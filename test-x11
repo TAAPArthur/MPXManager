@@ -1,0 +1,7 @@
+#!/bin/bash
+D=:7
+Xephyr +extension RANDR +xinerama -screen 600x400 -ac $D &> /dev/null & pid="$!"
+DISPLAY=$D $@
+exitCode=$?
+kill "$pid" 
+exit $exitCode
