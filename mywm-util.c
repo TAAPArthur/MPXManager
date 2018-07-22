@@ -19,6 +19,8 @@ typedef struct context_t{
     Node* master;
 
     Node*monitors;
+    int screenWidth;
+    int screenHeigth;
     Workspace*workspaces;
     int numberOfWorkspaces;
 } Context;
@@ -28,7 +30,25 @@ static Context *context=NULL;
 unsigned int getTime () {
    return time(NULL);
 }
+
+static int intersects1D(int P1,int D1,int P2,int D2){
+    return P1 < P2 +D2 && P1 +D1 > P2;
+}
+
+int intersects(short int arg1[4],short int arg2[4]){
+
+    if( intersects1D(arg1[0],arg1[2],arg2[0],arg2[2]) &&
+            intersects1D(arg1[1],arg1[3],arg2[1],arg2[3]))
+            return 1;
+    return 0;
+}
+
+
+
+
+
 void destroyContext(){
+    if(!context)return;
     Node*node;
 
     node=context->docks;
@@ -59,8 +79,6 @@ void destroyContext(){
 
     free(context);
     context=NULL;
-
-
 }
 void createContext(int numberOfWorkspaces){
 
@@ -169,6 +187,7 @@ int getFocusedTime(Master*m){
 }
 void onWindowFocus(int win){
     Node *node=isInList(context->windows, win);
+    if(!node)return;
     if(! isFocusStackFrozen())
         addUnique(getMasterWindowStack(), getValue(node));
     getActiveMaster()->focusedTimeStamp = getTime();
@@ -293,7 +312,6 @@ Workspace* getWorkspaceByIndex(int index){
 
 
 void resizeAllMonitorsToAvoidAllStructs(){
-
     Node *mon=context->monitors;
     Node* docks;
     if(isNotEmpty(mon))
@@ -301,36 +319,44 @@ void resizeAllMonitorsToAvoidAllStructs(){
             resetMonitor(getValue(mon));
             docks=context->docks;
             FOR_EACH(docks,
-                    resizeMonitorToAvoidStruct(mon,getValue(docks))));
+                    resizeMonitorToAvoidStruct(getValue(mon),getValue(docks))));
 }
 
 
-void resizeMonitorToAvoidStruct(Node*n,WindowInfo*winInfo){
-
-    assert(n);
+void resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo){
+    assert(m);
     assert(winInfo);
-    Monitor*m=(Monitor*)getValue(n);
     for(int i=0;i<4;i++){
-
-        int pos=i;
         int dim=winInfo->properties[i];
         if(dim==0)
             continue;
-        if(pos==DOCK_LEFT || pos==DOCK_RIGHT){
-            int width=m->viewWidth-dim;
-            if(pos==DOCK_LEFT)
-                resizeMonitor(m,dim, m->viewY, width, m->viewHeight);
-            else
-                resizeMonitor(m,0, m->viewY, width, m->viewHeight);
-        }
-        else {
-            int height=m->viewHeight-dim;
-            if(pos==DOCK_TOP)
-                resizeMonitor(m,m->x, dim, m->viewWidth, height);
-            else
-                resizeMonitor(m,m->x, 0, m->viewWidth, height);
-        }
+        int start=winInfo->properties[i*2+4];
+        int end=winInfo->properties[i*2+4+1];
+        assert(start<end);
+        int fromPositiveSide=i==DOCK_LEFT || i==DOCK_TOP;
+        int offset=i==DOCK_LEFT || i==DOCK_RIGHT?0:1;
+        short int values[]={0,0,0,0};
+        values[offset]=fromPositiveSide?0:(&context->screenWidth)[offset]-dim;
+        values[(offset+1)%2]=start;
+        values[offset+2]=dim;
+        values[(offset+1)%2+2]=end-start;
+
+        if(!intersects(&m->viewX, values))
+            continue;
+
+
+        int intersectionWidth=fromPositiveSide?
+                dim-(&m->viewX)[offset]:
+                (&m->viewX)[offset]+(&m->viewWidth)[offset]+dim-(&context->screenWidth)[offset];
+        if(intersectionWidth<=0)
+            continue;
+
+        (&m->viewWidth)[offset]-=intersectionWidth;
+        if(fromPositiveSide)
+            (&m->viewX)[offset]=dim;
     }
+
+
 }
 void resetMonitor(Monitor*m){
     assert(m);
@@ -339,25 +365,10 @@ void resetMonitor(Monitor*m){
     m->viewWidth=m->width;
     m->viewHeight=m->height;
 }
-void resizeMonitor(Monitor*monitor,int x,int y,int width, int height){
-    monitor->viewX=x;
-    monitor->viewY=y;
-    monitor->viewWidth=width;
-    monitor->viewHeight=height;
-}
 
 
-static int intersects1D(int P1,int D1,int P2,int D2){
-    return P1 < P2 +D2 && P1 +D1 > P2;
-}
 
-int intersects(short int arg1[4],short int arg2[4]){
 
-    if( intersects1D(arg1[0],arg1[2],arg2[0],arg2[2]) &&
-            intersects1D(arg1[1],arg1[3],arg2[1],arg2[3]))
-            return 1;
-    return 0;
-}
 
 
 //all and active methods
@@ -389,7 +400,18 @@ int removeMaster(unsigned int id){
     return 1;
 }
 
+void recalculateScreenDiminsions(){
+    Node*head=getAllMonitors();
+    if(!isNotEmpty(head))return;
+    GET_MAX(head,1,((Monitor*)getValue(head))->x+((Monitor*)getValue(head))->width)
 
+    assert(head);
+    context->screenWidth=((Monitor*)getValue(head))->x+((Monitor*)getValue(head))->width;
+    head=getAllMonitors();
+    GET_MAX(head,1,((Monitor*)getValue(head))->y+((Monitor*)getValue(head))->height);
+    assert(head);
+    context->screenHeigth=((Monitor*)getValue(head))->y+((Monitor*)getValue(head))->height;
+}
 int removeMonitor(unsigned int id){
     Node *n=isInList(context->monitors, id);
 
@@ -401,8 +423,10 @@ int removeMonitor(unsigned int id){
         w->monitor=NULL;
     if(n)
         deleteNode(n);
+    recalculateScreenDiminsions();
     return n?1:0;
 }
+
 int addMonitor(int id,int primary,int x,int y,int width,int height){
     if(isInList(context->monitors, id))
         return 0;
@@ -414,15 +438,13 @@ int addMonitor(int id,int primary,int x,int y,int width,int height){
             return 0;
         }
     }
-
     Monitor*m=calloc(1,sizeof(Monitor));
     *m=(Monitor){id,0,primary,x,y,width,height};
     insertHead(context->monitors, m);
-
     resetMonitor(m);
-
     setMonitorForWorkspace(workspace,m);
-     return 1;
+    recalculateScreenDiminsions();
+    return 1;
 }
 void setMonitorForWorkspace(Workspace*w,Monitor*m){
     w->monitor=m;
