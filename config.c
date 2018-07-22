@@ -52,6 +52,7 @@ Binding onKeyPressBindings[] = {
     {Mod4Mask | ControlMask , XF86XK_MonBrightnessUp, SPAWN("xrandr-invert-colors")},
     {0 , XF86XK_Tools, SPAWN("xrandr-invert-colors")},
     {Mod4Mask, XK_F11, BIND_TO_ARFUNC(setLayout,&DEFAULT_LAYOUTS[FULL]) ,.passThrough=1 },
+    {Mod4Mask, XK_F11, BIND_TO_ARFUNC(setLayout,&DEFAULT_LAYOUTS[FULL]) ,.passThrough=1 },
 
     //{.arbitArgs={(*funcVoidArg)(Context *,void*)setLayout,&DEFAULT_LAYOUTS[FULL]}},ARBIT_ARG
     //{.arbitArgs={(*funcVoidArg)(Context *,void*)&DEFAULT_LAYOUTS[FULL],}},ARBIT_ARG
@@ -146,7 +147,7 @@ Binding  onMousePressBindings[]={
 
 void loadSettings(){
     NUMBER_OF_WORKSPACES=2;
-    IGNORE_MASK = Mod2Mask | LockMask;
+    IGNORE_MASK = Mod2Mask;
     SHELL ="/bin/bash";
     ADD_BINDINGS;
     FOCUS_ON_CLICK;
