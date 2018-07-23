@@ -113,18 +113,13 @@ int main(int argc, char * argv[]){
     signal(SIGABRT, handler);
     //signal(SIGINT, quit);
 
-    setLogLevel(LOG_LEVEL_DEBUG);
     parseAgrs(argc,argv);
-    //setLogLevel(LOG_LEVEL_WARN);
+    setLogLevel(LOG_LEVEL_TRACE);
     //TODO make var
     createContext(numberOfWorkspaces);
     onStartup();
     loadSettings();
     connectToXserver();
-    printf("entering event loop\n");
-
     if(enterEventLoop)
         runEventLoop(NULL);
-
-    printf("left event loop\n");
 }

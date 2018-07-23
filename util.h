@@ -93,7 +93,7 @@ void insertBefore(Node* head,Node* newNode);
  * @param head - starting point for iteration. Will be set to the NULL upon completion
  */
 #define FOR_EACH(head,...) \
-        _FOR_EACH(head,next,__VA_ARGS__)
+        _FOR_EACH(next,head,__VA_ARGS__)
 
 /**
  * @brief Iterates over head and runs arbitrary command(s) util the end
@@ -104,7 +104,7 @@ void insertBefore(Node* head,Node* newNode);
  */
 #define FOR_EACH_CIRCULAR(head,...) {\
         Node*__start__=head; \
-        _FOR_EACH(head,next,__VA_ARGS__;if(__start__==head->next){head=NULL;break;})\
+        FOR_EACH(head,__VA_ARGS__;if(__start__==head->next){head=NULL;break;})\
     }
 /**
  * Iterates over head backwards and runs arbitary command(s).
@@ -113,7 +113,7 @@ void insertBefore(Node* head,Node* newNode);
  * @param head - starting point for iteration. Will be set to the NULL upon completion
  */
 #define FOR_EACH_REVERSED(head,...) \
-        _FOR_EACH(head,prev,__VA_ARGS__)
+        _FOR_EACH(prev,head,__VA_ARGS__)
 /**
  * itererates over head in the specified direction(either next or prev) and
  * runs arbitary command(s).
@@ -127,7 +127,7 @@ void insertBefore(Node* head,Node* newNode);
  * @see FOR_EACH_REVERSED(head,...)
  * @see FOR_EACH(head,...)
  */
-#define _FOR_EACH(head,dir,...) \
+#define _FOR_EACH(dir,head,...) \
     if(head->value)while(head){__VA_ARGS__;head=head->dir;}else head=NULL;
 
 /**

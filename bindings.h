@@ -8,10 +8,11 @@
 #include <X11/XF86keysym.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XI.h>
+#include <xcb/xinput.h>
 
 #include "mywm-structs.h"
 
-#define GENERIC_EVENT_OFFSET LASTEvent
+
 #define KEY_PRESS_BINDING_INDEX XI_KeyPress
 
 
@@ -25,16 +26,17 @@
 #define MATCH_ANY_LITERAL   ((1<<6) -1)
 #define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL - LITERAL)
 
+#define GENERIC_EVENT_OFFSET LASTEvent
+#define LAST_XI_EVENT   GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS
 
-#define ProcessingWindow        62  //if all rules are passed through, then the window is added as a normal window
-#define WorkspaceChange         63
-#define WindowWorkspaceChange   64
-#define WindowLayerChange       65
-#define LayoutChange            66
-#define TilingWindows           67
-#define onXConnection           68
-
-#define NUMBER_OF_EVENT_RULES   71
+enum{
+    //if all rules are passed through, then the window is added as a normal window
+    ProcessingWindow=LAST_XI_EVENT,
+    WorkspaceChange,WindowWorkspaceChange,
+    WindowLayerChange,LayoutChange,
+    TilingWindows,onXConnection,
+    NUMBER_OF_EVENT_RULES
+};
 
 
 
@@ -197,12 +199,11 @@ int doesStringMatchRule(Rules*rule,char*str);
 int doesWindowMatchRule(Rules *rules,WindowInfo*info);
 int applyRule(Rules*rule,WindowInfo*info);
 
-int applyGenericEventRules(int type,WindowInfo*info);
 int applyEventRules(int type,WindowInfo*info);
 void callBoundedFunction(BoundFunction*boundFunction,WindowInfo*info);
 
 void loadWindowProperties(WindowInfo *winInfo);
-
+void loadWindowHints(WindowInfo *winInfo);
 
 extern Node* eventRules[NUMBER_OF_EVENT_RULES];
 

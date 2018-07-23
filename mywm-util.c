@@ -97,6 +97,7 @@ void createContext(int numberOfWorkspaces){
 WindowInfo* createWindowInfo(Window id){
     WindowInfo *wInfo =calloc(1,sizeof(WindowInfo));
     wInfo->id=id;
+    wInfo->workspaceIndex=NO_WORKSPACE;
     return wInfo;
 }
 Master *createMaster(int id){
@@ -167,12 +168,14 @@ void setLastWindowClicked(int value){
     getActiveMaster()->lastWindowClicked=value;
 }
 
-
-Node* getFocusedWindow(){
-    return getActiveMaster()->focusedWindow;
-}
-Node* getFocusedWindowByMaster(Master*master){
+Node*getFocusedWindowByMaster(Master*master){
     return master->focusedWindow;
+}
+Node* getFocusedWindowNode(){
+    return getFocusedWindowByMaster(getActiveMaster());
+}
+WindowInfo* getFocusedWindow(){
+    return getValue(getFocusedWindowNode());
 }
 Node* getNextMasterNodeFocusedOnWindow(int win){
     Node*list=getAllMasters();
@@ -246,15 +249,14 @@ Workspace*getNextEmptyWorkspace(){
 }
 Workspace*getWorkspaceFromMonitor(Monitor*monitor){
     assert(monitor);
-    assert(monitor->workspaceIndex>=0);
-    assert(monitor->workspaceIndex<context->numberOfWorkspaces);
-    return &context->workspaces[monitor->workspaceIndex];
+    for(int i=0;i<context->numberOfWorkspaces;i++)
+        if(context->workspaces[i].monitor && context->workspaces[i].monitor->name==monitor->name)
+            return &context->workspaces[i];
+    return None;
 }
 Monitor*getMonitorFromWorkspace(Workspace*workspace){
     assert(workspace);
-    Node*node=context->monitors;
-    UNTIL_FIRST(node,((Monitor*)getValue(node))->workspaceIndex==workspace->id)
-    return getValue(node);
+    return workspace->monitor;
 }
 
 
@@ -271,8 +273,8 @@ Node* getMasterWindowStack(){
     return getActiveMaster()->windowStack;
 }
 
-Node* getNextWindowInFocusHistory(int dir){
-    Node*focusedNode=getFocusedWindow();
+Node* getNextWindowInFocusStack(int dir){
+    Node*focusedNode=getFocusedWindowNode();
     if(dir>0)
         return focusedNode->next?focusedNode->next:getMasterWindowStack();
     else
@@ -283,7 +285,7 @@ Node*getWindowStack(Workspace*workspace){
 }
 Node* getNextWindowInStack(int dir){
     Node*activeWindows=getMasterWindowStack(context);
-    int focusedWindowValue=getIntValue(getFocusedWindow(context));
+    int focusedWindowValue=getFocusedWindow(context)->id;
     Node*node=isInList(activeWindows, focusedWindowValue);
     if(dir>0)
         return node->next?node->next:activeWindows;
@@ -305,6 +307,8 @@ int isInNormalWorkspace(int workspaceIndex){
 
 
 Workspace* getWorkspaceByIndex(int index){
+    assert(index>=0);
+    assert(index<context->numberOfWorkspaces);
     return &context->workspaces[index];
 }
 
@@ -442,14 +446,11 @@ int addMonitor(int id,int primary,int x,int y,int width,int height){
     *m=(Monitor){id,0,primary,x,y,width,height};
     insertHead(context->monitors, m);
     resetMonitor(m);
-    setMonitorForWorkspace(workspace,m);
+    workspace->monitor=m;
     recalculateScreenDiminsions();
     return 1;
 }
-void setMonitorForWorkspace(Workspace*w,Monitor*m){
-    w->monitor=m;
-    m->workspaceIndex=w->id;
-}
+
 
 void removeWindowFromAllWorkspaces(WindowInfo* winInfo){
     for(int i=0;i<context->numberOfWorkspaces;i++)
@@ -502,15 +503,16 @@ void moveWindowToLayer(WindowInfo*winInfo,int workspaceIndex,int layer){
 void addWindowToWorkspace(WindowInfo*info,int workspaceIndex){
     addWindowToWorkspaceAtLayer(info, workspaceIndex, DEFAULT_LAYER);
 }
-void addWindowToWorkspaceAtLayer(WindowInfo*info,int workspaceIndex,int layer){
+void addWindowToWorkspaceAtLayer(WindowInfo*winInfo,int workspaceIndex,int layer){
     assert(workspaceIndex>=0);
     assert(layer>=0);
     assert(workspaceIndex<context->numberOfWorkspaces);
     Workspace*workspace=getWorkspaceByIndex(workspaceIndex);
-    assert(info!=NULL);
-    addUnique(workspace->windows[layer], info);
+    assert(winInfo!=NULL);
+    addUnique(workspace->windows[layer], winInfo);
     if(isWorkspaceVisible(workspace->id))
-       context->dirty=1;
+       setDirty();
+    winInfo->workspaceIndex=workspaceIndex;
 }
 
 int addWindowInfo(WindowInfo* wInfo){

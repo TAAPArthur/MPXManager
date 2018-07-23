@@ -84,8 +84,11 @@ int ungrabButton(int deviceID,int button,int mod){
     return XIUngrabButton(dpy, deviceID, button, root, 2, modifiers);
 }
 int grabKey(int deviceID,int keyCode,int mod,int maskValue){
+
     XIEventMask eventmask = {deviceID,2,(unsigned char*)&maskValue};
     XIGrabModifiers modifiers[2]={{mod},{mod|IGNORE_MASK}};
+    assert(modifiers[0].modifiers==mod);
+    assert(modifiers[1].modifiers==mod|IGNORE_MASK);
     return XIGrabKeycode(dpy, deviceID, keyCode, root, XIGrabModeAsync, XIGrabModeAsync,
             1, &eventmask, 2, modifiers);
 }
@@ -164,10 +167,10 @@ int resetBorder(xcb_window_t win){
 */
 
 int isExternallyResizable(WindowInfo* winInfo){
-    return winInfo->mask & EXTERNAL_RESIZE_MASK;
+    return !winInfo || winInfo->mask & EXTERNAL_RESIZE_MASK;
 }
 int isExternallyMoveable(WindowInfo* winInfo){
-    return winInfo->mask & EXTERNAL_RESIZE_MASK;
+    return !winInfo || winInfo->mask & EXTERNAL_RESIZE_MASK;
 }
 
 static int hasMask(WindowInfo* win,int mask){
@@ -188,7 +191,6 @@ void addState(WindowInfo*winInfo,int mask){
         xcb_unmap_window(dis,winInfo->id);
     }
     if(mask &X_MAXIMIZED_MASK ){}
-    if(mask &BANISHED_MASK){}
     if(mask &FULLSCREEN_MASK){}
     if(mask &EXTERNAL_RESIZE_MASK){}
     if(layer!=NO_LAYER)
@@ -217,9 +219,7 @@ int getNumberOfTileableWindows(Node*windowStack){
             if(isTileable(getValue(windowStack)))size++);
     return size;
 }
-int isTileable(WindowInfo*winInfo){
-    return isMapped(winInfo) && !(winInfo->mask & (NO_TILE_MASK|PRIVILGED_MASK));
-}
+
 
 void registerWindow(WindowInfo*winInfo){
     if(!winInfo){
@@ -288,8 +288,9 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo,xcb_atom_t* atoms,int numberO
 }
 
 void applyLayout(Workspace*workspace,Layout* layout){
-    LOG(LOG_LEVEL_DEBUG,"using layour %s\n",workspace->activeLayout->name);
+    LOG(LOG_LEVEL_DEBUG,"using layout %s with %d\n",workspace->activeLayout->name,getNumberOfTileableWindows(getWindowStack(workspace)));
     Monitor*m=getMonitorFromWorkspace(workspace);
+    assert(m);
     layout->layoutFunction(m,
             getWindowStack(workspace),layout->args);
 }
@@ -298,7 +299,6 @@ void tileWindows(){
         APPLY_RULES_OR_RETURN(TilingWindows,NULL);
         for(int i=0;i<getNumberOfWorkspaces();i++)
             if(isWorkspaceVisible(i)){
-
                 Workspace* w=getWorkspaceByIndex(i);
                 LOG(LOG_LEVEL_DEBUG,"tiling %d windows\n",getSize(getWindowStack(w)));
                 applyLayout(w,w->activeLayout);
@@ -308,38 +308,44 @@ void tileWindows(){
 }
 
 int activateWindow(WindowInfo* winInfo){
+    LOG(LOG_LEVEL_DEBUG,"activating window\n");
+    if(!winInfo)return 0;
+    dumpWindowInfo(winInfo);
     switchToWorkspace(winInfo->workspaceIndex);
-    return activateWindowById(winInfo->id);
-}
-int activateWindowById(int id){
-    LOG(LOG_LEVEL_TRACE,"activating window %d:\n",id);
-    assert(id);
-
-    return raiseWindow(id) && focusWindow(id);
+    return raiseWindow(winInfo->id) && focusWindow(winInfo->id);
 }
 
 int deleteWindow(xcb_window_t winToRemove){
     return removeWindow(winToRemove);
 }
-//Workspace commands
 
-static void updateWindowWorkspaceState(WindowInfo*info, int workspaceIndex,int state){
-    if(state==UNMAPPED){
-        if(info->activeWorkspaceCount)
-            info->activeWorkspaceCount--;
-        assert(info->activeWorkspaceCount==0);
-        if(info->activeWorkspaceCount==0)
-            xcb_unmap_window(dis, info->id);
+//Workspace commands
+static void attemptToMapWindow(WindowInfo* winInfo){
+    if(isWindowInVisibleWorkspace(winInfo) && isMappable(winInfo)){
+        xcb_map_window(dis, winInfo->id);
+        setDirty();
     }
     else{
-        info->activeWorkspaceCount++;
-        assert(info->activeWorkspaceCount);
-        info->workspaceIndex=workspaceIndex;
-        xcb_map_window(dis, info->id);
+        LOG(LOG_LEVEL_DEBUG,"Failed to map workspace mappable: %d in visible workspace %d\n",isMappable(winInfo),isWindowInVisibleWorkspace(winInfo));
+        //dumpWindowInfo(winInfo);
+    }
+}
+static void updateWindowWorkspaceState(WindowInfo*info, int workspaceIndex,int state){
+    if(state){
+        //info->activeWorkspaceCount++;
+        //assert(info->activeWorkspaceCount);
+        attemptToMapWindow(info);
+    }
+    else{
+        //if(info->activeWorkspaceCount)info->activeWorkspaceCount--;
+        //assert(info->activeWorkspaceCount==0);
+        if(info->activeWorkspaceCount==0)
+            xcb_unmap_window(dis, info->id);
     }
 }
 static void setWorkspaceState(int workspaceIndex,int state){
     Node*stack=getWindowStack(getWorkspaceByIndex(workspaceIndex));
+    LOG(LOG_LEVEL_DEBUG,"Setting workspace of %d  to %d:\n",workspaceIndex,state);
     FOR_EACH(stack,
             updateWindowWorkspaceState(getValue(stack),workspaceIndex,state))
 }
@@ -354,15 +360,17 @@ void switchToWorkspace(int workspaceIndex){
     int currentIndex=getActiveWorkspaceIndex();
     if(currentIndex==workspaceIndex)
         return;
-    LOG(LOG_LEVEL_TRACE,"Switchting to workspace %d:\n",workspaceIndex);
+    LOG(LOG_LEVEL_DEBUG,"Switchting to workspace %d:\n",workspaceIndex);
     Workspace*workspaceToSwitchTo=getWorkspaceByIndex(workspaceIndex);
     if(!workspaceToSwitchTo)
         return;
     if(!isWorkspaceVisible(workspaceIndex)){
         //we need to map new windows
+        LOG(LOG_LEVEL_DEBUG,"Swaping with visible workspace %d:\n",currentIndex);
         swapMonitors(workspaceIndex,currentIndex);
-        setWorkspaceState(currentIndex,UNMAPPED);
         setWorkspaceState(workspaceIndex,MAPPED);
+        setWorkspaceState(currentIndex,UNMAPPED);
+
     }
     getActiveMaster()->activeWorkspaceIndex=workspaceIndex;
     xcb_ewmh_set_current_desktop_checked(
@@ -390,10 +398,10 @@ void activateWorkspace(int workspaceIndex){
 }
 
 void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex){
-    assert(destIndex!=NO_WORKSPACE);
     moveWindowToWorkspaceAtLayer(winInfo,destIndex,DEFAULT_LAYER);
 }
 void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer){
+    assert(destIndex!=NO_WORKSPACE);
     removeWindowFromAllWorkspaces(winInfo);
     addWindowToWorkspaceAtLayer(winInfo, destIndex, layer);
     updateWindowWorkspaceState(winInfo, destIndex, isWorkspaceVisible(destIndex));
@@ -444,7 +452,7 @@ void processNewWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_DEBUG,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
 
     loadWindowProperties(winInfo);
-    dumpWindowInfo(winInfo);
+    //dumpWindowInfo(winInfo);
     APPLY_RULES_OR_RETURN(ProcessingWindow,winInfo);
     LOG(LOG_LEVEL_DEBUG,"Registerign window\n");
     registerWindow(winInfo);
@@ -522,23 +530,26 @@ void loadWindowType(WindowInfo *winInfo){
     LOG(LOG_LEVEL_TRACE,"window type %s\n",winInfo->typeName);
     free(reply);
 }
+void loadWindowHints(WindowInfo *winInfo){
+    assert(winInfo);
+    xcb_icccm_wm_hints_t hints;
+    if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->id), &hints, NULL)){
+        winInfo->groupId=hints.window_group;
+        winInfo->input=hints.input;
+        winInfo->state=hints.initial_state;
+    }
+    if(winInfo->mapped && winInfo->state ==XCB_ICCCM_WM_STATE_WITHDRAWN)
+        winInfo->state=XCB_ICCCM_WM_STATE_NORMAL;
 
+}
 void loadWindowProperties(WindowInfo *winInfo){
     if(!winInfo)
         return;
 
-
     loadClassInfo(winInfo);
     loadTitleInfo(winInfo);
-    xcb_icccm_wm_hints_t hints;
-
-    if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->id), &hints, NULL)){
-        winInfo->groupId=hints.window_group;
-        winInfo->input=hints.input;
-    }
+    loadWindowHints(winInfo);
     loadWindowType(winInfo);
-
-
 
     xcb_window_t prop;
     if(xcb_icccm_get_wm_transient_for_reply(dis,
@@ -550,6 +561,8 @@ void loadWindowProperties(WindowInfo *winInfo){
 
 #define COPY_VALUES(I)  actualWindowValues[I]=winInfo->config[I]?winInfo->config[I]:values[I];
 void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LEN]){
+    assert(winInfo);
+    assert(m);
     int actualWindowValues[CONFIG_LEN+1];
     int mask= XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y|
         XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT |
@@ -559,10 +572,8 @@ void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LEN]){
         COPY_VALUES(1);//y
 
         int maxWidth=getMaxDimensionForWindow(m, winInfo,0);
-        if(maxWidth){
-            LOG(LOG_LEVEL_DEBUG,"width toverried\n");
+        if(maxWidth)
             actualWindowValues[2]=maxWidth;
-        }
         else    COPY_VALUES(2);
 
         int maxHeight=getMaxDimensionForWindow(m, winInfo,1);
@@ -581,12 +592,41 @@ void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LEN]){
         actualWindowValues[i]=values[5];
     }
     assert(winInfo->id);
-    xcb_void_cookie_t c=xcb_configure_window_checked(dis, winInfo->id, mask, actualWindowValues);
+    xcb_configure_window_checked(dis, winInfo->id, mask, actualWindowValues);
     //LOG(LOG_LEVEL_ERROR,"Window dims %d %d %d %d %d %d\n",values[0],values[1],values[2],values[3],values[4],values[5]);
     //LOG(LOG_LEVEL_ERROR,"Window dims %d %d %d %d \n",m->width,m->height,m->viewWidth,m->viewHeight);
-    if(checkError(c, winInfo->id, "could not configure window"))
-        assert(0);
+    //if(checkError(c, winInfo->id, "could not configure window"))assert(0);
+}
+void processConfigureRequest(Window win,short values[5],xcb_window_t sibling,int stackMode,int mask){
 
+    int actualValues[7];
+    int i=0;
+    LOG(LOG_LEVEL_ERROR,"Window dims %d %d %d %d %d %d %d %d\n",values[0],values[1],values[2],values[3],values[4],values[5],values[6],mask);
+    WindowInfo*winInfo=getWindowInfo(win);
+    if(mask & XCB_CONFIG_WINDOW_X && isExternallyMoveable(winInfo))
+        actualValues[i++]=values[0];
+    else mask&=~XCB_CONFIG_WINDOW_X;
+    if(mask & XCB_CONFIG_WINDOW_Y && isExternallyMoveable(winInfo))
+            actualValues[i++]=values[1];
+    else mask&=~XCB_CONFIG_WINDOW_Y;
+    if(mask & XCB_CONFIG_WINDOW_WIDTH && isExternallyResizable(winInfo))
+        actualValues[i++]=values[2];
+    else mask&=~XCB_CONFIG_WINDOW_WIDTH;
+    if(mask & XCB_CONFIG_WINDOW_HEIGHT && isExternallyResizable(winInfo))
+        actualValues[i++]=values[3];
+    else mask&=~XCB_CONFIG_WINDOW_HEIGHT;
+    if(mask & XCB_CONFIG_WINDOW_BORDER_WIDTH)
+        actualValues[i++]=values[4];
+    else mask&=~XCB_CONFIG_WINDOW_BORDER_WIDTH;
+
+    if(mask & XCB_CONFIG_WINDOW_SIBLING)
+        actualValues[i++]=sibling;
+    else mask&=~XCB_CONFIG_WINDOW_SIBLING;
+    if(mask & XCB_CONFIG_WINDOW_STACK_MODE)
+        actualValues[i++]=stackMode;
+    else mask&=~XCB_CONFIG_WINDOW_STACK_MODE;
+    LOG(LOG_LEVEL_ERROR,"Window dims %d %d %d %d %d %d %d \n",i,actualValues[0],actualValues[1],actualValues[2],actualValues[3],actualValues[4],mask);
+    xcb_configure_window(dis, win, mask, actualValues);
 }
 
 int checkError(xcb_void_cookie_t cookie,int cause,char*msg){
@@ -603,24 +643,7 @@ int checkError(xcb_void_cookie_t cookie,int cause,char*msg){
     return e?1:0;
 }
 
-/*TODO uncomment
-void moveResize(Window win,int*values){
-    int mask=0;
-    WindowInfo*winInfo=getWindowInfo(win);
-    if(DEFAULT_BORDER_WIDTH>=0)
-        mask|=XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    if(winInfo){
-        if(isExternallyResizable(winInfo))
 
-            mask |= XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT;
-        if(isExternallyMoveable(winInfo))
-            mask |= XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y;
-        if(isTileable(winInfo))
-            mask |=XCB_CONFIG_WINDOW_SIBLING|XCB_CONFIG_WINDOW_STACK_MODE;
-    }
-    else mask=127; //all masks
-    xcb_configure_window(dis, win, mask, values);
-}*/
 
 void scan() {
     xcb_query_tree_reply_t *reply;
@@ -645,8 +668,7 @@ void scan() {
             }
             else {
                 WindowInfo *winInfo=createWindowInfo(children[i]);
-                if(attr)
-                    setMapped(winInfo, attr->map_state);
+                    winInfo->mapped=attr->map_state?1:0;
                 winInfo->overrideRedirect=attr->override_redirect;
                 processNewWindow(winInfo);
             }
@@ -659,9 +681,6 @@ void scan() {
         assert(0);
     }
 
-}
-int isWindowVisible(Window win){
-    return isVisible(getWindowInfo(win));
 }
 
 void registerForEvents(){
@@ -702,8 +721,10 @@ void initCurrentMasters(){
 void connectToXserver(){
     LOG(LOG_LEVEL_DEBUG," connecting to XServe \n");
     dpy = XOpenDisplay(NULL);
-    if (!dpy)
+    if (!dpy){
+        LOG(LOG_LEVEL_ERROR," Failed to connect to xserver\n");
         exit(1);
+    }
     dis = XGetXCBConnection(dpy);
     if(xcb_connection_has_error(dis)){
         LOG(LOG_LEVEL_ERROR," failed to conver xlib display to xcb version\n");
@@ -783,30 +804,36 @@ void setVisible(WindowInfo* winInfo,int v){
 int isActivatable(WindowInfo* winInfo){
     return winInfo->input;
 }
-int isMapped(WindowInfo* winInfo){
-    return winInfo && winInfo->mapState!=XCB_MAP_STATE_UNMAPPED;
+int isMappable(WindowInfo* winInfo){
+    return winInfo && winInfo->state==XCB_ICCCM_WM_STATE_NORMAL;
 }
-void setMapped(WindowInfo* winInfo,xcb_map_state_t state){
-    if(!winInfo)
-        return;
-    if(winInfo->mapState == state)
-        return;
+int isMapped(WindowInfo* winInfo){
+    return winInfo && winInfo->mapped;
+}
+int isTileable(WindowInfo*winInfo){
+    return isMapped(winInfo) && winInfo->type==ewmh->_NET_WM_WINDOW_TYPE_NORMAL && !(winInfo->mask & NO_TILE_MASK);
+}
 
-    if(isWindowInVisibleWorkspace(winInfo)){
-        if(isTileable(winInfo))
-            setDirty();
-        if(state != XCB_MAP_STATE_UNMAPPED)
-            xcb_map_window(dis, winInfo->id);
+void updateMapState(int id,int state){
+    WindowInfo*winInfo=getWindowInfo(id);
+    if(!winInfo){
+        if(state)
+            xcb_map_window(dis, id);
+        return;
     }
-    else if(state != XCB_MAP_STATE_UNMAPPED)
-        addState(winInfo, IN_INVISIBLE_WORKSPACE);
-
-    winInfo->mapState=state;
+    if(state){
+        loadWindowHints(winInfo);
+        if(winInfo->state==XCB_ICCCM_WM_STATE_WITHDRAWN){
+            LOG(LOG_LEVEL_WARN,"client explicint requested map but hints say it should be withdrawn; ignoring hints");
+            winInfo->state=XCB_ICCCM_WM_STATE_NORMAL;
+        }
+        attemptToMapWindow(winInfo);
+    }
+    winInfo->mapped=state;
 }
 int getWindowMask(WindowInfo*info){
     return info->mask;
 }
-
 
 void closeConnection(){
     LOG(LOG_LEVEL_INFO,"closing X connection\n");

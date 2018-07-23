@@ -135,8 +135,8 @@ START_TEST(test_master_focus_stack){
                 if(frozen)
                     assert(originalHeadValue==getIntValue(getAllWindows()));
                 else{
-                    assert(getIntValue(getFocusedWindow())==originalHeadValue);
-                    assert(getFocusedWindow()==getMasterWindowStack());
+                    assert(getFocusedWindow()->id==originalHeadValue);
+                    assert(getFocusedWindow()==getValue(getMasterWindowStack()));
                     assert(getIntValue(getMasterWindowStack())==getIntValue(getAllWindows()));
                 }
             }
@@ -244,7 +244,7 @@ START_TEST(test_monitor_init){
                     assert(m->viewHeight == height);
                     assert(m->viewX == x);
                     assert(m->viewY == y);
-                    assert(m->workspaceIndex==getActiveWorkspaceIndex());
+                    assert(getWorkspaceFromMonitor(m));
                     assert(m==getActiveWorkspace()->monitor);
                 }
 

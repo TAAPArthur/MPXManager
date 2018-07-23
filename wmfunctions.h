@@ -150,12 +150,7 @@ void tileWindows();
  */
 int setBorderColor(xcb_window_t win,unsigned int color);
 
-/**
- * raise and focus the window
- * @param id
- * @return
- */
-int activateWindowById(int id);
+
 /**
  * Switch to window's worksspace, raise and focus the window
  * @param id
@@ -306,19 +301,25 @@ void detectMonitors();
 void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LEN]);
 
 
+
+/**
+ *
+ * @param winInfo the window whose map state to query
+ * @return the window map state either UNMAPPED(0) or MAPPED(1)
+ */
+int isMappable(WindowInfo* winInfo);
 /**
  * Sets the mapped state to UNMAPPED(0) or MAPPED(1)
  * @param win the window whose state is being modified
  * @param state the new state
  * @return  true if the state actuall changed
  */
-void setMapped(WindowInfo* win,xcb_map_state_t state);
+void updateMapState(int id,int state);
 /**
  *
- * @param winInfo the window whose map state to query
- * @return the window map state either UNMAPPED(0) or MAPPED(1)
+ * @param winInfo
+ * @return true if the window can receive focus
  */
-int isMapped(WindowInfo* winInfo);
 int isActivatable(WindowInfo* winInfo);
 int isVisible(WindowInfo* winInfo);
 void setVisible(WindowInfo* winInfo,int v);
@@ -338,5 +339,4 @@ int getWindowMask(WindowInfo*info);
  */
 void killWindow(xcb_window_t win);
 
-int isWindowVisible(Window win);
 #endif

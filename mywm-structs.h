@@ -38,20 +38,19 @@
 #define NO_MASK                 0
 
 #define URGENT_MASK             1<<0    //set when the window received an urgent hint
-#define UNMANAGABLE_MASK        1<<1
-/**Window is in Above layer and is visible on all workspaces **/
-#define STICKY_MASK             1<<2
-#define MINIMIZED_MASK          1<<3
-#define X_MAXIMIZED_MASK        1<<4
-#define Y_MAXIMIZED_MASK        1<<5
-#define BANISHED_MASK           1<<6
-#define FULLSCREEN_MASK         1<<7
-#define ROOT_FULLSCREEN_MASK    1<<8
-#define NO_TILE_MASK            1<<9
-#define EXTERNAL_RESIZE_MASK    1<<10
-#define EXTERNAL_MOVE_MASK      1<<11
+#define MINIMIZED_MASK          1<<1
+#define X_MAXIMIZED_MASK        1<<2
+#define Y_MAXIMIZED_MASK        1<<3
+//rename
+#define FULLSCREEN_MASK         1<<4
+#define ROOT_FULLSCREEN_MASK    1<<5
 
-#define IN_INVISIBLE_WORKSPACE  1<<12
+#define NO_TILE_MASK            1<<6
+#define EXTERNAL_RESIZE_MASK    1<<7
+#define EXTERNAL_MOVE_MASK      1<<8
+
+/**Window is in Above layer and is visible on all workspaces **/
+#define STICKY_MASK             1<<12
 
 #define PRIVILGED_MASK          (FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)
 
@@ -94,10 +93,11 @@ typedef struct window_info{
 
     int config[5];
     unsigned int transientFor;
-    char mapState;
+    char state;
+    char mapped;
     char overrideRedirect;
-    int visibile;
-    int input;
+    char visibile;
+    char input;
     unsigned int groupId;
     int properties[12];
 } WindowInfo;
@@ -147,7 +147,6 @@ typedef struct{
     short int y;
     short int width;
     short int height;
-    int workspaceIndex;
     short int viewX;
     short int viewY;
     short int viewWidth;

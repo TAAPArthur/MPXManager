@@ -43,9 +43,10 @@ void dumpWindowInfo(WindowInfo* win){
     LOG(level,"Title class %s\n",win->title);
 
     LOG(level,"Transient for %d\n",win->transientFor);
-    LOG(level,"Mask %d; Input %d\n",win->mask,win->input);
-    LOG(level,"Override redirect %d;\n",win->overrideRedirect);
-    LOG(level,"map state %d %d is mapped\n",win->mapState,isMapped(win));
+    LOG(level,"Mask %d; Input %d Override redirect %d\n",win->mask,win->input,win->overrideRedirect);
+
+    LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isVisible(win));
+    LOG(level,"last active workspace %d\n",win->workspaceIndex);
 }
 
 void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms){

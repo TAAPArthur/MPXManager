@@ -18,26 +18,35 @@ Layout (DEFAULT_LAYOUTS[])={
 };
 int NUMBER_OF_DEFAULT_LAYOUTS = LEN(DEFAULT_LAYOUTS);
 
-#define FOR_EACH_TILE_AT_MOST(stack,N,...) {\
+
+#define _FOR_EACH_TILE_AT_MOST(dir,stack,N,...) {\
     int __size__=0;\
-    FOR_EACH_CIRCULAR(stack,\
+    _FOR_EACH(dir,stack,\
             if(__size__==N)break;\
             if(isTileable(getValue(stack))){__size__++;__VA_ARGS__;})}
-
+#define FOR_EACH_TILE_AT_MOST(stack,N,...) _FOR_EACH_TILE_AT_MOST(next,stack,N,__VA_ARGS__)
 #define FOR_EACH_TILE(stack,...)\
         FOR_EACH_TILE_AT_MOST(stack,-1,__VA_ARGS__)
+#define FOR_EACH_TILE_AT_MOST_REVERSE(stack,N,...){\
+        Node*__end__=stack;\
+        stack=getLast(stack);\
+        _FOR_EACH_TILE_AT_MOST(prev,stack,-1,__VA_ARGS__;if(__end__==stack)break;)\
+    }
 
-
-
+#define FOR_EACH_TILE_REVERSE(stack,...)\
+    FOR_EACH_TILE_AT_MOST_REVERSE(stack,-1,__VA_ARGS__)
 void full(Monitor*m,Node*windowStack,int*args){
     if(!isNotEmpty(windowStack))
         return;
-    LOG(LOG_LEVEL_INFO,"using full layout\n");
     short int values[CONFIG_LEN];
     memcpy(&values, &m->viewX, sizeof(short int)*4);
     values[4]=0;
+    values[5]=XCB_STACK_MODE_ABOVE;
+    FOR_EACH_TILE_AT_MOST(windowStack,1,configureWindow(m,getValue(windowStack),values));
+
     values[5]=XCB_STACK_MODE_BELOW;
-    FOR_EACH_TILE(windowStack,configureWindow(m,getValue(windowStack),values))
+    if(windowStack)
+        FOR_EACH_TILE_REVERSE(windowStack,configureWindow(m,getValue(windowStack),values));
 }
 
 Node*splitEven(Monitor*m,Node*stack,short values[CONFIG_LEN],int dim,int num){

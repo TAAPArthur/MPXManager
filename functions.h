@@ -71,7 +71,13 @@ void sendToNextWorkNonEmptySpace(int index);
 void swapWithNextMonitor(int index);
 void sendToNextMonitor(int index);
 
+/**
+ * Shifts the focused window to the top of the window stack
+ */
 void shiftTop();
+/**
+ * Swaps the focused window with the top of the window stack
+ */
 void swapWithTop();
 void cycleLayouts(int index);
 

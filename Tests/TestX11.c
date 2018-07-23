@@ -44,8 +44,13 @@
 
 const int size=10;
 
-int isWindowMapped(int win){
-    return isMapped(((WindowInfo*)getValue(isInList(getAllWindows(), win))));
+int isWindowMapped(DisplayConnection* dc,int win){
+    xcb_get_window_attributes_reply_t *reply;
+
+    reply=xcb_get_window_attributes_reply(dc->dis, xcb_get_window_attributes(dc->dis, win),NULL);
+
+
+    return reply->map_state!=XCB_MAP_STATE_UNMAPPED;
 }
 
 START_TEST(test_window_property_loading){
@@ -112,74 +117,82 @@ START_TEST(test_run_or_raise){
         assert(raisedWindow);
         assert(raisedWindow==win[i]);
     }
-
     END
 }END_TEST
 START_TEST(test_workspace_change){
     INIT
-    createContext(4);
+    createContext(size);
+    mapArbitraryWindow(dc);
+    mapArbitraryWindow(dc);
     connectToXserver();
-    assert(getSize(getAllWindows())==0);
-    assert(getSize(getActiveWindowStack())==0);
-    START_MY_WM
-    assert(getSize(getActiveWindowStack())==0);
-    assert(getActiveWorkspace()->id==0);
-    for(int i=0;i<size*2;i++){
-        mapArbitraryWindow(dc);
-        if(i+1==size){
-            xcb_flush(dc->dis);
-            WAIT_FOR(getSize(getActiveWindowStack())<size)
-            assert(getSize(getActiveWindowStack())==getSize(getAllWindows()));
-            switchToWorkspace(1);
-            assert(getActiveWorkspace()->id==1);
-        }
+    assert(getSize(getAllWindows())==2);
+    assert(getSize(getActiveWindowStack())==2);
+
+    for(int i=0;i<size;i++){
+        switchToWorkspace(i);
+        if(!i)continue;
+        assert(getActiveWorkspace()->id==i);
+        assert(getSize(getActiveWindowStack())==0);
     }
-    assert(getActiveWorkspace()->id==1);
-    xcb_flush(dc->dis);
-    WAIT_FOR(getSize(getActiveWindowStack())!=size)
-    Node*n=getWindowStack(getWorkspaceByIndex(0)),*n2;
-    //verify all windows are distict
-    FOR_EACH(n,n2=getWindowStack(getWorkspaceByIndex(1));FOR_EACH(n2,assert(getIntValue(n)!=getIntValue(n2))));
+    switchToWorkspace(0);
+    moveWindowToWorkspace(getValue(getActiveWindowStack()), 1);
+    assert(getSize(getActiveWindowStack())==1);
+    assert(getSize(getWindowStack(getWorkspaceByIndex(1)))==1);
 
-    Node*head=getActiveWindowStack();
-    FOR_EACH(head,assert(isMapped(getValue(head))))
-    head=getWindowStack(getWorkspaceByIndex(0));
-    FOR_EACH(head,assert(!isMapped(getValue(head))))
-
-    assert(getSize(getAllWindows())==size*2);
-    assert(getSize(getWindowStack(getWorkspaceByIndex(0)))==size);
-    assert(getSize(getWindowStack(getWorkspaceByIndex(1)))==size);
-
-    assert(activateWindow(getWindowInfo(getIntValue(getWindowStack(getWorkspaceByIndex(0))))));
-    assert(getActiveWorkspace()->id==0);
-    assert(activateWindow(getWindowInfo(getIntValue(getWindowStack(getWorkspaceByIndex(0))->next))));
-    assert(getActiveWorkspace()->id==0);
     END
 }END_TEST
 START_TEST(test_workspace_activation){
     INIT
+    setLogLevel(LOG_LEVEL_DEBUG);
     createContext(4);
     mapArbitraryWindow(dc);
     mapArbitraryWindow(dc);
     connectToXserver();
-    START_MY_WM
+
     int index1=getActiveWorkspaceIndex();
     int index2=!index1;
     moveWindowToWorkspace(getValue(getActiveWindowStack()), index2);
 
-    WindowInfo *info1=getValue(getWindowStack(getWorkspaceByIndex(index1)));
-    WindowInfo *info2=getValue(getWindowStack(getWorkspaceByIndex(index2)));
+    int info1=getIntValue(getWindowStack(getWorkspaceByIndex(index1)));
+    int info2=getIntValue(getWindowStack(getWorkspaceByIndex(index2)));
 
-    WAIT_FOR(isMapped(info2))
+    START_MY_WM
     xcb_ewmh_request_change_current_desktop(ewmh, defaultScreenNumber, index2, 0);
-    WAIT_UNTIL_TRUE(isMapped(info2)&&!isMapped(info1));
-    xcb_ewmh_request_change_current_desktop(ewmh, defaultScreenNumber, index1, 0);
-    WAIT_UNTIL_TRUE(isMapped(info1)&&!isMapped(info2));
-    xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, info2->id, 0, 0, info1->id);
+    WAIT_UNTIL_TRUE(isWindowMapped(dc,info2)&&!isWindowMapped(dc,info1)&&getActiveWorkspaceIndex()==index2);
 
-    WAIT_UNTIL_TRUE(isMapped(info2)&&!isMapped(info1)&&getActiveWorkspaceIndex()==index2);
-    xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, info1->id, 0, 0, info2->id);
-    WAIT_UNTIL_TRUE(isMapped(info1)&&!isMapped(info2)&&getActiveWorkspaceIndex()==index1);
+    xcb_ewmh_request_change_current_desktop(ewmh, defaultScreenNumber, index1, 0);
+    WAIT_UNTIL_TRUE(isWindowMapped(dc,info1)&&!isWindowMapped(dc,info2)&&getActiveWorkspaceIndex()==index1);
+
+    xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, info2, 0, 0, info1);
+    WAIT_UNTIL_TRUE(isWindowMapped(dc,info2)&&!isWindowMapped(dc,info1)&&getActiveWorkspaceIndex()==index2);
+    assert(getIntValue(getActiveWindowStack())==info2);
+
+    xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, info1, 0, 0, info2);
+    WAIT_UNTIL_TRUE(isWindowMapped(dc,info1)&&!isWindowMapped(dc,info2)&&getActiveWorkspaceIndex()==index1);
+    assert(getSize(getActiveWindowStack())==1);
+    assert(getIntValue(getActiveWindowStack())==info1);
+    END
+}END_TEST
+START_TEST(test_workspace_resume){
+    INIT
+
+    createContext(4);
+    int win=mapArbitraryWindow(dc);
+    int activeWorkspaceIndex=2;
+    int otherIndex=3;
+    //no wm is running we we set properties directly
+    assert(xcb_request_check(dc->dis, xcb_ewmh_set_current_desktop_checked(dc->ewmh, defaultScreenNumber, activeWorkspaceIndex))==NULL);
+    assert(xcb_request_check(dc->dis,xcb_ewmh_set_wm_desktop(dc->ewmh, win, otherIndex))==NULL);
+    setLogLevel(LOG_LEVEL_TRACE);
+    connectToXserver();
+    assert(isInList(getAllWindows(),win));
+    assert(getActiveWorkspaceIndex()==activeWorkspaceIndex);
+    assert(!isNotEmpty(getActiveWindowStack()));
+    assert(getSize(getWindowStack(getWorkspaceByIndex(otherIndex)))==1);
+    assert(((WindowInfo*)getValue(isInList(getAllWindows(), win)))->workspaceIndex==otherIndex);
+
+    activateWindow(getValue(isInList(getAllWindows(), win)));
+    assert(getActiveWorkspaceIndex()==otherIndex);
     END
 }END_TEST
 START_TEST(test_grab){
@@ -224,15 +237,19 @@ START_TEST(test_detect_existing_windows){
     int win=createArbitraryWindow(dc);
     int win2=createArbitraryWindow(dc);
     int win3=createArbitraryWindow(dc);
+    assert(!isWindowMapped(dc,win));
+    assert(!isWindowMapped(dc,win2));
+    assert(!isWindowMapped(dc,win3));
     mapWindow(dc, win);
     createContext(1);
     connectToXserver();
     assert(isInList(getAllWindows(), win));
     assert(isInList(getAllWindows(), win2));
     assert(isInList(getAllWindows(), win3));
-    assert(isWindowMapped(win));
-    assert(!isWindowMapped(win2));
-    assert(!isWindowMapped(win3));
+    printf("%d\n\n\n",win);
+    assert(isWindowMapped(dc,win));
+    assert(!isWindowMapped(dc,win2));
+    assert(!isWindowMapped(dc,win3));
     END
 }END_TEST
 START_TEST(test_detect_new_windows){
@@ -304,7 +321,7 @@ START_TEST(test_map_windows){
     //WAIT_UNTIL_TRUE(!isWindowMapped(win)&&isWindowMapped(win2)&&isWindowMapped(win3));
     //mapWindow(dc,win);
     //wait for all to be mapped
-    WAIT_UNTIL_TRUE(isWindowMapped(win)&&isWindowMapped(win2)&&isWindowMapped(win3));
+    WAIT_UNTIL_TRUE(isWindowMapped(dc,win)&&isWindowMapped(dc,win2)&&isWindowMapped(dc,win3));
 
     END
 }END_TEST
@@ -432,7 +449,7 @@ START_TEST(test_layouts){
             area=0;
             FOR_EACH(p1,
                 reply1=xcb_get_geometry_reply(dc->dis, xcb_get_geometry(dc->dis, getIntValue(p1)), NULL);
-                if(isWindowVisible(getIntValue(p1))){
+                if(isVisible(getValue(p1))){
 
                     area+=reply1->width*reply1->height;
                 }
@@ -446,12 +463,12 @@ START_TEST(test_layouts){
     }
     Node*p1=getActiveWindowStack();
     FOR_EACH(p1,
-        if(isWindowVisible(getIntValue(p1))){
+        if(isVisible(getValue(p1))){
             reply1=xcb_get_geometry_reply(dc->dis, xcb_get_geometry(dc->dis, getIntValue(p1)), NULL);
             Node*p2=p1->next;
             if(p2==NULL)break;
             FOR_EACH(p2,
-                if(isWindowVisible(getIntValue(p2))){
+                if(isVisible(getValue(p2))){
                     reply2=xcb_get_geometry_reply(dc->dis, xcb_get_geometry(dc->dis, getIntValue(p2)), NULL);
                     assert(intersects(&reply1->x, &reply2->x)==0);
                 }
@@ -496,7 +513,9 @@ Suite *xunit_suite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Window detection");
-    tcase_set_timeout(tc_core, 10);
+    //tcase_set_timeout(tc_core, 10);
+
+    tcase_add_test(tc_core, test_workspace_resume);
     tcase_add_test(tc_core, test_no_windows);
     tcase_add_test(tc_core, test_detect_existing_windows);
     tcase_add_test(tc_core, test_detect_new_windows);
@@ -506,7 +525,7 @@ Suite *xunit_suite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Functions");
-    //tcase_set_timeout(tc_core, 10);
+
     tcase_add_test(tc_core, test_run_or_raise);
     suite_add_tcase(s, tc_core);
 
@@ -517,12 +536,11 @@ Suite *xunit_suite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Layouts");
-
+    tcase_set_timeout(tc_core, 10);
     tcase_add_test(tc_core, test_privileged_windows_size);
     tcase_add_test(tc_core, test_auto_tile);
     tcase_add_loop_test(tc_core,test_layouts,0,LAST_LAYOUT+1);
     suite_add_tcase(s, tc_core);
-
 
     return s;
 }

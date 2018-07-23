@@ -9,5 +9,5 @@
 #include "mywm-structs.h"
 
 void *runEventLoop(void*context);
-void onGenericEvent();
+
 #endif /* EVENT_LOOP_H_ */

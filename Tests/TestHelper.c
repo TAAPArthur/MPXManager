@@ -20,13 +20,16 @@ typedef struct {
 }DisplayConnection;
 DisplayConnection* createDisplayConnection(){
     DisplayConnection*dc=malloc(sizeof(DisplayConnection));
-    dc->dpy = XOpenDisplay(NULL);
+    for(int i=0;i<30;i++){
+        dc->dpy = XOpenDisplay(NULL);
+        if(dc->dpy)
+            break;
+        msleep(50);
+    }
     if(!dc->dpy)
-        err(4, "could not open display");
+        exit(60);
     dc->dis = XGetXCBConnection(dc->dpy);
-
     dc->root=DefaultRootWindow(dc->dpy);
-
     dc->screen=DefaultScreen(dc->dpy);
     dc->ewmh = malloc(sizeof(xcb_ewmh_connection_t));
     xcb_intern_atom_cookie_t *cookie;

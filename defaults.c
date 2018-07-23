@@ -2,23 +2,17 @@
 #include <assert.h>
 
 
-#include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
 #include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-#include <X11/Xlib-xcb.h>
+#include <xcb/xproto.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/randr.h>
+#include <xcb/xinput.h>
 
-
+#include "event-loop.h"
 #include "defaults.h"
 #include "bindings.h"
-#include "event-loop.h"
 #include "wmfunctions.h"
 
 /**Mask of all events we listen for on the root window*/
@@ -55,31 +49,30 @@ Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 Rules DEFAULT_RULES[NUMBER_OF_EVENT_RULES] = {
 
-    [VisibilityNotify] = CREATE_DEFAULT_EVENT_RULE(onVisibilityEvent),
-    [CreateNotify] = CREATE_DEFAULT_EVENT_RULE(onCreateEvent),
+    [XCB_VISIBILITY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onVisibilityEvent),
+    [XCB_CREATE_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onCreateEvent),
 
-    [DestroyNotify] = CREATE_DEFAULT_EVENT_RULE(onDestroyEvent),
-    [UnmapNotify] = CREATE_DEFAULT_EVENT_RULE(onUnmapEvent),
-    [MapRequest] = CREATE_DEFAULT_EVENT_RULE(onMapRequestEvent),
-    [ConfigureRequest] = CREATE_DEFAULT_EVENT_RULE(onConfigureRequestEvent),
+    [XCB_DESTROY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onDestroyEvent),
+    [XCB_UNMAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onUnmapEvent),
+    [XCB_MAP_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onMapRequestEvent),
+    [XCB_CONFIGURE_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onConfigureRequestEvent),
 
 
-    [PropertyNotify] = CREATE_DEFAULT_EVENT_RULE(onPropertyEvent),
-    [ClientMessage] = CREATE_DEFAULT_EVENT_RULE(onClientMessage),
+    [XCB_PROPERTY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onPropertyEvent),
+    [XCB_CLIENT_MESSAGE] = CREATE_DEFAULT_EVENT_RULE(onClientMessage),
 
-    [GenericEvent] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
+    [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
 
-    [XI_KeyPress + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XI_KeyRelease + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XI_ButtonPress + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XI_ButtonRelease + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XI_Enter + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onEnterEvent),
-    [XI_FocusIn + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
-    [XI_FocusOut + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusOutEvent),
-    [XI_HierarchyChanged + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
+    [XCB_INPUT_DEVICE_KEY_PRESS + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_DEVICE_KEY_RELEASE + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_DEVICE_BUTTON_PRESS + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_DEVICE_BUTTON_RELEASE + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onEnterEvent),
+    [XCB_INPUT_DEVICE_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
+    [XCB_INPUT_DEVICE_FOCUS_OUT + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusOutEvent),
+    [XCB_INPUT_XI_CHANGE_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
 
 };
-
 
 void onStartup(){
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
@@ -90,47 +83,47 @@ void onStartup(){
 
 
 void onHiearchyChangeEvent(){
-    XIHierarchyEvent *event=getLastEvent();
-    if((event->flags & (XIMasterAdded |XIMasterRemoved)) ==0)
+    xcb_input_hierarchy_event_t*event=getLastEvent();
+    if((event->flags & (XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED |XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED)) ==0)
         return;
+    /*TODO
     for (int i = 0; i < event->num_info; i++){
         if (event->info[i].flags & XIMasterRemoved)
             removeMaster(event->info[i].deviceid);
         else if (event->info[i].flags & XIMasterAdded)
             addMaster(event->info[i].deviceid);
     }
+    */
 }
 void onDeviceEvent(){
-    XIDeviceEvent *event=getLastEvent();
+    xcb_input_device_key_press_event_t*event=getLastEvent();
 
-    LOG(LOG_LEVEL_TRACE,"deviec event %d %d %d\n",event->type,event->deviceid,event->sourceid);
-    if(event->evtype<XI_ButtonPress){//key press/release
-        setActiveMasterByKeyboardId(event->deviceid);
+    LOG(LOG_LEVEL_TRACE,"deviec event %d %d %d\n",event->response_type,event->device_id);
+    if(event->response_type<XCB_INPUT_DEVICE_BUTTON_PRESS){//key press/release
+        setActiveMasterByKeyboardId(event->device_id);
 
         //setActiveMasterByKeyboardSlaveId(event->deviceid);
     }
     else{//button press/release
         //setActiveMasterByKeyboardSlaveId(event->deviceid);
-        setActiveMasterByMouseId(event->deviceid);
+        setActiveMasterByMouseId(event->device_id);
         setLastWindowClicked(event->child);
     }
 
-    checkBindings(event->detail,event->mods.effective,event->evtype,
+    checkBindings(event->detail,event->state,event->response_type,
             getWindowInfo(event->child));
 }
 
 void onConfigureRequestEvent(){
-    /*
+
     LOG(LOG_LEVEL_TRACE,"configure request received\n");
-    XConfigureRequestEvent *event = getLastEvent();
-    int win=event->window;
-    int *values=&event->x;
-    moveResize(win,values);*/
+    xcb_configure_request_event_t *event=getLastEvent();
+    processConfigureRequest(event->window,&event->x,event->sibling,event->stack_mode,event->value_mask);
 }
 void onCreateEvent(){
 
     LOG(LOG_LEVEL_TRACE,"create event received\n");
-    XCreateWindowEvent *event= getLastEvent();
+    xcb_create_notify_event_t *event= getLastEvent();
     if(event->override_redirect && !MANAGE_OVERRIDE_REDIRECT_WINDOWS)return;
 
     WindowInfo*winInfo=createWindowInfo(event->window);
@@ -143,68 +136,64 @@ void onCreateEvent(){
 }
 void onDestroyEvent(){
     LOG(LOG_LEVEL_TRACE,"destroy event received\n");
-    XDestroyWindowEvent *event= getLastEvent();
+    xcb_destroy_notify_event_t *event= getLastEvent();
     deleteWindow(event->window);
 }
 void onVisibilityEvent(){
     LOG(LOG_LEVEL_TRACE,"made it to visibility request event\n");
-    XVisibilityEvent*event= getLastEvent();
+    xcb_visibility_notify_event_t *event= getLastEvent();
     setVisible(getWindowInfo(event->window),event->state);
 
 }
 void onMapRequestEvent(){
     LOG(LOG_LEVEL_TRACE,"made it to map request event\n");
-    XMapRequestEvent *event= getLastEvent();
-    WindowInfo*info=getWindowInfo(event->window);
-    if(info)
-        setMapped(info,XCB_MAP_STATE_VIEWABLE);
-    else
-        xcb_map_window(dis, event->window);
+    xcb_map_request_event_t*event= getLastEvent();
+    updateMapState(event->window,1);
 }
 void onUnmapEvent(){
-    XUnmapEvent *event= getLastEvent();
-    setMapped(getWindowInfo(event->window),XCB_MAP_STATE_UNMAPPED);
+    xcb_unmap_notify_event_t*event= getLastEvent();
+    updateMapState(event->window,0);
 }
+
+
+
+
 void onEnterEvent(){
-    XIEnterEvent *event= getLastEvent();
+    xcb_input_enter_event_t*event= getLastEvent();
     setActiveMasterByMouseId(event->deviceid);
     focusWindow(event->child);
 }
 void onFocusInEvent(){
-    XIFocusInEvent *event= getLastEvent();
+    xcb_input_focus_in_event_t*event= getLastEvent();
     LOG(LOG_LEVEL_DEBUG,"slave id %d\n",event->deviceid);
     setActiveMasterByKeyboardId(event->deviceid);
     //setBorder(event->child);
 }
 void onFocusOutEvent(){
-    XIFocusOutEvent *event= getLastEvent();
+    xcb_input_focus_out_event_t *event= getLastEvent();
     setActiveMasterByKeyboardId(event->deviceid);
-
     //resetBorder(event->child);
 }
 
 void onPropertyEvent(){
-    XPropertyEvent *event=getLastEvent();
+    xcb_property_notify_event_t*event=getLastEvent();
     loadWindowProperties(getWindowInfo(event->window));
 }
 
 void onClientMessage(){
-    XClientMessageEvent *event=getLastEvent();
-    long*data=event->data.l;
+    xcb_client_message_event_t*event=getLastEvent();
+    xcb_client_message_data_t data=event->data;
     Window win=event->window;
-    Atom message=event->message_type;
+    Atom message=event->type;
     Node*head=getAllWindows();
     assert(getSize(head));
 
-    WindowInfo*info=createWindowInfo(win);
-    loadWindowProperties(info);
-    dumpWindowInfo(info);
     if(message==ewmh->_NET_CURRENT_DESKTOP)
-        activateWorkspace(data[0]);
+        activateWorkspace(data.data32[0]);
     else if(message==ewmh->_NET_ACTIVE_WINDOW){
         //data[2] reqeuster's currently active window
 
-        setActiveMasterNodeById(getNextMasterNodeFocusedOnWindow(data[2]));
+        setActiveMasterNodeById(getNextMasterNodeFocusedOnWindow(data.data32[2]));
         activateWindow(getWindowInfo(win));
     }
     else if(message== ewmh->_NET_SHOWING_DESKTOP)
@@ -221,11 +210,15 @@ void onClientMessage(){
         moveResize(win,intData);
     }*/
     //change window's workspace
-    else if(message==ewmh->_NET_WM_DESKTOP)
-        moveWindowToWorkspace(getWindowInfo(win), data[0]);
+    else if(message==ewmh->_NET_WM_DESKTOP){
+        if(data.data32[0]==NO_WORKSPACE)
+            addState(getWindowInfo(win),STICKY_MASK);
+        else
+            moveWindowToWorkspace(getWindowInfo(win), data.data32[0]);
+    }
     else if (message==ewmh->_NET_WM_STATE){
-        dumpAtoms((xcb_atom_t *) &data[1], 2);
-        setWindowStateFromAtomInfo(getWindowInfo(win),(xcb_atom_t *) &data[1], 2,data[0]);
+        dumpAtoms((xcb_atom_t *) &data.data32[1], 2);
+        setWindowStateFromAtomInfo(getWindowInfo(win),(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
     }
     /*
     //ignored (we are allowed to)
@@ -236,14 +229,15 @@ void onClientMessage(){
 }
 
 void onGenericEvent(){
-    XEvent*event=getLastEvent();
-    XGenericEventCookie *cookie = &event->xcookie;
-    if(XGetEventData(dpy, cookie)){
-        setLastEvent(cookie->data);
-        LOG(LOG_LEVEL_TRACE,"generic event detected %d %s\n",cookie->evtype,genericEventTypeToString(cookie->evtype));
-        applyGenericEventRules(cookie->evtype, NULL);
+    xcb_ge_generic_event_t*event=getLastEvent();
+
+
+    const xcb_query_extension_reply_t*reply=xcb_get_extension_data(dis, &xcb_input_id);
+
+    if(event->extension == reply->major_opcode){
+        LOG(LOG_LEVEL_TRACE,"generic event detected %d %s\n",event->response_type,genericEventTypeToString(event->response_type));
+        applyEventRules(event->response_type+GENERIC_EVENT_OFFSET, NULL);
     }
     else LOG(LOG_LEVEL_ERROR,"could not get event data\n");
-    XFreeEventData(dpy, cookie);
 }
 

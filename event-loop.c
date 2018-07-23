@@ -55,25 +55,31 @@ void *runEventLoop(void*c){
     //pthread_create(&xcbThread, NULL, runXcbEventLoop, NULL);
     //pthread_create(&scriptingThread, NULL, runOtherLoop, NULL);
     LOG(LOG_LEVEL_TRACE,"starting event loop\n");
-    while(!isShuttingDown() && dpy) {
-        XEvent event;
-        LOG(LOG_LEVEL_TRACE,"Waiting for event\n");
-        XNextEvent(dpy,&event);
-        if(!dpy){
-            LOG(LOG_LEVEL_DEBUG,"X connection has been lost\n");
-            continue;
-        }
-        LOG(LOG_LEVEL_TRACE,"refular event detected %d %s %d\n",
-                event.type,eventTypeToString(event.type),getSize(eventRules[event.type]));
-        LOCK
-        setLastEvent(&event);
 
-        applyEventRules(event.type,NULL);
-        if(!isShuttingDown() && !XPending(dpy)){
-            tileWindows();
-            XFlush(dpy);
-            xcb_flush(dis);
+    xcb_generic_event_t *event;
+    while(!isShuttingDown() && dpy) {
+        LOG(LOG_LEVEL_TRACE,"Waiting for event\n");
+        event = xcb_wait_for_event (dis);
+        while(event){
+
+            if(!dis || !event){
+                LOG(LOG_LEVEL_DEBUG,"X connection has been lost\n");
+                continue;
+            }
+            LOG(LOG_LEVEL_TRACE,"refular event detected %d %s %d\n",
+                    event->response_type,eventTypeToString(event->response_type),getSize(eventRules[event->response_type]));
+            LOCK
+            setLastEvent(&event);
+            applyEventRules(event->response_type,NULL);
+            event=xcb_poll_for_event(dis);
+            if(!isShuttingDown())
+                break;
         }
+         if(isDirty()){
+            tileWindows();
+            xcb_flush(dis);
+         }
+
         UNLOCK
         LOG(LOG_LEVEL_TRACE,"event proccesed\n");
     }

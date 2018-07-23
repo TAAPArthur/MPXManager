@@ -121,9 +121,7 @@ int applyRule(Rules*rule,WindowInfo*info){
 
     return 0;
 }
-int applyGenericEventRules(int type,WindowInfo*info){
-    return applyEventRules(type+GENERIC_EVENT_OFFSET,info);
-}
+
 int applyEventRules(int type,WindowInfo*info){
     assert(type>=0);
     assert(type<NUMBER_OF_EVENT_RULES);

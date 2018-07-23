@@ -37,12 +37,6 @@ void createContext(int numberOfWorkspaces);
 WindowInfo* createWindowInfo(Window id);
 
 
-
-
-
-
-
-
 /**
  *
  * @return the number of workspaces
@@ -136,7 +130,7 @@ Node* getMasterWindowStack();
  * @param dir wheter to get teh next (>0) or the prev (<=0) window
  * @return the next or previous window depending on dir
  */
-Node* getNextWindowInFocusHistory(int dir);
+Node* getNextWindowInFocusStack(int dir);
 
 /**
  * Get the node containing the window master is
@@ -150,7 +144,7 @@ Node* getFocusedWindowByMaster(Master*master);
  * currently focused on. This should never be null
  * @return the currently focused window for the active master
  */
-Node* getFocusedWindow();
+WindowInfo* getFocusedWindow();
 /**
  *
  * @param m

@@ -41,9 +41,9 @@ void onFocusInEvent();
 void onFocusOutEvent();
 void onPropertyEvent();
 void onClientMessage();
-void moveResize(Window win,int*values);
+void processConfigureRequest(Window win,short values[5],xcb_window_t sibling,int stackMode,int mask);
 void detectMonitors();
-
+void onGenericEvent();
 void onStartup();
 
 
