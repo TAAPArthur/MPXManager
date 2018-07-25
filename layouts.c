@@ -2,6 +2,7 @@
 #include <string.h>
 #include "layouts.h"
 #include "wmfunctions.h"
+#include "window-properties.h"
 #include "assert.h"
 
 #define CONFIG_STACK    5

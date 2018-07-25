@@ -11,7 +11,7 @@
 #include <assert.h>
 
 #include "bindings.h"
-#include "defaults.h"
+#include "default-rules.h"
 #include "functions.h"
 #include "wmfunctions.h"
 #include "layouts.h"
@@ -20,8 +20,6 @@ extern int DEVICE_EVENT_MASKS;
 extern int IGNORE_MASK;
 extern int NUMBER_OF_WORKSPACES;
 extern char* workspaceNames[];
-extern Binding*bindings[4];
-extern int bindingLengths[4];
 
 #define ADD_BINDINGS \
         bindings[0]=(Binding*)onKeyPressBindings; \

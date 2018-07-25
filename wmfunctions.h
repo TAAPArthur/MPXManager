@@ -10,82 +10,41 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XI.h>
 
+#include "bindings.h"
 #include "mywm-structs.h"
 #include "logger.h"
 #include "mywm-util.h"
+#include <xcb/xinput.h>
+
 
 #define LEN(X) (sizeof X / sizeof X[0])
 
 
-extern char* SHELL;
-extern char MANAGE_OVERRIDE_REDIRECT_WINDOWS;
+#define GENERIC_EVENT_OFFSET LASTEvent
+#define LAST_XI_EVENT   GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS
 
-typedef enum{REMOVE,ADD,TOGGLE}MaskAction;
-
-
-
-void msleep(int mil);
-
+enum{
+    //if all rules are passed through, then the window is added as a normal window
+    onXConnection=LAST_XI_EVENT,
+    ProcessingWindow,
+    WorkspaceChange,WindowWorkspaceChange,
+    WindowLayerChange,LayoutChange,
+    TilingWindows,
+    NUMBER_OF_EVENT_RULES
+};
+extern Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 /**
  * Window Manager name used to comply with EWMH
  */
 #define WM_NAME "My Window Manger"
-/**XDisplay instance (only used for events/device commands)*/
-extern Display *dpy;
-/**XCB display instance*/
-extern xcb_connection_t *dis;
-/**EWMH instance*/
-extern xcb_ewmh_connection_t *ewmh;
-/**Root window*/
-extern int root;
-/**Default screen (assumed to be only 1*/
-extern xcb_screen_t* screen;
+
 extern int defaultScreenNumber;
 
-
-extern int ROOT_EVENT_MASKS;
-extern int NON_ROOT_EVENT_MASKS;
-extern int DEVICE_EVENT_MASKS;
-
-extern int CHAIN_BINDING_GRAB_MASKS;
-
-extern int IGNORE_MASK;
-extern int NUMBER_OF_WORKSPACES;
-extern int IGNORE_MASK;
 extern int NUMBER_OF_WORKSPACES;
 extern int DEFAULT_BORDER_WIDTH;
 
-
 int isShuttingDown();
-/**
- * if deviceId is a slave, will return the master device;
- * else,  deviceId is a master and the parnter master id is returned
- * @param context
- * @param deviceId
- * @return
- */
-int getAssociatedMasterDevice(int deviceId);
-/**
- * @return the id of the master keyboard associated with the master pointer
- */
-int getClientKeyboard();
-/**
- * Wrapper around XIUngrabDevice
- * Ungrabs the keyboard or mouse
- *
- * @param id    id of the device to ungrab
- */
-int ungrabDevice(int id);
-/**
- * Wrapper around XIGrabDevice
- *
- * Grabs the keyboard or mouse
- * @param id    if of the device to grab
- * @param maskValue mask of the events to grab
- * @see XIGrabDevice
- */
-int grabDevice(int deviceID,int maskValue);
 
 
 /**
@@ -95,39 +54,6 @@ int grabDevice(int deviceID,int maskValue);
  */
 void broadcastEWMHCompilence();
 
-/**
- * Wraps XIGrabButton
- * @see XIGrabButton
- */
-int grabButton(int deviceID,int button,int mod,int maskValue);
-/**
- * Wraps XIUnGrabButton
- * @see XIGrabButton
- */
-int ungrabButton(int deviceID,int button,int mod);
-
-/**
- * Wraps XIGrabKey
- */
-int grabKey(int deviceID,int keyCode,int mod,int mask);
-/**
- *
- * Wraps XIUnGrabKey
- */
-int ungrabKey(int deviceID,int keyCode,int mod);
-
-/**
- * Sets the active master to be the device associated with  mouseSlaveId
- * @param mouseSlaveId either master pointer or slave pointerid
- * @return 1 iff mouseSlaveId was a master pointer device
- */
-int setActiveMasterByMouseId(int mouseSlaveId);
-/**
- * Sets the active master to be the device associated with keyboardSlaveId
- * @param keyboardSlaveId either master keyboard or slave keyboard (or master pointer)id
- * @return 1 iff keyboardSlaveId was a master keyboard device
- */
-int setActiveMasterByKeyboardId(int keyboardSlaveId);
 
 /**
  * Tile the layouts according to layout
@@ -139,8 +65,6 @@ void applyLayout(Workspace*workspace,Layout* layout);
  * Retile all visible workspaces with their active layout
  */
 void tileWindows();
-
-
 
 /**
  * Sets the border color for the given window
@@ -179,65 +103,13 @@ int deleteWindow(xcb_window_t winToRemove);
  */
 void runCommand(char* command);
 
-/**
- *
- * @param winInfo
- * @return 1 iff external resize requests should be granted
- */
-int isExternallyResizable(WindowInfo* winInfo);
-/**
- *
- * @param winInfo
- * @return 1 iff external move requests should be granted
- */
-int isExternallyMoveable(WindowInfo* winInfo);
-
-/**
- *Removes,Adds or toggles the given mask for the given window
- * @param winInfo
- * @param mask
- * @param action an instance of MaskAction
- */
-void updateState(WindowInfo*winInfo,int mask,MaskAction action);
-
-/**
- * Adds the states give by mask to the window
- * @param winInfo
- * @param mask
- */
-void addState(WindowInfo*winInfo,int mask);
-/**
- * Removes the states give by mask from the window
- * @param winInfo
- * @param mask
- */
-void removeState(WindowInfo*winInfo,int mask);
-
-/**
- * Determines if a window should be tiled given its mapState and masks
- * @param winInfo
- * @return true if the window should be tiled
- */
-int isTileable(WindowInfo* winInfo);
-/**
- *
- * @param windowStack the stack of windows to check from
- * @return the number of windows that can be tiled
- */
-int getNumberOfTileableWindows(Node*windowStack);
-/**
- * Returns the max dims allowed for this window based on its mask
- * @param m the monitor the window is one
- * @param winInfo   the window
- * @param height    whether to check the height(1) or the width(0)
- * @return the max dimension or 0 if the window has not relevant mask
- */
-int getMaxDimensionForWindow(Monitor*m,WindowInfo*winInfo,int height);
 
 
-void removeWindowFromAllWorkspaces(WindowInfo* winInfo);
+
 void setWorkspaceNames(char*names[],int numberOfNames);
 void activateWorkspace(int workspaceIndex);
+
+void removeWindowFromAllWorkspaces(WindowInfo* winInfo);
 void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex);
 void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer);
 
@@ -245,16 +117,19 @@ void toggleShowDesktop();
 
 
 void switchToWorkspace(int workspaceIndex);
-int checkError(xcb_void_cookie_t cookie,int cause,char*msg);
+
 void scan();
 
-
-void closeConnection();
-void quit();
 /**
- * Grab all specified keys/buttons and listen for root window events
+ * Closes an open XConnection
  */
-void registerForEvents();
+void closeConnection();
+/**
+ * exits the application
+ */
+void quit();
+
+void connectToXserver();
 /**
  * Called when an connection to the Xserver has been established
  */
@@ -276,10 +151,8 @@ void detectMonitors();
 void processNewWindow(WindowInfo* winInfo);
 void avoidStruct(WindowInfo*info);
 
-/**
- * Add all existing masters to the list of master devices
- */
-void initCurrentMasters();
+
+
 /**
  * Sets the window state based on a list of attoms
  * @param winInfo
@@ -299,38 +172,7 @@ void registerWindow(WindowInfo*winInfo);
 void detectMonitors();
 
 void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LEN]);
-
-
-
-/**
- *
- * @param winInfo the window whose map state to query
- * @return the window map state either UNMAPPED(0) or MAPPED(1)
- */
-int isMappable(WindowInfo* winInfo);
-/**
- * Sets the mapped state to UNMAPPED(0) or MAPPED(1)
- * @param win the window whose state is being modified
- * @param state the new state
- * @return  true if the state actuall changed
- */
-void updateMapState(int id,int state);
-/**
- *
- * @param winInfo
- * @return true if the window can receive focus
- */
-int isActivatable(WindowInfo* winInfo);
-int isVisible(WindowInfo* winInfo);
-void setVisible(WindowInfo* winInfo,int v);
-void setDefaultWindowMasks(int mask);
-//Modifes window masks that determines special propertie of window
-/**
- *
- * @param info
- * @return The mask for the given window
- */
-int getWindowMask(WindowInfo*info);
+void processConfigureRequest(Window win,short values[5],xcb_window_t sibling,int stackMode,int mask);
 
 
 /**
@@ -338,5 +180,37 @@ int getWindowMask(WindowInfo*info);
  * @param win
  */
 void killWindow(xcb_window_t win);
+
+//extern const int bindingMasks[4];
+
+
+/**
+ * moves a window to a specified layer for all workspaces it is in
+ * @param win
+ * @param layer
+ */
+void moveWindowToLayerForAllWorkspaces(WindowInfo* win,int layer);
+/**
+ * MOves a window to the specifed layer in a given workspace
+ * @param win
+ * @param workspaceIndex
+ * @param layer
+ */
+void moveWindowToLayer(WindowInfo* win,int workspaceIndex,int layer);
+
+
+/**
+ * Clears the dirty bit
+ */
+void setClean();
+/**
+ * marks the context as dirty and in need of a retile
+ */
+void setDirty();
+/**
+ * Checks to see if any visible window stack has been modified
+ * @return true if a visible window stack has been modified
+ */
+int isDirty();
 
 #endif

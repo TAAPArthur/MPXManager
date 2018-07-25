@@ -1,50 +1,39 @@
-
-/**
- * @file defaults.h
- * @brief Sane defaults
- *
- */
 #ifndef DEFAULTS_H_
 #define DEFAULTS_H_
 
+#include <xcb/xcb.h>
+#include <xcb/xcb_ewmh.h>
+#include <X11/Xlib.h>
 
-#include "bindings.h"
 #include "mywm-structs.h"
-#include <X11/extensions/XInput2.h>
+
+extern int ROOT_EVENT_MASKS;
+extern int NON_ROOT_EVENT_MASKS;
+extern int DEVICE_EVENT_MASKS;
+extern char* SHELL;
+extern char MANAGE_OVERRIDE_REDIRECT_WINDOWS;
+extern int defaultWindowMask;
+extern int CHAIN_BINDING_GRAB_MASKS;
+
+extern int anyModier;
+extern int IGNORE_MASK;
+
+enum{KEY_PRESS,KEY_RELEASE,MOUSE_PRESS,MOUSE_RELEASE};
+extern Binding*deviceBindings[4];
+extern int deviceBindingLengths[4];
+extern int bindingMasks[4];
+extern char IGNORE_SEND_EVENT;
+
+/**XDisplay instance (only used for events/device commands)*/
+extern Display *dpy;
+/**XCB display instance*/
+extern xcb_connection_t *dis;
+/**EWMH instance*/
+extern xcb_ewmh_connection_t *ewmh;
+/**Root window*/
+extern int root;
+/**Default screen (assumed to be only 1*/
+extern xcb_screen_t* screen;
 
 
-
-
-
-
-
-void onHiearchyChangeEvent();
-void onDeviceEvent();
-/**
- * Set initial window config
- * @param event
- */
-void onConfigureRequestEvent();
-void onVisibilityEvent();
-void onCreateEvent();
-void onDestroyEvent();
-
-
-/**
- * Called when the a client application changes the window's state from unmapped to mapped.
- * @param context
- */
-void onMapRequestEvent();
-void onUnmapEvent();
-void onEnterEvent();
-void onFocusInEvent();
-void onFocusOutEvent();
-void onPropertyEvent();
-void onClientMessage();
-void processConfigureRequest(Window win,short values[5],xcb_window_t sibling,int stackMode,int mask);
-void detectMonitors();
-void onGenericEvent();
-void onStartup();
-
-
-#endif /* DEFAULTS_H_ */
+#endif

@@ -58,7 +58,7 @@
 
 #include "event-loop.h"
 #include "config.h"
-#include "defaults.h"
+#include "default-rules.h"
 #include "mywm-util.h"
 
 int enterEventLoop=1;

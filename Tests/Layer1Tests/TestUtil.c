@@ -1,8 +1,5 @@
 #include "../../mywm-structs.h"
-
 #include "../../util.h"
-
-
 
 WindowInfo* createStruct(int i){
     WindowInfo* t=malloc(sizeof(WindowInfo));
@@ -100,7 +97,6 @@ START_TEST(test_single_node_insertion){
     assert(getIntValue(n1->next)==originalHeadValue);
     assert(getSize(n1)==2);
 
-
     int value2=size+2;
     singleNode=createHead(&value2);
 
@@ -109,7 +105,6 @@ START_TEST(test_single_node_insertion){
     assert(getIntValue(n1)==value);
     assert(getIntValue(n1->next)==value2);
     assert(getSize(n1)==3);
-
 
 }END_TEST
 
@@ -213,7 +208,22 @@ START_TEST(test_in_list){
     for(int i=0;i<size;i++)
         assert(isInList(n, i+1));
 }END_TEST
-
+int assert_not_reached(){
+    assert(0);
+    return 0;
+}
+START_TEST(test_get_max){
+    Node*head=createLinkedList(size);
+    Node*node;
+    node=createEmptyHead();
+    GET_MAX(node,1,assert_not_reached());
+    assert(node==NULL);
+    for(int i=1;i<-size;i++){
+        node=head;
+        GET_MAX(node,getIntValue(node)<=i,getIntValue(node));
+        assert(getIntValue(node)==i);
+    }
+}END_TEST
 /**
  * Checks getLast
  * @param START_TEST(test_get_last)
@@ -242,21 +252,25 @@ START_TEST(test_get_nth){
     assert(last->prev!=NULL);
 } END_TEST
 
-
-
-
 /**
  * Test insertBefore and insertAfter
  */
 START_TEST(test_list_join){
-    for(int i=0;i<2;i++){
+    for(int i=0;i<6;i++){
         Node*n1=createLinkedList(size);
         Node*n2=createLinkedListAssert(createEmptyHead(),size,size+1,0);
         assert(getSize(n1)==size);
         assert(getSize(n2)==size);
-        int v1=getIntValue(i?n2:n1);
-        int v2=getIntValue(i?n1:n2);
-        if(i){
+
+        int totalSize = size*2 - i/2;
+        if(i==2 || i>=4)
+            n2=n2->next;
+        if(i==3 || i>=4)
+            n1=n1->next;
+        int v1=getIntValue(i%2?n2:n1);
+        int v2=getIntValue(i%2?n1:n2);
+
+        if(i%2){
             int v3=getIntValue(n2->next);
             insertBefore(n1, n2);
             assert(getIntValue(n1->next)==v3);
@@ -265,16 +279,16 @@ START_TEST(test_list_join){
             insertAfter(n1, n2);
             assert(getIntValue(n1->next)==v2);
         }
-        assert(getSize(n1)==size*2);
         assert(getIntValue(n1)==v1);
-
-        assert(getSize(n1->next)==size*2-1);
-
+        assert(getSize(n1)==totalSize);
         //check to make sure every value is present
+        int hits=0;
         for(int i=1;i<=size*2;i++)
-            assert(isInList(n1, i));
+            hits+=isInList(n1, i)?1:0;
+        assert(hits==totalSize);
     }
 }END_TEST
+
 
 START_TEST(test_cirular_list_insert){
     Node*head=createCircularHead(createStruct(1));
@@ -308,7 +322,6 @@ START_TEST(test_swap){
     assert(getIntValue(n)==2);
     assert(getIntValue(n->next)==1);
 }END_TEST
-
 
 
 START_TEST(test_delete_node){
@@ -467,6 +480,7 @@ Suite *utilSuite(void) {
     tcase_add_test(tc_core, test_iter_circular);
     tcase_add_test(tc_core, test_in_list);
     tcase_add_test(tc_core, test_get_nth);
+    tcase_add_test(tc_core, test_get_max);
     suite_add_tcase(s, tc_core);
 
 

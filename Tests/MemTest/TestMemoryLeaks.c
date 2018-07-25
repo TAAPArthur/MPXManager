@@ -1,7 +1,7 @@
+#include "../../default-rules.h"
 #include "../../mywm-util.h"
 #include "../../mywm-util-private.h"
 #include "../../wmfunctions.h"
-#include "../../defaults.h"
 #include "../../event-loop.h"
 
 #include "../TestHelper.c"
@@ -80,7 +80,7 @@ void testEventLoop(){
     }
     WAIT_FOR(getSize(getAllWindows())!=size*2)
     for(int i=0;i<size/2;i++){
-        distroyWindow(dc, win[i]);
+        assert(NULL==xcb_request_check(dc->dis, xcb_destroy_window_checked(dc->dis, win)));
     }
     quit();
     END

@@ -23,6 +23,7 @@ int isNotEmpty(Node*head){
     return head->value?1:0;
 }
 int getSize(Node*head){
+    assert(head);
     int size=0;
     FOR_EACH_CIRCULAR(head,size++)
     return size;
@@ -38,8 +39,6 @@ Node* isInList(Node* list,int value){
 Node* getNth(Node* list,int n){
     assert(list!=NULL);
     int i=0;
-    if(!isNotEmpty(list))
-        return NULL;
     UNTIL_FIRST(list,i++==n || n<0 && !list->next)
     return list;
 }
@@ -47,7 +46,6 @@ Node* getNth(Node* list,int n){
 Node* getLast(Node* list){
     return getNth(list, -1);
 }
-
 
 int getIntValue(Node*node){
     return node->value?*(int*)node->value:0;
@@ -58,18 +56,17 @@ void* getValue(Node*node){
 
 
 void _freeNode(Node* node){
-    if(!node)
-        return;
+    if(!node)return;
     free(node);
     return;
 }
 void clearList(Node* head){
-    destroyList(head->next);
+    if(head->next)
+        destroyList(head->next);
     head->value=NULL;
 }
 void destroyList(Node* head){
-    if(!head)
-        return;
+    assert(head);
     if(head->prev)
         head->prev->next=NULL;
     while(head){
@@ -79,11 +76,9 @@ void destroyList(Node* head){
     }
 }
 
-
 Node* popNode(Node* node){
 
-    if(!node)
-        return NULL;
+    assert(node);
     if(!node->prev){ //head of list
         if(node->next){
             swap(node,node->next);
@@ -166,8 +161,9 @@ void insertHead(Node* head,void *value){
     head->value=value;
 }
 int shiftToHead(Node* list,Node *node){
-    assert(node!=NULL);
-    if(list==node || !node || list==NULL)
+    assert(node);
+    assert(list);
+    if(list==node)
         return 0;
 
     assert(node->prev);

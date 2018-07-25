@@ -7,34 +7,48 @@
 #ifndef MYWM_XUTIL
 #define MYWM_XUTIL
 
-
 #include "util.h"
 #include "mywm-structs.h"
 
-extern Layout (DEFAULT_LAYOUTS[]);
+extern Layout DEFAULT_LAYOUTS[];
 extern int NUMBER_OF_DEFAULT_LAYOUTS;
+
 /**
  * @return the current time in seconds
  */
 unsigned int getTime ();
+/**
+ * Sleep of mil milliseconds
+ * @param mil number of milliseconds to sleep
+ */
+void msleep(int mil);
 
-void destroyContext();
 /**
  * Initializes a context object to default values.
  *
  * All Node points are set to point to an empty node.
  * Workspaces is set to point to the head of an array with size==
  * numberOfWorkspaces
+ *
+ * If a context already exists, it is first destroyed
  * @param numberOfWorkspaces    the number of workspaces
  */
 void createContext(int numberOfWorkspaces);
 
 /**
+ * Destroys the reference to context and clears all resources.
+ * It does nothing if context points to NULL
+ */
+void destroyContext();
+
+/**
  * Creates a pointer to a WindowInfo object and sets its id to id
+ *
+ * The workspaceIndex of the window is set to NO_WORKSPACE
  * @param id    the id of the WindowInfo object
  * @return  pointer to the newly created object
  */
-WindowInfo* createWindowInfo(Window id);
+WindowInfo* createWindowInfo(unsigned int id);
 
 
 /**
@@ -59,35 +73,53 @@ void* getLastEvent();
 
 
 
-
-/**
- * Creates and adds a given master with id = keyboardMasterId
- * if a master with this id does not already exist.
-
- * @param keyboardMasterId  the id of the master device.
- * This is expected to be the id of a master keyboard, but any int will work
- * @return 1 iff a new master was inserted; 0 o.w.
- */
-int addMaster(unsigned int keyboardMasterId);
 /**
  *
  * @return a list of all master devices
  */
 Node* getAllMasters();
 /**
+ * Creates and adds a given master with id = keyboardMasterId
+ * if a master with this id does not already exist to the head of the
+ * master list.
+ * Note the new master does not replace the active master unless there
+ * the master list is empty
+ * @param keyboardMasterId  the id of the master device.
+ * This is expected to be the id of a master keyboard, but any int will work
+ * @return 1 iff a new master was inserted; 0 o.w.
+ */
+int addMaster(unsigned int keyboardMasterId,unsigned int pointerMasterId);
+
+/**
  * Removes the master with the specifed id
  * @param id    the id to remove
  * @return 1 iff a node was removed 0 o.w.
  */
 int removeMaster(unsigned int id);
+/**
+ * Removes a window from the master stack
+ * @param masterNode
+ * @param winToRemove
+ * @return
+ */
+int removeWindowFromMaster(Master*master,int winToRemove);
 
-
+/**
+ * @return the id of the active master
+ */
+int getActiveMasterKeyboardID();
+/**
+ * @return the pointer id of the active master
+ */
+int getActiveMasterPointerID();
 /**
  * @return  whether of not the master window stack will be updated on focus change
 */
 int isFocusStackFrozen();
 /**
- * If value, the master window stack will not be updated of focuse change
+ * If value, the master window stack will not be updated on focus change
+ * Else the the focused window will be shifted to the top of the master stack,
+ * the master stack and the focused will remain in sync after all focus changes
  * @param value whether the focus stack is frozen or not
 */
 void setFocusStackFrozen(int value);
@@ -127,7 +159,7 @@ Node* getMasterWindowStack();
 
 /**
  * Get next/prev windows in master's stacking order
- * @param dir wheter to get teh next (>0) or the prev (<=0) window
+ * @param dir wheter to get teh next (>0) or the prev (<0) window
  * @return the next or previous window depending on dir
  */
 Node* getNextWindowInFocusStack(int dir);
@@ -140,11 +172,19 @@ Node* getNextWindowInFocusStack(int dir);
  */
 Node* getFocusedWindowByMaster(Master*master);
 /**
- * Get the node containing the window the master is
- * currently focused on. This should never be null
+ * Get the WindowInfo representing the window the master is
+ * currently focused on.
+ * This value will be should be updated whenever the focus for the active
+ * master changes. If the focused window is deleted, then the this value is
+ * set the next window if the master focus stack
  * @return the currently focused window for the active master
  */
 WindowInfo* getFocusedWindow();
+/**
+ *
+ * @return the node in the master window list representing the focused window
+ */
+Node* getFocusedWindowNode();
 /**
  *
  * @param m
@@ -152,42 +192,18 @@ WindowInfo* getFocusedWindow();
  */
 int getFocusedTime(Master*m);
 
-
-
-
-
-
-
 /**
  * Returns a struct with stored metadata on the given window
  * @param win
  * @return pointer to struct with info on the given window
  */
 WindowInfo* getWindowInfo(unsigned int win);
-/**
- * Retunrs list of windows in the active workspace
- * @param context
- * @return
- */
-Node* getWindowsOfActiveMaster();
+
 
 /**
  * @return a list of windows with the most recently used windows first
  */
 Node*getAllWindows();
-
-
-Node* getActiveWindowsAtLayer(int layer);
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -208,19 +224,24 @@ int addWindowInfo(WindowInfo* wInfo);
  * @return true if this dock was added
  */
 int addDock(WindowInfo* info);
-
+void setDockArea(WindowInfo* info,int numberofProperties,int properties[WINDOW_STRUCT_ARRAY_SIZE]);
 
 
 /**
  * To be called when a master focuses a given window.
- * The window is added to
- * the active master's stack
- * The active workspace's stack
- * And the master is promoted to the head of the master stack
- * @param context
+ *
+ * If the window is not in the window list, nothing is done
+ * else
+ * The window is added to the active master's stack
+ * if the master is not frozen, then the window is added/shifted to the head of the master stack
+ * The window is shifted the head of the global window list
+ * The master is promoted to the head of the master stack
+ *
+ * Note that if a new window is focused, it won't be added to the master stack if it is
+ * frozen
  * @param windowInfo
  */
-void onWindowFocus(int win);
+void onWindowFocus(unsigned int win);
 
 
 /**
@@ -232,17 +253,15 @@ Master*getActiveMaster();
 /**
  * The active master should be set whenever the user interacts with the
  * wm (key/mouse  binding, mouse press etc)
- * @param listOfMasters
- * @param keyboardMasterId
+ * @param the new active master
  */
-void setActiveMasterNodeById(Node*node);
+void setActiveMaster(Master*master);
 /**
  * @brief returns the master node with id == keyboardId
- * @param context
- * @param id
- * @return
+ * @param id id of the master device
+ * @return the master device with the give node
  */
-Node*getMasterNodeById(int keyboardID);
+Master*getMasterById(int keyboardID);
 /**
  * Return the first non-special workspace that a window is in
  * starting from the least recently focused window
@@ -267,6 +286,14 @@ void setActiveWorkspaceIndex(int index);
 
 Node*getWindowStack(Workspace*workspace);
 
+
+/**
+ * Returns the windows in the active workspace at a given layer
+ * @param layer
+ * @return
+ */
+Node* getWindowStackAtLayer(Workspace*workspace,int layer);
+
 /**
  *
  * @return the windows in the active workspace at the DEFAULT_LAYER
@@ -281,18 +308,49 @@ Node*getActiveWindowStack();
  */
 Workspace* getWorkspaceByIndex(int index);
 
-void moveWindowToLayerForAllWorksppaces(WindowInfo* win,int layer);
-void moveWindowToLayer(WindowInfo* win,int workspaceIndex,int layer);
 
 
+
+/**
+ *
+ * @param i the workspace index
+ * @return 1 iff the workspace has been assigned a monitor
+ */
 int isWorkspaceVisible(int i);
+/**
+ *
+ * @param index
+ * @return if the workspace has at least one window explicitly assigned to it
+ */
 int isWorkspaceNotEmpty(int index);
 /**
  * Returns the next workspace not assigned to a monitor
- * @param context
  * @return
  */
 Workspace*getNextHiddenWorkspace();
+/**
+ * Get the next workspace in the given direction according to the filters
+ * @param dir the interval of workspaces to check
+ * @param empty either 0,1,-1 for empty workspace, non empty workspace or either
+ * @param hidden either 0,1,-1 for hidden workspace, visible workspace or either
+ * @return the next workspace in the given direction
+ */
+Workspace*getNextWorkspace(int dir,int empty,int hidden);
+/**
+ * This method is a convince wrapper around getNextWorkspace
+ * It is equalivent to calling getNextWorkspace(1,0,1)
+ * @return the next hidden, non-empty workspace from the active workspace
+ * @see getNextWorkspace
+ */
+Workspace*getNextHiddenNonEmptyWorkspace();
+/**
+ * This method is a convince wrapper around getNextWorkspace
+ * It is equalivent to calling getNextWorkspace(1,-1,1)
+ * @return the next hidden workspace from the active workspace
+ * @see getNextWorkspace
+ */
+Workspace*getNextHiddenWorkspace();
+
 /**
  * Returns the workspace currently displayed by the monitor or null
  * @param context
@@ -301,9 +359,18 @@ Workspace*getNextHiddenWorkspace();
  */
 Workspace*getWorkspaceFromMonitor(Monitor*monitor);
 
+/**
+ * @param workspace
+ * @return the monitor assoicated with the given workspace if any
+ */
 Monitor*getMonitorFromWorkspace(Workspace*workspace);
 
-
+/**
+ * Swaps the monitors assosiated with the given workspaces
+ * @param index1
+ * @param index2
+ */
+void swapMonitors(int index1,int index2);
 
 /**
  * Get the next window in the stacking order in the given direction
@@ -324,10 +391,17 @@ Node* getNextWindowInStack(int dir);
  * @param win
  * @return
  */
-Node* getNextMasterNodeFocusedOnWindow(int win);
+Master* getLastMasterToFocusWindow(int win);
 
-
-int addMonitor(int id,int primary,int x,int y,int width,int height);
+/**
+ *
+ * @param id id of monitor TODO need to convert handle long to int conversion
+ * @param primary   if the monitor the primary
+ * @param geometry an array containing the x,y,width,height of the monitor
+ * @return 1 iff a new monitor was added
+ */
+int addMonitor(int id,int primary,short geometry[4]);
+int isPrimary(Monitor*monitor);
 int intersects(short int arg1[4],short int arg2[4]);
 void setMonitorForWorkspace(Workspace*w,Monitor*m);
 
@@ -344,18 +418,6 @@ Node*getAllDocks();
 Node*getAllMonitors();
 
 
-/**
- * Clears the dirty bit
- */
-void setClean();
-/**
- * marks the context as dirty and in need of a retile
- */
-void setDirty();
-/**
- * Checks to see if any visible window stack has been modified
- * @return true if a visible window stack has been modified
- */
-int isDirty();
+
 
 #endif

@@ -5,7 +5,6 @@
  *      Author: arthur
  */
 
-
 #include <assert.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -18,13 +17,14 @@
 #include <X11/extensions/XI.h>
 
 #include "mywm-structs.h"
+#include "defaults.h"
 #include "logger.h"
-#include "wmfunctions.h"
-
-
-int LOG_LEVEL=LOG_LEVEL_INFO;
+#include "window-properties.h"
 
 extern xcb_connection_t *dis;
+
+extern Display *dpy;
+int LOG_LEVEL=LOG_LEVEL_WARN;
 
 int getLogLevel(){
     return LOG_LEVEL;
@@ -45,7 +45,7 @@ void dumpWindowInfo(WindowInfo* win){
     LOG(level,"Transient for %d\n",win->transientFor);
     LOG(level,"Mask %d; Input %d Override redirect %d\n",win->mask,win->input,win->overrideRedirect);
 
-    LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isVisible(win));
+    //LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isWindowVisible(win));
     LOG(level,"last active workspace %d\n",win->workspaceIndex);
 }
 
@@ -100,4 +100,23 @@ char *eventTypeToString(int type){
     case MappingNotify: return "MappingNotify";
         default: return "unknown event";
     }
+}
+int checkError(xcb_void_cookie_t cookie,int cause,char*msg){
+    xcb_generic_error_t* e=xcb_request_check(dis,cookie);
+    if(e){
+        LOG(LOG_LEVEL_ERROR,"error occured with window %d %s\n\n",cause,msg);
+        logError(e);
+        free(e);
+        assert(1==2);
+    }
+    return e?1:0;
+}
+void logError(xcb_generic_error_t* e){
+    LOG(LOG_LEVEL_ERROR,"error occured with window %d %d\n\n",e->resource_id,e->major_code);
+    int size=256;
+    char buff[size];
+    XGetErrorText(dpy,e->error_code,buff,size);
+    LOG(LOG_LEVEL_ERROR,"Error code %d %s \n",
+               e->error_code,buff) ;
+
 }

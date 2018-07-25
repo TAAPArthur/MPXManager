@@ -12,13 +12,16 @@
  * @brief A Linked list struct
  * The struct can hold any value, but
  * there are convience methods that work best when the
- * value is/starts with an int.
+ * value points to an int.
  *
  * Nodes are just holders for values ie the value a node holds can change to
  * another value in the list. This property is mainly set so that the pointer
  * to the head of a list will always point to the head of the list while the list exists.
  * A list is considered to not exist when it is destroyed (via @see destroyList) or it is
  * joined with another list (@see insertBefore @see insertAfter)
+ *
+ * A node can only hold a value of NULL if it is an empty head of a list.
+ * Relatedly, a node is defined to be empty (sie==0) if its value is NULL
  */
 typedef struct node_struct{
     /** The value this node has or NULL if node is empty*/
@@ -41,6 +44,7 @@ typedef struct node_struct{
 Node* createEmptyHead();
 /**
  * Creates a pointer to a node with the given value.
+ * The next and prev pointers are set to null
  * @param the value of the new node
  * @return a pointer to node
  */
@@ -49,7 +53,7 @@ Node* createHead(void*value);
  * Creates the head of a cirular linked list with the given values.
  * A circular linked list is defined to have the next pointer of the last node
  * point to the head of the list and prev pointer of the head to point to the last element.
- * Once created no function shall break the above invariant.
+ * Once created no function shall break the above invariant until the entire list is freed
  * @param value the value of the linked list
  * @return a pointer a node
  */
@@ -75,8 +79,8 @@ void insertHead(Node* head,void *value);
  */
 void insertAfter(Node* node,Node* newNode);
 /**
- * Given list A--C--D, insertAfter(A,B) will yield
- * B--A--C--D.
+ * Given list A--B--C, and D--E--F, list insertBefore(A,E) will yield
+ * E--F--A--B--C.
  * The pointer to head will always point to the start of the list
  * even if it means shifting values of other nodes in the list
  * @param head the head of the list

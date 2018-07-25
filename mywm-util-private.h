@@ -15,10 +15,10 @@
 
 
 /**
- * Creates a pointer to a Master instance and sets its id to id
+ * Creates a pointer to a Master instance and sets its id to id.
  * @return pointer to object
  */
-Master *createMaster(int id);
+Master *createMaster(int id,int pointerId);
 
 /**
  * Init a an array of workspaces to default values.
@@ -30,8 +30,8 @@ Workspace*createWorkSpaces(int size);
 Node* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex);
 int isWindowInVisibleWorkspace(WindowInfo* winInfo);
 int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex);
-void addWindowToWorkspaceAtLayer(WindowInfo* winInfo,int workspaceIndex,int layer);
-void addWindowToWorkspace(WindowInfo*info,int workspaceIndex);
+int addWindowToWorkspaceAtLayer(WindowInfo* winInfo,int workspaceIndex,int layer);
+int addWindowToWorkspace(WindowInfo*info,int workspaceIndex);
 /**
  * Removes window from context and master(s)/workspace lists.
  * The Nodes containing the window and the windows value are freeded also
@@ -39,16 +39,16 @@ void addWindowToWorkspace(WindowInfo*info,int workspaceIndex);
  * @param winToRemove
  */
 int removeWindow(unsigned int winToRemove);
+
 void setWorkspaceNames(char*names[],int numberOfNames);
 
-void resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo);
+int resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo);
 void resizeAllMonitorsToAvoidAllStructs();
 void resizeAllMonitorsToAvoidStruct(WindowInfo*winInfo);
 
 void resizeMonitor(Monitor*monitor,int x,int y,int width, int height);
 
 int removeMonitor(unsigned int id);
-void resetMonitor(Monitor*m);
 
 
 #endif

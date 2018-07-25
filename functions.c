@@ -248,7 +248,4 @@ void setLayout(Layout* layout){
 }
 
 
-void killWindow(xcb_window_t win){
-    if(win)
-        xcb_kill_client(dis, win);
-}
+
