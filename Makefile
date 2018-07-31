@@ -16,9 +16,10 @@ LAYER3_SRCS := event-loop.c default-rules.c wmfunctions.c  window-properties.c
 LAYER4_SRCS := extra-functions.c functions.c layouts.c
 LIBSRCS :=  mywm.c config.c
 
+CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null | grep -v -E '$(2)' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
 SRCS := mywm.c config.c
 
-all: layer3 #layer1 layer2 layer3 layer4 # mywm 
+all: unitTest1 unitTest2 unitTest3 # layer4 # mywm 
 
 mywm: ${SRCS} ${LIBSRCS}
 	@echo "Building mywm"
@@ -27,22 +28,20 @@ mywm: ${SRCS} ${LIBSRCS}
 test: unit-test testMem	testX11
 	./test-x11
 		
-layer1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
-	${CC} ${LAYER1_SRCS} Tests/Layer1Tests/UnitTests.c -o unit-test ${CFLAGS} ${TESTLIBS}
-	./unit-test	
-	#gcov -f ${LAYER1_SRCS} 2> /dev/null | grep -v -E '100.00|9[5-9]\.[0-9]{2}' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 1
-	#gcov -f ${LAYER1_SRCS} 2> /dev/null | grep -v -E '100.00' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 1
-	gcov -f ${LAYER1_SRCS} 2> /dev/null | grep -v -E '100.00' |grep -B 1 "Lines e" && echo "test coverage is not high enough"
+unitTest1: $(wildcard Tests/Layer1Tests/*.c) ${LAYER1_SRCS}
+	${CC}  $^ -o $@ ${CFLAGS} ${TESTLIBS}
+	./$@
+	$(call CHECK_TEST_COVERAGE,${LAYER1_SRCS},100) 
 
-layer2: Tests/Layer2Tests/* ${LAYER2_SRCS}
-	${CC} ${LAYER2_SRCS} ${LAYER1_SRCS} Tests/Layer2Tests/UnitTests.c -o unit-test2 ${CFLAGS} ${LDFLAGS} ${TESTLIBS}
-	./test-x11 ./unit-test2
-	gcov -f ${LAYER2_SRCS} 2> /dev/null | grep -v -E '100.00' |grep -B 1 "Lines e" && echo "test coverage is not high enough"
+unitTest2: Tests/Layer2Tests/*.c ${LAYER2_SRCS} ${LAYER1_SRCS}
+	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS} ${TESTLIBS}
+	./test-x11 ./$@
+	$(call CHECK_TEST_COVERAGE,${LAYER2_SRCS},100)
 
-layer3: Tests/*.c $(wildcard Tests/Layer3Tests/*.c) ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS}
-	${CC} $^ -o unit-test3 ${CFLAGS} ${LDFLAGS} ${TESTLIBS}
-	./test-x11 ./unit-test3	
-	gcov -f ${LAYER3_SRCS} 2> /dev/null | grep -v -E '100.00' |grep -B 1 "Lines e" && echo "test coverage is not high enough"
+unitTest3: Tests/*.c $(wildcard Tests/Layer3Tests/*.c) ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS}
+	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS} ${TESTLIBS}
+	./test-x11 ./$@	
+	$(call CHECK_TEST_COVERAGE,${LAYER3_SRCS},100)
 
 testMem: Tests/TextX11Helper.c Tests/MemTest/TestMemoryLeaks.c ${LIBSRCS} 
 	${CC} ${LIBSRCS} Tests/TextX11Helper.c Tests/MemTest/TestMemoryLeaks.c -o testMem ${CFLAGS} ${LDFLAGS} ${TESTLIBS}
@@ -52,5 +51,7 @@ layer4: Tests/TestHelper.c Tests/Layer4Tests/* ${LAYER4_SRCS} ${LAYER3_SRCS} ${L
 
 .PHONY: test all clean
 
+.DELETE_ON_ERROR:
+
 clean:
-	rm -f mywm testX11 unit-test* testMem
+	rm -f mywm testX11 unitTest* testMem

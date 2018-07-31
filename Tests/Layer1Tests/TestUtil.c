@@ -1,3 +1,4 @@
+#include "../UnitTests.h"
 #include "../../mywm-structs.h"
 #include "../../util.h"
 
@@ -9,7 +10,7 @@ WindowInfo* createStruct(int i){
     return t;
 }
 
-
+int size=10;
 Node* createLinkedListAssert(Node*n,int size,int start,int a){
     assert(getSize(n)==0);\
     int cirular=n->prev==n->next&&n->prev==n;
@@ -270,26 +271,45 @@ START_TEST(test_list_join){
         int v1=getIntValue(i%2?n2:n1);
         int v2=getIntValue(i%2?n1:n2);
 
+        Node*head=n1;
         if(i%2){
             int v3=getIntValue(n2->next);
+            int insertingNotAtHead=n1->prev!=NULL;
             insertBefore(n1, n2);
-            assert(getIntValue(n1->next)==v3);
+            if(insertingNotAtHead){
+                assert(getIntValue(n1)==v2);
+                assert(getIntValue(n2)==v1);
+                head=n2;
+            }
+            else
+                assert(getIntValue(n1->next)==v3);
+
         }
         else{
             insertAfter(n1, n2);
             assert(getIntValue(n1->next)==v2);
         }
-        assert(getIntValue(n1)==v1);
-        assert(getSize(n1)==totalSize);
+        assert(getIntValue(head)==v1);
+        assert(getSize(head)==totalSize);
         //check to make sure every value is present
         int hits=0;
         for(int i=1;i<=size*2;i++)
-            hits+=isInList(n1, i)?1:0;
+            hits+=isInList(head, i)?1:0;
         assert(hits==totalSize);
     }
 }END_TEST
 
-
+START_TEST(test_cirular_insert_in_place){
+    Node*head=createLinkedList(size);
+    Node*fakeHead=head->next;
+    assert(getSize(fakeHead)==size-1);
+    for(int i=size+1;i<=size*2;i++){
+        insertBefore(fakeHead, createHead(createStruct(i)));
+        assert(getSize(fakeHead)==size-1);
+        assert(getSize(head)==i);
+    }
+    assert(getIntValue(head->next)==size+1);
+}END_TEST
 START_TEST(test_cirular_list_insert){
     Node*head=createCircularHead(createStruct(1));
     for(int i=2;i<=size;i++){
@@ -463,13 +483,14 @@ START_TEST(test_preserve_value){
 } END_TEST
 
 
-Suite *utilSuite(void) {
+Suite *utilSuite() {
     Suite*s = suite_create("Util");
 
     TCase*tc_core = tcase_create("Basic Node");
     tcase_add_test(tc_core, test_create_head);
     tcase_add_test(tc_core, test_create_cirular_head);
     tcase_add_test(tc_core, test_single_node_insertion);
+    tcase_add_test(tc_core,test_cirular_insert_in_place);
     tcase_add_test(tc_core, test_create_list);
     suite_add_tcase(s, tc_core);
 

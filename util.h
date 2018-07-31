@@ -74,8 +74,10 @@ void insertHead(Node* head,void *value);
  *
  * Insert a new node with value n->value after n,
  * and change n's value to value.
- * @param n
- * @param value
+ *
+ * Note behavious is undefined either param is empty
+ * @param node the head of the list
+ * @param newNode the new node to insert
  */
 void insertAfter(Node* node,Node* newNode);
 /**
@@ -83,8 +85,10 @@ void insertAfter(Node* node,Node* newNode);
  * E--F--A--B--C.
  * The pointer to head will always point to the start of the list
  * even if it means shifting values of other nodes in the list
+ *
+ * Note behavious is undefined either param is empty
  * @param head the head of the list
- * @param newNode the new node to inser
+ * @param newNode the new node to insert
  */
 void insertBefore(Node* head,Node* newNode);
 
@@ -142,6 +146,9 @@ void insertBefore(Node* head,Node* newNode);
  */
 #define FOR_AT_MOST(head,N,...) \
     {int __temp_size__=0; FOR_EACH(head,if(__temp_size__++==N)break; __VA_ARGS__;)}
+
+#define FOR_AT_MOST_REVERSED(head,N,...) \
+    {int __temp_size__=0; FOR_EACH_REVERSED(head,if(__temp_size__++==N)break; __VA_ARGS__;)}
 /**
  * Iterates over head and set head to the node in the last | EXPR is maximized
  * In the case of ties, the element closet to the head of the list is chosen

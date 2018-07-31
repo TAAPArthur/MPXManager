@@ -1,6 +1,12 @@
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
 
+START_TEST(test_default_layouts){
+    createContext(size);
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        assert(getSize(getWorkspaceByIndex(i)->layouts)==NUMBER_OF_DEFAULT_LAYOUTS);
+    }
+}END_TEST
 START_TEST(test_layouts){
     INIT
     createContext(1);
@@ -61,5 +67,8 @@ Suite *layoutSuite(void) {
     TCase* tc_core = tcase_create("Events");
     tcase_add_test(tc_core, test_layouts);
     suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("Layouts");
+        tcase_add_test(tc_core, test_default_layouts);
+        suite_add_tcase(s, tc_core);
     return s;
 }

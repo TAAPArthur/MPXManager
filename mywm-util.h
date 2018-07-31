@@ -417,7 +417,30 @@ Node*getAllDocks();
  */
 Node*getAllMonitors();
 
-
+/**
+ * Clears all layouts assosiated with the give workspace.
+ * The layouts themselves are not freeded
+ * @param workspaceIndex the workspace to clear
+ */
+void clearLayoutsOfWorkspace(int workspaceIndex);
+/**
+ * The the currently used layout for the active workspace.
+ * Note that this layout does not have to be in the list of layout for the active workspace
+ * @param layout the new active layout
+ */
+void setActiveLayout(Layout*layout);
+/**
+ * Sets the next layout to be the nth from the current position.
+ * Note that the current position need not be the active layout
+ * @param workspaceIndex
+ * @param delta
+ * @return
+ *
+ */
+Layout* switchToNthLayout(int workspaceIndex,int n);
+Layout* getActiveLayout();
+Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
+void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num);
 
 
 #endif

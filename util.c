@@ -121,12 +121,21 @@ int removeByValue(Node* list,int value){
 }
 
 void insertBefore(Node* head,Node* newNode){
+    assert(isNotEmpty(head));
+    assert(isNotEmpty(newNode));
     Node*nextNode=newNode->next;
+
+    if(head->prev){
+        Node*n=head->prev;
+        insertAfter(head->prev, newNode);
+        assert(n->next==newNode);
+        return;
+    }/*
     //disconnect node from eariler values
     if(newNode->prev){
         newNode->prev->next=NULL;
         newNode->prev=NULL;
-    }
+    }*/
     //disconnect node from later values
     if(newNode->next){
         newNode->next->prev=NULL;
@@ -136,29 +145,31 @@ void insertBefore(Node* head,Node* newNode){
     swap(head,newNode);
     //insert head's old value
     insertAfter(head, newNode);
-    //insert the reset of the new node list
+    //insert the reset of the new node list between head and newNode
     if(nextNode)
         insertAfter(head, nextNode);
 }
 void insertAfter(Node* node,Node* newNode){
+    assert(isNotEmpty(node));
+    assert(isNotEmpty(newNode));
     Node*end=getLast(newNode);
     end->next=node->next;
-    newNode->prev=node;
     if(node->next)
         node->next->prev=end;
+    newNode->prev=node;
     node->next=newNode;
-
 }
+
 void insertHead(Node* head,void *value){
     assert(head!=NULL);
     assert(value!=NULL);
     if(head->value){
-        Node* newNode = calloc(1,sizeof(Node));
-        newNode->value=head->value;
-        head->value=value;
+        Node* newNode = createHead(value);
+        swap(newNode,head);
         insertAfter(head,newNode);
     }
-    head->value=value;
+    else
+        head->value=value;
 }
 int shiftToHead(Node* list,Node *node){
     assert(node);

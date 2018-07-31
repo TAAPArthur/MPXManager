@@ -127,15 +127,46 @@ Workspace*createWorkSpaces(int size){
         workspaces[i].id=i;
         workspaces[i].name=NULL;
         workspaces[i].monitor=NULL;
-        workspaces[i].activeLayout=DEFAULT_LAYOUTS;
+        workspaces[i].activeLayout=NULL;
         workspaces[i].layouts=createCircularHead(NULL);
-        for(int n=0;n<NUMBER_OF_DEFAULT_LAYOUTS;n++){
-            insertHead(workspaces[i].layouts, &DEFAULT_LAYOUTS[n]);
-        }
         for(int n=0;n<NUMBER_OF_LAYERS;n++)
             workspaces[i].windows[n]=createEmptyHead();
     }
     return workspaces;
+}/*
+void clearLayoutsOfWorkspace(int workspaceIndex){
+    clearList(context->workspaces[workspaceIndex].layouts);
+    context->workspaces[workspaceIndex].activeLayout=NULL;
+}*/
+void setActiveLayout(Layout*layout){
+    getActiveWorkspace()->activeLayout=layout;
+}
+Layout* switchToNthLayout(int workspaceIndex,int delta){
+    Node*head=getActiveWorkspace()->layouts;
+    if(delta>=0)
+        FOR_AT_MOST(head,delta,;)
+    else
+        FOR_AT_MOST_REVERSED(head,abs(delta),;)
+    getActiveWorkspace()->layouts=head;
+    return getValue(head);
+}
+Layout* getActiveLayout(){
+    return getActiveLayoutOfWorkspace(getActiveWorkspaceIndex());
+}
+Layout* getActiveLayoutOfWorkspace(int workspaceIndex){
+    return context->workspaces[workspaceIndex].activeLayout;
+}
+void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num){
+    assert(workspaceIndex>=0);
+    assert(workspaceIndex<context->numberOfWorkspaces);
+    if(isNotEmpty(context->workspaces[workspaceIndex].layouts))
+        for(int n=0;n<num;n++)
+            insertBefore(context->workspaces[workspaceIndex].layouts, createHead(&layout[n]));
+    else{
+        context->workspaces[workspaceIndex].activeLayout=layout;
+        insertHead(context->workspaces[workspaceIndex].layouts, layout);
+    }
+
 }
 
 

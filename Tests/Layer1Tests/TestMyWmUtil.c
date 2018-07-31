@@ -1,8 +1,9 @@
+#include "../UnitTests.h"
 #include "../../mywm-util.h"
 #include "../../mywm-util-private.h"
-#include "../../util.h"
-#include "../UnitTests.h"
 
+extern int size;
+//int size=10;
 int addWindow(unsigned int id){
     assert(id!=0);
     return addWindowInfo(createWindowInfo(id));
@@ -89,6 +90,11 @@ START_TEST(test_destroy_context){
     createContext(10);
     addMaster(1,1);
     addWindow(1);
+    WindowInfo*winInfo=getValue(getAllWindows());
+    char*str="dummy";
+
+    winInfo->typeName=calloc(strlen(str)+1, sizeof(char));
+    memcpy(winInfo->typeName, str, strlen(str)*sizeof(char));
     addDock(createWindowInfo(2));
     addMonitor(1, 1, (short[]){1,1,1,1});
     destroyContext();
@@ -582,16 +588,27 @@ START_TEST(test_init_workspace){
     createContext(1);
     Workspace*workspace=getWorkspaceByIndex(0);
     assert(workspace->id==0);
-    for(int n=0;n<NUMBER_OF_LAYERS;n++){
-        assert(getIntValue(workspace[0].windows[n])==0);
-        assert(getValue(workspace[0].windows[n])==0);
-        assert(getSize(workspace[0].windows[n])==0);
-        assert(workspace[0].monitor==NULL);
-        assert(!isWorkspaceVisible(0));
-        assert(!isWorkspaceNotEmpty(0));
-        assert(workspace[0].windows[n]!=NULL);
+    for(int i=0;i<2;i++){
+        for(int n=0;n<NUMBER_OF_LAYERS;n++){
+            assert(getIntValue(workspace[i].windows[n])==0);
+            assert(getValue(workspace[i].windows[n])==0);
+            assert(getSize(workspace[i].windows[n])==0);
+            assert(workspace[i].monitor==NULL);
+            assert(workspace[i].activeLayout==NULL);
+            assert(!isNotEmpty(workspace[i].layouts));
+            assert(workspace[i].layouts->next==workspace[i].layouts->prev && workspace[i].layouts->next==workspace[i].layouts);
+            assert(!isWorkspaceVisible(i));
+            assert(!isWorkspaceNotEmpty(i));
+            assert(workspace[i].windows[n]!=NULL);
+        }
+        assert(getSize(workspace[i].windows[DEFAULT_LAYER])==0);
+        assert(workspace[i].layouts);
+        assert(workspace[i].layouts->next==workspace[i].layouts);
+        assert(workspace[i].layouts->next==workspace[i].layouts->prev);
+
     }
-    assert(getSize(workspace[0].windows[DEFAULT_LAYER])==0);
+    assert(workspace[0].layouts!=workspace[1].layouts);
+
 }END_TEST
 //TODO! fix broken test
 START_TEST(test_window_layers){
@@ -776,12 +793,7 @@ START_TEST(test_workspace_window_add_remove){
 
     */
 }END_TEST
-START_TEST(test_default_layouts){
-    createContext(size);
-    for(int i=0;i<getNumberOfWorkspaces();i++){
-        assert(getSize(getWorkspaceByIndex(i)->layouts)==NUMBER_OF_DEFAULT_LAYOUTS);
-    }
-}END_TEST
+
 
 START_TEST(test_monitor_workspace){
     createContext(size);
@@ -845,6 +857,52 @@ START_TEST(test_complete_window_remove){
 
 }END_TEST
 
+START_TEST(test_layout_add){
+    int numberOfWorkSpaces=2;
+    createContext(numberOfWorkSpaces);
+    addMaster(1, 1);
+    for(int n=0;n<numberOfWorkSpaces;n++){
+        setActiveWorkspaceIndex(n);
+        Layout* l=calloc(1, sizeof(Layout));
+        for(int i=1;i<=size;i++){
+            addLayoutsToWorkspace(n, l, 1);
+            assert(getSize(getActiveWorkspace()->layouts)==i);
+            if(i)
+                assert(getValue(getActiveWorkspace()->layouts->prev)==l);
+            else
+                assert(getValue(getActiveWorkspace()->layouts)==l);
+        }
+    }
+}END_TEST
+START_TEST(test_active_layout){
+    createContext(1);
+    addMaster(1, 1);
+    for(int i=0;i<size;i++){
+        Layout* l=calloc(1, sizeof(Layout));
+        setActiveLayout(l);
+        assert(getActiveLayout()==l);
+    }
+}END_TEST
+START_TEST(test_layout_cycling){
+    createContext(1);
+    addMaster(1, 1);
+    Layout*layouts[size];
+    for(int i=0;i<size;i++){
+        layouts[i]=calloc(1, sizeof(Layout));
+        addLayoutsToWorkspace(0, layouts[i], 1);
+    }
+    setActiveLayout(layouts[1]);
+    for(int i=1;i<=size;i++){
+        assert(layouts[i%size]==switchToNthLayout(0, 1));
+        assert(getActiveLayout()==layouts[1]);
+    }
+    assert(switchToNthLayout(0, size-1)==layouts[size-1]);
+    for(int i=size-2;i>=0;i--){
+        assert(layouts[i%size]==switchToNthLayout(0, -1));
+    }
+
+}END_TEST
+
 
 Suite *mywmUtilSuite(void) {
     Suite*s = suite_create("Context");
@@ -901,8 +959,11 @@ Suite *mywmUtilSuite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Layouts");
-    tcase_add_test(tc_core, test_default_layouts);
+    tcase_add_test(tc_core, test_layout_add);
+    tcase_add_test(tc_core, test_active_layout);
+    tcase_add_test(tc_core, test_layout_cycling);
     suite_add_tcase(s, tc_core);
+
 
     tc_core = tcase_create("Monitor");
     tcase_add_test(tc_core, test_monitor_init);
