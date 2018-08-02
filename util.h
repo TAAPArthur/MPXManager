@@ -156,7 +156,7 @@ void insertBefore(Node* head,Node* newNode);
 #define GET_MAX(head,CONDITION,EXPR) \
     {\
         unsigned int __maxValue__=0;Node*__maxNode__=NULL;\
-        FOR_EACH(head,if(CONDITION && (!__maxNode__||EXPR>__maxValue__)){__maxValue__=EXPR;__maxNode__=head;})\
+        FOR_EACH(head,if(CONDITION && (!__maxNode__||((unsigned int)EXPR)>__maxValue__)){__maxValue__=(unsigned int)EXPR;__maxNode__=head;})\
         head=__maxNode__;\
     }
 
