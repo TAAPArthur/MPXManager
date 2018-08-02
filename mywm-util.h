@@ -437,7 +437,7 @@ void setActiveLayout(Layout*layout);
  * @return
  *
  */
-Layout* switchToNthLayout(int workspaceIndex,int n);
+Layout* switchToNthLayout(int n);
 Layout* getActiveLayout();
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
 void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num);

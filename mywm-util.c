@@ -141,7 +141,7 @@ void clearLayoutsOfWorkspace(int workspaceIndex){
 void setActiveLayout(Layout*layout){
     getActiveWorkspace()->activeLayout=layout;
 }
-Layout* switchToNthLayout(int workspaceIndex,int delta){
+Layout* switchToNthLayout(int delta){
     Node*head=getActiveWorkspace()->layouts;
     if(delta>=0)
         FOR_AT_MOST(head,delta,;)
@@ -551,8 +551,6 @@ Node* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex){
     return NULL;
 }
 int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex){
-
-    Workspace*workspace=getWorkspaceByIndex(workspaceIndex);
     Node*node;
     for(int i=0;i<NUMBER_OF_LAYERS;i++){
         node=isWindowInWorkspace(winInfo,workspaceIndex);

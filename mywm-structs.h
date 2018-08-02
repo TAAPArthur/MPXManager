@@ -81,9 +81,15 @@ typedef struct window_info{
     /**title of window*/
     char*title;
 
-    struct window_info*clone;
 
     int implicitType;
+    /**
+     * Used to indicate the "last seen in" workspace.
+     * A window should only be tiled if the this field matches
+     * the tiling workspace's index
+     *
+     * Note that his field may not contain all the workspaces an window belongs to
+     */
     int workspaceIndex;
     int activeWorkspaceCount;
     int minimizedTimeStamp;
@@ -227,9 +233,6 @@ typedef enum{
     GRAB_KEY,
     /**Grabs the specified button*/
     GRAB_BUTTON,
-    GRAB_POINTER,
-    GRAB_KEYBOARD,
-    GRAB_POINTER_KEYBOARD
 
 }GrabType;
 typedef enum{
@@ -250,8 +253,6 @@ typedef enum{
      * as an argument
      */
     VOID_ARG,
-    /**Number of options*/
-    NUMBER_OF_BINDING_OPTIONS
 }BindingType;
 /**
  * Used to bind a function with arguments to a Rule or Binding
@@ -285,7 +286,7 @@ typedef struct binding_struct{
     /**Modifer to match on*/
     unsigned int mod;
     /**Either Button or KeySym to match**/
-    int detail;
+    int buttonOrKey;
     /**Function to call on match**/
     BoundFunction boundFunction;
     /**Wheter more bindings should be considered*/
@@ -297,7 +298,7 @@ typedef struct binding_struct{
     /**If a binding is pressed that doesn't match the chain, don't end it*/
     char noEndOnPassThrough;
     /**Converted detail of key bindings. Should not be set manually*/
-    int keyCode;
+    int detail;
 } Binding;
 
 typedef struct{
