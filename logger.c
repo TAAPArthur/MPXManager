@@ -17,6 +17,7 @@
 #include <X11/extensions/XI.h>
 
 #include "mywm-structs.h"
+#include "mywm-util.h"
 #include "defaults.h"
 #include "logger.h"
 #include "window-properties.h"
@@ -33,20 +34,30 @@ void setLogLevel(int level){
     LOG(LOG_LEVEL_NONE,"Changing log level from %d to %d \n",LOG_LEVEL,level);
     LOG_LEVEL=level;
 }
+void printNodeList(Node*n){
+    printf("Printing list: \n");
+    FOR_EACH(n,printf("%d ",getIntValue(n)));
+    printf("\n");
+}
+void dumpAllWindowInfo(){
+    Node*n=getAllWindows();
+    FOR_EACH(n,dumpWindowInfo(getValue(n)));
+}
 
 void dumpWindowInfo(WindowInfo* win){
     if(!win)return;
     const int level=LOG_LEVEL_DEBUG;
-    LOG(level,"Dumping window info %d(%#x) group: %d(%#x)\n",win->id,win->id,win->groupId,win->groupId);
-    LOG(level,"Type is %d (%s) implicit: %d\n",win->type,win->typeName,win->implicitType);
-    LOG(level,"Lables class %s (%s)\n",win->className,win->instanceName);
-    LOG(level,"Title class %s\n",win->title);
+    LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x)\n",win->id,win->id,win->groupId,win->groupId);
+    LOG(LOG_LEVEL_DEBUG,"Lables class %s (%s)\n",win->className,win->instanceName);
+    LOG(LOG_LEVEL_DEBUG,"Type is %d (%s) implicit: %d\n",win->type,win->typeName,win->implicitType);
 
-    LOG(level,"Transient for %d\n",win->transientFor);
-    LOG(level,"Mask %d; Input %d Override redirect %d\n",win->mask,win->input,win->overrideRedirect);
+    LOG(LOG_LEVEL_DEBUG,"Title class %s\n",win->title);
+
+    LOG(LOG_LEVEL_TRACE,"Transient for %d\n",win->transientFor);
+    LOG(LOG_LEVEL_TRACE,"Mask %d; Input %d Override redirect %d\n",win->mask,win->input,win->overrideRedirect);
 
     //LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isWindowVisible(win));
-    LOG(level,"last active workspace %d\n",win->workspaceIndex);
+    LOG(LOG_LEVEL_TRACE,"last active workspace %d\n",win->workspaceIndex);
 }
 
 void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms){
