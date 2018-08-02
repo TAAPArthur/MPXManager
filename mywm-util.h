@@ -10,9 +10,6 @@
 #include "util.h"
 #include "mywm-structs.h"
 
-extern Layout DEFAULT_LAYOUTS[];
-extern int NUMBER_OF_DEFAULT_LAYOUTS;
-
 /**
  * @return the current time in seconds
  */
@@ -69,9 +66,6 @@ void setLastEvent(void* event);
  * @see getLastEvent
  */
 void* getLastEvent();
-
-
-
 
 /**
  *
@@ -206,24 +200,6 @@ WindowInfo* getWindowInfo(unsigned int win);
 Node*getAllWindows();
 
 
-
-
-/**
- * Adds a window to the list of windows in context iff it
- * isn't already in the list
- * Note that the creted window is not added to a master window list or
- * a workspace
- * @param wInfo    instance to add
- * @return 1 iff this pointer was added
- */
-int addWindowInfo(WindowInfo* wInfo);
-
-/**
- * Add a dock
- * @param info the dock to add
- * @return true if this dock was added
- */
-int addDock(WindowInfo* info);
 void setDockArea(WindowInfo* info,int numberofProperties,int properties[WINDOW_STRUCT_ARRAY_SIZE]);
 
 
@@ -277,13 +253,17 @@ Workspace* getActiveWorkspace();
  */
 int getActiveWorkspaceIndex();
 /**
- *
+ * Sets the active workspace index
  * @param index
  */
 void setActiveWorkspaceIndex(int index);
 
 
-
+/**
+ * Returns the windows in the normal layer of the workspace
+ * @param workspace
+ * @return
+ */
 Node*getWindowStack(Workspace*workspace);
 
 
@@ -380,9 +360,6 @@ void swapMonitors(int index1,int index2);
  */
 Node* getNextWindowInStack(int dir);
 
-
-
-
 /**
  * Get the master who most recently focused window.
  * Should be called to reset border focus after the active master's
@@ -401,9 +378,15 @@ Master* getLastMasterToFocusWindow(int win);
  * @return 1 iff a new monitor was added
  */
 int addMonitor(int id,int primary,short geometry[4]);
+/**
+ * True if the monitor is marked as primary
+ * @param monitor
+ * @return
+ */
 int isPrimary(Monitor*monitor);
 int intersects(short int arg1[4],short int arg2[4]);
 void setMonitorForWorkspace(Workspace*w,Monitor*m);
+int removeMonitor(unsigned int id);
 
 
 /**

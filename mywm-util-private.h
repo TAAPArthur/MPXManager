@@ -48,7 +48,22 @@ void resizeAllMonitorsToAvoidStruct(WindowInfo*winInfo);
 
 void resizeMonitor(Monitor*monitor,int x,int y,int width, int height);
 
-int removeMonitor(unsigned int id);
+/**
+ * Adds a window to the list of windows in context iff it
+ * isn't already in the list
+ * Note that the creted window is not added to a master window list or
+ * a workspace
+ * @param wInfo    instance to add
+ * @return 1 iff this pointer was added
+ */
+int addWindowInfo(WindowInfo* wInfo);
+
+/**
+ * Add a dock
+ * @param info the dock to add
+ * @return true if this dock was added
+ */
+int addDock(WindowInfo* info);
 
 
 #endif

@@ -13,16 +13,18 @@
 
 #include "../default-rules.h"
 #include "../defaults.h"
+#include "../xsession.h"
 #include "../logger.h"
-#include "../event-loop.h"
+#include "../events.h"
 
 Suite *x11Suite();
 
 #define INIT DisplayConnection* dc = createDisplayConnection();
 #define END XCloseDisplay(dc->dpy);
+extern pthread_t pThread;
 #define START_MY_WM \
-        pthread_t pThread; assert(pthread_create(&pThread, NULL, runEventLoop, NULL)==0);
-#define KILL_MY_WM  pthread_kill(pThread,0);
+        pThread=runInNewThread(runEventLoop,NULL);
+#define KILL_MY_WM  requestEventLoopShutdown();pthread_join(pThread,NULL);
 #define destroyWindow(dis,win) assert(NULL==xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 
 typedef struct {
@@ -39,5 +41,8 @@ int mapWindow(DisplayConnection*dc,int win);
 int  mapArbitraryWindow(DisplayConnection* dc);
 void setProperties(DisplayConnection *dc,int win,char*classInstance,char*title,xcb_atom_t* atom);
 void setArbitraryProperties(DisplayConnection* dc,int win);
+void createContextAndConnection();
 
+void openXDisplay();
+xcb_input_key_press_event_t* getNextDeviceEvent();
 #endif /* TESTS_UNITTESTS_H_ */

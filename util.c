@@ -3,6 +3,13 @@
 
 #include "util.h"
 
+void _join(Node*prev,Node*next){
+    if(prev)
+        prev->next=next;
+    if(next)
+        next->prev=prev;
+}
+
 Node* createEmptyHead(){
     return calloc(1, sizeof(Node));
 }
@@ -36,15 +43,10 @@ Node* isInList(Node* list,int value){
     return NULL;
 }
 
-Node* getNth(Node* list,int n){
-    assert(list!=NULL);
-    int i=0;
-    UNTIL_FIRST(list,i++==n || n<0 && !list->next)
-    return list;
-}
-
 Node* getLast(Node* list){
-    return getNth(list, -1);
+    assert(list!=NULL);
+    UNTIL_FIRST(list, !list->next)
+    return list;
 }
 
 int getIntValue(Node*node){
@@ -60,23 +62,55 @@ void _freeNode(Node* node){
     free(node);
     return;
 }
+void partitionLeft(Node*node){
+    if(node->prev)
+        node->prev->next=NULL;
+    node->prev=NULL;
+}
+void partitionRight(Node*node){
+    if(node->next)
+        node->next->prev=NULL;
+    node->next=NULL;
+}
 void clearList(Node* head){
-    if(head->next)
-        destroyList(head->next);
+    assert(head);
+    while(head->next && head->next!=head){
+        Node*temp=head->next->next;
+        _freeNode(head->next);
+        head->next=temp;
+    }
+    head->prev=head->next;
     head->value=NULL;
 }
-void destroyList(Node* head){
+
+void _deleteList(Node* head,int freeValue){
     assert(head);
-    if(head->prev)
-        head->prev->next=NULL;
+    partitionLeft(head);
     while(head){
         Node*temp=head->next;
+        if(freeValue)
+            free(getValue(head));
+
         _freeNode(head);
         head=temp;
     }
 }
+void deleteList(Node* head){
+    _deleteList(head,1);
+}
+void destroyList(Node* head){
+    _deleteList(head,0);
+}
 
-Node* popNode(Node* node){
+/**
+ * Removes the give node from the list.
+ * If node is the head of the list,
+     * If the list is empty, node->value is set to null
+     * else node->value is et to node->next->value and popNode is called on node->next
+ * @param node
+ * @return a pointer to the node that was removed or NULL
+ */
+static Node* popNode(Node* node){
 
     assert(node);
     if(!node->prev){ //head of list
@@ -89,58 +123,41 @@ Node* popNode(Node* node){
             return NULL;
         }
     }
-    node->prev->next=node->next;
-    if(node->next)
-        node->next->prev=node->prev;
-    node->next=node->prev=NULL;
+    if(node->prev==node->next && node->next==node){
+        node->value=NULL;
+        return NULL;
+    }
+
+    Node*prev=node->prev;
+    Node*next=node->next;
+    partitionLeft(node);
+    partitionRight(node);
+    _join(prev,next);
     return node;
 }
 void deleteNode(Node* node){
-    void *value=getValue(node);
-    Node*popped=popNode(node);
-
-    if(popped){
-        if(popped->value)
-            free(popped->value);
-        _freeNode(popped);
-    }
-    else
-        free(value);
-
+    if(getValue(node))
+        free(getValue(node));
+    softDeleteNode(node);
 }
 void softDeleteNode(Node* node){
     _freeNode(popNode(node));
 }
 
-int removeByValue(Node* list,int value){
-    Node *nodeWithValue=isInList(list,value);
-    if(nodeWithValue)
-        softDeleteNode(nodeWithValue);
-
-    return nodeWithValue?1:0;
-}
-
 void insertBefore(Node* head,Node* newNode){
     assert(isNotEmpty(head));
     assert(isNotEmpty(newNode));
-    Node*nextNode=newNode->next;
+
 
     if(head->prev){
         Node*n=head->prev;
         insertAfter(head->prev, newNode);
         assert(n->next==newNode);
         return;
-    }/*
-    //disconnect node from eariler values
-    if(newNode->prev){
-        newNode->prev->next=NULL;
-        newNode->prev=NULL;
-    }*/
-    //disconnect node from later values
-    if(newNode->next){
-        newNode->next->prev=NULL;
-        newNode->next=NULL;
     }
+    Node*nextNode=newNode->next;
+    //disconnect node from later values
+    partitionRight(newNode);
     //set new Nodes' value to head
     swap(head,newNode);
     //insert head's old value
@@ -152,12 +169,10 @@ void insertBefore(Node* head,Node* newNode){
 void insertAfter(Node* node,Node* newNode){
     assert(isNotEmpty(node));
     assert(isNotEmpty(newNode));
+    partitionLeft(newNode);
     Node*end=getLast(newNode);
-    end->next=node->next;
-    if(node->next)
-        node->next->prev=end;
-    newNode->prev=node;
-    node->next=newNode;
+    _join(end,node->next);
+    _join(node,newNode);
 }
 
 void insertHead(Node* head,void *value){

@@ -12,7 +12,7 @@
 #include <xcb/randr.h>
 #include <xcb/xinput.h>
 
-#include "event-loop.h"
+#include "events.h"
 #include "bindings.h"
 #include "wmfunctions.h"
 #include "window-properties.h"
@@ -20,11 +20,6 @@
 #include "defaults.h"
 #include "logger.h"
 
-
-
-
-
-Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 Rules DEFAULT_RULES[NUMBER_OF_EVENT_RULES] = {
 
@@ -43,17 +38,16 @@ Rules DEFAULT_RULES[NUMBER_OF_EVENT_RULES] = {
 
     [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
 
-    [XCB_INPUT_DEVICE_KEY_PRESS + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XCB_INPUT_DEVICE_KEY_RELEASE + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XCB_INPUT_DEVICE_BUTTON_PRESS + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
-    [XCB_INPUT_DEVICE_BUTTON_RELEASE + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
+    [XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent),
     [XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onEnterEvent),
-    [XCB_INPUT_DEVICE_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
-    [XCB_INPUT_DEVICE_FOCUS_OUT + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusOutEvent),
+    [XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
+    [XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusOutEvent),
     [XCB_INPUT_XI_CHANGE_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect)
-
 };
 void addDefaultRules(){
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
@@ -69,6 +63,21 @@ void onStartup(){
     addDefaultRules();
 }
 
+void onXConnect(){
+    registerForEvents();
+    broadcastEWMHCompilence();
+    xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
+    unsigned int currentWorkspace;
+    if(!xcb_ewmh_get_current_desktop_reply(ewmh,
+            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
+            &currentWorkspace, NULL)){
+        currentWorkspace=DEFAULT_WORKSPACE_INDEX;
+    }
+    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
+    activateWorkspace(currentWorkspace);
+    scan();
+    tileWindows();
+}
 
 
 void onHiearchyChangeEvent(){
@@ -84,29 +93,11 @@ void onHiearchyChangeEvent(){
     }
     */
 }
-void onDeviceEvent(){
-    xcb_input_device_key_press_event_t*event=getLastEvent();
 
-    LOG(LOG_LEVEL_TRACE,"deviec event %d %d\n",event->response_type,event->device_id);
-    if(event->response_type<XCB_INPUT_DEVICE_BUTTON_PRESS){//key press/release
-        setActiveMasterByKeyboardId(event->device_id);
-
-        //setActiveMasterByKeyboardSlaveId(event->deviceid);
-    }
-    else{//button press/release
-        //setActiveMasterByKeyboardSlaveId(event->deviceid);
-        setActiveMasterByMouseId(event->device_id);
-        setLastWindowClicked(event->child);
-    }
-
-    checkBindings(event->detail,event->state,
-            event->response_type-XI_KeyPress,
-            getWindowInfo(event->child));
-}
 void onError(){
     LOG(LOG_LEVEL_ERROR,"error received in event loop\n");
     logError(getLastEvent());
-    assert(0);
+    assert(0 && "Unexpected error");
 }
 
 void onConfigureRequestEvent(){
@@ -119,6 +110,8 @@ void onCreateEvent(){
     LOG(LOG_LEVEL_TRACE,"create event received\n");
     xcb_create_notify_event_t *event= getLastEvent();
     if(event->override_redirect && !MANAGE_OVERRIDE_REDIRECT_WINDOWS)return;
+    if(getWindowInfo(event->window))
+        return;
     WindowInfo*winInfo=createWindowInfo(event->window);
     winInfo->overrideRedirect=event->override_redirect;
     LOG(LOG_LEVEL_TRACE,"window: %d parent: %d\n",event->window,event->parent);
@@ -148,9 +141,6 @@ void onUnmapEvent(){
     updateMapState(event->window,0);
 }
 
-
-
-
 void onEnterEvent(){
     xcb_input_enter_event_t*event= getLastEvent();
     setActiveMasterByMouseId(event->deviceid);
@@ -159,12 +149,12 @@ void onEnterEvent(){
 void onFocusInEvent(){
     xcb_input_focus_in_event_t*event= getLastEvent();
     LOG(LOG_LEVEL_DEBUG,"slave id %d\n",event->deviceid);
-    setActiveMasterByKeyboardId(event->deviceid);
+    setActiveMasterByMouseId(event->deviceid);
     //setBorder(event->child);
 }
 void onFocusOutEvent(){
     xcb_input_focus_out_event_t *event= getLastEvent();
-    setActiveMasterByKeyboardId(event->deviceid);
+    setActiveMasterByMouseId(event->deviceid);
     //resetBorder(event->child);
 }
 
@@ -175,6 +165,7 @@ void onPropertyEvent(){
 
 void onClientMessage(){
     xcb_client_message_event_t*event=getLastEvent();
+
     xcb_client_message_data_t data=event->data;
     Window win=event->window;
     Atom message=event->type;
@@ -186,7 +177,8 @@ void onClientMessage(){
     else if(message==ewmh->_NET_ACTIVE_WINDOW){
         //data[2] reqeuster's currently active window
 
-        setActiveMasterByKeyboardId(getClientKeyboard(data.data32[2]));
+        //TODO uncommeent
+        //setActiveMasterByKeyboardId(getClientKeyboard(data.data32[2]));
         activateWindow(getWindowInfo(win));
     }
     else if(message== ewmh->_NET_SHOWING_DESKTOP)
@@ -220,17 +212,3 @@ void onClientMessage(){
     case ewmh->_NET_DESKTOP_VIEWPORT:
     */
 }
-
-void onGenericEvent(){
-    xcb_ge_generic_event_t*event=getLastEvent();
-
-
-    const xcb_query_extension_reply_t*reply=xcb_get_extension_data(dis, &xcb_input_id);
-
-    if(event->extension == reply->major_opcode){
-        LOG(LOG_LEVEL_TRACE,"generic event detected %d %s\n",event->response_type,genericEventTypeToString(event->response_type));
-        applyEventRules(eventRules[event->response_type+GENERIC_EVENT_OFFSET], NULL);
-    }
-    else LOG(LOG_LEVEL_ERROR,"could not get event data\n");
-}
-

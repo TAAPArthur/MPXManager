@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <execinfo.h>
 #include <unistd.h>
+#include<sys/wait.h>
 
 #include "../mywm-util.h"
 

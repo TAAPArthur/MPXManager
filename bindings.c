@@ -16,36 +16,19 @@ void grabBindings(Binding*chain){
     Binding*binding=getEndOfChain(chain);
     if(binding->noGrab==NO_GRAB || binding->noGrab==GRAB_AUTO)
         return;
-    //assert(binding->noGrab!=GRAB_AUTO);
-
-    switch(binding->noGrab){
-        case GRAB_KEYBOARD:
-            grabActiveKeyboard();
-            break;
-        case GRAB_POINTER:
-            grabActivePointer();
-            break;
-        case GRAB_POINTER_KEYBOARD:
-            grabActiveKeyboard();
-            grabActivePointer();
-            break;
-        case GRAB_KEY:
-        case GRAB_BUTTON:
-            for(int i=0;&chain[i]!=binding;i++){
-                int mouse=binding->noGrab!=GRAB_KEY;
-                grabActiveDetail(
-                        mouse?chain[i].detail:chain[i].keyCode,
-                        chain[i].mod,mouse
-                );
-        }
-    }
+    /*TODO uncomment
+    for(int i=0;&chain[i]!=binding;i++){
+        int mouse=binding->noGrab!=GRAB_KEY;
+        grabActiveDetail(
+            &chain[i],mouse
+        );
+    }*/
 }
 
 void callBoundedFunction(BoundFunction*boundFunction,WindowInfo*info){
     assert(boundFunction);
     LOG(LOG_LEVEL_TRACE,"calling function %d\n",boundFunction->type);
-    assert(boundFunction->type<NUMBER_OF_BINDING_OPTIONS);
-
+    assert(boundFunction->type<=VOID_ARG);
 
     switch(boundFunction->type){
         case UNSET:
@@ -54,7 +37,6 @@ void callBoundedFunction(BoundFunction*boundFunction,WindowInfo*info){
             assert(!boundFunction->func.chainBindings->endChain);
             grabBindings(boundFunction->func.chainBindings);
             pushBinding(boundFunction->func.chainBindings);
-
             break;
         case NO_ARGS:
             boundFunction->func.funcNoArg();
@@ -68,9 +50,6 @@ void callBoundedFunction(BoundFunction*boundFunction,WindowInfo*info){
         case VOID_ARG:
             boundFunction->func.funcVoidArg(boundFunction->arg.voidArg);
             break;
-        default:
-            LOG(LOG_LEVEL_ERROR,"type is %d not valid\n",boundFunction->type);
-            assert(0);
     }
 }
 
@@ -80,12 +59,12 @@ Binding* getEndOfChain(Binding*chain){
     return &chain[end];
 }
 
-int doesBindingMatch(Binding*binding,int notMouse,int detail,int mods){
+int doesBindingMatch(Binding*binding,int detail,int mods){
     return (binding->mod == anyModier|| binding->mod==mods) &&
-            (notMouse && (binding->keyCode==0||binding->keyCode==detail) ||
-            !notMouse && (binding->detail==0||binding->detail==detail));
+            (binding->detail==0||binding->detail==detail);
 }
 int checkBindings(int keyCode,int mods,int bindingIndex,WindowInfo*info){
+    assert(bindingIndex<4);
     int notMouse=bindingIndex<2;
 
     mods&=~IGNORE_MASK;
@@ -97,7 +76,7 @@ int checkBindings(int keyCode,int mods,int bindingIndex,WindowInfo*info){
     while(chainBinding){
         int i;
         for(i=0;;i++){
-            if(doesBindingMatch(&chainBinding[i],notMouse,keyCode,mods)){
+            if(doesBindingMatch(&chainBinding[i],keyCode,mods)){
                 callBoundedFunction(&chainBinding[i].boundFunction,info);
                 if(chainBinding[i].endChain){
                     //chain has ended
@@ -123,7 +102,7 @@ int checkBindings(int keyCode,int mods,int bindingIndex,WindowInfo*info){
     }
     for (int i = 0; i < deviceBindingLengths[bindingIndex]; i++){
 
-        if(doesBindingMatch(&deviceBindings[bindingIndex][i],notMouse,keyCode,mods)){
+        if(doesBindingMatch(&deviceBindings[bindingIndex][i],keyCode,mods)){
             bindingTriggered+=1;
             callBoundedFunction(&deviceBindings[bindingIndex][i].boundFunction,info);
             if(!deviceBindings[bindingIndex][i].passThrough)
@@ -167,7 +146,6 @@ int applyRule(Rules*rule,WindowInfo*info){
 
 int applyEventRules(Node* head,WindowInfo*info){
     assert(head);
-    if(!head)return 1;
     FOR_EACH(head,
         Rules *rule=getValue(head);
         if(applyRule(rule,info))

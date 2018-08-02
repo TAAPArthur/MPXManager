@@ -10,15 +10,16 @@
 #include <string.h>
 #include <assert.h>
 
+#include <X11/keysym.h>
+#include <X11/XF86keysym.h>
+
 #include "bindings.h"
+#include "defaults.h"
 #include "default-rules.h"
 #include "functions.h"
 #include "wmfunctions.h"
 #include "layouts.h"
 
-extern int DEVICE_EVENT_MASKS;
-extern int IGNORE_MASK;
-extern int NUMBER_OF_WORKSPACES;
 extern char* workspaceNames[];
 
 #define ADD_BINDINGS \

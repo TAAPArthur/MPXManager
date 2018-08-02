@@ -14,6 +14,8 @@ int main(void) {
     runner = srunner_create(utilSuite());
     srunner_add_suite(runner,mywmUtilSuite());
     srunner_run_all(runner, CK_NORMAL);
-    return srunner_ntests_failed(runner);
+    int failures=srunner_ntests_failed(runner);
+    srunner_free(runner);
+    return failures;
 }
 

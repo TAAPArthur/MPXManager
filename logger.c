@@ -46,7 +46,7 @@ void dumpAllWindowInfo(){
 
 void dumpWindowInfo(WindowInfo* win){
     if(!win)return;
-    const int level=LOG_LEVEL_DEBUG;
+
     LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x)\n",win->id,win->id,win->groupId,win->groupId);
     LOG(LOG_LEVEL_DEBUG,"Lables class %s (%s)\n",win->className,win->instanceName);
     LOG(LOG_LEVEL_DEBUG,"Type is %d (%s) implicit: %d\n",win->type,win->typeName,win->implicitType);

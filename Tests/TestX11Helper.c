@@ -7,8 +7,9 @@
 #include "TestX11Helper.h"
 #include "../default-rules.h"
 #include "../logger.h"
+#include "../xsession.h"
 
-
+pthread_t pThread;
 
 DisplayConnection* createDisplayConnection(){
     DisplayConnection*dc=malloc(sizeof(DisplayConnection));
@@ -90,3 +91,17 @@ void setArbitraryProperties(DisplayConnection* dc,int win){
     setProperties(dc,win,"class\0instance","title",&dc->ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 
+void createContextAndConnection(){
+    createContext(1);
+    connectToXserver();
+}
+
+xcb_input_key_press_event_t* getNextDeviceEvent(){
+    xcb_flush(dis);
+    xcb_input_key_press_event_t*event=(xcb_input_key_press_event_t*)xcb_wait_for_event(dis);
+    //printf("%d\n\n",event->response_type);
+    //assert((event->response_type&127)==XCB_GE_GENERIC);
+    const xcb_query_extension_reply_t*reply=xcb_get_extension_data(dis, &xcb_input_id);
+    assert(reply);
+    return event;
+}

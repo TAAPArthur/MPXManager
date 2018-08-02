@@ -73,6 +73,7 @@ void onVisibilityEvent();
 void onCreateEvent();
 void onDestroyEvent();
 void onError();
+void onExpose();
 
 /**
  * Called when the a client application changes the window's state from unmapped to mapped.
@@ -87,9 +88,14 @@ void onPropertyEvent();
 void onClientMessage();
 
 void detectMonitors();
-void onGenericEvent();
+
 void onStartup();
 void clearAllRules();
+
+/**
+ * Called when an connection to the Xserver has been established
+ */
+void onXConnect();
 
 
 #endif /* DEFAULT_RULES_H_ */

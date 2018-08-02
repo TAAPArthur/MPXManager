@@ -9,50 +9,23 @@
 
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XI.h>
+#include <xcb/xinput.h>
 
 #include "bindings.h"
 #include "mywm-structs.h"
 #include "logger.h"
 #include "mywm-util.h"
-#include <xcb/xinput.h>
 
-
-#define LEN(X) (sizeof X / sizeof X[0])
-
-
-#define GENERIC_EVENT_OFFSET LASTEvent
-#define LAST_XI_EVENT   GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS
-
-enum{
-    //if all rules are passed through, then the window is added as a normal window
-    onXConnection=LAST_XI_EVENT,
-    ProcessingWindow,
-    WorkspaceChange,WindowWorkspaceChange,
-    WindowLayerChange,LayoutChange,
-    TilingWindows,
-    NUMBER_OF_EVENT_RULES
-};
-extern Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 /**
  * Window Manager name used to comply with EWMH
  */
 #define WM_NAME "My Window Manger"
 
-extern int defaultScreenNumber;
+#define LEN(X) (sizeof X / sizeof X[0])
 
-extern int NUMBER_OF_WORKSPACES;
-extern int DEFAULT_BORDER_WIDTH;
 
 int isShuttingDown();
-
-
-/**
- * Do everything needed to comply when EWMH.
- * Creates a functionless window with set all the Atoms we support, clear any
- * unsporrted values from the root window
- */
-void broadcastEWMHCompilence();
 
 
 /**
@@ -101,7 +74,7 @@ int deleteWindow(xcb_window_t winToRemove);
  * Forks and executes command
  * @param command the command to execute
  */
-void runCommand(char* command);
+//void runCommand(char* command);
 
 
 
@@ -121,37 +94,11 @@ void switchToWorkspace(int workspaceIndex);
 void scan();
 
 /**
- * Closes an open XConnection
- */
-void closeConnection();
-/**
- * exits the application
- */
-void quit();
-
-void connectToXserver();
-/**
- * Called when an connection to the Xserver has been established
- */
-void onXConnect();
-/**
- * Establishes a connection with the X server.
- * Creates and Xlib and xcb display
- */
-void connectToXserver();
-/**
- * Query for all monitors
- */
-void detectMonitors();
-
-/**
  * Determines if and how a given window should be managed
  * @param winInfo
  */
 void processNewWindow(WindowInfo* winInfo);
 void avoidStruct(WindowInfo*info);
-
-
 
 /**
  * Sets the window state based on a list of attoms
@@ -169,11 +116,15 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo,xcb_atom_t* atoms,int numberO
  */
 void registerWindow(WindowInfo*winInfo);
 
-void detectMonitors();
-
 void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LEN]);
 void processConfigureRequest(Window win,short values[5],xcb_window_t sibling,int stackMode,int mask);
 
+/**
+ * Do everything needed to comply when EWMH.
+ * Creates a functionless window with set all the Atoms we support, clear any
+ * unsporrted values from the root window
+ */
+void broadcastEWMHCompilence();
 
 /**
  * Send a kill signal to the client with the window
@@ -198,6 +149,7 @@ void moveWindowToLayerForAllWorkspaces(WindowInfo* win,int layer);
  */
 void moveWindowToLayer(WindowInfo* win,int workspaceIndex,int layer);
 
+int* getWindowDimensions(WindowInfo*winInfo);
 
 /**
  * Clears the dirty bit

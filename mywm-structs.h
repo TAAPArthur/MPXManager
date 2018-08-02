@@ -82,7 +82,8 @@ typedef struct window_info{
     char*title;
 
 
-    int implicitType;
+    /**1 iff the window type was not explicilty set*/
+    char implicitType;
     /**
      * Used to indicate the "last seen in" workspace.
      * A window should only be tiled if the this field matches
@@ -94,7 +95,19 @@ typedef struct window_info{
     int activeWorkspaceCount;
     int minimizedTimeStamp;
 
+    /**
+     * Set to override tiling
+     */
     int config[5];
+
+    /**
+     * offset for clone windows
+     */
+    int offset[2];
+    /**id of src window iff window is a clone*/
+    int cloneOrigin;
+    /**List of clones*/
+    Node*cloneList;
     unsigned int transientFor;
     char onlyOnPrimary;
     char state;
@@ -108,6 +121,7 @@ typedef struct window_info{
     char input;
     unsigned int groupId;
     int properties[WINDOW_STRUCT_ARRAY_SIZE];
+    int eventMasks;
 } WindowInfo;
 
 struct binding_struct;
@@ -115,6 +129,7 @@ typedef struct{
     /**master id; intended to corrospond to Master device id;*/
     int id;
     int pointerId;
+    int fakeDeviceId;
     /**Stack of windows in order of most recently focused*/
     Node* windowStack;
     /**Contains the window with current focus,

@@ -16,9 +16,6 @@
 
 #include <xcb/xinput.h>
 
-#include <X11/Xlib-xcb.h>
-#include <xcb/randr.h>
-
 #include "bindings.h"
 #include "ewmh.h"
 #include "mywm-util.h"
@@ -28,22 +25,19 @@
 #include "defaults.h"
 #include "devices.h"
 
-static int shuttingDown=0;
+
 
 #define APPLY_RULES_OR_RETURN(TYPE,winInfo) \
         if(!applyEventRules(eventRules[TYPE],winInfo))\
             return;
 
 
-int isShuttingDown(){
-    return shuttingDown;
-}
 
 //window methods
 
 int focusWindow(xcb_window_t win){
-    LOG(LOG_LEVEL_WARN,"Trying to set focus to %d\n",win);
-
+    LOG(LOG_LEVEL_DEBUG,"Trying to set focus to %d\n",win);
+    assert(win);
     xcb_void_cookie_t cookie=xcb_input_xi_set_focus_checked(dis, win, 0, getActiveMaster()->id);
     if(checkError(cookie,win,"could not set focus to window")){
         return 0;
@@ -56,7 +50,7 @@ int raiseWindow(xcb_window_t win){
 
     assert(dis);
     assert(win);
-    LOG(LOG_LEVEL_WARN,"Trying to raise window window %d\n",win);
+    LOG(LOG_LEVEL_TRACE,"Trying to raise window window %d\n",win);
     int values[]={XCB_STACK_MODE_ABOVE};
     if(checkError(xcb_configure_window_checked(dis, win,XCB_CONFIG_WINDOW_STACK_MODE,values),win,"Could not raise window"))
         return 0;
@@ -79,7 +73,7 @@ void registerWindow(WindowInfo*winInfo){
         return;
     }
     if(!addWindowInfo(winInfo))
-        assert(0);
+        assert(0 && "Window already exists");
 
     Window win=winInfo->id;
     addState(winInfo, defaultWindowMask);
@@ -230,6 +224,8 @@ void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex){
 }
 void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer){
     assert(destIndex!=NO_WORKSPACE);
+    assert(destIndex>=0 && destIndex<getNumberOfWorkspaces());
+    assert(winInfo);
     removeWindowFromAllWorkspaces(winInfo);
     addWindowToWorkspaceAtLayer(winInfo, destIndex, layer);
     updateWindowWorkspaceState(winInfo, destIndex, isWorkspaceVisible(destIndex));
@@ -265,22 +261,11 @@ void avoidStruct(WindowInfo*info){
 
 void toggleShowDesktop(){}
 
-void detectMonitors(){
-    xcb_randr_get_monitors_cookie_t cookie =xcb_randr_get_monitors(dis, root, 1);
-    xcb_randr_get_monitors_reply_t *monitors=xcb_randr_get_monitors_reply(dis, cookie, NULL);
-    xcb_randr_monitor_info_iterator_t iter=xcb_randr_get_monitors_monitors_iterator(monitors);
-    while(iter.rem){
-        xcb_randr_monitor_info_t *monitorInfo = iter.data;
-        addMonitor(monitorInfo->name,monitorInfo->primary,&monitorInfo->x);
-        xcb_randr_monitor_info_next(&iter);
-    }
-    free(monitors);
-}
-
 void processNewWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_DEBUG,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
 
-    loadWindowProperties(winInfo);
+    if(winInfo->cloneOrigin==0)
+        loadWindowProperties(winInfo);
     //dumpWindowInfo(winInfo);
     APPLY_RULES_OR_RETURN(ProcessingWindow,winInfo);
     LOG(LOG_LEVEL_DEBUG,"Registerign window\n");
@@ -288,84 +273,6 @@ void processNewWindow(WindowInfo* winInfo){
 
 }
 
-void connectToXserver(){
-    LOG(LOG_LEVEL_DEBUG," connecting to XServe \n");
-    for(int i=0;i<30;i++){
-        dpy = XOpenDisplay(NULL);
-        if(dpy)
-            break;
-        msleep(50);
-    }
-    if(!dpy){
-        LOG(LOG_LEVEL_ERROR," Failed to connect to xserver\n");
-        exit(60);
-    }
-    dis = XGetXCBConnection(dpy);
-    if(xcb_connection_has_error(dis)){
-        LOG(LOG_LEVEL_ERROR," failed to conver xlib display to xcb version\n");
-        exit(1);
-    }
-    XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
-
-    screen=xcb_setup_roots_iterator (xcb_get_setup (dis)).data;
-
-    root = DefaultRootWindow(dpy);
-    ewmh = malloc(sizeof(xcb_ewmh_connection_t));
-    xcb_intern_atom_cookie_t *cookie;
-    cookie = xcb_ewmh_init_atoms(dis, ewmh);
-    xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
-    xcb_set_close_down_mode(dis, XCB_CLOSE_DOWN_DESTROY_ALL);
-    APPLY_RULES_OR_RETURN(onXConnection,NULL);
-}
-
-
-void onXConnect(){
-
-
-
-    xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
-    registerForEvents();
-    broadcastEWMHCompilence();
-    initCurrentMasters();
-    assert(getActiveMaster()!=NULL);
-
-    unsigned int currentWorkspace;
-
-    if(!xcb_ewmh_get_current_desktop_reply(ewmh,
-            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
-            &currentWorkspace, NULL)){
-        currentWorkspace=DEFAULT_WORKSPACE_INDEX;
-    }
-
-    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
-    activateWorkspace(currentWorkspace);
-    detectMonitors();
-
-    scan();
-    tileWindows();
-    xcb_flush(dis);
-    LOG(LOG_LEVEL_TRACE,"finished init x connection \n");
-
-}
-
-void broadcastEWMHCompilence(){
-    LOG(LOG_LEVEL_TRACE,"Compliying with EWMH\n");
-    SET_SUPPORTED_OPERATIONS(ewmh);
-
-    //functionless window required by EWMH spec
-    //we set its class to input only and set override redirect so we (and anyone else  ignore it)
-    int noevents = 1;
-    xcb_window_t checkwin = xcb_generate_id(dis);
-    xcb_create_window(dis, 0, checkwin, root, 0, 0, 1, 1, 0,
-                      XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &noevents);
-    xcb_ewmh_set_supporting_wm_check(ewmh, root, checkwin);
-    xcb_ewmh_set_wm_name(ewmh, checkwin, strlen(WM_NAME), WM_NAME);
-
-    //TODO update on monitor detection
-    //xcb_ewmh_set_desktop_viewport_checked(ewmh, screen_nbr, list_len, list);
-
-    LOG(LOG_LEVEL_TRACE,"ewmh initilized\n");
-}
 
 void updateMapState(int id,int state){
     WindowInfo*winInfo=getWindowInfo(id);
@@ -386,21 +293,11 @@ void updateMapState(int id,int state){
 }
 
 
-void closeConnection(){
-    LOG(LOG_LEVEL_INFO,"closing X connection\n");
-    if(dpy)
-        XCloseDisplay(dpy);
-}
 
-void quit(){
-    LOG(LOG_LEVEL_INFO,"Shuttign down\n");
-    shuttingDown=1;
-    closeConnection();
-    destroyContext();
-    exit(0);
-}
 
 void applyLayout(Workspace*workspace,Layout* layout){
+    if(!workspace->activeLayout)
+        return;
     LOG(LOG_LEVEL_DEBUG,"using layout %s with %d\n",workspace->activeLayout->name,getNumberOfTileableWindows(getWindowStack(workspace)));
     Monitor*m=getMonitorFromWorkspace(workspace);
     assert(m);
@@ -409,16 +306,14 @@ void applyLayout(Workspace*workspace,Layout* layout){
             getWindowStack(workspace),layout->args);
 }
 void tileWindows(){
-    if(isDirty()){
-        APPLY_RULES_OR_RETURN(TilingWindows,NULL);
-        for(int i=0;i<getNumberOfWorkspaces();i++)
-            if(isWorkspaceVisible(i)){
-                Workspace* w=getWorkspaceByIndex(i);
-                LOG(LOG_LEVEL_DEBUG,"tiling %d windows\n",getSize(getWindowStack(w)));
-                applyLayout(w,w->activeLayout);
-            }
-    }
-    setClean();
+    LOG(LOG_LEVEL_DEBUG,"tiling windows\n");
+    APPLY_RULES_OR_RETURN(TilingWindows,NULL);
+    for(int i=0;i<getNumberOfWorkspaces();i++)
+        if(isWorkspaceVisible(i)){
+            Workspace* w=getWorkspaceByIndex(i);
+            LOG(LOG_LEVEL_DEBUG,"tiling %d windows\n",getSize(getWindowStack(w)));
+            applyLayout(w,w->activeLayout);
+        }
 }
 void scan() {
     xcb_query_tree_reply_t *reply;
@@ -436,8 +331,7 @@ void scan() {
             LOG(LOG_LEVEL_DEBUG,"processing child %d\n",children[i]);
             attr = xcb_get_window_attributes_reply(dis,cookies[i], NULL);
 
-            if(!attr)
-                assert(0);
+            assert(attr);
             if(!MANAGE_OVERRIDE_REDIRECT_WINDOWS && attr->override_redirect || attr->_class ==XCB_WINDOW_CLASS_INPUT_ONLY){
                 LOG(LOG_LEVEL_TRACE,"Skipping child override redirect: %d class: %d\n",attr->override_redirect,attr->_class);
             }
@@ -525,10 +419,32 @@ void processConfigureRequest(Window win,short values[5],xcb_window_t sibling,int
     LOG(LOG_LEVEL_TRACE,"Window dims %d %d %d %d %d %d %d \n",i,actualValues[0],actualValues[1],actualValues[2],actualValues[3],actualValues[4],mask);
     xcb_configure_window(dis, win, mask, actualValues);
 }
+void broadcastEWMHCompilence(){
+    LOG(LOG_LEVEL_TRACE,"Compliying with EWMH\n");
+    SET_SUPPORTED_OPERATIONS(ewmh);
+
+    //functionless window required by EWMH spec
+    //we set its class to input only and set override redirect so we (and anyone else  ignore it)
+    int noevents = 1;
+    xcb_window_t checkwin = xcb_generate_id(dis);
+    xcb_create_window(dis, 0, checkwin, root, 0, 0, 1, 1, 0,
+                      XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &noevents);
+    xcb_ewmh_set_supporting_wm_check(ewmh, root, checkwin);
+    xcb_ewmh_set_wm_name(ewmh, checkwin, strlen(WM_NAME), WM_NAME);
+
+    //TODO update on monitor detection
+    //xcb_ewmh_set_desktop_viewport_checked(ewmh, screen_nbr, list_len, list);
+
+    LOG(LOG_LEVEL_TRACE,"ewmh initilized\n");
+}
 
 void killWindow(xcb_window_t win){
     if(win)
         xcb_kill_client(dis, win);
+}
+
+int* getWindowDimensions(WindowInfo*winInfo){
+    return winInfo->currentConfig;
 }
 
 int dirty;

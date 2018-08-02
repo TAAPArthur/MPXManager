@@ -19,7 +19,8 @@ int NON_ROOT_EVENT_MASKS=VisibilityChangeMask;
 /**Mask of all events we listen for on all Master devices when grabing specific buttons/keys
  * (ie not grabing the entire device).
  * */
-int DEVICE_EVENT_MASKS=XCB_INPUT_XI_EVENT_MASK_FOCUS_IN|XCB_INPUT_XI_EVENT_MASK_HIERARCHY|XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
+int ROOT_DEVICE_EVENT_MASKS=XCB_INPUT_XI_EVENT_MASK_HIERARCHY|XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
+int NON_ROOT_DEVICE_EVENT_MASKS=XCB_INPUT_XI_EVENT_MASK_FOCUS_IN;
 //int DEVICE_EVENT_MASKS=XI_FocusInMask|XI_HierarchyChangedMask|XI_ButtonPressMask;
 /**
  * The masks to use when grabing the keyboard for chain bindings
@@ -66,6 +67,4 @@ xcb_ewmh_connection_t*ewmh;
 xcb_screen_t* screen;
 int defaultScreenNumber;
 
-
-
-
+Node* eventRules[NUMBER_OF_EVENT_RULES];

@@ -59,26 +59,22 @@ int intersects(short int arg1[4],short int arg2[4]){
 
 void destroyContext(){
     if(!context)return;
-    Node*node;
 
-    node=context->docks;
-    while(isNotEmpty(node))
-        removeWindow(getIntValue(node));
-    destroyList(node);
-    node=context->windows;
-    while(isNotEmpty(node))
-        removeWindow(getIntValue(node));
-    destroyList(node);
-    node=context->masterList;
-    while(isNotEmpty(node))
-        removeMaster(getIntValue(node));
-    destroyList(node);
+    while(isNotEmpty(getAllDocks()))
+        removeWindow(getIntValue(getAllDocks()));
+    deleteList(getAllDocks());
 
-    node=context->monitors;
-    while(isNotEmpty(node))
-        removeMonitor(getIntValue(node));
-    destroyList(node);
+    while(isNotEmpty(getAllWindows()))
+        removeWindow(getIntValue(getAllWindows()));
+    deleteList(getAllWindows());
 
+    while(isNotEmpty(getAllMasters()))
+        removeMaster(getIntValue(getAllMasters()));
+    deleteList(getAllMasters());
+
+    while(isNotEmpty(getAllMonitors()))
+        removeMonitor(getIntValue(getAllMonitors()));
+    deleteList(getAllMonitors());
 
     for(int i=context->numberOfWorkspaces-1;i>=0;i--){
        for(int n=0;n<NUMBER_OF_LAYERS;n++)
@@ -108,6 +104,7 @@ WindowInfo* createWindowInfo(unsigned int id){
     WindowInfo *wInfo =calloc(1,sizeof(WindowInfo));
     wInfo->id=id;
     wInfo->workspaceIndex=NO_WORKSPACE;
+    wInfo->cloneList=createEmptyHead();
     return wInfo;
 }
 Master *createMaster(int id,int partnerId){
@@ -118,6 +115,7 @@ Master *createMaster(int id,int partnerId){
     master->focusedWindow=master->windowStack;
     master->windowsToIgnore=createEmptyHead();
     master->activeChains=createEmptyHead();
+    master->workspaceHistory=createEmptyHead();
     return master;
 }
 Workspace*createWorkSpaces(int size){
@@ -467,12 +465,13 @@ int removeMaster(unsigned int id){
         return 0;
     assert(node->value);
     Master *master=(Master*)node->value;
-    if(master==getActiveMaster())
-        setActiveMaster(getValue(getAllMasters()));
     destroyList(master->windowStack);
     destroyList(master->windowsToIgnore);
     destroyList(master->activeChains);
+    destroyList(master->workspaceHistory);
     deleteNode(node);
+    if(master==getActiveMaster())
+        setActiveMaster(getValue(getAllMasters()));
     return 1;
 }
 
@@ -600,19 +599,20 @@ int addDock(WindowInfo* info){
 }
 
 int removeWindowFromMaster(Master*master,int winToRemove){
-    int nextWindow=getIntValue(
-            getNextWindowInFocusStack(
-                winToRemove==getIntValue(getFocusedWindowByMaster(master))));
-
-   //onWindowFocus(nextWindow);
-
-    int result = removeByValue(getMasterWindowStack(), winToRemove);
-    master->focusedWindow = isInList(getMasterWindowStack(), nextWindow);
-    if(!getFocusedWindowByMaster(master))
-        master->focusedWindow = getMasterWindowStack();
-    return result;
+    Node*node=isInList(master->windowStack, winToRemove);
+    if(node){
+        if(master->focusedWindow==node && master->windowStack != node){
+            master->focusedWindow =
+                getNextWindowInFocusStack(
+                    winToRemove==getIntValue(getFocusedWindowByMaster(master)));
+        }
+        softDeleteNode(node);
+    }
+    return node?1:0;
 }
-
+Node* getClonesOfWindow(WindowInfo*winInfo){
+    return winInfo->cloneList;
+}
 int removeWindow(unsigned int winToRemove){
     assert(winToRemove!=0);
 
@@ -626,16 +626,22 @@ int removeWindow(unsigned int winToRemove){
             dock=1;
     }
 
+
     Node*list=getAllMasters();
     FOR_EACH(list,removeWindowFromMaster(getValue(list),winToRemove));
     removeWindowFromAllWorkspaces(getValue(winNode));
 
     WindowInfo* winInfo=getValue(winNode);
+    Node*clones=getClonesOfWindow(winInfo);
+    FOR_EACH(clones,removeWindow(getIntValue(clones)));
+    deleteList(getClonesOfWindow(winInfo));
     char**fields=&winInfo->typeName;
     for(int i=0;i<4;i++)
         if(fields[i])
             free(fields[i]);
+
     deleteNode(winNode);
+
     if(dock)
         resizeAllMonitorsToAvoidAllStructs(context);
     return 1;
@@ -662,7 +668,8 @@ Master*getMasterById(int keyboardID){
     return getValue(isInList(getAllMasters(), keyboardID));
 }
 void setActiveMaster(Master*master){
-    assert(master);
+
+    assert(!isNotEmpty(getAllMasters()) || master);
     context->master=master;
 }
 

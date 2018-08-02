@@ -388,14 +388,18 @@ START_TEST(test_auto_tile){
     void fakeLayout(Monitor*m,Node*n,int*i){
         count++;
     }
-    DEFAULT_LAYOUTS[0].layoutFunction=fakeLayout;
+    Layout layout;
+    layout.layoutFunction=fakeLayout;
     for(int i=0;i<size;i++){
         win[i]=createArbitraryWindow(dc);
         mapWindow(dc, win[i]);
     }
     createContext(1);
+    addLayoutsToWorkspace(0, &layout, 1);
+    setLogLevel(0);
     connectToXserver();
     assert(isNotEmpty(eventRules[onXConnection]));
+    printf("%d\n",count);
     assert(count==1);
     END
 }END_TEST
@@ -422,16 +426,7 @@ START_TEST(test_privileged_windows_size){
 
 
 }END_TEST
-START_TEST(test_quit){
-    quit();
-    assert(0);
-}END_TEST
-START_TEST(test_xconnection){
-    createContext(1);
-    onStartup();
-    clearAllRules();
-    connectToXserver();
-}END_TEST
+
 
 
 Suite *x11Suite(void) {
@@ -439,15 +434,9 @@ Suite *x11Suite(void) {
     onStartup();
     Suite*s = suite_create("My Window Manager");
     TCase* tc_core = tcase_create("X");
-    tcase_add_test(tc_core, test_xconnection);
-    tcase_add_test(tc_core, test_quit);
-
-    suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Window properties");
     tcase_add_test(tc_core, test_window_property_loading);
     suite_add_tcase(s, tc_core);
-
-
 
     tc_core = tcase_create("Window detection");
     //tcase_set_timeout(tc_core, 10);

@@ -8,6 +8,7 @@
 
 #include "defaults.h"
 #include "devices.h"
+#include "bindings.h"
 #include "logger.h"
 #include "mywm-util.h"
 
@@ -26,6 +27,7 @@ int getAssociatedMasterDevice(int deviceId){
     XIFreeDeviceInfo(masterDevices);
     return id;
 }
+/*
 void setClientPointerForWindow(int window){
     xcb_input_xi_set_client_pointer(dis, window, getAssociatedMasterDevice(getActiveMaster()->id));
 }
@@ -34,11 +36,11 @@ int getClientKeyboard(int win){
     XIGetClientPointer(dpy, win, &masterPointer);
     return getAssociatedMasterDevice(masterPointer);
 }
-
+*/
 void destroyMasterDevice(int id,int returnPointer,int returnKeyboard){
     XIRemoveMasterInfo remove;
     remove.type = XIRemoveMaster;
-    remove.deviceid = id; /* assuming this is one of the master devices */
+    remove.deviceid = id;
     remove.return_mode = XIAttachToMaster;
     remove.return_pointer = returnPointer;
     remove.return_keyboard = returnKeyboard;
@@ -51,7 +53,6 @@ void createMasterDevice(char*name){
     add.send_core=1;
     add.enable=1;
     XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&add, 1);
-
     //xcb_input_xi_change_hierarchy(c, num_changes, changes);
 
 }
@@ -78,44 +79,58 @@ void initCurrentMasters(){
     devices = XIQueryDevice(dpy, XIAllMasterDevices, &ndevices);
     for (int i = 0; i < ndevices; i++) {
         device = &devices[i];
-        if(device->use == XIMasterKeyboard ){
+        if(device->use == XIMasterKeyboard){
             addMaster(device->deviceid,device->attachment);
         }
     }
     XIFreeDeviceInfo(devices);
 }
-Node* getSlavesOfMaster(Master*master,char keyboard,char pointer){
-    assert(master);
+
+Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves){
+    assert(ids);
     int ndevices;
     XIDeviceInfo *devices, *device;
     devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
     Node*list=createEmptyHead();
     assert(ndevices);
+
+    int count=0;
     for (int i = 0; i < ndevices; i++) {
         device = &devices[i];
-        if(device->attachment==master->id ||
-            device->attachment==master->pointerId)
-            if(device->use == XISlaveKeyboard && keyboard ||
-                    device->use == XISlavePointer && pointer){
+        for(int n=0;n<num;n++)
+            if(device->attachment==ids[n]){
+                if(device->use == XISlaveKeyboard||
+                        device->use == XISlavePointer){
 
-                int*p=malloc(sizeof(int));
-                *p=device->deviceid;
-                insertHead(list,p);
+                    if(isTestDevice(device->name))
+                        continue;
+                    count++;
+                    SlaveDevice*slaveDevice=malloc(sizeof(SlaveDevice));
+                    slaveDevice->id=device->deviceid;
+                    slaveDevice->attachment=ids[n];
+                    slaveDevice->offset=n;
+                    insertHead(list,slaveDevice);
+                }
+                break;
             }
     }
     XIFreeDeviceInfo(devices);
+    if(numberOfSlaves)
+        *numberOfSlaves=count;
     return list;
 }
 
 
 //master methods
 int setActiveMasterByMouseId(int mouseId){
+    assert(mouseId);
     int masterMouseOrMasterKeyboaredId=getAssociatedMasterDevice(mouseId);
 
     //master pointer is functionly the same as keyboard slave
     return setActiveMasterByKeyboardId(masterMouseOrMasterKeyboaredId);
 }
 int setActiveMasterByKeyboardId(int keyboardId){
+    assert(keyboardId);
     Master*masterNode=getMasterById(keyboardId);
     if(masterNode){
         //if true then keyboardId was a master keyboard
@@ -124,85 +139,82 @@ int setActiveMasterByKeyboardId(int keyboardId){
     }
     masterNode=getMasterById(getAssociatedMasterDevice(keyboardId));
 
-    if(masterNode){
-        setActiveMaster(masterNode);
-        return 0;
-    }
-    LOG(LOG_LEVEL_ERROR,"device id was not a master keyboard or slave keyboard/slave pointer");
-    assert(0);
-    return -1;
+    assert(masterNode && "device id was not a master keyboard or slave keyboard/slave pointer");
+    setActiveMaster(masterNode);
+    return 0;
 }
 
 int grabDetails(Binding*binding,int numKeys,int mask,int mouse){
     int errors=0;
     for (int i = 0; i < numKeys; i++){
-        if(!mouse)
-            binding[i].keyCode=XKeysymToKeycode(dpy, binding[i].detail);
+        binding[i].detail=mouse?binding[i].buttonOrKey: XKeysymToKeycode(dpy, binding[i].buttonOrKey);
         if(!binding[i].noGrab)
-            errors+=grabDetail(XIAllMasterDevices,binding[i].keyCode,binding[i].mod,mask,mouse);
+            errors+=grabDetail(XIAllMasterDevices,binding[i].detail,binding[i].mod,mask,mouse);
     }
     return errors;
 }
 
-int ungrabDevice(int id){
-    return XIUngrabDevice(dpy, id, 0);
+void passiveGrab(int window,int maskValue){
+    XIEventMask eventmask = {XIAllDevices,2,(unsigned char*)&maskValue};
+    XISelectEvents(dpy, window, &eventmask, 1);
+    //XISelectEvents(dpy, root, &eventmask, 1);
 }
 int grabActivePointer(){
-    return grabDevice(getAssociatedMasterDevice(getActiveMaster()->id),XCB_INPUT_DEVICE_BUTTON_PRESS);
+    return grabDevice(getActiveMasterPointerID(),XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE);
 }
 int grabActiveKeyboard(){
-    return grabDevice(getActiveMaster()->id,XCB_INPUT_DEVICE_KEY_PRESS);
+
+    return grabDevice(getActiveMasterKeyboardID(),XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE);
 }
 int grabDevice(int deviceID,int maskValue){
     XIEventMask eventmask = {deviceID,2,(unsigned char*)&maskValue};
     return XIGrabDevice(dpy, deviceID,  root, CurrentTime, None, GrabModeAsync,
-                                       GrabModeAsync, False, &eventmask);
+                                       GrabModeAsync, 1, &eventmask);
 }
-int grabActiveDetail(int detail,int mod,int mouse){
+int ungrabDevice(int id){
+    return XIUngrabDevice(dpy, id, 0);
+}
+int grabActiveDetail(Binding*binding,int mouse){
     int deviceID=mouse?
-            getAssociatedMasterDevice(getActiveMaster()->id):
-            getActiveMaster()->id;
-    int mask=mouse?XCB_INPUT_KEY_RELEASE:XCB_INPUT_KEY_PRESS;
-    return grabDetail(deviceID,detail,mod,mask,mouse);
+            getActiveMasterPointerID():
+            getActiveMasterKeyboardID();
+    int mask=mouse?XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS:XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
+    return grabDetail(deviceID,binding->detail,binding->mod,mask,mouse);
 }
 int grabDetail(int deviceID,int detail,int mod,int maskValue,int mouse){
     XIEventMask eventmask = {deviceID,2,(unsigned char*)&maskValue};
     XIGrabModifiers modifiers[2]={{mod},{mod|IGNORE_MASK}};
 
+    LOG(LOG_LEVEL_DEBUG,"Grabbing device:%d detail:%d mod:%d mask: %d %d\n",
+            deviceID,detail,mod,maskValue,mouse);
     if(mouse)
         return XIGrabButton(dpy, deviceID, detail, root, 0,
                 XIGrabModeAsync, XIGrabModeAsync, 1, &eventmask, 2, modifiers);
     else
         return XIGrabKeycode(dpy, deviceID, detail, root, XIGrabModeAsync, XIGrabModeAsync,
                     1, &eventmask, 2, modifiers);
-}
+}/*
 int ungrabDetail(int deviceID,int detail,int mod,int mouse){
+    LOG(LOG_LEVEL_ERROR,"UNGrabbing device:%d detail:%d mod:%d %d\n",
+                deviceID,detail,mod,mouse);
     XIGrabModifiers modifiers[2]={{mod},{mod|IGNORE_MASK}};
     if(mouse)
         return XIUngrabButton(dpy, deviceID, detail, root, 2, modifiers);
     else
-        return XIUngrabKeycode(dpy, deviceID, detail, root, 1, modifiers);
+        return XIUngrabKeycode(dpy, deviceID, detail, root, 2, modifiers);
 }
+*/
 
 
-
-void registerForEvents(){
-    xcb_void_cookie_t cookie;
-    cookie=xcb_change_window_attributes_checked(dis, root,XCB_CW_EVENT_MASK, &ROOT_EVENT_MASKS);
-    checkError(cookie, root, "could not sent window masks");
-
+void registerForDeviceEvents(){
     for(int i=0;i<4;i++)
-        if(deviceBindings[i])
+        if(deviceBindings[i] && deviceBindingLengths[i])
             grabDetails(deviceBindings[i], deviceBindingLengths[i], bindingMasks[i], i>=2);
 
     //TODO listen on select devices
-    LOG(LOG_LEVEL_TRACE,"listening for device event;  masks: %d\n",DEVICE_EVENT_MASKS);
-    XIEventMask eventmask = {XIAllDevices,4,(unsigned char*)&DEVICE_EVENT_MASKS};
+    LOG(LOG_LEVEL_TRACE,"listening for device event;  masks: %d\n",ROOT_DEVICE_EVENT_MASKS);
 
-
-    //xcb_input_event_mask_t eventmask={XCB_INPUT_DEVICE_ALL_MASTER,DEVICE_EVENT_MASKS};
-    XISelectEvents(dpy, root, &eventmask, 1);
-    //xcb_input_xi_select_events(dis, root, 1, &eventmask);
+    passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
 }
 void pushBinding(Binding*chain){
     assert(chain);
@@ -218,101 +230,87 @@ Binding* getActiveBinding(){
     return getValue(getActiveMaster()->activeChains);
 }
 
-int endsWith(const char *str, const char *suffix)
-{
-    if (!str || !suffix)
-        return 0;
+static int endsWith(const char *str, const char *suffix){
     size_t lenstr = strlen(str);
     size_t lensuffix = strlen(suffix);
     if (lensuffix >  lenstr)
         return 0;
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
-void swapSlaves(XIDeviceEvent *devev){
-    int masterPointer;
-    XIGetClientPointer(dpy, 0, &masterPointer);
-    int masterKeyboard=getAssociatedMasterDevice(masterPointer);
-    int pointer=getAssociatedMasterDevice(getAssociatedMasterDevice(devev->deviceid));
-    int keyboard=getAssociatedMasterDevice(pointer);
-
-    //printf("%d %d %d %d",masterPointer,masterKeyboard,pointer,keyboard);
-    //only act if device isn't already default master
-    if(masterKeyboard==keyboard||masterPointer==pointer)
-        return;
-    if(masterKeyboard==pointer || masterPointer==keyboard)
+int isTestDevice(char*str){
+    return endsWith(str, "XTEST pointer")||endsWith(str, "XTEST keyboard");
+}
+void swapSlaves(Master*master1,Master*master2){
+    if(master1==master2)
         return;
 
+    LOG(LOG_LEVEL_DEBUG,"Swapping %d(%d) with %d (%d)\n",
+            master1->id,master1->pointerId,master2->id,master2->pointerId);
     //swap keyboard focus
-    Window masterKeyboardFocus;
-    Window keyboardFocus;
-    XIGetFocus(dpy, masterKeyboard, &masterKeyboardFocus);
-    XIGetFocus(dpy, keyboard, &keyboardFocus);
 
-    if(masterKeyboardFocus==0 ||keyboardFocus==0)
-        return;
+    xcb_input_xi_set_focus(dis,getIntValue(getFocusedWindowByMaster(master1)), 0, master2->id);
+    xcb_input_xi_set_focus(dis, getIntValue(getFocusedWindowByMaster(master2)), 0, master2->id);
 
-    //printf("Window master:%lu other:%lu",masterKeyboardFocus,keyboardFocus);
+    xcb_input_xi_query_pointer_reply_t* reply1=
+        xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, root, master1->pointerId), NULL);
+    xcb_input_xi_query_pointer_reply_t* reply2=
+        xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, root, master2->pointerId), NULL);
 
-    XISetFocus(dpy, keyboard, masterKeyboardFocus, CurrentTime);
-    XISetFocus(dpy,  masterKeyboard, keyboardFocus,CurrentTime);
-
-
-    //swap mouse position
-    double ignore ;
-    Window wIgnore;
-    XIButtonState       buttons;
-    XIModifierState     mods;
-    XIGroupState        group;
-    double x,y;
-    double masterX,masterY;
-    XIQueryPointer(dpy, pointer,root, &wIgnore, &wIgnore, &x, &y, &ignore, &ignore, &buttons, &mods, &group);
-    XIQueryPointer(dpy, masterPointer, root, &wIgnore, &wIgnore, &masterX, &masterY,&ignore, &ignore, &buttons, &mods, &group);
-    printf("POS master:%f,%f other:%f,%f",x,y,masterX,masterY);
-    XIWarpPointer(dpy, masterPointer, None, root,0,0,0,0, x,y);
-    XIWarpPointer(dpy, pointer, None, root,0,0,0,0, masterX, masterY);
-
-
+    assert(reply1 && reply2);
+    xcb_input_xi_warp_pointer(dis, None, root, 0, 0, 0, 0, reply1->root_x, reply1->root_y, master2->pointerId);
+    xcb_input_xi_warp_pointer(dis, None, root, 0, 0, 0, 0, reply2->root_x, reply2->root_y, master1->pointerId);
+    free(reply1);
+    free(reply2);
 
     int ndevices;
-    XIDeviceInfo *devices, device;
-    devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
-    XIAnyHierarchyChangeInfo changes[ndevices];
+
+    int ids[]={master1->id,master1->pointerId,master2->id,master2->pointerId};
+    int idMap[]={master2->id,master2->pointerId,master1->id,master1->pointerId};
+    Node*slaves=getSlavesOfMaster(ids, 4, &ndevices);
+    Node*temp=slaves;
     int actualChanges=0;
+    XIAnyHierarchyChangeInfo changes[ndevices];
+    FOR_EACH(slaves,
+           changes[actualChanges].type=XIAttachSlave;
+           changes[actualChanges].attach.deviceid=getIntValue(slaves);
+           changes[actualChanges].attach.new_master=idMap[((SlaveDevice*)getValue(slaves))->offset];
+           actualChanges++;
+    )
+    deleteList(temp);
+    assert(actualChanges==ndevices);
     //swap slave devices
-    for (int i = 0; i < ndevices; i++) {
-        device = devices[i];
+    XIChangeHierarchy(dpy, changes, ndevices);
 
-        switch(device.use) {
-           case XISlavePointer:
-               if(device.attachment!=masterPointer && device.attachment!=pointer)
-                   continue;
-               if(endsWith(device.name,"XTEST pointer"))
-                   continue;
-
-               changes[actualChanges].type=XIAttachSlave;
-               changes[actualChanges].attach.deviceid=device.deviceid;
-               changes[actualChanges].attach.new_master=device.attachment==masterPointer?pointer:masterPointer;
-               actualChanges++;
-               break;
-
-           case XISlaveKeyboard:
-               if(device.attachment!=masterKeyboard && device.attachment!=keyboard)
-                   continue;
-               if(endsWith(device.name,"XTEST keyboard"))
-                   continue;
-               changes[actualChanges].type=XIAttachSlave;
-               changes[actualChanges].attach.deviceid=device.deviceid;
-               changes[actualChanges].attach.new_master=device.attachment==masterKeyboard?keyboard:masterKeyboard;
-               actualChanges++;
-               break;
-        }
-    }
-    XIChangeHierarchy(dpy, changes, actualChanges);
-    XIFreeDeviceInfo(devices);
-
+    int tempId=master1->id,tempPointerId=master1->pointerId;
+    master1->id=master2->id;
+    master1->pointerId=master2->pointerId;
+    master2->id=tempId;
+    master2->pointerId=tempPointerId;
     XFlush(dpy);
+}
+
+Rules deviceEventRule = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent);
+void addDefaultDeviceRules(){
+    for(int i=XCB_INPUT_KEY_PRESS;i<=XCB_INPUT_BUTTON_RELEASE;i++){
+        insertHead(eventRules[GENERIC_EVENT_OFFSET+i],&deviceEventRule);
+    }
 
 }
+void onDeviceEvent(){
+    xcb_input_key_press_event_t*event=getLastEvent();
+    LOG(LOG_LEVEL_DEBUG,"device event %d %d %d\n",event->event_type,event->deviceid,event->sourceid);
+    if(event->event_type<XCB_INPUT_DEVICE_BUTTON_PRESS){//key press/release
+        setActiveMasterByKeyboardId(event->deviceid);
+    }
+    else{//button press/release
+        setActiveMasterByMouseId(event->deviceid);
+        setLastWindowClicked(event->child);
+    }
+    checkBindings(event->detail,event->mods.effective,
+            event->event_type-XI_KeyPress,
+            getWindowInfo(event->child));
+}
+
 /*
 int setBorder(xcb_window_t wid){
     return setBorderColor(wid,getActiveMaster()->focusColor);

@@ -1,10 +1,32 @@
-
+/**
+ * @file devices.h
+ * @brief Provides XI2 helper methods
+ *
+ */
 #ifndef DEVICES_H_
 #define DEVICES_H_
 #include "mywm-structs.h"
+typedef enum{
+    SLAVE_POINTER=1,
+    SLAVE_KEYBOARD=2,
+    SLAVE_ANY=3,
+    SLAVE_NO_TEST=4
+}SlaveType;
 
+typedef struct{
+    int id;
+    int attachment;
+    unsigned char offset;
+}SlaveDevice;
 
 void createMasterDevice(char*name);
+/**
+ * Sends a XIChangeHierarchy request to remove the specified master.
+ * The internal state will not be updated until we receive a Hierarchy change event
+ * @param id
+ * @param returnPointer
+ * @param returnKeyboard
+ */
 void destroyMasterDevice(int id,int returnPointer,int returnKeyboard);
 
 /**
@@ -14,14 +36,13 @@ void destroyMasterDevice(int id,int returnPointer,int returnKeyboard);
  * @param mouse
  * @return
  */
-Node* getSlavesOfMaster(Master* masterDevice,char keyboard,char mouse);
-
-
-
+Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves);
+int isTestDevice(char*str);
+void swapSlaves(Master*master1,Master*master2);
 /**
- * Grab all specified keys/buttons and listen for root window events
+ * Grab all specified keys/buttons and listen for select device events on events
  */
-void registerForEvents();
+void registerForDeviceEvents();
 /**
  * Add all existing masters to the list of master devices
  */
@@ -52,8 +73,7 @@ int ungrabDevice(int id);
  * @see XIGrabDevice
  */
 int grabDevice(int deviceID,int maskValue);
-
-int grabActiveDetail(int detail,int mod,int mouse);
+int grabActiveDetail(Binding*binding,int mouse);
 int grabDetail(int deviceID,int detail,int mod,int maskValue,int mouse);
 int ungrabDetail(int deviceID,int detail,int mod,int mouse);
 int grabDevice(int deviceID,int maskValue);
@@ -62,6 +82,7 @@ int grabActivePointer();
 int ungrabDevice(int id);
 int grabDetails(Binding*binding,int numKeys,int mask,int mouse);
 
+void passiveGrab(int window,int maskValue);
 
 /**
  * Sets the active master to be the device associated with  mouseSlaveId
@@ -96,5 +117,6 @@ void popActiveBinding();
 Node* getActiveBindingNode();
 Binding* getActiveBinding();
 
-
+void addDefaultDeviceRules();
+void onDeviceEvent();
 #endif /* DEVICES_H_ */

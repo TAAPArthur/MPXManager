@@ -69,8 +69,8 @@ Node* createCircularHead(void*value);
 void insertHead(Node* head,void *value);
 
 /**
- * Give list A--C--D, insertAfter(A,B) will yield
- * A--B--C--D
+ * Given list A--B--C, and D--E--F, list insertBefore(A,E) will result in
+ * A--E--F--B--C and D
  *
  * Insert a new node with value n->value after n,
  * and change n's value to value.
@@ -81,8 +81,8 @@ void insertHead(Node* head,void *value);
  */
 void insertAfter(Node* node,Node* newNode);
 /**
- * Given list A--B--C, and D--E--F, list insertBefore(A,E) will yield
- * E--F--A--B--C.
+ * Given list A--B--C, and D--E--F, list insertBefore(A,E) will result in
+ * E--F--A--B--C, and D
  * The pointer to head will always point to the start of the list
  * even if it means shifting values of other nodes in the list
  *
@@ -207,16 +207,6 @@ int isNotEmpty(Node*head);
  */
 void swap(Node* n,Node* n2);
 
-
-
-/**
- * Returns Nth node in list or NULL if n>= the length of the list
- * @param list list to check
- * @param n
- * @return
- */
-Node* getNth(Node* list,int n);
-
 /**
  * Returns last node in list
  * @param list the last to check
@@ -232,21 +222,29 @@ Node* getLast(Node* list);
 void destroyList(Node* head);
 
 /**
- * Destroys the list but preserves just the refrence to the head
+ * Frees all the nodes in the linked list. The values themselves are freed
+ * @param head
+ */
+void deleteList(Node* head);
+
+/**
+ * Like destroyList the list but preserves just the reference to the head.
+ * Values are not freed and all references to values in this list will be lost
  * @param head
  */
 void clearList(Node* head);
-
-
 /**
- * Removes the give node from the list.
- * If node is the head of the list,
-     * If the list is empty, node->value is set to null
-     * else node->value is et to node->next->value and popNode is called on node->next
+ * Separates node for all earlier values if any
  * @param node
- * @return a pointer to the node that was removed or NULL
  */
-Node* popNode(Node* node);
+void partitionLeft(Node*node);
+/**
+ * Separates node for all laster values if any
+ * @param node
+ */
+void partitionRight(Node*node);
+
+
 /**
  * Pops node from list and re-inserts it at the head
  * @param list
@@ -268,14 +266,6 @@ void deleteNode(Node* node);
  */
 void softDeleteNode(Node* node);
 
-/**
- * Finds the first node with value, pops it.
- * The pointer to the head of the list is garunteed point to a valid node
- * @param list
- * @param value
- * @return 1 iff a value was found
- */
-int removeByValue(Node* list,int value);
 
 /**
  * Gets an integer representation of the return value
