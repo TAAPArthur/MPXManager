@@ -49,7 +49,10 @@ testMem: Tests/TextX11Helper.c Tests/MemTest/TestMemoryLeaks.c ${LIBSRCS}
 layer4: Tests/TestHelper.c Tests/Layer4Tests/* ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS}
 	${CC} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} Tests/TestX11Helper.c Tests/Layer4Tests/*.c -o unit-test4 ${CFLAGS} ${LDFLAGS} ${TESTLIBS}
 
-.PHONY: test all clean
+doc:
+	doxygen dconfig 
+
+.PHONY: test all clean doc
 
 .DELETE_ON_ERROR:
 
