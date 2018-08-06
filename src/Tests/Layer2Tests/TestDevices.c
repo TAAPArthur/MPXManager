@@ -1,23 +1,53 @@
+#include <X11/keysym.h>
+
 #include "../../mywm-util.h"
-#include "../../bindings.h"
 #include "../../devices.h"
-#include "../../defaults.h"
+#include "../../bindings.h"
+#include "../../globals.h"
 #include "../../xsession.h"
 #include "../../logger.h"
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
-
-#include <X11/keysym.h>
 #include "../../test-functions.h"
 
-void waitForCleanExit(){
-    int status=0;
-    wait(&status);
-    if ( WIFEXITED(status) ) {
-        const int es = WEXITSTATUS(status);
-        assert(es==EXIT_SUCCESS);
-    }
+
+#define KEYBOARD_MASKS XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE
+#define POINTER_MASKS XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE
+#define ALL_MASKS KEYBOARD_MASKS|POINTER_MASKS
+//mod,detail,mask
+Binding input[]={
+        {0,XK_a,.mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS},
+        {0,XK_a,.mask=XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE},
+        {0,Button1,.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
+        {0,Button1,.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE},
+};
+static void resetAllMasks(){
+    ROOT_DEVICE_EVENT_MASKS=0;
+    NON_ROOT_DEVICE_EVENT_MASKS=0;
+    ROOT_EVENT_MASKS=0;
+    NON_ROOT_EVENT_MASKS=0;
 }
+static void setup(){
+    createSimpleContext();
+    resetAllMasks();
+    //connectToXserver();
+    openXDisplay();
+    initCurrentMasters();
+
+    for(int i=0;i<LEN(input);i++){
+        assert(input[i].noGrab==0);
+        initBinding(&input[i]);
+        addBinding(&input[i]);
+    }
+
+}
+
+static void teardown(){
+    closeConnection();
+    destroyContext();
+}
+
+
 int getIntAndFree(Node*node){
     int value=getIntValue(node);
     deleteList(node);
@@ -36,15 +66,8 @@ int listsEqual(Node*n,Node*n2){
     return 1;
 }
 
-static int checkDeviceEventMatchesType(xcb_input_key_press_event_t*event,int type){
-    int result= event->event_type==type;
-    free(event);
-    return result;
-}
 
-
-
-START_TEST(test_create_remove_master){
+START_TEST(test_create_destroy_master){
     createMasterDevice("test");
     //re-running
     initCurrentMasters();
@@ -81,17 +104,21 @@ START_TEST(test_set_active_master_by_id){
     for(int i=0;i<4;i++){
         setActiveMaster(fakeMaster);
         if(i==0)
-            assert(!setActiveMasterByKeyboardId(slaveKeyboardId));
+            setActiveMasterByDeviceId(slaveKeyboardId);
         else if(i==1)
-            assert(setActiveMasterByKeyboardId(masterKeyboard));
+            setActiveMasterByDeviceId(masterKeyboard);
         else if(i==2)
-            assert(setActiveMasterByMouseId(masterPointer));
+            setActiveMasterByDeviceId(masterPointer);
         else if(i==3)
-            assert(!setActiveMasterByMouseId(slavePointerId));
+            setActiveMasterByDeviceId(slavePointerId);
         assert(realMaster==getActiveMaster());
     }
 }END_TEST
-
+START_TEST(test_set_client_pointer){
+    int win=createNormalWindow();
+    setClientPointerForWindow(win);
+    assert(getActiveMasterKeyboardID()==getClientKeyboard(win));
+}END_TEST
 
 
 START_TEST(test_detect_test_slaves){
@@ -127,7 +154,6 @@ START_TEST(test_get_slaves){
     assert(listsEqual(slavePointers,slavePointers2));
     assert(getSize(slaveKeyboards)==slavePointerSize);
     assert(slavePointers);
-    assert(SLAVE_POINTER|SLAVE_KEYBOARD==SLAVE_ANY);
 
     int size;
     Node*slaves=getSlavesOfMaster(&getActiveMaster()->id,2,&size);
@@ -149,14 +175,12 @@ START_TEST(test_get_slaves){
     deleteList(slaves2);
 }END_TEST
 
-
-
 START_TEST(test_slave_swapping_same_device){
     removeMaster(getActiveMasterKeyboardID());
     addMaster(1, 1);
     setActiveMaster(getMasterById(1));
     //will error due to no Xserver is doesn't check for equality first
-    swapSlaves(getActiveMaster(),getActiveMaster());
+    swapDeviceId(getActiveMaster(),getActiveMaster());
 }END_TEST
 START_TEST(test_slave_swapping){
     createMasterDevice("test");
@@ -171,7 +195,7 @@ START_TEST(test_slave_swapping){
     Node*slaves1=getSlavesOfMaster(&master1->id, 2,NULL);
     Node*slaves2=getSlavesOfMaster(&master2->id,2,NULL);
 
-    swapSlaves(master1,master2);
+    swapDeviceId(master1,master2);
     Node*slavesSwap1=getSlavesOfMaster(&master1->id, 2,NULL);
     Node*slavesSwap2=getSlavesOfMaster(&master2->id, 2,NULL);
     assert(master1->id==idKeyboard2 && master1->pointerId==idPointer2);
@@ -181,7 +205,7 @@ START_TEST(test_slave_swapping){
     deleteList(slavesSwap1);
     deleteList(slavesSwap2);
 
-    swapSlaves(master1,master2);
+    swapDeviceId(master1,master2);
     slavesSwap1=getSlavesOfMaster(&master1->id, 2,NULL);
     slavesSwap2=getSlavesOfMaster(&master2->id, 2,NULL);
     assert(master1->id==idKeyboard1 && master1->pointerId==idPointer1);
@@ -192,7 +216,62 @@ START_TEST(test_slave_swapping){
     deleteList(slavesSwap2);
     deleteList(slaves1);
     deleteList(slaves2);
+}END_TEST
 
+
+START_TEST(test_passive_grab){
+    passiveGrab(root, ALL_MASKS);
+    triggerAllBindings(ALL_MASKS);
+    waitToReceiveInput(ALL_MASKS);
+}END_TEST
+START_TEST(test_passive_ungrab){
+    //TODO
+    assert(!xcb_poll_for_event(dis) && "test failure");
+    triggerAllBindings(ALL_MASKS);
+    assert(!xcb_poll_for_event(dis) && "test failure?");
+    passiveGrab(root, ALL_MASKS);
+    passiveGrab(root, 0);
+    triggerAllBindings(ALL_MASKS);
+    assert(!xcb_poll_for_event(dis));
+}END_TEST
+
+START_TEST(test_grab_detail){
+    Node*n=deviceBindings;
+    FOR_EACH_CIRCULAR(n,assert(!grabBinding(getValue(n))));
+
+    if(!fork()){
+        n=deviceBindings;
+        openXDisplay();
+        FOR_EACH_CIRCULAR(n,assert(grabBinding(getValue(n))));
+        closeConnection();
+        exit(0);
+    }
+    waitForCleanExit();
+
+
+    // we only send events to the test events focused window
+    catchError(xcb_set_input_focus_checked(dis, XCB_INPUT_FOCUS_PARENT, root, 0));
+    triggerAllBindings(ALL_MASKS);
+    waitToReceiveInput(ALL_MASKS);
+}END_TEST
+START_TEST(test_ungrab_detail){
+    Node*n=deviceBindings;
+
+    FOR_EACH_CIRCULAR(n,assert(!grabBinding(getValue(n))));
+    n=deviceBindings;
+    FOR_EACH_CIRCULAR(n,assert(!ungrabBinding(getValue(n))));
+    xcb_flush(dis);
+    XFlush(dpy);
+    if(!fork()){
+        n=deviceBindings;
+        openXDisplay();
+        FOR_EACH_CIRCULAR(n,assert(!grabBinding(getValue(n))));
+        closeConnection();
+        exit(0);
+    }
+    waitForCleanExit();
+    triggerAllBindings(ALL_MASKS);
+    assert(!xcb_poll_for_event(dis));
 }END_TEST
 
 START_TEST(test_grab_keyboard){
@@ -204,6 +283,8 @@ START_TEST(test_grab_keyboard){
         exit(0);
     }
     waitForCleanExit();
+    triggerAllBindings(KEYBOARD_MASKS);
+    waitToReceiveInput(KEYBOARD_MASKS);
 }END_TEST
 START_TEST(test_grab_pointer){
     assert(!grabActivePointer());
@@ -214,6 +295,8 @@ START_TEST(test_grab_pointer){
         exit(0);
     }
     waitForCleanExit();
+    triggerAllBindings(POINTER_MASKS);
+    waitToReceiveInput(POINTER_MASKS);
 }END_TEST
 
 START_TEST(test_ungrab_device){
@@ -231,90 +314,42 @@ START_TEST(test_ungrab_device){
         exit(0);
     }
     waitForCleanExit();
-
-
-}END_TEST
-
-START_TEST(test_passive_grab){
-    int masks=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE;
-    passiveGrab(root, masks);
-    sendButtonPress(1);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_BUTTON_PRESS))
-    sendButtonRelease(1);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_BUTTON_RELEASE))
+    triggerAllBindings(ALL_MASKS);
+    assert(!xcb_poll_for_event(dis));
 
 }END_TEST
 
 
-
-START_TEST(test_register_for_device_events){
-    ROOT_DEVICE_EVENT_MASKS=XI_KeyPressMask|XI_KeyReleaseMask|
-                XI_ButtonPressMask|XI_ButtonReleaseMask;
-    registerForDeviceEvents();
-    for(int i=0;i<4;i++)
-        assert(deviceBindings[i]->detail);
-    sendButtonPress(1);
-    free(getNextDeviceEvent());
-}END_TEST
-START_TEST(test_grab_detail){
-    for(int i=0;i<4;i++)
-        assert(!grabActiveDetail(&deviceBindings[i][1], i>=2));
-    if(!fork()){
-        openXDisplay();
-        for(int i=0;i<4;i++)
-            assert(grabActiveDetail(&deviceBindings[i][1], i>=2));
-        closeConnection();
-        exit(0);
-    }
-    //wait(NULL);
-    waitForCleanExit();
-
-}END_TEST
-
-void resetAllMasks(){
-    ROOT_DEVICE_EVENT_MASKS=0;
-    NON_ROOT_DEVICE_EVENT_MASKS=0;
-    ROOT_EVENT_MASKS=0;
-    NON_ROOT_EVENT_MASKS=0;
-}
-static void setup(){
-    resetAllMasks();
-    createContext(1);
-    connectToXserver();
-}
-
-static void teardown(){
-    closeConnection();
-    destroyContext();
-}
 
 Suite *devicesSuite() {
     Suite*s = suite_create("Devices");
 
     TCase*tc_core =tcase_create("Master detection");
-    tcase_add_checked_fixture(tc_core, setup, teardown);
-    tcase_add_test(tc_core,test_create_remove_master);
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, closeConnection);
+    tcase_add_test(tc_core,test_create_destroy_master);
     tcase_add_test(tc_core,test_get_associated_device);
     tcase_add_test(tc_core,test_set_active_master_by_id);
-    suite_add_tcase(s, tc_core);
-
-    tc_core = tcase_create("Grab");
-    tcase_add_checked_fixture(tc_core, setup, teardown);
-    tcase_add_test(tc_core,test_register_for_device_events);
-    tcase_add_test(tc_core,test_passive_grab);
-    tcase_add_test(tc_core, test_grab_detail);
-    tcase_add_test(tc_core, test_grab_pointer);
-    tcase_add_test(tc_core, test_grab_keyboard);
-    tcase_add_test(tc_core,test_ungrab_device);
-
+    tcase_add_test(tc_core,test_set_client_pointer);
     suite_add_tcase(s, tc_core);
 
     tc_core =tcase_create("Slaves");
-    tcase_add_checked_fixture(tc_core, setup, teardown);
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, closeConnection);
     tcase_add_test(tc_core,test_detect_test_slaves);
     tcase_add_test(tc_core,test_get_slaves);
     tcase_add_test(tc_core,test_slave_swapping);
     tcase_add_test(tc_core,test_slave_swapping_same_device);
+    suite_add_tcase(s, tc_core);
+
+
+    tc_core = tcase_create("Grab");
+    tcase_add_checked_fixture(tc_core, setup, teardown);
+    tcase_add_test(tc_core, test_passive_grab);
+    tcase_add_test(tc_core, test_passive_ungrab);
+    tcase_add_test(tc_core, test_grab_detail);
+    tcase_add_test(tc_core, test_ungrab_detail);
+    tcase_add_test(tc_core, test_grab_pointer);
+    tcase_add_test(tc_core, test_grab_keyboard);
+    tcase_add_test(tc_core, test_ungrab_device);
     suite_add_tcase(s, tc_core);
 
     return s;

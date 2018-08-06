@@ -1,9 +1,14 @@
-#include <stdlib.h>
+/**
+ * @file util.c
+ */
+/// \cond
 #include <assert.h>
+#include <stdlib.h>
+/// \endcond
 
 #include "util.h"
 
-void _join(Node*prev,Node*next){
+static void _join(Node*prev,Node*next){
     if(prev)
         prev->next=next;
     if(next)
@@ -57,7 +62,7 @@ void* getValue(Node*node){
 }
 
 
-void _freeNode(Node* node){
+static void _freeNode(Node* node){
     if(!node)return;
     free(node);
     return;
@@ -83,7 +88,7 @@ void clearList(Node* head){
     head->value=NULL;
 }
 
-void _deleteList(Node* head,int freeValue){
+static void _deleteList(Node* head,int freeValue){
     assert(head);
     partitionLeft(head);
     while(head){
@@ -174,14 +179,17 @@ void insertAfter(Node* node,Node* newNode){
     _join(end,node->next);
     _join(node,newNode);
 }
-
 void insertHead(Node* head,void *value){
     assert(head!=NULL);
     assert(value!=NULL);
     if(head->value){
         Node* newNode = createHead(value);
-        swap(newNode,head);
-        insertAfter(head,newNode);
+        if(head->prev)
+            insertBefore(head, newNode);
+        else{
+            swap(newNode,head);
+            insertAfter(head,newNode);
+        }
     }
     else
         head->value=value;

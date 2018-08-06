@@ -1,13 +1,11 @@
 #include "../UnitTests.h"
 
-#include "../../mywm-structs.h"
-
 extern Suite *x11Suite();
 
 extern Suite *defaultRulesSuite();
-Layout DEFAULT_LAYOUTS[]={0};
-int NUMBER_OF_DEFAULT_LAYOUTS=1;
 
+extern Suite *stateSuite();
+extern Suite *layoutSuite();
 CREATE_HANDLER
 
 
@@ -16,10 +14,16 @@ int main(void) {
     signal(SIGABRT, handler);   // install our handler
 
     SRunner *runner;
-    runner = srunner_create(x11Suite());
+    runner = srunner_create(stateSuite());
 
-    srunner_add_suite(runner,defaultRulesSuite());
+
+    srunner_add_suite(runner, x11Suite());
+    srunner_add_suite(runner, defaultRulesSuite());
+    srunner_add_suite(runner, layoutSuite());
+
     srunner_run_all(runner, CK_NORMAL);
-    return srunner_ntests_failed(runner);
+    int failures=srunner_ntests_failed(runner);
+    srunner_free(runner);
+    return failures;
 }
 

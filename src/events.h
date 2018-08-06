@@ -1,12 +1,23 @@
 /**
- * @file event-loop.h
+ * @file events.h
  *
  * @brief Handles geting and processing XEvents
  */
 
 #ifndef EVENTS_H_
 #define EVENTS_H_
-#include "mywm-structs.h"
+
+void lock();
+void unlock();
+
+/**
+ * Requests all threads to terminate
+ */
+void requestShutdown();
+/**
+ * Indicate to threads that the system is shutting down;
+ */
+int isShuttingDown();
 
 /**
  * Runs method in a new thread
@@ -15,8 +26,37 @@
  * @return a pthread identifier
  */
 pthread_t runInNewThread(void *(*method) (void *),void*arg);
+/**
+ * TODO rename
+ * Continually listens and responds to event and applying corresponding Rules.
+ * This method will only exit when the x connection is lost
+ * @param arg unused
+ */
 void *runEventLoop(void*arg);
-void onGenericEvent();
-void requestEventLoopShutdown();
+/**
+ * Attemps to translate the generic event receive into an extension event and applyies corresponding Rules.
+ */
+void onGenericEvent(void);
+/**
+ * TODO rename
+ * Register ROOT_EVENT_MASKS
+ * @see ROOT_EVENT_MASKS
+ */
 void registerForEvents();
+
+/**
+ * Declare interest in select window events
+ * @param window
+ * @param mask
+ */
+void registerForWindowEvents(int window,int mask);
+
+int loadGenericEvent(xcb_ge_generic_event_t*event);
+
+/**
+ * Grab all specified keys/buttons and listen for select device events on events
+ */
+void registerForDeviceEvents();
+void registerForMonitorChange();
+
 #endif /* EVENTS_H_ */

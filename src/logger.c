@@ -1,9 +1,4 @@
-/*
- * logger.c
- *
- *  Created on: Jul 8, 2018
- *      Author: arthur
- */
+
 
 #include <assert.h>
 #include <stdlib.h>
@@ -16,22 +11,20 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XI.h>
 
-#include "mywm-structs.h"
+
 #include "mywm-util.h"
-#include "defaults.h"
 #include "logger.h"
-#include "window-properties.h"
+#include "globals.h"
 
 extern xcb_connection_t *dis;
 
 extern Display *dpy;
-int LOG_LEVEL=LOG_LEVEL_WARN;
+int LOG_LEVEL=LOG_LEVEL_ERROR;
 
 int getLogLevel(){
     return LOG_LEVEL;
 }
 void setLogLevel(int level){
-    LOG(LOG_LEVEL_NONE,"Changing log level from %d to %d \n",LOG_LEVEL,level);
     LOG_LEVEL=level;
 }
 void printNodeList(Node*n){
@@ -54,7 +47,7 @@ void dumpWindowInfo(WindowInfo* win){
     LOG(LOG_LEVEL_DEBUG,"Title class %s\n",win->title);
 
     LOG(LOG_LEVEL_TRACE,"Transient for %d\n",win->transientFor);
-    LOG(LOG_LEVEL_TRACE,"Mask %d; Input %d Override redirect %d\n",win->mask,win->input,win->overrideRedirect);
+    LOG(LOG_LEVEL_TRACE,"Mask %d\n",win->mask);
 
     //LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isWindowVisible(win));
     LOG(LOG_LEVEL_TRACE,"last active workspace %d\n",win->workspaceIndex);
@@ -70,64 +63,70 @@ void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms){
     }
 }
 
+#define ADD_TYPE_CASE(TYPE) case TYPE: return  #TYPE
 char *genericEventTypeToString(int type){
-
-    //type+=GENERIC_EVENT_OFFSET;
     switch(type) {
+        ADD_TYPE_CASE(XCB_INPUT_KEY_PRESS);
+        ADD_TYPE_CASE(XCB_INPUT_KEY_RELEASE);
+        ADD_TYPE_CASE(XCB_INPUT_BUTTON_PRESS);
+        ADD_TYPE_CASE(XCB_INPUT_BUTTON_RELEASE);
+        ADD_TYPE_CASE(XCB_INPUT_MOTION);
+        ADD_TYPE_CASE(XCB_INPUT_ENTER);
+        ADD_TYPE_CASE(XCB_INPUT_LEAVE);
+        ADD_TYPE_CASE(XCB_INPUT_FOCUS_IN);
+        ADD_TYPE_CASE(XCB_INPUT_FOCUS_OUT);
+        ADD_TYPE_CASE(XCB_INPUT_HIERARCHY);
 
-     case XI_KeyPress: return "XI_KeyPress";
-     case XI_KeyRelease: return "XI_KeyRelease";
-     case XI_ButtonPress: return "XI_ButtonPress";
-     case XI_ButtonRelease: return "XI_ButtonRelease";
-     case XI_Motion: return "XI_Motion";
-     case XI_Enter: return "XI_Enter";
-     case XI_Leave: return "XI_Leave";
-     case XI_FocusIn: return "XI_FocusIn";
-     case XI_FocusOut: return "XI_FocusOut";
-     case XI_HierarchyChanged: return "XI_HierarchyChanged";
-     case XI_PropertyEvent: return "XI_PropertyEvent";
-         default:
-             return "undef XI event (%d)";
+        default:
+             return "unkown XI event";
      }
 }
+
 char *eventTypeToString(int type){
     switch(type) {
+        case 0: return "Error";
 
-    case GenericEvent: return "GenericEvent";
-
-    case Expose: return "Expose";
-
-    case VisibilityNotify: return "VisibilityNotify";
-    case CreateNotify: return "CreateNotify";
-    case DestroyNotify: return "DestroyNotify";
-    case UnmapNotify: return "UnmapNotify";
-    case MapNotify: return "MapNotify";
-    case MapRequest: return "MapRequest";
-    case ReparentNotify: return "ReparentNotify";
-    case ConfigureNotify: return "ConfigureNotify";
-    case ConfigureRequest: return "ConfigureRequest";
-    case PropertyNotify: return "PropertyNotify";
-    case ClientMessage: return "ClientMessage";
-    case MappingNotify: return "MappingNotify";
+        ADD_TYPE_CASE(XCB_EXPOSE);
+        ADD_TYPE_CASE(XCB_VISIBILITY_NOTIFY);
+        ADD_TYPE_CASE(XCB_CREATE_NOTIFY);
+        ADD_TYPE_CASE(XCB_DESTROY_NOTIFY);
+        ADD_TYPE_CASE(XCB_UNMAP_NOTIFY);
+        ADD_TYPE_CASE(XCB_MAP_NOTIFY);
+        ADD_TYPE_CASE(XCB_MAP_REQUEST);
+        ADD_TYPE_CASE(XCB_CONFIGURE_NOTIFY);
+        ADD_TYPE_CASE(XCB_CONFIGURE_REQUEST);
+        ADD_TYPE_CASE(XCB_PROPERTY_NOTIFY);
+        ADD_TYPE_CASE(XCB_CLIENT_MESSAGE);
+        ADD_TYPE_CASE(XCB_GE_GENERIC);
         default: return "unknown event";
+
     }
 }
-int checkError(xcb_void_cookie_t cookie,int cause,char*msg){
+int catchError(xcb_void_cookie_t cookie){
     xcb_generic_error_t* e=xcb_request_check(dis,cookie);
     if(e){
-        LOG(LOG_LEVEL_ERROR,"error occured with window %d %s\n\n",cause,msg);
         logError(e);
+        //TODO finish
+        switch(e->major_code){
+            case BadWindow:
+                break;
+        }
         free(e);
-        assert(1==2);
     }
     return e?1:0;
 }
 void logError(xcb_generic_error_t* e){
-    LOG(LOG_LEVEL_ERROR,"error occured with window %d %d\n\n",e->resource_id,e->major_code);
+    LOG(LOG_LEVEL_ERROR,"error occured with resource %d %d %d\n\n",e->resource_id,e->major_code,e->minor_code);
+
+
     int size=256;
     char buff[size];
     XGetErrorText(dpy,e->error_code,buff,size);
     LOG(LOG_LEVEL_ERROR,"Error code %d %s \n",
                e->error_code,buff) ;
+
+    if(CRASH_ON_ERRORS)
+        assert(0 && "Unexpected error");
+
 
 }

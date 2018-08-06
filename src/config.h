@@ -1,6 +1,6 @@
 /**
  * @file config.h
- * @breif user config file
+ * @brief user config file
  */
 
 
@@ -14,9 +14,9 @@
 #include <X11/XF86keysym.h>
 
 #include "bindings.h"
-#include "defaults.h"
 #include "default-rules.h"
 #include "functions.h"
+#include "globals.h"
 #include "wmfunctions.h"
 #include "layouts.h"
 

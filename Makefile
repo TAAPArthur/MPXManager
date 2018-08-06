@@ -1,10 +1,11 @@
 MAKE_SRC := +$(MAKE) -C src $@
+%: all
+
 all:
-	$(MAKE_SRC)
-%:
-	$(MAKE_SRC)
+	+$(MAKE) -C src $@
+
 doc:
 	doxygen dconfig 
 
-.PHONY: all clean doc
+.PHONY: doc
 

@@ -3,7 +3,7 @@
 
 #include "../../test-functions.h"
 #include "../../xsession.h"
-#include "../../defaults.h"
+#include "../../globals.h"
 #include "../../devices.h"
 #include <xcb/xcb.h>
 #include <xcb/xinput.h>
@@ -27,6 +27,7 @@ START_TEST(test_send_key_release){
     sendKeyRelease(keyDetail);
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_KEY_RELEASE))
 }END_TEST
+
 START_TEST(test_send_button_press){
     sendButtonPress(mouseDetail);
     assert(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_BUTTON_PRESS));
@@ -36,15 +37,24 @@ START_TEST(test_send_button_release){
     sendButtonRelease(mouseDetail);
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_BUTTON_RELEASE))
 }END_TEST
+START_TEST(test_click_button){
+    clickButton(mouseDetail);
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_BUTTON_PRESS))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_BUTTON_RELEASE))
+}END_TEST
+START_TEST(test_type_key){
+    typeKey(keyDetail);
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_KEY_PRESS))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_KEY_RELEASE))
+}END_TEST
 
 static void setup(){
 
-    ROOT_DEVICE_EVENT_MASKS|=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE|
+    int mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE|
             XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE;
-    for(int i=0;i<4;i++)
-        deviceBindingLengths[i]=0;
-    createContextAndConnection();
-    passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
+    clearList(deviceBindings);
+    createContextAndSimpleConnection();
+    passiveGrab(root, mask);
 }
 
 Suite *testFunctionSuite() {
@@ -55,6 +65,8 @@ Suite *testFunctionSuite() {
     tcase_add_test(tc_core, test_send_key_release);
     tcase_add_test(tc_core, test_send_button_press);
     tcase_add_test(tc_core, test_send_button_release);
+    tcase_add_test(tc_core, test_type_key);
+    tcase_add_test(tc_core, test_click_button);
     suite_add_tcase(s, tc_core);
     return s;
 }

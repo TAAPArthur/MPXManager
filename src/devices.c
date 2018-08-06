@@ -1,3 +1,8 @@
+/**
+ * @file devices.c
+ */
+
+/// \cond
 #include <assert.h>
 #include <strings.h>
 #include <string.h>
@@ -5,17 +10,13 @@
 
 #include <xcb/xinput.h>
 #include <X11/extensions/XInput2.h>
+/// \endcond
 
-#include "defaults.h"
 #include "devices.h"
-#include "bindings.h"
+
+#include "globals.h"
 #include "logger.h"
 #include "mywm-util.h"
-
-
-extern Display *dpy;
-extern xcb_connection_t *dis;
-extern int root;
 
 //Master device methods
 int getAssociatedMasterDevice(int deviceId){
@@ -27,16 +28,16 @@ int getAssociatedMasterDevice(int deviceId){
     XIFreeDeviceInfo(masterDevices);
     return id;
 }
-/*
+
 void setClientPointerForWindow(int window){
-    xcb_input_xi_set_client_pointer(dis, window, getAssociatedMasterDevice(getActiveMaster()->id));
+    xcb_input_xi_set_client_pointer(dis, window, getActiveMasterPointerID());
 }
 int getClientKeyboard(int win){
     int masterPointer;
     XIGetClientPointer(dpy, win, &masterPointer);
     return getAssociatedMasterDevice(masterPointer);
 }
-*/
+
 void destroyMasterDevice(int id,int returnPointer,int returnKeyboard){
     XIRemoveMasterInfo remove;
     remove.type = XIRemoveMaster;
@@ -85,6 +86,28 @@ void initCurrentMasters(){
     }
     XIFreeDeviceInfo(devices);
 }
+void setActiveMasterByDeviceId(int id){
+    int ndevices;
+    XIDeviceInfo *masterDevices;
+    masterDevices = XIQueryDevice(dpy, id, &ndevices);
+
+    switch(masterDevices->use){
+        case XIMasterKeyboard:
+            setActiveMaster(getMasterById(masterDevices->deviceid));
+            break;
+        case XIMasterPointer:
+            setActiveMaster(getMasterById(masterDevices->attachment));
+            break;
+        case XISlaveKeyboard:
+            setActiveMaster(getMasterById(masterDevices->attachment));
+            break;
+        case XISlavePointer:
+            setActiveMasterByDeviceId(masterDevices->attachment);
+            break;
+    }
+    XIFreeDeviceInfo(masterDevices);
+    assert(getActiveMaster());
+}
 
 Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves){
     assert(ids);
@@ -121,50 +144,31 @@ Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves){
 }
 
 
-//master methods
-int setActiveMasterByMouseId(int mouseId){
-    assert(mouseId);
-    int masterMouseOrMasterKeyboaredId=getAssociatedMasterDevice(mouseId);
-
-    //master pointer is functionly the same as keyboard slave
-    return setActiveMasterByKeyboardId(masterMouseOrMasterKeyboaredId);
-}
-int setActiveMasterByKeyboardId(int keyboardId){
-    assert(keyboardId);
-    Master*masterNode=getMasterById(keyboardId);
-    if(masterNode){
-        //if true then keyboardId was a master keyboard
-        setActiveMaster(masterNode);
-        return 1;
-    }
-    masterNode=getMasterById(getAssociatedMasterDevice(keyboardId));
-
-    assert(masterNode && "device id was not a master keyboard or slave keyboard/slave pointer");
-    setActiveMaster(masterNode);
-    return 0;
-}
-
-int grabDetails(Binding*binding,int numKeys,int mask,int mouse){
-    int errors=0;
-    for (int i = 0; i < numKeys; i++){
-        binding[i].detail=mouse?binding[i].buttonOrKey: XKeysymToKeycode(dpy, binding[i].buttonOrKey);
-        if(!binding[i].noGrab)
-            errors+=grabDetail(XIAllMasterDevices,binding[i].detail,binding[i].mod,mask,mouse);
-    }
-    return errors;
-}
-
 void passiveGrab(int window,int maskValue){
     XIEventMask eventmask = {XIAllDevices,2,(unsigned char*)&maskValue};
     XISelectEvents(dpy, window, &eventmask, 1);
-    //XISelectEvents(dpy, root, &eventmask, 1);
+}
+int isKeyboardMask(int mask){
+    return mask & (XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE)?1:0;
+}
+
+int grabPointer(int id){
+    return grabDevice(id,XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE);
 }
 int grabActivePointer(){
-    return grabDevice(getActiveMasterPointerID(),XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE);
+    return grabPointer(getActiveMasterPointerID());
+}
+int grabKeyboard(int id){
+    return grabDevice(id,XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE);
 }
 int grabActiveKeyboard(){
-
-    return grabDevice(getActiveMasterKeyboardID(),XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE);
+    return grabKeyboard(getActiveMasterKeyboardID());
+}
+int getDeviceIDByMask(int mask){
+        int global = mask&1;
+        return global?XIAllMasterDevices:
+                isKeyboardMask(mask)?getActiveMasterKeyboardID():
+                getActiveMasterPointerID();
 }
 int grabDevice(int deviceID,int maskValue){
     XIEventMask eventmask = {deviceID,2,(unsigned char*)&maskValue};
@@ -174,60 +178,29 @@ int grabDevice(int deviceID,int maskValue){
 int ungrabDevice(int id){
     return XIUngrabDevice(dpy, id, 0);
 }
-int grabActiveDetail(Binding*binding,int mouse){
-    int deviceID=mouse?
-            getActiveMasterPointerID():
-            getActiveMasterKeyboardID();
-    int mask=mouse?XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS:XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
-    return grabDetail(deviceID,binding->detail,binding->mod,mask,mouse);
-}
-int grabDetail(int deviceID,int detail,int mod,int maskValue,int mouse){
+
+
+int grabDetail(int deviceID,int detail,int mod,int maskValue){
     XIEventMask eventmask = {deviceID,2,(unsigned char*)&maskValue};
     XIGrabModifiers modifiers[2]={{mod},{mod|IGNORE_MASK}};
 
     LOG(LOG_LEVEL_DEBUG,"Grabbing device:%d detail:%d mod:%d mask: %d %d\n",
-            deviceID,detail,mod,maskValue,mouse);
-    if(mouse)
+            deviceID,detail,mod,maskValue,isKeyboardMask(maskValue));
+    if(!isKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,
                 XIGrabModeAsync, XIGrabModeAsync, 1, &eventmask, 2, modifiers);
     else
         return XIGrabKeycode(dpy, deviceID, detail, root, XIGrabModeAsync, XIGrabModeAsync,
                     1, &eventmask, 2, modifiers);
-}/*
-int ungrabDetail(int deviceID,int detail,int mod,int mouse){
-    LOG(LOG_LEVEL_ERROR,"UNGrabbing device:%d detail:%d mod:%d %d\n",
-                deviceID,detail,mod,mouse);
+}
+int ungrabDetail(int deviceID,int detail,int mod,int isKeyboard){
+    LOG(LOG_LEVEL_DEBUG,"UNGrabbing device:%d detail:%d mod:%d %d\n",
+                deviceID,detail,mod,isKeyboard);
     XIGrabModifiers modifiers[2]={{mod},{mod|IGNORE_MASK}};
-    if(mouse)
+    if(!isKeyboard)
         return XIUngrabButton(dpy, deviceID, detail, root, 2, modifiers);
     else
         return XIUngrabKeycode(dpy, deviceID, detail, root, 2, modifiers);
-}
-*/
-
-
-void registerForDeviceEvents(){
-    for(int i=0;i<4;i++)
-        if(deviceBindings[i] && deviceBindingLengths[i])
-            grabDetails(deviceBindings[i], deviceBindingLengths[i], bindingMasks[i], i>=2);
-
-    //TODO listen on select devices
-    LOG(LOG_LEVEL_TRACE,"listening for device event;  masks: %d\n",ROOT_DEVICE_EVENT_MASKS);
-
-    passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
-}
-void pushBinding(Binding*chain){
-    assert(chain);
-    insertHead(getActiveMaster()->activeChains,chain);
-}
-void popActiveBinding(){
-    softDeleteNode(getActiveMaster()->activeChains);
-}
-Node* getActiveBindingNode(){
-    return getActiveMaster()->activeChains;
-}
-Binding* getActiveBinding(){
-    return getValue(getActiveMaster()->activeChains);
 }
 
 static int endsWith(const char *str, const char *suffix){
@@ -240,7 +213,7 @@ static int endsWith(const char *str, const char *suffix){
 int isTestDevice(char*str){
     return endsWith(str, "XTEST pointer")||endsWith(str, "XTEST keyboard");
 }
-void swapSlaves(Master*master1,Master*master2){
+void swapDeviceId(Master*master1,Master*master2){
     if(master1==master2)
         return;
 
@@ -287,28 +260,6 @@ void swapSlaves(Master*master1,Master*master2){
     master2->id=tempId;
     master2->pointerId=tempPointerId;
     XFlush(dpy);
-}
-
-Rules deviceEventRule = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent);
-void addDefaultDeviceRules(){
-    for(int i=XCB_INPUT_KEY_PRESS;i<=XCB_INPUT_BUTTON_RELEASE;i++){
-        insertHead(eventRules[GENERIC_EVENT_OFFSET+i],&deviceEventRule);
-    }
-
-}
-void onDeviceEvent(){
-    xcb_input_key_press_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"device event %d %d %d\n",event->event_type,event->deviceid,event->sourceid);
-    if(event->event_type<XCB_INPUT_DEVICE_BUTTON_PRESS){//key press/release
-        setActiveMasterByKeyboardId(event->deviceid);
-    }
-    else{//button press/release
-        setActiveMasterByMouseId(event->deviceid);
-        setLastWindowClicked(event->child);
-    }
-    checkBindings(event->detail,event->mods.effective,
-            event->event_type-XI_KeyPress,
-            getWindowInfo(event->child));
 }
 
 /*

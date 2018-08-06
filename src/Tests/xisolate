@@ -1,7 +1,14 @@
 #!/bin/bash
+
 D=:7
-Xephyr +extension RANDR +xinerama -screen 600x400 -ac $D &> /dev/null & pid="$!"
+echo $1
+if [ "$1" = "--no-xserver" ];then
+	shift
+else
+       echo starting server	
+	Xephyr -noreset +extension RANDR -screen 200x200+100+0 -screen 100x100 $D 2>&1 &> /dev/null & pid="$!"
+fi
 DISPLAY=$D $@
 exitCode=$?
-kill "$pid" 
+[ "$pid" ] && kill "$pid" 
 exit $exitCode

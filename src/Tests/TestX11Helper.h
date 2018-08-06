@@ -12,37 +12,43 @@
 #include <X11/Xlib-xcb.h>
 
 #include "../default-rules.h"
-#include "../defaults.h"
 #include "../xsession.h"
 #include "../logger.h"
 #include "../events.h"
+#include "../bindings.h"
+#include "../globals.h"
+#include "../test-functions.h"
 
-Suite *x11Suite();
-
-#define INIT DisplayConnection* dc = createDisplayConnection();
-#define END XCloseDisplay(dc->dpy);
 extern pthread_t pThread;
 #define START_MY_WM \
         pThread=runInNewThread(runEventLoop,NULL);
 #define KILL_MY_WM  requestEventLoopShutdown();pthread_join(pThread,NULL);
-#define destroyWindow(dis,win) assert(NULL==xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 
-typedef struct {
-    Display *dpy;
-    xcb_connection_t *dis;
-    xcb_ewmh_connection_t *ewmh;
-    xcb_window_t root;
-    xcb_screen_t* screen;
-}DisplayConnection;
-DisplayConnection* createDisplayConnection();
-int createWindow(DisplayConnection* dc,int ignored);
-int  createArbitraryWindow(DisplayConnection* dc);
-int mapWindow(DisplayConnection*dc,int win);
-int  mapArbitraryWindow(DisplayConnection* dc);
-void setProperties(DisplayConnection *dc,int win,char*classInstance,char*title,xcb_atom_t* atom);
-void setArbitraryProperties(DisplayConnection* dc,int win);
-void createContextAndConnection();
-
+void destroyWindow(int win);
+int  createUnmappedWindow();
+int createIgnoredWindow();
+int createNormalWindow();
+int mapWindow(int win);
+int  mapArbitraryWindow();
+void createSimpleContext();
+void createSimpleContextWthMaster();
+void createContextAndSimpleConnection();
+void destroyContextAndConnection();
 void openXDisplay();
-xcb_input_key_press_event_t* getNextDeviceEvent();
+void triggerAllBindings(int mask);
+void triggerBinding(Binding* b);
+void* getNextDeviceEvent();
+void waitToReceiveInput(int mask);
+void consumeEvents();
+int waitForNormalEvents(int mask);
+
+int isWindowMapped(int win);
+void flush();
+Window createDock(int i,int size,int full);
+void fullCleanup();
+
+int getExitStatusOfFork();
+void waitForCleanExit();
+void setProperties(int win);
+void checkProperties(WindowInfo*winInfo);
 #endif /* TESTS_UNITTESTS_H_ */

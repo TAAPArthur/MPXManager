@@ -1,49 +1,25 @@
 /**
  * TODO
- * XUtil Test (finish) //30min F
- * functions (non-x11)//30min F
- * * Workspaces //2hr F
- * X11 tests S
-     * Create testing environment
-     * functions (X11)
-     * wmfunctions
-     * mywm // as a unit not c file
- * EWMH //2hr S
- * ICCM //2hr S
-     * Floating
-     * Docks
-     * Sticky
- * Monitors //2hr
-     * Basic (finish) F
-     * Virtual monitors
-     * new monitor detection
- * updating window property //30min S
- * * window tagging //1h
- * Options //1hr S
-     * Focus follows mouse
-     * raise on focus
-         * keyboard
-         * mouse
-         * general
-     * new window focus
-         * lasat active master
-         * last focus master
-         * None
-     * Tag OnCreate vs on change
-
- * Debugging/Logging
+ * Complex Functions -- done
+ * Layers
+ * State
+ * Printing 1hr
+ * Common functions
+ *
+ * Testing
  * Doc
-     * Refactor
-     * Comments
-     * ReadMe
-     * Install
- *recompile
- * cleanup
+ *
+ * Layouts
+ * Fake monitors
+ *
+ * Restart/recompile
+ *
+ * Convience functions (focus follows mouse) -- done
+ * Scripting //2hr
+ *
  * Optimization/Benchmarking
- ** * Scripting //2hr
- * Extra Tiling modes
-     * Tmux
- * * Patch mode
+ *
+ * Patch mode  -- done
  */
 
 
@@ -116,10 +92,10 @@ int main(int argc, char * argv[]){
     parseAgrs(argc,argv);
     setLogLevel(LOG_LEVEL_TRACE);
     //TODO make var
-    createContext(numberOfWorkspaces);
-    onStartup();
+
     loadSettings();
-    connectToXserver();
+    onStartup();
+
     if(enterEventLoop)
         runEventLoop(NULL);
 }

@@ -1,87 +1,42 @@
 /**
+ * @file functions.c
  * Functions user can bind keys to
  */
-
+/// \cond
 #include <assert.h>
 #include <unistd.h>
-
+#include <err.h>
+/// \endcond
 #include "functions.h"
 #include "wmfunctions.h"
+#include "mywm-util.h"
+#include "logger.h"
+#include "bindings.h"
+#include "globals.h"
 
 #define UP 1
 #define DOWN -1
 
-#define NO_ACTION_REQUIRED 2
-#define NORMAL_EXIT 1
-#define ERROR_EXIT 0
-
 void cycleWindows( int delta){
-    Master *master = getActiveMaster();
-    if(!isFocusStackFrozen())
-        grabDevice(master->id,XI_KeyReleaseMask);
-    else
-        setFocusStackFrozen(1);
-
-    if(! getMasterWindowStack()->next){
-        LOG(LOG_LEVEL_INFO,"not enough windows");
-        return;
-    }
-    while(getIntValue(getMasterWindowStack())){
-
+    setFocusStackFrozen(1);
+    int size=getSize(getMasterWindowStack());
+    for(int i=0;i<size;i++){
         Node* nextWindowNode=getNextWindowInFocusStack(delta);
         xcb_window_t nextWindow=getIntValue(nextWindowNode);
-
         assert(nextWindow!=0);
-
-        activateWindow(getValue(nextWindowNode));
-        /*
-        if(!activateWindowNode(nextWindowNode)){
-            printf("window did not exist; trying again");
-            delta+=delta/abs(delta);
-            continue;
-        }
-        */
-        break;
+        if(activateWindow(getValue(nextWindowNode)))
+            break;
     }
-
-}
-void cycleWindowsForward(){
-    cycleWindows(1);
-}
-void cycleWindowsReverse(){
-    cycleWindows(-1);
 }
 
-
-void endCycleWindows(){
-    Master*master=getActiveMaster();
-    if(isFocusStackFrozen(master)){
-        ungrabDevice(master->id);
-        setFocusStackFrozen(0);
-        onWindowFocus(getFocusedWindow()->id);
-    }
+void endCycleWindows(void){
+    setFocusStackFrozen(0);
 }
 
 //////Run or Raise code
 
-int _runOrRaise(Node*targetWindow,Rules*commandRule){
-    LOG(LOG_LEVEL_DEBUG,"RUN OR RAISE RESULT: %d %d\n",targetWindow?1:0,commandRule->ruleTarget);
-    if(targetWindow){
-        assert(getIntValue(targetWindow));
-        assert(getValue(targetWindow));
-        WindowInfo*info=getValue(targetWindow);
-        activateWindow(info);
-        updateWindowCache(info);
-        return info->id;
-    }
-    else{
-        for(int i=0;commandRule[i].ruleTarget;i++)
-            applyRule(commandRule, NULL);
-        return 0;
-    }
-}
 
-Node* findWindow(Rules*rule,Node*searchList,Node*ignoreList){
+Node* findWindow(Rule*rule,Node*searchList,Node*ignoreList){
     UNTIL_FIRST(searchList,
             (!ignoreList||!isInList(ignoreList,getIntValue(searchList)))&&
             isActivatable(getValue(searchList))&&
@@ -90,71 +45,52 @@ Node* findWindow(Rules*rule,Node*searchList,Node*ignoreList){
     assert(searchList==NULL||doesWindowMatchRule(rule, getValue(searchList)));
     return searchList;
 }
-
-int runOrRaiseLazy(Rules*rule,int numberOfRules){
-    Node* targetWindow=NULL;
-
-    int i=0;
-    for(;!targetWindow && rule[i].ruleTarget;i++)
-        targetWindow=findWindow(&rule[i],getAllWindows(),NULL);
-    return _runOrRaise(targetWindow, &rule[i]);
+int processFindResult(Node*target){
+    if(target){
+        WindowInfo*winInfo=getValue(target);
+        activateWindow(winInfo);
+        updateWindowCache(winInfo);
+        return winInfo->id;
+    }
+    else return 0;
 }
-int runOrRaise(Rules*rule){
+int findAndRaiseLazy(Rule*rule){
+    return processFindResult(findWindow(rule,getAllWindows(),NULL));
+}
+int findAndRaise(Rule*rule){
     Node*topWindow=getMasterWindowStack(getActiveMaster());
     if(isNotEmpty(topWindow))
         updateWindowCache(getValue(topWindow));
 
-    Node* targetWindow=NULL;
-    int i=0;
-    while(rule[i].ruleTarget){
-        Node *windowsToIgnore = getWindowCache(getActiveMaster());
-        targetWindow=findWindow(&rule[i],topWindow,windowsToIgnore);
-        if(!targetWindow){
-            targetWindow=findWindow(&rule[i],getAllWindows(),windowsToIgnore);
-            if(!targetWindow && isNotEmpty(windowsToIgnore)){
-                clearWindowCache();
-                targetWindow=findWindow(&rule[i],topWindow,NULL);
-            }
+    Node* target=NULL;
+    Node *windowsToIgnore = getWindowCache(getActiveMaster());
+    target=findWindow(rule,topWindow,windowsToIgnore);
+    if(!target){
+        target=findWindow(rule,getAllWindows(),windowsToIgnore);
+        if(!target && isNotEmpty(windowsToIgnore)){
+            clearWindowCache();
+            target=findWindow(rule,topWindow,NULL);
         }
-        if(targetWindow)
-            break;
-        i++;
     }
-    if(targetWindow)
-        dumpWindowInfo(getValue(targetWindow));
-
-    dumpWindowInfo(getValue(targetWindow));
-    return _runOrRaise(targetWindow, &rule[i+1]);
-
+    return processFindResult(target);
 }
+
 
 void spawn(char* command){
     LOG(LOG_LEVEL_INFO,"running command %s\n",command);
     int pid=fork();
     if(pid==0){
         setsid();
-        execl(SHELL, "-c",command,(char*)0);
+        execl(SHELL,SHELL, "-c",command,(char*)0);
     }
-    else if(pid<0){
-        LOG(LOG_LEVEL_ERROR,"error forking\n");
-        exit(1);
-    }
+    else if(pid<0)
+        err(1, "error forking\n");
 }
-/*
-void spawnAsMaster(char* target){
-    //TODO Merge with MPX Patch
-    runCommand(target);
-}
-*/
 
 void killFocusedWindow(){
     killWindow(getFocusedWindow()->id);
 }
 
-
-void activateLastClickedWindow(){
-    activateWindow(getWindowInfo(getLastWindowClicked(getActiveMaster())));
-}
 
 void focusBottom(){
     activateWindow(getValue(getLast(getActiveWindowStack())));
@@ -175,11 +111,13 @@ void shiftFocus(int dir){
     focusWindow(getIntValue(getNextWindowInStack(dir)));
 }
 
-void popMin(int index){}
-void pushMin(int index){}
-void sendToNextWorkNonEmptySpace(int index){}
-void swapWithNextMonitor(int index){}
-void sendToNextMonitor(int index){}
+/*
+void swapWithNextMonitor(int index){
+    swapMonitors(getActiveWorkspaceIndex(), getActiveWorkspaceIndex()+index);
+}
+void sendToNextMonitor(int index){
+
+}*/
 
 void moveToWorkspace(int index){
     activateWorkspace(index);
@@ -193,34 +131,18 @@ void cloneToWorkspace(int index){
 void moveToNextWorkspace(int dir){
     switchToWorkspace((getActiveWorkspaceIndex()+dir)%getNumberOfWorkspaces());
 }
-void mouseResize(){
+
+
+void floatFocusedWindow(){
+    floatWindow(getFocusedWindow());
 }
-void mouseDragWindow(){
+void sinkFocusedWindow(){
+    sinkWindow(getFocusedWindow());
 }
 
 
-int floatActiveWindow(){
-    return floatWindow(getValue(getActiveWindowStack()));
-}
-int floatWindow(WindowInfo* winInfo){
-    if(NO_TILE_MASK & winInfo->id)
-        return NO_ACTION_REQUIRED;
-    //setMaskForWindow(winInfo, NO_TILE_MASK);
-
-    return NORMAL_EXIT;
-}
-int sinkActiveWindow(){
-    return sinkWindow(getFocusedWindow());
-}
-int sinkWindow(WindowInfo* winInfo){
-    if(NO_TILE_MASK & winInfo->id == 0)
-            return NO_ACTION_REQUIRED;
-    //setMaskForWindow(winInfo, NO_TILE_MASK);
-
-    return NORMAL_EXIT;
-}
 void toggleStateForActiveWindow(int mask){
-    updateState(getFocusedWindow(), mask, TOGGLE);
+    toggleMask(getFocusedWindow(), mask);
 }
 
 
@@ -235,17 +157,14 @@ void cycleLayouts(int dir){
             getActiveWorkspace()->layouts=getActiveWorkspace()->layouts->next;
         else
             getActiveWorkspace()->layouts=getActiveWorkspace()->layouts->prev;
-    setLayout(getValue(getActiveWorkspace()->layouts));
+    setActiveLayout(getValue(getActiveWorkspace()->layouts));
 }
 void toggleLayout(Layout* layout){
     if(layout==getActiveWorkspace()->activeLayout)
-        setLayout(layout);
+        setActiveLayout(layout);
     else cycleLayouts(0);
 }
-void setLayout(Layout* layout){
-    getActiveWorkspace()->activeLayout=layout;
-    applyLayout(getActiveWorkspace(), layout);
+void retile(){
+    tileWorkspace(getActiveWorkspaceIndex());
 }
-
-
 

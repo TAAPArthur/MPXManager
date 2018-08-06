@@ -1,5 +1,4 @@
 #include "../UnitTests.h"
-#include "../../mywm-structs.h"
 #include "../../util.h"
 
 int* createStruct(int i){
@@ -280,7 +279,7 @@ START_TEST(test_util_first){
 
 }END_TEST
 START_TEST(test_iter_circular){
-    Node*head=createLinkedListAssert(createCircularHead(NULL), size, 1, 1);
+    Node*head=fillListLinkedList(createCircularHead(NULL), size);
     Node*temp=head;
     UNTIL_FIRST(head,0)
     assert(head==NULL);

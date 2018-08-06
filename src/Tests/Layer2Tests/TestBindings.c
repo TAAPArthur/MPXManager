@@ -1,32 +1,334 @@
 #include "../../mywm-util.h"
-#include "../../mywm-util-private.h"
+
 #include "../../bindings.h"
 #include "../../devices.h"
-#include "../../defaults.h"
-
+#include "../../globals.h"
 #include "../UnitTests.h"
-#include "../../logger.h"
+#include "../TestX11Helper.h"
+
+
+static BoundFunction sampleChain=CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE,
+        {0, Button1, .mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
+        {0, Button1, .mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .noGrab=1},
+        END_CHAIN(0, 0));
+int returnFalse(void){return 0;}
+int returnTrue(void){return 1;}
+
+
+START_TEST(test_init_binding){
+    Binding binding={0,Button1,.targetID=BIND_TO_ALL_MASTERS};
+    initBinding(&binding);
+    assert(binding.targetID==1);
+    assert(binding.detail);
+    binding.targetID=BIND_TO_ALL_DEVICES;
+    initBinding(&binding);
+    assert(binding.targetID==0);
+}END_TEST
+START_TEST(test_binding_target_id){
+    addMaster(2, 3);
+    Binding binding={.targetID=-1};
+    assert(getIDOfBindingTarget(&binding)==getActiveMasterPointerID());
+    binding.targetID=1;
+    assert(getIDOfBindingTarget(&binding)==1);
+}END_TEST
+
+
+///does to make sure a binding will match only the correct detail/mod pair(s)
+START_TEST(test_binding_match){
+    int mod=1;
+    int match=1;
+    int fake=10;
+    int fakeMod=2;
+    int mask=Mod4Mask;
+    int fakeMask=Mod1Mask;
+    Binding binding={mod,fake,.detail=match,.mask=mask};
+
+    int wildCardMod=0;
+    int wildCardDetail=0;
+    anyModier=-1;
+    assert(binding.mask);
+    for(int i=0;i<4;i++){
+        assert(!doesBindingMatch(&binding, fake, fakeMod,fakeMask));
+        assert(doesBindingMatch(&binding, fake, fakeMod, mask)==(wildCardDetail&wildCardMod));
+        assert(!doesBindingMatch(&binding, fake, mod,fakeMask));
+
+        assert(doesBindingMatch(&binding, fake, mod,mask)==wildCardDetail);
+
+        assert(!doesBindingMatch(&binding, match, fakeMod,fakeMask));
+
+
+        assert(doesBindingMatch(&binding, match, fakeMod,mask)==wildCardMod);
+        assert(!doesBindingMatch(&binding, match, mod,fakeMask));
+        assert(doesBindingMatch(&binding, match, mod,mask));
+
+        assert(doesBindingMatch(&binding, match, mod,0));
+        if(i==0){
+            binding.mod=anyModier;
+            wildCardMod=1;
+        }
+        else if(i==1){
+            binding.detail=0;
+            wildCardDetail=1;
+        }
+        else if(i==2){
+            binding.mod=mod;
+            wildCardMod=0;
+        }
+    }
+
+
+}END_TEST
+START_TEST(test_check_bindings){
+    addMaster(1,2);
+    int passThrough=_i;
+    int count=0;
+    int targertCount=0;
+    void funcNoArg(void){
+        count++;
+    }
+    IGNORE_MASK=16;
+    anyModier=0;
+
+    int i=0;
+    for(int mod=0;mod<3;mod++)
+        for(int detail=0;detail<3;detail++){
+            Binding arr[]={
+                {10,10,BIND(exit,10),.passThrough=passThrough, .detail=10},
+                {mod,detail,BIND(funcNoArg),.passThrough=passThrough, .detail=detail},
+                {mod,detail,BIND(funcNoArg),.passThrough=0,.detail=detail},
+                {mod,detail,BIND(exit,11),.passThrough=passThrough, .detail=detail},
+            };
+            clearList(deviceBindings);
+
+            for(int i=0;i<LEN(arr);i++)
+                addBinding(&arr[i]);
+
+            checkBindings(1, 1, i, NULL);
+            checkBindings(1, 1|IGNORE_MASK, i, NULL);
+            if(mod!=2 && detail!=2)
+                targertCount+=2*(passThrough+1);
+            assert(count==targertCount);
+    }
+}END_TEST
+
+
+///Test to make sure callBoundedFunction() actually calls the right function
+START_TEST(test_call_bounded_function){
+    addMaster(1,2);
+    int integer=1;
+    void*voidPointer="c";
+    int count=0;
+
+    int targetCounts[]={4,4,4};
+    int individualCounts[LEN(targetCounts)]={0};
+
+    void funcNoArg(void){
+        count++;
+        individualCounts[0]++;
+    }
+    int funcNoArgReturn(void){
+        count++;
+        individualCounts[0]++;
+        return 2;
+    }
+    void funcVoidArg(void*v){
+        count++;
+        assert(voidPointer==v);
+        individualCounts[1]++;
+    }
+    int funcVoidArgReturn(void*v){
+        count++;
+        assert(voidPointer==v);
+        individualCounts[1]++;
+        return 3;
+    }
+    void funcWinArg(WindowInfo*v){
+        count++;
+        assert(voidPointer==v);
+        individualCounts[1]++;
+    }
+    int funcWinArgReturn(WindowInfo*v){
+        count++;
+        assert(voidPointer==v);
+        individualCounts[1]++;
+        return 4;
+    }
+    void funcInt(int i){
+        count++;
+        assert(integer==i);
+        individualCounts[2]++;
+    }
+    int funcIntReturn(int i){
+        count++;
+        assert(integer==i);
+        individualCounts[2]++;
+        return 5;
+    }
+
+
+    assert(getActiveBinding()==NULL);
+    BoundFunction unset = BIND(exit,110);
+    unset.type=UNSET;
+    BoundFunction b[]={
+        unset,
+        CHAIN_GRAB(0,
+            {0, Button1, BIND(exit,1),.noGrab=1},
+            {0, Button1, BIND(exit,1),.noGrab=1},
+            END_CHAIN(0, Button1, BIND(exit,1),.noGrab=1)
+        ),
+        BIND(funcNoArg),
+        BIND(funcNoArgReturn),
+        BIND(funcInt,integer),
+        BIND(funcIntReturn,integer),
+        BIND(funcVoidArg,voidPointer),
+        BIND(funcVoidArgReturn,voidPointer),
+        BIND(funcWinArg),
+        BIND(funcWinArgReturn),
+        AND(BIND(funcInt,integer),BIND(funcIntReturn,integer)),
+        OR(BIND(funcNoArg),BIND(funcNoArgReturn)),
+        AUTO_CHAIN_GRAB(0,1,
+            {0, Button1, OR(BIND(funcNoArg),BIND(funcNoArgReturn)),.noGrab=1},
+            {0, Button1, BIND(exit,1),.noGrab=1},
+            END_CHAIN(0, Button1, BIND(exit,1),.noGrab=1)
+        ),
+    };
+    //{ _Generic(funcNoArg,default: .func) =funcNoArg,.type=NO_ARGS}
+
+    int size=sizeof(b)/sizeof(BoundFunction);
+
+    int sum=0;
+    for(int i=0;i<size;i++){
+        int c=count;
+        int result=callBoundedFunction(&b[i], voidPointer);
+        assert(result);
+        sum+=result;
+        if(i<LEN(b)-3)
+            if (i>1)
+                assert(count-c==1);
+            else assert(count==0);
+    }
+    for(int i=0;i<LEN(targetCounts);i++)
+        assert(targetCounts[i]==individualCounts[i]);
+
+    assert(getActiveBinding()==b[LEN(b)-1].func.chainBindings);
+    assert(sum==10+LEN(b));
+
+}END_TEST
+
+START_TEST(test_and_or_short_circuit){
+
+    BoundFunction fail=BIND(exit,22);
+    BoundFunction and=AND(BIND(returnFalse),fail);
+    BoundFunction or=OR(BIND(returnTrue),fail);
+    assert(!callBoundedFunction(&and, NULL));
+    assert(callBoundedFunction(&or, NULL));
+    BoundFunction combo=OR(and,and);
+    BoundFunction combo2=AND(or,or);
+    assert(!callBoundedFunction(&combo, NULL));
+    assert(callBoundedFunction(&combo2, NULL));
+}END_TEST
+START_TEST(test_init_chain_binding){
+    startChain(&sampleChain);
+    assert(sampleChain.func.chainBindings->detail);
+    assert(sampleChain.func.chainBindings[1].detail);
+}END_TEST
+START_TEST(test_start_end_chain){
+    startChain(&sampleChain);
+    assert(getActiveBinding()==sampleChain.func.chainBindings);
+    endChain();
+    assert(getActiveBinding()==NULL);
+}END_TEST
+START_TEST(test_chain_bindings){
+    int count=0;
+
+    int outerChainEndMod=1;
+    void funcNoArg(void){
+        count++;
+    }
+    void funcNoArg2(void){
+        count--;
+    }
+
+    int mask=0;
+
+    Binding chain={0,1,CHAIN_GRAB(0,
+                {0,1,CHAIN_GRAB(0,
+                    {0, 2, BIND(funcNoArg),.passThrough=0,.detail=2 , .noGrab=1},
+                    END_CHAIN(0,0,BIND(funcNoArg2),.passThrough=1, .noGrab=1)
+                ),.passThrough=0, .detail=1, .noGrab=1},
+                {0, 2, BIND(exit,11),.detail=2, .noGrab=1},
+            END_CHAIN(outerChainEndMod,0,BIND(funcNoArg2),.noEndOnPassThrough=1, .noGrab=1)
+        ),.passThrough=1, .detail=1, .noGrab=1};
+    Binding dummy={0, 2, BIND(exit,10),.detail=2, .noGrab=1};
+    addBinding(&chain);
+    addBinding(&dummy);
+    assert(getActiveBinding()==NULL);
+
+    //enter first chain
+    assert(checkBindings(1, 0, mask, NULL));
+    assert(getActiveBinding());
+    assert(count==0);
+    //enter second chain chain
+    checkBindings(1, 0, mask, NULL);
+    assert(getSize(getActiveBindingNode())==2);
+    assert(count==0);
+    checkBindings(2, 0, mask, NULL);
+    assert(count==1);
+    checkBindings(2, 0, mask, NULL);
+    assert(count==2);
+    //exit 2nd layer of chain
+    checkBindings(123, 0, mask, NULL);
+    assert(count==1);
+    assert(getSize(getActiveBindingNode())==1);
+    //re-enter 2nd layer of chain
+    checkBindings(1, 0, mask, NULL);
+    assert(getSize(getActiveBindingNode())==2);
+    assert(count==1);
+    //passthrough via inner chain
+    assert(!checkBindings(123, outerChainEndMod, mask, NULL));
+    assert(count==0);
+    assert(getActiveBinding()==NULL);
+
+}END_TEST
+
+START_TEST(test_chain_grab){
+
+    addBinding(sampleChain.func.chainBindings);
+    addBinding(&sampleChain.func.chainBindings[1]);
+    startChain(&sampleChain);
+    int mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE;
+    if(_i){
+        //triggerAllBindings(mask);
+        //waitToReceiveInput(mask);
+    }
+    endChain();
+    if(!_i){
+        triggerAllBindings(mask);
+        assert(!xcb_poll_for_event(dis));
+    }
+}END_TEST
+
 
 
 START_TEST(test_literal_string_rule){
-    Rules r=CREATE_LITERAL_RULE("A",LITERAL,NULL);
+    Rule r=CREATE_LITERAL_RULE("A",LITERAL,NULL);
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "a")==0);
     assert(doesStringMatchRule(&r, "b")==0);
-    Rules r2=CREATE_LITERAL_RULE("A",LITERAL|CASE_INSENSITIVE,NULL);
+    Rule r2=CREATE_LITERAL_RULE("A",LITERAL|CASE_INSENSITIVE,NULL);
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "b")==0);
 
 }END_TEST
 START_TEST(test_string_rule){
-    Rules r=CREATE_RULE(".*",MATCH_ANY_REGEX,NULL);
+    Rule r=CREATE_RULE(".*",MATCH_ANY_REGEX,NULL);
     COMPILE_RULE((&r));
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "B"));
     regfree(r.regexExpression);
     free(r.regexExpression);
-    Rules r2=CREATE_RULE("A",MATCH_ANY_REGEX,NULL);
+    Rule r2=CREATE_RULE("A",MATCH_ANY_REGEX,NULL);
     COMPILE_RULE((&r2));
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
@@ -34,200 +336,13 @@ START_TEST(test_string_rule){
     regfree(r2.regexExpression);
     free(r2.regexExpression);
     int target=(MATCH_ANY_REGEX) - (CASE_INSENSITIVE);
-    Rules r3=CREATE_RULE("A",target,NULL);
+    Rule r3=CREATE_RULE("A",target,NULL);
     COMPILE_RULE((&r3));
     assert(doesStringMatchRule(&r3, "A"));
     assert(doesStringMatchRule(&r3, "a")==0);
     assert(doesStringMatchRule(&r3, "B")==0);
     regfree(r3.regexExpression);
     free(r3.regexExpression);
-}END_TEST
-
-START_TEST(test_call_bounded_function){
-    createContext(1);
-    addMaster(1,2);
-    int integer=1;
-    void*voidPointer="c";
-    int count=0;
-    int individualCounts[4]={};
-    int targetCounts[4]={1,3,1,2};
-
-    void funcNoArg(){
-        count++;
-        individualCounts[0]++;
-    }
-    void funcVoidArg(void*v){
-        count++;
-        assert(voidPointer==v);
-        individualCounts[1]++;
-    }
-    void funcWinArg(WindowInfo*v){
-        count++;
-        assert(voidPointer==v);
-        individualCounts[1]++;
-    }
-    void funcInt(int i){
-        count++;
-        assert(integer==i);
-        individualCounts[2]++;
-    }
-
-    assert(getActiveBinding()==NULL);
-    BoundFunction unset = BIND_TO_INT_FUNC((void(*)(int))exit,110);
-    unset.type=UNSET;
-    BoundFunction b[]={
-        CHAIN(
-            {0, 0, BIND_TO_INT_FUNC(exit,1)},
-            {0, 0, BIND_TO_INT_FUNC(exit,1)},
-            END_CHAIN(0, 0, BIND_TO_INT_FUNC(exit,1))
-        ),
-        unset,
-        BIND_TO_FUNC(funcNoArg),
-        BIND_TO_INT_FUNC(funcInt,integer),
-        BIND_TO_STR_FUNC(funcVoidArg,voidPointer),
-        BIND_TO_VOID_FUNC(funcVoidArg,voidPointer),
-        BIND_TO_WIN_FUNC(funcWinArg),
-
-    };
-
-    int size=sizeof(b)/sizeof(BoundFunction);
-
-    for(int i=0;i<size;i++){
-        int c=count;
-        callBoundedFunction(&b[i], voidPointer);
-        if(i>1)
-            assert(count-c==1);
-        else assert(count==0);
-    }
-    for(int i=0;i<2;i++)
-        assert(targetCounts[i]==individualCounts[i]);
-    assert(getActiveBinding()==b[0].func.chainBindings);
-
-}END_TEST
-
-START_TEST(test_binding_match){
-    int mod=1;
-    int match=1;
-    int fake=10;
-    int fakeMod=2;
-    Binding binding={mod,fake,.detail=match};
-
-    anyModier=-1;
-
-    assert(!doesBindingMatch(&binding, fake, fakeMod));
-    assert(!doesBindingMatch(&binding, fake, mod));
-    assert(!doesBindingMatch(&binding, match, fakeMod));
-    assert(doesBindingMatch(&binding, match, mod));
-
-    binding.mod=anyModier;
-    assert(!doesBindingMatch(&binding, fake, fakeMod));
-    assert(!doesBindingMatch(&binding, fake, mod));
-    assert(doesBindingMatch(&binding, match, fakeMod));
-    assert(doesBindingMatch(&binding, match, mod));
-
-    binding.detail=0;
-
-    assert(doesBindingMatch(&binding, fake, fakeMod));
-    assert(doesBindingMatch(&binding, fake, mod));
-    assert(doesBindingMatch(&binding, match, fakeMod));
-    assert(doesBindingMatch(&binding, match, mod));
-
-    binding.mod=mod;
-
-    assert(!doesBindingMatch(&binding, fake, fakeMod));
-    assert(doesBindingMatch(&binding, fake, mod));
-    assert(!doesBindingMatch(&binding, match, fakeMod));
-    assert(doesBindingMatch(&binding, match, mod));
-
-}END_TEST
-START_TEST(test_bindings){
-    createContext(1);
-    addMaster(1,2);
-    int passThrough=_i;
-    int count=0;
-    int targertCount=0;
-    void funcNoArg(){
-        count++;
-    }
-    IGNORE_MASK=16;
-    anyModier=0;
-    for(int i=0;i<=MOUSE_RELEASE;i++){
-        deviceBindingLengths[i]=4;
-        for(int mod=0;mod<3;mod++)
-            for(int detail=0;detail<3;detail++){
-                deviceBindings[i]=(Binding[]){
-                    {10,10,BIND_TO_INT_FUNC(exit,10),.passThrough=passThrough, .detail=10},
-                    {mod,detail,BIND_TO_FUNC(funcNoArg),.passThrough=passThrough, .detail=detail},
-                    {mod,detail,BIND_TO_FUNC(funcNoArg),.passThrough=0,.detail=detail},
-                    {mod,detail,BIND_TO_INT_FUNC(exit,11),.passThrough=passThrough, .detail=detail},
-                };
-                assert(deviceBindings[i][0].boundFunction.func.funcNoArg);
-                assert(doesBindingMatch(&deviceBindings[i][1], detail, mod));
-
-                checkBindings(1, 1, i, NULL);
-                checkBindings(1, 1|IGNORE_MASK, i, NULL);
-                if(mod!=2 && detail!=2)
-                    targertCount+=2*(passThrough+1);
-                assert(count==targertCount);
-        }
-    }
-}END_TEST
-
-START_TEST(test_chain_bindings){
-    createContext(1);
-    addMaster(1,2);
-    int count=0;
-
-    int outerChainEndMod=1;
-    void funcNoArg(){
-        count++;
-    }
-    void funcNoArg2(){
-        count--;
-    }
-
-    for(int i=0;i<4;i++){
-        count=0;
-        deviceBindingLengths[i]=2;
-        deviceBindings[i]=(Binding[]){
-            {0,1,CHAIN(
-                    {0,1,CHAIN(
-                        {0, 2, BIND_TO_FUNC(funcNoArg),.passThrough=0,.detail=2},
-                        END_CHAIN(0,0,BIND_TO_FUNC(funcNoArg2),.passThrough=1)
-                    ),.passThrough=0, .detail=1, .noGrab=1},
-                    {0, 2, BIND_TO_INT_FUNC(exit,11),.detail=2},
-                END_CHAIN(outerChainEndMod,0,BIND_TO_FUNC(funcNoArg2),.noEndOnPassThrough=1)
-            ),.passThrough=1, .detail=1, .noGrab=1},
-            {0, 2, BIND_TO_INT_FUNC(exit,10),.detail=2},
-        };
-        assert(getActiveBinding()==NULL);
-
-        //enter first chain
-        assert(checkBindings(1, 0, i, NULL));
-        assert(getActiveBinding());
-        assert(count==0);
-        //enter second chain chain
-        checkBindings(1, 0, i, NULL);
-        assert(getSize(getActiveBindingNode())==2);
-        assert(count==0);
-        checkBindings(2, 0, i, NULL);
-        assert(count==1);
-        checkBindings(2, 0, i, NULL);
-        assert(count==2);
-        //exit 2nd layer of chain
-        checkBindings(123, 0, i, NULL);
-        assert(count==1);
-        assert(getSize(getActiveBindingNode())==1);
-        //re-enter 2nd layer of chain
-        checkBindings(1, 0, i, NULL);
-        assert(getSize(getActiveBindingNode())==2);
-        assert(count==1);
-        //passthrough via inner chain
-        assert(!checkBindings(123, outerChainEndMod, i, NULL));
-        assert(count==0);
-        assert(getActiveBinding()==NULL);
-    }
-
 }END_TEST
 
 START_TEST(test_window_matching){
@@ -241,92 +356,103 @@ START_TEST(test_window_matching){
     int windowResourceIndex=_i;
     (&info->typeName)[windowResourceIndex]=s;
     (&noMatchInfo->typeName)[windowResourceIndex]="gibberish";
-    int count=0;
 
-    void funcNoArg(){
-        count++;
-    }
     int mask=1<<(_i+2);
     for(int i=0;i<MATCH_ANY_LITERAL;i++){
-        count=0;
-        Rules r=CREATE_LITERAL_RULE(s,i,BIND_TO_FUNC(funcNoArg));
+        Rule r=CREATE_LITERAL_RULE(s,i,NULL);
         int result=((i & mask)?1:0);
         assert(doesWindowMatchRule(&r, info) == result);
-        assert(applyRule(&r, info) == result);
-        assert(count==result);
         assert(!doesWindowMatchRule(&r, noMatchInfo));
-        assert(!applyRule(&r, noMatchInfo));
         assert(!doesWindowMatchRule(&r, nullInfo));
-        assert(!applyRule(&r, nullInfo));
         assert(!doesWindowMatchRule(&r, NULL));
-        assert(!applyRule(&r, NULL));
     }
     free(all);
 }END_TEST
 START_TEST(test_wildcard_rule){
-    int count=0;
-
-    void funcNoArg(){
-        count++;
-    }
-    Rules r=CREATE_WILDCARD(BIND_TO_FUNC(funcNoArg));
-    assert(applyRule(&r, NULL));
-    assert(count==1);
-    Rules r2=CREATE_DEFAULT_EVENT_RULE(funcNoArg);
-    assert(applyRule(&r2, NULL));
-    assert(count==2);
+    Rule r=CREATE_WILDCARD(NULL);
+    assert(doesWindowMatchRule(&r, NULL));
 }END_TEST
 START_TEST(test_apply_rules){
     int count=0;
 
-    void funcNoArg(){
+    void funcNoArg(void){
         count++;
     }
-    Node*head=createEmptyHead();
+    Rule dummy=CREATE_RULE("",LITERAL,NULL);
+    assert(applyRule(&dummy, NULL));
+    Node*head=createCircularHead(NULL);
+    assert(applyRules(head, NULL));
     int size=MATCH_ANY_LITERAL;
     size=8;
     int target=0;
-    Rules r[size];
+    Rule r[size];
     for(int i=0;i<size;i++){
-        r[i]=(Rules)CREATE_WILDCARD(BIND_TO_FUNC(funcNoArg),.passThrough=i>=size/2);
-        target+=i>=size/2;
+        r[i]=(Rule)CREATE_WILDCARD(BIND(funcNoArg),.passThrough=i<size/2);
+        target+=i<size/2;
         insertHead(head,&r[i]);
     }
 
-    applyEventRules(head, NULL);
+    applyRules(head, NULL);
     assert(count==target+1);
-    Node*temp=head;
-    FOR_AT_MOST(temp,size/2-1);
-    assert(((Rules*)getValue(temp->prev))->passThrough);
-    destroyList(temp);
-    assert(applyEventRules(head, NULL));
     destroyList(head);
+
+}END_TEST
+START_TEST(test_passthrough_rules){
+
+    Rule rules[]={
+            CREATE_WILDCARD(BIND(returnTrue),.passThrough=ALWAYS_PASSTHROUGH),
+            CREATE_WILDCARD(BIND(returnTrue),.passThrough=PASSTHROUGH_IF_TRUE),
+            CREATE_WILDCARD(BIND(returnFalse),.passThrough=PASSTHROUGH_IF_FALSE),
+    };
+
+    for(int i=0;i<LEN(rules);i++)
+        assert(applyRule(&rules[i], NULL));
+
+    Rule noPassThrough=CREATE_WILDCARD(BIND(returnFalse),.passThrough=NO_PASSTHROUGH);
+    assert(!applyRule(&noPassThrough, NULL));
+
+    //here to touch 'impossible case'
+    passThrough(0, -1);
 
 }END_TEST
 
 
+static void setup(){
+    DEFAULT_BINDING_MASKS=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
+    createContextAndSimpleConnection();
+}
 Suite *bindingsSuite(void) {
     Suite*s = suite_create("Context");
 
-    TCase*tc_core = tcase_create("Bindings");
+    TCase*tc_core;
 
-    tcase_add_test(tc_core,test_call_bounded_function);
-
+    tc_core= tcase_create("Bindings");
+    tcase_add_checked_fixture(tc_core, setup, destroyContextAndConnection);
+    tcase_add_test(tc_core,test_init_binding);
+    tcase_add_test(tc_core,test_binding_target_id);
     tcase_add_test(tc_core,test_binding_match);
-    tcase_add_loop_test(tc_core,test_bindings,0,2);
+    tcase_add_test(tc_core,test_call_bounded_function);
+    tcase_add_test(tc_core,test_and_or_short_circuit);
+    tcase_add_loop_test(tc_core,test_check_bindings,0,2);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("Chain Bindings");
+    tcase_add_checked_fixture(tc_core, setup, destroyContextAndConnection);
+
+    tcase_add_test(tc_core,test_init_chain_binding);
+    tcase_add_test(tc_core,test_start_end_chain);
     tcase_add_test(tc_core,test_chain_bindings);
+    tcase_add_loop_test(tc_core,test_chain_grab,0,1);
+    tcase_add_loop_test(tc_core,test_chain_grab,1,2);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Rule");
     tcase_add_test(tc_core, test_literal_string_rule);
     tcase_add_test(tc_core, test_string_rule);
-
-
     tcase_add_loop_test(tc_core, test_window_matching,0,4);
-
     tcase_add_test(tc_core,test_wildcard_rule);
+    tcase_add_test(tc_core, test_passthrough_rules);
     tcase_add_test(tc_core,test_apply_rules);
-
     suite_add_tcase(s, tc_core);
 
     return s;

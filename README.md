@@ -36,6 +36,9 @@ We did not make it a priority to be small or efficient
 
 
 # Features
+## Event Hooks
+We all users to add run arbitrary function when certain events (either standard X11 events or changes in out internal state) are detected.
+
 ## Key/Mouse Bindings
 When a designed key/modifer or button/modifer combination (henceforth a Binding) is pressed or released, a desired function will be called. 
 In addition, you can specify combination to signal the start of a "chain." A chain is an array of Bindings that get processed before all other bindings. When the last member of the chain is called (by default this will be any other key is pressed), the chain ends and any grabs assosiated with the chain are released

@@ -27,19 +27,19 @@ Binding onKeyPressBindings[] = {
     WORKSPACE_OPERATION(    XK_0,                             9),
     STACK_OPERATION(XK_Up,XK_Down,XK_Left,XK_Right),
     STACK_OPERATION(XK_H,XK_J,XK_K,XK_L),
-
-    {Mod1Mask,XK_Tab,BIND_TO_FUNC(cycleWindowsForward)},
-    {Mod1Mask | ShiftMask,XK_Tab, BIND_TO_FUNC(cycleWindowsReverse)},
-    {Mod4Mask,XK_Return, BIND_TO_FUNC(shiftTop)},
-    {Mod4Mask|ShiftMask,XK_Return, BIND_TO_FUNC(swapWithTop)},
-    {Mod4Mask,XK_Home, BIND_TO_FUNC(focusTop)},
-    {Mod4Mask,XK_End, BIND_TO_FUNC(focusBottom)},
+    //KEY_PRESS(Mod1Mask,XK_Tab,BIND(cycleWindowsForward)),
+    {Mod1Mask,XK_Tab,BIND(cycleWindowsForward)},
+    {Mod1Mask | ShiftMask,XK_Tab, BIND(cycleWindowsReverse)},
+    {Mod4Mask,XK_Return, BIND(shiftTop)},
+    {Mod4Mask|ShiftMask,XK_Return, BIND(swapWithTop)},
+    {Mod4Mask,XK_Home, BIND(focusTop)},
+    {Mod4Mask,XK_End, BIND(focusBottom)},
     {Mod4Mask,XK_space, BIND_TO_INT_FUNC(cycleLayouts,1)},
 
     {0,XK_F6, RUN_OR_RAISE_CLASS("arandr")},
     {Mod4Mask,XK_F6, RUN_OR_RAISE_CLASS("arandr")},
 
-    //{Mod4Mask | ControlMask | Mod1Mask |ShiftMask,XK_Up, BIND_TO_FUNC(spawnWithArgs),{.charArg=""} __ },
+    //{Mod4Mask | ControlMask | Mod1Mask |ShiftMask,XK_Up, BIND(spawnWithArgs),{.charArg=""} __ },
     {Mod4Mask | ControlMask | Mod1Mask |ShiftMask,XK_Up, SPAWN(".screenlayout/leftSetup.sh")},
     {Mod4Mask | ControlMask | Mod1Mask |ShiftMask,XK_Down, SPAWN(".screenlayout/rightSetup.sh")},
     {Mod4Mask | ControlMask | Mod1Mask |ShiftMask,XK_End, SPAWN(".screenlayout/baseSetup.sh")},
@@ -63,7 +63,7 @@ Binding onKeyPressBindings[] = {
             {Mod4Mask, XK_F2, BIND_TO_INT_FUNC(toggleStateForActiveWindow,FULLSCREEN_MASK)}
     )
     },
-    {Mod4Mask,XK_c, BIND_TO_FUNC(killFocusedWindow)},
+    {Mod4Mask,XK_c, BIND(killFocusedWindow)},
     {ControlMask | Mod1Mask , XK_Delete, RUN_OR_RAISE_CLASS("xfce4-taskmanager")},
     {Mod4Mask | ControlMask | Mod1Mask  , XK_l, SPAWN("xtrlock")},
     {Mod4Mask, XK_Escape, SPAWN("xtrlock")},
@@ -129,20 +129,20 @@ Binding onKeyPressBindings[] = {
     {Mod4Mask | ShiftMask,XK_d, SPAWN("thunar")},
     {ControlMask | Mod1Mask,XK_t, RUN_OR_RAISE_CLASS("xfce4-terminal")},
     {ControlMask | Mod1Mask | ShiftMask,XK_t, SPAWN("xfce4-terminal")},
-    {Mod4Mask | ShiftMask ,XK_q, BIND_TO_FUNC(quit)}
+    {Mod4Mask | ShiftMask ,XK_q, BIND(quit)}
 
 };
 
 Binding onKeyReleaseBindings[] = {
-        {0,XK_Alt_L,BIND_TO_FUNC(endCycleWindows),.passThrough=1,.noGrab=1}
+        {0,XK_Alt_L,BIND(endCycleWindows),.passThrough=1,.noGrab=1}
 };
 Binding onMouseReleaseBindings[]={
-        {0,XK_Alt_L,BIND_TO_FUNC(endCycleWindows),.passThrough=1,.noGrab=1}
+        {0,XK_Alt_L,BIND(endCycleWindows),.passThrough=1,.noGrab=1}
 };
 
 Binding  onMousePressBindings[]={
-    {0,Button1,BIND_TO_FUNC(activateLastClickedWindow), .noGrab=1, .passThrough=1 },
-    {0,Button2,BIND_TO_FUNC(activateLastClickedWindow) , .noGrab=1, .passThrough=1 },
+    {0,Button1,BIND(activateLastClickedWindow), .noGrab=1, .passThrough=1 },
+    {0,Button2,BIND(activateLastClickedWindow) , .noGrab=1, .passThrough=1 },
 };
 
 void loadSettings(){

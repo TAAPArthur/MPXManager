@@ -3,12 +3,10 @@
  * @brief Linked list implementation and helper methods
  *
  */
-
 #ifndef MYWM_UTIL
 #define MYWM_UTIL
 
 /**
- * @struct
  * @brief A Linked list struct
  * The struct can hold any value, but
  * there are convience methods that work best when the
@@ -45,7 +43,7 @@ Node* createEmptyHead();
 /**
  * Creates a pointer to a node with the given value.
  * The next and prev pointers are set to null
- * @param the value of the new node
+ * @param value - the value of the new node
  * @return a pointer to node
  */
 Node* createHead(void*value);
@@ -99,9 +97,11 @@ void insertBefore(Node* head,Node* newNode);
  * The value of head will be updated upon every iteration.
  * Note that behavior is undefined if the list is modified while iterating
  * @param head - starting point for iteration. Will be set to the NULL upon completion
+ * @param ... - code to run on every iteration
  */
 #define FOR_EACH(head,...) \
         _FOR_EACH(next,head,__VA_ARGS__)
+
 
 /**
  * @brief Iterates over head and runs arbitrary command(s) util the end
@@ -109,6 +109,7 @@ void insertBefore(Node* head,Node* newNode);
  * The value of head will be updated upon every iteration.
  * Note that behavior is undefined if the list is modified while iterating
  * @param head - starting point for iteration. Will be set to the NULL upon completion
+ * @param ... - code to run on every iteration
  */
 #define FOR_EACH_CIRCULAR(head,...) {\
         Node*__start__=head; \
@@ -131,6 +132,7 @@ void insertBefore(Node* head,Node* newNode);
  * Note that behavior is undefined if the list is modified while iterating
  *
  * You probably don't want to use this function
+ * @param dir - the direction to transverse (next or prev)
  * @param head  - starting point for iteration. Will be set to the NULL upon completion
  * @see FOR_EACH_REVERSED(head,...)
  * @see FOR_EACH(head,...)
@@ -146,7 +148,7 @@ void insertBefore(Node* head,Node* newNode);
  */
 #define FOR_AT_MOST(head,N,...) \
     {int __temp_size__=0; FOR_EACH(head,if(__temp_size__++==N)break; __VA_ARGS__;)}
-
+///@copydoc FOR_AT_MOST
 #define FOR_AT_MOST_REVERSED(head,N,...) \
     {int __temp_size__=0; FOR_EACH_REVERSED(head,if(__temp_size__++==N)break; __VA_ARGS__;)}
 /**

@@ -1,9 +1,9 @@
 #include "../UnitTests.h"
 
-#include "../../defaults.h"
 #include "../../xsession.h"
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
+#include "../../globals.h"
 
 void openXDisplay();
 START_TEST(test_quit){
@@ -12,18 +12,22 @@ START_TEST(test_quit){
 }END_TEST
 START_TEST(test_open_xdisplay){
     openXDisplay();
+    assert(dis);
+    assert(!xcb_connection_has_error(dis));
+    assert(screen);
+    assert(root);
     assert(!xcb_connection_has_error(dis));
 }END_TEST
 START_TEST(test_close_xdisplay){
     openXDisplay();
     closeConnection();
     openXDisplay();
-}END_TEST
-START_TEST(test_xconnection){
-    createContext(1);
-    connectToXserver();
-    assert(getActiveMaster());
-    assert(getMonitorFromWorkspace(getWorkspaceByIndex(0)));
+    closeConnection();
+    //will leak if vars aren't freed
+    dis=NULL;
+    ewmh=NULL;
+    //tear down will close
+    openXDisplay();
 }END_TEST
 
 Suite *xsessionSuite() {
@@ -33,7 +37,6 @@ Suite *xsessionSuite() {
     tcase_add_checked_fixture(tc_core, NULL, closeConnection);
     tcase_add_test(tc_core, test_open_xdisplay);
     tcase_add_test(tc_core, test_close_xdisplay);
-    tcase_add_test(tc_core, test_xconnection);
 
     tcase_add_test(tc_core, test_quit);
 
