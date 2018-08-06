@@ -21,7 +21,7 @@ SRCS := ${LIBSRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} $
 
 CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null | grep -v -E '$(2)' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
 RUN_TEST = valgrind -q --leak-check=full --error-exitcode=123 $(1)
-RUN_XTEST = ./test-x11 $(call RUN_TEST, ./$@ )
+RUN_XTEST = ./xisolate $(call RUN_TEST, ./$@ )
 SRCS := mywm.c config.c
 
 all: unitTest1 unitTest2 unitTest3 # layer4 # mywm 
