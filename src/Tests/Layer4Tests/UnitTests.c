@@ -3,6 +3,7 @@
 
 
 
+extern Suite*windowCloneSuite();
 extern Suite*functionsSuite();
 CREATE_HANDLER
 int main(void) {
@@ -11,6 +12,7 @@ int main(void) {
 
     SRunner *runner;
     runner = srunner_create(functionsSuite());
+    srunner_add_suite(runner,windowCloneSuite());
     //srunner_add_suite(runner,functionsSuite());
     srunner_run_all(runner, CK_NORMAL);
     int failures=srunner_ntests_failed(runner);
