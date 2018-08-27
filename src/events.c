@@ -29,20 +29,23 @@ void requestShutdown(){
 int isShuttingDown(){
     return shuttingDown;
 }
-pthread_t runInNewThread(void *(*method) (void *),void*arg){
+pthread_t runInNewThread(void *(*method) (void *),void*arg,int detached){
     pthread_t thread;
-    assert(pthread_create(&thread, NULL, method, arg)==0);
+    int result __attribute__((unused)) =pthread_create(&thread, NULL, method, arg)==0;
+    assert(result);
+    if(detached)
+        pthread_detach(thread);
     return thread;
 }
 void *runEventLoop(void*c __attribute__((unused))){
     LOG(LOG_LEVEL_TRACE,"starting event loop\n");
     xcb_generic_event_t *event;
     while(!isShuttingDown() && dis) {
-        xcb_flush(dis);
         event = xcb_poll_for_event(dis);
         if(!event && !xcb_connection_has_error(dis)){
             applyRules(eventRules[Idle],NULL);
             LOG(LOG_LEVEL_TRACE,"Waiting for event\n");
+            flush();
             event = xcb_wait_for_event (dis);
         }
 
@@ -62,7 +65,6 @@ void *runEventLoop(void*c __attribute__((unused))){
                         event->response_type,eventTypeToString(type),getSize(eventRules[type]));
         lock();
         setLastEvent(event);
-
         applyRules(eventRules[type<35?type:35],NULL);
         unlock();
         free(event);
@@ -101,11 +103,13 @@ void registerForMonitorChange(){
 }
 void registerForDeviceEvents(){
     Node*list=deviceBindings;
+
+    LOG(LOG_LEVEL_DEBUG,"Grabbing %d buttons/keys\n",getSize(list));
     FOR_EACH_CIRCULAR(list,
         initBinding(getValue(list));
         grabBinding(getValue(list));
     )
-    LOG(LOG_LEVEL_TRACE,"listening for device event;  masks: %d\n",ROOT_DEVICE_EVENT_MASKS);
+    LOG(LOG_LEVEL_DEBUG,"listening for device event;  masks: %d\n",ROOT_DEVICE_EVENT_MASKS);
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
 }
 void registerForWindowEvents(int window,int mask){

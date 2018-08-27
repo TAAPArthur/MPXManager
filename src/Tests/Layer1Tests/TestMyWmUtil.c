@@ -69,7 +69,8 @@ START_TEST(test_init_context){
 
 
 START_TEST(test_destroy_context){
-    //should not error if no context exists
+    destroyContext();
+    createContext(10);
     addMaster(1,1);
     WindowInfo*winInfo=createWindowInfo(1);
     addWindowInfo(winInfo);
@@ -80,11 +81,6 @@ START_TEST(test_destroy_context){
     destroyContext();
 }END_TEST
 
-START_TEST(test_set_event){
-    char e=1;
-    setLastEvent(&e);
-    assert(getLastEvent()==&e);
-}END_TEST
 
 START_TEST(test_create_master){
     addMaster(1, 2);
@@ -554,8 +550,6 @@ START_TEST(test_next_workspace){
     }
 
     int size=4;
-    int hiddenNonEmptyIndex=5;
-    int hiddenIndex=2;
     int target[][4]={
             {1,2,3,0},//any -1,-1
             {1,0,1,0},//visible -1,0
@@ -572,13 +566,10 @@ START_TEST(test_next_workspace){
 
             setActiveWorkspaceIndex(0);
             for(int n=0;n<size;n++){
-                Workspace*w=getNextWorkspace(1, e,h);
-                assert(w==getNextWorkspace(1, e, h));
+                int mask=((e+1)<<2)+(h+1);
+                Workspace*w=getNextWorkspace(1, mask);
+                assert(w==getNextWorkspace(1, mask));
                 assert(w);
-                if(count==hiddenIndex)
-                    assert(w==getNextHiddenWorkspace());
-                else if (count==hiddenNonEmptyIndex)
-                    assert(w==getNextHiddenNonEmptyWorkspace());
 
                 assert(w->id==target[count][n]);
                 setActiveWorkspaceIndex(w->id);
@@ -587,7 +578,7 @@ START_TEST(test_next_workspace){
 
     setActiveWorkspaceIndex(0);
     for(int i=-getSize(getAllWindows())*2;i<=getSize(getAllWindows())*2;i++){
-        Workspace*w=getNextWorkspace(i, -1, -1);
+        Workspace*w=getNextWorkspace(i, 0);
         assert(w->id==(getActiveWorkspaceIndex()+i+getNumberOfWorkspaces())%getNumberOfWorkspaces());
     }
 
@@ -605,14 +596,13 @@ START_TEST(test_window_cycle){
     int currentFocusedWindow=getIntValue(node);
     onWindowFocus(currentFocusedWindow);
     assert(getFocusedWindow());
-    for(int dir=-1;dir<=1;dir++){
-        for(int i=1;i<=size;i++){
-            //should not change anything
-            assert(getNextWindowInStack(dir)==getNextWindowInStack(dir));
-            onWindowFocus(getIntValue(getNextWindowInStack(dir)));
-        }
-        assert(currentFocusedWindow==getIntValue(node));
-    }
+    FOR_EACH(node,
+        int size=getSize(node);
+        onWindowFocus(getIntValue(node));
+        assert(getFocusedWindow()==getValue(node));
+        assert(size==getSize(node));
+
+    )
 }END_TEST
 START_TEST(test_active){
     addMaster(1,1);
@@ -731,6 +721,17 @@ START_TEST(test_layout_add){
     }
     free(l);
 }END_TEST
+START_TEST(test_layout_add_multiple){
+    addMaster(1, 1);
+    int size=10;
+    Layout* l=calloc(size, sizeof(Layout));
+    addLayoutsToWorkspace(getActiveWorkspaceIndex(), l, size);
+    assert(getSize(getActiveWorkspace()->layouts)==size);
+    Node*n=getActiveWorkspace()->layouts;
+    int i=0;
+    FOR_AT_MOST(n,size,assert(getValue(n)==&l[i++]))
+    free(l);
+}END_TEST
 START_TEST(test_active_layout){
     addMaster(1, 1);
     Layout* l=calloc(size, sizeof(Layout));
@@ -740,24 +741,7 @@ START_TEST(test_active_layout){
     }
     free(l);
 }END_TEST
-START_TEST(test_layout_cycling){
-    addMaster(1, 1);
-    Layout*layouts=calloc(size, sizeof(Layout));
-    for(int i=0;i<size;i++){
-        addLayoutsToWorkspace(0, &layouts[i], 1);
-    }
-    setActiveLayout(&layouts[1]);
-    for(int i=1;i<=size;i++){
-        assert(&layouts[i%size]==switchToNthLayout(1));
-        assert(getActiveLayout()==&layouts[1]);
-    }
-    assert(switchToNthLayout(size-1)==&layouts[size-1]);
-    for(int i=size-2;i>=0;i--){
-        assert(&layouts[i%size]==switchToNthLayout(-1));
-    }
-    free(layouts);
 
-}END_TEST
 
 void setup(){
     createContext(size);
@@ -783,8 +767,6 @@ Suite *mywmUtilSuite(void) {
 
 
     tc_core = tcase_create("Context");
-    tcase_add_checked_fixture(tc_core, setup, teardown);
-    tcase_add_test(tc_core, test_set_event);
     tcase_add_test(tc_core, test_destroy_context);
     suite_add_tcase(s, tc_core);
 
@@ -821,14 +803,13 @@ Suite *mywmUtilSuite(void) {
     tcase_add_test(tc_core, test_empty_workspace);
     tcase_add_test(tc_core, test_next_workspace);
     tcase_add_test(tc_core, test_window_cycle);
-
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Layouts");
     tcase_add_checked_fixture(tc_core, setup, teardown);
     tcase_add_test(tc_core, test_layout_add);
+    tcase_add_test(tc_core, test_layout_add_multiple);
     tcase_add_test(tc_core, test_active_layout);
-    tcase_add_test(tc_core, test_layout_cycling);
     suite_add_tcase(s, tc_core);
 
 

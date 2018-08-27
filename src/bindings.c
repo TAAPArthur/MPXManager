@@ -47,13 +47,20 @@ Binding* getActiveBinding(){
 int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
 ///\cond
 #define _BF_CASE(TYPE,FUNC_ARG,ARG...)\
-    case TYPE: ((void (*)(FUNC_ARG))boundFunction->func.func)(ARG);break; \
-    case TYPE+1: return ((int (*)(FUNC_ARG))boundFunction->func.funcReturnInt)(ARG);
-#define _BF_ARG boundFunction->dynamic?winInfo:boundFunction->arg.voidArg
+    case TYPE: ((void (*)FUNC_ARG)boundFunction->func.func)(ARG);break; \
+    case TYPE+1: return ((int (*)FUNC_ARG)boundFunction->func.funcReturnInt)(ARG);
 ///\endcond
 
     assert(boundFunction);
     LOG(LOG_LEVEL_TRACE,"calling function %d\n",boundFunction->type);
+
+    BoundFunctionArg arg=boundFunction->arg;
+
+    if(boundFunction->dynamic==2)
+        arg.intArg=callBoundedFunction(boundFunction->arg.voidArg, winInfo);
+
+    else if(boundFunction->dynamic==1)
+        arg.voidArg=winInfo;
 
     switch(boundFunction->type){
         case UNSET:
@@ -63,7 +70,7 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
             assert(!boundFunction->func.chainBindings->endChain);
             startChain(boundFunction);
             break;
-        case AUTO_CHAIN:
+        case CHAIN_AUTO:
             startChain(boundFunction);
             return callBoundedFunction(&boundFunction->func.chainBindings->boundFunction, winInfo);
         case FUNC_AND:
@@ -76,10 +83,12 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
                 if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i],winInfo))
                     return 1;
             return 0;
-        _BF_CASE(NO_ARGS,void)
-        _BF_CASE(INT_ARG,int,boundFunction->arg.intArg)
-        _BF_CASE(WIN_ARG,WindowInfo*,_BF_ARG)
-        _BF_CASE(VOID_ARG,void*,_BF_ARG)
+        _BF_CASE(NO_ARGS,(void))
+        _BF_CASE(INT_ARG,(int),arg.intArg)
+        _BF_CASE(WIN_ARG,(WindowInfo*),arg.voidArg)
+        _BF_CASE(WIN_INT_ARG,(WindowInfo*,int),winInfo,arg.intArg)
+        _BF_CASE(VOID_ARG,(void*),arg.voidArg)
+
     }
     return 1;
 }
@@ -122,7 +131,7 @@ int getIDOfBindingTarget(Binding*binding){
 
 
 int doesBindingMatch(Binding*binding,int detail,int mods,int mask){
-    return (binding->mask & mask || mask==0) && (binding->mod == anyModier|| binding->mod==mods) &&
+    return (binding->mask & mask || mask==0) && (binding->mod == WILDCARD_MODIFIER|| binding->mod==mods) &&
             (binding->detail==0||binding->detail==detail);
 }
 int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
@@ -229,9 +238,12 @@ int applyRules(Node* head,WindowInfo*winInfo){
         )
     return 1;
 }
-
+void addBindings(Binding*bindings,int num){
+    for(int i=0;i<num;i++)
+        insertTail(deviceBindings, &bindings[i]);
+}
 void addBinding(Binding*binding){
-    insertHead(deviceBindings, binding);
+    addBindings(binding,1);
 }
 /**
  * Convience method for grabBinding() and ungrabBinding()

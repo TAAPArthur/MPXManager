@@ -78,6 +78,9 @@ Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves);
  * @return 1 iff str is the name of a test slave as opposed to one backed by a physical device
  */
 int isTestDevice(char*str);
+
+
+
 /**
  * Swap the ids of master devices backed by master1 and master2
  * There is no easy way in X to accomplish this task so every other aspect of the

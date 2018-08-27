@@ -16,7 +16,10 @@
 #include "xsession.h"
 #include "globals.h"
 
-void openXDisplay(){
+xcb_atom_t WM_TAKE_FOCUS;
+xcb_atom_t WM_DELETE_WINDOW;
+
+void openXDisplay(void){
 #ifdef MPX_TESTING
     XInitThreads();
 #endif
@@ -50,11 +53,19 @@ void openXDisplay(){
 
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
 
+    xcb_intern_atom_reply_t *reply;
+    reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, "WM_TAKE_FOCUS"),NULL);
+    WM_TAKE_FOCUS=reply->atom;
+    free(reply);
+    reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, "WM_DELETE_WINDOW"),NULL);
+    WM_DELETE_WINDOW=reply->atom;
+    free(reply);
+
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
     xcb_set_close_down_mode(dis, XCB_CLOSE_DOWN_DESTROY_ALL);
 }
 
-void closeConnection(){
+void closeConnection(void){
     LOG(LOG_LEVEL_INFO,"closing X connection\n");
 
     if(ewmh){
@@ -67,11 +78,15 @@ void closeConnection(){
     //dpy=NULL;
 }
 
-void quit(){
+void quit(void){
     LOG(LOG_LEVEL_INFO,"Shuttign down\n");
     //shuttingDown=1;
     closeConnection();
     LOG(LOG_LEVEL_INFO,"destroying context\n");
     destroyContext();
     exit(0);
+}
+void flush(){
+    XFlush(dpy);
+    xcb_flush(dis);
 }

@@ -52,10 +52,6 @@ int removeDock(unsigned int winToRemove){
     if(!winNode)
         return 0;
 
-    Node*list=getAllMasters();
-    FOR_EACH(list,removeWindowFromMaster(getValue(list),winToRemove));
-    removeWindowFromAllWorkspaces(getValue(winNode));
-
     deleteWindowNode(winNode);
 
     resizeAllMonitorsToAvoidAllStructs();

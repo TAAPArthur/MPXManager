@@ -101,7 +101,6 @@ int compareState(void(*onChange)(int)){
                 memcmp(savedState->state[i].windowIds, currentState->state[i].windowIds, sizeof(int)*savedState->state[i].size)
                 ||memcmp(savedState->state[i].windowMasks, currentState->state[i].windowMasks, sizeof(int)*savedState->state[i].size)
                 ){
-                    LOG(LOG_LEVEL_TRACE,"index changed: %d %d\n\n",savedState?savedState->state[i].index:-1,currentState->state[i].index);
                     couldStateHaveChanged=0;
                     changed=1;
                     if(onChange)

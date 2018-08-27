@@ -5,6 +5,7 @@
 /// \cond
 #include <assert.h>
 #include <unistd.h>
+#include <string.h>
 #include <err.h>
 /// \endcond
 #include "functions.h"
@@ -14,16 +15,11 @@
 #include "bindings.h"
 #include "globals.h"
 
-#define UP 1
-#define DOWN -1
-
 void cycleWindows( int delta){
     setFocusStackFrozen(1);
     int size=getSize(getMasterWindowStack());
     for(int i=0;i<size;i++){
         Node* nextWindowNode=getNextWindowInFocusStack(delta);
-        xcb_window_t nextWindow=getIntValue(nextWindowNode);
-        assert(nextWindow!=0);
         if(activateWindow(getValue(nextWindowNode)))
             break;
     }
@@ -45,7 +41,7 @@ Node* findWindow(Rule*rule,Node*searchList,Node*ignoreList){
     assert(searchList==NULL||doesWindowMatchRule(rule, getValue(searchList)));
     return searchList;
 }
-int processFindResult(Node*target){
+static int processFindResult(Node*target){
     if(target){
         WindowInfo*winInfo=getValue(target);
         activateWindow(winInfo);
@@ -80,35 +76,52 @@ void spawn(char* command){
     LOG(LOG_LEVEL_INFO,"running command %s\n",command);
     int pid=fork();
     if(pid==0){
-        setsid();
         execl(SHELL,SHELL, "-c",command,(char*)0);
     }
     else if(pid<0)
         err(1, "error forking\n");
 }
 
-void killFocusedWindow(){
-    killWindow(getFocusedWindow()->id);
-}
+Node* getNextWindowInStack(int dir){
+    Node*activeWindows=getActiveWindowStack();
+    Node*node=NULL;
+    node=isInList(activeWindows, getFocusedWindow()->id);
+
+    if(!node)
+        node=activeWindows;
 
 
-void focusBottom(){
-    activateWindow(getValue(getLast(getActiveWindowStack())));
+    if(dir==0)
+        return node;
+    Node*starting=node;
+    do{
+        if(dir>0)
+            node=node->next?node->next:activeWindows;
+        else
+            node=node->prev?node->prev:getLast(activeWindows);
+        if(isActivatable(getValue(node)))
+            break;
+    }while(node!=starting);
+    return node;
 }
-void focusTop(){
-    focusWindow(getIntValue(getMasterWindowStack()));
+
+int focusBottom(void){
+    return activateWindow(getValue(getLast(getActiveWindowStack())));
 }
-void shiftTop(){
+int focusTop(void){
+    return activateWindow(getValue(getActiveWindowStack()));
+}
+void shiftTop(void){
     shiftToHead(getActiveWindowStack(), getNextWindowInStack(0));
 }
-void swapWithTop(){
+void swapWithTop(void){
     swap(getActiveWindowStack(),getNextWindowInStack(0));
 }
-void shiftPosition(int dir){
-    swap(getActiveWindowStack(),getNextWindowInStack(dir));
+void swapPosition(int dir){
+    swap(getNextWindowInStack(0),getNextWindowInStack(dir));
 }
-void shiftFocus(int dir){
-    focusWindow(getIntValue(getNextWindowInStack(dir)));
+int shiftFocus(int dir){
+    return activateWindow(getValue(getNextWindowInStack(dir)));
 }
 
 /*
@@ -119,52 +132,74 @@ void sendToNextMonitor(int index){
 
 }*/
 
-void moveToWorkspace(int index){
-    activateWorkspace(index);
-}
-void sendToWorkspace(int index){
-    moveWindowToWorkspace(getFocusedWindow(), index);
-}
-void cloneToWorkspace(int index){
-
-}
-void moveToNextWorkspace(int dir){
-    switchToWorkspace((getActiveWorkspaceIndex()+dir)%getNumberOfWorkspaces());
-}
-
-
-void floatFocusedWindow(){
-    floatWindow(getFocusedWindow());
-}
-void sinkFocusedWindow(){
-    sinkWindow(getFocusedWindow());
-}
-
-
-void toggleStateForActiveWindow(int mask){
-    toggleMask(getFocusedWindow(), mask);
-}
-
-
-int sendWindowToWorkspaceByName(char*name,int window){
-    //TODO implement
-    return 0;
+void sendWindowToWorkspaceByName(WindowInfo*winInfo,char*name){
+    moveWindowToWorkspace(winInfo, getIndexFromName(name));
 }
 
 void cycleLayouts(int dir){
-    for(int i=0;i<abs(dir);i++)
-        if(dir>0)
-            getActiveWorkspace()->layouts=getActiveWorkspace()->layouts->next;
-        else
-            getActiveWorkspace()->layouts=getActiveWorkspace()->layouts->prev;
-    setActiveLayout(getValue(getActiveWorkspace()->layouts));
+    Node*n=getActiveWorkspace()->layouts;
+    if(dir>=0)
+        FOR_AT_MOST(n,dir)
+    else
+        FOR_AT_MOST_REVERSED(n,-dir)
+
+
+    getActiveWorkspace()->layouts=n;
+    setActiveLayout(getValue(n));
+    retile();
 }
 void toggleLayout(Layout* layout){
-    if(layout==getActiveWorkspace()->activeLayout)
+    if(layout!=getActiveLayout()){
         setActiveLayout(layout);
+        retile();
+    }
     else cycleLayouts(0);
 }
-void retile(){
+void retile(void){
     tileWorkspace(getActiveWorkspaceIndex());
 }
 
+
+
+void setLastKnowMasterPosition(int x,int y,int relativeX,int relativeY){
+    getActiveMaster()->mousePos[0]=x;
+    getActiveMaster()->mousePos[1]=y;
+    getActiveMaster()->relativeMousePos[0]=relativeX;
+    getActiveMaster()->relativeMousePos[1]=relativeY;
+
+}
+void setRefefrencePointForMaster(int x,int y,int relativeX,int relativeY){
+    getActiveMaster()->refPoint[0]=x;
+    getActiveMaster()->refPoint[1]=y;
+    getActiveMaster()->relativeRefPoint[0]=relativeX;
+    getActiveMaster()->relativeRefPoint[1]=relativeY;
+}
+
+
+static short*addArr(short*result,short*arr1,short*arr2,int size,char sign){
+    for(int i=0;i<size;i++)
+        result[i]=arr1[i]+arr2[i]*sign;
+    return result;
+}
+
+void resizeWindowWithMouse(WindowInfo*winInfo){
+    assert(winInfo);
+    short values[2];
+    addArr(values,getActiveMaster()->mousePos,getActiveMaster()->refPoint,2,-1);
+    addArr(values,&getConfig(winInfo)[2],values,2,1);
+    processConfigureRequest(winInfo->id, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT);
+}
+void moveWindowWithMouse(WindowInfo*winInfo){
+    assert(winInfo);
+    short values[2];
+    addArr(values,getActiveMaster()->mousePos,getActiveMaster()->relativeRefPoint,2,-1);
+    processConfigureRequest(winInfo->id, values, 0, 0, XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y);
+}
+
+int focusActiveWindow(WindowInfo *winInfo){
+    return winInfo && focusWindowInfo(winInfo);
+}
+void killFocusedWindow(void){
+    if(getFocusedWindow())
+        killWindowInfo(getFocusedWindow());
+}

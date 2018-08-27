@@ -27,7 +27,7 @@ START_TEST(test_no_state_change){
     assert(!updateState(NULL));
 }END_TEST
 START_TEST(test_mask_change){
-    WindowInfo*winInfo=createWindowInfo(1);
+    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
     addWindowInfo(winInfo);
     addWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
     assert(!hasMask(winInfo, 1));

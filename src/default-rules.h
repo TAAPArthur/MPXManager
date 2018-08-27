@@ -9,6 +9,14 @@
 
 #include "bindings.h"
 
+
+#define MOVE_WINDOW_WITH_MOUSE(mod,btn)\
+        AUTO_CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_MOTION,1,\
+        {-1,-1,NULL,.noGrab=1},        \
+        {mod,btn,NULL},\
+        END_CHAIN(WILDCARD_MODIFIER,0)\
+        )
+
 void onHiearchyChangeEvent(void);
 void onDeviceEvent(void);
 void addDefaultDeviceRules();
@@ -50,5 +58,6 @@ void onXConnect(void);
 
 void addAvoidDocksRule(void);
 void addDefaultRules(void);
+void addFocusFollowsMouseRule(void);
 void focusFollowMouse(void);
 #endif /* DEFAULT_RULES_H_ */

@@ -57,4 +57,15 @@ void typeKey(int keycode);
  */
 void clickButton(int button);
 
+
+/**
+ * Moves the mouse specified by id x,y units relative to relativeWindow. If
+ * relativeWindow is none the mouse will be moved relative to its current position
+ * @param id
+ * @param relativeWindow
+ * @param x
+ * @param y
+ */
+void movePointer(int id,int relativeWindow,int x,int y);
+
 #endif

@@ -155,9 +155,7 @@ void insertBefore(Node* head,Node* newNode){
 
 
     if(head->prev){
-        Node*n=head->prev;
         insertAfter(head->prev, newNode);
-        assert(n->next==newNode);
         return;
     }
     Node*nextNode=newNode->next;

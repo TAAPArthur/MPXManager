@@ -48,10 +48,19 @@ START_TEST(test_type_key){
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(),XCB_INPUT_KEY_RELEASE))
 }END_TEST
 
+START_TEST(test_move_pointer){
+
+    for(int i=0;i<10;i++){
+        movePointer(getActiveMasterPointerID(), root, 10, 10);
+        movePointer(getActiveMasterPointerID(), root, 100, 100);
+        waitToReceiveInput(1<<XCB_INPUT_MOTION);
+    }
+}END_TEST
+
 static void setup(){
 
     int mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE|
-            XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE;
+            XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE|XCB_INPUT_XI_EVENT_MASK_MOTION;
     clearList(deviceBindings);
     createContextAndSimpleConnection();
     passiveGrab(root, mask);
@@ -67,6 +76,7 @@ Suite *testFunctionSuite() {
     tcase_add_test(tc_core, test_send_button_release);
     tcase_add_test(tc_core, test_type_key);
     tcase_add_test(tc_core, test_click_button);
+    tcase_add_test(tc_core, test_move_pointer);
     suite_add_tcase(s, tc_core);
     return s;
 }

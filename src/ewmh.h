@@ -28,7 +28,6 @@
     }
 
 #define SUPPORTED_STATES\
-       ewmh->_NET_WM_STATE_FULLSCREEN,\
        ewmh->_NET_WM_STATE_ABOVE,\
        ewmh->_NET_WM_STATE_BELOW,\
        ewmh->_NET_WM_STATE_DEMANDS_ATTENTION,\

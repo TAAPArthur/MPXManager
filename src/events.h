@@ -7,6 +7,7 @@
 #ifndef EVENTS_H_
 #define EVENTS_H_
 
+#include <pthread.h>
 void lock();
 void unlock();
 
@@ -25,7 +26,7 @@ int isShuttingDown();
  * @param arg the argument to pass into method
  * @return a pthread identifier
  */
-pthread_t runInNewThread(void *(*method) (void *),void*arg);
+pthread_t runInNewThread(void *(*method) (void *),void*arg,int detached);
 /**
  * TODO rename
  * Continually listens and responds to event and applying corresponding Rules.

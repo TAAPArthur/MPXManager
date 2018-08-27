@@ -6,6 +6,11 @@
 #ifndef XSESSION_H_
 #define XSESSION_H_
 
+#include <xcb/xcb.h>
+
+extern xcb_atom_t WM_TAKE_FOCUS;
+extern xcb_atom_t WM_DELETE_WINDOW;
+
 /**
  * Opens a connection to the Xserver
  *
@@ -16,17 +21,20 @@
  * This method probably should not be called directly.
  * @see connectToXserver
  */
-void openXDisplay();
+void openXDisplay(void);
 
 /**
  * Closes an open XConnection
  */
-void closeConnection();
+void closeConnection(void);
 /**
  * exits the application
  */
-void quit();
+void quit(void);
 
-
+/**
+ * Flush the X connection
+ */
+void flush();
 
 #endif /* XSESSION_H_ */

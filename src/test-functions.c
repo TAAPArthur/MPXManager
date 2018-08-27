@@ -1,3 +1,7 @@
+/**
+ * @file test-functions.c
+ */
+
 #include <xcb/xtest.h>
 
 #include "test-functions.h"
@@ -34,4 +38,8 @@ void sendKeyRelease(int keycode){
 void typeKey(int keycode){
     sendKeyPress(keycode);
     sendKeyRelease(keycode);
+}
+
+void movePointer(int id,int relativeWindow,int x,int y){
+    xcb_input_xi_warp_pointer(dis, None, relativeWindow, 0, 0, 0, 0, x, y, id);
 }

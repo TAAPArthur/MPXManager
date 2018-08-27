@@ -22,9 +22,6 @@
  * Patch mode  -- done
  */
 
-
-#include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <unistd.h>
@@ -32,8 +29,9 @@
 #include <getopt.h>
 #include <stdio.h>
 
-#include "event-loop.h"
 #include "config.h"
+#include "logger.h"
+#include "events.h"
 #include "default-rules.h"
 #include "mywm-util.h"
 
@@ -90,12 +88,11 @@ int main(int argc, char * argv[]){
     //signal(SIGINT, quit);
 
     parseAgrs(argc,argv);
-    setLogLevel(LOG_LEVEL_TRACE);
+    setLogLevel(LOG_LEVEL_DEBUG);
     //TODO make var
 
-    loadSettings();
+    startUpMethod=loadSettings;
     onStartup();
-
     if(enterEventLoop)
         runEventLoop(NULL);
 }

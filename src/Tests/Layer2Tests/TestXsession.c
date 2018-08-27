@@ -12,14 +12,18 @@ START_TEST(test_quit){
 }END_TEST
 START_TEST(test_open_xdisplay){
     openXDisplay();
+
     assert(dis);
     assert(!xcb_connection_has_error(dis));
     assert(screen);
     assert(root);
+    assert(WM_DELETE_WINDOW);
+    assert(WM_TAKE_FOCUS);
     assert(!xcb_connection_has_error(dis));
 }END_TEST
 START_TEST(test_close_xdisplay){
     openXDisplay();
+    flush();
     closeConnection();
     openXDisplay();
     closeConnection();

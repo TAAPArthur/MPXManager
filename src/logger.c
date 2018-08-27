@@ -32,7 +32,7 @@ void printNodeList(Node*n){
     FOR_EACH(n,printf("%d ",getIntValue(n)));
     printf("\n");
 }
-void dumpAllWindowInfo(){
+void dumpAllWindowInfo(void){
     Node*n=getAllWindows();
     FOR_EACH(n,dumpWindowInfo(getValue(n)));
 }
@@ -40,17 +40,16 @@ void dumpAllWindowInfo(){
 void dumpWindowInfo(WindowInfo* win){
     if(!win)return;
 
-    LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x)\n",win->id,win->id,win->groupId,win->groupId);
+    LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x) Transient for %d\n",win->id,win->id,win->groupId,win->groupId,win->transientFor);
     LOG(LOG_LEVEL_DEBUG,"Lables class %s (%s)\n",win->className,win->instanceName);
     LOG(LOG_LEVEL_DEBUG,"Type is %d (%s) implicit: %d\n",win->type,win->typeName,win->implicitType);
 
     LOG(LOG_LEVEL_DEBUG,"Title class %s\n",win->title);
 
-    LOG(LOG_LEVEL_TRACE,"Transient for %d\n",win->transientFor);
-    LOG(LOG_LEVEL_TRACE,"Mask %d\n",win->mask);
+    LOG(LOG_LEVEL_DEBUG,"Mask %d\n",win->mask);
 
     //LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isWindowVisible(win));
-    LOG(LOG_LEVEL_TRACE,"last active workspace %d\n",win->workspaceIndex);
+    LOG(LOG_LEVEL_DEBUG,"last active workspace %d\n",win->workspaceIndex);
 }
 
 void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms){

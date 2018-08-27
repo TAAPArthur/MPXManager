@@ -12,35 +12,27 @@
 
 #include "mywm-util.h"
 
-/**
- * Used to hold various struct that maintain state
- */
-typedef struct{
-    ///Last registered event
-    void*lastEvent;
-    ///list of all windows
-    Node* windows;
+///list of all windows
+Node* windows;
 
-    ///lists of all masters
-    Node* masterList;
-    ///the active master
-    Master* master;
+///lists of all masters
+Node* masterList;
+///the active master
+Master* master;
 
-    ///list of all monitors
-    Node*monitors;
-    ///width of the screen
-    int screenWidth;
-    ///height of the screen
-    int screenHeigth;
+///list of all monitors
+Node*monitors;
+///width of the screen
+int screenWidth;
+///height of the screen
+int screenHeigth;
 
-    ///list of all workspaces
-    Workspace*workspaces;
-    ///number of workspaces
-    int numberOfWorkspaces;
+///list of all workspaces
+Workspace*workspaces;
+///number of workspaces
+int numberOfWorkspaces;
+char active=0;
 
-} Context;
-
-static Context *context=NULL;
 
 void msleep(int mil){
     int sec=mil/1000;
@@ -54,9 +46,9 @@ unsigned int getTime () {
 
 
 void destroyContext(){
-    if(!context)return;
-
-
+    if(!active)
+        return;
+    active=0;
     while(isNotEmpty(getAllWindows()))
         removeWindow(getIntValue(getAllWindows()));
     deleteList(getAllWindows());
@@ -69,25 +61,23 @@ void destroyContext(){
         removeMonitor(getIntValue(getAllMonitors()));
     deleteList(getAllMonitors());
 
-    for(int i=context->numberOfWorkspaces-1;i>=0;i--){
+    for(int i=numberOfWorkspaces-1;i>=0;i--){
        for(int n=0;n<NUMBER_OF_LAYERS;n++)
-           destroyList(context->workspaces[i].windows[n]);
-       destroyList(context->workspaces[i].layouts);
+           destroyList(workspaces[i].windows[n]);
+       destroyList(workspaces[i].layouts);
     }
-    free(context->workspaces);
+    free(workspaces);
 
-    free(context);
-    context=NULL;
 }
-void createContext(int numberOfWorkspaces){
-    assert(!context);
-    context=calloc(1, sizeof(Context));
-    context->windows=createEmptyHead();
-    context->masterList=createEmptyHead();
-    context->master=NULL;
-    context->numberOfWorkspaces=numberOfWorkspaces;
-    context->workspaces=createWorkspaces(numberOfWorkspaces);
-    context->monitors=createEmptyHead();
+void createContext(int numberOfWorkspacesToCreate){
+    assert(!active);
+    active=1;
+    windows=createEmptyHead();
+    masterList=createEmptyHead();
+    master=NULL;
+    numberOfWorkspaces=numberOfWorkspacesToCreate;
+    workspaces=createWorkspaces(numberOfWorkspaces);
+    monitors=createEmptyHead();
 }
 WindowInfo* createWindowInfo(unsigned int id){
     WindowInfo *wInfo =calloc(1,sizeof(WindowInfo));
@@ -122,49 +112,30 @@ Workspace*createWorkspaces(int size){
     return workspaces;
 }
 void clearLayoutsOfWorkspace(int workspaceIndex){
-    clearList(context->workspaces[workspaceIndex].layouts);
-    context->workspaces[workspaceIndex].activeLayout=NULL;
+    clearList(workspaces[workspaceIndex].layouts);
+    workspaces[workspaceIndex].activeLayout=NULL;
 }
 void setActiveLayout(Layout*layout){
     getActiveWorkspace()->activeLayout=layout;
 }
-Layout* switchToNthLayout(int delta){
-    Node*head=getActiveWorkspace()->layouts;
-    if(delta>=0)
-        FOR_AT_MOST(head,delta,;)
-    else
-        FOR_AT_MOST_REVERSED(head,abs(delta),;)
-    getActiveWorkspace()->layouts=head;
-    return getValue(head);
-}
+
 Layout* getActiveLayout(){
     return getActiveLayoutOfWorkspace(getActiveWorkspaceIndex());
 }
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex){
-    return context->workspaces[workspaceIndex].activeLayout;
+    return workspaces[workspaceIndex].activeLayout;
 }
 void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num){
     assert(workspaceIndex>=0);
-    assert(workspaceIndex<context->numberOfWorkspaces);
-    if(isNotEmpty(context->workspaces[workspaceIndex].layouts))
-        for(int n=0;n<num;n++)
-            insertBefore(context->workspaces[workspaceIndex].layouts, createHead(&layout[n]));
-    else{
-        context->workspaces[workspaceIndex].activeLayout=layout;
-        insertHead(context->workspaces[workspaceIndex].layouts, layout);
-    }
-
+    assert(workspaceIndex<numberOfWorkspaces);
+    if(num && !isNotEmpty(getWorkspaceByIndex(workspaceIndex)->layouts))
+        getWorkspaceByIndex(workspaceIndex)->activeLayout=layout;
+    for(int n=0;n<num;n++)
+        insertTail(getWorkspaceByIndex(workspaceIndex)->layouts, &layout[n]);
 }
 
 int getNumberOfWorkspaces(){
-    return context->numberOfWorkspaces;
-}
-
-void setLastEvent(void* event){
-    context->lastEvent=event;
-}
-void* getLastEvent(){
-    return context->lastEvent;
+    return numberOfWorkspaces;
 }
 
 //master methods
@@ -246,16 +217,19 @@ int updateWindowCache(WindowInfo* targetWindow){
 
 //workspace methods
 int isWorkspaceVisible(int index){
-    return context->workspaces[index].monitor?1:0;
+    return workspaces[index].monitor?1:0;
 }
 int isWorkspaceNotEmpty(int index){
     for(int i=0;i<NUMBER_OF_LAYERS;i++)
-        if(isNotEmpty(context->workspaces[index].windows[i]))
+        if(isNotEmpty(workspaces[index].windows[i]))
             return 1;
     return 0;
 
 }
-Workspace*getNextWorkspace(int dir,int empty,int hidden){
+
+Workspace*getNextWorkspace(int dir,int mask){
+    int empty = ((mask>>2) & 3) -1;
+    int hidden = (mask & 3) -1;
     int index = getActiveWorkspaceIndex();
 
     for(int i=0;i<getNumberOfWorkspaces();i++){
@@ -265,23 +239,17 @@ Workspace*getNextWorkspace(int dir,int empty,int hidden){
         if( (hidden ==-1 || hidden == !isWorkspaceVisible(index)) &&
             (empty ==-1 || empty == !isWorkspaceNotEmpty(index))
             )
-            return &context->workspaces[index];
+            return &workspaces[index];
 
     }
     return NULL;
 }
-Workspace*getNextHiddenNonEmptyWorkspace(){
-    return getNextWorkspace(1,0,1);
-}
-Workspace*getNextHiddenWorkspace(){
-    return getNextWorkspace(1,-1,1);
-}
 
 Workspace*getWorkspaceFromMonitor(Monitor*monitor){
     assert(monitor);
-    for(int i=0;i<context->numberOfWorkspaces;i++)
-        if(context->workspaces[i].monitor && context->workspaces[i].monitor->name==monitor->name)
-            return &context->workspaces[i];
+    for(int i=0;i<numberOfWorkspaces;i++)
+        if(workspaces[i].monitor && workspaces[i].monitor->name==monitor->name)
+            return &workspaces[i];
     return NULL;
 }
 Monitor*getMonitorFromWorkspace(Workspace*workspace){
@@ -295,11 +263,6 @@ void swapMonitors(int index1,int index2){
 }
 
 //end workspace methods
-
-
-
-
-
 
 //stack methods
 
@@ -321,23 +284,13 @@ Node*getWindowStack(Workspace*workspace){
 Node* getWindowStackAtLayer(Workspace*workspace,int layer){
     return workspace->windows[layer];
 }
-Node* getNextWindowInStack(int dir){
-    Node*activeWindows=getActiveWindowStack();
-    int focusedWindowValue=getFocusedWindow()->id;
-    Node*node=isInList(activeWindows, focusedWindowValue);
-    assert(node);
-    if(dir>0)
-        return node->next?node->next:activeWindows;
-    else
-       return node->prev?node->prev:getLast(activeWindows);
-}
 
 //Workspace methods
 
 Workspace* getWorkspaceByIndex(int index){
     assert(index>=0);
-    assert(index<context->numberOfWorkspaces);
-    return &context->workspaces[index];
+    assert(index<numberOfWorkspaces);
+    return &workspaces[index];
 }
 
 
@@ -349,7 +302,7 @@ Workspace* getWorkspaceByIndex(int index){
 
 
 int addMaster(unsigned int keyboardMasterId,unsigned int masterPointerId){
-    Node*masterList=context->masterList;
+
     assert(keyboardMasterId);
 
     if(isInList(masterList, keyboardMasterId))
@@ -382,7 +335,7 @@ int removeMaster(unsigned int id){
 
 
 int removeMonitor(unsigned int id){
-    Node *n=isInList(context->monitors, id);
+    Node *n=isInList(monitors, id);
 
     if(!n)
         return 0;
@@ -399,22 +352,23 @@ int isPrimary(Monitor*monitor){
     return monitor->primary;
 }
 int addMonitor(int id,int primary,short geometry[4]){
-    if(isInList(context->monitors, id))
+    if(isInList(monitors, id))
         return 0;
 
     Workspace*workspace;
     if(!isWorkspaceVisible(getActiveWorkspaceIndex()))
         workspace=getActiveWorkspace();
     else {
-        workspace=getNextHiddenNonEmptyWorkspace();
+
+        workspace=getNextWorkspace(1, HIDDEN|NON_EMPTY);
         if(!workspace){
-            workspace=getNextHiddenWorkspace();
+            workspace=getNextWorkspace(1, HIDDEN);
         }
     }
     Monitor*m=calloc(1,sizeof(Monitor));
     *m=(Monitor){id,primary?1:0};
     memcpy(&m->x, geometry, sizeof(short)*4);
-    insertHead(context->monitors, m);
+    insertHead(monitors, m);
     resetMonitor(m);
     if(workspace)
         workspace->monitor=m;
@@ -467,7 +421,7 @@ int addWindowToWorkspace(WindowInfo*info,int workspaceIndex){
 int addWindowToWorkspaceAtLayer(WindowInfo*winInfo,int workspaceIndex,int layer){
     assert(workspaceIndex>=0);
     assert(layer>=0);
-    assert(workspaceIndex<context->numberOfWorkspaces);
+    assert(workspaceIndex<numberOfWorkspaces);
     Workspace*workspace=getWorkspaceByIndex(workspaceIndex);
     assert(winInfo!=NULL);
     if(addUnique(workspace->windows[layer], winInfo)){
@@ -513,7 +467,7 @@ void deleteWindowNode(Node*winNode){
 int removeWindow(unsigned int winToRemove){
     assert(winToRemove!=0);
 
-    Node *winNode =isInList(context->windows, winToRemove);
+    Node *winNode =isInList(windows, winToRemove);
 
     if(!winNode)
         return 0;
@@ -528,27 +482,27 @@ int removeWindow(unsigned int winToRemove){
 }
 
 Node*getAllWindows(void){
-    return context->windows;
+    return windows;
 }
 
 Node*getAllMonitors(void){
-    return context->monitors;
+    return monitors;
 }
 Node* getAllMasters(void){
-    return context->masterList;
+    return masterList;
 }
 
 
 Master*getActiveMaster(void){
-    return context->master;
+    return master;
 }
 Master*getMasterById(int keyboardID){
     return getValue(isInList(getAllMasters(), keyboardID));
 }
-void setActiveMaster(Master*master){
+void setActiveMaster(Master*newMaster){
 
-    assert(!isNotEmpty(getAllMasters()) || master);
-    context->master=master;
+    assert(!isNotEmpty(getAllMasters()) || newMaster);
+    master=newMaster;
 }
 
 
@@ -559,7 +513,7 @@ int getActiveWorkspaceIndex(void){
     return getActiveMaster()->activeWorkspaceIndex;
 }
 Workspace* getActiveWorkspace(void){
-    return &context->workspaces[getActiveWorkspaceIndex()];
+    return &workspaces[getActiveWorkspaceIndex()];
 }
 
 Node*getActiveWindowStack(void){
@@ -567,5 +521,5 @@ Node*getActiveWindowStack(void){
 }
 
 WindowInfo* getWindowInfo(unsigned int win){
-    return getValue(isInList(context->windows, win));
+    return getValue(isInList(windows, win));
 }

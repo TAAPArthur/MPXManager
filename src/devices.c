@@ -17,6 +17,7 @@
 #include "globals.h"
 #include "logger.h"
 #include "mywm-util.h"
+#include "test-functions.h"
 
 //Master device methods
 int getAssociatedMasterDevice(int deviceId){
@@ -213,6 +214,7 @@ static int endsWith(const char *str, const char *suffix){
 int isTestDevice(char*str){
     return endsWith(str, "XTEST pointer")||endsWith(str, "XTEST keyboard");
 }
+
 void swapDeviceId(Master*master1,Master*master2){
     if(master1==master2)
         return;
@@ -230,8 +232,8 @@ void swapDeviceId(Master*master1,Master*master2){
         xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, root, master2->pointerId), NULL);
 
     assert(reply1 && reply2);
-    xcb_input_xi_warp_pointer(dis, None, root, 0, 0, 0, 0, reply1->root_x, reply1->root_y, master2->pointerId);
-    xcb_input_xi_warp_pointer(dis, None, root, 0, 0, 0, 0, reply2->root_x, reply2->root_y, master1->pointerId);
+    movePointer(master2->pointerId,root,reply1->root_x, reply1->root_y);
+    movePointer(master1->pointerId,root,reply2->root_x, reply2->root_y);
     free(reply1);
     free(reply2);
 

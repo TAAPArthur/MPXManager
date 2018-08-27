@@ -45,7 +45,7 @@ START_TEST(test_binding_match){
 
     int wildCardMod=0;
     int wildCardDetail=0;
-    anyModier=-1;
+    WILDCARD_MODIFIER=-1;
     assert(binding.mask);
     for(int i=0;i<4;i++){
         assert(!doesBindingMatch(&binding, fake, fakeMod,fakeMask));
@@ -63,7 +63,7 @@ START_TEST(test_binding_match){
 
         assert(doesBindingMatch(&binding, match, mod,0));
         if(i==0){
-            binding.mod=anyModier;
+            binding.mod=WILDCARD_MODIFIER;
             wildCardMod=1;
         }
         else if(i==1){
@@ -87,7 +87,7 @@ START_TEST(test_check_bindings){
         count++;
     }
     IGNORE_MASK=16;
-    anyModier=0;
+    WILDCARD_MODIFIER=0;
 
     int i=0;
     for(int mod=0;mod<3;mod++)
@@ -119,7 +119,7 @@ START_TEST(test_call_bounded_function){
     void*voidPointer="c";
     int count=0;
 
-    int targetCounts[]={4,4,4};
+    int targetCounts[]={4,6,5};
     int individualCounts[LEN(targetCounts)]={0};
 
     void funcNoArg(void){
@@ -153,6 +153,19 @@ START_TEST(test_call_bounded_function){
         individualCounts[1]++;
         return 4;
     }
+    void funcWinIntArg(WindowInfo*v,int i){
+        count++;
+        assert(integer==i);
+        assert(voidPointer==v);
+        individualCounts[1]++;
+    }
+    int funcWinIntArgReturn(WindowInfo*v,int i){
+        count++;
+        assert(integer==i);
+        assert(voidPointer==v);
+        individualCounts[1]++;
+        return 4;
+    }
     void funcInt(int i){
         count++;
         assert(integer==i);
@@ -164,6 +177,12 @@ START_TEST(test_call_bounded_function){
         individualCounts[2]++;
         return 5;
     }
+    int funcEcho(int i){
+        assert(i==integer);
+        return i;
+    }
+
+
 
 
     assert(getActiveBinding()==NULL);
@@ -180,10 +199,13 @@ START_TEST(test_call_bounded_function){
         BIND(funcNoArgReturn),
         BIND(funcInt,integer),
         BIND(funcIntReturn,integer),
+        BIND(funcInt,&((BoundFunction)BIND(funcEcho,integer))),
         BIND(funcVoidArg,voidPointer),
         BIND(funcVoidArgReturn,voidPointer),
         BIND(funcWinArg),
         BIND(funcWinArgReturn),
+        BIND(funcWinIntArg,integer),
+        BIND(funcWinIntArgReturn,integer),
         AND(BIND(funcInt,integer),BIND(funcIntReturn,integer)),
         OR(BIND(funcNoArg),BIND(funcNoArgReturn)),
         AUTO_CHAIN_GRAB(0,1,
@@ -207,11 +229,13 @@ START_TEST(test_call_bounded_function){
                 assert(count-c==1);
             else assert(count==0);
     }
-    for(int i=0;i<LEN(targetCounts);i++)
+    for(int i=0;i<LEN(targetCounts);i++){
         assert(targetCounts[i]==individualCounts[i]);
+    }
 
     assert(getActiveBinding()==b[LEN(b)-1].func.chainBindings);
-    assert(sum==10+LEN(b));
+
+    assert(sum==13+LEN(b));
 
 }END_TEST
 

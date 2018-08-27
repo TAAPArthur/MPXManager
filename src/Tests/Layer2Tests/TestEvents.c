@@ -53,14 +53,15 @@ START_TEST(test_regular_events){
     assert(LEN(eventRules)==NUMBER_OF_EVENT_RULES);
 
     int count=-1;
+    int i;
     //int lastType=-1;
 
     void func(void){
-        //lastType=((xcb_generic_event_t*)getLastEvent())->response_type & 127;
+        assert(i==(((xcb_generic_event_t*)getLastEvent())->response_type & 127));
         count++;
     }
     IGNORE_SEND_EVENT=0;
-    for(int i=count+1;i<XCB_GE_GENERIC;i++){
+    for(i=count+1;i<XCB_GE_GENERIC;i++){
         if(i==1){
             count++;
             continue;
@@ -97,7 +98,8 @@ START_TEST(test_regular_events){
         }
 
         xcb_flush(dis);
-        //WAIT_UNTIL_TRUE(count==i);
+        WAIT_UNTIL_TRUE(count==i);
+
         //assert(lastType==i);
         free(event);
         //assert(count==i);
@@ -131,12 +133,22 @@ START_TEST(test_monitors){
 
 }END_TEST
 
-
+static void*testFunction(void*p  __attribute__((unused))){return NULL;}
+START_TEST(test_threads){
+    char c;
+    pthread_t thread=runInNewThread(testFunction,&c,_i);
+    assert(thread);
+    if(_i==0)
+        pthread_join(thread,NULL);
+}END_TEST
 
 Suite *eventSuite(void) {
     Suite*s = suite_create("Test Events");
     TCase* tc_core;
 
+    tc_core = tcase_create("Threads");
+    tcase_add_loop_test(tc_core, test_threads,0,2);
+    suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Events");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_regular_events);

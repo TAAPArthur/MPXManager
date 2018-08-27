@@ -29,7 +29,7 @@
 
 
 START_TEST(test_mask_add_remove_toggle){
-    WindowInfo*winInfo=createWindowInfo(1);
+    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
     addWindowInfo(winInfo);
     assert(winInfo->mask==0);
     addMask(winInfo, 1);
@@ -47,6 +47,15 @@ START_TEST(test_mask_add_remove_toggle){
     assert(winInfo->mask==1);
 }END_TEST
 
+START_TEST(test_mask_reset){
+    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
+    addWindowInfo(winInfo);
+    addMask(winInfo, X_MAXIMIZED_MASK|Y_MAXIMIZED_MASK|ROOT_FULLSCREEN_MASK|FULLSCREEN_MASK);
+    int nonUserMask=MAPPED_MASK|PARTIALLY_VISIBLE;
+    addMask(winInfo,nonUserMask);
+    resetUserMask(winInfo);
+    assert(winInfo->mask==nonUserMask);
+}END_TEST
 
 START_TEST(test_get_set_geometry_config){
     WindowInfo*winInfo=createWindowInfo(1);
@@ -149,7 +158,8 @@ START_TEST(test_sync_state){
 }END_TEST
 
 START_TEST(test_window_state){
-    xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
+
+    xcb_atom_t net_atoms[] = {WM_TAKE_FOCUS,WM_DELETE_WINDOW,SUPPORTED_STATES};
     int win=createNormalWindow();
     WindowInfo*winInfo=createWindowInfo(win);
     addWindowInfo(winInfo);
@@ -165,7 +175,40 @@ START_TEST(test_window_state){
     setWindowStateFromAtomInfo(winInfo, net_atoms, LEN(net_atoms), XCB_EWMH_WM_STATE_TOGGLE);
     assert(winInfo->mask==0);
 
+    catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo->id, 1,(unsigned int[]){-1}));
+    setXWindowStateFromMask(winInfo);
+    xcb_ewmh_get_atoms_reply_t reply;
+    int hasState=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    assert(hasState);
+    for(int i=0;i<reply.atoms_len;i++)
+        if(reply.atoms[i]==-1){
+            xcb_ewmh_get_atoms_reply_wipe(&reply);
+            return;
+        }
+    assert(0);
+}END_TEST
 
+START_TEST(test_window_state_sync){
+    int win=createNormalWindow();
+    scan();
+    WindowInfo*winInfo=getWindowInfo(win);
+    moveWindowToLayer(winInfo, getActiveWorkspaceIndex(), UPPER_LAYER);
+    addMask(winInfo, -1);
+
+    xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
+    xcb_ewmh_get_atoms_reply_t reply;
+    int count=0;
+
+    int status=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, win), &reply, NULL);
+    assert(status);
+    for(int j=0;j<LEN(net_atoms);j++)
+        for(int i=0;i<reply.atoms_len;i++)
+            if(reply.atoms[i]==net_atoms[j]){
+                count++;
+                break;
+            }
+    assert(count+1==LEN(net_atoms));
+    xcb_ewmh_get_atoms_reply_wipe(&reply);
 }END_TEST
 
 START_TEST(test_layer_move){
@@ -229,6 +272,87 @@ START_TEST(test_focus_window){
     free(reply);
 
 }END_TEST
+
+START_TEST(test_focus_window_request){
+    //TODO update when the X11 request focus methods supports multi focus
+    int win=mapArbitraryWindow();
+    scan();
+    focusWindowInfo(getWindowInfo(win));
+    xcb_input_xi_get_focus_reply_t*reply=xcb_input_xi_get_focus_reply(dis,
+            xcb_input_xi_get_focus(dis, getActiveMasterKeyboardID()), NULL);
+
+    assert(reply->focus==win);
+    free(reply);
+}END_TEST
+
+START_TEST(test_activate_window){
+    int win=createUnmappedWindow();
+    int win2=createNormalWindow();
+    scan();
+    assert(!activateWindow(getWindowInfo(win)));
+    assert(activateWindow(getWindowInfo(win2)));
+}END_TEST
+START_TEST(test_delete_window_request){
+    KILL_TIMEOUT=20;
+    int fd[2];
+    int fd2[2];
+    pipe(fd);
+    pipe(fd2);
+    if(!fork()){
+        openXDisplay();
+        int win=mapArbitraryWindow();
+        xcb_atom_t atoms[]={WM_DELETE_WINDOW,ewmh->_NET_WM_PING};
+        xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, _i?2:1, atoms);
+        write(fd[1],&win,sizeof(int));
+        close(fd[1]);
+        close(fd[0]);
+        flush();
+        read(fd2[0],&win,sizeof(int));
+        close(fd2[1]);
+        close(fd2[0]);
+        if(_i==1){
+            msleep(KILL_TIMEOUT*10);
+            mapArbitraryWindow();
+            LOG(LOG_LEVEL_NONE,"Code should have terminated\n");
+            msleep(KILL_TIMEOUT*10000);
+        }
+        waitForNormalEvent(XCB_CLIENT_MESSAGE);
+        closeConnection();
+        msleep(KILL_TIMEOUT*2);
+        exit(0);
+    }
+    int win;
+    read(fd[0],&win,sizeof(int));
+    close(fd[0]);
+    close(fd[1]);
+    scan();
+    WindowInfo*winInfo=getWindowInfo(win);
+    assert(hasMask(winInfo, WM_DELETE_WINDOW_MASK));
+    consumeEvents();
+    lock();
+    killWindowInfo(winInfo);
+    flush();
+    unlock();
+    write(fd2[1],&win,sizeof(int));
+    close(fd2[0]);
+    close(fd2[1]);
+    if(_i==2){
+        lock();
+        removeWindow(win);
+        killWindow(win);
+        unlock();
+        msleep(KILL_TIMEOUT*2);
+    }
+    else if(_i==3){
+        lock();
+        requestShutdown();
+        msleep(KILL_TIMEOUT*2);
+        unlock();
+        return;
+    }
+    wait(NULL);
+}END_TEST
+
 START_TEST(test_set_border_color){
     int win=mapArbitraryWindow();
     unsigned int colors[]={0,-1,255};
@@ -263,8 +387,8 @@ START_TEST(test_raise_window){
     assert(infoTop);
     assert(raiseWindow(bottom));
     flush();
-    waitForNormalEvents(1<<XCB_VISIBILITY_NOTIFY);
-    waitForNormalEvents(1<<XCB_VISIBILITY_NOTIFY);
+    waitForNormalEvent(XCB_VISIBILITY_NOTIFY);
+    waitForNormalEvent(XCB_VISIBILITY_NOTIFY);
 }END_TEST
 START_TEST(test_workspace_change){
 
@@ -301,6 +425,7 @@ START_TEST(test_sticky_window){
     assert(!isNotEmpty(getActiveWindowStack()));
 }END_TEST
 START_TEST(test_workspace_activation){
+    LOAD_SAVED_STATE=0;
     mapArbitraryWindow();
     mapArbitraryWindow();
     scan();
@@ -383,10 +508,31 @@ START_TEST(test_tile_windows){
     consumeEvents();
     tileWorkspace(getActiveWorkspaceIndex());
     for(int i=0;i<LEN(win);i++)
-        waitForNormalEvents(1<<XCB_CONFIGURE_NOTIFY);
+        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
     //TODO actually test window order
+
 }END_TEST
 
+START_TEST(test_empty_layout){
+    LOAD_SAVED_STATE=0;
+    mapWindow(createNormalWindow());
+    scan();
+    setActiveLayout(NULL);
+    consumeEvents();
+    tileWorkspace(getActiveWorkspaceIndex());
+    assert(!xcb_poll_for_event(dis));
+    Layout l={};
+    setActiveLayout(&l);
+    tileWorkspace(getActiveWorkspaceIndex());
+    assert(!xcb_poll_for_event(dis));
+    int returnFalse(){return 0;}
+    void dummy(){exit(1);}
+    l.layoutFunction=dummy;
+    l.conditionFunction=returnFalse;
+    setActiveLayout(&l);
+    tileWorkspace(getActiveWorkspaceIndex());
+    assert(!xcb_poll_for_event(dis));
+}END_TEST
 START_TEST(test_configure_windows){
     int win=createNormalWindow();
     WindowInfo*winInfo=createWindowInfo(win);
@@ -401,7 +547,7 @@ START_TEST(test_configure_windows){
         short defaultValues[]={10,10,10,10,10,10};
         xcb_configure_window(dis, win, allMasks, defaultValues);
         processConfigureRequest(win, values, 0, 0, masks[i]);
-        waitForNormalEvents(1<<XCB_CONFIGURE_NOTIFY);
+        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
         xcb_get_geometry_reply_t* reply=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
         for(int n=0;n<=5;n++)
             assert((&reply->x)[n]==n==i?values[n]:defaultValues[n]);
@@ -460,11 +606,14 @@ START_TEST(test_apply_gravity){
 
 
 START_TEST(test_set_workspace_names){
-    char*name="test";
-    setWorkspaceNames(&name, 1);
-    assert(strcmp(name,getWorkspaceByIndex(0)->name)==0);
-    setWorkspaceNames(&name, 1);
-    assert(strcmp(name,getWorkspaceByIndex(0)->name)==0);
+    char*name[]={"test","test2"};
+    setWorkspaceNames(name, 1);
+    assert(getIndexFromName(name[0])==0);
+    assert(strcmp(name[0],getWorkspaceByIndex(0)->name)==0);
+    setWorkspaceNames(name, 2);
+    assert(getIndexFromName(name[1])==1);
+    assert(strcmp(name[1],getWorkspaceByIndex(1)->name)==0);
+
 }END_TEST
 START_TEST(test_unkown_window){
     int win=createNormalWindow();
@@ -510,8 +659,9 @@ Suite *x11Suite(void) {
     TCase* tc_core;
 
     tc_core = tcase_create("Window fields");
-    tcase_add_checked_fixture(tc_core, createSimpleContext, destroyContext);
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_mask_add_remove_toggle);
+    tcase_add_test(tc_core, test_mask_reset);
     tcase_add_test(tc_core, test_get_set_geometry_config);
     suite_add_tcase(s, tc_core);
 
@@ -520,7 +670,7 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_connect_to_xserver);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Window detection");
+    tc_core = tcase_create("Window_Detection");
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_window_property_loading);
     tcase_add_test(tc_core, test_window_property_alt_loading);
@@ -529,6 +679,7 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_window_scan);
     tcase_add_test(tc_core, test_sync_state);
     tcase_add_test(tc_core, test_window_state);
+    tcase_add_test(tc_core, test_window_state_sync);
     suite_add_tcase(s, tc_core);
 
 
@@ -542,11 +693,14 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_invalid_state);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Window Operations");
+    tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
 
     tcase_add_test(tc_core, test_raise_window);
     tcase_add_test(tc_core, test_focus_window);
+    tcase_add_test(tc_core, test_focus_window_request);
+    tcase_add_loop_test(tc_core, test_delete_window_request,1,4);
+    tcase_add_test(tc_core, test_activate_window);
     tcase_add_test(tc_core, test_set_border_color);
     tcase_add_test(tc_core, test_workspace_activation);
     tcase_add_test(tc_core, test_workspace_change);
@@ -555,11 +709,12 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_kill_window);
     tcase_add_test(tc_core, test_privileged_windows_size);
     tcase_add_loop_test(tc_core, test_tile_windows,0,2);
+    tcase_add_test(tc_core, test_empty_layout);
     tcase_add_test(tc_core, test_configure_windows);
     tcase_add_test(tc_core, test_float_sink_window);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Window Operations");
+    tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_toggle_show_desktop);
     tcase_add_test(tc_core, test_apply_gravity);

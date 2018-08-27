@@ -59,10 +59,16 @@ int isExternallyRaisable(WindowInfo* winInfo){
 }
 
 int isActivatable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & ~HIDDEN_MASK & MAPABLE_MASK;
+    return !winInfo || winInfo->mask & MAPABLE_MASK && !(winInfo->mask & HIDDEN_MASK);
 }
 int hasMask(WindowInfo* winInfo,int mask){
     return (winInfo->mask & mask) == mask;
+}
+void resetUserMask(WindowInfo* winInfo){
+    memcpy(&winInfo->mask, &DEFAULT_WINDOW_MASKS, sizeof(char));
+}
+int isUserMask(int mask){
+    return ((char)mask)?1:0;
 }
 
 void toggleMask(WindowInfo*winInfo,int mask){
@@ -73,9 +79,13 @@ void toggleMask(WindowInfo*winInfo,int mask){
 }
 void addMask(WindowInfo*winInfo,int mask){
     winInfo->mask|=mask;
+    if(isUserMask(mask))
+        setXWindowStateFromMask(winInfo);
 }
 void removeMask(WindowInfo*winInfo,int mask){
     winInfo->mask&=~mask;
+    if(isUserMask(mask))
+        setXWindowStateFromMask(winInfo);
 }
 
 void connectToXserver(){
@@ -133,6 +143,7 @@ void scan() {
                 //if the window is not unmapped
                 if(attr->map_state)
                     addMask(winInfo, MAPABLE_MASK);
+
                 processNewWindow(winInfo);
             }
             free(attr);
@@ -206,7 +217,7 @@ void loadClassInfo(WindowInfo*info){
     strcpy(info->className, prop.class_name);
     strcpy(info->instanceName, prop.instance_name);
     xcb_icccm_get_wm_class_reply_wipe(&prop);
-    LOG(LOG_LEVEL_DEBUG,"class name %s instance name: %s \n",info->className,info->instanceName);
+    LOG(LOG_LEVEL_TRACE,"class name %s instance name: %s \n",info->className,info->instanceName);
 
 }
 void loadTitleInfo(WindowInfo*winInfo){
@@ -230,7 +241,7 @@ void loadTitleInfo(WindowInfo*winInfo){
     }
 
     if(winInfo->title)
-        LOG(LOG_LEVEL_DEBUG,"window title %s\n",winInfo->title);
+        LOG(LOG_LEVEL_TRACE,"window title %s\n",winInfo->title);
 }
 void loadWindowType(WindowInfo *winInfo){
     xcb_ewmh_get_atoms_reply_t name;
@@ -269,17 +280,37 @@ void loadWindowHints(WindowInfo *winInfo){
             addMask(winInfo, MAPABLE_MASK);
     }
 }
+
+void loadProtocols(WindowInfo *winInfo){
+    xcb_icccm_get_wm_protocols_reply_t reply;
+    if(xcb_icccm_get_wm_protocols_reply(dis,
+                xcb_icccm_get_wm_protocols(dis, winInfo->id, ewmh->WM_PROTOCOLS),
+                &reply, NULL)){
+        for(int i=0;i<reply.atoms_len;i++)
+            if(reply.atoms[i]==WM_DELETE_WINDOW)
+                addMask(winInfo, WM_DELETE_WINDOW_MASK);
+            else if(reply.atoms[i]==ewmh->_NET_WM_PING)
+                addMask(winInfo, WM_PING_MASK);
+            //else if(reply.atoms[i]==WM_TAKE_FOCUS)
+                //addMask(winInfo, WM_TAKE_FOCUS_MASK);
+
+        xcb_icccm_get_wm_protocols_reply_wipe(&reply);
+    }
+}
 void loadWindowProperties(WindowInfo *winInfo){
+
+    LOG(LOG_LEVEL_TRACE,"loading window properties %d\n",winInfo->id);
     loadClassInfo(winInfo);
     loadTitleInfo(winInfo);
     loadWindowHints(winInfo);
-    loadWindowType(winInfo);
+    loadProtocols(winInfo);
 
     xcb_window_t prop;
     if(xcb_icccm_get_wm_transient_for_reply(dis,
             xcb_icccm_get_wm_transient_for(dis, winInfo->id), &prop, NULL)){
         winInfo->transientFor=prop;
     }
+    loadWindowType(winInfo);
     //dumpWindowInfo(winInfo);
 }
 
@@ -312,7 +343,62 @@ typedef struct {
     int layer;
 }WindowState;
 
-WindowState getState(xcb_atom_t* atoms,int numberOfAtoms){
+
+int getLastLayerForWindow(WindowInfo*winInfo){
+    Workspace*workspace=getWorkspaceByIndex(winInfo->workspaceIndex);
+    for(int i=0;i<NUMBER_OF_LAYERS;i++)
+        if(isInList(getWindowStackAtLayer(workspace, i),winInfo->id))
+            return i;
+    return -1;
+
+}
+
+void setXWindowStateFromMask(WindowInfo*winInfo){
+
+    xcb_atom_t supportedStates[]={SUPPORTED_STATES};
+
+    xcb_ewmh_get_atoms_reply_t reply;
+    int count=0;
+    int hasState=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    xcb_atom_t windowState[LEN(supportedStates)+(hasState?reply.atoms_len:0)];
+    if(hasState){
+        for(int i=0;i<reply.atoms_len;i++){
+            char isSupportedState=0;
+            for(int n=0;n<LEN(supportedStates);n++)
+                if(supportedStates[n]==reply.atoms[i]){
+                    isSupportedState=1;
+                    break;
+                }
+            if(!isSupportedState)
+                windowState[count++]=reply.atoms[i];
+        }
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+    if(hasMask(winInfo, STICKY_MASK))
+        windowState[count++]=ewmh->_NET_WM_STATE_STICKY;
+    if(hasMask(winInfo, HIDDEN_MASK))
+        windowState[count++]=ewmh->_NET_WM_STATE_HIDDEN;
+    if(hasMask(winInfo, Y_MAXIMIZED_MASK))
+        windowState[count++]=ewmh->_NET_WM_STATE_MAXIMIZED_VERT;
+    if(hasMask(winInfo, X_MAXIMIZED_MASK))
+        windowState[count++]=ewmh->_NET_WM_STATE_MAXIMIZED_HORZ;
+    if(hasMask(winInfo, URGENT_MASK))
+        windowState[count++]=ewmh->_NET_WM_STATE_DEMANDS_ATTENTION;
+    if(hasMask(winInfo, FULLSCREEN_MASK))
+        windowState[count++]=ewmh->_NET_WM_STATE_FULLSCREEN;
+    int layer=getLastLayerForWindow(winInfo);
+    if(layer==UPPER_LAYER)
+        windowState[count++]=ewmh->_NET_WM_STATE_ABOVE;
+    if(layer==LOWER_LAYER)
+        windowState[count++]=ewmh->_NET_WM_STATE_BELOW;
+    xcb_ewmh_set_wm_state(ewmh, winInfo->id, count, windowState);
+}
+
+void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int numberOfAtoms,int action){
+    if(!winInfo)
+        return;
+
+    LOG(LOG_LEVEL_TRACE,"Updating state of %d from %d atoms",winInfo->id,numberOfAtoms);
 
     int mask=0;
     int layer=NORMAL_LAYER;
@@ -333,25 +419,12 @@ WindowState getState(xcb_atom_t* atoms,int numberOfAtoms){
             layer=UPPER_LAYER;
         else if(atoms[i] == ewmh->_NET_WM_STATE_BELOW)
             layer=LOWER_LAYER;
+        else if(atoms[i] == WM_TAKE_FOCUS)
+            mask|=WM_TAKE_FOCUS_MASK;
+        else if(atoms[i] == WM_DELETE_WINDOW)
+            mask|=WM_DELETE_WINDOW_MASK;
     }
-
-    return (WindowState){mask,layer};
-}
-int getLastLayerForWindow(WindowInfo*winInfo){
-    Workspace*workspace=getWorkspaceByIndex(winInfo->workspaceIndex);
-    for(int i=0;i<NUMBER_OF_LAYERS;i++)
-        if(isInList(getWindowStackAtLayer(workspace, i),winInfo->id))
-            return i;
-    return -1;
-
-}
-void setWindowStateFromAtomInfo(WindowInfo*winInfo,xcb_atom_t* atoms,int numberOfAtoms,int action){
-    if(!winInfo)
-        return;
-
-    LOG(LOG_LEVEL_TRACE,"Updating state of %d from %d atoms",winInfo->id,numberOfAtoms);
-
-    WindowState state=getState(atoms, numberOfAtoms);
+    WindowState state={mask,layer};
     if(action==XCB_EWMH_WM_STATE_TOGGLE){
         if(hasMask(winInfo, state.mask) &&getLastLayerForWindow(winInfo)==state.layer)
             action=XCB_EWMH_WM_STATE_REMOVE;
@@ -383,8 +456,70 @@ int getSavedWorkspaceIndex(xcb_window_t win){
     return workspaceIndex;
 }
 
+void* waitForWindowToDie(int id){
+    int wait=1;
+    while(wait && !isShuttingDown()){
+        xcb_ewmh_send_wm_ping(ewmh, id, 0);
+        flush();
+        msleep(KILL_TIMEOUT);
+        if(isShuttingDown())
+            continue;
+        lock();
+        WindowInfo*winInfo=getWindowInfo(id);
+        if(!winInfo){
+            LOG(LOG_LEVEL_DEBUG,"Window %d no longer exists\n", id);
+            wait=0;
+        }
+        else if(getTime()-winInfo->pingTimeStamp>=KILL_TIMEOUT){
+            LOG(LOG_LEVEL_DEBUG,"Window %d is not responsive; force killing\n", id);
+            killWindow(id);
+            wait=0;
+        }
+        unlock();
+    }
+    LOG(LOG_LEVEL_DEBUG,"Finshed waiting for window %d\n", id);
+    return NULL;
+}
 
-int focusWindow(xcb_window_t win){
+void killWindowInfo(WindowInfo* winInfo){
+    if(hasMask(winInfo, WM_DELETE_WINDOW_MASK)){
+        xcb_client_message_event_t ev;
+        ev.response_type = XCB_CLIENT_MESSAGE;
+        ev.sequence = 0;
+        ev.format = 32;
+        ev.window = winInfo->id;
+        ev.type = ewmh->WM_PROTOCOLS;
+        ev.data.data32[0] = WM_DELETE_WINDOW;
+        ev.data.data32[1] = getTime();
+        xcb_send_event(dis, 0, winInfo->id, XCB_EVENT_MASK_NO_EVENT, (char *)&ev);
+        LOG(LOG_LEVEL_INFO,"Sending request to delete window\n");
+        if(hasMask(winInfo, WM_PING_MASK))
+            runInNewThread((void *(*)(void *))waitForWindowToDie,(void*) winInfo->id,1);
+    }
+    else{
+        killWindow(winInfo->id);
+    }
+}
+void killWindow(xcb_window_t win){
+    assert(win);
+    LOG(LOG_LEVEL_DEBUG,"Killing window %d\n",win);
+    catchError(xcb_kill_client_checked(dis, win));
+    flush();
+}
+
+int focusWindowInfo(WindowInfo*winInfo){
+    /*
+    if(hasMask(winInfo, WM_TAKE_FOCUS_MASK)){
+        uint32_t data[]={WM_TAKE_FOCUS,getTime()};
+        LOG(LOG_LEVEL_TRACE,"sending request to take focus to ")
+        xcb_ewmh_send_client_message(dis, winInfo->id, winInfo->id, ewmh->WM_PROTOCOLS, 2, data);
+        return 1;
+    }
+    else*/
+
+    return focusWindow(winInfo->id);
+}
+int focusWindow(int win){
     LOG(LOG_LEVEL_DEBUG,"Trying to set focus to %d\n",win);
     assert(win);
     xcb_void_cookie_t cookie=xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME, getActiveMaster()->id);
@@ -409,10 +544,13 @@ int raiseWindow(xcb_window_t win){
 
 int activateWindow(WindowInfo* winInfo){
 
-    if(!winInfo || !isActivatable(winInfo))return 0;
+    if(!winInfo || !isActivatable(winInfo)){
+        LOG(LOG_LEVEL_TRACE,"could not activate window %d\n",winInfo?winInfo->mask:-1);
+        return 0;
+    }
     LOG(LOG_LEVEL_DEBUG,"activating window %d in workspace %d\n",winInfo->id,winInfo->workspaceIndex);
     switchToWorkspace(winInfo->workspaceIndex);
-    return raiseWindow(winInfo->id) && focusWindow(winInfo->id);
+    return raiseWindow(winInfo->id) && focusWindowInfo(winInfo)?winInfo->id:0;
 }
 
 int deleteWindow(xcb_window_t winToRemove){
@@ -451,7 +589,7 @@ static void setLayerState(int workspaceIndex,int map,int layer){
             updateWindowWorkspaceState(getValue(stack),workspaceIndex,map))
 }
 static void setWorkspaceState(int workspaceIndex,int map){
-    LOG(LOG_LEVEL_DEBUG,"Setting workspace of %d  to %d:\n",workspaceIndex,map);
+    LOG(LOG_LEVEL_DEBUG,"Setting workspace %d  to %d:\n",workspaceIndex,map);
     for(int i=0;i<NUMBER_OF_LAYERS;i++)
         setLayerState(workspaceIndex,map,i);
 
@@ -463,14 +601,17 @@ void switchToWorkspace(int workspaceIndex){
     }
     int currentIndex=getActiveWorkspaceIndex();
     LOG(LOG_LEVEL_DEBUG,"Switchting to workspace %d:\n",workspaceIndex);
-    Workspace*workspaceToSwitchTo=getWorkspaceByIndex(workspaceIndex);
-    assert(workspaceToSwitchTo);
+    /*
+     * Each master can have independent active workspaces. While an active workspace is generally visible when it is set,
+     * it can become invisible due to another master switching workspaces. So when the master in the invisible workspaces
+     * wants its workspace to become visbile it must first find a visible workspace to swap with
+     */
     if(currentIndex==workspaceIndex){
-        currentIndex=getNextWorkspace(1, -1, 0)->id;
+        currentIndex=getNextWorkspace(1, VISIBLE)->id;
     }
     assert(isWorkspaceVisible(currentIndex));
     //we need to map new windows
-    LOG(LOG_LEVEL_DEBUG,"Swaping with visible workspace %d with %d\n",currentIndex,workspaceIndex);
+    LOG(LOG_LEVEL_DEBUG,"Swaping visible workspace %d with %d\n",currentIndex,workspaceIndex);
     swapMonitors(workspaceIndex,currentIndex);
     setWorkspaceState(workspaceIndex,1);
     setWorkspaceState(currentIndex,0);
@@ -486,11 +627,14 @@ void activateWorkspace(int workspaceIndex){
     Workspace*workspaceToSwitchTo=getWorkspaceByIndex(workspaceIndex);
 
     Node*head=getMasterWindowStack();
-    LOG(LOG_LEVEL_TRACE,"Finding first window in active master in workspace %d:\n",workspaceIndex);
+    LOG(LOG_LEVEL_TRACE,"Finding first window of active master in workspace %d:\n",workspaceIndex);
 
     UNTIL_FIRST(head,((WindowInfo*)getValue(head))->workspaceIndex==workspaceIndex)
-    if(!head)
+    if(!head){
+
         head=getWindowStack(workspaceToSwitchTo);
+        LOG(LOG_LEVEL_TRACE,"Intersection was empty; using head of stack:%d\n",getIntValue(head));
+    }
 
 
     if(head->value)
@@ -577,10 +721,14 @@ void tileWorkspace(int index){
 
     if(!isNotEmpty(getWindowStack(workspace)))
         LOG(LOG_LEVEL_DEBUG,"WARNING there are not windows to tile\n");
+    if(!layout->layoutFunction)
+        LOG(LOG_LEVEL_WARN,"WARNING there is not a set layout function\n");
     if(layout->layoutFunction)
         if(!layout->conditionFunction || layout->conditionFunction(layout->conditionArg))
             layout->layoutFunction(m,
                 getWindowStack(workspace),layout->args);
+        else
+            LOG(LOG_LEVEL_TRACE,"condition not met to use layout %s \n",layout->name);
     for(int i=NORMAL_LAYER-1;i>=DESKTOP_LAYER;i--){
         Node*n=workspace->windows[i];
         FOR_EACH(n,tileNonNormalLayers(getValue(n),0));
@@ -592,38 +740,41 @@ void tileWorkspace(int index){
 }
 
 void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int mask){
-
+    LOG(LOG_LEVEL_TRACE,"processing configure request window %d\n",win);
     int actualValues[7];
     int i=0;
+    int n=0;
 
     WindowInfo*winInfo=getWindowInfo(win);
-    if(mask & XCB_CONFIG_WINDOW_X && isExternallyMoveable(winInfo))
-        actualValues[i++]=values[0];
+    if(mask & XCB_CONFIG_WINDOW_X && ++n && isExternallyMoveable(winInfo))
+        actualValues[i++]=values[n-1];
     else mask&=~XCB_CONFIG_WINDOW_X;
-    if(mask & XCB_CONFIG_WINDOW_Y && isExternallyMoveable(winInfo))
-            actualValues[i++]=values[1];
+    if(mask & XCB_CONFIG_WINDOW_Y && ++n && isExternallyMoveable(winInfo))
+            actualValues[i++]=values[n-1];
     else mask&=~XCB_CONFIG_WINDOW_Y;
-    if(mask & XCB_CONFIG_WINDOW_WIDTH && isExternallyResizable(winInfo))
-        actualValues[i++]=values[2];
+    if(mask & XCB_CONFIG_WINDOW_WIDTH && ++n && isExternallyResizable(winInfo))
+        actualValues[i++]=values[n-1];
     else mask&=~XCB_CONFIG_WINDOW_WIDTH;
-    if(mask & XCB_CONFIG_WINDOW_HEIGHT && isExternallyResizable(winInfo))
-        actualValues[i++]=values[3];
+    if(mask & XCB_CONFIG_WINDOW_HEIGHT && ++n && isExternallyResizable(winInfo))
+        actualValues[i++]=values[n-1];
     else mask&=~XCB_CONFIG_WINDOW_HEIGHT;
-    if(mask & XCB_CONFIG_WINDOW_BORDER_WIDTH && isExternallyBorderConfigurable(winInfo))
-        actualValues[i++]=values[4];
+    if(mask & XCB_CONFIG_WINDOW_BORDER_WIDTH && ++n && isExternallyBorderConfigurable(winInfo))
+        actualValues[i++]=values[n-1];
     else mask&=~XCB_CONFIG_WINDOW_BORDER_WIDTH;
 
-    if(mask & XCB_CONFIG_WINDOW_SIBLING && isExternallyRaisable(winInfo))
+    if(mask & XCB_CONFIG_WINDOW_SIBLING && ++n && isExternallyRaisable(winInfo))
         actualValues[i++]=sibling;
     else mask&=~XCB_CONFIG_WINDOW_SIBLING;
-    if(mask & XCB_CONFIG_WINDOW_STACK_MODE && isExternallyRaisable(winInfo))
+    if(mask & XCB_CONFIG_WINDOW_STACK_MODE && ++n && isExternallyRaisable(winInfo))
         actualValues[i++]=stackMode;
     else mask&=~XCB_CONFIG_WINDOW_STACK_MODE;
 
-    if(mask)
+    if(mask){
         xcb_configure_window(dis, win, mask, actualValues);
+        LOG(LOG_LEVEL_TRACE,"re-configure window %d mask: %d\n",win,mask);
+    }
     else
-        LOG(LOG_LEVEL_DEBUG,"configure request denied for window %d; masks %d\n",win,winInfo?winInfo->mask:0);
+        LOG(LOG_LEVEL_DEBUG,"configure request denied for window %d; masks %d\n",win,winInfo?winInfo->mask:-1);
 }
 void broadcastEWMHCompilence(){
     LOG(LOG_LEVEL_TRACE,"Compliying with EWMH\n");
@@ -662,7 +813,13 @@ void updateMapState(int id,int map){
             removeMask(winInfo, MAPPED_MASK);
 }
 
-
+int getIndexFromName(char*name){
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        if(getWorkspaceByIndex(i)->name && strcmp(name, getWorkspaceByIndex(i)->name)==0)
+            return i;
+    }
+    return getNumberOfWorkspaces();
+}
 void setWorkspaceNames(char*names[],int numberOfNames){
     for(int i=0;i<numberOfNames && i<getNumberOfWorkspaces();i++)
         getWorkspaceByIndex(i)->name=names[i];
@@ -747,10 +904,3 @@ void applyGravity(int win,short pos[5],int gravity){
             pos[0]+=pos[2]/2;
     }
 }
-
-void killWindow(xcb_window_t win){
-    assert(win);
-    LOG(LOG_LEVEL_DEBUG,"Killing window %d",win);
-    xcb_kill_client(dis, win);
-}
-

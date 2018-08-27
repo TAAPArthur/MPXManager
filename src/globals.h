@@ -20,6 +20,7 @@
 
 ///If true, then check used saved window properties as defaults
 extern char LOAD_SAVED_STATE;
+extern long KILL_TIMEOUT;
 /**Mask of all events we listen for on the root window*/
 extern int ROOT_EVENT_MASKS;
 /**Mask of all events we listen for on non-root windows*/
@@ -41,13 +42,13 @@ extern int DEFAULT_WINDOW_MASKS;
 ///If unspecifed the mask of a Binding
 extern int DEFAULT_BINDING_MASKS;
 ///If unspecifed the mask, used during a chaing binding grab
-extern int DEFAULT_CHAIN_BINDING_GRAB_MASK;
+#define DEFAULT_CHAIN_BINDING_GRAB_MASK XCB_INPUT_XI_EVENT_MASK_KEY_PRESS
 
 ///The started workspace if !LOAD_STATE or the root CURRENT_DESKTOP property is not set
 extern int DEFAULT_WORKSPACE_INDEX;
 
-///The modier that will match any other modier
-extern int anyModier;
+///The modifier that will match any other modifier
+extern int WILDCARD_MODIFIER;
 ///Masks to ignore; Default is ModMask2 (NUM_LOCK)
 extern int IGNORE_MASK;
 ///IF True we will crash if an error is received
@@ -102,5 +103,19 @@ extern int DEFAULT_BORDER_WIDTH;
 
 void init();
 
+/**
+ *Set the last event received.
+ * @param event the last event received
+ * @see getLastEvent
+ */
+void setLastEvent(void* event);
+/**
+ * Retries the last event received
+ * @see getLastEvent
+ */
+void* getLastEvent();
+
+extern void (*preStartUpMethod)();
 extern void (*startUpMethod)();
+
 #endif

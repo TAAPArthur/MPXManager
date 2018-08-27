@@ -11,24 +11,28 @@
 
 #include "mywm-util.h"
 
-#define SRC_INDICATION_OFFSET 15
+#define SRC_INDICATION_OFFSET 12
 typedef enum {
     /// no special properties
     NO_MASK = 0,
-    /**The window can receive input focus*/
-    INPUT_MASK =           1<<0,
-    /**The WM will not forcibly set focus but request the application focus itself*/
-    WM_TAKE_FOCUS_MASK =    1<<2,
     /**The window's X size will equal the size of the monitor's viewport*/
-    X_MAXIMIZED_MASK =      1<<3,
+    X_MAXIMIZED_MASK =      1<<0,
     /**The window's Y size will equal the size of the monitor's viewport*/
-    Y_MAXIMIZED_MASK =      1<<4,
+    Y_MAXIMIZED_MASK =      1<<1,
     /**The window's size will equal the size of the monitor (not viewport)     */
-    FULLSCREEN_MASK =       1<<5,
+    FULLSCREEN_MASK =       1<<2,
     /**The window's size will equal the size of the screen (union of all monitors)*/
-    ROOT_FULLSCREEN_MASK =  1<<6,
+    ROOT_FULLSCREEN_MASK =  1<<3,
     ///Window will not be tiled
-    NO_TILE_MASK =          1<<7,
+    NO_TILE_MASK =          1<<4,
+
+    ///Window is effectively associated with its monitor instead of its workspace
+    /// (it is moveded between workspaces to stay on its monitor
+    STICKY_MASK =           1<<5,
+    ///The window will be treated as unmapped until this mask is removed (iconic state)
+    HIDDEN_MASK =        1<<6,
+
+
     /// Window can be externally resized (configure requests are allowed)
     EXTERNAL_RESIZE_MASK =  1<<8,
     /// Window can be externally moved (configure requests are allowed)
@@ -48,23 +52,27 @@ typedef enum {
     /// allow from any source
     SRC_ANY =                SRC_INDICATION_OTHER|SRC_INDICATION_APP|SRC_INDICATION_PAGER,
 
-    ///Window is effectively associated with its monitor instead of its workspace
-    /// (it is moveded between workspaces to stay on its monitor
-    STICKY_MASK =           1<<20,
-    ///The window will be treated as unmapped until this mask is removed (iconic state)
-    HIDDEN_MASK =        1<<21,
-    /**Marks the window as urgent*/
-    URGENT_MASK =           1<<22,
-    ///Treat this window as if it mapped
-    MAPABLE_MASK =           1<<23,
-    ///the window is currently mapped
-    MAPPED_MASK =           1<<24,
+
+    /**The window can receive input focus*/
+    INPUT_MASK =           1<<16,
+    /**The WM will not forcibly set focus but request the application focus itself*/
+    WM_TAKE_FOCUS_MASK =    1<<17,
+    /**The WM will not forcibly set focus but request the application focus itself*/
+    WM_DELETE_WINDOW_MASK = 1<<18,
+    /**Used in conjuction with WM_DELETE_WINDOW_MASK to kill the window */
+    WM_PING_MASK = 1<<19,
+
 
     ///Keeps track on the visibility state of the window
-    PARTIALLY_VISIBLE =     1<<25,
-    FULLY_VISIBLE =         1<<26 | PARTIALLY_VISIBLE,
+    PARTIALLY_VISIBLE =     1<<27,
+    FULLY_VISIBLE =         1<<28 | PARTIALLY_VISIBLE,
+    ///Inidicates the window is not withdrawn
+    MAPABLE_MASK =           1<<29,
+    ///the window is currently mapped
+    MAPPED_MASK =           1<<30,
 
-
+    /**Marks the window as urgent*/
+    URGENT_MASK =           1<<31,
 
 }WindowMasks;
 
@@ -122,7 +130,11 @@ int isActivatable(WindowInfo* winInfo);
  * @return 1 iff the window containers the complete mask
  */
 int hasMask(WindowInfo* win,int mask);
-
+/**
+ * Resets the user controlled state to the defaults
+ * @param winInfo
+ */
+void resetUserMask(WindowInfo* winInfo);
 /**
  * Adds the states give by mask to the window
  * @param winInfo
@@ -222,9 +234,9 @@ void registerWindow(WindowInfo*winInfo);
  * @param numberOfAtoms
  * @param action
  */
-void setWindowStateFromAtomInfo(WindowInfo*winInfo,xcb_atom_t* atoms,int numberOfAtoms,int action);
+void setWindowStateFromAtomInfo(WindowInfo*winInfo,const xcb_atom_t* atoms,int numberOfAtoms,int action);
 
-
+void setXWindowStateFromMask(WindowInfo*winInfo);
 /**
  * Reads EWMH desktop property to find the workspace the window should be long.
  * If the field is not present the active workspace is used.
@@ -245,7 +257,11 @@ void updateMapState(int id,int state);
 
 
 /**
- * Tiles the specified workspace
+ * Tiles the specified workspace.
+ * If the active layout is NULL then this is a no-op.
+ * First the windows in the NORMAL_LAYER are tiled. If the layoutFunction is NULL
+ * or the conditionFunction is not true then the windows are left as in.
+ * Afterwards the remaining layers are tiled in ascending order
  * @param index
  */
 void tileWorkspace(int index);
@@ -261,8 +277,8 @@ void setBorderColor(xcb_window_t win,unsigned int color);
 
 /**
  * Switch to window's worksspace, raise and focus the window
- * @param id
- * @return
+ * @param winInfo
+ * @return the id of the activated window or 0 if no window was activated
  */
 int activateWindow(WindowInfo* winInfo);
 /**
@@ -270,7 +286,9 @@ int activateWindow(WindowInfo* winInfo);
  * @param win   the window to focus
  * @return 1 iff no error was detected
  */
-int focusWindow(xcb_window_t win);
+int focusWindow(int win);
+
+int focusWindowInfo(WindowInfo*winInfo);
 /**
  * Raises the given window
  * @param win   the window to raise
@@ -348,6 +366,13 @@ void applyGravity(int win,short pos[5],int gravity);
  */
 void setWorkspaceNames(char*names[],int numberOfNames);
 
+/**
+ * Returns the first workspace index whose names matches name
+ * @param name
+ * @return
+ */
+int getIndexFromName(char*name);
+
 void activateWorkspace(int workspaceIndex);
 
 void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex);
@@ -391,6 +416,12 @@ void moveWindowToLayer(WindowInfo* win,int workspaceIndex,int layer);
  */
 void killWindow(xcb_window_t win);
 
+/**
+ * Sends a WM_DELETE_WINDOW message or sends a kill requests
+ * @param winInfo
+ * @see killWindow();
+ */
+void killWindowInfo(WindowInfo* winInfo);
 /**
  * Check to see if we are showing the desktop.
  * When showing the desktop all windows in the workspace are hidden except for windows in the Desktop Layer

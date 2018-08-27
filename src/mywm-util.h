@@ -57,6 +57,8 @@ typedef struct window_info{
     int activeWorkspaceCount;
     /**The time this window was minimized*/
     int minimizedTimeStamp;
+    ///time the window was last pinged
+    int pingTimeStamp;
 
     ///Window gravity
     char gravity;
@@ -72,7 +74,7 @@ typedef struct window_info{
     ///x,y offset for cloned windows; they will clone the original starting at this offset
     int cloneOffset[2];
     /**
-     * The window this window is a trainsient for
+     * The window this window is a transient for
      */
     unsigned int transientFor;
     /**
@@ -184,7 +186,6 @@ typedef struct {
      * @param list of arguments to pass
      */
     void (*layoutFunction)(Monitor*,Node*,int*);
-    //TODO implement conditional layout
     /**
      * When cycling layouts this, layout will only be applied if this function is not set or returns true.
      * This function can prevent cycling between layouts that look identical with a set number of windows
@@ -260,8 +261,8 @@ void msleep(int mil);
 void createContext(int numberOfWorkspaces);
 
 /**
- * Destroys the reference to context and clears all resources.
- * It does nothing if context points to NULL
+ * Destroys the resources related to our internal representation.
+ * It does nothing if resources have already been cleared or never initally created
  */
 void destroyContext();
 
@@ -281,18 +282,6 @@ WindowInfo* createWindowInfo(unsigned int id);
  * @see createContext
  */
 int getNumberOfWorkspaces();
-
-/**
- *Set the last event received.
- * @param event the last event received
- * @see getLastEvent
- */
-void setLastEvent(void* event);
-/**
- * Retries the last event received
- * @see getLastEvent
- */
-void* getLastEvent();
 
 /**
  *
@@ -511,33 +500,25 @@ int isWorkspaceVisible(int i);
  * @return if the workspace has at least one window explicitly assigned to it
  */
 int isWorkspaceNotEmpty(int index);
-/**
- * Returns the next workspace not assigned to a monitor
- * @return
- */
-Workspace*getNextHiddenWorkspace();
+
+///@see getNextWorkspace()
+typedef enum{
+    ///only return visible workspaces
+    VISIBLE=1,
+    ///only return invisible workspaces
+    HIDDEN=2,
+    ///only return non empty workspaces
+    NON_EMPTY=1<<2,
+    ///only return empty workspaces
+    EMPTY=2<<2
+}WorkSpaceFilter;
 /**
  * Get the next workspace in the given direction according to the filters
  * @param dir the interval of workspaces to check
- * @param empty either 0,1,-1 for empty workspace, non empty workspace or either
- * @param hidden either 0,1,-1 for hidden workspace, visible workspace or either
- * @return the next workspace in the given direction
+ * @param mask species a filter for workpspaces @see WorkSpaceFilter
+ * @return the next workspace in the given direction that matches the criteria
  */
-Workspace*getNextWorkspace(int dir,int empty,int hidden);
-/**
- * This method is a convince wrapper around getNextWorkspace
- * It is equalivent to calling getNextWorkspace(1,0,1)
- * @return the next hidden, non-empty workspace from the active workspace
- * @see getNextWorkspace
- */
-Workspace*getNextHiddenNonEmptyWorkspace();
-/**
- * This method is a convince wrapper around getNextWorkspace
- * It is equalivent to calling getNextWorkspace(1,-1,1)
- * @return the next hidden workspace from the active workspace
- * @see getNextWorkspace
- */
-Workspace*getNextHiddenWorkspace();
+Workspace*getNextWorkspace(int dir,int mask);
 
 /**
  * Returns the workspace currently displayed by the monitor or null
@@ -559,14 +540,6 @@ Monitor*getMonitorFromWorkspace(Workspace*workspace);
  * @param index2
  */
 void swapMonitors(int index1,int index2);
-
-/**
- * Get the next window in the stacking order in the given direction
-
- * @param dir
- * @return
- */
-Node* getNextWindowInStack(int dir);
 
 /**
  * Get the master who most recently focused window.
@@ -629,13 +602,7 @@ void clearLayoutsOfWorkspace(int workspaceIndex);
  * @param layout the new active layout
  */
 void setActiveLayout(Layout*layout);
-/**
- * Sets the next layout to be the nth from the current position.
- * Note that the current position need not be the active layout
- * @param delta
- * @return
- */
-Layout* switchToNthLayout(int delta);
+
 /**
  *
  * @return the active layout for the active workspace

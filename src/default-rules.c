@@ -22,19 +22,12 @@
 #include "state.h"
 #include "monitors.h"
 #include "default-rules.h"
-
-#define MOVE_WINDOW_WITH_MOUSE(mod,btn)\
-        AUTO_CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_MOTION,\
-        {-1,-1,BIND(floatWindow).noGrab=1},        \
-        {mod,btn,BIND(moveWindowWithMouse)},\
-        END_CHAIN(anyModifer,0)\
-        );
-
-
+#include "functions.h"
+#include "layouts.h"
 
 
 void addRule(int i,Rule*rule){
-    insertHead(eventRules[i], rule);
+    insertTail(eventRules[i], rule);
 }
 void clearAllRules(void){
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
@@ -62,13 +55,16 @@ void addDefaultDeviceRules(void){
     }
 }
 
-
-
 void addAvoidDocksRule(void){
     static Rule avoidDocksRule = CREATE_RULE("_NET_WM_WINDOW_TYPE_DOCK",TYPE|LITERAL,BIND(addDock));
     addRule(ProcessingWindow, &avoidDocksRule);
 }
+void addFocusFollowsMouseRule(void){
 
+    static Rule focusFollowsMouseRule=CREATE_DEFAULT_EVENT_RULE(focusFollowMouse);
+    NON_ROOT_DEVICE_EVENT_MASKS|=XCB_INPUT_XI_EVENT_MASK_ENTER;
+    addRule(GENERIC_EVENT_OFFSET+XCB_INPUT_ENTER,&focusFollowsMouseRule);
+}
 
 void onXConnect(void){
     scan();
@@ -128,8 +124,9 @@ void onDestroyEvent(void){
     deleteWindow(event->window);
 }
 void onVisibilityEvent(void){
-    LOG(LOG_LEVEL_TRACE,"made it to visibility request event\n");
+
     xcb_visibility_notify_event_t *event= getLastEvent();
+    LOG(LOG_LEVEL_TRACE,"made it to visibility request event %d %d\n",event->window,event->state);
     WindowInfo*winInfo=getWindowInfo(event->window);
     if(winInfo)
         if(event->state==XCB_VISIBILITY_FULLY_OBSCURED)
@@ -158,7 +155,14 @@ void onUnmapEvent(void){
     updateMapState(event->window,0);
 }
 
-
+void focusFollowMouse(void){
+    xcb_input_enter_event_t*event= getLastEvent();
+    setActiveMasterByDeviceId(event->deviceid);
+    WindowInfo*winInfo=getWindowInfo(event->event);
+    if(winInfo)
+        focusWindowInfo(winInfo);
+    else focusWindow(event->event);
+}
 void onFocusInEvent(void){
     xcb_input_focus_in_event_t*event= getLastEvent();
     LOG(LOG_LEVEL_DEBUG,"id %d window %d %d\n",event->deviceid,event->event,event->event);
@@ -167,11 +171,7 @@ void onFocusInEvent(void){
     setActiveWindowProperty(event->event);
     //setBorder(event->child);
 }
-void onFocusOutEvent(void){
-    //xcb_input_focus_out_event_t *event= getLastEvent();
-    //TODO setActiveMasterByMouseId(event->deviceid);
-    //resetBorder(event->child);
-}
+
 
 void onPropertyEvent(void){
     xcb_property_notify_event_t*event=getLastEvent();
@@ -181,10 +181,12 @@ void onPropertyEvent(void){
 
 void onClientMessage(void){
     xcb_client_message_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"Received client message/request \n\n");
+
     xcb_client_message_data_t data=event->data;
     xcb_window_t win=event->window;
     Atom message=event->type;
+
+    LOG(LOG_LEVEL_DEBUG,"Received client message/request for window: %d\n",win);
 
     if(message==ewmh->_NET_CURRENT_DESKTOP)
         activateWorkspace(data.data32[0]);
@@ -205,12 +207,15 @@ void onClientMessage(void){
     else if(message==ewmh->_NET_CLOSE_WINDOW){
         LOG(LOG_LEVEL_DEBUG,"Killing window %d\n\n",win);
         WindowInfo*winInfo=getWindowInfo(win);
-        if(allowRequestFromSource(winInfo, data.data32[0])){
+        if(!winInfo)
             killWindow(win);
+        else if(allowRequestFromSource(winInfo, data.data32[0])){
+            killWindowInfo(winInfo);
         }
     }
     else if(message== ewmh->_NET_RESTACK_WINDOW){
         WindowInfo*winInfo=getWindowInfo(win);
+        LOG(LOG_LEVEL_TRACE,"Restacking Window %d sibling %d detail %d\n\n",win,data.data32[1], data.data32[2]);
         if(allowRequestFromSource(winInfo, data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2], XCB_CONFIG_WINDOW_STACK_MODE|XCB_CONFIG_WINDOW_SIBLING);
     }
@@ -218,6 +223,7 @@ void onClientMessage(void){
         xcb_ewmh_set_frame_extents(ewmh, win, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH);
     }
     else if(message==ewmh->_NET_MOVERESIZE_WINDOW){
+        LOG(LOG_LEVEL_TRACE,"Move/Resize window request %d\n\n",win);
         int gravity=data.data8[0];
         int mask=data.data8[1] & 15;
         int source = (data.data8[1] >>4) & 15;
@@ -249,6 +255,16 @@ void onClientMessage(void){
         dumpAtoms((xcb_atom_t *) &data.data32[1], 2);
         setWindowStateFromAtomInfo(getWindowInfo(win),(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
     }
+    else if(message==ewmh->WM_PROTOCOLS){
+        if(data.data32[0]==ewmh->_NET_WM_PING){
+            LOG(LOG_LEVEL_DEBUG,"Ping received\n");
+            WindowInfo*winInfo=getWindowInfo(data.data32[2]);
+            if(winInfo){
+                LOG(LOG_LEVEL_DEBUG,"Updated ping timestamp for window %d\n\n",winInfo->id);
+                winInfo->pingTimeStamp=getTime();
+            }
+        }
+    }
     /*
     //ignored (we are allowed to)
     case ewmh->_NET_NUMBER_OF_DESKTOPS:
@@ -257,10 +273,7 @@ void onClientMessage(void){
     */
 }
 
-void setLastKnowMasterPosition(int x,int y){
-    getActiveMaster()->mousePos[0]=x;
-    getActiveMaster()->mousePos[1]=y;
-}
+
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
     LOG(LOG_LEVEL_DEBUG,"device event %d %d %d %d\n\n",event->event_type,event->deviceid,event->sourceid,event->flags);
@@ -268,10 +281,8 @@ void onDeviceEvent(void){
     if((event->flags&XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && IGNORE_KEY_REPEAT)
         return;
 
-
-
     setActiveMasterByDeviceId(event->deviceid);
-    setLastKnowMasterPosition(event->root_x,event->root_y);
+    setLastKnowMasterPosition(event->root_x,event->root_y,event->event_x,event->event_y);
     checkBindings(event->detail,event->mods.effective,
             1<<event->event_type,
             getWindowInfo(event->child));
@@ -285,10 +296,17 @@ void onGenericEvent(void){
 
 void onStartup(void){
     init();
+    if(preStartUpMethod)
+        preStartUpMethod();
     addDefaultRules();
+    //TODO find way to customize number of workspaces in config
     createContext(NUMBER_OF_WORKSPACES);
     if(startUpMethod)
         startUpMethod();
+
+    for(int i=0;i<getNumberOfWorkspaces();i++)
+        if(!getActiveLayoutOfWorkspace(i))
+            addLayoutsToWorkspace(i,DEFAULT_LAYOUTS,NUMBER_OF_DEFAULT_LAYOUTS);
     connectToXserver();
 }
 
@@ -313,7 +331,6 @@ void addBasicRules(void){
         [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
 
         [XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
-        [XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusOutEvent),
         [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
 
         [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect)

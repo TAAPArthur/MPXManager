@@ -46,13 +46,13 @@ static int createWindow(int mapped,int ignored){
 
     return window;
 }
-int createIgnoredWindow(){
+int createIgnoredWindow(void){
     return createWindow(1,1);
 }
-int createNormalWindow(){
+int createNormalWindow(void){
     return createWindow(1,0);
 }
-int  createUnmappedWindow(){
+int  createUnmappedWindow(void){
     return createWindow(0,0);
 }
 
@@ -61,7 +61,7 @@ int mapWindow(int win){
     flush();
     return win;
 }
-int  mapArbitraryWindow(){
+int  mapArbitraryWindow(void){
     return mapWindow( createUnmappedWindow());
 }
 
@@ -126,23 +126,28 @@ void consumeEvents(){
     xcb_generic_event_t*e;
     while(1){
         e=xcb_poll_for_event(dis);
-        if(e)
+        if(e){
+            LOG(LOG_LEVEL_ALL,"Event ignmored %d %s\n",
+                e->response_type,eventTypeToString(e->response_type&127));
             free(e);
+        }
         else break;
     }
     unlock();
 }
-int waitForNormalEvents(int mask){
+
+int waitForNormalEvent(int type){
     flush();
-    while(mask){
+    while(type){
         xcb_generic_event_t*e=xcb_wait_for_event(dis);
         LOG(LOG_LEVEL_ALL,"Found event\n");
         if(!e)
             return 0;
-        LOG(LOG_LEVEL_ALL,"type %d (%d)%s\n",e->response_type,(1<<e->response_type),eventTypeToString(e->response_type));
-        mask&=~(1<<e->response_type);
-        LOG(LOG_LEVEL_ALL,"type %d; remaining mask:%d\n",e->response_type,mask);
+        LOG(LOG_LEVEL_ALL,"type %d %s\n",e->response_type,eventTypeToString(e->response_type));
+        int t=e->response_type&127;
         free(e);
+        if(type==t)
+            break;
     }
     return 1;
 }
@@ -177,13 +182,11 @@ Window createDock(int i,int size,int full){
     return win;
 }
 
-void flush(){
-    XFlush(dpy);
-    xcb_flush(dis);
-}
+
 extern void requestShutdown();
 void fullCleanup(){
     setLogLevel(LOG_LEVEL_NONE+1);
+    consumeEvents();
     //wake up other thread
     requestShutdown();
     xcb_ewmh_request_frame_extents(ewmh, defaultScreenNumber, root);
@@ -245,4 +248,12 @@ void checkProperties(WindowInfo*winInfo){
     assert(*atomTypes== winInfo->type);
     assert(strcmp(instace, winInfo->instanceName)==0);
     assert(strcmp(clazz, winInfo->className)==0);
+}
+int getActiveFocus(){
+    int win;
+    xcb_input_xi_get_focus_reply_t *reply;
+    reply=xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis, getActiveMasterKeyboardID()), NULL);
+    win=reply->focus;
+    free(reply);
+    return win;
 }

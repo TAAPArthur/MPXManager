@@ -12,6 +12,8 @@
 
 #include "bindings.h"
 
+enum{UP=-1,DOWN=1};
+
 #define RUN_RAISE_ANY(STR_TO_MATCH)    RUN_OR_RAISE_TYPE(STR_TO_MATCH,ANY,STR_TO_MATCH)
 #define RUN_OR_RAISE_CLASS(STR_TO_MATCH)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,CLASS|CASE_INSENSITIVE|LITERAL,STR_TO_MATCH)
 #define RUN_OR_RAISE_TITLE(STR_TO_MATCH,COMMAND)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,TITLE,COMMAND)
@@ -26,13 +28,13 @@
 #define BIND_TO_RULE_FUNC(F,...) BIND(F,(Rules*)(Rules[]){__VA_ARGS__})
 
 #define RUN_OR_RAISE_TYPE(STR_TO_MATCH,TYPE,COMMAND_STR) \
-    AND(BIND(runOrRaise,CREATE_RULE(STR_TO_MATCH,TYPE,NULL)), SPAWN(COMMAND_STR))
+    OR(BIND((int (*)(void*))findAndRaise,(&((Rule)CREATE_RULE(STR_TO_MATCH,TYPE,NULL)))), SPAWN(COMMAND_STR))
 
-#define SPAWN(COMMAND_STR)  BIND_FUNC(spawn,COMMAND_STR)
+#define SPAWN(COMMAND_STR)  BIND((void (*)(void*))spawn,COMMAND_STR)
 
 #define WORKSPACE_OPERATION(K,N) \
-    {  Mod4Mask,             K, BIND_FUNC(moveToWorkspace,N)}, \
-    {  Mod4Mask|ShiftMask,   K, BIND_FUNC(sendToWorkspace,N)}/*, \
+    {  Mod4Mask,             K, BIND(switchToWorkspace,N)}, \
+    {  Mod4Mask|ShiftMask,   K, BIND(moveWindowToWorkspace,N)}/*, \
     {  Mod4Mask|ControlMask,   K, BIND_TO_INT_FUNC(cloneToWorkspace,N)}, \
     {  Mod4Mask|Mod1Mask,   K, BIND_TO_INT_FUNC(swapWithWorkspace,N)}, \
     {  Mod4Mask|ControlMask|Mod1Mask,   K, BIND_TO_INT_FUNC(stealFromWorkspace,N)}, \
@@ -40,10 +42,10 @@
     {  Mod4Mask|ControlMask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(tradeWithWorkspace,N)}*/
 
 #define STACK_OPERATION(UP,DOWN,LEFT,RIGHT) \
-    {  Mod4Mask,             UP, BIND_FUNC(shiftPosition,1)}, \
-    {  Mod4Mask,             DOWN, BIND_FUNC(shiftPosition,-1)}, \
-    {  Mod4Mask,             LEFT, BIND_FUNC(shiftFocus,1)}, \
-    {  Mod4Mask,             RIGHT, BIND_FUNC(shiftFocus,-1)}/*, \
+    {  Mod4Mask,             UP, BIND(swapPosition,UP)}, \
+    {  Mod4Mask,             DOWN, BIND(swapPosition,DOWN)}, \
+    {  Mod4Mask,             LEFT, BIND(shiftFocus,UP)}, \
+    {  Mod4Mask,             RIGHT, BIND(shiftFocus,DOWN)}/*, \
     {  Mod4Mask|ShiftMask,             UP, BIND_TO_INT_FUNC(popMin,1)}, \
     {  Mod4Mask|ShiftMask,             DOWN, BIND_TO_INT_FUNC(pushMin,1)}, \
     {  Mod4Mask|ShiftMask,             LEFT, BIND_TO_INT_FUNC(sendToNextWorkNonEmptySpace,1)}, \
@@ -80,18 +82,28 @@ void cycleWindows( int delta);
 //////Run or Raise code
 
 /**
- *Attempts to find a that rule matches
+ * Attempts to find a that rule matches a managed window.
+ * First the active Master's window stack is checked ignoring the master's window cache.
+ * Then all windows are checked
+ * and finally the master's window complete window stack is checked
  * @param rule
  * @param numberOfRules
  * @return 1 if a matching window was found
  */
 int findAndRaise(Rule*rule);
+/**
+ * Checks all managed windows to see if any match the given rule; the first match is raised
+ * @param rule
+ * @return
+ */
 int findAndRaiseLazy(Rule*rule);
 Node* findWindow(Rule*rule,Node*searchList,Node*ignoreList);
 /**
  * Sends a kill signal to the focused window
  */
-void killFocusedWindow();
+void killFocusedWindow(void);
+
+int focusActiveWindow(WindowInfo *winInfo);
 
 /**
  * Forks and runs command in SHELL
@@ -102,17 +114,12 @@ void spawn(char* command);
 
 
 /**
- * Switch to workspace
- * @param context
- * @param index
+ * Send the active window to the first workspace with the given name
+ * @param name
+ * @param window
  */
-void moveToWorkspace(int index);
-/**
- * Send active window to workspace
- * @param context
- * @param index
- */
-void sendToWorkspace(int index);
+void sendWindowToWorkspaceByName(WindowInfo*winInfo,char*name);
+
 /**
  * Adds the window to new workspace without removing it
  */
@@ -124,8 +131,13 @@ void stealFromWorkspace(int index);
 void giveToWorkspace(int index);
 void tradeWithWorkspace(int index);
 
-void shiftPosition(int index);
-void shiftFocus(int index);
+void swapPosition(int index);
+/**
+ * Shifts the focus up or down the window stack
+ * @param index
+ * @return
+ */
+int shiftFocus(int index);
 void popMin();
 void pushMin();
 void sendToNextWorkNonEmptySpace(int index);
@@ -140,11 +152,11 @@ void sendToNextMonitor(int index);
 /**
  * Shifts the focused window to the top of the window stack
  */
-void shiftTop();
+void shiftTop(void);
 /**
  * Swaps the focused window with the top of the window stack
  */
-void swapWithTop();
+void swapWithTop(void);
 
 /**
  * Cycle through the layouts of the active workspace
@@ -161,23 +173,32 @@ void toggleLayout(Layout* layout);
 /**
  * Manually retile the active workspace
  */
-void retile();
+void retile(void);
 
-void focusBottom();
-void focusTop();
-void focusBottom();
-void sendtoBottom(int index);
-void sendFromBottomToTop();
+/**
+ * Get the next window in the stacking order in the given direction
+ * @param dir
+ * @return
+ */
+Node* getNextWindowInStack(int dir);
+
+/**
+ * Activates the window at the bottom of the Workspace stack
+ * @return 1 if successful
+ */
+int focusBottom(void);
+/**
+ * Activates the window at the top of the workspace stack
+ * @return 1 if successful
+ */
+int focusTop(void);
+void sendFromBottomToTop(void);
 
 
-int floatActiveWindow();
-int sinkFocusedWindow();
-
-int moveToLayer(int index);
-int sendWindowToWorkspaceByName(char*,int window);
-
-
-
+void setLastKnowMasterPosition(int x,int y,int relativeX,int relativeY);
+void setRefefrencePointForMaster(int x,int y,int relativeX,int relativeY);
+void moveWindowWithMouse(WindowInfo*winInfo);
+void resizeWindowWithMouse(WindowInfo*winInfo);
 
 
 #endif

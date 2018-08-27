@@ -53,7 +53,7 @@ typedef enum{
     /**Start a chain binding*/
     CHAIN,
     /**Start a auto chain binding*/
-    AUTO_CHAIN,
+    CHAIN_AUTO,
     /// && for bindings
     FUNC_AND,
     /// || for bindings
@@ -70,12 +70,23 @@ typedef enum{
     WIN_ARG,
     /**Call a function that takes a WindowInfo as an object */
     WIN_ARG_RETURN_INT,
+    /**Call a function that takes a WindowInfo and an int as a parameter */
+    WIN_INT_ARG,
+    /**Call a function that takes a WindowInfo and an int as a parameter and returns an int */
+    WIN_INT_ARG_RETURN_INT,
     /// Call a function that takes a non-function pointer as an argument
     VOID_ARG,
     /// Call a function that takes a non-function pointer as an argument
     VOID_ARGS_RETURN_INT
-    /// Call a function that takes a non-function pointer as an argument
 }BindingType;
+
+
+typedef union{
+    /**an int*/
+    int intArg;
+    /**a pointer*/
+    void* voidArg;
+}BoundFunctionArg;
 
 /**
  * Used to bind a function with arguments to a Rule or Binding
@@ -90,21 +101,12 @@ typedef struct bound_function_struct{
         int (*funcReturnInt)();
         /**An array of Bindings terminated with a by the last member having .endChain==1*/
         struct binding_struct *chainBindings;
-
+        ///Used with and/or bindings
         struct bound_function_struct *boundFunctionArr;
 
     } func;
     /**Arguments to pass into the bound function*/
-    union{
-        /**an int*/
-        int intArg;
-        /**a pointer*/
-        void* voidArg;
-        ///func pointer
-        void(*compositeFunc);
-        ///func pointer
-        int(*compositeFuncReturnInt);
-    } arg;
+    BoundFunctionArg arg;
     /**The type of Binding which is used to call the right function*/
     BindingType type;
     ///If true, then then the variable passed to callBoundedFuncion() will be pass to func
@@ -168,18 +170,24 @@ typedef struct{
             default:1 \
             ))
 
-#define BIND2(F,A) _BIND(F,A,0)
+#define BIND2(F,A) _BIND(F,A,\
+    _Generic((A), \
+        BoundFunction*:2,\
+        default:0 \
+        ))
+
 #define BIND_HELPER(_1,_2,_3,NAME,...) NAME
 
-#define _BIND(F,A,D) (BoundFunction){.func=(void (*)()) F, .arg={.voidArg=(void*)A},.dynamic=D, .type=\
+#define _BIND(F,A,D) {.func=(void (*)()) F, .arg={.voidArg=(void*)A},.dynamic=D, .type=\
    _Generic((F), \
-        struct binding_struct:CHAIN, \
         void (*)(void):NO_ARGS, \
         int (*)(void):NO_ARGS_RETURN_INT, \
         void (*)(int): INT_ARG, \
         int (*)(int): INT_ARGS_RETURN_INT, \
         void (*)(WindowInfo*): WIN_ARG, \
         int (*)(WindowInfo*): WIN_ARG_RETURN_INT, \
+        void (*)(WindowInfo*,int): WIN_INT_ARG, \
+        int (*)(WindowInfo*, int): WIN_INT_ARG_RETURN_INT, \
         void (*)(void*): VOID_ARG, \
         int (*)(void*): VOID_ARGS_RETURN_INT \
 )}
@@ -210,7 +218,7 @@ typedef struct{
  * @param AUTO when the chain is actiated, auto trigger the first binding
  * @param ... the members of the chain
  */
-#define AUTO_CHAIN_GRAB(GRAB,AUTO,...) {.func={.chainBindings=(Binding*)(Binding[]){__VA_ARGS__}},.arg={.intArg=GRAB},.type=AUTO?AUTO_CHAIN:CHAIN}
+#define AUTO_CHAIN_GRAB(GRAB,AUTO,...) {.func={.chainBindings=(Binding*)(Binding[]){__VA_ARGS__}},.arg={.intArg=GRAB},.type=AUTO?CHAIN_AUTO:CHAIN}
 /**
  * Used to create a Keybinding that will server as the terminator for the chain.
  * When this binding is triggered the chain will end
@@ -221,7 +229,7 @@ typedef struct{
  * When called, call the BoundFunctions will be triggered until one of them returns false
  * @param B
  */
-#define AND(B...) {.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=LEN(((BoundFunction[]){B}))},.type=FUNC_AND}
+#define AND(B...) {.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=sizeof(((BoundFunction[]){B}))/sizeof(BoundFunction)},.type=FUNC_AND}
 
 /**
  * When called, call the BoundFunctions will be triggered until one of them returns true
@@ -408,6 +416,7 @@ int applyRules(Node* head,WindowInfo*winInfo);
  * @param binding
  */
 void addBinding(Binding*binding);
+void addBindings(Binding*bindings,int num);
 
 /**
  * @return the last node added to the activeChain stack

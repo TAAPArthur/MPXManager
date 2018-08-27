@@ -14,13 +14,13 @@ RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS}
 LAYER0_SRCS := logger.c 
 LAYER1_SRCS := mywm-util.c util.c 
 LAYER2_SRCS := globals.c bindings.c xsession.c devices.c test-functions.c monitors.c events.c
-LAYER3_SRCS := state.c layouts.c wmfunctions.c default-rules.c
-LAYER4_SRCS := functions.c window-clone.c
+LAYER3_SRCS := state.c layouts.c wmfunctions.c functions.c default-rules.c
+LAYER4_SRCS := window-clone.c
 LIBSRCS :=  mywm.c config.c
 
 SRCS := mywm.c config.c ${LIBSRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 
-CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null | grep -v "Function 'spawn'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
+CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v "Function 'focusFollowMouse'"| grep -v "Function 'spawn'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 

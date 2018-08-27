@@ -11,38 +11,67 @@
 #include "../../logger.h"
 #include "../../globals.h"
 #include "../../wmfunctions.h"
+#include "../../functions.h"
+#include "../../layouts.h"
 #include "../../devices.h"
 #include "../../bindings.h"
 
 WindowInfo*winInfo;
 WindowInfo*winInfo2;
 Master* defaultMaster;
+static int completedInit=0;
+static void finishedInit(void){completedInit++;}
 static int count=0;
 static void dummy(void){count++;}
+static int getDummyCount(){return count;}
 static Binding testBinding={0,1,BIND(dummy),.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
 static void sampleStartupMethod(){addBinding(&testBinding);};
+
 static void deviceEventsetup(){
     LOAD_SAVED_STATE=0;
     CRASH_ON_ERRORS=1;
     DEFAULT_WINDOW_MASKS=SRC_ANY;
-    startUpMethod=sampleStartupMethod;
+
+    if(!startUpMethod)
+        startUpMethod=sampleStartupMethod;
+    NUMBER_OF_DEFAULT_LAYOUTS=0;
     onStartup();
 
     defaultMaster=getActiveMaster();
-    mapWindow(createNormalWindow());
-    mapWindow(createNormalWindow());
+    int win1=mapWindow(createNormalWindow());
+    int win2=mapWindow(createNormalWindow());
+    xcb_icccm_set_wm_protocols(dis, win2, ewmh->WM_PROTOCOLS, 1, &ewmh->_NET_WM_PING);
+    flush();
     scan();
 
-    winInfo=getValue(getAllWindows());
-    winInfo2=getValue(getAllWindows()->next);
+    winInfo=getWindowInfo(win1);
+    winInfo2=getWindowInfo(win2);
     assert(winInfo);
     assert(winInfo2);
 
     createMasterDevice("device2");
     createMasterDevice("device3");
     initCurrentMasters();
-    //runEventLoop(NULL);
+
+    flush();
+    static Rule postInitRule=CREATE_DEFAULT_EVENT_RULE(finishedInit);
+    addRule(Idle,&postInitRule);
     START_MY_WM
+    WAIT_UNTIL_TRUE(completedInit);
+
+}
+
+static void nonDefaultDeviceEventsetup(){
+
+
+    startUpMethod=addFocusFollowsMouseRule;
+    deviceEventsetup();
+    completedInit=0;
+    toggleLayout(&DEFAULT_LAYOUTS[GRID]);
+    flush();
+    WAIT_UNTIL_TRUE(completedInit);
+
+
 }
 
 static void deviceEventTeardown(){
@@ -178,7 +207,7 @@ START_TEST(test_device_event){
     flush();
     sendButtonPress(1);
     flush();
-    WAIT_UNTIL_TRUE(count);
+    WAIT_UNTIL_TRUE(getDummyCount());
 }END_TEST
 START_TEST(test_master_device_add_remove){
     int numMaster=getSize(getAllMasters());
@@ -203,6 +232,38 @@ START_TEST(test_focus_update){
     WAIT_UNTIL_TRUE(getFocusedWindow()==winInfo2);
 }END_TEST
 
+START_TEST(test_focus_follows_mouse){
+
+    int id1=winInfo->id;
+    int id2=winInfo2->id;
+    assert(focusWindow(id2));
+    short geo1[LEN(winInfo->geometry)],geo2[LEN(winInfo->geometry)];
+    memcpy(geo1, getGeometry(winInfo), LEN(geo1)*sizeof(short));
+    memcpy(geo2, getGeometry(winInfo2), LEN(geo2)*sizeof(short));
+
+    if(_i){
+        lock();
+        deleteWindow(id1);
+        deleteWindow(id2);
+        unlock();
+    }
+    movePointer(getActiveMasterPointerID(), root, 0,0);
+    movePointer(getActiveMasterPointerID(), root, geo1[0]+1, geo1[1]+1);
+    movePointer(getActiveMasterPointerID(), root, geo1[0]+10, geo1[1]+10);
+    movePointer(getActiveMasterPointerID(), root, geo2[0]+1, geo2[1]+1);
+    movePointer(getActiveMasterPointerID(), root, geo2[0]+10, geo2[1]+10);
+    LOG(LOG_LEVEL_ALL,"Size: %d\n\n",getSize(getAllWindows()));
+/*
+    LOG(LOG_LEVEL_NONE,"waiting\n\n");
+    if(_i){
+        WAIT_UNTIL_TRUE(getActiveFocus()==id1);
+    }
+    else
+        WAIT_UNTIL_TRUE(getFocusedWindow()==winInfo);
+*/
+
+}END_TEST
+
 static void clientSetup(){
     LOAD_SAVED_STATE=0;
     pid=fork();
@@ -223,7 +284,7 @@ static void clientSetup(){
 START_TEST(test_map_request){
     mapWindow(_i?createUnmappedWindow():createIgnoredWindow());
     flush();
-    waitForNormalEvents(1<<XCB_MAP_NOTIFY);
+    waitForNormalEvent(XCB_MAP_NOTIFY);
 }END_TEST
 START_TEST(test_configure_request){
     int win=mapWindow(_i?createUnmappedWindow():createIgnoredWindow());
@@ -233,7 +294,7 @@ START_TEST(test_configure_request){
         XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT |
         XCB_CONFIG_WINDOW_BORDER_WIDTH|XCB_CONFIG_WINDOW_STACK_MODE;
     assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
-    waitForNormalEvents(1<<XCB_CONFIGURE_NOTIFY);
+    waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
 }END_TEST
 
 START_TEST(test_client_activate_window){
@@ -249,6 +310,7 @@ START_TEST(test_client_activate_window){
     setClientPointerForWindow(winInfo->id);
     setActiveMaster(mainMaster);
     int index=getActiveWorkspaceIndex();
+    assert(index==0);
     switchToWorkspace(!index);
     xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, winInfo2->id, 1, 0, winInfo->id);
     flush();
@@ -270,12 +332,12 @@ START_TEST(test_client_close_window){
     DEFAULT_WINDOW_MASKS|=SRC_ANY;
     if(!fork()){
         openXDisplay();
-        int id=createNormalWindow();
+        int id=_i?createNormalWindow():createIgnoredWindow();
         flush();
         registerForWindowEvents(id, XCB_EVENT_MASK_STRUCTURE_NOTIFY);
         xcb_ewmh_request_close_window(ewmh, defaultScreenNumber, id, 0, 0);
         flush();
-        waitForNormalEvents(1<<XCB_DESTROY_NOTIFY);
+        waitForNormalEvent(XCB_DESTROY_NOTIFY);
         closeConnection();
         exit(0);
     }
@@ -306,24 +368,35 @@ START_TEST(test_client_set_window_state){
 }END_TEST
 
 START_TEST(test_auto_tile){
-    Layout layout={0};
+
     int count=0;
-    void fakeLayout(Monitor*m  __attribute__((unused)),Node*n  __attribute__((unused)),int*i  __attribute__((unused))){
+    void fakeLayout(){
         count++;
     }
-    void addFakeLayout(){
+    Layout layout={.layoutFunction=fakeLayout,.name="Dummy"};
 
-        layout.layoutFunction=fakeLayout;
+    void addFakeLayout(){
+        assert(isNotEmpty(eventRules[onXConnection]));
+        assert(getNumberOfWorkspaces());
         for(int i=0;i<getNumberOfWorkspaces();i++){
             addLayoutsToWorkspace(i, &layout, 1);
             assert(getActiveLayoutOfWorkspace(i)->layoutFunction);
         }
     }
+    void addDummyWindows(){
+        static Rule rule=CREATE_DEFAULT_EVENT_RULE(createNormalWindow);
+        addRule(onXConnection, &rule);
+    }
+    preStartUpMethod=addDummyWindows;
     startUpMethod=addFakeLayout;
+
     onStartup();
+    assert(getActiveLayoutOfWorkspace(0)==&layout);
     assert(getActiveLayoutOfWorkspace(0)->layoutFunction);
-    assert(isNotEmpty(eventRules[onXConnection]));
-    assert(count==getSize(getAllMonitors()));
+
+
+    LOG(LOG_LEVEL_ERROR,"%d\n\n\n",count);
+    assert(count);
 }END_TEST
 START_TEST(test_client_show_desktop){
     xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 1);
@@ -335,19 +408,18 @@ START_TEST(test_client_show_desktop){
 }END_TEST
 
 START_TEST(test_client_request_frame_extents){
-    consumeEvents();
     static Rule properyChangeDummyRule=CREATE_DEFAULT_EVENT_RULE(dummy);
     addRule(XCB_PROPERTY_NOTIFY, &properyChangeDummyRule);
     xcb_ewmh_request_frame_extents(ewmh, defaultScreenNumber, winInfo->id);
     flush();
-    WAIT_UNTIL_TRUE(count);
+    WAIT_UNTIL_TRUE(getDummyCount());
 }END_TEST
 
 START_TEST(test_client_request_restack){
-
-    raiseWindow(winInfo2->id);
+    assert(raiseWindow(winInfo2->id));
     addMask(winInfo, EXTERNAL_RAISE_MASK);
-    consumeEvents();
+    LOG(LOG_LEVEL_DEBUG,"win: %d\n",winInfo->id);
+    //processConfigureRequest(winInfo->id, NULL, winInfo2->id, XCB_STACK_MODE_ABOVE,  XCB_CONFIG_WINDOW_STACK_MODE|XCB_CONFIG_WINDOW_SIBLING);
     xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, winInfo->id, winInfo2->id, XCB_STACK_MODE_ABOVE);
     flush();
     WAIT_UNTIL_TRUE(isWindowVisible(winInfo));
@@ -366,6 +438,15 @@ START_TEST(test_client_request_move_resize){
 
     WAIT_UNTIL_TRUE(memcmp(values, winInfo->geometry, sizeof(short)*LEN(values))==0)
 
+}END_TEST
+START_TEST(test_client_ping){
+    WindowInfo*rootInfo=createWindowInfo(root);
+    addWindowInfo(rootInfo);
+    addMask(rootInfo,WM_PING_MASK);
+    xcb_ewmh_send_wm_ping(ewmh, root, 0);
+    flush();
+
+    WAIT_UNTIL_TRUE(rootInfo->pingTimeStamp)
 }END_TEST
 
 Suite *defaultRulesSuite() {
@@ -400,7 +481,6 @@ Suite *defaultRulesSuite() {
     tcase_add_checked_fixture(tc_core, clientSetup, fullCleanup);
     tcase_add_loop_test(tc_core, test_map_request,0,2);
     tcase_add_loop_test(tc_core, test_configure_request,0,2);
-
     suite_add_tcase(s, tc_core);
 
 
@@ -411,27 +491,28 @@ Suite *defaultRulesSuite() {
     tcase_add_test(tc_core, test_focus_update);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Client Messages");
+    tc_core = tcase_create("Non_Default_Device_Events");
+    tcase_add_checked_fixture(tc_core, nonDefaultDeviceEventsetup, deviceEventTeardown);
+    tcase_add_loop_test(tc_core, test_focus_follows_mouse,0,2);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("Client_Messages");
     tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
     tcase_add_test(tc_core, test_client_activate_window);
     tcase_add_test(tc_core, test_client_change_desktop);
-
     tcase_add_test(tc_core, test_client_set_window_workspace);
     tcase_add_test(tc_core, test_client_set_window_state);
     tcase_add_test(tc_core, test_client_show_desktop);
     tcase_add_test(tc_core, test_client_request_frame_extents);
     tcase_add_test(tc_core, test_client_request_restack);
     tcase_add_test(tc_core, test_client_request_move_resize);
+    tcase_add_test(tc_core, test_client_ping);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Special Client Messages");
     tcase_add_checked_fixture(tc_core, onStartup, deviceEventTeardown);
-    tcase_add_test(tc_core, test_client_close_window);
+    tcase_add_loop_test(tc_core, test_client_close_window,0,2);
     suite_add_tcase(s, tc_core);
-
-
-
 
     return s;
 }
-
