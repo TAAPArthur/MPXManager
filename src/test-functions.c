@@ -6,9 +6,12 @@
 #include "mywm-util.h"
 #include "logger.h"
 
+void sendDeviceActionToWindow(int id,int detail,int type,int window){
+    catchError(xcb_test_fake_input_checked(dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id));
+}
 void sendDeviceAction(int id,int detail,int type){
     LOG(LOG_LEVEL_TRACE,"Sending action: %d %d %d\n",id,detail,type);
-    catchError(xcb_test_fake_input_checked(dis, type, detail, XCB_CURRENT_TIME, XCB_NONE, 0, 0, id));
+    sendDeviceActionToWindow(id,detail,type,XCB_NONE);
 }
 
 void sendButtonPress(int button){

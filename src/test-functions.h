@@ -8,6 +8,15 @@
 #ifndef TEST_FUNCTIONS_H_
 #define TEST_FUNCTIONS_H_
 /**
+ * \copydoc sendDeviceAction()
+ * @param id
+ * @param detail
+ * @param type
+ * @param window
+ */
+void sendDeviceActionToWindow(int id,int detail,int type,int window);
+
+/**
  * Wrappers around xcb_test_fake_input
  * Will send detail to the active window
  *
