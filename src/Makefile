@@ -31,7 +31,10 @@ all: test mywm
 
 mywm: ${SRCS}
 	gcc $^ -o $@  ${RELEASE_FLAGS} ${LDFLAGS}
-	
+
+quick-test: QUICK=1
+quick-test: test	
+
 test: unitTest1 unitTest2 unitTest3 unitTest4
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
