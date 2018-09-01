@@ -182,6 +182,19 @@ START_TEST(test_cirular_insert_in_place){
     deleteList(head);
 }END_TEST
 
+START_TEST(test_cirular_insert_end){
+    Node*head=createCircularHead(NULL);
+    for(int i=1;i<=size;i++){
+        insertTail(head, createStruct(i));
+        assert(getIntValue(head)==1);
+        assert(getSize(head)==i);
+    }
+    int i=1;
+    FOR_AT_MOST(head,size,assert(i++==getIntValue(head)));
+    deleteList(head);
+
+}END_TEST
+
 
 /**Teests get size, and insert head*/
 START_TEST(test_create_list){
@@ -576,6 +589,7 @@ Suite *utilSuite() {
     tcase_add_test(tc_core, test_single_node_insertion);
     tcase_add_test(tc_core, test_insert_unique);
     tcase_add_test(tc_core,test_cirular_insert_in_place);
+    tcase_add_test(tc_core,test_cirular_insert_end);
     tcase_add_test(tc_core, test_create_list);
     suite_add_tcase(s, tc_core);
 

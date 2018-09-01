@@ -179,6 +179,12 @@ void insertAfter(Node* node,Node* newNode){
     _join(end,node->next);
     _join(node,newNode);
 }
+
+void insertTail(Node* head,void *value){
+    if(isNotEmpty(head))
+        insertBefore(head, createHead(value));
+    else head->value=value;
+}
 void insertHead(Node* head,void *value){
     assert(head!=NULL);
     assert(value!=NULL);

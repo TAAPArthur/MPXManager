@@ -67,6 +67,13 @@ Node* createCircularHead(void*value);
 void insertHead(Node* head,void *value);
 
 /**
+ * Adds a new new to the end of the list.
+ * Using this method on non-circular list is undefined behavior
+ * @param head
+ * @param value
+ */
+void insertTail(Node* head,void *value);
+/**
  * Given list A--B--C, and D--E--F, list insertBefore(A,E) will result in
  * A--E--F--B--C and D
  *
