@@ -2,17 +2,18 @@ CC := gcc -std=c11
 OPTIMIZATION_FLAGS ?= -Os
 DEBUGGING_FLAGS ?= -g -rdynamic -Og
 IGNORED_FLAGS ?= -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-int-to-pointer-cast -Wno-cast-function-type
-ERROR_FLAGS ?= -Werror -Wall -Wextra 
+ERROR_FLAGS ?= -Werror -Wall -Wextra
 CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS}
 
-TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -D MPX_TESTING --coverage -Wno-unused-function 
-TESTLIBS ?= -lcheck -lm -lrt 
+TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -D MPX_TESTING --coverage -Wno-unused-function
+TESTLIBS ?= -lcheck -lm
 LDFLAGS ?= -s -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 #-pedantic
-RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} 
+RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} -DNDEBUG
+DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
 
-LAYER0_SRCS := logger.c 
-LAYER1_SRCS := mywm-util.c util.c 
+LAYER0_SRCS := logger.c
+LAYER1_SRCS := mywm-util.c util.c
 LAYER2_SRCS := globals.c bindings.c xsession.c devices.c test-functions.c monitors.c events.c
 LAYER3_SRCS := state.c layouts.c wmfunctions.c functions.c default-rules.c
 LAYER4_SRCS := window-clone.c
@@ -27,20 +28,22 @@ RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=1
 RUN_XTEST = Tests/xisolate $(call RUN_TEST, ./$@ )
 RUN_XTEST_NO_DISPLAY = Tests/xisolate --no-xserver $(call RUN_TEST, ./$@ --test-no-xdisplay )
 
-all: test mywm 
+all: quick-test mywm
 
 mywm: ${SRCS}
 	gcc $^ -o $@  ${RELEASE_FLAGS} ${LDFLAGS}
+debug: ${SRCS}
+	gcc $^ -o $@  ${DEBUG_FLAGS} ${LDFLAGS}
 
 quick-test: QUICK=1
-quick-test: test	
+quick-test: test
 
-test: unitTest1 unitTest2 unitTest3 unitTest4
+test: unitTest1 unitTest2 unitTest3 #unitTest4
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
-	${CC}  $^ -o $@ ${TESTFLAGS} ${TESTLIBS} 
+	${CC}  $^ -o $@ ${TESTFLAGS} ${TESTLIBS}
 	$(call RUN_TEST, ./$@ )
-	$(call CHECK_TEST_COVERAGE,${LAYER1_SRCS}) 
+	$(call CHECK_TEST_COVERAGE,${LAYER1_SRCS})
 
 unitTest2: Tests/*.c Tests/Layer2Tests/*.c ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
