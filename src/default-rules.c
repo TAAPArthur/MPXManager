@@ -203,7 +203,7 @@ void onFocusInEvent(void){
     xcb_input_focus_in_event_t*event= getLastEvent();
     LOG(LOG_LEVEL_TRACE,"id %d window %d %d\n",event->deviceid,event->event,event->event);
     setActiveMasterByDeviceId(event->deviceid);
-    onWindowFocus(event->event);
+    updateFocusState(getWindowInfo(event->event));
     setActiveWindowProperty(event->event);
     //setBorder(event->child);
 }

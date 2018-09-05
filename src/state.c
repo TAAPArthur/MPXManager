@@ -11,6 +11,7 @@
 /// \endcond
 
 #include "mywm-util.h"
+#include "wmfunctions.h"
 #include "logger.h"
 
 
@@ -62,18 +63,20 @@ State* computeState(){
             states[n].monitor=getMonitorFromWorkspace(getWorkspaceByIndex(i))->name;
             Node*node=getWindowStack(getWorkspaceByIndex(i));
             int size=getSize(node);
-            states[n].size=size;
+            int j=0;
             if(size){
                 states[n].windowIds=malloc(size*sizeof(int));
                 states[n].windowMasks=malloc(size*sizeof(int));
-                int j=0;
                 FOR_EACH(node,
                     WindowInfo*winInfo=getValue(node);
-                    states[n].windowIds[j]=winInfo->id;
-                    states[n].windowMasks[j]=winInfo->mask;
-                    j++;
+                    if(isTileable(winInfo)){
+                        states[n].windowIds[j]=winInfo->id;
+                        states[n].windowMasks[j]=getUserMask(winInfo);
+                        j++;
+                    }
                 )
             }
+            states[n].size=j;
             n++;
 
         }

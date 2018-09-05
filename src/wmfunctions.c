@@ -20,6 +20,7 @@
 #include "ewmh.h"
 #include "mywm-util.h"
 #include "wmfunctions.h"
+#include "functions.h"
 #include "devices.h"
 #include "logger.h"
 #include "xsession.h"
@@ -43,8 +44,14 @@ int isMappable(WindowInfo* winInfo){
 int isMapped(WindowInfo* winInfo){
     return winInfo && hasMask(winInfo, MAPPED_MASK);
 }
+int isInteractable(WindowInfo* winInfo){
+    return isMapped(winInfo) && !(winInfo->mask & HIDDEN_MASK);
+}
 int isTileable(WindowInfo*winInfo){
-    return isMapped(winInfo) && !hasMask(winInfo, NO_TILE_MASK);
+    return isInteractable(winInfo) && !hasMask(winInfo, NO_TILE_MASK);
+}
+int isActivatable(WindowInfo* winInfo){
+    return !winInfo || winInfo->mask & MAPABLE_MASK && !(winInfo->mask & HIDDEN_MASK);
 }
 
 int isExternallyResizable(WindowInfo* winInfo){
@@ -62,12 +69,6 @@ int isExternallyRaisable(WindowInfo* winInfo){
     return !winInfo || winInfo->mask & EXTERNAL_RAISE_MASK;
 }
 
-int isInteractable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & MAPPED_MASK && !(winInfo->mask & HIDDEN_MASK);
-}
-int isActivatable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & MAPABLE_MASK && !(winInfo->mask & HIDDEN_MASK);
-}
 int getMask(WindowInfo*winInfo){
     return winInfo->mask;
 }
@@ -77,6 +78,9 @@ int hasMask(WindowInfo* winInfo,int mask){
 void resetUserMask(WindowInfo* winInfo){
     if(winInfo)
         memcpy(&winInfo->mask, &DEFAULT_WINDOW_MASKS, sizeof(char));
+}
+int getUserMask(WindowInfo*winInfo){
+    return (char)getMask(winInfo);
 }
 int isUserMask(int mask){
     return ((char)mask)?1:0;
@@ -757,9 +761,10 @@ void tileWorkspace(int index){
     if(!layout->layoutFunction)
         LOG(LOG_LEVEL_WARN,"WARNING there is not a set layout function\n");
     if(layout->layoutFunction)
-        if(!layout->conditionFunction || layout->conditionFunction(layout->conditionArg))
+        if(!layout->conditionFunction || layout->conditionFunction(layout->conditionArg)){
             layout->layoutFunction(m,
                 getWindowStack(workspace),layout->args);
+        }
         else
             LOG(LOG_LEVEL_TRACE,"condition not met to use layout %s \n",layout->name);
     for(int i=NORMAL_LAYER-1;i>=DESKTOP_LAYER;i--){

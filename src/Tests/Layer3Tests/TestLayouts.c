@@ -3,6 +3,7 @@
 
 #include "../../layouts.h"
 #include "../../wmfunctions.h"
+#include "../../functions.h"
 #include "../../monitors.h"
 #include "../../state.h"
 
@@ -88,6 +89,7 @@ START_TEST(test_fixed_position_windows){
 
 
 }END_TEST
+
 
 Suite *layoutSuite() {
     Suite*s = suite_create("Layouts");

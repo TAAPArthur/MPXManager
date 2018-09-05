@@ -18,8 +18,8 @@
 
 #define TILE_MASK   XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT|XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y
 Layout (DEFAULT_LAYOUTS[])={
-        {.name="Full",.layoutFunction=full,.args=(int*)(int[]){0,0}},
-        {.name="Grid",.layoutFunction=grid,.args=(int*)(int[]){0,0,CONFIG_WIDTH}},
+    {.name="Full",.layoutFunction=full,.args=(int*)(int[]){0,0}},
+    {.name="Grid",.layoutFunction=grid,.args=(int*)(int[]){0,0,CONFIG_WIDTH}},
 
 //        {.name="Master",.layoutFunction=masterPane},
 };

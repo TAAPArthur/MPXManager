@@ -166,7 +166,7 @@ typedef struct{
     ///@}
 
 } Monitor;
-
+//
 ///holds meta data to to determine what tiling function to call and and when/how to call it
 typedef struct {
     /**
@@ -176,7 +176,7 @@ typedef struct {
      */
     int* args;
     /**
-     * The name of the layout. Used solefly for user
+     * The name of the layout. Used solely for user
      */
     char* name;
     /**

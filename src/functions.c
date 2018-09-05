@@ -159,7 +159,6 @@ void cycleLayouts(int dir){
     else
         FOR_AT_MOST_REVERSED(n,-dir)
 
-
     getActiveWorkspace()->layouts=n;
     if(setActiveLayout(getValue(n)))
         retile();

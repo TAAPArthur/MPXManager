@@ -83,7 +83,6 @@ typedef enum {
  */
 #define WM_NAME "MPX Manger"
 
-
 /**
  * @param winInfo
  * @return 1 iff the window is PARTIALLY_VISIBLE or VISIBLE
@@ -136,10 +135,16 @@ int getMask(WindowInfo*winInfo);
  */
 int hasMask(WindowInfo* win,int mask);
 /**
+ * Returns the subset of mask that refers to user set masks
+ */
+int getUserMask(WindowInfo*winInfo);
+
+/**
  * Resets the user controlled state to the defaults
  * @param winInfo
  */
 void resetUserMask(WindowInfo* winInfo);
+
 /**
  * Adds the states give by mask to the window
  * @param winInfo
@@ -262,6 +267,12 @@ int getSavedWorkspaceIndex(xcb_window_t win);
  */
 void updateMapState(int id,int state);
 
+/**
+ * Updates our view of the focused window
+ * @param winInfo
+ * @see onWindowFocus()
+ */
+void updateFocusState(WindowInfo*winInfo);
 
 /**
  * Tiles the specified workspace.

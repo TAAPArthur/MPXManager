@@ -30,6 +30,7 @@ START_TEST(test_mask_change){
     WindowInfo*winInfo=createWindowInfo(createNormalWindow());
     addWindowInfo(winInfo);
     addWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
+    addMask(winInfo,MAPPED_MASK);
     assert(!hasMask(winInfo, 1));
     assert(updateState(NULL));
     addMask(winInfo, 1);
@@ -52,6 +53,7 @@ START_TEST(test_state_change_num_windows){
     for(int i=1;i<10;i++){
         WindowInfo*winInfo=createWindowInfo(i);
         addWindowInfo(winInfo);
+        addMask(winInfo,MAPPED_MASK);
         assert(isWorkspaceVisible(0));
         addWindowToWorkspace(winInfo, 0);
         markState();
@@ -63,6 +65,7 @@ START_TEST(test_on_state_change){
     updateState(NULL);
     WindowInfo*winInfo=createWindowInfo(1);
     addWindowInfo(winInfo);
+    addMask(winInfo,MAPPED_MASK);
     assert(isWorkspaceVisible(0));
     addWindowToWorkspace(winInfo, 0);
     markState();
