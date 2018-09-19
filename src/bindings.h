@@ -259,7 +259,7 @@ typedef struct{
 /**
  * Macro to create a rule that will be interpreted literally
  */
-#define CREATE_LITERAL_RULE(E,T,F) {E,(T|LITERAL),F}
+#define CREATE_LITERAL_RULE(E,T,...) {E,(T|LITERAL),__VA_ARGS__}
 
 /**
  * Compiles rules

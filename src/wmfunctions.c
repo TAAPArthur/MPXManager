@@ -333,9 +333,9 @@ void registerWindow(WindowInfo*winInfo){
     //todo move to own method
     registerForWindowEvents(win, NON_ROOT_EVENT_MASKS);
     passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
-    APPLY_RULES_OR_RETURN(RegisteringWindow,winInfo);
 
     moveWindowToWorkspaceAtLayer(winInfo, winInfo->workspaceIndex,NORMAL_LAYER);
+    APPLY_RULES_OR_RETURN(RegisteringWindow,winInfo);
 }
 
 typedef struct {
@@ -694,7 +694,10 @@ void setBorderColor(xcb_window_t win,unsigned int color){
 
 static void tileNonNormalLayers(WindowInfo*winInfo,int above){
     if(winInfo->transientFor){
-        int values[]={winInfo->transientFor,XCB_STACK_MODE_ABOVE};
+        //check to see if the transient for window refers to a window or a group
+        Node*n=getWindowStack(getActiveWorkspace());
+        UNTIL_FIRST(n,((WindowInfo*)getValue(n))->groupId==winInfo->transientFor)
+        int values[]={n?((WindowInfo*)getValue(n))->id:winInfo->transientFor,XCB_STACK_MODE_ABOVE};
         xcb_configure_window(dis, winInfo->id,XCB_CONFIG_WINDOW_SIBLING|XCB_CONFIG_WINDOW_STACK_MODE,values);
     }
     else

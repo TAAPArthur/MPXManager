@@ -166,10 +166,10 @@ void loadSettings(){
     addBindings(customBindings,LEN(customBindings));
     static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);
     addRule(ProcessingWindow,&ignoreRule);
-    static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow));
-    addRule(ProcessingWindow, &dialogRule);
-    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow));
-    addRule(ProcessingWindow, &notificationRule);
+    static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
+    addRule(RegisteringWindow, &dialogRule);
+    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
+    addRule(RegisteringWindow, &notificationRule);
     /*
     ADD_WINDOW_RULE(ProcessingWindow, CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND_TO_WIN_FUNC(floatWindow)));
     ADD_WINDOW_RULE(ProcessingWindow, CREATE_RULE(".*__WM_IGNORE.*",TITLE,NULL));
