@@ -168,6 +168,8 @@ void loadSettings(){
     addRule(ProcessingWindow,&ignoreRule);
     static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow));
     addRule(ProcessingWindow, &dialogRule);
+    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow));
+    addRule(ProcessingWindow, &notificationRule);
     /*
     ADD_WINDOW_RULE(ProcessingWindow, CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND_TO_WIN_FUNC(floatWindow)));
     ADD_WINDOW_RULE(ProcessingWindow, CREATE_RULE(".*__WM_IGNORE.*",TITLE,NULL));
