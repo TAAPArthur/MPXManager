@@ -1,5 +1,5 @@
 #include "globals.h"
-
+#include <unistd.h>
 
 
 char LOAD_SAVED_STATE=1;
@@ -52,7 +52,10 @@ Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 void (*preStartUpMethod)();
 void (*startUpMethod)();
+void (*printStatusMethod)();
+int statusPipeFD[2];
 void init(){
+    pipe(statusPipeFD);
     SHELL=getenv("SHELL");
     deviceBindings=createCircularHead(NULL);
     for(int i=0;i<NUMBER_OF_EVENT_RULES;i++)

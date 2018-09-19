@@ -32,6 +32,11 @@
             return;
 static Node initialMappingOrder;
 
+static inline void printStatus(){
+    if(printStatusMethod)
+        printStatusMethod();
+}
+
 int isWindowVisible(WindowInfo* winInfo){
     return winInfo && hasMask(winInfo, PARTIALLY_VISIBLE);
 }
@@ -740,6 +745,8 @@ void tileWorkspace(int index){
         Node*n=workspace->windows[i];
         FOR_EACH(n,tileNonNormalLayers(getValue(n),1));
     }
+
+    printStatus();
 }
 
 void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int mask){

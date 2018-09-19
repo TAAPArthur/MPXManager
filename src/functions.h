@@ -16,7 +16,7 @@ enum{UP=-1,DOWN=1};
 
 #define RUN_RAISE_ANY(STR_TO_MATCH)    RUN_OR_RAISE_TYPE(STR_TO_MATCH,ANY,STR_TO_MATCH)
 #define RUN_OR_RAISE_CLASS(STR_TO_MATCH)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,CLASS|CASE_INSENSITIVE|LITERAL,STR_TO_MATCH)
-#define RUN_OR_RAISE_TITLE(STR_TO_MATCH,COMMAND)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,TITLE,COMMAND)
+#define RUN_OR_RAISE_TITLE(STR_TO_MATCH,COMMAND)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,TITLE|LITERAL,COMMAND)
 
 
 /**
@@ -111,7 +111,10 @@ int focusActiveWindow(WindowInfo *winInfo);
  */
 void spawn(char* command);
 
-
+/**
+ * Like spawn but the child's stdin refers to our stdout
+ */
+void spawnPipe(char* command);
 
 /**
  * Send the active window to the first workspace with the given name

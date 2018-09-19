@@ -157,11 +157,16 @@ Binding onKeyPressBindings[] = {
     //{Mod4Mask,XK_m, RUN_OR_RAISE_CLASS("thunderbird")},
 };
 */
-
+void printFunction(){
+    if(getFocusedWindow())
+        dprintf(STATUS_FD,"%s\n",getFocusedWindow()->title);
+}
 int ignoreFunction(WindowInfo*winInfo){
    return winInfo->implicitType;
 }
 void loadSettings(){
+    spawnPipe("xmobar");
+    printStatusMethod=printFunction;
     addBindings(bindings,LEN(bindings));
     addBindings(customBindings,LEN(customBindings));
     static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);

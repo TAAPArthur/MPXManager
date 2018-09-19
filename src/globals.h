@@ -17,7 +17,7 @@
 
 ///Returns the length of the array
 #define LEN(X) (sizeof X / sizeof X[0])
-
+#define STATUS_FD statusPipeFD[1]
 ///If true, then check used saved window properties as defaults
 extern char LOAD_SAVED_STATE;
 extern long KILL_TIMEOUT;
@@ -101,6 +101,7 @@ extern int defaultScreenNumber;
 /**Border width when borders for windows*/
 extern int DEFAULT_BORDER_WIDTH;
 
+extern int statusPipeFD[2];
 void init();
 
 /**
@@ -117,5 +118,5 @@ void* getLastEvent();
 
 extern void (*preStartUpMethod)();
 extern void (*startUpMethod)();
-
+extern void (*printStatusMethod)();
 #endif
