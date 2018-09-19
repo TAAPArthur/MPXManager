@@ -1,13 +1,13 @@
 CC := gcc -std=c11
 OPTIMIZATION_FLAGS ?= -Os
-DEBUGGING_FLAGS ?= -g -rdynamic -Og
+DEBUGGING_FLAGS ?= -g -rdynamic -O0
 IGNORED_FLAGS ?= -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-int-to-pointer-cast -Wno-cast-function-type
 ERROR_FLAGS ?= -Werror -Wall -Wextra
 CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS}
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -D MPX_TESTING -D_DEFAULT_SOURCE --coverage -Wno-unused-function
 TESTLIBS ?= -lcheck -lm
-LDFLAGS ?= -s -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
+LDFLAGS ?= -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 #-pedantic
 RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} -DNDEBUG
 DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
@@ -66,4 +66,4 @@ unitTest4: Tests/*.c Tests/Layer4Tests/* ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_
 .DELETE_ON_ERROR:
 
 clean:
-	rm -f mywm unitTest* *gc?? vgcore*
+	rm -f mywm debug unitTest* *gc?? vgcore*
