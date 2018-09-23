@@ -174,7 +174,7 @@ void syncState();
  * Queries the XServer for all top level windows and process all of them
  * that do not have override redirect
  */
-void scan();
+void scan(xcb_window_t baseWindow);
 
 /**
  * Sets the EWMH property to be the given window

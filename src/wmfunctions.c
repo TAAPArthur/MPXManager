@@ -122,13 +122,14 @@ void syncState(){
     activateWorkspace(currentWorkspace);
 }
 
-void scan() {
+void scan(xcb_window_t baseWindow) {
+    LOG(LOG_LEVEL_DEBUG,"Scanning children of %d\n",baseWindow);
     xcb_query_tree_reply_t *reply;
-    reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
+    reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, baseWindow), 0);
     assert(reply && "could not query tree");
     if (reply) {
         int numberOfChildren = xcb_query_tree_children_length(reply);
-        LOG(LOG_LEVEL_DEBUG,"detected %d kids\n",numberOfChildren);
+        LOG(LOG_LEVEL_TRACE,"detected %d kids\n",numberOfChildren);
         xcb_window_t *children = xcb_query_tree_children(reply);
         xcb_get_window_attributes_reply_t *attr;
         xcb_get_window_attributes_cookie_t cookies[numberOfChildren];
@@ -150,6 +151,8 @@ void scan() {
                     addMask(winInfo, MAPABLE_MASK);
 
                 processNewWindow(winInfo);
+                if(isInList(getAllWindows(),children[i]))
+                    scan(children[i]);
             }
             free(attr);
         }

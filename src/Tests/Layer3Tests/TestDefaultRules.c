@@ -42,7 +42,7 @@ static void deviceEventsetup(){
     int win2=mapWindow(createNormalWindow());
     xcb_icccm_set_wm_protocols(dis, win2, ewmh->WM_PROTOCOLS, 1, &ewmh->_NET_WM_PING);
     flush();
-    scan();
+    scan(root);
 
     winInfo=getWindowInfo(win1);
     winInfo2=getWindowInfo(win2);

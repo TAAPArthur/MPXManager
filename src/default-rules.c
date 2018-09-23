@@ -67,7 +67,7 @@ void addFocusFollowsMouseRule(void){
 }
 
 void onXConnect(void){
-    scan();
+    scan(root);
     for(int i=0;i<getNumberOfWorkspaces();i++)
         tileWorkspace(i);
 }

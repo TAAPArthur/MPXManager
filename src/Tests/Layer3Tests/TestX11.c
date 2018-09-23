@@ -148,7 +148,7 @@ START_TEST(test_sync_state){
     assert(xcb_request_check(dis,xcb_ewmh_set_wm_desktop(ewmh, win, windowWorkspace))==NULL);
     //setLogLevel(LOG_LEVEL_TRACE);
     syncState();
-    scan();
+    scan(root);
 
     assert(isInList(getAllWindows(),win));
     assert(getActiveWorkspaceIndex()==activeWorkspace);
@@ -190,7 +190,7 @@ START_TEST(test_window_state){
 
 START_TEST(test_window_state_sync){
     int win=createNormalWindow();
-    scan();
+    scan(root);
     WindowInfo*winInfo=getWindowInfo(win);
     moveWindowToLayer(winInfo, getActiveWorkspaceIndex(), UPPER_LAYER);
     addMask(winInfo, -1);
@@ -245,7 +245,7 @@ START_TEST(test_process_window){
 }END_TEST
 START_TEST(test_window_scan){
     assert(!isNotEmpty(getAllWindows()));
-    scan();
+    scan(root);
     assert(!isNotEmpty(getAllWindows()));
     int win=createUnmappedWindow();
     int win2=createUnmappedWindow();
@@ -255,7 +255,7 @@ START_TEST(test_window_scan){
     assert(!isWindowMapped(win3));
     mapWindow(win);
     xcb_flush(dis);
-    scan();
+    scan(root);
     assert(isInList(getAllWindows(), win));
     assert(isInList(getAllWindows(), win2));
     assert(isInList(getAllWindows(), win3));
@@ -263,7 +263,7 @@ START_TEST(test_window_scan){
 
 START_TEST(test_focus_window){
     int win=mapArbitraryWindow();
-    scan();
+    scan(root);
     focusWindow(win);
     xcb_input_xi_get_focus_reply_t*reply=xcb_input_xi_get_focus_reply(dis,
             xcb_input_xi_get_focus(dis, getActiveMasterKeyboardID()), NULL);
@@ -276,7 +276,7 @@ START_TEST(test_focus_window){
 START_TEST(test_focus_window_request){
     //TODO update when the X11 request focus methods supports multi focus
     int win=mapArbitraryWindow();
-    scan();
+    scan(root);
     focusWindowInfo(getWindowInfo(win));
     xcb_input_xi_get_focus_reply_t*reply=xcb_input_xi_get_focus_reply(dis,
             xcb_input_xi_get_focus(dis, getActiveMasterKeyboardID()), NULL);
@@ -288,7 +288,7 @@ START_TEST(test_focus_window_request){
 START_TEST(test_activate_window){
     int win=createUnmappedWindow();
     int win2=createNormalWindow();
-    scan();
+    scan(root);
     assert(!activateWindow(getWindowInfo(win)));
     assert(activateWindow(getWindowInfo(win2)));
 }END_TEST
@@ -325,7 +325,7 @@ START_TEST(test_delete_window_request){
     read(fd[0],&win,sizeof(int));
     close(fd[0]);
     close(fd[1]);
-    scan();
+    scan(root);
     WindowInfo*winInfo=getWindowInfo(win);
     assert(hasMask(winInfo, WM_DELETE_WINDOW_MASK));
     consumeEvents();
@@ -367,7 +367,7 @@ START_TEST(test_invalid_state){
     xcb_ewmh_set_wm_desktop(ewmh, win, getNumberOfWorkspaces()+1);
     xcb_ewmh_set_current_desktop(ewmh, defaultScreenNumber, getNumberOfWorkspaces()+1);
     flush();
-    scan();
+    scan(root);
     syncState();
     assert(getActiveWorkspaceIndex()<getNumberOfWorkspaces());
     assert(getWindowInfo(win)->workspaceIndex<getNumberOfWorkspaces());
@@ -379,7 +379,7 @@ START_TEST(test_raise_window){
     int top=mapArbitraryWindow();
     registerForWindowEvents(bottom, XCB_EVENT_MASK_VISIBILITY_CHANGE);
     registerForWindowEvents(top, XCB_EVENT_MASK_VISIBILITY_CHANGE);
-    scan();
+    scan(root);
 
     WindowInfo*info=getValue(isInList(getAllWindows(), bottom));
     WindowInfo*infoTop=getValue(isInList(getAllWindows(), top));
@@ -395,7 +395,7 @@ START_TEST(test_workspace_change){
     int nonEmptyIndex=getActiveWorkspaceIndex();
     mapArbitraryWindow();
     mapArbitraryWindow();
-    scan();
+    scan(root);
     assert(getSize(getAllWindows())==2);
     assert(getSize(getActiveWindowStack())==2);
     assert(getNumberOfWorkspaces()>1);
@@ -417,7 +417,7 @@ START_TEST(test_workspace_change){
 
 START_TEST(test_sticky_window){
     mapArbitraryWindow();
-    scan();
+    scan(root);
     WindowInfo*winInfo=getValue(getAllWindows());
     moveWindowToWorkspace(winInfo, -1);
     assert(hasMask(winInfo, STICKY_MASK));
@@ -428,7 +428,7 @@ START_TEST(test_workspace_activation){
     LOAD_SAVED_STATE=0;
     mapArbitraryWindow();
     mapArbitraryWindow();
-    scan();
+    scan(root);
     int index1=getActiveWorkspaceIndex();
     int index2=!index1;
     moveWindowToWorkspace(getValue(getActiveWindowStack()), index2);
@@ -496,7 +496,7 @@ START_TEST(test_tile_windows){
         win[i]=mapWindow(createNormalWindow());
     if(_i)
         xcb_icccm_set_wm_transient_for(dis, win[UPPER_LAYER], win[NORMAL_LAYER]);
-    scan();
+    scan(root);
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
     for(int i=LEN(win)-1;i>=0;i--){
         assert(raiseWindow(win[i]));
@@ -516,7 +516,7 @@ START_TEST(test_tile_windows){
 START_TEST(test_empty_layout){
     LOAD_SAVED_STATE=0;
     mapWindow(createNormalWindow());
-    scan();
+    scan(root);
     setActiveLayout(NULL);
     consumeEvents();
     tileWorkspace(getActiveWorkspaceIndex());
