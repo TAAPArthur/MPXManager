@@ -245,7 +245,7 @@ typedef struct{
  * @param func the function (that takes no args and returns void) to call.
  * @see CREATE_WILDCARD
  */
-#define CREATE_DEFAULT_EVENT_RULE(func) CREATE_WILDCARD(BIND(func),.passThrough=1)
+#define CREATE_DEFAULT_EVENT_RULE(func) CREATE_WILDCARD(BIND(func),.passThrough=ALWAYS_PASSTHROUGH)
 /**
  * Creates a Rule that will match anything such that when applyRules is called BoundFunction will
  * be called unless another Rule terminates the loop first

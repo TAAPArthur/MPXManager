@@ -54,7 +54,29 @@ void addDefaultDeviceRules(void){
         addRule(GENERIC_EVENT_OFFSET+i,&deviceEventRule);
     }
 }
+int ignoreFunction(WindowInfo*winInfo){
+   return winInfo->implicitType;
+}
 
+static void printStatus(void){
+    if(printStatusMethod)
+        printStatusMethod();
+}
+void addPrintRule(void){
+    static Rule printRule=CREATE_DEFAULT_EVENT_RULE(printStatus);
+    addRule(Idle,&printRule);
+}
+void addIgnoreRule(void){
+    
+    static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);
+    addRule(ProcessingWindow,&ignoreRule);
+}
+void addFloatRules(void){
+    static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
+    addRule(RegisteringWindow, &dialogRule);
+    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
+    addRule(RegisteringWindow, &notificationRule);
+}
 void addAvoidDocksRule(void){
     static Rule avoidDocksRule = CREATE_RULE("_NET_WM_WINDOW_TYPE_DOCK",TYPE|LITERAL,BIND(addDock));
     addRule(ProcessingWindow, &avoidDocksRule);
@@ -339,11 +361,13 @@ void addBasicRules(void){
         if(NORMAL_RULES[i].onMatch.type)
             insertHead(eventRules[i],&NORMAL_RULES[i]);
 }
-
 void addDefaultRules(void){
 
     addBasicRules();
     addDefaultDeviceRules();
     addAvoidDocksRule();
     addAutoTileRules();
+    addPrintRule();
+    addIgnoreRule();
+    addFloatRules();
 }

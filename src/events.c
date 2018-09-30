@@ -61,14 +61,14 @@ void *runEventLoop(void*c __attribute__((unused))){
             type &= 127;
 
         assert(type<NUMBER_OF_EVENT_RULES);
-        LOG(LOG_LEVEL_DEBUG,"Event detected %d %s number of rules: %d\n",
+        LOG(LOG_LEVEL_TRACE,"Event detected %d %s number of rules: %d\n",
                         event->response_type,eventTypeToString(type),getSize(eventRules[type]));
         lock();
         setLastEvent(event);
         applyRules(eventRules[type<35?type:35],NULL);
         unlock();
         free(event);
-        LOG(LOG_LEVEL_DEBUG,"event proccesed %d\n",getActiveWorkspaceIndex());
+        LOG(LOG_LEVEL_TRACE,"event proccesed %d\n",getActiveWorkspaceIndex());
     }
     LOG(LOG_LEVEL_DEBUG,"Exited event loop\n");
     return NULL;

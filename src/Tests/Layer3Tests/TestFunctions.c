@@ -42,13 +42,14 @@ START_TEST(test_cycle_window){
     flush();
 
     WAIT_UNTIL_TRUE(getValue(getMasterWindowStack())!=getFocusedWindow());
-
     assert(isFocusStackFrozen());
     for(int i=1;i<size*2;i++){
         int oldFocusedWindow=getFocusedWindow()->id;
         int newFocusedWindow=win[(i+1)%size];
+        lock();
         typeKey(getKeyCode(startKeySym));
         flush();
+        unlock();
         WAIT_UNTIL_TRUE(getFocusedWindow()->id!=oldFocusedWindow);
         assert(getFocusedWindow()->id==newFocusedWindow);
     }

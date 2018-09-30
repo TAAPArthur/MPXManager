@@ -116,7 +116,7 @@ void setLastEvent(void* event);
  */
 void* getLastEvent();
 
-extern void (*preStartUpMethod)();
-extern void (*startUpMethod)();
-extern void (*printStatusMethod)();
+extern void (*preStartUpMethod)(void);
+extern void (*startUpMethod)(void);
+extern void (*printStatusMethod)(void);
 #endif

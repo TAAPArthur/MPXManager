@@ -122,6 +122,12 @@ void setActiveLayout(Layout*layout){
 Layout* getActiveLayout(){
     return getActiveLayoutOfWorkspace(getActiveWorkspaceIndex());
 }
+
+char* getNameOfLayout(Layout*layout){
+    if(layout)
+        return layout->name;
+    else return NULL;
+}
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex){
     return workspaces[workspaceIndex].activeLayout;
 }
@@ -452,8 +458,7 @@ int removeWindowFromMaster(Master*master,int winToRemove){
 Node* getClonesOfWindow(WindowInfo*winInfo){
     return winInfo->cloneList;
 }
-void deleteWindowNode(Node*winNode){
-    WindowInfo* winInfo=getValue(winNode);
+void deleteWindowInfo(WindowInfo*winInfo){
     Node*clones=getClonesOfWindow(winInfo);
     FOR_EACH(clones,removeWindow(getIntValue(clones)));
     deleteList(getClonesOfWindow(winInfo));
@@ -461,17 +466,19 @@ void deleteWindowNode(Node*winNode){
     for(int i=0;i<4;i++)
         if(fields[i])
             free(fields[i]);
-
-    deleteNode(winNode);
+    free(winInfo);
+}
+void deleteWindowNode(Node*winNode){
+    WindowInfo* winInfo=getValue(winNode);
+    deleteWindowInfo(winInfo);
+    softDeleteNode(winNode);
 }
 int removeWindow(unsigned int winToRemove){
     assert(winToRemove!=0);
 
     Node *winNode =isInList(windows, winToRemove);
-
     if(!winNode)
         return 0;
-
 
     Node*list=getAllMasters();
     FOR_EACH(list,removeWindowFromMaster(getValue(list),winToRemove));

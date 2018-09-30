@@ -112,6 +112,12 @@ START_TEST(test_on_startup){
 
 }END_TEST
 
+START_TEST(test_print_method){
+    printStatusMethod=dummy;
+    applyRules(eventRules[Idle],NULL);
+    assert(getDummyCount());
+}END_TEST
+
 START_TEST(test_detect_new_windows){
 
     int win=createUnmappedWindow();
@@ -126,7 +132,6 @@ START_TEST(test_detect_new_windows){
 
 START_TEST(test_delete_windows){
 
-    setLogLevel(LOG_LEVEL_NONE);
     int win=createUnmappedWindow();
     int win2=createUnmappedWindow();
     int win3=createUnmappedWindow();
@@ -141,26 +146,31 @@ START_TEST(test_delete_windows){
             isInList(getAllWindows(), win2)&&
             isInList(getAllWindows(), win3))
 
+    WAIT_UNTIL_FALSE(isInList(getAllWindows(), win));
+
     destroyWindow(win2);
     destroyWindow(win3);
     destroyWindow(win4);
 
-    WAIT_FOR(isInList(getAllWindows(), win)||
-                isInList(getAllWindows(), win2)||
+    WAIT_FOR(isInList(getAllWindows(), win2)||
                 isInList(getAllWindows(), win3)||
                 isInList(getAllWindows(), win4));
-
+    assert(getSize(getAllWindows())==0);
 }END_TEST
 
 START_TEST(test_visibility_update){
     clearLayoutsOfWorkspace(getActiveWorkspaceIndex());
     START_MY_WM
 
+    lock();
     int win=createNormalWindow();
+    unlock();
 
     WAIT_UNTIL_TRUE(getWindowInfo(win))
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win)));
+    lock();
     int win2=createNormalWindow();
+    unlock();
     WAIT_UNTIL_TRUE(getWindowInfo(win2))
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win2)));
     assert(!isWindowVisible(getWindowInfo(win)));
@@ -179,6 +189,17 @@ START_TEST(test_property_update){
 
 }END_TEST
 
+START_TEST(test_ignored_windows){
+    createUserIgnoredWindow();
+    mapWindow(createUserIgnoredWindow());
+    scan(root);
+    assert(getSize(getAllWindows())==0);
+    consumeEvents();
+    START_MY_WM
+    createUserIgnoredWindow();
+    mapWindow(createUserIgnoredWindow());
+    msleep(1000);
+}END_TEST
 
 START_TEST(test_map_windows){
 
@@ -449,6 +470,16 @@ START_TEST(test_client_ping){
     WAIT_UNTIL_TRUE(rootInfo->pingTimeStamp)
 }END_TEST
 
+START_TEST(test_key_repeat){
+    IGNORE_KEY_REPEAT=1;
+    xcb_input_key_press_event_t event;
+    event.flags=XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT;
+    setLastEvent(&event);
+    onDeviceEvent();
+   assert(getDummyCount()==0);
+}END_TEST
+
+
 Suite *defaultRulesSuite() {
     Suite*s = suite_create("Default events");
     TCase* tc_core;
@@ -466,6 +497,7 @@ Suite *defaultRulesSuite() {
     tc_core = tcase_create("Special Events");
     tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_on_startup);
+    tcase_add_test(tc_core, test_print_method);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Normal Events");
@@ -475,6 +507,11 @@ Suite *defaultRulesSuite() {
     tcase_add_test(tc_core, test_delete_windows);
     tcase_add_test(tc_core, test_visibility_update);
     tcase_add_test(tc_core, test_property_update);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("Extra Events");
+    tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
+    tcase_add_test(tc_core, test_ignored_windows);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Requests");

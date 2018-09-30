@@ -608,6 +608,13 @@ void setActiveLayout(Layout*layout);
  * @return the active layout for the active workspace
  */
 Layout* getActiveLayout();
+
+/**
+* Returns the name of the given layout
+* @param layout
+* @return
+*/
+char* getNameOfLayout(Layout*layout);
 /**
  * @param workspaceIndex
  * @return the active layout for the specified workspace
@@ -690,6 +697,11 @@ int addWindowToWorkspace(WindowInfo*info,int workspaceIndex);
  * @param winToRemove
  */
 int removeWindow(unsigned int winToRemove);
+/**
+ * Frees winInfo
+ *
+*/
+void deleteWindowInfo(WindowInfo*winInfo);
 /**
  * Deletes the node from its list and frees the WindowInfo* value
  * @param winNode

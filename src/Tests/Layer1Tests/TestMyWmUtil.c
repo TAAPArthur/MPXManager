@@ -742,6 +742,15 @@ START_TEST(test_active_layout){
     free(l);
 }END_TEST
 
+START_TEST(test_layout_name){
+    addMaster(1, 1);
+    Layout* l=calloc(size, sizeof(Layout));
+    getNameOfLayout(NULL);//should not crash
+    char*name="test";
+    l->name=name;
+    assert(strcmp(getNameOfLayout(l),name)==0);
+    free(l);
+}END_TEST
 
 void setup(){
     createContext(size);
@@ -810,6 +819,7 @@ Suite *mywmUtilSuite(void) {
     tcase_add_test(tc_core, test_layout_add);
     tcase_add_test(tc_core, test_layout_add_multiple);
     tcase_add_test(tc_core, test_active_layout);
+    tcase_add_test(tc_core, test_layout_name);
     suite_add_tcase(s, tc_core);
 
 

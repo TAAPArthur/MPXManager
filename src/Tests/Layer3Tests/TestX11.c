@@ -97,7 +97,7 @@ START_TEST(test_window_property_alt_loading){
     assert(strcmp(winInfo->title,name)==0);
 }END_TEST
 START_TEST(test_window_property_loading){
-    int win=createUnmappedWindow();
+    int win=createIgnoredWindow();
     WindowInfo*winInfo=createWindowInfo(win);
     addWindowInfo(winInfo);
     //no properties are set don't crash
@@ -609,10 +609,10 @@ START_TEST(test_set_workspace_names){
     char*name[]={"test","test2"};
     setWorkspaceNames(name, 1);
     assert(getIndexFromName(name[0])==0);
-    assert(strcmp(name[0],getWorkspaceByIndex(0)->name)==0);
+    assert(strcmp(name[0],getWorkspaceName(0))==0);
     setWorkspaceNames(name, 2);
     assert(getIndexFromName(name[1])==1);
-    assert(strcmp(name[1],getWorkspaceByIndex(1)->name)==0);
+    assert(strcmp(name[1],getWorkspaceName(1))==0);
 
 }END_TEST
 START_TEST(test_unkown_window){

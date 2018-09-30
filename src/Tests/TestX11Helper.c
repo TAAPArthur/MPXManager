@@ -16,7 +16,7 @@ pthread_t pThread=0;
 void destroyWindow(int win){
     assert(NULL==xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 }
-static int createWindow(int mapped,int ignored){
+static int createWindow(int mapped,int ignored,int userIgnored){
 
     assert(ignored<2);
     assert(dis);
@@ -43,17 +43,21 @@ static int createWindow(int mapped,int ignored){
         err(1, "could not set hintsfor window on creation\n");
     }
     flush();
-
+    if(!userIgnored&&!ignored)
+        catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &ewmh->_NET_WM_WINDOW_TYPE_NORMAL));
     return window;
 }
+int createUserIgnoredWindow(void){
+    return createWindow(1,0,1);
+}
 int createIgnoredWindow(void){
-    return createWindow(1,1);
+    return createWindow(1,1,0);
 }
 int createNormalWindow(void){
-    return createWindow(1,0);
+    return createWindow(1,0,0);
 }
 int  createUnmappedWindow(void){
-    return createWindow(0,0);
+    return createWindow(0,0,0);
 }
 
 int mapWindow(int win){

@@ -25,6 +25,7 @@ extern pthread_t pThread;
 #define KILL_MY_WM  requestEventLoopShutdown();pthread_join(pThread,NULL);
 
 void destroyWindow(int win);
+int createUserIgnoredWindow(void);
 int  createUnmappedWindow(void);
 int createIgnoredWindow(void);
 int createNormalWindow(void);

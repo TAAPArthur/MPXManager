@@ -16,7 +16,6 @@ START_TEST(test_layouts){
         targetArea=m->width*m->height;
         layoutIndex=0;
     }
-
     setActiveLayout(&DEFAULT_LAYOUTS[layoutIndex]);
 
     int size=5;
@@ -29,9 +28,10 @@ START_TEST(test_layouts){
     int area;
     xcb_get_geometry_reply_t*reply1,*reply2;
     for(int i=1;i<=size;i++){
+        lock();
         createNormalWindow();
-        markState();
         flush();
+        unlock();
         WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),0)>=i)
 
         do{

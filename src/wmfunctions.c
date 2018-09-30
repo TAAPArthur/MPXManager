@@ -32,10 +32,6 @@
             return;
 static Node initialMappingOrder;
 
-static inline void printStatus(){
-    if(printStatusMethod)
-        printStatusMethod();
-}
 
 int isWindowVisible(WindowInfo* winInfo){
     return winInfo && hasMask(winInfo, PARTIALLY_VISIBLE);
@@ -70,7 +66,8 @@ int hasMask(WindowInfo* winInfo,int mask){
     return (winInfo->mask & mask) == mask;
 }
 void resetUserMask(WindowInfo* winInfo){
-    memcpy(&winInfo->mask, &DEFAULT_WINDOW_MASKS, sizeof(char));
+    if(winInfo)
+        memcpy(&winInfo->mask, &DEFAULT_WINDOW_MASKS, sizeof(char));
 }
 int isUserMask(int mask){
     return ((char)mask)?1:0;
@@ -150,8 +147,7 @@ void scan(xcb_window_t baseWindow) {
                 if(attr->map_state)
                     addMask(winInfo, MAPABLE_MASK);
 
-                processNewWindow(winInfo);
-                if(isInList(getAllWindows(),children[i]))
+                if(processNewWindow(winInfo))
                     scan(children[i]);
             }
             free(attr);
@@ -195,16 +191,21 @@ void updateEWMHClientList(){
     xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, num, mappingOrder);
     xcb_ewmh_set_client_list_stacking(ewmh, defaultScreenNumber, num, stackingOrder);
 }
-void processNewWindow(WindowInfo* winInfo){
+int processNewWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_DEBUG,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
 
     if(winInfo->cloneOrigin==0)
         loadWindowProperties(winInfo);
     //dumpWindowInfo(winInfo);
-    APPLY_RULES_OR_RETURN(ProcessingWindow,winInfo);
+    if(!applyRules(eventRules[ProcessingWindow],winInfo)){
+        LOG(LOG_LEVEL_DEBUG,"Window is to be ignored; freeing winInfo\n");
+        deleteWindowInfo(winInfo);
+        return 0;
+    }
     LOG(LOG_LEVEL_DEBUG,"Registering window\n");
     registerWindow(winInfo);
     updateEWMHClientList();
+    return 1;
 }
 
 
@@ -748,8 +749,6 @@ void tileWorkspace(int index){
         Node*n=workspace->windows[i];
         FOR_EACH(n,tileNonNormalLayers(getValue(n),1));
     }
-
-    printStatus();
 }
 
 void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int mask){
@@ -824,6 +823,15 @@ void updateMapState(int id,int map){
         }
         else
             removeMask(winInfo, MAPPED_MASK);
+}
+
+void updateFocusState(WindowInfo*winInfo){
+    if(!winInfo)return;
+    onWindowFocus(winInfo->id);
+}
+
+char*getWorkspaceName(int index){
+    return getWorkspaceByIndex(index)->name;
 }
 
 int getIndexFromName(char*name){

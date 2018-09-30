@@ -1,7 +1,8 @@
 
 
 #include "config.h"
-
+#include <stdio.h>
+#include <unistd.h>
 #define NONFOCUSED_WINDOW_COLOR 0xdddddd
 
 //char* workspaceNames[NUMBER_OF_WORKSPACES]={"Main"};
@@ -157,24 +158,28 @@ Binding onKeyPressBindings[] = {
     //{Mod4Mask,XK_m, RUN_OR_RAISE_CLASS("thunderbird")},
 };
 */
-void printFunction(){
-    if(getFocusedWindow())
-        dprintf(STATUS_FD,"%s\n",getFocusedWindow()->title);
-}
-int ignoreFunction(WindowInfo*winInfo){
-   return winInfo->implicitType;
+
+void printFunction(void){
+    if(getFocusedWindow()){
+        const char* format="<fc=%s>%s:%s</fc> ";
+        for(int i=0;i<getNumberOfWorkspaces();i++){
+            char * color;
+            if(isWorkspaceVisible(i))
+                color="green";
+            else if(isWorkspaceNotEmpty(i))
+                color="yellow";
+            else continue;
+            dprintf(STATUS_FD,format,color,getWorkspaceName(i),getNameOfLayout(getActiveLayoutOfWorkspace(i)));
+        }
+        dprintf(STATUS_FD,"<fc=%s>%s</fc>\n","green",getFocusedWindow()->title);
+        fsync(STATUS_FD);
+    }
 }
 void loadSettings(){
     spawnPipe("xmobar");
     printStatusMethod=printFunction;
     addBindings(bindings,LEN(bindings));
     addBindings(customBindings,LEN(customBindings));
-    static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);
-    addRule(ProcessingWindow,&ignoreRule);
-    static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
-    addRule(RegisteringWindow, &dialogRule);
-    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
-    addRule(RegisteringWindow, &notificationRule);
     /*
     ADD_WINDOW_RULE(ProcessingWindow, CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND_TO_WIN_FUNC(floatWindow)));
     ADD_WINDOW_RULE(ProcessingWindow, CREATE_RULE(".*__WM_IGNORE.*",TITLE,NULL));

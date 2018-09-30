@@ -185,8 +185,9 @@ void setActiveWindowProperty(int win);
 /**
  * Determines if and how a given window should be managed
  * @param winInfo
+ * @return 1 iff the window wasn't ignored
  */
-void processNewWindow(WindowInfo* winInfo);
+int processNewWindow(WindowInfo* winInfo);
 
 /**
  * Loads class and instance name for the given window
@@ -373,6 +374,13 @@ void setWorkspaceNames(char*names[],int numberOfNames);
  */
 int getIndexFromName(char*name);
 
+/**
+* Returns the name of the workspace at the specifed index
+* @param index 
+*
+* @return the name of the workspace
+*/
+char*getWorkspaceName(int index);
 void activateWorkspace(int workspaceIndex);
 
 void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex);

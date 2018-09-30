@@ -88,7 +88,7 @@ int main(int argc, char * argv[]){
     //signal(SIGINT, quit);
 
     parseAgrs(argc,argv);
-    setLogLevel(LOG_LEVEL_DEBUG);
+    setLogLevel(LOG_LEVEL_INFO);
     //TODO make var
 
     startUpMethod=loadSettings;

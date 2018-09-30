@@ -50,9 +50,9 @@ int CRASH_ON_ERRORS=0;
 
 Node* eventRules[NUMBER_OF_EVENT_RULES];
 
-void (*preStartUpMethod)();
-void (*startUpMethod)();
-void (*printStatusMethod)();
+void (*preStartUpMethod)(void);
+void (*startUpMethod)(void);
+void (*printStatusMethod)(void);
 int statusPipeFD[2];
 void init(){
     pipe(statusPipeFD);
