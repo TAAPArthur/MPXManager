@@ -2,7 +2,6 @@
  * @file mywm-util.c
  */
 
-#define _DEFAULT_SOURCE
 /// \cond
 #include <time.h>
 #include <assert.h>

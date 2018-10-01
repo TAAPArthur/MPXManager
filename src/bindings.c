@@ -172,7 +172,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
             break;
         else chainBinding=getActiveBinding();
     }
-    Node*n=deviceBindings;
+    Node*n=getDeviceBindings();
     FOR_EACH_CIRCULAR(n,
             Binding*binding=getValue(n);
         if(doesBindingMatch(binding,keyCode,mods,mask)){
@@ -188,6 +188,8 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
 int doesStringMatchRule(Rule*rule,char*str){
     if(!str)
         return 0;
+    if(!rule->init)
+        initRule(rule);
     if(rule->ruleTarget & LITERAL){
         if(rule->ruleTarget & CASE_INSENSITIVE)
             return strcasecmp(rule->literal,str)==0;
@@ -238,12 +240,15 @@ int applyRules(Node* head,WindowInfo*winInfo){
         )
     return 1;
 }
+Node*getDeviceBindings(){
+    return deviceBindings;
+}
 void addBindings(Binding*bindings,int num){
     for(int i=0;i<num;i++)
-        insertTail(deviceBindings, &bindings[i]);
+        addBinding(&bindings[i]);
 }
 void addBinding(Binding*binding){
-    addBindings(binding,1);
+    insertTail(getDeviceBindings(), binding);
 }
 /**
  * Convience method for grabBinding() and ungrabBinding()
@@ -285,7 +290,18 @@ void initBinding(Binding*binding){
     assert(binding->detail||!binding->buttonOrKey);
 
 }
-
+void initRule(Rule*rule){
+    if(rule->ruleTarget & ENV_VAR){
+        assert(rule->literal[0]==(int)'$');
+        rule->literal=getenv(rule->literal+1);
+    }
+    if(rule->literal && (rule->ruleTarget & LITERAL) == 0){
+        rule->regexExpression=malloc(sizeof(regex_t));
+        regcomp(rule->regexExpression,rule->literal,
+                (DEFAULT_REGEX_FLAG)|((rule->ruleTarget & CASE_INSENSITIVE)?REG_ICASE:0));
+    }
+    rule->init=1;
+}
 /*if(chain!=getActiveMaster()->lastBindingTriggered){
         Master *m=getActiveMaster();
         clearWindowCache(m);

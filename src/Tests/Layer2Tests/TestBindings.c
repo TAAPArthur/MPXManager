@@ -6,6 +6,7 @@
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
 
+#include <stdlib.h>
 
 static BoundFunction sampleChain=CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE,
         {0, Button1, .mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
@@ -23,6 +24,17 @@ START_TEST(test_init_binding){
     binding.targetID=BIND_TO_ALL_DEVICES;
     initBinding(&binding);
     assert(binding.targetID==0);
+}END_TEST
+START_TEST(test_binding_add){
+    assert(!isNotEmpty(getDeviceBindings()));
+    Binding arr[5]={0};
+    Binding single;
+    addBinding(&single);
+    assert(getValue(getDeviceBindings()->prev)==&single);
+    addBindings(arr,LEN(arr));
+    int i=0;
+    Node *n =getDeviceBindings()->next;
+    FOR_AT_MOST(n,LEN(arr),assert(getValue(n)==&arr[i++]));
 }END_TEST
 START_TEST(test_binding_target_id){
     addMaster(2, 3);
@@ -99,9 +111,7 @@ START_TEST(test_check_bindings){
                 {mod,detail,BIND(exit,11),.passThrough=passThrough, .detail=detail},
             };
             clearList(deviceBindings);
-
-            for(int i=0;i<LEN(arr);i++)
-                addBinding(&arr[i]);
+            addBindings(arr,LEN(arr));
 
             checkBindings(1, 1, i, NULL);
             checkBindings(1, 1|IGNORE_MASK, i, NULL);
@@ -335,11 +345,20 @@ START_TEST(test_chain_grab){
 
 
 START_TEST(test_literal_string_rule){
-    Rule r=CREATE_LITERAL_RULE("A",LITERAL,NULL);
+    char*var;
+    int target=LITERAL;
+    if(_i){
+        var="$random_name";
+        const char*value="A";
+        setenv(var+1,value,1);
+        target|=ENV_VAR;
+    }
+    else var ="A";
+    Rule r=CREATE_LITERAL_RULE(var,target,NULL);
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "a")==0);
     assert(doesStringMatchRule(&r, "b")==0);
-    Rule r2=CREATE_LITERAL_RULE("A",LITERAL|CASE_INSENSITIVE,NULL);
+    Rule r2=CREATE_LITERAL_RULE(var,target|CASE_INSENSITIVE,NULL);
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "b")==0);
@@ -347,21 +366,17 @@ START_TEST(test_literal_string_rule){
 }END_TEST
 START_TEST(test_string_rule){
     Rule r=CREATE_RULE(".*",MATCH_ANY_REGEX,NULL);
-    COMPILE_RULE((&r));
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "B"));
     regfree(r.regexExpression);
     free(r.regexExpression);
     Rule r2=CREATE_RULE("A",MATCH_ANY_REGEX,NULL);
-    COMPILE_RULE((&r2));
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "B")==0);
     regfree(r2.regexExpression);
     free(r2.regexExpression);
-    int target=(MATCH_ANY_REGEX) - (CASE_INSENSITIVE);
-    Rule r3=CREATE_RULE("A",target,NULL);
-    COMPILE_RULE((&r3));
+    Rule r3=CREATE_RULE("A",(MATCH_ANY_REGEX) - (CASE_INSENSITIVE),NULL);
     assert(doesStringMatchRule(&r3, "A"));
     assert(doesStringMatchRule(&r3, "a")==0);
     assert(doesStringMatchRule(&r3, "B")==0);
@@ -453,6 +468,7 @@ Suite *bindingsSuite(void) {
     tc_core= tcase_create("Bindings");
     tcase_add_checked_fixture(tc_core, setup, destroyContextAndConnection);
     tcase_add_test(tc_core,test_init_binding);
+    tcase_add_test(tc_core,test_binding_add);
     tcase_add_test(tc_core,test_binding_target_id);
     tcase_add_test(tc_core,test_binding_match);
     tcase_add_test(tc_core,test_call_bounded_function);
@@ -471,7 +487,7 @@ Suite *bindingsSuite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Rule");
-    tcase_add_test(tc_core, test_literal_string_rule);
+    tcase_add_loop_test(tc_core, test_literal_string_rule,0,2);
     tcase_add_test(tc_core, test_string_rule);
     tcase_add_loop_test(tc_core, test_window_matching,0,4);
     tcase_add_test(tc_core,test_wildcard_rule);

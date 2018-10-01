@@ -31,7 +31,7 @@
 #define MATCH_ANY_LITERAL   ((1<<6) -1)
 /**Rule will match on above property of window not literally */
 #define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL - LITERAL)
-
+#define ENV_VAR             1<<6
 /**
  * Determines if and when the control flow should abort processing a series of
  * Rules/Bindings
@@ -150,6 +150,7 @@ typedef struct{
     int passThrough;
     /**Compiled regex used for matching with non-literal rules*/
     regex_t* regexExpression;
+    char init;
 } Rule;
 
 
@@ -261,16 +262,6 @@ typedef struct{
  */
 #define CREATE_LITERAL_RULE(E,T,...) {E,(T|LITERAL),__VA_ARGS__}
 
-/**
- * Compiles rules
- * @param R the rule to compile
- */
-#define COMPILE_RULE(R) \
-     if((R->ruleTarget & LITERAL) == 0){\
-        R->regexExpression=malloc(sizeof(regex_t));\
-        assert(0==regcomp(R->regexExpression,R->literal, \
-                (DEFAULT_REGEX_FLAG)|((R->ruleTarget & CASE_INSENSITIVE)?REG_ICASE:0)));\
-    }
 
 
 ///@{Special ids that will be replaced on a call to initBinding()
@@ -427,5 +418,6 @@ Node* getActiveBindingNode();
  */
 Binding* getActiveBinding();
 
-
+Node*getDeviceBindings();
+void initRule(Rule*rule);
 #endif

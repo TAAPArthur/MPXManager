@@ -77,22 +77,19 @@ Binding customBindings[]={
     {Mod4Mask, XK_Menu, RUN_OR_RAISE_CLASS("pavucontrol")},
 
 
+    {Mod4Mask,XK_w, RUN_OR_RAISE_ENV_CLASS("$BROWSER")},
+    {Mod4Mask | ShiftMask ,XK_w, SPAWN("$BROWSER --new-window")},
+    {Mod4Mask | ControlMask,XK_w, SPAWN("google-chrome-stable --new-window --disk-cache-size=1000")},
     {Mod4Mask | ControlMask| ShiftMask,XK_w, SPAWN("google-chrome-stable --new-window")},
-    {Mod4Mask,XK_w, RUN_OR_RAISE_CLASS("firefox")},
-    {Mod4Mask | ShiftMask ,XK_w, SPAWN(" firefox --new-window")},
+    {Mod4Mask,XK_f, RUN_OR_RAISE_CLASS("firefox")},
+    {Mod4Mask | ShiftMask ,XK_f, SPAWN(" firefox --new-window")},
 
-    {Mod4Mask,XK_l, RUN_OR_RAISE_TYPE("libreoffice-writer",CLASS, "lowriter")},
-    {Mod4Mask | ShiftMask ,XK_l, SPAWN("lowriter")},
-    {Mod4Mask | ControlMask ,XK_l, RUN_OR_RAISE_TYPE("libreoffice-calc",CLASS,"localc")},
-    {Mod4Mask | ControlMask | ShiftMask ,XK_l, SPAWN("localc")},
     {Mod4Mask,XK_v, RUN_OR_RAISE_CLASS("vlc")},
     {Mod4Mask | ControlMask ,XK_v, RUN_OR_RAISE_CLASS("virtualbox")},
     {Mod4Mask | ControlMask | Mod1Mask ,XK_v, RUN_OR_RAISE_CLASS("pitivi")},
     {Mod4Mask | ControlMask | Mod1Mask ,XK_a, RUN_OR_RAISE_CLASS("audacity")},
-    {Mod4Mask,XK_e, RUN_OR_RAISE_CLASS("eclipse")},
     {Mod4Mask | ControlMask, XK_z, RUN_OR_RAISE_CLASS("zim")},
     {Mod4Mask | ControlMask,XK_g, RUN_OR_RAISE_CLASS("gummi")},
-    {Mod4Mask | ControlMask ,XK_a, RUN_OR_RAISE_CLASS("atom")},
     //{Mod4Mask ,XK_n, RUN_OR_RAISE_CLASS("write_stylus")},
     {Mod4Mask | ControlMask,XK_b, RUN_OR_RAISE_TYPE( "App.py",CLASS, "backintime-qt4")},
     {Mod4Mask | ControlMask,XK_d, RUN_OR_RAISE_CLASS("dolphin-emu")},
@@ -102,8 +99,8 @@ Binding customBindings[]={
     {Mod4Mask | ShiftMask,XK_g, SPAWN("gedit -s")},
     {Mod4Mask,XK_d, RUN_OR_RAISE_CLASS("thunar")},
     {Mod4Mask | ShiftMask,XK_d, SPAWN("thunar")},
-    {ControlMask | Mod1Mask,XK_t, RUN_OR_RAISE_CLASS("xfce4-terminal")},
-    {ControlMask | Mod1Mask | ShiftMask,XK_t, SPAWN("xfce4-terminal")},
+    {ControlMask | Mod1Mask,XK_t, RUN_OR_RAISE_ENV_CLASS("$TERMINAL")},
+    {ControlMask | Mod1Mask | ShiftMask,XK_t, SPAWN("$TERMINAL")},
 
 
     {Mod4Mask,XK_p, SPAWN("dmenu_run_history")},

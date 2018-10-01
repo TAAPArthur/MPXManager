@@ -102,7 +102,7 @@ void registerForMonitorChange(){
     xcb_randr_select_input(dis, root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
 }
 void registerForDeviceEvents(){
-    Node*list=deviceBindings;
+    Node*list=getDeviceBindings();
 
     LOG(LOG_LEVEL_DEBUG,"Grabbing %d buttons/keys\n",getSize(list));
     FOR_EACH_CIRCULAR(list,

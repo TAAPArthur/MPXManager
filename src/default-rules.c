@@ -329,6 +329,11 @@ void onStartup(void){
     for(int i=0;i<getNumberOfWorkspaces();i++)
         if(!getActiveLayoutOfWorkspace(i))
             addLayoutsToWorkspace(i,DEFAULT_LAYOUTS,NUMBER_OF_DEFAULT_LAYOUTS);
+
+    for(int i=0;i<NUMBER_OF_EVENT_RULES;i++){
+        Node*n=eventRules[i];
+        FOR_EACH_CIRCULAR(n,initRule(getValue(n)));
+    }
     connectToXserver();
 }
 
