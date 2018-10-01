@@ -232,8 +232,10 @@ void loadClassInfo(WindowInfo*info){
 void loadTitleInfo(WindowInfo*winInfo){
     xcb_ewmh_get_utf8_strings_reply_t wtitle;
     xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name(ewmh, winInfo->id);
-    if(winInfo->title)
+    if(winInfo->title){
         free(winInfo->title);
+        winInfo->title=NULL;
+    }
     if (xcb_ewmh_get_wm_name_reply(ewmh, cookie, &wtitle, NULL)) {
         winInfo->title=calloc(1+wtitle.strings_len,sizeof(char));
         memcpy(winInfo->title, wtitle.strings, wtitle.strings_len*sizeof(char));

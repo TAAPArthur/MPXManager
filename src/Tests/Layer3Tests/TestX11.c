@@ -116,7 +116,19 @@ START_TEST(test_window_property_loading){
         checkProperties(winInfo);
     }
 }END_TEST
-
+START_TEST(test_window_property_reloading){
+    int win=createUnmappedWindow();
+    int win2=createUnmappedWindow();
+    WindowInfo*winInfo=createWindowInfo(win);
+    addWindowInfo(winInfo);
+    setProperties(win);
+    loadWindowProperties(winInfo);
+    //very hacky way to unset the title property of the window
+    winInfo->id=win2;
+    //don't double free window properties
+    loadWindowProperties(winInfo);
+    loadWindowProperties(winInfo);
+}END_TEST
 START_TEST(test_window_extra_property_loading){
 
     int win=createUnmappedWindow();
@@ -673,6 +685,7 @@ Suite *x11Suite(void) {
     tc_core = tcase_create("Window_Detection");
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_window_property_loading);
+    tcase_add_test(tc_core, test_window_property_reloading);
     tcase_add_test(tc_core, test_window_property_alt_loading);
     tcase_add_test(tc_core, test_window_extra_property_loading);
     tcase_add_test(tc_core, test_process_window);
