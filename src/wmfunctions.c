@@ -345,6 +345,8 @@ void registerWindow(WindowInfo*winInfo){
 
     moveWindowToWorkspaceAtLayer(winInfo, winInfo->workspaceIndex,NORMAL_LAYER);
     APPLY_RULES_OR_RETURN(RegisteringWindow,winInfo);
+    char state=XCB_ICCCM_WM_STATE_WITHDRAWN;
+    xcb_change_property(dis,XCB_PROP_MODE_REPLACE,win,ewmh->_NET_WM_STATE,ewmh->_NET_WM_STATE,32,0,&state);
 }
 
 typedef struct {
