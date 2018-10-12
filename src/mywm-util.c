@@ -397,6 +397,7 @@ int isWindowInVisibleWorkspace(WindowInfo* winInfo){
     return 0;
 }
 Node* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex){
+    if(!winInfo)return NULL;
     Workspace*workspace=getWorkspaceByIndex(workspaceIndex);
     Node*node;
     for(int i=0;i<NUMBER_OF_LAYERS;i++){
