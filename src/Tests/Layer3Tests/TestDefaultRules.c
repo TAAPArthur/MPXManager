@@ -122,6 +122,13 @@ START_TEST(test_print_method){
     assert(getDummyCount());
 }END_TEST
 
+START_TEST(test_handle_error){
+    CRASH_ON_ERRORS=0;
+    xcb_input_key_press_event_t event={0};
+    setLastEvent(&event);
+    applyRules(eventRules[0],NULL);
+}END_TEST
+
 START_TEST(test_detect_new_windows){
 
     int win=createUnmappedWindow();
@@ -500,6 +507,7 @@ Suite *defaultRulesSuite() {
     tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_on_startup);
     tcase_add_test(tc_core, test_print_method);
+    tcase_add_test(tc_core, test_handle_error);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Normal Events");
