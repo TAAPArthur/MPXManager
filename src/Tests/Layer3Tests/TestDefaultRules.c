@@ -25,7 +25,11 @@ static int count=0;
 static void dummy(void){count++;}
 static int getDummyCount(){return count;}
 static Binding testBinding={0,1,BIND(dummy),.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
-static void sampleStartupMethod(){addBinding(&testBinding);};
+static Binding testKeyPressBinding={0,XK_A,BIND(dummy),.mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS};
+static void sampleStartupMethod(){
+    addBinding(&testBinding);
+    addBinding(&testKeyPressBinding);
+}
 
 static void deviceEventsetup(){
     LOAD_SAVED_STATE=0;
@@ -472,13 +476,11 @@ START_TEST(test_client_ping){
 
 START_TEST(test_key_repeat){
     IGNORE_KEY_REPEAT=1;
-    xcb_input_key_press_event_t event;
-    event.flags=XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT;
+    xcb_input_key_press_event_t event={.flags=XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT};
     setLastEvent(&event);
     onDeviceEvent();
    assert(getDummyCount()==0);
 }END_TEST
-
 
 Suite *defaultRulesSuite() {
     Suite*s = suite_create("Default events");
@@ -531,6 +533,11 @@ Suite *defaultRulesSuite() {
     tc_core = tcase_create("Non_Default_Device_Events");
     tcase_add_checked_fixture(tc_core, nonDefaultDeviceEventsetup, deviceEventTeardown);
     tcase_add_loop_test(tc_core, test_focus_follows_mouse,0,2);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("KeyEvent");
+    tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
+    tcase_add_test(tc_core, test_key_repeat);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Client_Messages");
