@@ -157,20 +157,20 @@ Binding onKeyPressBindings[] = {
 */
 
 void printFunction(void){
-    if(getFocusedWindow()){
-        const char* format="<fc=%s>%s:%s</fc> ";
-        for(int i=0;i<getNumberOfWorkspaces();i++){
-            char * color;
-            if(isWorkspaceVisible(i))
-                color="green";
-            else if(isWorkspaceNotEmpty(i))
-                color="yellow";
-            else continue;
-            dprintf(STATUS_FD,format,color,getWorkspaceName(i),getNameOfLayout(getActiveLayoutOfWorkspace(i)));
-        }
-        dprintf(STATUS_FD,"<fc=%s>%s</fc>\n","green",getFocusedWindow()->title);
-        fsync(STATUS_FD);
+    const char* format="<fc=%s>%s:%s</fc> ";
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        char * color;
+        if(isWorkspaceVisible(i))
+            color="green";
+        else if(isWorkspaceNotEmpty(i))
+            color="yellow";
+        else continue;
+        dprintf(STATUS_FD,format,color,getWorkspaceName(i),getNameOfLayout(getActiveLayoutOfWorkspace(i)));
     }
+    if(getFocusedWindow())
+        dprintf(STATUS_FD,"<fc=%s>%s</fc>","green",getFocusedWindow()->title);
+    dprintf(STATUS_FD,"\n");
+    fsync(STATUS_FD);
 }
 void loadSettings(){
     spawnPipe("xmobar");
