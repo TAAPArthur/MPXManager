@@ -738,10 +738,6 @@ void tileWorkspace(int index){
         LOG(LOG_LEVEL_TRACE,"workspace %d does not have a layout; skipping \n",workspace->id);
         return;
     }
-    if(!isWorkspaceVisible(workspace->id)){
-        LOG(LOG_LEVEL_TRACE,"workspace %d is not visible; skipping \n",workspace->id);
-        return;
-    }
     LOG(LOG_LEVEL_DEBUG,"using layout %s \n",layout->name);
     Monitor*m=getMonitorFromWorkspace(workspace);
     assert(m);

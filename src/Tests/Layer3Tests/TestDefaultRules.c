@@ -423,12 +423,13 @@ START_TEST(test_auto_tile){
     startUpMethod=addFakeLayout;
 
     onStartup();
+    START_MY_WM
     assert(getActiveLayoutOfWorkspace(0)==&layout);
     assert(getActiveLayoutOfWorkspace(0)->layoutFunction);
 
 
     LOG(LOG_LEVEL_ERROR,"%d\n\n\n",count);
-    assert(count);
+    WAIT_UNTIL_TRUE(count);
 }END_TEST
 START_TEST(test_client_show_desktop){
     xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 1);
@@ -499,7 +500,7 @@ Suite *defaultRulesSuite() {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Startup Events");
-    tcase_add_checked_fixture(tc_core, NULL, destroyContextAndConnection);
+    tcase_add_checked_fixture(tc_core, NULL, fullCleanup);
     tcase_add_test(tc_core, test_auto_tile);
     suite_add_tcase(s, tc_core);
 

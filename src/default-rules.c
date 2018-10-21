@@ -90,8 +90,22 @@ void addFocusFollowsMouseRule(void){
 
 void onXConnect(void){
     scan(root);
-    for(int i=0;i<getNumberOfWorkspaces();i++)
-        tileWorkspace(i);
+    Node*master=getAllMasters();
+    //for each master try to make set the focused window to the currently focused window (or closet one by id)
+    FOR_EACH(master,
+        setActiveMaster(getValue(master));
+        xcb_input_xi_get_focus_reply_t *reply;
+        reply=xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis, getIntValue(master)), NULL);
+        if(reply){
+            Node*n=getAllWindows();
+            int focus=0;
+            FOR_EACH(n,
+                if(abs(getIntValue(n)-focus)<focus-reply->focus)
+                    focus=getIntValue(n));
+            onWindowFocus(focus);
+            free(reply);
+        }
+    );
 }
 
 void onHiearchyChangeEvent(void){

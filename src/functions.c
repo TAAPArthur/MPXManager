@@ -99,7 +99,8 @@ void spawn(char* command){
 Node* getNextWindowInStack(int dir){
     Node*activeWindows=getActiveWindowStack();
     Node*node=NULL;
-    node=isInList(activeWindows, getFocusedWindow()->id);
+    if(getFocusedWindow())
+        node=isInList(activeWindows, getFocusedWindow()->id);
 
     if(!node)
         node=activeWindows;
