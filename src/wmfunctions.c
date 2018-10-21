@@ -62,6 +62,9 @@ int isExternallyRaisable(WindowInfo* winInfo){
 int isActivatable(WindowInfo* winInfo){
     return !winInfo || winInfo->mask & MAPABLE_MASK && !(winInfo->mask & HIDDEN_MASK);
 }
+int getMask(WindowInfo*winInfo){
+    return winInfo->mask;
+}
 int hasMask(WindowInfo* winInfo,int mask){
     return (winInfo->mask & mask) == mask;
 }
@@ -399,6 +402,10 @@ void setXWindowStateFromMask(WindowInfo*winInfo){
         windowState[count++]=ewmh->_NET_WM_STATE_DEMANDS_ATTENTION;
     if(hasMask(winInfo, FULLSCREEN_MASK))
         windowState[count++]=ewmh->_NET_WM_STATE_FULLSCREEN;
+    if(hasMask(winInfo, ROOT_FULLSCREEN_MASK))
+        windowState[count++]=WM_STATE_ROOT_FULLSCREEN;
+    if(hasMask(winInfo, NO_TILE_MASK))
+        windowState[count++]=WM_STATE_NO_TILE;
     int layer=getLastLayerForWindow(winInfo);
     if(layer==UPPER_LAYER)
         windowState[count++]=ewmh->_NET_WM_STATE_ABOVE;
@@ -428,6 +435,10 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int 
             mask|=URGENT_MASK;
         else if(atoms[i] == ewmh->_NET_WM_STATE_FULLSCREEN)
             mask|=FULLSCREEN_MASK;
+        else if(atoms[i] == WM_STATE_ROOT_FULLSCREEN)
+            mask|=ROOT_FULLSCREEN_MASK;
+        else if(atoms[i] == WM_STATE_NO_TILE)
+            mask|=NO_TILE_MASK;
         else if(atoms[i] == ewmh->_NET_WM_STATE_ABOVE)
             layer=UPPER_LAYER;
         else if(atoms[i] == ewmh->_NET_WM_STATE_BELOW)

@@ -57,6 +57,24 @@ START_TEST(test_mask_reset){
     assert(winInfo->mask==nonUserMask);
 }END_TEST
 
+START_TEST(test_mask_save_restore){
+
+    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
+    WindowInfo*winInfo2=createWindowInfo(createNormalWindow());
+    assert(processNewWindow(winInfo));
+    addMask(winInfo, USER_MASKS);
+
+    xcb_ewmh_get_atoms_reply_t reply;
+    int hasState=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    assert(hasState);
+
+    catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo2->id, reply.atoms_len,reply.atoms));
+    assert(processNewWindow(winInfo2));
+    assert(getSize(getAllWindows())==2);
+    assert(getMask(winInfo)==getMask(winInfo2));
+    xcb_ewmh_get_atoms_reply_wipe(&reply);
+}END_TEST
+
 START_TEST(test_get_set_geometry_config){
     WindowInfo*winInfo=createWindowInfo(1);
     addWindowInfo(winInfo);
@@ -674,6 +692,7 @@ Suite *x11Suite(void) {
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_mask_add_remove_toggle);
     tcase_add_test(tc_core, test_mask_reset);
+    tcase_add_test(tc_core, test_mask_save_restore);
     tcase_add_test(tc_core, test_get_set_geometry_config);
     suite_add_tcase(s, tc_core);
 

@@ -12,6 +12,7 @@
 #include "mywm-util.h"
 
 #define SRC_INDICATION_OFFSET 12
+#define USER_MASKS ((1<<7) -1)
 typedef enum {
     /// no special properties
     NO_MASK = 0,
@@ -121,7 +122,10 @@ int isExternallyMoveable(WindowInfo* winInfo);
  * @return true if the window can receive focus
  */
 int isActivatable(WindowInfo* winInfo);
-
+/**
+ *Returns the full mask of the given window
+ */
+int getMask(WindowInfo*winInfo);
 
 /**
  *

@@ -36,6 +36,8 @@
        ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,\
        ewmh->_NET_WM_STATE_MAXIMIZED_VERT,\
        ewmh->_NET_WM_STATE_STICKY,\
+       WM_STATE_ROOT_FULLSCREEN,\
+       WM_STATE_NO_TILE,\
 
 #define SUPPORTED_TYPES \
        ewmh->_NET_WM_WINDOW_TYPE_NORMAL,\

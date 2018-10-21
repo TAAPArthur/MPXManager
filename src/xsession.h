@@ -11,6 +11,9 @@
 extern xcb_atom_t WM_TAKE_FOCUS;
 extern xcb_atom_t WM_DELETE_WINDOW;
 
+extern xcb_atom_t WM_STATE_NO_TILE;
+extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
+
 /**
  * Opens a connection to the Xserver
  *

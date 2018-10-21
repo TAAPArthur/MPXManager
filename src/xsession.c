@@ -16,8 +16,17 @@
 #include "xsession.h"
 #include "globals.h"
 
+#define CREATE_ATOM(name) {\
+    xcb_intern_atom_reply_t *reply;\
+    reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, # name),NULL);\
+    name=reply->atom;\
+    free(reply);\
+}
+
 xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_DELETE_WINDOW;
+xcb_atom_t WM_STATE_NO_TILE;
+xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 
 void openXDisplay(void){
 #ifdef MPX_TESTING
@@ -52,14 +61,10 @@ void openXDisplay(void){
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
 
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
-
-    xcb_intern_atom_reply_t *reply;
-    reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, "WM_TAKE_FOCUS"),NULL);
-    WM_TAKE_FOCUS=reply->atom;
-    free(reply);
-    reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, "WM_DELETE_WINDOW"),NULL);
-    WM_DELETE_WINDOW=reply->atom;
-    free(reply);
+    CREATE_ATOM(WM_TAKE_FOCUS);
+    CREATE_ATOM(WM_DELETE_WINDOW);
+    CREATE_ATOM(WM_STATE_NO_TILE);
+    CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
 
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
     xcb_set_close_down_mode(dis, XCB_CLOSE_DOWN_DESTROY_ALL);
