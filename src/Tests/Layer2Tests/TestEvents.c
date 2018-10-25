@@ -94,7 +94,12 @@ START_TEST(test_regular_events){
         }
         else{
             //generate error
+            xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS,(char*) event);
             xcb_map_window(dis, -1);
+            flush();
+            WAIT_UNTIL_TRUE(count>=i);
+            consumeEvents();
+            count=i;
         }
 
         xcb_flush(dis);
