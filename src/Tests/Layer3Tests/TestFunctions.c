@@ -128,9 +128,10 @@ START_TEST(test_get_next_window_in_stack){
     addMask(bottom, HIDDEN_MASK);
     onWindowFocus(top->id);
     assert(getValue(getNextWindowInFocusStack(0))==top);
-    assert(getValue(getNextWindowInStack(1))==getValue(getActiveWindowStack()->next));
-    assert(getValue(getNextWindowInStack(-1))!=bottom);
-    assert(getValue(getNextWindowInStack(-1))==getValue(getLast(getActiveWindowStack())->prev));
+    assert(getValue(getNextWindowInStack(DOWN))==getValue(getActiveWindowStack()->next));
+    //bottom is marked hidden
+    assert(getValue(getNextWindowInStack(UP))!=bottom);
+    assert(getValue(getNextWindowInStack(UP))==getValue(getLast(getActiveWindowStack())->prev));
     assert(getFocusedWindow()==top);
     switchToWorkspace(!getActiveWorkspaceIndex());
     Node*n=getNextWindowInStack(0);
@@ -291,9 +292,23 @@ START_TEST(test_kill_focused){
     else wait(NULL);
 }END_TEST
 
+START_TEST(test_function_bindings){
+    int arbitNum=1001;
+    Binding bindings[]={STACK_OPERATION(arbitNum,arbitNum,arbitNum,arbitNum)};
+    for(int i=0;i<LEN(bindings);i++){
+        int intArg=bindings[i].boundFunction.arg.intArg;
+        assert(intArg==UP ||intArg==DOWN||intArg==0);
+    }
+}END_TEST
+
 Suite *functionsSuite() {
     Suite*s = suite_create("Functions");
     TCase* tc_core;
+
+    tc_core = tcase_create("Function Bindings");
+    tcase_add_test(tc_core,test_function_bindings);
+    suite_add_tcase(s, tc_core);
+
     tc_core = tcase_create("Helper_Functions");
     tcase_add_checked_fixture(tc_core, functionSetup, fullCleanup);
     tcase_add_test(tc_core, test_get_next_window_in_stack);

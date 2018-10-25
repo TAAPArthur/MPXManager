@@ -12,7 +12,8 @@
 
 #include "bindings.h"
 
-enum{UP=-1,DOWN=1};
+#define UP -1
+#define DOWN 1
 
 #define RUN_RAISE_ANY(STR_TO_MATCH)    RUN_OR_RAISE_TYPE(STR_TO_MATCH,ANY,STR_TO_MATCH)
 
@@ -44,11 +45,11 @@ enum{UP=-1,DOWN=1};
     {  Mod4Mask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(giveToWorkspace,N)},\
     {  Mod4Mask|ControlMask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(tradeWithWorkspace,N)}*/
 
-#define STACK_OPERATION(UP,DOWN,LEFT,RIGHT) \
-    {  Mod4Mask,             UP, BIND(swapPosition,UP)}, \
-    {  Mod4Mask,             DOWN, BIND(swapPosition,DOWN)}, \
-    {  Mod4Mask,             LEFT, BIND(shiftFocus,UP)}, \
-    {  Mod4Mask,             RIGHT, BIND(shiftFocus,DOWN)}/*, \
+#define STACK_OPERATION(KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT) \
+    {  Mod4Mask,             KEY_UP, BIND(swapPosition,UP)}, \
+    {  Mod4Mask,             KEY_DOWN, BIND(swapPosition,DOWN)}, \
+    {  Mod4Mask,             KEY_LEFT, BIND(shiftFocus,UP)}, \
+    {  Mod4Mask,             KEY_RIGHT, BIND(shiftFocus,DOWN)}/*, \
     {  Mod4Mask|ShiftMask,             UP, BIND_TO_INT_FUNC(popMin,1)}, \
     {  Mod4Mask|ShiftMask,             DOWN, BIND_TO_INT_FUNC(pushMin,1)}, \
     {  Mod4Mask|ShiftMask,             LEFT, BIND_TO_INT_FUNC(sendToNextWorkNonEmptySpace,1)}, \
