@@ -600,8 +600,9 @@ void clearLayoutsOfWorkspace(int workspaceIndex);
  * The the currently used layout for the active workspace.
  * Note that this layout does not have to be in the list of layout for the active workspace
  * @param layout the new active layout
+ * @return 1 iff the layout has changed
  */
-void setActiveLayout(Layout*layout);
+int setActiveLayout(Layout*layout);
 
 /**
  *

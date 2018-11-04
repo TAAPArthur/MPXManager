@@ -736,7 +736,9 @@ START_TEST(test_active_layout){
     addMaster(1, 1);
     Layout* l=calloc(size, sizeof(Layout));
     for(int i=0;i<size;i++){
-        setActiveLayout(&l[i]);
+        assert(setActiveLayout(&l[i]));
+        assert(getActiveLayout()==&l[i]);
+        assert(!setActiveLayout(&l[i]));
         assert(getActiveLayout()==&l[i]);
     }
     free(l);

@@ -160,13 +160,13 @@ void cycleLayouts(int dir){
 
 
     getActiveWorkspace()->layouts=n;
-    setActiveLayout(getValue(n));
-    retile();
+    if(setActiveLayout(getValue(n)))
+        retile();
 }
 void toggleLayout(Layout* layout){
     if(layout!=getActiveLayout()){
-        setActiveLayout(layout);
-        retile();
+        if(setActiveLayout(layout))
+            retile();
     }
     else cycleLayouts(0);
 }

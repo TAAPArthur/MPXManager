@@ -114,8 +114,11 @@ void clearLayoutsOfWorkspace(int workspaceIndex){
     clearList(workspaces[workspaceIndex].layouts);
     workspaces[workspaceIndex].activeLayout=NULL;
 }
-void setActiveLayout(Layout*layout){
+int setActiveLayout(Layout*layout){
+    if(getActiveLayout()==layout)
+        return 0;
     getActiveWorkspace()->activeLayout=layout;
+    return 1;
 }
 
 Layout* getActiveLayout(){
