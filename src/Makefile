@@ -5,12 +5,12 @@ IGNORED_FLAGS ?= -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-mis
 ERROR_FLAGS ?= -Werror -Wall -Wextra
 CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS}
 
-TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -D MPX_TESTING -D_DEFAULT_SOURCE --coverage -Wno-unused-function
+TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING -D_DEFAULT_SOURCE --coverage -Wno-unused-function
 TESTLIBS ?= -lcheck -lm
 LDFLAGS ?= -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 #-pedantic
 RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} -DNDEBUG
-DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
+DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
 
 LAYER0_SRCS := logger.c
 LAYER1_SRCS := mywm-util.c util.c

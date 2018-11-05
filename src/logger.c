@@ -19,7 +19,12 @@
 extern xcb_connection_t *dis;
 
 extern Display *dpy;
-int LOG_LEVEL=LOG_LEVEL_ERROR;
+
+#ifndef INIT_LOG_LEVEL
+#define INIT_LOG_LEVEL LOG_LEVEL_INFO
+#endif
+
+int LOG_LEVEL=INIT_LOG_LEVEL;
 
 int getLogLevel(){
     return LOG_LEVEL;
