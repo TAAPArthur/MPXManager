@@ -115,7 +115,7 @@ Node* getNextWindowInStack(int dir){
             node=node->next?node->next:activeWindows;
         else
             node=node->prev?node->prev:getLast(activeWindows);
-        if(isActivatable(getValue(node)))
+        if(isInteractable(getValue(node)))
             break;
     }while(node!=starting);
     return node;

@@ -73,7 +73,8 @@ START_TEST(test_layouts){
 START_TEST(test_fixed_position_windows){
     int size=4;
     for(int i=1;i<=size;i++)
-        createNormalWindow();
+        mapWindow(createNormalWindow());
+    flush();
     scan(root);
     short config[]={1,2,3,4};
     WindowInfo*winInfo=getValue(getAllWindows());

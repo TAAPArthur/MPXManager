@@ -40,8 +40,11 @@ int isWindowVisible(WindowInfo* winInfo){
 int isMappable(WindowInfo* winInfo){
     return winInfo && hasMask(winInfo, MAPABLE_MASK);
 }
+int isMapped(WindowInfo* winInfo){
+    return winInfo && hasMask(winInfo, MAPPED_MASK);
+}
 int isTileable(WindowInfo*winInfo){
-    return isMappable(winInfo) && !hasMask(winInfo, NO_TILE_MASK);
+    return isMapped(winInfo) && !hasMask(winInfo, NO_TILE_MASK);
 }
 
 int isExternallyResizable(WindowInfo* winInfo){
@@ -59,6 +62,9 @@ int isExternallyRaisable(WindowInfo* winInfo){
     return !winInfo || winInfo->mask & EXTERNAL_RAISE_MASK;
 }
 
+int isInteractable(WindowInfo* winInfo){
+    return !winInfo || winInfo->mask & MAPPED_MASK && !(winInfo->mask & HIDDEN_MASK);
+}
 int isActivatable(WindowInfo* winInfo){
     return !winInfo || winInfo->mask & MAPABLE_MASK && !(winInfo->mask & HIDDEN_MASK);
 }
@@ -148,7 +154,7 @@ void scan(xcb_window_t baseWindow) {
                 WindowInfo *winInfo=createWindowInfo(children[i]);
                 //if the window is not unmapped
                 if(attr->map_state)
-                    addMask(winInfo, MAPABLE_MASK);
+                    addMask(winInfo, MAPABLE_MASK|MAPPED_MASK);
 
                 if(processNewWindow(winInfo))
                     scan(children[i]);

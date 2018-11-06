@@ -97,6 +97,7 @@ int isWindowVisible(WindowInfo* winInfo);
  */
 int isMappable(WindowInfo* winInfo);
 
+int isInteractable(WindowInfo* winInfo);
 
 /**
  * Determines if a window should be tiled given its mapState and masks
