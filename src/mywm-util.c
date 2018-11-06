@@ -411,13 +411,10 @@ Node* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex){
     return NULL;
 }
 int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex){
-    Node*node;
-    for(int i=0;i<NUMBER_OF_LAYERS;i++){
-        node=isWindowInWorkspace(winInfo,workspaceIndex);
-        if(node){
-            softDeleteNode(node);
-            return 1;
-        }
+    Node*node=isWindowInWorkspace(winInfo,workspaceIndex);
+    if(node){
+        softDeleteNode(node);
+        return 1;
     }
     return 0;
 }
