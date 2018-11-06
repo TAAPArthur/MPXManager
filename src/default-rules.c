@@ -201,7 +201,7 @@ void focusFollowMouse(void){
 }
 void onFocusInEvent(void){
     xcb_input_focus_in_event_t*event= getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"id %d window %d %d\n",event->deviceid,event->event,event->event);
+    LOG(LOG_LEVEL_TRACE,"id %d window %d %d\n",event->deviceid,event->event,event->event);
     setActiveMasterByDeviceId(event->deviceid);
     onWindowFocus(event->event);
     setActiveWindowProperty(event->event);
@@ -312,7 +312,7 @@ void onClientMessage(void){
 
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"device event %d %d %d %d\n\n",event->event_type,event->deviceid,event->sourceid,event->flags);
+    LOG(LOG_LEVEL_TRACE,"device event %d %d %d %d\n\n",event->event_type,event->deviceid,event->sourceid,event->flags);
 
     if((event->flags&XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && IGNORE_KEY_REPEAT)
         return;

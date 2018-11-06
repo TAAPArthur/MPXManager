@@ -88,7 +88,7 @@ int loadGenericEvent(xcb_ge_generic_event_t*event){
 
 
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode){
-        LOG(LOG_LEVEL_DEBUG,"generic event detected %d %d %s\n",event->event_type,event->response_type,genericEventTypeToString(event->event_type));
+        LOG(LOG_LEVEL_TRACE,"generic event detected %d %d %s\n",event->event_type,event->response_type,genericEventTypeToString(event->event_type));
         return event->event_type+GENERIC_EVENT_OFFSET;
 
     }

@@ -15,6 +15,7 @@
 #include "mywm-util.h"
 #include "logger.h"
 #include "globals.h"
+#include "wmfunctions.h"
 
 extern xcb_connection_t *dis;
 
@@ -37,6 +38,49 @@ void printNodeList(Node*n){
     FOR_EACH(n,printf("%d ",getIntValue(n)));
     printf("\n");
 }
+#define PRINT_MASK(str,mask) if( str & mask)LOG(LOG_LEVEL_DEBUG,#str " ");
+void printMask(int mask){
+    PRINT_MASK(NO_MASK,mask);
+    PRINT_MASK(X_MAXIMIZED_MASK,mask);
+    PRINT_MASK(Y_MAXIMIZED_MASK,mask);
+    PRINT_MASK(FULLSCREEN_MASK,mask);
+    PRINT_MASK(ROOT_FULLSCREEN_MASK,mask);
+    PRINT_MASK(NO_TILE_MASK,mask);
+    PRINT_MASK(STICKY_MASK,mask);
+    PRINT_MASK(HIDDEN_MASK,mask);
+    PRINT_MASK(EXTERNAL_RESIZE_MASK,mask);
+    PRINT_MASK(EXTERNAL_MOVE_MASK,mask);
+    PRINT_MASK(EXTERNAL_BORDER_MASK,mask);
+    PRINT_MASK(EXTERNAL_RAISE_MASK,mask);
+    PRINT_MASK(FLOATING_MASK,mask);
+    PRINT_MASK(SRC_INDICATION_OTHER,mask);
+    PRINT_MASK(SRC_INDICATION_APP,mask);
+    PRINT_MASK(SRC_INDICATION_PAGER,mask);
+    PRINT_MASK(SRC_ANY,mask);
+    PRINT_MASK(INPUT_MASK,mask);
+    PRINT_MASK(WM_TAKE_FOCUS_MASK,mask);
+    PRINT_MASK(WM_DELETE_WINDOW_MASK,mask);
+    PRINT_MASK(WM_PING_MASK,mask);
+    PRINT_MASK(PARTIALLY_VISIBLE,mask);
+    PRINT_MASK(FULLY_VISIBLE,mask);
+    PRINT_MASK(MAPABLE_MASK,mask);
+    PRINT_MASK(MAPPED_MASK,mask);
+    PRINT_MASK(URGENT_MASK,mask);
+}
+void printSummary(void){
+    LOG(LOG_LEVEL_DEBUG,"Summary:\n");
+    for(int i=0;i<getNumberOfWorkspaces();i++)
+        for(int l=0;l<NUMBER_OF_LAYERS;l++){
+            Node*n=getWindowStackAtLayer(getWorkspaceByIndex(i),l);
+            if(!isNotEmpty(n))continue;
+            LOG(LOG_LEVEL_DEBUG,"%d @%d\n",i,l);
+            FOR_EACH(n,
+                WindowInfo*winInfo=getValue(n);
+                LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
+            );
+            LOG(LOG_LEVEL_DEBUG,"\n");
+        }
+}
 void dumpAllWindowInfo(void){
     Node*n=getAllWindows();
     FOR_EACH(n,dumpWindowInfo(getValue(n)));
@@ -52,8 +96,7 @@ void dumpWindowInfo(WindowInfo* win){
     LOG(LOG_LEVEL_DEBUG,"Title class %s\n",win->title);
 
     LOG(LOG_LEVEL_DEBUG,"Mask %d\n",win->mask);
-
-    //LOG(level,"mapped %d state: %d visible status: %d\n",win->mapped,win->state,isWindowVisible(win));
+    printMask(win->mask);
     LOG(LOG_LEVEL_DEBUG,"last active workspace %d\n",win->workspaceIndex);
 }
 
@@ -112,6 +155,9 @@ int catchError(xcb_void_cookie_t cookie){
         logError(e);
         //TODO finish
         switch(e->major_code){
+            case BadAccess:
+                exit(1);
+                break;
             case BadWindow:
                 break;
         }
@@ -120,12 +166,12 @@ int catchError(xcb_void_cookie_t cookie){
     return e?1:0;
 }
 void logError(xcb_generic_error_t* e){
-    LOG(LOG_LEVEL_ERROR,"error occured with resource %d %d %d\n\n",e->resource_id,e->major_code,e->minor_code);
-
+    LOG(LOG_LEVEL_ERROR,"error occured with resource %d %d %d\n",e->resource_id,e->major_code,e->minor_code);
 
     int size=256;
     char buff[size];
     XGetErrorText(dpy,e->error_code,buff,size);
+    dumpWindowInfo(getWindowInfo(e->resource_id));
     LOG(LOG_LEVEL_ERROR,"Error code %d %s \n",
                e->error_code,buff) ;
 

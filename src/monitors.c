@@ -68,7 +68,6 @@ int addDock(WindowInfo* info){
 
     xcb_window_t win=info->id;
     xcb_ewmh_wm_strut_partial_t strut;
-    LOG(LOG_LEVEL_INFO,"Avoid structs\n");
     if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
                 xcb_ewmh_get_wm_strut_partial(ewmh, win), &strut, NULL)){
         setDockArea(info,sizeof(xcb_ewmh_wm_strut_partial_t)/sizeof(int),(int*)&strut);

@@ -73,7 +73,6 @@ static void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LE
 
         int maxHeight=getMaxDimensionForWindow(m, winInfo,1);
         if(maxHeight){
-            LOG(LOG_LEVEL_DEBUG,"hiehg toverried\n");
             assert(maxHeight>=values[3]);
             actualWindowValues[3]=maxHeight;
         }
@@ -83,8 +82,8 @@ static void configureWindow(Monitor*m,WindowInfo* winInfo,short values[CONFIG_LE
     }
     assert(winInfo->id);
     xcb_configure_window_checked(dis, winInfo->id, mask, actualWindowValues);
-    LOG(LOG_LEVEL_DEBUG,"Window dims %d %d %d %d %d %d\n",values[0],values[1],values[2],values[3],values[4],values[5]);
-    LOG(LOG_LEVEL_DEBUG,"Window dims %d %d %d %d \n",m->width,m->height,m->viewWidth,m->viewHeight);
+    LOG(LOG_LEVEL_ALL,"Window dims %d %d %d %d %d %d\n",values[0],values[1],values[2],values[3],values[4],values[5]);
+    LOG(LOG_LEVEL_ALL,"Window dims %d %d %d %d \n",m->width,m->height,m->viewWidth,m->viewHeight);
     //if(checkError(c, winInfo->id, "could not configure window"))assert(0);
 }
 
@@ -116,7 +115,7 @@ Node*splitEven(Monitor*m,Node*stack,short values[CONFIG_LEN],int dim,int num){
     assert(stack);
     int rem=values[dim]%num;
     int size =values[dim]/num;
-    LOG(LOG_LEVEL_INFO,"tiling at most %d windows size %d rem: %d\n",num,size, rem);
+    LOG(LOG_LEVEL_TRACE,"tiling at most %d windows size %d rem: %d\n",num,size, rem);
     FOR_EACH_TILE_AT_MOST(stack,num,
             values[dim] =size+(rem-->0?1:0);
             configureWindow(m,getValue(stack),values);
@@ -135,7 +134,7 @@ void grid(Monitor*m,Node*windowStack,int*args){
         return;
     }
 
-    LOG(LOG_LEVEL_INFO,"using grid layout: num win %d\n\n\n\n",size);
+    LOG(LOG_LEVEL_TRACE,"using grid layout: num win %d\n",size);
     int isOdd =size%2==1;
 
     int fixedDim=args[2];

@@ -60,6 +60,7 @@ void parseAgrs(int argc, char * argv[]){
       {"help",          no_argument,       NULL, 'h'},
       {"patch",          no_argument, NULL, 'p'},
       {"no-event-loop",          no_argument, NULL, 'n'},
+      {"crash-on-error",          no_argument, NULL, 'c'},
       {NULL,            0,                 NULL, 0  }
     };
 
@@ -69,7 +70,9 @@ void parseAgrs(int argc, char * argv[]){
          case -1:       /* no more arguments */
          case 0:        /* long options toggles */
          break;
-
+         case 'c':
+            CRASH_ON_ERRORS=1;
+            break;
          case 'n':
              enterEventLoop=0;
              break;

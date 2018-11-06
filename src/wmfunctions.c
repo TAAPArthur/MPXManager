@@ -110,7 +110,8 @@ void connectToXserver(){
     registerForEvents();
     APPLY_RULES_OR_RETURN(onXConnection,NULL);
     broadcastEWMHCompilence();
-
+    dumpAllWindowInfo();
+    printSummary();
 }
 void syncState(){
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
@@ -129,7 +130,7 @@ void syncState(){
 }
 
 void scan(xcb_window_t baseWindow) {
-    LOG(LOG_LEVEL_DEBUG,"Scanning children of %d\n",baseWindow);
+    LOG(LOG_LEVEL_TRACE,"Scanning children of %d\n",baseWindow);
     xcb_query_tree_reply_t *reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, baseWindow), 0);
     assert(reply && "could not query tree");
@@ -143,7 +144,7 @@ void scan(xcb_window_t baseWindow) {
             cookies[i]=xcb_get_window_attributes(dis, children[i]);
 
         for (int i = 0; i < numberOfChildren; i++) {
-            LOG(LOG_LEVEL_DEBUG,"processing child %d\n",children[i]);
+            LOG(LOG_LEVEL_TRACE,"processing child %d\n",children[i]);
             attr = xcb_get_window_attributes_reply(dis,cookies[i], NULL);
 
             assert(attr);
@@ -201,17 +202,16 @@ void updateEWMHClientList(){
     xcb_ewmh_set_client_list_stacking(ewmh, defaultScreenNumber, num, stackingOrder);
 }
 int processNewWindow(WindowInfo* winInfo){
-    LOG(LOG_LEVEL_DEBUG,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
+    LOG(LOG_LEVEL_TRACE,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
 
     if(winInfo->cloneOrigin==0)
         loadWindowProperties(winInfo);
-    //dumpWindowInfo(winInfo);
     if(!applyRules(eventRules[ProcessingWindow],winInfo)){
-        LOG(LOG_LEVEL_DEBUG,"Window is to be ignored; freeing winInfo\n");
+        LOG(LOG_LEVEL_TRACE,"Window is to be ignored; freeing winInfo\n");
         deleteWindowInfo(winInfo);
         return 0;
     }
-    LOG(LOG_LEVEL_DEBUG,"Registering window\n");
+    LOG(LOG_LEVEL_DEBUG,"Registering window %d\n",isMappable(winInfo));
     registerWindow(winInfo);
     updateEWMHClientList();
     return 1;
@@ -376,7 +376,7 @@ int getLastLayerForWindow(WindowInfo*winInfo){
 }
 
 void setXWindowStateFromMask(WindowInfo*winInfo){
-
+    assert(winInfo);
     xcb_atom_t supportedStates[]={SUPPORTED_STATES};
 
     xcb_ewmh_get_atoms_reply_t reply;
@@ -462,6 +462,7 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int 
             action=XCB_EWMH_WM_STATE_ADD;
 
     }
+    LOG(LOG_LEVEL_DEBUG,"Action %d mask %d layer %d\n",action,mask,layer);
     if(action==XCB_EWMH_WM_STATE_REMOVE){
         if(state.layer!=NORMAL_LAYER)
             moveWindowToLayerForAllWorkspaces(winInfo, NORMAL_LAYER);
@@ -591,7 +592,7 @@ int deleteWindow(xcb_window_t winToRemove){
 
 int attemptToMapWindow(int id){
     WindowInfo* winInfo=getValue(isInList(getAllWindows(), id));
-    LOG(LOG_LEVEL_DEBUG,"Mappable status %d %d\n\n\n",isWindowInVisibleWorkspace(winInfo),isMappable(winInfo));
+    LOG(LOG_LEVEL_DEBUG,"Mappable status %d %d %d\n",id,isWindowInVisibleWorkspace(winInfo),isMappable(winInfo));
     if(!winInfo || isWindowInVisibleWorkspace(winInfo) && isMappable(winInfo))
         return catchError(xcb_map_window_checked(dis, id));
     return 0;
@@ -619,7 +620,7 @@ static void setLayerState(int workspaceIndex,int map,int layer){
             updateWindowWorkspaceState(getValue(stack),workspaceIndex,map))
 }
 static void setWorkspaceState(int workspaceIndex,int map){
-    LOG(LOG_LEVEL_DEBUG,"Setting workspace %d  to %d:\n",workspaceIndex,map);
+    LOG(LOG_LEVEL_DEBUG,"Setting workspace %d to %d:\n",workspaceIndex,map);
     for(int i=0;i<NUMBER_OF_LAYERS;i++)
         setLayerState(workspaceIndex,map,i);
 
@@ -630,7 +631,7 @@ void switchToWorkspace(int workspaceIndex){
         return;
     }
     int currentIndex=getActiveWorkspaceIndex();
-    LOG(LOG_LEVEL_DEBUG,"Switchting to workspace %d:\n",workspaceIndex);
+    LOG(LOG_LEVEL_DEBUG,"Switching to workspace %d:\n",workspaceIndex);
     /*
      * Each master can have independent active workspaces. While an active workspace is generally visible when it is set,
      * it can become invisible due to another master switching workspaces. So when the master in the invisible workspaces
@@ -710,7 +711,7 @@ void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer){
 
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, destIndex);
 
-    LOG(LOG_LEVEL_INFO,"window %d added to workspace %d at layer %d",winInfo->id,destIndex,layer);
+    LOG(LOG_LEVEL_TRACE,"window %d added to workspace %d at layer %d\n",winInfo->id,destIndex,layer);
 }
 
 
