@@ -289,7 +289,17 @@ void onClientMessage(void){
     }
     else if (message==ewmh->_NET_WM_STATE){
         dumpAtoms((xcb_atom_t *) &data.data32[1], 2);
-        setWindowStateFromAtomInfo(getWindowInfo(win),(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
+        WindowInfo*winInfo=getWindowInfo(win);
+        if(winInfo){
+            setWindowStateFromAtomInfo(winInfo,(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
+            setXWindowStateFromMask(winInfo);
+        }
+        else{
+            WindowInfo fakeWinInfo={.mask=0,.id=win};
+            loadSavedAtomState(&fakeWinInfo);
+            setWindowStateFromAtomInfo(&fakeWinInfo,(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
+            setXWindowStateFromMask(&fakeWinInfo);
+        }
     }
     else if(message==ewmh->WM_PROTOCOLS){
         if(data.data32[0]==ewmh->_NET_WM_PING){

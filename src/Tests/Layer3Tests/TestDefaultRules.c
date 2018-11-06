@@ -388,13 +388,18 @@ START_TEST(test_client_set_window_workspace){
 }END_TEST
 START_TEST(test_client_set_window_state){
     int states[]={XCB_EWMH_WM_STATE_ADD,XCB_EWMH_WM_STATE_REMOVE,XCB_EWMH_WM_STATE_TOGGLE,XCB_EWMH_WM_STATE_TOGGLE};
+    int ignoredWindow=createIgnoredWindow();
     for(int i=0;i<LEN(states);i++){
+        xcb_ewmh_request_change_wm_state(ewmh, defaultScreenNumber, ignoredWindow, states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ, ewmh->_NET_WM_STATE_MAXIMIZED_VERT, 0);
         xcb_ewmh_request_change_wm_state(ewmh, defaultScreenNumber, winInfo->id, states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ, ewmh->_NET_WM_STATE_MAXIMIZED_VERT, 0);
         flush();
+        WindowInfo fakeWinInfo={.mask=0,.id=ignoredWindow};
         if(i%2==0)
             WAIT_UNTIL_TRUE(hasMask(winInfo, X_MAXIMIZED_MASK)&&hasMask(winInfo, Y_MAXIMIZED_MASK))
         else
             WAIT_UNTIL_FALSE(hasMask(winInfo, X_MAXIMIZED_MASK)&&hasMask(winInfo, Y_MAXIMIZED_MASK));
+        loadSavedAtomState(&fakeWinInfo);
+        assert((hasMask(&fakeWinInfo, X_MAXIMIZED_MASK)&&hasMask(&fakeWinInfo, Y_MAXIMIZED_MASK))==(i%2==0));
     }
 
 }END_TEST

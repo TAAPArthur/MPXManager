@@ -333,7 +333,13 @@ void loadWindowProperties(WindowInfo *winInfo){
     loadWindowType(winInfo);
     //dumpWindowInfo(winInfo);
 }
-
+void loadSavedAtomState(WindowInfo*winInfo){
+    xcb_ewmh_get_atoms_reply_t reply;
+    if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL)){
+        setWindowStateFromAtomInfo(winInfo,reply.atoms,reply.atoms_len,XCB_EWMH_WM_STATE_ADD);
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+}
 void registerWindow(WindowInfo*winInfo){
     assert(winInfo);
     assert(!isInList(getAllWindows(), winInfo->id) && "Window registered exists" );
@@ -344,11 +350,7 @@ void registerWindow(WindowInfo*winInfo){
     Window win=winInfo->id;
     assert(win);
     if(LOAD_SAVED_STATE){
-        xcb_ewmh_get_atoms_reply_t reply;
-        if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, win), &reply, NULL)){
-            setWindowStateFromAtomInfo(winInfo,reply.atoms,reply.atoms_len,XCB_EWMH_WM_STATE_ADD);
-            xcb_ewmh_get_atoms_reply_wipe(&reply);
-        }
+        loadSavedAtomState(winInfo);
     }
     //todo move to own method
     registerForWindowEvents(win, NON_ROOT_EVENT_MASKS);
@@ -456,7 +458,8 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int 
     }
     WindowState state={mask,layer};
     if(action==XCB_EWMH_WM_STATE_TOGGLE){
-        if(hasMask(winInfo, state.mask) &&getLastLayerForWindow(winInfo)==state.layer)
+        int currentLayer=getLastLayerForWindow(winInfo);
+        if(hasMask(winInfo, state.mask) &&(currentLayer==-1 ||currentLayer==state.layer))
             action=XCB_EWMH_WM_STATE_REMOVE;
         else
             action=XCB_EWMH_WM_STATE_ADD;

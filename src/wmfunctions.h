@@ -232,6 +232,7 @@ void loadWindowProperties(WindowInfo *winInfo);
  */
 void registerWindow(WindowInfo*winInfo);
 
+void loadSavedAtomState(WindowInfo*winInfo);
 
 /**
  * Sets the window state based on a list of atoms
