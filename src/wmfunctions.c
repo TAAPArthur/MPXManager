@@ -269,12 +269,17 @@ void loadTitleInfo(WindowInfo*winInfo){
 }
 void loadWindowType(WindowInfo *winInfo){
     xcb_ewmh_get_atoms_reply_t name;
-    if(xcb_ewmh_get_wm_window_type_reply(ewmh,
-            xcb_ewmh_get_wm_window_type(ewmh, winInfo->id), &name, NULL)){
-        winInfo->type=name.atoms[0];
-        xcb_ewmh_get_atoms_reply_wipe(&name);
-    }
-    else{
+    int foundType=0;
+    for(int i=0;i<10;i++)
+        if(xcb_ewmh_get_wm_window_type_reply(ewmh,
+                xcb_ewmh_get_wm_window_type(ewmh, winInfo->id), &name, NULL)){
+            winInfo->type=name.atoms[0];
+            xcb_ewmh_get_atoms_reply_wipe(&name);
+            foundType=1;
+            break;
+        }
+        else msleep(10);
+    if(!foundType){
         winInfo->implicitType=1;
         winInfo->type=winInfo->transientFor?ewmh->_NET_WM_WINDOW_TYPE_DIALOG:ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
     }
