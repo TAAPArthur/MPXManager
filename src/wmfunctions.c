@@ -206,12 +206,12 @@ void updateEWMHClientList(){
     xcb_ewmh_set_client_list_stacking(ewmh, defaultScreenNumber, num, stackingOrder);
 }
 int processNewWindow(WindowInfo* winInfo){
-    LOG(LOG_LEVEL_TRACE,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
+    LOG(LOG_LEVEL_DEBUG,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
 
     if(winInfo->cloneOrigin==0)
         loadWindowProperties(winInfo);
     if(!applyRules(eventRules[ProcessingWindow],winInfo)){
-        LOG(LOG_LEVEL_TRACE,"Window is to be ignored; freeing winInfo\n");
+        LOG(LOG_LEVEL_DEBUG,"Window is to be ignored; freeing winInfo\n");
         deleteWindowInfo(winInfo);
         return 0;
     }
@@ -573,7 +573,26 @@ int focusWindow(int win){
     //onWindowFocus(win);
     return 1;
 }
-
+int raiseWindowInfo(WindowInfo* winInfo){
+    if (getLayer(winInfo)!=NORMAL_LAYER){
+        Node*head=getWindowStackOfWindow(winInfo);
+        Node*node=head;
+        UNTIL_FIRST(node,getValue(node)==winInfo);
+        assert(node);
+        if(node)
+           shiftToHead(head,node); 
+    }
+    if(getLayer(winInfo)>=NORMAL_LAYER){
+        int result=raiseWindow(winInfo->id);
+        if(result)
+            tileUpperLayers(getWorkspaceOfWindow(winInfo),getLayer(winInfo)+1);
+        return result;
+    }
+    else{ 
+        tileLowerLayers(getWorkspaceOfWindow(winInfo));
+        return 1;
+    }
+}
 int raiseWindow(xcb_window_t win){
     assert(dis);
     assert(win);
@@ -593,7 +612,7 @@ int activateWindow(WindowInfo* winInfo){
     }
     LOG(LOG_LEVEL_DEBUG,"activating window %d in workspace %d\n",winInfo->id,winInfo->workspaceIndex);
     switchToWorkspace(winInfo->workspaceIndex);
-    return raiseWindow(winInfo->id) && focusWindowInfo(winInfo)?winInfo->id:0;
+    return raiseWindowInfo(winInfo) && focusWindowInfo(winInfo)?winInfo->id:0;
 }
 
 int deleteWindow(xcb_window_t winToRemove){
@@ -604,7 +623,7 @@ int deleteWindow(xcb_window_t winToRemove){
 
 int attemptToMapWindow(int id){
     WindowInfo* winInfo=getValue(isInList(getAllWindows(), id));
-    LOG(LOG_LEVEL_DEBUG,"Mappable status %d %d %d\n",id,isWindowInVisibleWorkspace(winInfo),isMappable(winInfo));
+    LOG(LOG_LEVEL_TRACE,"Mappable status %d %d %d\n",id,isWindowInVisibleWorkspace(winInfo),isMappable(winInfo));
     if(!winInfo || isWindowInVisibleWorkspace(winInfo) && isMappable(winInfo))
         return catchError(xcb_map_window_checked(dis, id));
     return 0;
@@ -721,6 +740,8 @@ void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer){
     addWindowToWorkspaceAtLayer(winInfo, destIndex, layer);
     updateWindowWorkspaceState(winInfo, destIndex, isWorkspaceVisible(destIndex));
 
+    if(isWorkspaceVisible(destIndex) && layer<NORMAL_LAYER)
+        tileLowerLayers(getWorkspaceByIndex(destIndex));
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, destIndex);
 
     LOG(LOG_LEVEL_TRACE,"window %d added to workspace %d at layer %d\n",winInfo->id,destIndex,layer);
@@ -747,7 +768,24 @@ static void tileNonNormalLayers(WindowInfo*winInfo,int above){
         xcb_configure_window(dis, winInfo->id,XCB_CONFIG_WINDOW_STACK_MODE,
                 (int[]){above?XCB_STACK_MODE_ABOVE:XCB_STACK_MODE_BELOW});
 }
-
+void tileLowerLayers(Workspace*workspace){
+    for(int i=NORMAL_LAYER-1;i>=DESKTOP_LAYER;i--){
+        Node*n=workspace->windows[i];
+        FOR_EACH(n,tileNonNormalLayers(getValue(n),0));
+    }
+}
+void tileUpperLayers(Workspace*workspace,int startingLayer){
+    LOG(LOG_LEVEL_DEBUG,"tiling upper windows\n");
+    assert(startingLayer>NORMAL_LAYER);
+    assert(workspace);
+    for(int i=startingLayer;i<NUMBER_OF_LAYERS;i++){
+        if(isNotEmpty(workspace->windows[i])){
+            Node*n=getLast(workspace->windows[i]);
+            assert(n);
+            FOR_EACH_REVERSED(n,tileNonNormalLayers(getValue(n),1));
+        }
+    }
+}
 void tileWorkspace(int index){
     //TDOD support APPLY_RULES_OR_RETURN(TilingWindows,&index);
 
@@ -762,7 +800,7 @@ void tileWorkspace(int index){
     assert(m);
 
     if(!isNotEmpty(getWindowStack(workspace)))
-        LOG(LOG_LEVEL_DEBUG,"WARNING there are not windows to tile\n");
+        LOG(LOG_LEVEL_TRACE,"no windows to tile\n");
     if(!layout->layoutFunction)
         LOG(LOG_LEVEL_WARN,"WARNING there is not a set layout function\n");
     if(layout->layoutFunction)
@@ -772,14 +810,8 @@ void tileWorkspace(int index){
         }
         else
             LOG(LOG_LEVEL_TRACE,"condition not met to use layout %s \n",layout->name);
-    for(int i=NORMAL_LAYER-1;i>=DESKTOP_LAYER;i--){
-        Node*n=workspace->windows[i];
-        FOR_EACH(n,tileNonNormalLayers(getValue(n),0));
-    }
-    for(int i=NORMAL_LAYER+1;i<NUMBER_OF_LAYERS;i++){
-        Node*n=workspace->windows[i];
-        FOR_EACH(n,tileNonNormalLayers(getValue(n),1));
-    }
+    tileLowerLayers(workspace);
+    tileUpperLayers(workspace,NORMAL_LAYER+1);
 }
 
 void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int mask){

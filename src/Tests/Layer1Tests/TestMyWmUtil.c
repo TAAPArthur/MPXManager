@@ -32,12 +32,15 @@ void testWindowAddRemove(Node*head,
         int(*remove)(unsigned int)){
 
     assert(head!=NULL);
+    assert(head->prev==NULL);
     assert(getSize(head)==0);
 
     CREATE_WIN_INFO_ARR
 
     for(int i=1;i<=size;i++){
         add(arr[i-1]);
+        if(head->prev)
+            head=head->prev;
         assert(getSize(head)==i);
         assert(getIntValue(head)==i);
     }
@@ -622,24 +625,31 @@ START_TEST(test_workspace_window_add_remove){
     }
     assert(getValue(getMasterWindowStack())==NULL);
     assert(getSize(getMasterWindowStack())==0);
-/*
+
     testWindowAddRemove(
-            getMasterWindowStack(),addWindowToActiveWorkspace,
-            removeWindowFromActiveWorkspace);
+            getActiveWindowStack(),addWindowToActiveWorkspace,
+            removeWindow);
 
     int layer = DESKTOP_LAYER;
-    int addAtLayer(xcb_window_t win){
-       int i= addWindowToWorkspaceAtLayer(win, getActiveWorkspaceIndex(), layer);
-       assert(getActiveWorkspaceIndex()==((WindowInfo*)getValue(isInList(getAllWindows(), win)))->workspaceIndex);
+    int removeAtLayer(unsigned int win){
+       WindowInfo*winInfo=getWindowInfo(win);
+       int i= removeWindowFromActiveWorkspace(winInfo);
+       return i;
+    }
+    int addAtLayer(WindowInfo* winInfo){
+       int i= addWindowToWorkspaceAtLayer(winInfo, getActiveWorkspaceIndex(), layer);
+       assert(getActiveWorkspace()==getWorkspaceOfWindow(winInfo));
+       assert(layer==getLayer(winInfo));
+       assert(getWindowStackAtLayer(getActiveWorkspace(),layer)==getWindowStackOfWindow(winInfo));
        return i;
     }
 
     for(;layer<NUMBER_OF_LAYERS;layer++)
         testWindowAddRemove(
-                getActiveWindowsAtLayer(layer),addAtLayer,
-                removeWindowFromActiveWorkspace);
+                getWindowStackAtLayer(getActiveWorkspace(),layer),addAtLayer,
+                removeAtLayer);
 
-    */
+    
 }END_TEST
 
 

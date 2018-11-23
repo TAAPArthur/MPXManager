@@ -292,6 +292,15 @@ Node*getWindowStack(Workspace*workspace){
 Node* getWindowStackAtLayer(Workspace*workspace,int layer){
     return workspace->windows[layer];
 }
+Workspace* getWorkspaceOfWindow(WindowInfo*winInfo){
+    return getWorkspaceByIndex(winInfo->workspaceIndex);
+}
+Node* getWindowStackOfWindow(WindowInfo*winInfo){
+   return getWindowStackAtLayer(getWorkspaceOfWindow(winInfo),getLayer(winInfo));
+}
+int getLayer(WindowInfo*winInfo){
+    return winInfo->layer;
+}
 
 //Workspace methods
 
@@ -410,6 +419,9 @@ Node* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex){
     }
     return NULL;
 }
+int removeWindowFromActiveWorkspace(WindowInfo* winInfo){
+    return removeWindowFromWorkspace(winInfo,getActiveWorkspaceIndex());
+}
 int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex){
     Node*node=isWindowInWorkspace(winInfo,workspaceIndex);
     if(node){
@@ -421,6 +433,9 @@ int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex){
 
 
 
+int addWindowToActiveWorkspace(WindowInfo*winInfo){
+    return addWindowToWorkspace(winInfo,getActiveWorkspaceIndex());
+}
 int addWindowToWorkspace(WindowInfo*info,int workspaceIndex){
     return addWindowToWorkspaceAtLayer(info, workspaceIndex, NORMAL_LAYER);
 }
@@ -432,6 +447,7 @@ int addWindowToWorkspaceAtLayer(WindowInfo*winInfo,int workspaceIndex,int layer)
     assert(winInfo!=NULL);
     if(addUnique(workspace->windows[layer], winInfo)){
         winInfo->workspaceIndex=workspaceIndex;
+        winInfo->layer=layer;
         return 1;
     }
     return 0;

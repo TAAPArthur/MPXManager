@@ -150,7 +150,7 @@ void onCreateEvent(void){
     if(getWindowInfo(event->window))
         return;
     WindowInfo*winInfo=createWindowInfo(event->window);
-    LOG(LOG_LEVEL_TRACE,"window: %d parent: %d\n",event->window,event->parent);
+    LOG(LOG_LEVEL_DEBUG,"window: %d parent: %d\n",event->window,event->parent);
     processNewWindow(winInfo);
 }
 void onDestroyEvent(void){
@@ -215,6 +215,7 @@ void onPropertyEvent(void){
     xcb_property_notify_event_t*event=getLastEvent();
     if(getWindowInfo(event->window))
         loadWindowProperties(getWindowInfo(event->window));
+    else processNewWindow(createWindowInfo(event->window));
 }
 
 void onClientMessage(void){

@@ -27,7 +27,7 @@ Binding bindings[]={
     WORKSPACE_OPERATION(XK_0,9),
     STACK_OPERATION(XK_Up,XK_Down,XK_Left,XK_Right),
     STACK_OPERATION(XK_H,XK_J,XK_K,XK_L),
-    {0,Button1,BIND(focusActiveWindow), .noGrab=1, .passThrough=1 ,.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
+    {0,Button1,BIND(activateWindow), .noGrab=1, .passThrough=1 ,.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
 
     {Mod1Mask,XK_Tab,AUTO_CHAIN_GRAB(0,1,
         {Mod1Mask,XK_Tab,BIND(cycleWindows,1),.noGrab=1},
@@ -123,7 +123,8 @@ Binding customBindings[]={
 
 
 
-    {Mod4Mask | ShiftMask,XK_asciitilde, BIND(dumpAllWindowInfo)},
+    {Mod4Mask | ShiftMask,XK_asciitilde, BIND(printSummary)},
+    {Mod4Mask |ControlMask |ShiftMask,XK_asciitilde, BIND(dumpAllWindowInfo)},
     {Mod4Mask ,XK_grave, BIND(resetUserMask)},
 };
 /*

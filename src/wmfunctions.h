@@ -283,6 +283,8 @@ void updateFocusState(WindowInfo*winInfo);
  * @param index
  */
 void tileWorkspace(int index);
+void tileLowerLayers(Workspace*workspace);
+void tileUpperLayers(Workspace*workspace,int startingLayer);
 
 /**
  * Sets the border color for the given window
@@ -313,6 +315,7 @@ int focusWindowInfo(WindowInfo*winInfo);
  * @return 1 iff no error was detected
  */
 int raiseWindow(xcb_window_t win);
+int raiseWindowInfo(WindowInfo* winInfo);
 
 /**
  * Maps the window specified by id

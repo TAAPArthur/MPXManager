@@ -51,6 +51,7 @@ typedef struct window_info{
      * Note that his field may not contain all the workspaces an window belongs to
      */
     int workspaceIndex;
+    int layer;
     /**
      * THe number of workspaces this window is in that are currently viewable
      */
@@ -475,6 +476,8 @@ Node*getWindowStack(Workspace*workspace);
  */
 Node* getWindowStackAtLayer(Workspace*workspace,int layer);
 
+Workspace* getWorkspaceOfWindow(WindowInfo*winInfo);
+Node* getWindowStackOfWindow(WindowInfo*winInfo);
 /**
  *
  * @return the windows in the active workspace at the NORMAL_LAYER
@@ -675,6 +678,7 @@ void removeWindowFromAllWorkspaces(WindowInfo* winInfo);
  * @return 1 iff the window was actually removed
  */
 int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex);
+int removeWindowFromActiveWorkspace(WindowInfo* winInfo);
 /**
  * Adds a windows to a given workspace at a given layer
  * First the window is removed from any layer if the given workspace if present
@@ -692,6 +696,7 @@ int addWindowToWorkspaceAtLayer(WindowInfo* winInfo,int workspaceIndex,int layer
  * @see addWindowToWorkspaceAtLayer
  */
 int addWindowToWorkspace(WindowInfo*info,int workspaceIndex);
+int addWindowToActiveWorkspace(WindowInfo*winInfo);
 /**
  * Removes window from context and master(s)/workspace lists.
  * The Nodes containing the window and the windows value are freeded also
@@ -728,4 +733,5 @@ int addWindowInfo(WindowInfo* wInfo);
  * @return
  */
 Node* getClonesOfWindow(WindowInfo*winInfo);
+int getLayer(WindowInfo*winInfo);
 #endif

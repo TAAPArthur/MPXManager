@@ -403,6 +403,44 @@ START_TEST(test_invalid_state){
     assert(getWindowInfo(win)->workspaceIndex<getNumberOfWorkspaces());
 }END_TEST
 
+START_TEST(test_raise_window_layer){
+    int windowsPerLayer=2;
+    setActiveLayout(NULL);
+    //bottom to top stacking order;
+    WindowInfo* stackingOrder[NUMBER_OF_LAYERS*windowsPerLayer];
+    for(int i=NUMBER_OF_LAYERS-1;i>=0;i--){
+        for(int n=0;n<windowsPerLayer;n++){
+            int win=mapWindow(createNormalWindow());
+            WindowInfo*winInfo=createWindowInfo(win);
+            addWindowInfo(winInfo);
+            moveWindowToWorkspaceAtLayer(winInfo,getActiveWorkspaceIndex(),i);
+            stackingOrder[i*windowsPerLayer+n]=winInfo;
+            assert(raiseWindowInfo(winInfo));
+        }
+    }
+    flush();
+    for(int n=0;n<2;n++){
+        xcb_query_tree_reply_t *reply;
+        reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
+        assert(reply && "could not query tree");
+        int numberOfChildren = xcb_query_tree_children_length(reply);
+        xcb_window_t *children = xcb_query_tree_children(reply);
+        int counter=0;
+        for (int i = 0; i < numberOfChildren; i++) {
+            if(children[i]==stackingOrder[counter]->id){
+                counter++;
+                if(counter==LEN(stackingOrder))
+                    break;
+            }
+        }
+        assert(counter==LEN(stackingOrder));
+        free(reply);
+        for(int i=0;i<LEN(stackingOrder);i++){
+            assert(raiseWindowInfo(stackingOrder[i]));
+        }
+    }
+}END_TEST
+    
 START_TEST(test_raise_window){
     //windows are in same spot
     int bottom=mapArbitraryWindow();
@@ -729,6 +767,7 @@ Suite *x11Suite(void) {
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
 
     tcase_add_test(tc_core, test_raise_window);
+    tcase_add_test(tc_core, test_raise_window_layer);
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
     tcase_add_loop_test(tc_core, test_delete_window_request,1,4);
