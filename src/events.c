@@ -37,18 +37,35 @@ pthread_t runInNewThread(void *(*method) (void *),void*arg,int detached){
         pthread_detach(thread);
     return thread;
 }
+static volatile int idle;
+int getIdleCount(){
+    return idle;
+}
+
+
+static inline xcb_generic_event_t *getNextEvent(){
+    
+    xcb_generic_event_t *event;
+    event = xcb_poll_for_event(dis);
+    if(!event && !xcb_connection_has_error(dis)){
+        for(int i=0;i<POLL_COUNT;i++){
+            msleep(POLL_INTERVAL);
+            event = xcb_poll_for_event(dis);
+            if(event)return event;
+        }
+        idle++;
+        applyRules(eventRules[Idle],NULL);
+        flush();
+        LOG(LOG_LEVEL_TRACE,"Idle %d\n",idle);
+        event = xcb_wait_for_event (dis);
+    }
+    return event;
+}
 void *runEventLoop(void*c __attribute__((unused))){
     LOG(LOG_LEVEL_TRACE,"starting event loop\n");
     xcb_generic_event_t *event;
     while(!isShuttingDown() && dis) {
-        event = xcb_poll_for_event(dis);
-        if(!event && !xcb_connection_has_error(dis)){
-            applyRules(eventRules[Idle],NULL);
-            LOG(LOG_LEVEL_TRACE,"Waiting for event\n");
-            flush();
-            event = xcb_wait_for_event (dis);
-        }
-
+        event=getNextEvent();
         if(isShuttingDown()||xcb_connection_has_error(dis)||!event){
             if(event)free(event);
             if(isShuttingDown())

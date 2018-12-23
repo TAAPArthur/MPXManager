@@ -101,6 +101,13 @@ extern int defaultScreenNumber;
 /**Border width when borders for windows*/
 extern int DEFAULT_BORDER_WIDTH;
 
+/**
+ * Indicates how long we should poll for events before switching to blocking
+ * We will wait a total of POLL_COUNT*POLL_INTERVAL ms
+ */
+extern int POLL_COUNT;
+extern int POLL_INTERVAL;
+
 extern int statusPipeFD[2];
 void init();
 

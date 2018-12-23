@@ -21,6 +21,10 @@ void requestShutdown();
 int isShuttingDown();
 
 /**
+ *Returns a monotonically increasing counter indicating the number of times the event loop has been idel. Being idle means event loop has nothing to do at the moment which means it has responded to all prior events
+*/
+int getIdleCount();
+/**
  * Runs method in a new thread
  * @param method the method to run
  * @param arg the argument to pass into method

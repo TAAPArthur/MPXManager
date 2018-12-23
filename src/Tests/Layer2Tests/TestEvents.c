@@ -61,6 +61,8 @@ START_TEST(test_regular_events){
         count++;
     }
     IGNORE_SEND_EVENT=0;
+    POLL_COUNT=0;
+    int idleCount=-1;
     for(i=count+1;i<XCB_GE_GENERIC;i++){
         if(i==1){
             count++;
@@ -108,6 +110,8 @@ START_TEST(test_regular_events){
         //assert(lastType==i);
         free(event);
         //assert(count==i);
+        WAIT_UNTIL_TRUE(getIdleCount()>idleCount);
+        idleCount=getIdleCount();
     }
 
 }END_TEST

@@ -50,6 +50,10 @@ int CRASH_ON_ERRORS=0;
 
 Node* eventRules[NUMBER_OF_EVENT_RULES];
 
+int POLL_COUNT=10;
+int POLL_INTERVAL=10;
+
+
 void (*preStartUpMethod)(void);
 void (*startUpMethod)(void);
 void (*printStatusMethod)(void);
