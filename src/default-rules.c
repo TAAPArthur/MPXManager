@@ -189,6 +189,8 @@ void onMapRequestEvent(void){
 void onUnmapEvent(void){
     xcb_unmap_notify_event_t*event= getLastEvent();
     updateMapState(event->window,0);
+    if(getWindowInfo(event->window))
+        removeMask(getWindowInfo(event->window), FULLY_VISIBLE);
 }
 
 void focusFollowMouse(void){

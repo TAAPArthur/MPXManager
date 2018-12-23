@@ -186,6 +186,15 @@ START_TEST(test_visibility_update){
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win2)));
     assert(!isWindowVisible(getWindowInfo(win)));
 
+    int workspace=getActiveWorkspaceIndex();
+    switchToWorkspace(!workspace);
+    WAIT_UNTIL_TRUE(!isWindowVisible(getWindowInfo(win2)));
+    assert(!isWindowVisible(getWindowInfo(win)));
+    assert(!isWindowVisible(getWindowInfo(win2)));
+
+    switchToWorkspace(workspace);
+    WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win2)));
+
 }END_TEST
 
 START_TEST(test_property_update){
