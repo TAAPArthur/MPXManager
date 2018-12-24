@@ -354,7 +354,14 @@ int updateWindowCache(WindowInfo*winInfo);
  * Returns the top window in the stack relative to given master.
  * @return
  */
-Node* getMasterWindowStack();
+Node* getActiveMasterWindowStack(void);
+
+
+/**
+ * Returns the top window in the stack relative to given master.
+ * @return
+ */
+Node* getWindowStackByMaster(Master*master);
 
 /**
  * Get next/prev windows in master's stacking order

@@ -161,7 +161,7 @@ void setFocusStackFrozen(int value){
     if(master->freezeFocusStack!=value){
         master->freezeFocusStack=value;
         if(!value)
-            master->focusedWindow=getMasterWindowStack();
+            master->focusedWindow=getActiveMasterWindowStack();
     }
 }
 
@@ -191,9 +191,9 @@ void onWindowFocus(unsigned int win){
 
     if(!node)return;
     if(! isFocusStackFrozen())
-        addUnique(getMasterWindowStack(), getValue(node));
+        addUnique(getActiveMasterWindowStack(), getValue(node));
     getActiveMaster()->focusedTimeStamp = getTime();
-    Node*focusedWindow = isInList(getMasterWindowStack(), win);
+    Node*focusedWindow = isInList(getActiveMasterWindowStack(), win);
     if(focusedWindow){
         getActiveMaster()->focusedWindow = focusedWindow;
         assert(getFocusedWindow());
@@ -274,17 +274,20 @@ void swapMonitors(int index1,int index2){
 
 //stack methods
 
-Node* getMasterWindowStack(){
-    return getActiveMaster()->windowStack;
+Node* getActiveMasterWindowStack(){
+    return getWindowStackByMaster(getActiveMaster());
+}
+Node* getWindowStackByMaster(Master*master){
+    return master->windowStack;
 }
 
 Node* getNextWindowInFocusStack(int dir){
     Node*focusedNode=getFocusedWindowNode();
     if(dir==0)return focusedNode;
     if(dir>0)
-        return focusedNode->next?focusedNode->next:getMasterWindowStack();
+        return focusedNode->next?focusedNode->next:getActiveMasterWindowStack();
     else
-       return focusedNode->prev?focusedNode->prev:getMasterWindowStack();
+       return focusedNode->prev?focusedNode->prev:getActiveMasterWindowStack();
 }
 Node*getWindowStack(Workspace*workspace){
     return getWindowStackAtLayer(workspace,NORMAL_LAYER);

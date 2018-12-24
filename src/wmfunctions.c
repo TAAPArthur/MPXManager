@@ -688,7 +688,7 @@ void activateWorkspace(int workspaceIndex){
     LOG(LOG_LEVEL_DEBUG,"Activating workspace:%d\n",workspaceIndex);
     Workspace*workspaceToSwitchTo=getWorkspaceByIndex(workspaceIndex);
 
-    Node*head=getMasterWindowStack();
+    Node*head=getActiveMasterWindowStack();
     LOG(LOG_LEVEL_TRACE,"Finding first window of active master in workspace %d:\n",workspaceIndex);
 
     UNTIL_FIRST(head,((WindowInfo*)getValue(head))->workspaceIndex==workspaceIndex)

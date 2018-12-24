@@ -17,7 +17,7 @@
 
 void cycleWindows( int delta){
     setFocusStackFrozen(1);
-    int size=getSize(getMasterWindowStack());
+    int size=getSize(getActiveMasterWindowStack());
     for(int i=0;i<size;i++){
         Node* nextWindowNode=getNextWindowInFocusStack(delta);
         if(activateWindow(getValue(nextWindowNode)))
@@ -54,7 +54,7 @@ int findAndRaiseLazy(Rule*rule){
     return processFindResult(findWindow(rule,getAllWindows(),NULL));
 }
 int findAndRaise(Rule*rule){
-    Node*topWindow=getMasterWindowStack(getActiveMaster());
+    Node*topWindow=getActiveMasterWindowStack();
     if(isNotEmpty(topWindow))
         updateWindowCache(getValue(topWindow));
 

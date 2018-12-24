@@ -94,7 +94,7 @@ START_TEST(test_connect_to_xserver){
     connectToXserver();
     assert(getActiveMaster()!=NULL);
     assert(getActiveWorkspace()!=NULL);
-    assert(getSize(getMasterWindowStack())==0);
+    assert(getSize(getActiveMasterWindowStack())==0);
     assert(getSize(getAllWindows())==0);
     assert(getActiveMaster());
     Monitor*m=getValue(getAllMonitors());

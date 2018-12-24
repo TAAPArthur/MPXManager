@@ -36,12 +36,12 @@ START_TEST(test_cycle_window){
     WAIT_UNTIL_TRUE(getSize(getAllWindows())==3);
     Node*n=getAllWindows();
     FOR_EACH(n,focusWindow(getIntValue(n)));
-    WAIT_UNTIL_TRUE(getSize(getMasterWindowStack())==3);
+    WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack())==3);
 
     typeKey(getKeyCode(startKeySym));
     flush();
 
-    WAIT_UNTIL_TRUE(getValue(getMasterWindowStack())!=getFocusedWindow());
+    WAIT_UNTIL_TRUE(getValue(getActiveMasterWindowStack())!=getFocusedWindow());
     assert(isFocusStackFrozen());
     for(int i=1;i<size*2;i++){
         int oldFocusedWindow=getFocusedWindow()->id;
@@ -89,7 +89,7 @@ START_TEST(test_find_and_raise){
             assert(id==win[i%size]);
         }
         else if(i==size-1){
-            assert(!isInList(getMasterWindowStack(), id));
+            assert(!isInList(getActiveMasterWindowStack(), id));
             assert(id!=win[i%size]);
             continue;
         }

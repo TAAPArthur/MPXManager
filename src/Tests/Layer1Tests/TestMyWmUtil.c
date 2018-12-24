@@ -95,8 +95,8 @@ START_TEST(test_create_master){
     assert(m->workspaceHistory);
     assert(m->focusedWindow);
     assert(getActiveMaster()==m);
-    assert(!getSize(getMasterWindowStack()));
-    assert(getFocusedWindowNode()==getMasterWindowStack());
+    assert(!getSize(getActiveMasterWindowStack()));
+    assert(getFocusedWindowNode()==getActiveMasterWindowStack());
     assert(getActiveWorkspaceIndex()==0);
 
 }END_TEST
@@ -121,9 +121,9 @@ START_TEST(test_master_stack_add_remove){
     int fakeOnWindowFocus(WindowInfo*winInfo){
 
         addWindowInfo(winInfo);
-        int size=getSize(getMasterWindowStack());
+        int size=getSize(getActiveMasterWindowStack());
         onWindowFocus(winInfo->id);
-        return size!=getSize(getMasterWindowStack());
+        return size!=getSize(getActiveMasterWindowStack());
     }
     int fakeRemove(unsigned int i){
         return removeWindowFromMaster(getActiveMaster(),i);
@@ -132,8 +132,8 @@ START_TEST(test_master_stack_add_remove){
         addMaster(i,i);
         setActiveMaster(getMasterById(i));
         assert(getIntValue(getAllMasters())==i);
-        testWindowAddRemove(getMasterWindowStack(), fakeOnWindowFocus, fakeRemove);
-        testAddUnique(getMasterWindowStack(),
+        testWindowAddRemove(getActiveMasterWindowStack(), fakeOnWindowFocus, fakeRemove);
+        testAddUnique(getActiveMasterWindowStack(),
                 fakeOnWindowFocus);
     }
     Node*head=getAllMasters();
@@ -146,11 +146,11 @@ START_TEST(test_master_stack_add_remove){
 /*
 START_TEST(test_set_last_window_clicked){
     addMaster(1,1);
-    assert(getSize(getMasterWindowStack())==0);
+    assert(getSize(getActiveMasterWindowStack())==0);
     //does not have to be window in context
     int lastWindowClicked=1;
     setLastWindowClicked(lastWindowClicked);
-    assert(getSize(getMasterWindowStack())==0);
+    assert(getSize(getActiveMasterWindowStack())==0);
     addWindowInfo(createWindowInfo(1));
     addWindowInfo(createWindowInfo(2));
     onWindowFocus(1);
@@ -169,10 +169,10 @@ START_TEST(test_master_focus_stack_toggle){
     onWindowFocus(2);
     setFocusStackFrozen(1);
     onWindowFocus(getIntValue(getNextWindowInFocusStack(1)));
-    assert(getFocusedWindow()!=getValue(getMasterWindowStack()));
+    assert(getFocusedWindow()!=getValue(getActiveMasterWindowStack()));
     setFocusStackFrozen(0);
     //should always be true when not frozen
-    assert(getFocusedWindow()==getValue(getMasterWindowStack()));
+    assert(getFocusedWindow()==getValue(getActiveMasterWindowStack()));
 }END_TEST
 /**
  * Test window changes stack change or lack thereof
@@ -189,7 +189,7 @@ START_TEST(test_master_focus_stack){
 
     for(int i=1;i<=size;i++){
         if(i==size){
-            Node*window=getMasterWindowStack();
+            Node*window=getActiveMasterWindowStack();
             addMaster(2, 3);
             setActiveMaster(getMasterById(2));
             setFocusStackFrozen(frozen);
@@ -204,18 +204,18 @@ START_TEST(test_master_focus_stack){
         assert(time<=getFocusedTime(getActiveMaster()));
 
 
-        Node*window=getMasterWindowStack();
+        Node*window=getActiveMasterWindowStack();
         int count=0;
         if(frozen){
-            assert(getSize(getMasterWindowStack())==0);
+            assert(getSize(getActiveMasterWindowStack())==0);
             assert(getLastMasterToFocusWindow(i)==NULL);
         }
         else{
             assert(getLastMasterToFocusWindow(i)==getActiveMaster());
             assert(getFocusedWindow()->id==(unsigned int)i);
-            assert(getSize(getMasterWindowStack())==getSize(getAllWindows()));
+            assert(getSize(getActiveMasterWindowStack())==getSize(getAllWindows()));
         }
-        int numberOfWindows=getSize(getMasterWindowStack());
+        int numberOfWindows=getSize(getActiveMasterWindowStack());
         FOR_EACH(window,
                 Node*temp=window->next;
             count++;
@@ -227,9 +227,9 @@ START_TEST(test_master_focus_stack){
                 //focused window should be the set window
                 assert(getFocusedWindow()->id==originalHeadValue);
                 //focused window should be at top
-                assert(getFocusedWindow()==getValue(getMasterWindowStack()));
+                assert(getFocusedWindow()==getValue(getActiveMasterWindowStack()));
                 //LRU window cache should be updated
-                assert(getIntValue(getMasterWindowStack())==getIntValue(getAllWindows()));
+                assert(getIntValue(getActiveMasterWindowStack())==getIntValue(getAllWindows()));
             }
 
             window=temp;
@@ -238,12 +238,12 @@ START_TEST(test_master_focus_stack){
             else continue;
         )
         //workspace stack unchanged
-        assert(numberOfWindows==getSize(getMasterWindowStack()));
+        assert(numberOfWindows==getSize(getActiveMasterWindowStack()));
         assert(count==numberOfWindows);
 
         if(!frozen)
             assert(getSize(getAllWindows())==numberOfWindows);
-        assert(getSize(getMasterWindowStack())==numberOfWindows);
+        assert(getSize(getActiveMasterWindowStack())==numberOfWindows);
         assert(getSize(getActiveWindowStack())==0);
 
     }
@@ -301,26 +301,26 @@ START_TEST(test_focus_delete){
     //head is 1
     setFocusStackFrozen(1);
     //focused on 3
-    onWindowFocus(getIntValue(getMasterWindowStack()->next->next));
-    assert(getSize(getMasterWindowStack())==3);
+    onWindowFocus(getIntValue(getActiveMasterWindowStack()->next->next));
+    assert(getSize(getActiveMasterWindowStack())==3);
 
     removeWindowFromMaster(getActiveMaster(), getFocusedWindow()->id);
-    assert(getMasterWindowStack()==getFocusedWindowNode());
+    assert(getActiveMasterWindowStack()==getFocusedWindowNode());
 
     while(getFocusedWindow()){
         unsigned int nextWindow=getIntValue(getNextWindowInFocusStack(1));
 
-        assert(isInList(getMasterWindowStack(),nextWindow));
-        assert(isInList(getMasterWindowStack(),getFocusedWindow()->id));
+        assert(isInList(getActiveMasterWindowStack(),nextWindow));
+        assert(isInList(getActiveMasterWindowStack(),getFocusedWindow()->id));
         assert(removeWindowFromMaster(getActiveMaster(), getFocusedWindow()->id));
 
         if(getFocusedWindow()){
             assert(getFocusedWindow()->id==nextWindow);
         }
 
-        assert(getMasterWindowStack()==getFocusedWindowNode());
+        assert(getActiveMasterWindowStack()==getFocusedWindowNode());
     }
-    assert(getSize(getMasterWindowStack())==0);
+    assert(getSize(getActiveMasterWindowStack())==0);
 }END_TEST
 
 START_TEST(test_add_remove_master_window_cache){
@@ -611,11 +611,11 @@ START_TEST(test_active){
     addMaster(1,1);
     assert(getActiveWorkspaceIndex()==0);
     assert(getActiveWorkspace()->id==getActiveWorkspaceIndex());
-    assert(getMasterWindowStack()!=NULL);
-    assert(getMasterWindowStack()->value==NULL);
-    assert(getIntValue(getMasterWindowStack())==0);
-    assert(getSize(getMasterWindowStack())==0);
-    assert(isNotEmpty(getMasterWindowStack())==0);
+    assert(getActiveMasterWindowStack()!=NULL);
+    assert(getActiveMasterWindowStack()->value==NULL);
+    assert(getIntValue(getActiveMasterWindowStack())==0);
+    assert(getSize(getActiveMasterWindowStack())==0);
+    assert(isNotEmpty(getActiveMasterWindowStack())==0);
 
 }END_TEST
 START_TEST(test_workspace_window_add_remove){
@@ -623,8 +623,8 @@ START_TEST(test_workspace_window_add_remove){
     for(int i=1;i<=size;i++){
         addWindowInfo(createWindowInfo(i));
     }
-    assert(getValue(getMasterWindowStack())==NULL);
-    assert(getSize(getMasterWindowStack())==0);
+    assert(getValue(getActiveMasterWindowStack())==NULL);
+    assert(getSize(getActiveMasterWindowStack())==0);
 
     testWindowAddRemove(
             getActiveWindowStack(),addWindowToActiveWorkspace,
