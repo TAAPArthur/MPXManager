@@ -120,8 +120,7 @@ void connectToXserver(){
 void syncState(){
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
     unsigned int currentWorkspace=DEFAULT_WORKSPACE_INDEX;
-    if(LOAD_SAVED_STATE)
-        if(!xcb_ewmh_get_current_desktop_reply(ewmh,
+    if(!LOAD_SAVED_STATE || !xcb_ewmh_get_current_desktop_reply(ewmh,
                 xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
                 &currentWorkspace, NULL)){
             currentWorkspace=DEFAULT_WORKSPACE_INDEX;
@@ -789,6 +788,8 @@ void tileUpperLayers(Workspace*workspace,int startingLayer){
 void tileWorkspace(int index){
     //TDOD support APPLY_RULES_OR_RETURN(TilingWindows,&index);
 
+    if(!isWorkspaceVisible(index))
+        return;
     Workspace*workspace=getWorkspaceByIndex(index);
     Layout*layout=getActiveLayoutOfWorkspace(workspace->id);
     if(!layout){

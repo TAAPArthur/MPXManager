@@ -169,14 +169,21 @@ START_TEST(test_sync_state){
     int win=mapArbitraryWindow();
     int activeWorkspace=1;
     int windowWorkspace=3;
+    LOAD_SAVED_STATE=0;
     DEFAULT_WORKSPACE_INDEX=2;
     syncState();
     assert(getActiveWorkspaceIndex()==DEFAULT_WORKSPACE_INDEX);
+    unsigned int currentWorkspace=DEFAULT_WORKSPACE_INDEX;
+    assert(xcb_ewmh_get_current_desktop_reply(ewmh,
+            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
+            &currentWorkspace, NULL));
+    assert(getActiveWorkspaceIndex()==currentWorkspace);
 
 
     assert(xcb_request_check(dis, xcb_ewmh_set_current_desktop_checked(ewmh, defaultScreenNumber, activeWorkspace))==NULL);
     assert(xcb_request_check(dis,xcb_ewmh_set_wm_desktop(ewmh, win, windowWorkspace))==NULL);
     //setLogLevel(LOG_LEVEL_TRACE);
+    LOAD_SAVED_STATE=1;
     syncState();
     scan(root);
 

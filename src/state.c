@@ -16,15 +16,15 @@
 
 
 typedef struct {
-    int index;
-    int monitor;
+    long monitor;
+    int noFree;
     int size;
     int *windowIds;
     int *windowMasks;
     void* layout;
 }WorkspaceState;
 typedef struct{
-    int numberOfVisibleWorkspaces;
+    int numberOfWorkspaces;
     WorkspaceState*state;
 }State;
 static State*savedState;
@@ -38,48 +38,57 @@ void markState(void){
 void destroyCurrentState(){
     if(!savedState)
         return;
-    for(int i=0;i<savedState->numberOfVisibleWorkspaces;i++)
-        if(savedState->state[i].size){
-            free(savedState->state[i].windowIds);
-            free(savedState->state[i].windowMasks);
-        }
+    for(int i=0;i<savedState->numberOfWorkspaces;i++){
+        if(savedState->state[i].noFree)continue;
+        free(savedState->state[i].windowIds);
+        free(savedState->state[i].windowMasks);
+    }
 
     free(savedState->state);
     free(savedState);
     savedState=NULL;
 }
 
+static long getMonitorLocationFromWorkspace(Workspace*workspace){
+    assert(workspace);
+    Monitor *m=getMonitorFromWorkspace(workspace);
+    if(!m)return 0;
+    long l;
+    memcpy(&l,&m->viewX,8);
+    return l;
+}
 State* computeState(){
     State* gloalState=malloc(sizeof(State));
-    int numberOfActiveStacks=getSize(getAllMonitors());
-    WorkspaceState* states=calloc(numberOfActiveStacks, sizeof(WorkspaceState));
-    gloalState->numberOfVisibleWorkspaces=numberOfActiveStacks;
+    WorkspaceState* states=calloc(getNumberOfWorkspaces(), sizeof(WorkspaceState));
+    gloalState->numberOfWorkspaces=getNumberOfWorkspaces();
     gloalState->state=states;
-    for(int n=0,i=0;i<getNumberOfWorkspaces();i++)
-        if(isWorkspaceVisible(i)){
-            assert(n<numberOfActiveStacks);
-            states[n].index=i;
-            states[n].layout=getActiveLayoutOfWorkspace(i);
-            states[n].monitor=getMonitorFromWorkspace(getWorkspaceByIndex(i))->name;
-            Node*node=getWindowStack(getWorkspaceByIndex(i));
-            int size=getSize(node);
-            int j=0;
-            if(size){
-                states[n].windowIds=malloc(size*sizeof(int));
-                states[n].windowMasks=malloc(size*sizeof(int));
-                FOR_EACH(node,
-                    WindowInfo*winInfo=getValue(node);
-                    if(isTileable(winInfo)){
-                        states[n].windowIds[j]=winInfo->id;
-                        states[n].windowMasks[j]=getUserMask(winInfo);
-                        j++;
-                    }
-                )
-            }
-            states[n].size=j;
-            n++;
-
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        if(!isWorkspaceVisible(i)&&savedState){
+            memcpy(&states[i],&savedState->state[i],sizeof(WorkspaceState));
+            savedState->state[i].noFree=1;
+            states[i].noFree=0;
+            continue;
         }
+        states[i].layout=getActiveLayoutOfWorkspace(i);
+        long m=getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
+        states[i].monitor=m?m:savedState?savedState->state[i].monitor:0;
+        Node*node=getWindowStack(getWorkspaceByIndex(i));
+        int size=getSize(node);
+        int j=0;
+        if(size){
+            states[i].windowIds=malloc(size*sizeof(int));
+            states[i].windowMasks=malloc(size*sizeof(int));
+            FOR_EACH(node,
+                WindowInfo*winInfo=getValue(node);
+                if(isTileable(winInfo)){
+                    states[i].windowIds[j]=winInfo->id;
+                    states[i].windowMasks[j]=getUserMask(winInfo);
+                    j++;
+                }
+            )
+        }
+        states[i].size=j;
+    }
     return gloalState;
 }
 
@@ -94,23 +103,22 @@ int compareState(void(*onChange)(int)){
     State* currentState=computeState();
     assert(currentState);
     int changed=0;
-    if(!savedState || savedState->numberOfVisibleWorkspaces==currentState->numberOfVisibleWorkspaces)
-        for(int i=0;i<currentState->numberOfVisibleWorkspaces;i++)
-            if(
-                !savedState||savedState->state[i].size != currentState->state[i].size||
-                savedState->state[i].index!=currentState->state[i].index||
-                savedState->state[i].monitor!=currentState->state[i].monitor||
-                savedState->state[i].layout!=currentState->state[i].layout||
-                memcmp(savedState->state[i].windowIds, currentState->state[i].windowIds, sizeof(int)*savedState->state[i].size)
-                ||memcmp(savedState->state[i].windowMasks, currentState->state[i].windowMasks, sizeof(int)*savedState->state[i].size)
-                ){
-                    couldStateHaveChanged=0;
-                    changed=1;
-                    if(onChange)
-                        onChange(currentState->state[i].index);
-                    else
-                        break;
-            }
+    for(int i=0;i<currentState->numberOfWorkspaces;i++)
+        if(
+            !savedState||savedState->state[i].size != currentState->state[i].size||
+            savedState->state[i].monitor!=currentState->state[i].monitor||
+            savedState->state[i].layout!=currentState->state[i].layout||
+            memcmp(savedState->state[i].windowIds, currentState->state[i].windowIds, sizeof(int)*savedState->state[i].size)
+            ||memcmp(savedState->state[i].windowMasks, currentState->state[i].windowMasks, sizeof(int)*savedState->state[i].size)
+            ){
+                couldStateHaveChanged=0;
+                changed=1;
+                LOG(LOG_LEVEL_TRACE,"Detected change in workspace %d. \n",i);
+                if(onChange)
+                    onChange(i);
+                else
+                    break;
+        }
 
     destroyCurrentState();
     savedState=currentState;
