@@ -6,7 +6,7 @@ if [ "$1" = "--no-xserver" ];then
 	shift
 else
        echo starting server	
-	Xephyr -noreset +extension RANDR -screen 200x200+100+0 -screen 100x100 $D 2>&1 &> /dev/null & pid="$!"
+	Xephyr -noreset -r +extension RANDR -screen 200x200+100+0 -screen 100x100 $D 2>&1 &> /dev/null & pid="$!"
 fi
 DISPLAY=$D $@
 exitCode=$?
