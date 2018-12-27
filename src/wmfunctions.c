@@ -505,20 +505,20 @@ void* waitForWindowToDie(int id){
         xcb_ewmh_send_wm_ping(ewmh, id, 0);
         flush();
         msleep(KILL_TIMEOUT);
-        if(isShuttingDown())
-            continue;
-        lock();
-        WindowInfo*winInfo=getWindowInfo(id);
-        if(!winInfo){
-            LOG(LOG_LEVEL_DEBUG,"Window %d no longer exists\n", id);
-            wait=0;
+        if(!isShuttingDown()){
+            lock();
+            WindowInfo*winInfo=getWindowInfo(id);
+            if(!winInfo){
+                LOG(LOG_LEVEL_DEBUG,"Window %d no longer exists\n", id);
+                wait=0;
+            }
+            else if(getTime()-winInfo->pingTimeStamp>=KILL_TIMEOUT){
+                LOG(LOG_LEVEL_DEBUG,"Window %d is not responsive; force killing\n", id);
+                killWindow(id);
+                wait=0;
+            }
+            unlock();
         }
-        else if(getTime()-winInfo->pingTimeStamp>=KILL_TIMEOUT){
-            LOG(LOG_LEVEL_DEBUG,"Window %d is not responsive; force killing\n", id);
-            killWindow(id);
-            wait=0;
-        }
-        unlock();
     }
     LOG(LOG_LEVEL_DEBUG,"Finshed waiting for window %d\n", id);
     return NULL;

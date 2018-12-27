@@ -374,10 +374,8 @@ START_TEST(test_delete_window_request){
         msleep(KILL_TIMEOUT*2);
     }
     else if(_i==3){
-        lock();
         requestShutdown();
         msleep(KILL_TIMEOUT*2);
-        unlock();
         return;
     }
     wait(NULL);

@@ -22,7 +22,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 void lock(){LOCK}
 void unlock(){UNLOCK}
 
-static int shuttingDown=0;
+static volatile int shuttingDown=0;
 void requestShutdown(){
     shuttingDown=1;
 }
