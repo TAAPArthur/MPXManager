@@ -218,3 +218,12 @@ void killFocusedWindow(void){
     if(getFocusedWindow())
         killWindowInfo(getFocusedWindow());
 }
+void floatWindow(WindowInfo* winInfo){
+    addMask(winInfo, FLOATING_MASK);
+    moveWindowToLayerForAllWorkspaces(winInfo, UPPER_LAYER);
+
+}
+void sinkWindow(WindowInfo* winInfo){
+    removeMask(winInfo, FLOATING_MASK);
+    moveWindowToLayerForAllWorkspaces(winInfo, NORMAL_LAYER);
+}

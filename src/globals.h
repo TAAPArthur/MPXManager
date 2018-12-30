@@ -17,9 +17,15 @@
 
 ///Returns the length of the array
 #define LEN(X) (sizeof X / sizeof X[0])
+///Returns the field descriptor used to commuicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
+
+///Returns the field descriptors used to commuicate WM status to an external program
+extern int statusPipeFD[2];
+
 ///If true, then check used saved window properties as defaults
 extern char LOAD_SAVED_STATE;
+/// How long to wait for a window to die after sening a WM_DELETE_REQUEST
 extern long KILL_TIMEOUT;
 /**Mask of all events we listen for on the root window*/
 extern int ROOT_EVENT_MASKS;
@@ -36,6 +42,7 @@ extern int NON_ROOT_DEVICE_EVENT_MASKS;
 /// The default SHELL; This defaults to the SHELL environment var
 extern char* SHELL;
 
+/// How often we update the display on cloned windows (in ms)
 extern int CLONE_REFRESH_RATE;
 ///Defaults masks to be applied to windows
 extern int DEFAULT_WINDOW_MASKS;
@@ -80,19 +87,27 @@ extern int root;
 /**Default screen (assumed to be only 1*/
 extern xcb_screen_t* screen;
 
+/// The last supported standard x event
 #define GENERIC_EVENT_OFFSET LASTEvent
+/// offset for all monitor related events
 #define MONITOR_EVENT_OFFSET GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS
+/// max value of supported X events (not total events)
 #define LAST_REAL_EVENT   MONITOR_EVENT_OFFSET+8
 
+//TODO consistent naming
 enum{
-    //if all rules are passed through, then the window is added as a normal window
+    ///if all rules are passed through, then the window is added as a normal window
     onXConnection=LAST_REAL_EVENT,
-    ProcessingWindow,RegisteringWindow,
-    WorkspaceChange,WindowWorkspaceChange,
-    WindowLayerChange,LayoutChange,
+    /// deterime if a newly detected window should be recorded/monitored/controlled by us
+    ProcessingWindow,
+    /// called after the newly created window has been added to a workspace
+    RegisteringWindow,
+    /// called when the connection is idle
     Idle,
+    /// max value of supported events
     NUMBER_OF_EVENT_RULES
 };
+/// Holds a Node list of rules that will be applied in response to various conditions
 extern Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 /// Used for select xcb functions
@@ -103,13 +118,17 @@ extern int DEFAULT_BORDER_WIDTH;
 
 /**
  * Indicates how long we should poll for events before switching to blocking
- * We will wait a total of POLL_COUNT*POLL_INTERVAL ms
+ * We will wait POLL_INTERVAL ms OLL_COUNT times (for aa total of POLL_COUNT*POLL_INTERVAL ms)
+ * before deciding that a event connection is idle
  */
 extern int POLL_COUNT;
+/// @copydoc POLL_COUNT
 extern int POLL_INTERVAL;
-
-extern int statusPipeFD[2];
-void init();
+/**
+ * Init globals var like deviceBindigns and eventRules
+ * Should be called when program starts up
+ */
+void init(void);
 
 /**
  *Set the last event received.
@@ -121,9 +140,19 @@ void setLastEvent(void* event);
  * Retries the last event received
  * @see getLastEvent
  */
-void* getLastEvent();
+void* getLastEvent(void);
 
+/**
+ * User can set preStartUpMethod to run an arbitrary function before the startup method is called
+ */
 extern void (*preStartUpMethod)(void);
+/**
+ * User can set preStartUpMethod to run an arbitrary function right after the startup method is called
+ */
 extern void (*startUpMethod)(void);
+
+/**
+ * The user can set this method which would be called to write out the WM status to an external program
+ */
 extern void (*printStatusMethod)(void);
 #endif

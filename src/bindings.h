@@ -31,6 +31,7 @@
 #define MATCH_ANY_LITERAL   ((1<<6) -1)
 /**Rule will match on above property of window not literally */
 #define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL - LITERAL)
+/**Rule subsitute env variables for designated strings (strings starting with '$')*/
 #define ENV_VAR             1<<6
 /**
  * Determines if and when the control flow should abort processing a series of
@@ -80,7 +81,9 @@ typedef enum{
     VOID_ARGS_RETURN_INT
 }BindingType;
 
-
+/**
+ *Union holding the argument to a bounded function.
+ */
 typedef union{
     /**an int*/
     int intArg;
@@ -150,6 +153,9 @@ typedef struct{
     int passThrough;
     /**Compiled regex used for matching with non-literal rules*/
     regex_t* regexExpression;
+    /** boolean indicating whether the rule has been initilized or not 
+     *  @see initRule
+    */
     char init;
 } Rule;
 
@@ -407,6 +413,12 @@ int applyRules(Node* head,WindowInfo*winInfo);
  * @param binding
  */
 void addBinding(Binding*binding);
+/**
+ * Adds num bindings to the head of deviceBindings
+ * @param bindings array of bindings to add
+ * @param num number of bindings to add
+ * @see addBinding
+ */
 void addBindings(Binding*bindings,int num);
 
 /**
@@ -418,6 +430,16 @@ Node* getActiveBindingNode();
  */
 Binding* getActiveBinding();
 
+/**
+ * Returns a Node list of all regisitered bidings
+ * @see deviceBindings; 
+*/
+
 Node*getDeviceBindings();
+
+/**
+ * Initilize a rule
+ * @param rule 
+ */
 void initRule(Rule*rule);
 #endif

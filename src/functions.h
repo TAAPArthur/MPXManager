@@ -208,4 +208,6 @@ void moveWindowWithMouse(WindowInfo*winInfo);
 void resizeWindowWithMouse(WindowInfo*winInfo);
 
 
+void floatWindow(WindowInfo* win);
+void sinkWindow(WindowInfo* win);
 #endif

@@ -18,6 +18,7 @@
 #include "../../logger.h"
 #include "../../events.h"
 #include "../../wmfunctions.h"
+#include "../../functions.h"
 #include "../../ewmh.h"
 #include "../../globals.h"
 #include "../../layouts.h"
@@ -62,7 +63,8 @@ START_TEST(test_mask_save_restore){
     WindowInfo*winInfo=createWindowInfo(createNormalWindow());
     WindowInfo*winInfo2=createWindowInfo(createNormalWindow());
     assert(processNewWindow(winInfo));
-    addMask(winInfo, USER_MASKS);
+    //add a USER_MASK
+    addMask(winInfo, NO_TILE_MASK);
 
     xcb_ewmh_get_atoms_reply_t reply;
     int hasState=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
@@ -513,12 +515,12 @@ START_TEST(test_workspace_activation){
 
     assert(getSize(getAllMonitors())==1);
 
-    activateWorkspace(index2);
+    switchToWorkspace(index2);
     assert(isWorkspaceVisible(index2));
     assert(!isWorkspaceVisible(index1));
     WAIT_UNTIL_TRUE(isWindowMapped(info2)&&!isWindowMapped(info1)&&getActiveWorkspaceIndex()==index2);
 
-    activateWorkspace(index1);
+    switchToWorkspace(index1);
     assert(isWorkspaceVisible(index1));
     assert(!isWorkspaceVisible(index2));
     WAIT_UNTIL_TRUE(isWindowMapped(info1)&&!isWindowMapped(info2)&&getActiveWorkspaceIndex()==index1);

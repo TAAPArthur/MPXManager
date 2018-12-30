@@ -10,9 +10,16 @@
 #include <xcb/xcb.h>
 
 #include "mywm-util.h"
-
+/**
+ * Offset for SRC_INDICATION_* masks
+ * These masks specify which type of external sources are allowed to modify the window
+ * Adding [0,2] and rasing 2 to that power yeilds OTHER,APP and PAGER SRC_INDICATION_ masks respectivly
+ */
 #define SRC_INDICATION_OFFSET 12
-#define USER_MASKS ((1<<7) -1)
+/**
+ * Various flags that detail how a window should be treated.
+ *
+ */
 typedef enum {
     /// no special properties
     NO_MASK = 0,
@@ -42,6 +49,7 @@ typedef enum {
     EXTERNAL_BORDER_MASK =    1<<10,
     /// Window cannot be externally raised/lowered (configure requests are blocked)
     EXTERNAL_RAISE_MASK =   1<<11,
+    /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse
     FLOATING_MASK =            EXTERNAL_RESIZE_MASK|EXTERNAL_MOVE_MASK|EXTERNAL_BORDER_MASK|EXTERNAL_RAISE_MASK,
 
     ///Allow client requests from older clients who don't specify what they are
@@ -96,6 +104,10 @@ int isWindowVisible(WindowInfo* winInfo);
  */
 int isMappable(WindowInfo* winInfo);
 
+/**
+ * Returns true if the user can interact (ie focus,type etc)  with the window
+ * For this to be true the window would have to be mapped and not hidden
+ */
 int isInteractable(WindowInfo* winInfo);
 
 /**
@@ -237,18 +249,27 @@ void loadWindowProperties(WindowInfo *winInfo);
  */
 void registerWindow(WindowInfo*winInfo);
 
+/**
+ * Sets the WM_STATE from the window masks
+ */
+void setXWindowStateFromMask(WindowInfo*winInfo);
+/**
+ * Reads the WM_STATE fields from the given window and sets the window mask to be consistent with the state
+ * If the WM_STATE cannot be read, then nothing is done
+ * @see setWindowStateFromAtomInfo
+ */
 void loadSavedAtomState(WindowInfo*winInfo);
 
 /**
  * Sets the window state based on a list of atoms
- * @param winInfo
- * @param atoms
- * @param numberOfAtoms
- * @param action
+ * @param winInfo the window whose mask will be modifed
+ * @param atoms the list of atoms to add,remove or toggle depending on ACTION
+ * @param numberOfAtoms the number of atoms
+ * @param action wether to add,remove or toggle atoms. For toggle, if all of the corrosponding masks for the list of atoms is set, then they all will be removed else they all will be added
+ * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
  */
 void setWindowStateFromAtomInfo(WindowInfo*winInfo,const xcb_atom_t* atoms,int numberOfAtoms,int action);
 
-void setXWindowStateFromMask(WindowInfo*winInfo);
 /**
  * Reads EWMH desktop property to find the workspace the window should be long.
  * If the field is not present the active workspace is used.
@@ -261,7 +282,7 @@ int getSavedWorkspaceIndex(xcb_window_t win);
 
 /**
  * Sets the mapped state to UNMAPPED(0) or MAPPED(1)
- * @param win the window whose state is being modified
+ * @param id the window whose state is being modified
  * @param state the new state
  * @return  true if the state actuall changed
  */
@@ -276,14 +297,20 @@ void updateFocusState(WindowInfo*winInfo);
 
 /**
  * Tiles the specified workspace.
- * If the active layout is NULL then this is a no-op.
- * First the windows in the NORMAL_LAYER are tiled. If the layoutFunction is NULL
- * or the conditionFunction is not true then the windows are left as in.
+ * First the windows in the NORMAL_LAYER are tiled according to the active layout's layoutFunction 
+ * (if sett) or the conditionFunction is not true then the windows are left as in.
  * Afterwards the remaining layers are tiled in ascending order
- * @param index
+ * @param index the index of the workspace to tile
+ * @see tileLowerLayers, tileUpperLayers
  */
 void tileWorkspace(int index);
+/**
+ * Tile the windows in the layers below NORMAL_LAYER in DESC order
+ */
 void tileLowerLayers(Workspace*workspace);
+/**
+ *Tile the windows in the layers above NORMAL_LAYER in AESC order
+ */
 void tileUpperLayers(Workspace*workspace,int startingLayer);
 
 /**
@@ -307,7 +334,11 @@ int activateWindow(WindowInfo* winInfo);
  * @return 1 iff no error was detected
  */
 int focusWindow(int win);
-
+/**
+ * Focus the given window
+ * This method is diffrent from focusWindow in that it allows diffrent protocals for 
+ * focusing the window based on window masks
+ */
 int focusWindowInfo(WindowInfo*winInfo);
 /**
  * Raises the given window
@@ -315,6 +346,9 @@ int focusWindowInfo(WindowInfo*winInfo);
  * @return 1 iff no error was detected
  */
 int raiseWindow(xcb_window_t win);
+/**
+ * Raise the given window within its onw layer
+ */
 int raiseWindowInfo(WindowInfo* winInfo);
 
 /**
@@ -323,14 +357,12 @@ int raiseWindowInfo(WindowInfo* winInfo);
  * @return if the attempt was successful
  */
 int attemptToMapWindow(int id);
-
+/**
+ * Removes a window from our records and updates EWMH client list if the window was present
+ * @return 1 iff the window was already in our records
+ */
 int deleteWindow(xcb_window_t winToRemove);
 
-/**
- * Forks and executes command
- * @param command the command to execute
- */
-//void runCommand(char* command);
 
 /**
  * Returns the max dims allowed for this window based on its mask
@@ -401,21 +433,35 @@ int getIndexFromName(char*name);
 * @return the name of the workspace
 */
 char*getWorkspaceName(int index);
-void activateWorkspace(int workspaceIndex);
-
-void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex);
-void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer);
-
-void toggleShowDesktop();
-
-
+/**
+ * Make the active workspace the one designated by workspaceIndex
+ * For the workspace to become active,it must become visible. For this to be true it must 
+ * swap monitor with an already visible workspace
+ * Upon switching, the focus for all masters is updated to be the last focused window out of 
+ * all visible windows
+ */
 void switchToWorkspace(int workspaceIndex);
 
+/**
+ * Moves a window to the workspace given by destIndex at the NORMAL_LAYER
+ */
+void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex);
+/**
+ *
+ * Moves a window to the workspace given by destIndex at layer 
+ */
+void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer);
 
-
-
-
-void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int mask);
+/**
+ * Filters the configure request to allowed actions then configures the window
+ * @param win
+ * @param values
+ * @param sibling 
+ * @param stackMode
+ * @param configMask
+ * @see xcb_configure_window
+ */
+void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int configMask);
 
 /**
  * Do everything needed to comply when EWMH.
@@ -470,6 +516,4 @@ void setShowingDesktop(int index,int value);
 void toggleShowDesktop();
 
 
-void floatWindow(WindowInfo* win);
-void sinkWindow(WindowInfo* win);
 #endif

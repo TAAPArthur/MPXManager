@@ -69,6 +69,13 @@ void printMask(int mask){
 }
 void printSummary(void){
     LOG(LOG_LEVEL_DEBUG,"Summary:\n");
+    Node*n=getActiveMasterWindowStack();
+    LOG(LOG_LEVEL_DEBUG,"Active Master %d\n",getActiveMaster()->id);
+    FOR_EACH(n,
+        WindowInfo*winInfo=getValue(n);
+        LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
+    );
+    LOG(LOG_LEVEL_DEBUG,"\n");
     for(int i=0;i<getNumberOfWorkspaces();i++)
         for(int l=0;l<NUMBER_OF_LAYERS;l++){
             Node*n=getWindowStackAtLayer(getWorkspaceByIndex(i),l);

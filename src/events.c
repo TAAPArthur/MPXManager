@@ -15,18 +15,20 @@
 #include "state.h"
 #include "wmfunctions.h"
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-#define LOCK pthread_mutex_lock(&mutex);
-#define UNLOCK pthread_mutex_unlock(&mutex);
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void lock(){LOCK}
-void unlock(){UNLOCK}
+void lock(void){
+    pthread_mutex_lock(&mutex);
+}
+void unlock(void){
+    pthread_mutex_unlock(&mutex);
+}
 
 static volatile int shuttingDown=0;
-void requestShutdown(){
+void requestShutdown(void){
     shuttingDown=1;
 }
-int isShuttingDown(){
+int isShuttingDown(void){
     return shuttingDown;
 }
 pthread_t runInNewThread(void *(*method) (void *),void*arg,int detached){
@@ -61,7 +63,7 @@ static inline xcb_generic_event_t *getNextEvent(){
     }
     return event;
 }
-void *runEventLoop(void*c __attribute__((unused))){
+void *runEventLoop(void*arg __attribute__((unused))){
     LOG(LOG_LEVEL_TRACE,"starting event loop\n");
     xcb_generic_event_t *event;
     while(!isShuttingDown() && dis) {
@@ -92,13 +94,13 @@ void *runEventLoop(void*c __attribute__((unused))){
 }
 
 int loadGenericEvent(xcb_ge_generic_event_t*event){
-    LOG(LOG_LEVEL_TRACE,"processing generic event; ext: %d type: %d event type %d \n",
-            event->extension,event->response_type,event->event_type);
-    LOG(LOG_LEVEL_TRACE,"%d %d %d",
+    LOG(LOG_LEVEL_TRACE,"processing generic event; ext: %d type: %d event type %d  seq %d\n",
+            event->extension,event->response_type,event->event_type,event->sequence);
+    LOG(LOG_LEVEL_TRACE,"%d %d %d\n",
             xcb_get_extension_data(dis, &xcb_randr_id)->major_opcode,
             xcb_get_extension_data(dis, &xcb_randr_id)->first_event,
             xcb_get_extension_data(dis, &xcb_randr_id)->first_error);
-    LOG(LOG_LEVEL_TRACE,"%d %d %d",
+    LOG(LOG_LEVEL_TRACE,"%d %d %d\n",
             xcb_get_extension_data(dis, &xcb_input_id)->major_opcode,
             xcb_get_extension_data(dis, &xcb_input_id)->first_event,
             xcb_get_extension_data(dis, &xcb_input_id)->first_error);

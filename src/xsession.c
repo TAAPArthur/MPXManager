@@ -16,6 +16,10 @@
 #include "xsession.h"
 #include "globals.h"
 
+/**
+ * Shorthand marco to init a X11 atom
+ * @param name the name of the atom to init
+ */
 #define CREATE_ATOM(name) {\
     xcb_intern_atom_reply_t *reply;\
     reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, # name),NULL);\
@@ -91,7 +95,7 @@ void quit(void){
     destroyContext();
     exit(0);
 }
-void flush(){
+void flush(void){
     XFlush(dpy);
     xcb_flush(dis);
 }

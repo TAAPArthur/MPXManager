@@ -58,7 +58,7 @@ void (*preStartUpMethod)(void);
 void (*startUpMethod)(void);
 void (*printStatusMethod)(void);
 int statusPipeFD[2];
-void init(){
+void init(void){
     pipe(statusPipeFD);
     SHELL=getenv("SHELL");
     deviceBindings=createCircularHead(NULL);
@@ -67,10 +67,10 @@ void init(){
 }
 
 ///Last registered event
-void*lastEvent;
+static void*lastEvent;
 void setLastEvent(void* event){
     lastEvent=event;
 }
-void* getLastEvent(){
+void* getLastEvent(void){
     return lastEvent;
 }

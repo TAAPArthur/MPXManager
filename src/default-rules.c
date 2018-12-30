@@ -228,7 +228,7 @@ void onClientMessage(void){
     LOG(LOG_LEVEL_DEBUG,"Received client message/request for window: %d\n",win);
 
     if(message==ewmh->_NET_CURRENT_DESKTOP)
-        activateWorkspace(data.data32[0]);
+        switchToWorkspace(data.data32[0]);
     else if(message==ewmh->_NET_ACTIVE_WINDOW){
         //data: source,timestamp,current active window
         WindowInfo*winInfo=getWindowInfo(win);

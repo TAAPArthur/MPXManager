@@ -8,10 +8,27 @@
 
 #include <xcb/xcb.h>
 
+/**
+ * WM_TAKE_FOCUS atom
+ * Used to send client messages to direct focus of an application
+*/
 extern xcb_atom_t WM_TAKE_FOCUS;
+
+/**
+ * WM_DELETE_WINDOW atom
+ * Used to send client messages to delete the window
+*/
 extern xcb_atom_t WM_DELETE_WINDOW;
 
+/**
+ *Custom atom store in window's state to indicate that it should not be tield
+ */
 extern xcb_atom_t WM_STATE_NO_TILE;
+
+/**
+ *Custom atom store in window's state to indicate that this window should 
+ * have the ROOT_FULLSCREEN mask
+ */
 extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 
 /**
@@ -38,6 +55,6 @@ void quit(void);
 /**
  * Flush the X connection
  */
-void flush();
+void flush(void);
 
 #endif /* XSESSION_H_ */

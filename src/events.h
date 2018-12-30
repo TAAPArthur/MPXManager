@@ -8,26 +8,37 @@
 #define EVENTS_H_
 
 #include <pthread.h>
-void lock();
-void unlock();
+#include <xcb/xcb.h>
+
+/**
+ * Locks/unlocks the global mutex
+ *
+ * It is not safe to modify most structs from multiple threads so the main event loop lock/unlocks a
+ * global mutex. Any addition thread that runs alongside the main thread of if in general, there 
+ * is a race, lock/unlock should be used
+ */
+void lock(void);
+///cpoydoc lock(void)
+void unlock(void);
 
 /**
  * Requests all threads to terminate
  */
-void requestShutdown();
+void requestShutdown(void);
 /**
  * Indicate to threads that the system is shutting down;
  */
-int isShuttingDown();
+int isShuttingDown(void);
 
 /**
  *Returns a monotonically increasing counter indicating the number of times the event loop has been idel. Being idle means event loop has nothing to do at the moment which means it has responded to all prior events
 */
-int getIdleCount();
+int getIdleCount(void);
 /**
  * Runs method in a new thread
  * @param method the method to run
  * @param arg the argument to pass into method
+ * @param detached creates a detached thread; When a detached thread terminates, its resources are automatically released back to the system without the need for another thread to join with the terminated thread.
  * @return a pthread identifier
  */
 pthread_t runInNewThread(void *(*method) (void *),void*arg,int detached);
@@ -56,12 +67,19 @@ void registerForEvents();
  */
 void registerForWindowEvents(int window,int mask);
 
+/**
+ * To be called when a generic event is received
+ * loads info related to the generic event which can be accesed by getLastEvent()
+ */
 int loadGenericEvent(xcb_ge_generic_event_t*event);
 
 /**
  * Grab all specified keys/buttons and listen for select device events on events
  */
 void registerForDeviceEvents();
+/**
+ * Request to be notifed when info related to the monitor/screen changes
+ */
 void registerForMonitorChange();
 
 #endif /* EVENTS_H_ */

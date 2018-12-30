@@ -28,9 +28,6 @@
 #include "globals.h"
 #include "events.h"
 
-#define APPLY_RULES_OR_RETURN(TYPE,winInfo) \
-        if(!applyRules(eventRules[TYPE],winInfo))\
-            return;
 static Node initialMappingOrder;
 
 
@@ -82,6 +79,7 @@ void resetUserMask(WindowInfo* winInfo){
 int getUserMask(WindowInfo*winInfo){
     return (char)getMask(winInfo);
 }
+///return true iff mask as any USER_MASK bits set
 int isUserMask(int mask){
     return ((char)mask)?1:0;
 }
@@ -112,10 +110,11 @@ void connectToXserver(){
     detectMonitors();
     syncState();
     registerForEvents();
-    APPLY_RULES_OR_RETURN(onXConnection,NULL);
-    broadcastEWMHCompilence();
-    dumpAllWindowInfo();
-    printSummary();
+    if(applyRules(eventRules[onXConnection],NULL)){
+        broadcastEWMHCompilence();
+        dumpAllWindowInfo();
+        printSummary();
+    }
 }
 void syncState(){
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
@@ -129,7 +128,7 @@ void syncState(){
         currentWorkspace=getNumberOfWorkspaces()-1;
     xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
     LOG(LOG_LEVEL_INFO,"Current workspace is %d; default %d\n\n",currentWorkspace,DEFAULT_WORKSPACE_INDEX);
-    activateWorkspace(currentWorkspace);
+    switchToWorkspace(currentWorkspace);
 }
 
 void scan(xcb_window_t baseWindow) {
@@ -365,16 +364,11 @@ void registerWindow(WindowInfo*winInfo){
     passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
 
     moveWindowToWorkspaceAtLayer(winInfo, winInfo->workspaceIndex,NORMAL_LAYER);
-    APPLY_RULES_OR_RETURN(RegisteringWindow,winInfo);
+    if(!applyRules(eventRules[RegisteringWindow],winInfo))\
+        return;
     char state=XCB_ICCCM_WM_STATE_WITHDRAWN;
     xcb_change_property(dis,XCB_PROP_MODE_REPLACE,win,ewmh->_NET_WM_STATE,ewmh->_NET_WM_STATE,32,0,&state);
 }
-
-typedef struct {
-    int mask;
-    int layer;
-}WindowState;
-
 
 int getLastLayerForWindow(WindowInfo*winInfo){
     Workspace*workspace=getWorkspaceByIndex(winInfo->workspaceIndex);
@@ -464,10 +458,9 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int 
         else if(atoms[i] == WM_DELETE_WINDOW)
             mask|=WM_DELETE_WINDOW_MASK;
     }
-    WindowState state={mask,layer};
     if(action==XCB_EWMH_WM_STATE_TOGGLE){
         int currentLayer=getLastLayerForWindow(winInfo);
-        if(hasMask(winInfo, state.mask) &&(currentLayer==-1 ||currentLayer==state.layer))
+        if(hasMask(winInfo, mask) &&(currentLayer==-1 ||currentLayer==layer))
             action=XCB_EWMH_WM_STATE_REMOVE;
         else
             action=XCB_EWMH_WM_STATE_ADD;
@@ -475,14 +468,14 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int 
     }
     LOG(LOG_LEVEL_DEBUG,"Action %d mask %d layer %d\n",action,mask,layer);
     if(action==XCB_EWMH_WM_STATE_REMOVE){
-        if(state.layer!=NORMAL_LAYER)
+        if(layer!=NORMAL_LAYER)
             moveWindowToLayerForAllWorkspaces(winInfo, NORMAL_LAYER);
-        removeMask(winInfo, state.mask);
+        removeMask(winInfo, mask);
     }
     else{
-        if(state.layer!=NORMAL_LAYER)
-            moveWindowToLayerForAllWorkspaces(winInfo, state.layer);
-        addMask(winInfo, state.mask);
+        if(layer!=NORMAL_LAYER)
+            moveWindowToLayerForAllWorkspaces(winInfo, layer);
+        addMask(winInfo, mask);
     }
 }
 
@@ -696,37 +689,7 @@ void switchToWorkspace(int workspaceIndex){
     xcb_ewmh_set_current_desktop_checked(
                 ewmh, DefaultScreen(dpy), workspaceIndex);
 }
-void activateWorkspace(int workspaceIndex){
 
-    LOG(LOG_LEVEL_DEBUG,"Activating workspace:%d\n",workspaceIndex);
-    Workspace*workspaceToSwitchTo=getWorkspaceByIndex(workspaceIndex);
-
-    Node*head=getActiveMasterWindowStack();
-    LOG(LOG_LEVEL_TRACE,"Finding first window of active master in workspace %d:\n",workspaceIndex);
-
-    UNTIL_FIRST(head,((WindowInfo*)getValue(head))->workspaceIndex==workspaceIndex)
-    if(!head){
-
-        head=getWindowStack(workspaceToSwitchTo);
-        LOG(LOG_LEVEL_TRACE,"Intersection was empty; using head of stack:%d\n",getIntValue(head));
-    }
-
-
-    if(head->value)
-        activateWindow(getValue(head));
-    else switchToWorkspace(workspaceIndex);
-
-}
-
-void floatWindow(WindowInfo* winInfo){
-    addMask(winInfo, FLOATING_MASK);
-    moveWindowToLayerForAllWorkspaces(winInfo, UPPER_LAYER);
-
-}
-void sinkWindow(WindowInfo* winInfo){
-    removeMask(winInfo, FLOATING_MASK);
-    moveWindowToLayerForAllWorkspaces(winInfo, NORMAL_LAYER);
-}
 
 void moveWindowToLayerForAllWorkspaces(WindowInfo* winInfo,int layer){
     for(int i=0;i<getNumberOfWorkspaces();i++)
@@ -800,7 +763,7 @@ void tileUpperLayers(Workspace*workspace,int startingLayer){
     }
 }
 void tileWorkspace(int index){
-    //TDOD support APPLY_RULES_OR_RETURN(TilingWindows,&index);
+    //TDOD support if(!applyRules(eventRules[TilingWindows],&index))return;
 
     if(!isWorkspaceVisible(index))
         return;
@@ -829,42 +792,42 @@ void tileWorkspace(int index){
     tileUpperLayers(workspace,NORMAL_LAYER+1);
 }
 
-void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int mask){
+void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int configMask){
     LOG(LOG_LEVEL_TRACE,"processing configure request window %d\n",win);
     int actualValues[7];
     int i=0;
     int n=0;
 
     WindowInfo*winInfo=getWindowInfo(win);
-    if(mask & XCB_CONFIG_WINDOW_X && ++n && isExternallyMoveable(winInfo))
+    if(configMask & XCB_CONFIG_WINDOW_X && ++n && isExternallyMoveable(winInfo))
         actualValues[i++]=values[n-1];
-    else mask&=~XCB_CONFIG_WINDOW_X;
-    if(mask & XCB_CONFIG_WINDOW_Y && ++n && isExternallyMoveable(winInfo))
+    else configMask&=~XCB_CONFIG_WINDOW_X;
+    if(configMask & XCB_CONFIG_WINDOW_Y && ++n && isExternallyMoveable(winInfo))
             actualValues[i++]=values[n-1];
-    else mask&=~XCB_CONFIG_WINDOW_Y;
-    if(mask & XCB_CONFIG_WINDOW_WIDTH && ++n && isExternallyResizable(winInfo))
+    else configMask&=~XCB_CONFIG_WINDOW_Y;
+    if(configMask & XCB_CONFIG_WINDOW_WIDTH && ++n && isExternallyResizable(winInfo))
         actualValues[i++]=values[n-1];
-    else mask&=~XCB_CONFIG_WINDOW_WIDTH;
-    if(mask & XCB_CONFIG_WINDOW_HEIGHT && ++n && isExternallyResizable(winInfo))
+    else configMask&=~XCB_CONFIG_WINDOW_WIDTH;
+    if(configMask & XCB_CONFIG_WINDOW_HEIGHT && ++n && isExternallyResizable(winInfo))
         actualValues[i++]=values[n-1];
-    else mask&=~XCB_CONFIG_WINDOW_HEIGHT;
-    if(mask & XCB_CONFIG_WINDOW_BORDER_WIDTH && ++n && isExternallyBorderConfigurable(winInfo))
+    else configMask&=~XCB_CONFIG_WINDOW_HEIGHT;
+    if(configMask & XCB_CONFIG_WINDOW_BORDER_WIDTH && ++n && isExternallyBorderConfigurable(winInfo))
         actualValues[i++]=values[n-1];
-    else mask&=~XCB_CONFIG_WINDOW_BORDER_WIDTH;
+    else configMask&=~XCB_CONFIG_WINDOW_BORDER_WIDTH;
 
-    if(mask & XCB_CONFIG_WINDOW_SIBLING && ++n && isExternallyRaisable(winInfo))
+    if(configMask & XCB_CONFIG_WINDOW_SIBLING && ++n && isExternallyRaisable(winInfo))
         actualValues[i++]=sibling;
-    else mask&=~XCB_CONFIG_WINDOW_SIBLING;
-    if(mask & XCB_CONFIG_WINDOW_STACK_MODE && ++n && isExternallyRaisable(winInfo))
+    else configMask&=~XCB_CONFIG_WINDOW_SIBLING;
+    if(configMask & XCB_CONFIG_WINDOW_STACK_MODE && ++n && isExternallyRaisable(winInfo))
         actualValues[i++]=stackMode;
-    else mask&=~XCB_CONFIG_WINDOW_STACK_MODE;
+    else configMask&=~XCB_CONFIG_WINDOW_STACK_MODE;
 
-    if(mask){
-        xcb_configure_window(dis, win, mask, actualValues);
-        LOG(LOG_LEVEL_TRACE,"re-configure window %d mask: %d\n",win,mask);
+    if(configMask){
+        xcb_configure_window(dis, win, configMask, actualValues);
+        LOG(LOG_LEVEL_TRACE,"re-configure window %d configMask: %d\n",win,configMask);
     }
     else
-        LOG(LOG_LEVEL_DEBUG,"configure request denied for window %d; masks %d\n",win,winInfo?winInfo->mask:-1);
+        LOG(LOG_LEVEL_DEBUG,"configure request denied for window %d; configMasks %d\n",win,winInfo?winInfo->mask:-1);
 }
 void broadcastEWMHCompilence(){
     LOG(LOG_LEVEL_TRACE,"Compliying with EWMH\n");
