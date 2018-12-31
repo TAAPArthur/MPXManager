@@ -225,7 +225,6 @@ START_TEST(test_passive_grab){
     waitToReceiveInput(ALL_MASKS);
 }END_TEST
 START_TEST(test_passive_ungrab){
-    //TODO
     assert(!xcb_poll_for_event(dis) && "test failure");
     triggerAllBindings(ALL_MASKS);
     assert(!xcb_poll_for_event(dis) && "test failure?");

@@ -261,3 +261,20 @@ int getActiveFocus(){
     free(reply);
     return win;
 }
+int checkStackingOrder(int* stackingOrder,int num){
+    xcb_query_tree_reply_t *reply;
+    reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
+    assert(reply && "could not query tree");
+    int numberOfChildren = xcb_query_tree_children_length(reply);
+    xcb_window_t *children = xcb_query_tree_children(reply);
+    int counter=0;
+    for (int i = 0; i < numberOfChildren; i++) {
+        if(children[i]==stackingOrder[counter]){
+            counter++;
+            if(counter==num)
+                break;
+        }
+    }
+    free(reply);
+    return counter==num;
+}

@@ -19,10 +19,8 @@
 //const int size=10;
 
 
-#define WAIT_FOR(EXPR)  while(EXPR)msleep(100)
-#define WAIT_UNTIL_TRUE(EXPR) WAIT_FOR(!(EXPR));
-#define WAIT_UNTIL(EXPR) WAIT_FOR((EXPR));
-#define WAIT_UNTIL_FALSE(EXPR) WAIT_FOR((EXPR));
+#define WAIT_UNTIL_FALSE(COND,EXPR...) while(COND){msleep(100);EXPR;}
+#define WAIT_UNTIL_TRUE(COND,EXPR...) WAIT_UNTIL_FALSE(!(COND),EXPR)
 
 #define CREATE_HANDLER void handler(int sig) { \
   int n=30; \

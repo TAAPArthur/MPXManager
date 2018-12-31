@@ -163,7 +163,7 @@ START_TEST(test_delete_windows){
     destroyWindow(win3);
     destroyWindow(win4);
 
-    WAIT_FOR(isInList(getAllWindows(), win2)||
+    WAIT_UNTIL_FALSE(isInList(getAllWindows(), win2)||
                 isInList(getAllWindows(), win3)||
                 isInList(getAllWindows(), win4));
     assert(getSize(getAllWindows())==0);

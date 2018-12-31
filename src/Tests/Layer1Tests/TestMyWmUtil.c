@@ -475,7 +475,7 @@ START_TEST(test_init_workspace){
     }
     assert(workspace[0].layouts!=workspace[1].layouts);
 }END_TEST
-//TODO! fix broken test
+
 START_TEST(test_window_layers){
     addMaster(1,1);
     WindowInfo*info=createWindowInfo(1);
@@ -490,30 +490,6 @@ START_TEST(test_window_layers){
 
 }END_TEST
 
-/*
-START_TEST(test_window_in_multiple_workspaces){
-    size=10;
-    createContext(size);
-    addMaster(1,1);
-    WindowInfo*info=createWindowInfo(1);
-    addWindow(info);
-    addWindow(100);
-
-    int activeWorkspaceIndex=getActiveWorkspaceIndex();
-    assert(getSize(getActiveWindowStack())==2);
-    for(int n=0;n<size;n++){
-        moveWindowToWorkspace(info, n);
-        assert(activeWorkspaceIndex==getActiveWorkspaceIndex());
-        assert(getSize(getAllWindows())==2);
-        for(int i=0;i<size;i++)
-            if(i!=getActiveWorkspaceIndex())
-                assert(getSize(getWindowStack(getWorkspaceByIndex(i)))==0);
-            else
-                assert(getSize(getActiveWindowStack)==(n==0?2:1));
-
-    }
-}
-*/
 START_TEST(test_visible_workspace){
     addMaster(1,1);
     assert(isWorkspaceVisible(getActiveWorkspaceIndex())==0);

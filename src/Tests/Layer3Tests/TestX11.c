@@ -575,8 +575,7 @@ START_TEST(test_tile_windows){
     tileWorkspace(getActiveWorkspaceIndex());
     for(int i=0;i<LEN(win);i++)
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
-    //TODO actually test window order
-
+    checkStackingOrder(win,LEN(win));
 }END_TEST
 
 START_TEST(test_empty_layout){
