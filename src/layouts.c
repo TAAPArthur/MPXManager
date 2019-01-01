@@ -98,6 +98,7 @@ int getLimit(int*args){
 void full(Monitor*m,Node*windowStack,int*args){
     if(!isNotEmpty(windowStack))
         return;
+    int raiseFocusedWindow=getFocusedWindow()&&isInList(windowStack,getFocusedWindow()->id)&&isTileable(getFocusedWindow());
     int size=getNumberOfWindowsToTile(windowStack,getLimit(args));
     short int values[CONFIG_LEN];
     memcpy(&values, &m->viewX, sizeof(short int)*4);
@@ -109,6 +110,10 @@ void full(Monitor*m,Node*windowStack,int*args){
     values[5]=XCB_STACK_MODE_BELOW;
     if(size>1)
         FOR_EACH_TILE_AT_MOST(windowStack,size-1,configureWindow(m,getValue(windowStack),values));
+
+    values[5]=XCB_STACK_MODE_ABOVE;
+    if(raiseFocusedWindow)
+        configureWindow(m,getFocusedWindow(),values);
 }
 
 Node*splitEven(Monitor*m,Node*stack,short values[CONFIG_LEN],int dim,int num){
