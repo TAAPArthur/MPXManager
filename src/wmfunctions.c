@@ -562,7 +562,7 @@ int focusWindowInfo(WindowInfo*winInfo){
     return focusWindow(winInfo->id);
 }
 int focusWindow(int win){
-    LOG(LOG_LEVEL_DEBUG,"Trying to set focus to %d\n",win);
+    LOG(LOG_LEVEL_DEBUG,"Trying to set focus to %d for master %d\n",win,getActiveMaster()->id);
     assert(win);
     xcb_void_cookie_t cookie=xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME, getActiveMaster()->id);
     if(catchError(cookie)){
@@ -573,6 +573,7 @@ int focusWindow(int win){
     return 1;
 }
 int raiseWindowInfo(WindowInfo* winInfo){
+    if(!winInfo)return 0;
     if (getLayer(winInfo)!=NORMAL_LAYER){
         Node*head=getWindowStackOfWindow(winInfo);
         Node*node=head;
@@ -642,6 +643,18 @@ static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,in
         if(winInfo->activeWorkspaceCount)winInfo->activeWorkspaceCount--;
         if(winInfo->activeWorkspaceCount==0)
             catchError(xcb_unmap_window_checked(dis, winInfo->id));
+        Master*active=getActiveMaster();
+        Node*master=getLast(getAllMasters());
+        FOR_EACH_REVERSED(master,
+            Node* masterWindowStack=getWindowStackByMaster(getValue(master));
+            if(getValue(masterWindowStack)==winInfo){
+                setActiveMaster(getValue(master));
+                UNTIL_FIRST(masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(getValue(masterWindowStack))->id));
+                if(masterWindowStack)
+                    focusWindowInfo(getValue(masterWindowStack));
+            }
+        );
+        setActiveMaster(active);
     }
 }
 static void setLayerState(int workspaceIndex,int map,int layer){

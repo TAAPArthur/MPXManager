@@ -6,6 +6,7 @@
 #include "../../functions.h"
 #include "../../monitors.h"
 #include "../../state.h"
+#include "../../devices.h"
 
 
 START_TEST(test_layouts){
@@ -71,6 +72,91 @@ START_TEST(test_layouts){
     )
 }END_TEST
 
+START_TEST(test_layouts_transition){
+
+    LOAD_SAVED_STATE=0;
+    int layoutIndex=_i;
+    setActiveLayout(&DEFAULT_LAYOUTS[layoutIndex]);
+    int size=10;
+    int startingWorkspace = 0;
+    switchToWorkspace(startingWorkspace);
+    int numOfMasters=5;
+    for(int i=0;i<numOfMasters-1;i++)
+        createMasterDevice((char[]){'A'+i,0});
+    initCurrentMasters();
+    WindowInfo*markedWindows[numOfMasters];
+    Master*masterList[numOfMasters];
+    Node*masters=getAllMasters();
+
+    int i=0;
+    int idle;
+    FOR_AT_MOST(masters,numOfMasters,masterList[i++]=getValue(masters));
+    START_MY_WM
+    lock();
+    for(int i=0;i<size;i++)
+        createNormalWindow();
+    flush();
+    unlock();
+    WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),0)==size)
+    lock();
+    Node*stack=getLast(getActiveWindowStack());
+    i=0;
+    FOR_AT_MOST_REVERSED(stack,numOfMasters,markedWindows[i++]=getValue(stack));
+    unlock();
+    for(int i=0;i<numOfMasters;i++){
+        lock();
+        setActiveMaster(masterList[i]);
+        activateWindow(markedWindows[i]);
+        flush();
+        unlock();
+        idle=getIdleCount();
+        WAIT_UNTIL_TRUE(getIdleCount()!=idle);
+    }
+
+    lock();
+    switchToWorkspace(!startingWorkspace);
+    assert(getActiveWorkspaceIndex()!=startingWorkspace);
+    assert(!isNotEmpty(getActiveWindowStack()));
+    createNormalWindow();
+    assert(getActiveWorkspaceIndex()!=startingWorkspace);
+    unlock();
+
+    WAIT_UNTIL_TRUE(isNotEmpty(getActiveWindowStack()));
+
+    assert(getActiveWorkspaceIndex()!=startingWorkspace);
+    lock();
+    WindowInfo* tempWindow=(getValue(getActiveWindowStack()));
+    for(int i=0;i<numOfMasters;i++){
+        setActiveMaster(masterList[i]);
+        focusWindowInfo(tempWindow);
+    }
+    flush();
+    idle=getIdleCount();
+    unlock();
+    WAIT_UNTIL_TRUE(getIdleCount()!=idle);
+    lock();
+    for(int i=0;i<numOfMasters;i++){
+        assert(getValue(getFocusedWindowByMaster(masterList[i]))==tempWindow);
+    }
+    switchToWorkspace(!startingWorkspace);
+    assert(getActiveWorkspaceIndex()!=startingWorkspace);
+    idle=getIdleCount();
+    switchToWorkspace(startingWorkspace);
+    assert(getActiveWorkspaceIndex()==startingWorkspace);
+    flush();
+    idle=getIdleCount();
+    unlock();
+
+    WAIT_UNTIL_TRUE(getIdleCount()!=idle);
+    for(int i=0;i<numOfMasters;i++){
+        assert(getValue(getFocusedWindowByMaster(masterList[i]))==markedWindows[i]);
+    }
+    for(int i=0;i<numOfMasters;i++)
+        destroyMasterDevice(masterList[i]->id, 2, 3);
+    flush();
+    WAIT_UNTIL_TRUE(getSize(getAllMasters())==1);
+
+}END_TEST
 START_TEST(test_fixed_position_windows){
     int size=4;
     for(int i=1;i<=size;i++)
@@ -96,6 +182,7 @@ Suite *layoutSuite() {
     TCase* tc_core = tcase_create("Layouts");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_loop_test(tc_core, test_layouts,0,NUMBER_OF_DEFAULT_LAYOUTS+1);
+    tcase_add_loop_test(tc_core, test_layouts_transition,0,NUMBER_OF_DEFAULT_LAYOUTS);
     tcase_add_loop_test(tc_core, test_fixed_position_windows,0,NUMBER_OF_DEFAULT_LAYOUTS);
     suite_add_tcase(s, tc_core);
     return s;
