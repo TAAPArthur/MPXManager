@@ -1,11 +1,11 @@
 CC := gcc -std=c11
-OPTIMIZATION_FLAGS ?= -Os
+OPTIMIZATION_FLAGS ?= -O3
 DEBUGGING_FLAGS ?= -g -rdynamic -O0
 IGNORED_FLAGS ?= -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-int-to-pointer-cast -Wno-cast-function-type
 ERROR_FLAGS ?= -Werror -Wall -Wextra
-CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS}
+CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE
 
-TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING -D_DEFAULT_SOURCE --coverage -Wno-unused-function
+TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING  --coverage -Wno-unused-function
 TESTLIBS ?= -lcheck -lm
 LDFLAGS ?= -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 #-pedantic
@@ -31,9 +31,9 @@ RUN_XTEST_NO_DISPLAY = Tests/xisolate --no-xserver $(call RUN_TEST, ./$@ --test-
 all: quick-test mywm
 
 mywm: ${SRCS}
-	gcc $^ -o $@  ${RELEASE_FLAGS} ${LDFLAGS}
+	${CC} $^ -o $@  ${RELEASE_FLAGS} ${LDFLAGS}
 debug: ${SRCS}
-	gcc $^ -o $@  ${DEBUG_FLAGS} ${LDFLAGS}
+	${CC} $^ -o $@  ${DEBUG_FLAGS} ${LDFLAGS}
 
 quick-test: QUICK=1
 quick-test: test
