@@ -141,11 +141,10 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
     LOG(LOG_LEVEL_TRACE,"key detected code: %d mod: %d mask: %d\n",keyCode,mods,mask);
 
     Binding* chainBinding=getActiveBinding();
-    int bindingTriggered=0;
-    //TODO simplify logic
+    int bindingsTriggered=0;
     while(chainBinding){
-        int i;
-        for(i=0;;i++){
+        int i=0;
+        do{
             if(doesBindingMatch(&chainBinding[i],keyCode,mods,mask)){
                 LOG(LOG_LEVEL_TRACE,"Calling chain binding\n");
                 int result=callBoundedFunction(&chainBinding[i].boundFunction,winInfo);
@@ -155,34 +154,28 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
                 }
                 if(!passThrough(result,chainBinding[i].passThrough))
                     return 0;
-                bindingTriggered+=1;
-                if(chainBinding[i].endChain){
-                    break;
-                }
+                bindingsTriggered+=1;
             }
-            if(chainBinding[i].endChain){
-                if(!chainBinding[i].noEndOnPassThrough){
-                    LOG(LOG_LEVEL_DEBUG,"chain is ending because external key was pressed\n");
-                    endChain();
-                }
-                break;
+            else if(chainBinding[i].endChain && !chainBinding[i].noEndOnPassThrough){
+                LOG(LOG_LEVEL_DEBUG,"chain is ending because external key was pressed\n");
+                endChain();
             }
-        }
+        }while(!chainBinding[i++].endChain);
         if(chainBinding==getActiveBinding())
             break;
         else chainBinding=getActiveBinding();
     }
     Node*n=getDeviceBindings();
     FOR_EACH_CIRCULAR(n,
-            Binding*binding=getValue(n);
+        Binding*binding=getValue(n);
         if(doesBindingMatch(binding,keyCode,mods,mask)){
-            bindingTriggered+=1;
+            bindingsTriggered+=1;
             if(!passThrough(callBoundedFunction(&binding->boundFunction,winInfo),binding->passThrough))
                return 0;
         }
     )
-    LOG(LOG_LEVEL_TRACE,"Triggered %d bindings\n",bindingTriggered);
-    return bindingTriggered;
+    LOG(LOG_LEVEL_TRACE,"Triggered %d bindings\n",bindingsTriggered);
+    return bindingsTriggered;
 }
 
 int doesStringMatchRule(Rule*rule,char*str){
