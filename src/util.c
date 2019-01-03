@@ -205,10 +205,10 @@ int shiftToHead(Node* list,Node *node){
         return 0;
 
     assert(node->prev);
-    //TODO handle case where node is not in list?
     Node *singleNode=popNode(node);
     assert(singleNode==node);
-    insertBefore(list,singleNode);
+    if(singleNode)
+        insertBefore(list,singleNode);
     return 0;
 }
 void swap(Node* n,Node* n2){

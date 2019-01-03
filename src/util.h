@@ -256,6 +256,7 @@ void partitionRight(Node*node);
 
 /**
  * Pops node from list and re-inserts it at the head
+ * If the node is not already in the list, then the outcome is undefiend
  * @param list
  * @param node a node in list
  * @return
