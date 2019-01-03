@@ -617,7 +617,8 @@ int activateWindow(WindowInfo* winInfo){
 
 int deleteWindow(xcb_window_t winToRemove){
     int result = removeWindow(winToRemove)||removeDock(winToRemove);
-    updateEWMHClientList();
+    if(result)
+        updateEWMHClientList();
     return result;
 }
 
