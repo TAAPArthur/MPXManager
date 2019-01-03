@@ -67,7 +67,7 @@ static long getMonitorLocationFromWorkspace(Workspace*workspace){
 static WorkspaceState* computeState(){
     WorkspaceState* states=calloc(getNumberOfWorkspaces(), sizeof(WorkspaceState));
     for(int i=0;i<getNumberOfWorkspaces();i++){
-        if(!isWorkspaceVisible(i)&&savedStates){
+        if(!isWorkspaceVisible(i)&&i<numberOfRecordedWorkspaces){
             memcpy(&states[i],&savedStates[i],sizeof(WorkspaceState));
             savedStates[i].noFree=1;
             states[i].noFree=0;
@@ -75,7 +75,7 @@ static WorkspaceState* computeState(){
         }
         states[i].layout=getActiveLayoutOfWorkspace(i);
         long m=getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
-        states[i].monitor=m?m:savedStates?savedStates[i].monitor:0;
+        states[i].monitor=m?m:i<numberOfRecordedWorkspaces?savedStates[i].monitor:0;
         Node*node=getWindowStack(getWorkspaceByIndex(i));
         int size=getSize(node);
         int j=0;
@@ -109,7 +109,7 @@ static int compareState(void(*onChange)(int)){
     int changed=0;
     for(int i=0;i<getNumberOfWorkspaces();i++)
         if(
-            !savedStates||savedStates[i].size != currentState[i].size||
+            i>=numberOfRecordedWorkspaces||savedStates[i].size != currentState[i].size||
             savedStates[i].monitor!=currentState[i].monitor||
             savedStates[i].layout!=currentState[i].layout||
             memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(int)*savedStates[i].size)

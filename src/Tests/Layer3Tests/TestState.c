@@ -118,6 +118,7 @@ START_TEST(test_state_change_num_windows){
         break;
     }
 }END_TEST
+
 START_TEST(test_on_state_change){
     updateState(NULL);
     WindowInfo*winInfo=createWindowInfo(1);
@@ -131,6 +132,17 @@ START_TEST(test_on_state_change){
     assert(visited==1);
 }END_TEST
 
+START_TEST(test_num_workspaces_grow){
+    updateState(NULL);
+    markState();
+    int num=getNumberOfWorkspaces();
+    assert(num>2);
+    destroyContext();
+    createContext(_i?num*2:num/2);
+    assert(num!=getNumberOfWorkspaces());
+    //detect change only when growing
+    assert(updateState(NULL)==_i);
+}END_TEST
 
 
 Suite *stateSuite() {
@@ -148,6 +160,7 @@ Suite *stateSuite() {
     tcase_add_test(tc_core,test_on_invisible_workspace_window_add);
     tcase_add_test(tc_core,test_mask_change);
     tcase_add_test(tc_core,test_layout_change);
+    tcase_add_loop_test(tc_core,test_num_workspaces_grow,0,2);
     suite_add_tcase(s, tc_core);
 
     return s;
