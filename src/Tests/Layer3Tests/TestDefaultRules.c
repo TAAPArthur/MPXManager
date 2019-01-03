@@ -389,6 +389,15 @@ START_TEST(test_client_close_window){
 
 }END_TEST
 
+START_TEST(test_client_set_sticky_window){
+    mapArbitraryWindow();
+    WAIT_UNTIL_TRUE(getSize(getAllWindows()));
+    WindowInfo*winInfo=getValue(getAllWindows());
+    xcb_ewmh_request_change_wm_desktop(ewmh, defaultScreenNumber, winInfo->id, -1, 0);
+    flush();
+    WAIT_UNTIL_TRUE(hasMask(winInfo, STICKY_MASK));
+    assert(hasMask(winInfo, FLOATING_MASK));
+}END_TEST
 START_TEST(test_client_set_window_workspace){
     int workspace=3;
     xcb_ewmh_request_change_wm_desktop(ewmh, defaultScreenNumber, winInfo->id, workspace, 0);
@@ -568,6 +577,8 @@ Suite *defaultRulesSuite() {
     tcase_add_test(tc_core, test_client_activate_window);
     tcase_add_test(tc_core, test_client_change_desktop);
     tcase_add_test(tc_core, test_client_set_window_workspace);
+    tcase_add_test(tc_core, test_client_set_sticky_window);
+
     tcase_add_test(tc_core, test_client_set_window_state);
     tcase_add_test(tc_core, test_client_show_desktop);
     tcase_add_test(tc_core, test_client_request_frame_extents);

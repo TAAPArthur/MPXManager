@@ -287,8 +287,15 @@ void onClientMessage(void){
     else if(message==ewmh->_NET_WM_DESKTOP){
         LOG(LOG_LEVEL_DEBUG,"Changing window workspace %d\n\n",data.data32[0]);
         WindowInfo*winInfo=getWindowInfo(win);
+        int destIndex=data.data32[0];
         if(allowRequestFromSource(winInfo, data.data32[1]))
-            moveWindowToWorkspace(getWindowInfo(win), data.data32[0]);
+            if(destIndex==-1){
+                addMask(winInfo,STICKY_MASK);
+                floatWindow(winInfo);
+                xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, destIndex);
+            }
+            else
+                moveWindowToWorkspace(getWindowInfo(win), destIndex);
     }
     else if (message==ewmh->_NET_WM_STATE){
         dumpAtoms((xcb_atom_t *) &data.data32[1], 2);

@@ -231,7 +231,7 @@ START_TEST(test_window_state_sync){
     int win=createNormalWindow();
     scan(root);
     WindowInfo*winInfo=getWindowInfo(win);
-    moveWindowToLayer(winInfo, getActiveWorkspaceIndex(), UPPER_LAYER);
+    moveWindowToWorkspaceAtLayer(winInfo, getActiveWorkspaceIndex(), UPPER_LAYER);
     addMask(winInfo, -1);
 
     xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
@@ -257,7 +257,7 @@ START_TEST(test_layer_move){
     LOAD_SAVED_STATE=0;
     processNewWindow(winInfo);
     for(int i=0;i<NUMBER_OF_LAYERS;i++){
-        moveWindowToLayer(winInfo, getActiveWorkspaceIndex(), i);
+        moveWindowToWorkspaceAtLayer(winInfo, getActiveWorkspaceIndex(), i);
         assert(isInList(getActiveWorkspace()->windows[i], winInfo->id));
     }
 }END_TEST
@@ -490,15 +490,6 @@ START_TEST(test_workspace_change){
 
 }END_TEST
 
-START_TEST(test_sticky_window){
-    mapArbitraryWindow();
-    scan(root);
-    WindowInfo*winInfo=getValue(getAllWindows());
-    moveWindowToWorkspace(winInfo, -1);
-    assert(hasMask(winInfo, STICKY_MASK));
-    assert(hasMask(winInfo, FLOATING_MASK));
-    assert(!isNotEmpty(getActiveWindowStack()));
-}END_TEST
 START_TEST(test_workspace_activation){
     LOAD_SAVED_STATE=0;
     mapArbitraryWindow();
@@ -575,7 +566,7 @@ START_TEST(test_tile_windows){
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
     for(int i=LEN(win)-1;i>=0;i--){
         assert(raiseWindow(win[i]));
-        moveWindowToLayer(getWindowInfo(win[i]), getActiveWorkspaceIndex(), i);
+        moveWindowToWorkspaceAtLayer(getWindowInfo(win[i]), getActiveWorkspaceIndex(), i);
     }
 
     for(int i =0;i<LEN(win);i++)
@@ -782,7 +773,6 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_set_border_color);
     tcase_add_test(tc_core, test_workspace_activation);
     tcase_add_test(tc_core, test_workspace_change);
-    tcase_add_test(tc_core, test_sticky_window);
 
     tcase_add_test(tc_core, test_kill_window);
     tcase_add_test(tc_core, test_privileged_windows_size);

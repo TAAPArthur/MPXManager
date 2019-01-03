@@ -471,18 +471,11 @@ void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int st
 void broadcastEWMHCompilence();
 
 /**
- * moves a window to a specified layer for all workspaces it is in
+ * Moves a window to the specifed layer in the same workspace
  * @param win
  * @param layer
  */
-void moveWindowToLayerForAllWorkspaces(WindowInfo* win,int layer);
-/**
- * MOves a window to the specifed layer in a given workspace
- * @param win
- * @param workspaceIndex
- * @param layer
- */
-void moveWindowToLayer(WindowInfo* win,int workspaceIndex,int layer);
+void moveWindowToLayer(WindowInfo* win,int layer);
 
 /**
  * Send a kill signal to the client with the window

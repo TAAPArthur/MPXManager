@@ -20,7 +20,6 @@
 #include "ewmh.h"
 #include "mywm-util.h"
 #include "wmfunctions.h"
-#include "functions.h"
 #include "devices.h"
 #include "logger.h"
 #include "xsession.h"
@@ -469,12 +468,12 @@ void setWindowStateFromAtomInfo(WindowInfo*winInfo, const xcb_atom_t* atoms,int 
     LOG(LOG_LEVEL_DEBUG,"Action %d mask %d layer %d\n",action,mask,layer);
     if(action==XCB_EWMH_WM_STATE_REMOVE){
         if(layer!=NORMAL_LAYER)
-            moveWindowToLayerForAllWorkspaces(winInfo, NORMAL_LAYER);
+            moveWindowToLayer(winInfo, NORMAL_LAYER);
         removeMask(winInfo, mask);
     }
     else{
         if(layer!=NORMAL_LAYER)
-            moveWindowToLayerForAllWorkspaces(winInfo, layer);
+            moveWindowToLayer(winInfo, layer);
         addMask(winInfo, mask);
     }
 }
@@ -691,22 +690,11 @@ void switchToWorkspace(int workspaceIndex){
 }
 
 
-void moveWindowToLayerForAllWorkspaces(WindowInfo* winInfo,int layer){
-    for(int i=0;i<getNumberOfWorkspaces();i++)
-        moveWindowToLayer(winInfo, i, layer);
-}
-void moveWindowToLayer(WindowInfo*winInfo,int workspaceIndex,int layer){
-    if(removeWindowFromWorkspace(winInfo, workspaceIndex))
-        addWindowToWorkspaceAtLayer(winInfo, workspaceIndex, layer);
+void moveWindowToLayer(WindowInfo*winInfo,int layer){
+    moveWindowToWorkspaceAtLayer(winInfo,getWorkspaceIndexOfWindow(winInfo),layer);
 }
 void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex){
-    if(destIndex==-1){
-        addMask(winInfo,STICKY_MASK);
-        floatWindow(winInfo);
-        xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, destIndex);
-    }
-    else
-        moveWindowToWorkspaceAtLayer(winInfo,destIndex,NORMAL_LAYER);
+    moveWindowToWorkspaceAtLayer(winInfo,destIndex,NORMAL_LAYER);
 }
 void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer){
     assert(destIndex>=0 && destIndex<getNumberOfWorkspaces());

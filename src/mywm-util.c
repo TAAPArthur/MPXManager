@@ -295,8 +295,11 @@ Node*getWindowStack(Workspace*workspace){
 Node* getWindowStackAtLayer(Workspace*workspace,int layer){
     return workspace->windows[layer];
 }
+int getWorkspaceIndexOfWindow(WindowInfo*winInfo){
+    return winInfo->workspaceIndex;
+}
 Workspace* getWorkspaceOfWindow(WindowInfo*winInfo){
-    return getWorkspaceByIndex(winInfo->workspaceIndex);
+    return getWorkspaceByIndex(getWorkspaceIndexOfWindow(winInfo));
 }
 Node* getWindowStackOfWindow(WindowInfo*winInfo){
    return getWindowStackAtLayer(getWorkspaceOfWindow(winInfo),getLayer(winInfo));

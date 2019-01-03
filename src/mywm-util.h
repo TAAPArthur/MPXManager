@@ -483,6 +483,7 @@ Node*getWindowStack(Workspace*workspace);
  */
 Node* getWindowStackAtLayer(Workspace*workspace,int layer);
 
+int getWorkspaceIndexOfWindow(WindowInfo*winInfo);
 Workspace* getWorkspaceOfWindow(WindowInfo*winInfo);
 Node* getWindowStackOfWindow(WindowInfo*winInfo);
 /**
