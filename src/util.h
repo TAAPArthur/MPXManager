@@ -29,7 +29,17 @@ typedef struct node_struct{
     /** Pointer to prev element in the list or NULL*/
     struct node_struct * prev;
 } Node;
-
+/**
+ * Simple ArrayList struct
+ */
+typedef struct ArrayList{
+    ///backing arr
+    void**arr;
+    ///number of elements in list
+    int size;
+    ///cappacity of the list. When size==maxSize, the arr is doubled
+    int maxSize;
+}ArrayList;
 
 
 /**
@@ -299,5 +309,37 @@ void* getValue(Node*node);
  * @return 0 if the value is already present in head 1 o.w.
  */
 int addUnique(Node* head,void* value);
+
+/**
+ * Initilize the backing array for the given list.
+ * If an list has already been initilized it should be cleared first
+ * @param list the list to init
+ */
+void initArrayList(ArrayList*list);
+/**
+ * Adds value to the end of list
+ * @param list the list to append to 
+ * @param value the value to append
+ */
+void addToList(ArrayList*list,void* value);
+/**
+ * Frees all internal memory of list and resets size
+ * The list does not need to be initilized again before it can be used
+ * @param list
+ */
+void clearArrayList(ArrayList*list);
+/**
+ * This method is safe to call on uninitlized lists and cleared lists
+ * @param list
+ * @return the number of elements in the list
+ */
+int getSizeOfList(ArrayList*list);
+/**
+ * Note this method does not perform anys bounds checking
+ * @param list
+ * @param index
+ * @return the element at the index-th position in list
+ */
+void* getElement(ArrayList*list,int index);
 
 #endif

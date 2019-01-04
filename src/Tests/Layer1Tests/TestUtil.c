@@ -579,6 +579,21 @@ START_TEST(test_shift_to_head){
 
 }END_TEST
 
+START_TEST(test_arraylist){
+    ArrayList list;
+    initArrayList(&list);
+    int size=100;
+    for(int n=0;n<2;n++){
+        for(int i=0;i<size;i++){
+            addToList(&list,(void*)i);
+        }
+        assert(getSizeOfList(&list)==size);
+        for(int i=0;i<size;i++)
+            assert(getElement(&list,i)==(void*)i);
+        clearArrayList(&list);
+    }
+}END_TEST
+
 
 Suite *utilSuite() {
     Suite*s = suite_create("Util");
@@ -623,6 +638,10 @@ Suite *utilSuite() {
     tcase_add_test(tc_core, test_cirular_list_insert);
     tcase_add_test(tc_core, test_swap);
     tcase_add_test(tc_core, test_shift_to_head);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("ArrayList");
+    tcase_add_test(tc_core, test_arraylist);
     suite_add_tcase(s, tc_core);
 
     return s;

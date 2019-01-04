@@ -8,6 +8,11 @@
 
 #include "util.h"
 
+///init number of elemenets an arraylist can hold
+#ifndef INITIAL_ARRAY_LIST_CAP
+    #define INITIAL_ARRAY_LIST_CAP 8
+#endif
+
 static void _join(Node*prev,Node*next){
     if(prev)
         prev->next=next;
@@ -225,4 +230,28 @@ int addUnique(Node* head,void* value){
     else
         shiftToHead(head, node);
     return node?0:1;
+}
+
+int getSizeOfList(ArrayList*list){return list->size;}
+void* getElement(ArrayList*list,int index){return list->arr[index];}
+void addToList(ArrayList*list,void* value){
+    if(list->arr==NULL)
+        initArrayList(list);
+    if(list->size==list->maxSize){
+        list->maxSize*=2;
+        list->arr=realloc(list->arr,list->maxSize*sizeof(void*));
+    }
+    list->arr[list->size++]=value;
+}
+void initArrayList(ArrayList*list){
+    list->size=0;
+    list->maxSize=INITIAL_ARRAY_LIST_CAP;
+    list->arr=malloc(sizeof(void*)*list->maxSize);
+}
+void clearArrayList(ArrayList*list){
+    if(list->arr)
+        free(list->arr);
+    list->size=0;
+    list->maxSize=INITIAL_ARRAY_LIST_CAP;
+    list->arr=NULL;
 }
