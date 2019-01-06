@@ -61,7 +61,7 @@ static void setup(){
 
     int mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE|
             XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE|XCB_INPUT_XI_EVENT_MASK_MOTION;
-    clearList(deviceBindings);
+    clearList(getDeviceBindings());
     createContextAndSimpleConnection();
     passiveGrab(root, mask);
 }

@@ -118,10 +118,9 @@ START_TEST(test_layouts_transition){
     assert(getActiveWorkspaceIndex()!=startingWorkspace);
     assert(!isNotEmpty(getActiveWindowStack()));
     createNormalWindow();
-    assert(getActiveWorkspaceIndex()!=startingWorkspace);
+    idle=getIdleCount();
     unlock();
-
-    WAIT_UNTIL_TRUE(isNotEmpty(getActiveWindowStack()));
+    WAIT_UNTIL_TRUE(getIdleCount()!=idle);
 
     assert(getActiveWorkspaceIndex()!=startingWorkspace);
     lock();
@@ -138,15 +137,11 @@ START_TEST(test_layouts_transition){
     for(int i=0;i<numOfMasters;i++){
         assert(getValue(getFocusedWindowByMaster(masterList[i]))==tempWindow);
     }
-    switchToWorkspace(!startingWorkspace);
-    assert(getActiveWorkspaceIndex()!=startingWorkspace);
-    idle=getIdleCount();
     switchToWorkspace(startingWorkspace);
     assert(getActiveWorkspaceIndex()==startingWorkspace);
     flush();
     idle=getIdleCount();
     unlock();
-
     WAIT_UNTIL_TRUE(getIdleCount()!=idle);
     for(int i=0;i<numOfMasters;i++){
         assert(getValue(getFocusedWindowByMaster(masterList[i]))==markedWindows[i]);

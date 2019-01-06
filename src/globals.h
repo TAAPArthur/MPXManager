@@ -140,6 +140,10 @@ extern int POLL_INTERVAL;
  */
 void init(void);
 
+/// the X pointer that exists by default
+extern int DEFAULT_POINTER;
+/// the X keboard that exists by default
+extern int DEFAULT_KEYBOARD;
 /**
  *Set the last event received.
  * @param event the last event received

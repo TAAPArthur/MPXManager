@@ -58,6 +58,12 @@ void createMasterDevice(char*name){
     //xcb_input_xi_change_hierarchy(c, num_changes, changes);
 
 }
+
+void destroyAllNonDefaultMasters(void){
+    Node*masters=getAllMasters();
+    FOR_EACH(masters,if(getIntValue(masters)!=DEFAULT_KEYBOARD)destroyMasterDevice(getIntValue(masters), DEFAULT_POINTER, DEFAULT_KEYBOARD));
+}
+
 void initCurrentMasters(){
 
     /*
@@ -145,6 +151,9 @@ Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves){
 }
 
 
+void passiveUngrab(int window){
+    passiveGrab(window,0);
+}
 void passiveGrab(int window,int maskValue){
     XIEventMask eventmask = {XIAllDevices,2,(unsigned char*)&maskValue};
     XISelectEvents(dpy, window, &eventmask, 1);
@@ -153,9 +162,6 @@ int isKeyboardMask(int mask){
     return mask & (KEYBOARD_MASKS)?1:0;
 }
 
-int grabAllMasterDevices(void){
-    return grabDevice(XIAllMasterDevices,KEYBOARD_MASKS|POINTER_MASKS);
-}
 int grabPointer(int id){
     return grabDevice(id,POINTER_MASKS);
 }
@@ -178,6 +184,24 @@ int grabDevice(int deviceID,int maskValue){
     XIEventMask eventmask = {deviceID,2,(unsigned char*)&maskValue};
     return XIGrabDevice(dpy, deviceID,  root, CurrentTime, None, GrabModeAsync,
                                        GrabModeAsync, 1, &eventmask);
+}
+int grabAllMasterDevices(void){
+    Node*master=getAllMasters();
+    int result=1;
+    FOR_EACH(master,
+        result&=grabDevice(getIntValue(master),KEYBOARD_MASKS);
+        result&=grabDevice(((Master*)getValue(master))->pointerId,POINTER_MASKS);
+    );
+    return result;
+}
+int ungrabAllMasterDevices(void){
+    Node*master=getAllMasters();
+    int result=1;
+    FOR_EACH(master,
+        result&=ungrabDevice(getIntValue(master));
+        result&=ungrabDevice(((Master*)getValue(master))->pointerId);
+    );
+    return result;
 }
 int ungrabDevice(int id){
     return XIUngrabDevice(dpy, id, 0);

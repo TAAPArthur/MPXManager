@@ -37,7 +37,6 @@ START_TEST(test_binding_add){
     FOR_AT_MOST(n,LEN(arr),assert(getValue(n)==&arr[i++]));
 }END_TEST
 START_TEST(test_binding_target_id){
-    addMaster(2, 3);
     Binding binding={.targetID=-1};
     assert(getIDOfBindingTarget(&binding)==getActiveMasterPointerID());
     binding.targetID=1;
@@ -90,7 +89,6 @@ START_TEST(test_binding_match){
 
 }END_TEST
 START_TEST(test_check_bindings){
-    addMaster(1,2);
     int passThrough=_i;
     int count=0;
     int targetCount=0;
@@ -105,16 +103,16 @@ START_TEST(test_check_bindings){
             Binding arr[]={
                 {10,10,BIND(exit,10),.passThrough=passThrough, .detail=10},
                 {effectiveMod,detail,BIND(funcNoArg),.passThrough=passThrough, .detail=detail},
-                {effectiveMod,detail,BIND(funcNoArg),.passThrough=0,.detail=detail},
+                {effectiveMod,detail,BIND(funcNoArg),.passThrough=NO_PASSTHROUGH,.detail=detail},
                 {effectiveMod,detail,BIND(exit,11),.passThrough=passThrough, .detail=detail},
             };
-            clearList(deviceBindings);
+            clearList(getDeviceBindings());
             addBindings(arr,LEN(arr));
 
             checkBindings(1, 1, mask, NULL);
             checkBindings(1, 1|IGNORE_MASK, mask, NULL);
             if(mod!=2 && detail!=2)
-                targetCount+=2*(passThrough+1);
+                targetCount+=2*((passThrough==ALWAYS_PASSTHROUGH)+1);
             assert(count==targetCount);
     }
 }END_TEST
@@ -122,7 +120,6 @@ START_TEST(test_check_bindings){
 
 ///Test to make sure callBoundedFunction() actually calls the right function
 START_TEST(test_call_bounded_function){
-    addMaster(1,2);
     int integer=1;
     void*voidPointer="c";
     int count=0;
@@ -285,13 +282,13 @@ START_TEST(test_chain_bindings){
 
     Binding chain={0,1,CHAIN_GRAB(0,
                 {0,1,CHAIN_GRAB(0,
-                    {0, 2, BIND(funcNoArg),.passThrough=0,.detail=2 , .noGrab=1},
-                    END_CHAIN(0,0,BIND(funcNoArg2),.passThrough=1, .noGrab=1)
-                ),.passThrough=0, .detail=1, .noGrab=1},
-                {0, 2, BIND(exit,11),.detail=2, .noGrab=1},
+                    {0, 2, BIND(funcNoArg),.passThrough=NO_PASSTHROUGH,.detail=2 , .noGrab=1},
+                    END_CHAIN(0,0,BIND(funcNoArg2),.passThrough=ALWAYS_PASSTHROUGH, .noGrab=1)
+                ),.passThrough=NO_PASSTHROUGH, .detail=1, .noGrab=1},
+                {0, 2, BIND(exit,11),.detail=2, .noGrab=1,.passThrough=NO_PASSTHROUGH},
             END_CHAIN(outerChainEndMod,0,BIND(funcNoArg2),.noEndOnPassThrough=1, .noGrab=1)
-        ),.passThrough=1, .detail=1, .noGrab=1};
-    Binding dummy={0, 2, BIND(exit,10),.detail=2, .noGrab=1};
+        ),.passThrough=ALWAYS_PASSTHROUGH, .detail=1, .noGrab=1};
+    Binding dummy={0, 2, BIND(exit,10),.detail=2, .noGrab=1,.passThrough=NO_PASSTHROUGH};
     addBinding(&chain);
     addBinding(&dummy);
     assert(getActiveBinding()==NULL);
@@ -317,9 +314,10 @@ START_TEST(test_chain_bindings){
     assert(getSize(getActiveBindingNode())==2);
     assert(count==1);
     //passthrough via inner chain
-    assert(!checkBindings(123, outerChainEndMod, mask, NULL));
+    checkBindings(123, outerChainEndMod, mask, NULL);
     assert(count==0);
     assert(getActiveBinding()==NULL);
+    clearList(getDeviceBindings());
 
 }END_TEST
 
@@ -424,8 +422,8 @@ START_TEST(test_apply_rules){
     int target=0;
     Rule r[size];
     for(int i=0;i<size;i++){
-        r[i]=(Rule)CREATE_WILDCARD(BIND(funcNoArg),.passThrough=i<size/2);
-        target+=i<size/2;
+        r[i]=(Rule)CREATE_WILDCARD(BIND(funcNoArg),.passThrough=i<size/2?ALWAYS_PASSTHROUGH:NO_PASSTHROUGH);
+        target+=r[i].passThrough==ALWAYS_PASSTHROUGH;
         insertHead(head,&r[i]);
     }
 

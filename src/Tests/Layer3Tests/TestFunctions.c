@@ -283,7 +283,7 @@ START_TEST(test_kill_focused){
         addWindowInfo(createWindowInfo(win));
         onWindowFocus(win);
         assert(getFocusedWindow());
-
+        close(2);
         registerForWindowEvents(win, XCB_EVENT_MASK_STRUCTURE_NOTIFY);
         killFocusedWindow();
         flush();

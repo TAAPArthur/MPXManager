@@ -17,7 +17,6 @@ START_TEST(test_dock_add_remove){
     assert(!removeDock(id));
 }END_TEST
 START_TEST(test_avoid_struct){
-    addMaster(1,1);
     int dim=100;
     int dockSize=10;
     addMonitor(2, 0, (short[]){dim, 0, dim,dim});
@@ -79,7 +78,6 @@ START_TEST(test_avoid_struct){
 }END_TEST
 
 START_TEST(test_intersection){
-    addMaster(1,1);
     int dimX=100;
     int dimY=200;
     int offsetX=10;

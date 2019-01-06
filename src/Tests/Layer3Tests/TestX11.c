@@ -347,6 +347,8 @@ START_TEST(test_delete_window_request){
         close(fd[0]);
         flush();
         read(fd2[0],&win,sizeof(int));
+        close(1);
+        close(2);
         close(fd2[1]);
         close(fd2[0]);
         if(_i==1){
@@ -672,6 +674,7 @@ START_TEST(test_apply_gravity){
 
 START_TEST(test_set_workspace_names){
     char*name[]={"test","test2"};
+    assert((unsigned int)getIndexFromName(name[0])>=LEN(name));
     setWorkspaceNames(name, 1);
     assert(getIndexFromName(name[0])==0);
     assert(strcmp(name[0],getWorkspaceName(0))==0);
@@ -761,8 +764,7 @@ Suite *x11Suite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("WindowOperations");
-    tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
-
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_raise_window);
     tcase_add_test(tc_core, test_raise_window_layer);
     tcase_add_test(tc_core, test_focus_window);

@@ -30,7 +30,7 @@ static void sampleStartupMethod(){
     addBinding(&testBinding);
     addBinding(&testKeyPressBinding);
 }
-
+static Layout*startingLayout=&DEFAULT_LAYOUTS[FULL];
 static void deviceEventsetup(){
     LOAD_SAVED_STATE=0;
     CRASH_ON_ERRORS=1;
@@ -40,41 +40,35 @@ static void deviceEventsetup(){
         startUpMethod=sampleStartupMethod;
     NUMBER_OF_DEFAULT_LAYOUTS=0;
     onStartup();
+    setActiveLayout(startingLayout);
 
     defaultMaster=getActiveMaster();
     int win1=mapWindow(createNormalWindow());
     int win2=mapWindow(createNormalWindow());
     xcb_icccm_set_wm_protocols(dis, win2, ewmh->WM_PROTOCOLS, 1, &ewmh->_NET_WM_PING);
     flush();
-    scan(root);
 
-    winInfo=getWindowInfo(win1);
-    winInfo2=getWindowInfo(win2);
-    assert(winInfo);
-    assert(winInfo2);
 
     createMasterDevice("device2");
     createMasterDevice("device3");
-    initCurrentMasters();
 
     flush();
     static Rule postInitRule=CREATE_DEFAULT_EVENT_RULE(finishedInit);
     addRule(Idle,&postInitRule);
     START_MY_WM
     WAIT_UNTIL_TRUE(completedInit);
+    winInfo=getWindowInfo(win1);
+    winInfo2=getWindowInfo(win2);
+    assert(winInfo);
+    assert(winInfo2);
 
 }
 
 static void nonDefaultDeviceEventsetup(){
-
+    startingLayout=&DEFAULT_LAYOUTS[GRID];
 
     startUpMethod=addFocusFollowsMouseRule;
     deviceEventsetup();
-    completedInit=0;
-    toggleLayout(&DEFAULT_LAYOUTS[GRID]);
-    flush();
-    WAIT_UNTIL_TRUE(completedInit);
-
 
 }
 
@@ -124,6 +118,7 @@ START_TEST(test_print_method){
 
 START_TEST(test_handle_error){
     CRASH_ON_ERRORS=0;
+    setLogLevel(LOG_LEVEL_NONE);
     xcb_input_key_press_event_t event={0};
     setLastEvent(&event);
     applyRules(eventRules[0],NULL);
@@ -215,10 +210,15 @@ START_TEST(test_ignored_windows){
     scan(root);
     assert(getSize(getAllWindows())==0);
     consumeEvents();
+    
+    int idle=getIdleCount();
     START_MY_WM
+    WAIT_UNTIL_TRUE(idle!=getIdleCount());
     createUserIgnoredWindow();
     mapWindow(createUserIgnoredWindow());
-    msleep(1000);
+    idle=getIdleCount();
+    WAIT_UNTIL_TRUE(idle!=getIdleCount());
+    assert(getSize(getAllWindows())==0);
 }END_TEST
 
 START_TEST(test_map_windows){
@@ -244,9 +244,7 @@ START_TEST(test_map_windows){
 
 }END_TEST
 START_TEST(test_device_event){
-    focusWindow(root);
-    flush();
-    sendButtonPress(1);
+    triggerBinding(&testBinding);
     flush();
     WAIT_UNTIL_TRUE(getDummyCount());
 }END_TEST
@@ -258,11 +256,10 @@ START_TEST(test_master_device_add_remove){
 
     WAIT_UNTIL_TRUE(getSize(getAllMasters())==numMaster+2);
     lock();
-    destroyMasterDevice(getIntValue(getAllMasters()->next), getActiveMasterPointerID(),getActiveMasterKeyboardID());
-    destroyMasterDevice(getIntValue(getAllMasters()->next->next), getActiveMasterPointerID(),getActiveMasterKeyboardID());
+    destroyAllNonDefaultMasters();
     flush();
     unlock();
-    WAIT_UNTIL_TRUE(getSize(getAllMasters())==numMaster);
+    WAIT_UNTIL_TRUE(getSize(getAllMasters())==1);
 }END_TEST
 START_TEST(test_focus_update){
     assert(getFocusedWindow()!=winInfo);
@@ -274,34 +271,28 @@ START_TEST(test_focus_update){
 }END_TEST
 
 START_TEST(test_focus_follows_mouse){
-
+    lock();
     int id1=winInfo->id;
     int id2=winInfo2->id;
-    assert(focusWindow(id2));
-    short geo1[LEN(winInfo->geometry)],geo2[LEN(winInfo->geometry)];
-    memcpy(geo1, getGeometry(winInfo), LEN(geo1)*sizeof(short));
-    memcpy(geo2, getGeometry(winInfo2), LEN(geo2)*sizeof(short));
-
     if(_i){
-        lock();
         deleteWindow(id1);
         deleteWindow(id2);
-        unlock();
     }
-    movePointer(getActiveMasterPointerID(), root, 0,0);
-    movePointer(getActiveMasterPointerID(), root, geo1[0]+1, geo1[1]+1);
-    movePointer(getActiveMasterPointerID(), root, geo1[0]+10, geo1[1]+10);
-    movePointer(getActiveMasterPointerID(), root, geo2[0]+1, geo2[1]+1);
-    movePointer(getActiveMasterPointerID(), root, geo2[0]+10, geo2[1]+10);
-    LOG(LOG_LEVEL_ALL,"Size: %d\n\n",getSize(getAllWindows()));
-/*
-    LOG(LOG_LEVEL_NONE,"waiting\n\n");
-    if(_i){
-        WAIT_UNTIL_TRUE(getActiveFocus()==id1);
+    unlock();
+    focusWindow(id1);
+    movePointer(getActiveMasterPointerID(), id1, 0,0);
+    flush();
+    WAIT_UNTIL_TRUE(getActiveFocus()==id1);
+    for(int i=0;i<4;i++){
+        int id=(i%2?id1:id2);
+        int n=0;
+        WAIT_UNTIL_TRUE(getActiveFocus()==id,
+            setActiveMaster(defaultMaster);
+            movePointer(getActiveMasterPointerID(), id, n,n);
+            n=!n;
+            flush()
+        );
     }
-    else
-        WAIT_UNTIL_TRUE(getFocusedWindow()==winInfo);
-*/
 
 }END_TEST
 
@@ -378,6 +369,8 @@ START_TEST(test_client_close_window){
         registerForWindowEvents(id, XCB_EVENT_MASK_STRUCTURE_NOTIFY);
         xcb_ewmh_request_close_window(ewmh, defaultScreenNumber, id, 0, 0);
         flush();
+        close(2);
+        close(1);
         waitForNormalEvent(XCB_DESTROY_NOTIFY);
         closeConnection();
         exit(0);
@@ -451,7 +444,6 @@ START_TEST(test_auto_tile){
     assert(getActiveLayoutOfWorkspace(0)->layoutFunction);
 
 
-    LOG(LOG_LEVEL_ERROR,"%d\n\n\n",count);
     WAIT_UNTIL_TRUE(count);
 }END_TEST
 START_TEST(test_client_show_desktop){
@@ -554,7 +546,6 @@ Suite *defaultRulesSuite() {
     tcase_add_loop_test(tc_core, test_configure_request,0,2);
     suite_add_tcase(s, tc_core);
 
-
     tc_core = tcase_create("Default Device Events");
     tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
     tcase_add_test(tc_core, test_master_device_add_remove);
@@ -571,7 +562,6 @@ Suite *defaultRulesSuite() {
     tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
     tcase_add_test(tc_core, test_key_repeat);
     suite_add_tcase(s, tc_core);
-
     tc_core = tcase_create("Client_Messages");
     tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
     tcase_add_test(tc_core, test_client_activate_window);
@@ -591,6 +581,5 @@ Suite *defaultRulesSuite() {
     tcase_add_checked_fixture(tc_core, onStartup, deviceEventTeardown);
     tcase_add_loop_test(tc_core, test_client_close_window,0,2);
     suite_add_tcase(s, tc_core);
-
     return s;
 }

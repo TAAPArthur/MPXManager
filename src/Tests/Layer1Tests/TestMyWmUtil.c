@@ -4,6 +4,14 @@
 extern int size;
 //int size=10;
 
+
+void loadSampleProperties(WindowInfo*winInfo){
+    const char*dummyString="dummy";
+    char**fields=&winInfo->typeName;
+    for(int i=0;i<4;i++)
+        fields[i]=memcpy(calloc(strlen(dummyString)+1, sizeof(char)), dummyString, strlen(dummyString)*sizeof(char));
+}
+
 #define CREATE_WIN_INFO_ARR WindowInfo* arr[size]; \
 for(int i=0;i<size;i++){ \
     int value=i+1; \
@@ -70,23 +78,20 @@ START_TEST(test_init_context){
 }END_TEST
 
 
-
 START_TEST(test_destroy_context){
     destroyContext();
     createContext(10);
-    addMaster(1,1);
+    addFakeMaster(1,1);
     WindowInfo*winInfo=createWindowInfo(1);
+    loadSampleProperties(winInfo);
     addWindowInfo(winInfo);
-    char*str="dummy";
-    winInfo->typeName=calloc(strlen(str)+1, sizeof(char));
-    memcpy(winInfo->typeName, str, strlen(str)*sizeof(char));
     addMonitor(1, 1, (short[]){1,1,1,1});
     destroyContext();
 }END_TEST
 
 
 START_TEST(test_create_master){
-    addMaster(1, 2);
+    addFakeMaster(1, 2);
     Master*m=getMasterById(1);
     assert(getSize(getAllMasters())==1);
     assert(m->id==1);
@@ -105,7 +110,7 @@ START_TEST(test_master_add_remove){
     assert(getSize(getAllMasters())==0);
     for(int n=0;n<2;n++){
         for(int i=1;i<=size;i++)
-            addMaster(i,i);
+            addFakeMaster(i,i);
         assert(getSize(getAllMasters())==size);
     }
     for(int i=1;i<=size;i++)
@@ -129,7 +134,7 @@ START_TEST(test_master_stack_add_remove){
         return removeWindowFromMaster(getActiveMaster(),i);
     }
     for(int i=1;i<=size;i++){
-        addMaster(i,i);
+        addFakeMaster(i,i);
         setActiveMaster(getMasterById(i));
         assert(getIntValue(getAllMasters())==i);
         testWindowAddRemove(getActiveMasterWindowStack(), fakeOnWindowFocus, fakeRemove);
@@ -145,7 +150,7 @@ START_TEST(test_master_stack_add_remove){
 }END_TEST
 /*
 START_TEST(test_set_last_window_clicked){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     assert(getSize(getActiveMasterWindowStack())==0);
     //does not have to be window in context
     int lastWindowClicked=1;
@@ -160,7 +165,7 @@ START_TEST(test_set_last_window_clicked){
 }END_TEST
 */
 START_TEST(test_master_focus_stack_toggle){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     //default value should be 0
     assert(isFocusStackFrozen()==0);
     addWindowInfo(createWindowInfo(1));
@@ -181,7 +186,7 @@ START_TEST(test_master_focus_stack_toggle){
 START_TEST(test_master_focus_stack){
 
     int frozen=_i;
-    addMaster(1,1);
+    addFakeMaster(1,1);
     //default value should be 0
     assert(isFocusStackFrozen()==0);
     setFocusStackFrozen(frozen);
@@ -190,7 +195,7 @@ START_TEST(test_master_focus_stack){
     for(int i=1;i<=size;i++){
         if(i==size){
             Node*window=getActiveMasterWindowStack();
-            addMaster(2, 3);
+            addFakeMaster(2, 3);
             setActiveMaster(getMasterById(2));
             setFocusStackFrozen(frozen);
             FOR_EACH(window,
@@ -250,7 +255,7 @@ START_TEST(test_master_focus_stack){
 
 }END_TEST
 START_TEST(test_focus_cycle){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     for(int i=1;i<=size;i++){
         assert(addWindowInfo(createWindowInfo(i)));
         onWindowFocus(i);
@@ -270,7 +275,7 @@ START_TEST(test_last_master_to_focus_window){
     addWindowInfo(createWindowInfo(1));
     assert(getLastMasterToFocusWindow(1)==NULL);
     for(int i=1;i<=size*2;i++){
-        addMaster(i,i);
+        addFakeMaster(i,i);
         if(i%2==0)
             continue;
         setActiveMaster(getMasterById(i));
@@ -289,7 +294,7 @@ START_TEST(test_last_master_to_focus_window){
 
 }END_TEST
 START_TEST(test_focus_delete){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     assert(addWindowInfo(createWindowInfo(1)));
     assert(addWindowInfo(createWindowInfo(2)));
     assert(addWindowInfo(createWindowInfo(3)));
@@ -324,7 +329,7 @@ START_TEST(test_focus_delete){
 }END_TEST
 
 START_TEST(test_add_remove_master_window_cache){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     assert(getWindowCache());
     testAddUnique(getWindowCache(),
             updateWindowCache);
@@ -336,12 +341,12 @@ START_TEST(test_add_remove_master_window_cache){
 
 START_TEST(test_master_active){
     assert(getActiveMaster()==NULL);
-    addMaster(1,3);
+    addFakeMaster(1,3);
     assert(getActiveMasterKeyboardID()==1);
     assert(getActiveMasterPointerID()==3);
     assert(getActiveMaster());
     for(int i=2;i<=size;i++){
-        assert(addMaster(i,i));
+        assert(addFakeMaster(i,i));
         //non default masters are not auto set to active
         assert(getActiveMaster()->id!=i);
         setActiveMaster(getMasterById(i));
@@ -351,8 +356,8 @@ START_TEST(test_master_active){
 }END_TEST
 START_TEST(test_master_active_remove){
     assert(getActiveMaster()==NULL);
-    addMaster(1,2);
-    addMaster(3,4);
+    addFakeMaster(1,2);
+    addFakeMaster(3,4);
     removeMaster(1);
     assert(getActiveMaster()==getMasterById(3));
     assert(getActiveMasterKeyboardID()==3);
@@ -412,7 +417,7 @@ START_TEST(test_window_mask){
 START_TEST(test_monitor_init){
 
     int count=0;
-    addMaster(1,1);
+    addFakeMaster(1,1);
     for(int x=0;x<2;x++)
         for(int y=0;y<2;y++){
             short dim[4]={x,y,size*size+y,size*2+x};
@@ -429,7 +434,7 @@ START_TEST(test_monitor_init){
 }END_TEST
 START_TEST(test_monitor_add_remove){
 
-    addMaster(1,1);
+    addFakeMaster(1,1);
 
     for(int n=0;n<2;n++){
         for(int i=1;i<=size+1;i++){
@@ -477,7 +482,7 @@ START_TEST(test_init_workspace){
 }END_TEST
 
 START_TEST(test_window_layers){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     WindowInfo*info=createWindowInfo(1);
     addWindowInfo(info);
 
@@ -491,7 +496,7 @@ START_TEST(test_window_layers){
 }END_TEST
 
 START_TEST(test_visible_workspace){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     assert(isWorkspaceVisible(getActiveWorkspaceIndex())==0);
     assert(isWorkspaceVisible(!getActiveWorkspaceIndex())==0);
     addMonitor(1, 1, (short[]){1,1,1,1});
@@ -505,7 +510,7 @@ START_TEST(test_visible_workspace){
     assert(isWorkspaceVisible(!getActiveWorkspaceIndex()));
 }END_TEST
 START_TEST(test_empty_workspace){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     assert(isWorkspaceNotEmpty(0)==0);
     addWindowInfo(createWindowInfo(1));
     assert(isWorkspaceNotEmpty(0)==0);
@@ -517,7 +522,7 @@ START_TEST(test_empty_workspace){
 START_TEST(test_next_workspace){
     destroyContext();
     createContext(4);
-    addMaster(1,1);
+    addFakeMaster(1,1);
     for(int i=0;i<2;i++){
         //will take the first n workspaces
         addMonitor(i, 1, (short[]){i,i,1,1});
@@ -564,7 +569,7 @@ START_TEST(test_next_workspace){
 }END_TEST
 
 START_TEST(test_window_cycle){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     for(int i=1;i<=size;i++){
         WindowInfo*winInfo=createWindowInfo(i);
         assert(addWindowInfo(winInfo));
@@ -584,7 +589,7 @@ START_TEST(test_window_cycle){
     )
 }END_TEST
 START_TEST(test_active){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     assert(getActiveWorkspaceIndex()==0);
     assert(getActiveWorkspace()->id==getActiveWorkspaceIndex());
     assert(getActiveMasterWindowStack()!=NULL);
@@ -595,7 +600,7 @@ START_TEST(test_active){
 
 }END_TEST
 START_TEST(test_workspace_window_add_remove){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     for(int i=1;i<=size;i++){
         addWindowInfo(createWindowInfo(i));
     }
@@ -630,7 +635,7 @@ START_TEST(test_workspace_window_add_remove){
 
 
 START_TEST(test_monitor_workspace){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     addMonitor(1, 0, (short[]){0, 0, 1, 1});
     addMonitor(2, 0, (short[]){1, 1, 1, 1});
     Node*n=getAllMonitors();
@@ -655,7 +660,7 @@ START_TEST(test_monitor_workspace){
 }END_TEST
 
 START_TEST(test_window_in_visible_worspace){
-    addMaster(1,1);
+    addFakeMaster(1,1);
     WindowInfo*winInfo=createWindowInfo(1);
     addWindowInfo(winInfo);
     assert(!isWindowInVisibleWorkspace(winInfo));
@@ -672,7 +677,7 @@ START_TEST(test_window_in_visible_worspace){
 START_TEST(test_complete_window_remove){
     addWindowInfo(createWindowInfo(1));
     for(int i=1;i<=size;i++){
-        addMaster(i,i);
+        addFakeMaster(i,i);
         onWindowFocus(1);
         addWindowToWorkspace(getValue(getAllWindows()), i-1);
     }
@@ -689,7 +694,7 @@ START_TEST(test_complete_window_remove){
 }END_TEST
 
 START_TEST(test_layout_add){
-    addMaster(1, 1);
+    addFakeMaster(1, 1);
     Layout* l=calloc(1, sizeof(Layout));
     for(int n=0;n<getNumberOfWorkspaces();n++){
         setActiveWorkspaceIndex(n);
@@ -708,7 +713,7 @@ START_TEST(test_layout_add){
     free(l);
 }END_TEST
 START_TEST(test_layout_add_multiple){
-    addMaster(1, 1);
+    addFakeMaster(1, 1);
     int size=10;
     Layout* l=calloc(size, sizeof(Layout));
     addLayoutsToWorkspace(getActiveWorkspaceIndex(), l, size);
@@ -719,7 +724,7 @@ START_TEST(test_layout_add_multiple){
     free(l);
 }END_TEST
 START_TEST(test_active_layout){
-    addMaster(1, 1);
+    addFakeMaster(1, 1);
     Layout* l=calloc(size, sizeof(Layout));
     for(int i=0;i<size;i++){
         assert(setActiveLayout(&l[i]));
@@ -731,7 +736,7 @@ START_TEST(test_active_layout){
 }END_TEST
 
 START_TEST(test_layout_name){
-    addMaster(1, 1);
+    addFakeMaster(1, 1);
     Layout* l=calloc(size, sizeof(Layout));
     getNameOfLayout(NULL);//should not crash
     char*name="test";

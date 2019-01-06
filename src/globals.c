@@ -55,6 +55,9 @@ int POLL_COUNT=10;
 int POLL_INTERVAL=10;
 
 
+int DEFAULT_POINTER=2;
+int DEFAULT_KEYBOARD=3;
+
 void (*preStartUpMethod)(void);
 void (*startUpMethod)(void);
 void (*printStatusMethod)(void);

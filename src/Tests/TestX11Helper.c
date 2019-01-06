@@ -74,7 +74,7 @@ void createSimpleContext(){
 }
 void createSimpleContextWthMaster(){
     createSimpleContext();
-    addMaster(2, 3);
+    addFakeMaster(2, 3);
 }
 
 void createContextAndSimpleConnection(){
@@ -99,13 +99,18 @@ void* getNextDeviceEvent(){
     return event;
 }
 void triggerBinding(Binding* b){
-    sendDeviceAction(isKeyboardMask(b->mask)?
-        getActiveMasterKeyboardID():getActiveMasterPointerID(),
-        b->detail,(int)round(log2(b->mask)));
+    int id=isKeyboardMask(b->mask)?
+        getActiveMasterKeyboardID():getActiveMasterPointerID();
+
+    sendDeviceAction(id,b->detail,(int)log2(b->mask));
+    if(b->mask==XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS)
+        sendDeviceAction(id,b->detail,XCB_INPUT_BUTTON_RELEASE);
+    if(b->mask==XCB_INPUT_XI_EVENT_MASK_KEY_PRESS)
+        sendDeviceAction(id,b->detail,XCB_INPUT_KEY_RELEASE);
 }
 void triggerAllBindings(int mask){
     flush();
-    Node*n=deviceBindings;
+    Node*n=getDeviceBindings();
     FOR_EACH_CIRCULAR(n,
         Binding*b=getValue(n);
         if(mask & b->mask)
@@ -198,9 +203,9 @@ void fullCleanup(){
     //close(xcb_get_file_descriptor(dis));
     if(pThread)
         pthread_join(pThread,((void *)0));
+    destroyAllNonDefaultMasters();
     xcb_disconnect(dis);
     destroyContext();
-    msleep(100);
 }
 int getExitStatusOfFork(){
     int status=0;
@@ -210,7 +215,9 @@ int getExitStatusOfFork(){
     else return -1;
 }
 void waitForCleanExit(){
-    assert(getExitStatusOfFork()==EXIT_SUCCESS);
+    int status=getExitStatusOfFork();
+    LOG(LOG_LEVEL_DEBUG,"exit status %d\n",status);
+    assert(status==EXIT_SUCCESS);
 }
 
 
@@ -264,10 +271,17 @@ int getActiveFocus(){
 int checkStackingOrder(int* stackingOrder,int num){
     xcb_query_tree_reply_t *reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
-    assert(reply && "could not query tree");
+    if(!reply){
+        LOG(LOG_LEVEL_NONE,"could not query tree");
+        return 0;
+    }
     int numberOfChildren = xcb_query_tree_children_length(reply);
     xcb_window_t *children = xcb_query_tree_children(reply);
     int counter=0;
+    LOG(LOG_LEVEL_DEBUG,"Stacking order: ");
+    PRINT_ARR(children,numberOfChildren);
+    LOG(LOG_LEVEL_DEBUG,"Target order: ");
+    PRINT_ARR(stackingOrder,num);
     for (int i = 0; i < numberOfChildren; i++) {
         if(children[i]==stackingOrder[counter]){
             counter++;

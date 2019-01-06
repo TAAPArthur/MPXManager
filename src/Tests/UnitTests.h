@@ -30,4 +30,20 @@
   exit(1); \
 }
 
+static inline int addFakeMaster(int pointerId,int keyboardID){
+    return addMaster(pointerId,keyboardID);
+}
+
+static inline int listsEqual(Node*n,Node*n2){
+    if(n==n2)
+        return 1;
+    if(getSize(n)!=getSize(n2))
+        return 0;
+    FOR_EACH(n,
+        if(getIntValue(n)!=getIntValue(n2))
+            return 0;
+        n2=n2->next;
+    )
+    return 1;
+}
 #endif /* TESTS_UNITTESTS_H_ */

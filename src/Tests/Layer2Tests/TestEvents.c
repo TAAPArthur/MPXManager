@@ -61,7 +61,7 @@ START_TEST(test_regular_events){
         count++;
     }
     IGNORE_SEND_EVENT=0;
-    POLL_COUNT=0;
+    POLL_COUNT=1;
     int idleCount=-1;
     for(i=count+1;i<XCB_GE_GENERIC;i++){
         if(i==1){
@@ -127,8 +127,8 @@ START_TEST(test_register_for_device_events){
     ROOT_DEVICE_EVENT_MASKS=XI_KeyPressMask|XI_KeyReleaseMask|
                 XI_ButtonPressMask|XI_ButtonReleaseMask;
     registerForDeviceEvents();
-    Node*n=deviceBindings;
-    assert(getSize(deviceBindings));
+    Node*n=getDeviceBindings();
+    assert(getSize(getDeviceBindings()));
     FOR_EACH_CIRCULAR(n,assert(((Binding*)getValue(n))->detail));
     triggerAllBindings(ROOT_DEVICE_EVENT_MASKS);
     waitToReceiveInput(ROOT_DEVICE_EVENT_MASKS);

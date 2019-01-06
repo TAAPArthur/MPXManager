@@ -146,9 +146,7 @@ void onConfigureRequestEvent(void){
 void onCreateEvent(void){
     LOG(LOG_LEVEL_TRACE,"create event received\n");
     xcb_create_notify_event_t *event= getLastEvent();
-    if(event->override_redirect)return;
-    if(getWindowInfo(event->window))
-        return;
+    if(event->override_redirect||getWindowInfo(event->window))return;
     WindowInfo*winInfo=createWindowInfo(event->window);
     LOG(LOG_LEVEL_DEBUG,"window: %d parent: %d\n",event->window,event->parent);
     processNewWindow(winInfo);

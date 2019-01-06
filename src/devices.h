@@ -33,7 +33,10 @@ void createMasterDevice(char*name);
  * @param returnKeyboard
  */
 void destroyMasterDevice(int id,int returnPointer,int returnKeyboard);
-
+/**
+ * Calls destroyMasterDevice for all non default masters
+ */
+void destroyAllNonDefaultMasters(void);
 /**
  * if deviceId is a slave, will return the master device;
  * else,  deviceId is a master and the partner master id is returned
@@ -104,7 +107,6 @@ void initCurrentMasters();
  * @return the if of the device that should be grabbed based on the mask
  */
 int getDeviceIDByMask(int mask);
-
 /**
  * Wrapper around XIUngrabDevice
  * Ungrabs the keyboard or mouse
@@ -152,6 +154,7 @@ int grabActiveKeyboard();
  */
 int grabKeyboard(int id);
 
+
 /**
  *
  * @param id
@@ -172,6 +175,20 @@ int grabActivePointer();
  * @param maskValue
  */
 void passiveGrab(int window,int maskValue);
+/**
+ * Ends a passive grab on the given window for events indicated by mask.
+ * @param window
+ * @param id 
+ */
+void passiveUngrab(int window);
+/**
+ * grabs all master devices
+ */
+int grabAllMasterDevices(void);
+/**
+ * ungrabs all master devices (keyboards and mice)
+ */
+int ungrabAllMasterDevices(void);
 
 /**
  * If the masks should go with a keyboard device
