@@ -20,6 +20,12 @@
 ///Returns the field descriptor used to commuicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
 
+///The modifier that will match any other modifier
+#ifndef WILDCARD_MODIFIER
+    #define WILDCARD_MODIFIER AnyModifier
+#endif
+
+
 ///Returns the field descriptors used to commuicate WM status to an external program
 extern int statusPipeFD[2];
 
@@ -39,6 +45,12 @@ extern int ROOT_DEVICE_EVENT_MASKS;
  * and non-root window.
  */
 extern int NON_ROOT_DEVICE_EVENT_MASKS;
+
+/// All masks refering to keyboard events
+extern int KEYBOARD_MASKS;
+/// all masks refering to pointer/mouse events
+extern int POINTER_MASKS;
+
 /// The default SHELL; This defaults to the SHELL environment var
 extern char* SHELL;
 
@@ -54,8 +66,6 @@ extern int DEFAULT_BINDING_MASKS;
 ///The started workspace if !LOAD_STATE or the root CURRENT_DESKTOP property is not set
 extern int DEFAULT_WORKSPACE_INDEX;
 
-///The modifier that will match any other modifier
-extern int WILDCARD_MODIFIER;
 ///Masks to ignore; Default is ModMask2 (NUM_LOCK)
 extern int IGNORE_MASK;
 ///IF True we will crash if an error is received

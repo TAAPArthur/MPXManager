@@ -57,7 +57,6 @@ START_TEST(test_binding_match){
 
     int wildCardMod=0;
     int wildCardDetail=0;
-    WILDCARD_MODIFIER=-1;
     assert(binding.mask);
     for(int i=0;i<4;i++){
         assert(!doesBindingMatch(&binding, fake, fakeMod,fakeMask));
@@ -94,30 +93,29 @@ START_TEST(test_check_bindings){
     addMaster(1,2);
     int passThrough=_i;
     int count=0;
-    int targertCount=0;
+    int targetCount=0;
     void funcNoArg(void){
         count++;
     }
     IGNORE_MASK=16;
-    WILDCARD_MODIFIER=0;
-
-    int i=0;
+    int mask=0;
     for(int mod=0;mod<3;mod++)
         for(int detail=0;detail<3;detail++){
+            int effectiveMod=mod==0?WILDCARD_MODIFIER:mod;
             Binding arr[]={
                 {10,10,BIND(exit,10),.passThrough=passThrough, .detail=10},
-                {mod,detail,BIND(funcNoArg),.passThrough=passThrough, .detail=detail},
-                {mod,detail,BIND(funcNoArg),.passThrough=0,.detail=detail},
-                {mod,detail,BIND(exit,11),.passThrough=passThrough, .detail=detail},
+                {effectiveMod,detail,BIND(funcNoArg),.passThrough=passThrough, .detail=detail},
+                {effectiveMod,detail,BIND(funcNoArg),.passThrough=0,.detail=detail},
+                {effectiveMod,detail,BIND(exit,11),.passThrough=passThrough, .detail=detail},
             };
             clearList(deviceBindings);
             addBindings(arr,LEN(arr));
 
-            checkBindings(1, 1, i, NULL);
-            checkBindings(1, 1|IGNORE_MASK, i, NULL);
+            checkBindings(1, 1, mask, NULL);
+            checkBindings(1, 1|IGNORE_MASK, mask, NULL);
             if(mod!=2 && detail!=2)
-                targertCount+=2*(passThrough+1);
-            assert(count==targertCount);
+                targetCount+=2*(passThrough+1);
+            assert(count==targetCount);
     }
 }END_TEST
 

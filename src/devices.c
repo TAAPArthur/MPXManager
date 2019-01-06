@@ -150,17 +150,20 @@ void passiveGrab(int window,int maskValue){
     XISelectEvents(dpy, window, &eventmask, 1);
 }
 int isKeyboardMask(int mask){
-    return mask & (XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE)?1:0;
+    return mask & (KEYBOARD_MASKS)?1:0;
 }
 
+int grabAllMasterDevices(void){
+    return grabDevice(XIAllMasterDevices,KEYBOARD_MASKS|POINTER_MASKS);
+}
 int grabPointer(int id){
-    return grabDevice(id,XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS|XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE);
+    return grabDevice(id,POINTER_MASKS);
 }
 int grabActivePointer(){
     return grabPointer(getActiveMasterPointerID());
 }
 int grabKeyboard(int id){
-    return grabDevice(id,XCB_INPUT_XI_EVENT_MASK_KEY_PRESS|XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE);
+    return grabDevice(id,KEYBOARD_MASKS);
 }
 int grabActiveKeyboard(){
     return grabKeyboard(getActiveMasterKeyboardID());
