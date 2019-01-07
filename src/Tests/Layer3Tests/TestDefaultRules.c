@@ -112,6 +112,8 @@ START_TEST(test_on_startup){
 
 START_TEST(test_print_method){
     printStatusMethod=dummy;
+    // set to an open FD
+    STATUS_FD=1;
     applyRules(eventRules[Idle],NULL);
     assert(getDummyCount());
 }END_TEST

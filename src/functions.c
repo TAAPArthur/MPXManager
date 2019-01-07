@@ -74,6 +74,12 @@ int findAndRaise(Rule*rule){
 
 void spawnPipe(char*command){
     LOG(LOG_LEVEL_INFO,"running command %s\n",command);
+
+    if(statusPipeFD[0]){
+        close(statusPipeFD[0]);
+        close(statusPipeFD[1]);
+    }
+    pipe(statusPipeFD);
     int pid=fork();
     if(pid==0){
         close(statusPipeFD[1]);

@@ -59,7 +59,7 @@ int ignoreFunction(WindowInfo*winInfo){
 }
 
 static void printStatus(void){
-    if(printStatusMethod)
+    if(printStatusMethod && STATUS_FD)
         printStatusMethod();
 }
 void addPrintRule(void){
