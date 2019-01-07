@@ -92,7 +92,6 @@ START_TEST(test_get_set_geometry_config){
 }END_TEST
 
 START_TEST(test_connect_to_xserver){
-    init();
     connectToXserver();
     assert(getActiveMaster()!=NULL);
     assert(getActiveWorkspace()!=NULL);

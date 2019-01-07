@@ -241,6 +241,9 @@ int applyRules(Node* head,WindowInfo*winInfo){
     return 1;
 }
 Node*getDeviceBindings(){
+    static Node*deviceBindings;
+    if(!deviceBindings)
+        deviceBindings=createCircularHead(NULL);
     return deviceBindings;
 }
 void addBindings(Binding*bindings,int num){

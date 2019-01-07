@@ -24,7 +24,6 @@ int main(int argc, char **argv __attribute__((unused)) ) {
             wait(NULL);
         exit(0);
     }
-    init();
 
     signal(SIGSEGV, handler);   // install our handler
     signal(SIGABRT, handler);   // install our handler

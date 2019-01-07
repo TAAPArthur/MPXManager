@@ -174,6 +174,7 @@ void printFunction(void){
     fsync(STATUS_FD);
 }
 void loadSettings(){
+    SHELL=getenv("SHELL");
     spawnPipe("xmobar");
     printStatusMethod=printFunction;
     addBindings(bindings,LEN(bindings));

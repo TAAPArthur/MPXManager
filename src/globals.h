@@ -76,10 +76,6 @@ extern int CRASH_ON_ERRORS;
 ///Number of workspaces to create
 extern int NUMBER_OF_WORKSPACES;
 
-/**
- * List of all bindings
- */
-extern Node*deviceBindings;
 
 ///If true ignore all events with the send_event bit
 extern char IGNORE_SEND_EVENT;
@@ -142,11 +138,6 @@ extern int POLL_INTERVAL;
 
 ///  File path of config file dictating ideal master(s)/slaves configuration
 extern char * MASTER_INFO_PATH;
-/**
- * Init globals var like deviceBindigns and eventRules
- * Should be called when program starts up
- */
-void init(void);
 
 /// the X pointer that exists by default
 extern int DEFAULT_POINTER;

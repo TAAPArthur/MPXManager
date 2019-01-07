@@ -32,7 +32,7 @@ char IGNORE_SEND_EVENT=0;
 char IGNORE_KEY_REPEAT=0;
 
 
-char* SHELL;
+char* SHELL="/bin/sh";
 
 int CLONE_REFRESH_RATE=15;
 
@@ -42,7 +42,6 @@ int DEFAULT_BINDING_MASKS=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
 
 int DEFAULT_WORKSPACE_INDEX=0;
 
-Node*deviceBindings;
 
 Display *dpy;
 xcb_connection_t *dis;
@@ -66,11 +65,6 @@ void (*preStartUpMethod)(void);
 void (*startUpMethod)(void);
 void (*printStatusMethod)(void);
 int statusPipeFD[2];
-void init(void){
-    pipe(statusPipeFD);
-    SHELL=getenv("SHELL");
-    deviceBindings=createCircularHead(NULL);
-}
 
 ///Last registered event
 static void*lastEvent;
