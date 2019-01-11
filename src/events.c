@@ -87,7 +87,7 @@ void *runEventLoop(void*arg __attribute__((unused))){
         applyRules(getEventRules(type<35?type:35),NULL);
         unlock();
         free(event);
-        LOG(LOG_LEVEL_TRACE,"event proccesed %d\n",getActiveWorkspaceIndex());
+        LOG(LOG_LEVEL_TRACE,"event proccesed\n");
     }
     LOG(LOG_LEVEL_DEBUG,"Exited event loop\n");
     return NULL;
@@ -96,18 +96,21 @@ void *runEventLoop(void*arg __attribute__((unused))){
 int loadGenericEvent(xcb_ge_generic_event_t*event){
     LOG(LOG_LEVEL_TRACE,"processing generic event; ext: %d type: %d event type %d  seq %d\n",
             event->extension,event->response_type,event->event_type,event->sequence);
-    LOG(LOG_LEVEL_TRACE,"%d %d %d\n",
+    LOG(LOG_LEVEL_ALL,"Xrandr data: %d %d %d\n",
             xcb_get_extension_data(dis, &xcb_randr_id)->major_opcode,
             xcb_get_extension_data(dis, &xcb_randr_id)->first_event,
             xcb_get_extension_data(dis, &xcb_randr_id)->first_error);
-    LOG(LOG_LEVEL_TRACE,"%d %d %d\n",
+    LOG(LOG_LEVEL_ALL,"Xinput data %d %d %d\n",
             xcb_get_extension_data(dis, &xcb_input_id)->major_opcode,
             xcb_get_extension_data(dis, &xcb_input_id)->first_event,
             xcb_get_extension_data(dis, &xcb_input_id)->first_error);
 
 
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode){
-        LOG(LOG_LEVEL_TRACE,"generic event detected %d %d %s\n",event->event_type,event->response_type,genericEventTypeToString(event->event_type));
+        LOG(LOG_LEVEL_TRACE,"generic event detected %d %d %s number of rules: %d\n",
+            event->event_type,event->response_type,
+            genericEventTypeToString(event->event_type),
+            getSize(getEventRules(event->event_type+GENERIC_EVENT_OFFSET)));
         return event->event_type+GENERIC_EVENT_OFFSET;
 
     }

@@ -66,11 +66,21 @@ void printMask(int mask){
     PRINT_MASK(MAPABLE_MASK,mask);
     PRINT_MASK(MAPPED_MASK,mask);
     PRINT_MASK(URGENT_MASK,mask);
+    LOG(LOG_LEVEL_DEBUG,"\n");
+}
+void printMasterSummary(void){
+    LOG(LOG_LEVEL_DEBUG,"Active Master %d\n",getActiveMaster()->id);
+    Node *n=getAllMasters();
+    FOR_EACH(n,
+        Master*master=getValue(n);
+        LOG(LOG_LEVEL_DEBUG,"(%d, %d: %s %06x) ",master->id,master->pointerId,master->name, master->focusColor);
+    );
+    LOG(LOG_LEVEL_DEBUG,"\n");
 }
 void printSummary(void){
     LOG(LOG_LEVEL_DEBUG,"Summary:\n");
+    printMasterSummary();
     Node*n=getActiveMasterWindowStack();
-    LOG(LOG_LEVEL_DEBUG,"Active Master %d\n",getActiveMaster()->id);
     FOR_EACH(n,
         WindowInfo*winInfo=getValue(n);
         LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);

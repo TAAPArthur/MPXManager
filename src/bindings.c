@@ -52,7 +52,7 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
 ///\endcond
 
     assert(boundFunction);
-    LOG(LOG_LEVEL_TRACE,"calling function %d\n",boundFunction->type);
+    LOG(LOG_LEVEL_ALL,"calling function %d\n",boundFunction->type);
 
     BoundFunctionArg arg=boundFunction->arg;
 
@@ -144,7 +144,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
 
     mods&=~IGNORE_MASK;
 
-    LOG(LOG_LEVEL_TRACE,"key detected code: %d mod: %d mask: %d\n",keyCode,mods,mask);
+    LOG(LOG_LEVEL_DEBUG,"detail: %d mod: %d mask: %d\n\n",keyCode,mods,mask);
 
     Binding* chainBinding=getActiveBinding();
     int bindingsTriggered=0;
@@ -152,7 +152,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
         int i=0;
         do{
             if(doesBindingMatch(&chainBinding[i],keyCode,mods,mask)){
-                LOG(LOG_LEVEL_TRACE,"Calling chain binding\n");
+                LOG(LOG_LEVEL_DEBUG,"Calling chain binding\n");
                 int result=callBoundedFunction(&chainBinding[i].boundFunction,winInfo);
                 if(chainBinding[i].endChain){
                     //chain has ended

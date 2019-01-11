@@ -663,7 +663,7 @@ static void setWorkspaceState(int workspaceIndex,int map){
 }
 void switchToWorkspace(int workspaceIndex){
     if(isWorkspaceVisible(workspaceIndex)){
-        LOG(LOG_LEVEL_DEBUG,"Workspace is already visible %d:\n",workspaceIndex);
+        LOG(LOG_LEVEL_TRACE,"Workspace is already visible %d:\n",workspaceIndex);
         return;
     }
     int currentIndex=getActiveWorkspaceIndex();
@@ -747,6 +747,7 @@ static void tileNonNormalLayers(WindowInfo*winInfo,int above){
                 (int[]){above?XCB_STACK_MODE_ABOVE:XCB_STACK_MODE_BELOW});
 }
 void tileLowerLayers(Workspace*workspace){
+    LOG(LOG_LEVEL_DEBUG,"tiling lower windows\n");
     for(int i=NORMAL_LAYER-1;i>=DESKTOP_LAYER;i--){
         Node*n=workspace->windows[i];
         FOR_EACH(n,tileNonNormalLayers(getValue(n),0));

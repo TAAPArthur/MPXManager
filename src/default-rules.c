@@ -327,7 +327,9 @@ void onClientMessage(void){
 
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_TRACE,"device event %d %d %d %d\n\n",event->event_type,event->deviceid,event->sourceid,event->flags);
+    LOG(LOG_LEVEL_DEBUG,"device event %d %d %d %d %d %d %d %d\n\n",
+        event->sequence,event->event_type,event->deviceid,event->sourceid,event->flags,
+        event->root,event->event,event->child);
 
     if((event->flags&XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && IGNORE_KEY_REPEAT)
         return;
