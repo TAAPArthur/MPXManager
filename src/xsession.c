@@ -32,6 +32,19 @@ xcb_atom_t WM_DELETE_WINDOW;
 xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 
+xcb_gcontext_t graphics_context;
+
+static xcb_gcontext_t create_graphics_context(void) {
+    uint32_t mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND | XCB_GC_GRAPHICS_EXPOSURES;
+    uint32_t values[3]={ screen->black_pixel,screen->white_pixel,0};
+
+    graphics_context = xcb_generate_id(dis);
+    xcb_void_cookie_t cookie=xcb_create_gc_checked(dis,
+        graphics_context, root,
+        mask, values);
+    catchError(cookie);
+    return graphics_context;
+}
 void openXDisplay(void){
 #ifdef MPX_TESTING
     XInitThreads();
@@ -69,6 +82,8 @@ void openXDisplay(void){
     CREATE_ATOM(WM_DELETE_WINDOW);
     CREATE_ATOM(WM_STATE_NO_TILE);
     CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
+
+    create_graphics_context();
 
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
     xcb_set_close_down_mode(dis, XCB_CLOSE_DOWN_DESTROY_ALL);

@@ -85,6 +85,19 @@ WindowInfo* createWindowInfo(unsigned int id){
     wInfo->cloneList=createEmptyHead();
     return wInfo;
 }
+WindowInfo*cloneWindowInfo(unsigned int id,WindowInfo*winInfo){
+    WindowInfo *clone =malloc(sizeof(WindowInfo));
+    memcpy(clone, winInfo, sizeof(WindowInfo));
+    clone->cloneList=createEmptyHead();
+    clone->id=id;
+    clone->cloneOrigin=winInfo->id;
+    insertHead(winInfo->cloneList,clone);
+    char**fields=&winInfo->typeName;
+    for(int i=0;i<4;i++)
+        if(fields[i])
+            fields[i]=strcpy(calloc(1+(strlen(fields[i])),sizeof(char)),fields[i]);
+    return clone;
+}
 Master *createMaster(int id,int partnerId,char* name,int focusColor){
     Master*master= calloc(1,sizeof(Master));
     master->id=id;
@@ -483,9 +496,7 @@ Node* getClonesOfWindow(WindowInfo*winInfo){
     return winInfo->cloneList;
 }
 void deleteWindowInfo(WindowInfo*winInfo){
-    Node*clones=getClonesOfWindow(winInfo);
-    FOR_EACH(clones,removeWindow(getIntValue(clones)));
-    deleteList(getClonesOfWindow(winInfo));
+    destroyList(getClonesOfWindow(winInfo));
     char**fields=&winInfo->typeName;
     for(int i=0;i<4;i++)
         if(fields[i])

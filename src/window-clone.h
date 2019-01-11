@@ -8,11 +8,11 @@
 #include "mywm-util.h"
 #include "wmfunctions.h"
 
-xcb_gcontext_t create_graphics_context();
-WindowInfo* createCloneWindow(WindowInfo*winInfo);
+WindowInfo* cloneWindow(WindowInfo*winInfo);
 
 void updateClone(WindowInfo*winInfo,WindowInfo* dest);
 void updateAllClones(WindowInfo*winInfo);
 int getCloneOrigin(WindowInfo*winInfo);
 
-void addCloneRules();
+void* autoUpdateClones();
+void addCloneRules(void);

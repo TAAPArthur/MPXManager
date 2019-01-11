@@ -286,6 +286,14 @@ void destroyContext();
  */
 WindowInfo* createWindowInfo(unsigned int id);
 
+/**
+ * Clones a WindowInfo object and sets its id to id
+ *
+ * @param id    the id of the WindowInfo object
+ * @param winInfo    the window to clone
+ * @return  pointer to the newly created object
+ */
+WindowInfo*cloneWindowInfo(unsigned int id,WindowInfo*winInfo);
 
 /**
  *

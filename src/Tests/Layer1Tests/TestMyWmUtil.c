@@ -375,6 +375,21 @@ START_TEST(test_window_add_remove){
     testWindowAddRemove(getAllWindows(),addWindowInfo,removeWindow);
     testAddUnique(getAllWindows(),addWindowInfo);
 }END_TEST
+START_TEST(test_window_clone){
+    WindowInfo*winInfo=createWindowInfo(1);
+    addWindowInfo(winInfo);
+    loadSampleProperties(winInfo);
+    assert(winInfo);
+    WindowInfo* clone=cloneWindowInfo(2,winInfo);
+    assert(getSize(winInfo->cloneList)==1);
+    assert(getValue(winInfo->cloneList)==clone);
+    assert(getSize(clone->cloneList)==0);
+    assert(clone->cloneOrigin==winInfo->id);
+    assert(clone->mask==winInfo->mask);
+    assert(clone->id!=winInfo->id);
+    assert(strcmp(clone->title,winInfo->title)==0);
+    addWindowInfo(clone);
+}END_TEST
 
 
 START_TEST(test_window_workspace_add_remove){
@@ -776,6 +791,7 @@ Suite *mywmUtilSuite(void) {
     tc_core = tcase_create("Window");
     tcase_add_checked_fixture(tc_core, setup, teardown);
     tcase_add_test(tc_core, test_window_add_remove);
+    tcase_add_test(tc_core, test_window_clone);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Master");

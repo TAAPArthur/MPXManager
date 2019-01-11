@@ -8,6 +8,9 @@
 
 #include <xcb/xcb.h>
 
+///global graphics context
+extern xcb_gcontext_t graphics_context;
+
 /**
  * WM_TAKE_FOCUS atom
  * Used to send client messages to direct focus of an application
