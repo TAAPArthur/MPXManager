@@ -55,8 +55,8 @@ static inline xcb_generic_event_t *getNextEvent(){
             event = xcb_poll_for_event(dis);
             if(event)return event;
         }
-        idle++;
         applyRules(getEventRules(Idle),NULL);
+        idle++;
         flush();
         LOG(LOG_LEVEL_TRACE,"Idle %d\n",idle);
         event = xcb_wait_for_event (dis);
