@@ -338,7 +338,7 @@ START_TEST(test_get_max){
  */
 START_TEST(test_get_last){
     Node* n=createEmptyHead();
-    assert(getLast(n)==NULL);
+    assert(getLast(n)==n);
     deleteList(n);
     n=createHead(createStruct(1));
     assert(n==getLast(n));

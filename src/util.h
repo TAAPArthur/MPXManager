@@ -41,6 +41,8 @@ typedef struct ArrayList{
     int maxSize;
 }ArrayList;
 
+#define MIN(a,b) (a<b?a:b)
+#define MAX(a,b) (a>b?a:b)
 
 /**
  * Creates a pointer to a head of an empty node list.
@@ -146,7 +148,7 @@ void insertBefore(Node* head,Node* newNode);
  * The value of head will be updated upon every iteration
  * head will be set to either the last or front element.
  *
- * Note that behavior is undefined if the list is modified while iterating
+ * Note that it is safe to modify the list while iterating
  *
  * You probably don't want to use this function
  * @param dir - the direction to transverse (next or prev)
@@ -155,7 +157,7 @@ void insertBefore(Node* head,Node* newNode);
  * @see FOR_EACH(head,...)
  */
 #define _FOR_EACH(dir,head,...) \
-    if(head->value)while(head){__VA_ARGS__;head=head->dir;}else head=NULL;
+    if(head->value)while(head){Node*__temp=head->dir;__VA_ARGS__;head=__temp;}else head=NULL;
 
 /**
  * Like for each but stops after N iterations
@@ -289,6 +291,7 @@ void softDeleteNode(Node* node);
 
 /**
  * Gets an integer representation of the return value
+ * If the node or value is null,0 is returned
  * @param node
  * @return
  */

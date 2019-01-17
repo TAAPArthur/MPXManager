@@ -55,12 +55,13 @@ Node* isInList(Node* list,int value){
 
 Node* getLast(Node* list){
     assert(list!=NULL);
+    if(!isNotEmpty(list))return list;
     UNTIL_FIRST(list, !list->next)
     return list;
 }
 
 int getIntValue(Node*node){
-    return node->value?*(int*)node->value:0;
+    return node&&node->value?*(int*)node->value:0;
 }
 void* getValue(Node*node){
     return node?node->value:NULL;
