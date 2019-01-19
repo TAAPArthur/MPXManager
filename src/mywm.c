@@ -28,12 +28,14 @@
 
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "config.h"
 #include "logger.h"
 #include "events.h"
 #include "default-rules.h"
 #include "mywm-util.h"
+#include "globals.h"
 
 int enterEventLoop=1;
 int runAsWindowManager=1;
