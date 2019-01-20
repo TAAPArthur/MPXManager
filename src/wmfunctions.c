@@ -714,10 +714,24 @@ void moveWindowToWorkspaceAtLayer(WindowInfo *winInfo,int destIndex,int layer){
 
 //window methods
 
-void setBorderColor(xcb_window_t win,unsigned int color){
+int setBorderColor(xcb_window_t win,unsigned int color){
     xcb_void_cookie_t c;
+    if(color>0xFFFFFF){
+        LOG(LOG_LEVEL_WARN,"Color %d is out f range\n",color);
+        return 0;
+    }
     c=xcb_change_window_attributes_checked(dis, win, XCB_CW_BORDER_PIXEL,&color);
-    catchError(c);
+    LOG(LOG_LEVEL_TRACE,"setting border for window %d to %d\n",win,color);
+    return !catchError(c);
+}
+int setBorder(WindowInfo* winInfo){
+    return setBorderColor(winInfo->id,getActiveMaster()->focusColor);
+}
+int resetBorder(WindowInfo*winInfo){
+    Master*master=getLastMasterToFocusWindow(winInfo->id);
+    if(master)
+        return setBorderColor(winInfo->id,master->focusColor);
+    return setBorderColor(winInfo->id,DEFAULT_UNFOCUS_BORDER_COLOR);
 }
 
 static void tileNonNormalLayers(WindowInfo*winInfo,int above){

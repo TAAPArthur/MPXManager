@@ -31,7 +31,7 @@
 }
 
 static inline int addFakeMaster(int pointerId,int keyboardID){
-    return addMaster(pointerId,keyboardID,"");
+    return addMaster(pointerId,keyboardID,"",0);
 }
 
 static inline int listsEqual(Node*n,Node*n2){

@@ -102,7 +102,7 @@ void initCurrentMasters(){
                     lastSpace=n;
             if(lastSpace)
                 device->name[lastSpace]=0;
-            addMaster(device->deviceid,device->attachment,device->name);
+            addMaster(device->deviceid,device->attachment,device->name,DEFAULT_FOCUS_BORDER_COLOR);
         }
     }
     XIFreeDeviceInfo(devices);
@@ -306,16 +306,3 @@ void swapDeviceId(Master*master1,Master*master2){
     master2->pointerId=tempPointerId;
     XFlush(dpy);
 }
-
-/*
-int setBorder(xcb_window_t wid){
-    return setBorderColor(wid,getActiveMaster()->focusColor);
-}
-int resetBorder(xcb_window_t win){
-    Master*master=getValue(getNextMasterNodeFocusedOnWindow(win));
-    if(master)
-        return setBorderColor(win,master->focusColor);
-    return setBorderColor(win,getActiveMaster()->unfocusColor);
-}
-
-*/

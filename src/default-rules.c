@@ -194,11 +194,17 @@ void onFocusInEvent(void){
     xcb_input_focus_in_event_t*event= getLastEvent();
     LOG(LOG_LEVEL_TRACE,"id %d window %d %d\n",event->deviceid,event->event,event->event);
     setActiveMasterByDeviceId(event->deviceid);
-    updateFocusState(getWindowInfo(event->event));
+    WindowInfo*winInfo=getWindowInfo(event->event);
+    WindowInfo*oldFocus=getFocusedWindow();
+    if(winInfo){
+        updateFocusState(winInfo);
+        setBorder(winInfo);
+    }
+    if(oldFocus)
+        resetBorder(oldFocus);
     setActiveWindowProperty(event->event);
     //setBorder(event->child);
 }
-
 
 void onPropertyEvent(void){
     xcb_property_notify_event_t*event=getLastEvent();

@@ -123,7 +123,13 @@ extern int defaultScreenNumber;
 
 /**Border width when borders for windows*/
 extern int DEFAULT_BORDER_WIDTH;
+/**Border color for unfocused windows and windows whose last focused master is not set*/
+extern int DEFAULT_BORDER_COLOR;
 
+/**Border color for unfocused windows and windows whose last focused master is not set*/
+extern int DEFAULT_UNFOCUS_BORDER_COLOR;
+/**Default Border color for focused windows*/
+extern int DEFAULT_FOCUS_BORDER_COLOR;
 
 /**
  * Indicates how long we should poll for events before switching to blocking

@@ -111,6 +111,8 @@ typedef struct{
     int pointerId;
     /// the name of the master keyboard
     char name[NAME_BUFFER];
+    /// the color windows when this device has the most recent focus
+    unsigned int focusColor;
 
     /**Stack of windows in order of most recently focused*/
     Node* windowStack;
@@ -306,9 +308,10 @@ Node* getAllMasters();
  * @param keyboardMasterId  the id of the master device.
  * @param pointerMasterId  the id of the associated master pointer
  * @param name the name of the master keyboard
+ * @param focusColor
  * @return 1 iff a new master was inserted; 0 o.w.
  */
-int addMaster(unsigned int keyboardMasterId,unsigned int pointerMasterId,char*name);
+int addMaster(unsigned int keyboardMasterId,unsigned int pointerMasterId,char*name,int focusColor);
 
 /**
  * Removes the master with the specifed id
@@ -660,9 +663,10 @@ void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num);
  * @param id keyboard id
  * @param pointerId pointer id
  * @param name the name of the master keyboard
+ * @param focusColor
  * @return pointer to object
  */
-Master *createMaster(int id,int pointerId,char*name);
+Master *createMaster(int id,int pointerId,char*name,int focusColor);
 
 /**
  * Init a an array of workspaces to default values.

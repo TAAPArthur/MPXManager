@@ -393,12 +393,19 @@ START_TEST(test_delete_window_request){
 }END_TEST
 
 START_TEST(test_set_border_color){
-    int win=mapArbitraryWindow();
-    unsigned int colors[]={0,-1,255};
+    int win=mapWindow(createNormalWindow());
+    scan(root);
+    Node*n=isInList(getAllWindows(),win);
+    WindowInfo*winInfo=getValue(n);
+    unsigned int colors[]={0,255,255*255,255*255*255};
     for(int i=0;i<LEN(colors);i++){
-        setBorderColor(win, colors[i]);
+        assert(setBorderColor(win, colors[i]));
         flush();
     }
+    setBorderColor(win, -1);
+    assert(setBorder(winInfo));
+    resetBorder(winInfo);
+    //TODO check to see if border was set correctly
 }END_TEST
 
 START_TEST(test_invalid_state){
@@ -762,13 +769,13 @@ Suite *x11Suite(void) {
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_invalid_state);
     suite_add_tcase(s, tc_core);
-
     tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_raise_window);
     tcase_add_test(tc_core, test_raise_window_layer);
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
+
     tcase_add_loop_test(tc_core, test_delete_window_request,1,4);
     tcase_add_test(tc_core, test_activate_window);
     tcase_add_test(tc_core, test_set_border_color);
@@ -782,7 +789,6 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_configure_windows);
     tcase_add_test(tc_core, test_float_sink_window);
     suite_add_tcase(s, tc_core);
-
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_toggle_show_desktop);

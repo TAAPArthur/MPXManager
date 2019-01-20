@@ -85,10 +85,11 @@ WindowInfo* createWindowInfo(unsigned int id){
     wInfo->cloneList=createEmptyHead();
     return wInfo;
 }
-Master *createMaster(int id,int partnerId,char* name){
+Master *createMaster(int id,int partnerId,char* name,int focusColor){
     Master*master= calloc(1,sizeof(Master));
     master->id=id;
     master->pointerId=partnerId;
+    master->focusColor=focusColor;
     strncpy(master->name,name,sizeof(master->name));
     master->windowStack=createEmptyHead(NULL);
     master->focusedWindow=master->windowStack;
@@ -325,14 +326,14 @@ Workspace* getWorkspaceByIndex(int index){
 
 
 
-int addMaster(unsigned int keyboardMasterId,unsigned int masterPointerId,char*name){
+int addMaster(unsigned int keyboardMasterId,unsigned int masterPointerId,char*name,int focusColor){
 
     assert(keyboardMasterId);
 
     if(isInList(masterList, keyboardMasterId))
         return 0;
 
-    Master *keyboardMaster = createMaster(keyboardMasterId,masterPointerId,name);
+    Master *keyboardMaster = createMaster(keyboardMasterId,masterPointerId,name,focusColor);
     if(!isNotEmpty(masterList))
         setActiveMaster(keyboardMaster);
     insertHead(masterList, keyboardMaster);

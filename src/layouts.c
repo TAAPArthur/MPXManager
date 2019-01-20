@@ -145,7 +145,7 @@ void grid(Monitor*m,Node*windowStack,int*args){
     int fixedDim=args[2];
     int delteDim=fixedDim==CONFIG_WIDTH?CONFIG_HEIGHT:CONFIG_WIDTH;
     short values[CONFIG_LEN];
-    values[CONFIG_BORDER]=1;
+    values[CONFIG_BORDER]=DEFAULT_BORDER_WIDTH;
     values[CONFIG_STACK]=XCB_STACK_MODE_ABOVE;
     memcpy(&values, &m->viewX, sizeof(short int)*4);
     values[fixedDim]/=2;

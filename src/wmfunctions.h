@@ -319,8 +319,20 @@ void tileUpperLayers(Workspace*workspace,int startingLayer);
  * @param color the new window border color
  * @return 1 iff no error was deteced
  */
-void setBorderColor(xcb_window_t win,unsigned int color);
+int setBorderColor(xcb_window_t win,unsigned int color);
 
+/**
+ * Sets the border color of the window to match the active master
+ * @param winInfo 
+ * @return 1 iff no error was deteced
+ */
+int setBorder(WindowInfo* winInfo);
+/**
+ * Sets the border color of the window to match the master that last focused this window or to the default color 
+ * @param winInfo 
+ * @return 1 iff no error was deteced
+ */
+int resetBorder(WindowInfo*winInfo);
 
 /**
  * Switch to window's worksspace, raise and focus the window
