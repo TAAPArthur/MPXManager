@@ -124,7 +124,7 @@ START_TEST(test_call_bounded_function){
     void*voidPointer="c";
     int count=0;
 
-    int targetCounts[]={4,6,5};
+    int targetCounts[]={6,6,5};
     int individualCounts[LEN(targetCounts)]={0};
 
     void funcNoArg(void){
@@ -213,6 +213,7 @@ START_TEST(test_call_bounded_function){
         BIND(funcWinIntArgReturn,integer),
         AND(BIND(funcInt,integer),BIND(funcIntReturn,integer)),
         OR(BIND(funcNoArg),BIND(funcNoArgReturn)),
+        BOTH(BIND(funcNoArg),BIND(funcNoArgReturn)),
         AUTO_CHAIN_GRAB(0,1,
             {0, Button1, OR(BIND(funcNoArg),BIND(funcNoArgReturn)),.noGrab=1},
             {0, Button1, BIND(exit,1),.noGrab=1},
@@ -229,7 +230,7 @@ START_TEST(test_call_bounded_function){
         int result=callBoundedFunction(&b[i], voidPointer);
         assert(result);
         sum+=result;
-        if(i<LEN(b)-3)
+        if(i<LEN(b)-4)
             if (i>1)
                 assert(count-c==1);
             else assert(count==0);

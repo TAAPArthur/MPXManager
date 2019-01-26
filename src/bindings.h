@@ -55,6 +55,9 @@ typedef enum{
     CHAIN,
     /**Start a auto chain binding*/
     CHAIN_AUTO,
+    
+    /// & for bindings
+    FUNC_BOTH,
     /// && for bindings
     FUNC_AND,
     /// || for bindings
@@ -236,13 +239,22 @@ typedef struct{
  * When called, call the BoundFunctions will be triggered until one of them returns false
  * @param B
  */
-#define AND(B...) {.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=sizeof(((BoundFunction[]){B}))/sizeof(BoundFunction)},.type=FUNC_AND}
+#define AND(B...) _UNION(FUNC_AND,B)
+
+/**
+ * When called, call the BoundFunctions will be triggered until one of them returns false
+ * @param B
+ */
+#define BOTH(B...) _UNION(FUNC_BOTH,B)
 
 /**
  * When called, call the BoundFunctions will be triggered until one of them returns true
  * @param B
  */
-#define OR(B...) {.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=LEN(((BoundFunction[]){B}))},.type=FUNC_OR}
+#define OR(B...) _UNION(FUNC_OR,B)
+
+/// Helper macro for AND, OR and BOTH
+#define _UNION(TYPE,B...){.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=LEN(((BoundFunction[]){B}))},.type=TYPE}
 
 
 

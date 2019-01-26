@@ -62,6 +62,7 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
     else if(boundFunction->dynamic==1)
         arg.voidArg=winInfo;
 
+    int result=0;
     switch(boundFunction->type){
         case UNSET:
             LOG(LOG_LEVEL_WARN,"calling unset function; nothing is happening\n");
@@ -78,6 +79,11 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
                 if(!callBoundedFunction(&boundFunction->func.boundFunctionArr[i],winInfo))
                     return 0;
             return 1;
+        case FUNC_BOTH:
+            for(int i=0;i<boundFunction->arg.intArg;i++)
+                if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i],winInfo))
+                    result=1;
+            return result;
         case FUNC_OR:
             for(int i=0;i<boundFunction->arg.intArg;i++)
                 if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i],winInfo))
