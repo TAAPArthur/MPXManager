@@ -42,7 +42,7 @@ void addAutoTileRules(void){
 
 void addDefaultDeviceRules(void){
     static Rule deviceEventRule = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent);
-    for(int i=XCB_INPUT_KEY_PRESS;i<=XCB_INPUT_BUTTON_RELEASE;i++){
+    for(int i=XCB_INPUT_KEY_PRESS;i<=XCB_INPUT_MOTION;i++){
         appendRule(GENERIC_EVENT_OFFSET+i,&deviceEventRule);
     }
 }
@@ -324,7 +324,13 @@ void onClientMessage(void){
     */
 }
 
-
+WindowInfo* getTargetWindow(int root,int event,int child){
+    Master*master=getActiveMaster();
+    int i;
+    int list[]={0,root,event,child,master->targetWindow};
+    for(i=LEN(list)-1;i>=1&&!list[i];i--);
+    return getWindowInfo(list[i]);
+}
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
     LOG(LOG_LEVEL_DEBUG,"device event %d %d %d %d %d %d %d %d\n\n",
@@ -335,10 +341,10 @@ void onDeviceEvent(void){
         return;
 
     setActiveMasterByDeviceId(event->deviceid);
-    setLastKnowMasterPosition(event->root_x,event->root_y,event->event_x,event->event_y);
+    setLastKnowMasterPosition(event->root_x>>16,event->root_y>>16);
     checkBindings(event->detail,event->mods.effective,
             1<<event->event_type,
-            getWindowInfo(event->child));
+            getTargetWindow(event->root,event->event,event->child));
 }
 
 void onGenericEvent(void){

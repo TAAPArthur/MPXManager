@@ -261,7 +261,16 @@ static int endsWith(const char *str, const char *suffix){
 int isTestDevice(char*str){
     return endsWith(str, "XTEST pointer")||endsWith(str, "XTEST keyboard");
 }
-
+int getMousePosition(int id,int relativeWindow,int result[2]){
+    xcb_input_xi_query_pointer_reply_t* reply1=
+        xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, relativeWindow, id), NULL);
+    if(reply1){
+        result[0]=reply1->win_x;
+        result[1]=reply1->win_y;
+        free(reply1);
+    }
+    return reply1?1:0;
+}
 void swapDeviceId(Master*master1,Master*master2){
     if(master1==master2)
         return;

@@ -98,7 +98,14 @@ Node*getSlavesOfMaster(Master*master);
  */
 int isTestDevice(char*str);
 
-
+/**
+ * Gets the pointer position relative to a given window
+ * @param id the id of the pointer
+ * @param relativeWindow window to report position relative to
+ * @param result where the x,y location will be stored
+ * @return 1 if result now contains position
+ */
+int getMousePosition(int id,int relativeWindow,int result[2]);
 
 /**
  * Swap the ids of master devices backed by master1 and master2

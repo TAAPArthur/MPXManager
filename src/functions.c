@@ -182,39 +182,45 @@ void retile(void){
 
 
 
-void setLastKnowMasterPosition(int x,int y,int relativeX,int relativeY){
-    getActiveMaster()->mousePos[0]=x;
-    getActiveMaster()->mousePos[1]=y;
-    getActiveMaster()->relativeMousePos[0]=relativeX;
-    getActiveMaster()->relativeMousePos[1]=relativeY;
-
+void setLastKnowMasterPosition(int x,int y){
+    memcpy(getActiveMaster()->prevMousePos,getActiveMaster()->currentMousePos,sizeof(getActiveMaster()->prevMousePos));
+    getActiveMaster()->currentMousePos[0]=x;
+    getActiveMaster()->currentMousePos[1]=y;
 }
-void setRefefrencePointForMaster(int x,int y,int relativeX,int relativeY){
-    getActiveMaster()->refPoint[0]=x;
-    getActiveMaster()->refPoint[1]=y;
-    getActiveMaster()->relativeRefPoint[0]=relativeX;
-    getActiveMaster()->relativeRefPoint[1]=relativeY;
-}
-
-
-static short*addArr(short*result,short*arr1,short*arr2,int size,char sign){
-    for(int i=0;i<size;i++)
-        result[i]=arr1[i]+arr2[i]*sign;
-    return result;
+void getMouseDelta(Master*master,short result[2]){
+    for(int i=0;i<2;i++)
+        result[i]=master->currentMousePos[i]-master->prevMousePos[i];
 }
 
 void resizeWindowWithMouse(WindowInfo*winInfo){
     assert(winInfo);
-    short values[2];
-    addArr(values,getActiveMaster()->mousePos,getActiveMaster()->refPoint,2,-1);
-    addArr(values,&getConfig(winInfo)[2],values,2,1);
-    processConfigureRequest(winInfo->id, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT);
+    short values[4];
+    short delta[2];
+    getMouseDelta(getActiveMaster(),delta); 
+    for(int i=0;i<4;i++)
+        values[i]=getGeometry(winInfo)[i]+(i>=2)*delta[i-2];
+    for(int i=0;i<2;i++)
+        if(values[i+2]<0){
+            values[i+2]=-values[i];
+            values[i]+=delta[i];
+        }
+    processConfigureRequest(winInfo->id, values, 0, 0, XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y|XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT);
+    //TODO check success
+    for(int i=0;i<4;i++)
+        getGeometry(winInfo)[i]=values[i];
 }
 void moveWindowWithMouse(WindowInfo*winInfo){
     assert(winInfo);
     short values[2];
-    addArr(values,getActiveMaster()->mousePos,getActiveMaster()->relativeRefPoint,2,-1);
+    short delta[2];
+    getMouseDelta(getActiveMaster(),delta); 
+    for(int i=0;i<2;i++)
+        values[i]=getGeometry(winInfo)[i]+delta[i];
+    
     processConfigureRequest(winInfo->id, values, 0, 0, XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y);
+    //TODO check success
+    getGeometry(winInfo)[0]=values[0];
+    getGeometry(winInfo)[1]=values[1];
 }
 
 int focusActiveWindow(WindowInfo *winInfo){
@@ -232,4 +238,15 @@ void floatWindow(WindowInfo* winInfo){
 void sinkWindow(WindowInfo* winInfo){
     removeMask(winInfo, FLOATING_MASK);
     moveWindowToLayer(winInfo,NORMAL_LAYER);
+}
+void setMasterTarget(int id){
+    getActiveMaster()->targetWindow=id;
+}
+void startMouseOperation(WindowInfo*winInfo){
+    setMasterTarget(winInfo->id);
+    lockWindow(winInfo);
+}
+void stopMouseOperation(WindowInfo*winInfo){
+    setMasterTarget(0);
+    unlockWindow(winInfo);
 }

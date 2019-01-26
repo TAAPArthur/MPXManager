@@ -914,8 +914,14 @@ short*getGeometry(WindowInfo*winInfo){
     return winInfo->geometry;
 }
 void setGeometry(WindowInfo*winInfo,short*geometry){
-    if(winInfo)
+    if(winInfo && winInfo->geometrySemaphore==0)
         memcpy(winInfo->geometry, geometry, LEN(winInfo->geometry)*sizeof(short));
+}
+void lockWindow(WindowInfo*winInfo){
+    winInfo->geometrySemaphore++;
+}
+void unlockWindow(WindowInfo*winInfo){
+    winInfo->geometrySemaphore--;
 }
 int getMaxDimensionForWindow(Monitor*m,WindowInfo*winInfo,int height){
     if(hasMask(winInfo,ROOT_FULLSCREEN_MASK))

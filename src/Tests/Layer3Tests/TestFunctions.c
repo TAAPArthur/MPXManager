@@ -3,6 +3,7 @@
 #include "../../layouts.h"
 #include "../../wmfunctions.h"
 #include "../../functions.h"
+#include "../../devices.h"
 
 
 static WindowInfo*top;
@@ -223,38 +224,66 @@ START_TEST(test_focuse_window){
     assert(getActiveFocus()==top->id);
 }END_TEST
 
-START_TEST(test_move_window_with_mouse){
-    Binding mouseMove={0,Button1,MOVE_WINDOW_WITH_MOUSE(0,Button1),.mask=XCB_INPUT_XI_EVENT_MASK_MOTION};
 
-    initBinding(&mouseMove);
-    addBinding(&mouseMove);
-    setRefefrencePointForMaster(0, 0, 0, 0);
-    int xPos=10;
-    int yPos=20;
-    floatWindow(top);
-    setLastKnowMasterPosition(xPos, yPos, xPos, yPos);
-
-    moveWindowWithMouse(top);
-    xcb_get_geometry_reply_t* reply=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, top->id), NULL);
-    assert(reply->x==xPos);
-    assert(reply->y==yPos);
-    free(reply);
-
+START_TEST(test_mouse_lock){
+    volatile int count=0;
+    WindowInfo*dummy;
+    void test(WindowInfo*winInfo){
+        if(winInfo==dummy)count++;
+    }
+    Binding binding={0,Button1,BIND(test),.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
+    START_MY_WM
+    lock();
+    dummy=createWindowInfo(1);
+    addWindowInfo(dummy);
+    clearList(getDeviceBindings());
+    initBinding(&binding);
+    grabBinding(&binding);
+    addBinding(&binding);
+    startMouseOperation(dummy);
+    triggerBinding(&binding);
+    flush();
+    int idle=getIdleCount();
+    unlock();
+    WAIT_UNTIL_TRUE(idle!=getIdleCount());
+    assert(count);
+    lock();
+    stopMouseOperation(dummy);
+    triggerBinding(&binding);
+    flush();
+    idle=getIdleCount();
+    count=0;
+    unlock();
+    WAIT_UNTIL_TRUE(idle!=getIdleCount());
+    assert(count==0);
 }END_TEST
 
-START_TEST(test_resize_window_with_mouse){
-    int xPos=10;
-    int yPos=20;
-    setRefefrencePointForMaster(0, 0, 0, 0);
-    setLastKnowMasterPosition(xPos, yPos, xPos, yPos);
-    short config[4]={0};
-    setConfig(top, config);
-    floatWindow(top);
 
-    resizeWindowWithMouse(top);
+START_TEST(test_move_resize_window_with_mouse){
+    
+    int masterPos[]={210,200};
+    int masterPosDelta[]={15,25};
+    floatWindow(top);
+    short geo[]={100,100,100,100};
+    if(_i==2){
+        masterPosDelta[0]=-200;
+        masterPosDelta[1]=-200;
+    }
+    setGeometry(top,geo);
+    startMouseOperation(top);
+    setLastKnowMasterPosition(masterPos[0],masterPos[1]);
+    setLastKnowMasterPosition(masterPos[0]+masterPosDelta[0], masterPos[1]+masterPosDelta[1]);
+    if(_i%2==0) resizeWindowWithMouse(top);
+    else  moveWindowWithMouse(top);
     xcb_get_geometry_reply_t* reply=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, top->id), NULL);
-    assert(reply->width==xPos);
-    assert(reply->height==yPos);
+    if(_i==0){
+        assert(reply->width==geo[2]+masterPosDelta[0]);
+        assert(reply->height==geo[3]+masterPosDelta[1]);
+    }
+    else if(_i==1){
+        assert(reply->x==geo[0]+masterPosDelta[0]);
+        assert(reply->y==geo[1]+masterPosDelta[1]);
+    }
     free(reply);
 }END_TEST
 
@@ -331,8 +360,8 @@ Suite *functionsSuite() {
 
     tc_core = tcase_create("Mouse_Functions");
     tcase_add_checked_fixture(tc_core, functionSetup, fullCleanup);
-    tcase_add_test(tc_core, test_move_window_with_mouse);
-    tcase_add_test(tc_core, test_resize_window_with_mouse);
+    tcase_add_test(tc_core, test_mouse_lock);
+    tcase_add_loop_test(tc_core, test_move_resize_window_with_mouse,0,3);
     suite_add_tcase(s, tc_core);
 
 

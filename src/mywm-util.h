@@ -66,6 +66,9 @@ typedef struct window_info{
     ///time the window was last pinged
     int pingTimeStamp;
 
+    ///counter for how many clients have requested the this window to be locked
+    /// when this field is zero, the the geometry field is allowed to be updated in response to XEvents
+    char geometrySemaphore;
     ///Window gravity
     char gravity;
     /** Set to override tiling */
@@ -137,15 +140,12 @@ typedef struct{
      * all workspace operations if a workspace is not specified
      * */
     int activeWorkspaceIndex;
+    int targetWindow;
 
     ///Starting point for operations like resizing the window with mouse
-    short refPoint[2];
-    ///Relative Starting point for operations like resizing the window with mouse
-    short relativeRefPoint[2];
+    short prevMousePos[2];
     ///Last recorded mouse position for a device event
-    short mousePos[2];
-    /// relative last recorded positoin
-    short relativeMousePos[2];
+    short currentMousePos[2];
     /**
      * stack of visited workspaces with most recent at top
      */

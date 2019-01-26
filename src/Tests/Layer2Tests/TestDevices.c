@@ -301,7 +301,24 @@ START_TEST(test_ungrab_device){
 
 }END_TEST
 
-
+START_TEST(test_mouse_location){
+    movePointer(getActiveMasterPointerID(),root,1,1);
+    int arr[2];
+    getMousePosition(getActiveMasterPointerID(),root,arr);
+/*TODO fix broken test
+    for(int x=1;x<5;x++)
+        for(int y=1;y<10;y+=2){
+            movePointer(getActiveMasterPointerID(),root,x,y);
+            flush();
+            int arr[2];
+            
+            WAIT_UNTIL_TRUE(arr[0]==x&&arr[1]==y,flush();movePointer(getActiveMasterPointerID(),root,x,y);getMousePosition(getActiveMasterPointerID(),root,arr));
+            printf("%d %d\n",x,y);
+            assert(arr[0]==x);
+            assert(arr[1]==y);
+        }
+*/
+}END_TEST
 
 Suite *devicesSuite() {
     Suite*s = suite_create("Devices");
@@ -322,7 +339,11 @@ Suite *devicesSuite() {
     tcase_add_test(tc_core,test_slave_swapping_same_device);
     suite_add_tcase(s, tc_core);
 
-
+    tc_core = tcase_create("Mouse");
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, closeConnection);
+    tcase_add_test(tc_core, test_mouse_location);
+    suite_add_tcase(s, tc_core);
+    
     tc_core = tcase_create("Grab");
     tcase_add_checked_fixture(tc_core, setup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_passive_grab_ungrab);

@@ -202,13 +202,20 @@ int focusBottom(void);
 int focusTop(void);
 void sendFromBottomToTop(void);
 
+void lockWindow(WindowInfo*winInfo);
+void unlockWindow(WindowInfo*winInfo);
 
-void setLastKnowMasterPosition(int x,int y,int relativeX,int relativeY);
-void setRefefrencePointForMaster(int x,int y,int relativeX,int relativeY);
+void moveTargetWindowWithMouse(void);
+
+void setLastKnowMasterPosition(int x,int y);
+
 void moveWindowWithMouse(WindowInfo*winInfo);
 void resizeWindowWithMouse(WindowInfo*winInfo);
 
-
 void floatWindow(WindowInfo* win);
 void sinkWindow(WindowInfo* win);
+
+void setMasterTarget(int id);
+void startMouseOperation(WindowInfo*winInfo);
+void stopMouseOperation(WindowInfo*winInfo);
 #endif
