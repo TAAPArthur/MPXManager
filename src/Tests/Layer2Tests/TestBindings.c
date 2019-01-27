@@ -341,6 +341,32 @@ START_TEST(test_chain_grab){
 
 
 
+START_TEST(test_env_rule_sub){
+
+    int target=LITERAL|ENV_VAR;
+    char *var="$_var";
+    char*str[]={"echo '$_var'","$_var","\\$var","$_unsetVar"};
+    char*subVar[]={"echo 'A'","A","$var",""};
+    const char*value="A";
+    setenv(var+1,value,1);
+    unsetenv("_unsetVar");
+    for(int i=0;i<LEN(str);i++){
+        Rule r=CREATE_LITERAL_RULE(str[i],target,NULL);
+        initRule(&r);
+        assert(strcmp(r.literal,subVar[i])==0);
+        free(r.literal);
+    }
+
+    char longValue[255];
+
+    for(int i=0;i<255;i++)longValue[i]='A';
+    longValue[LEN(longValue)-1]=0;
+    setenv(var+1,longValue,1);
+    Rule r=CREATE_LITERAL_RULE(var,target,NULL);
+    initRule(&r);
+    assert(strcmp(r.literal,longValue)==0);
+    free(r.literal);
+}END_TEST
 START_TEST(test_literal_string_rule){
     char*var;
     int target=LITERAL;
@@ -359,6 +385,10 @@ START_TEST(test_literal_string_rule){
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "b")==0);
+    if(_i){
+        free(r.literal);
+        free(r2.literal);
+    }
 
 }END_TEST
 START_TEST(test_string_rule){
@@ -507,6 +537,8 @@ Suite *bindingsSuite(void) {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Rule");
+
+    tcase_add_test(tc_core, test_env_rule_sub);
     tcase_add_loop_test(tc_core, test_literal_string_rule,0,2);
     tcase_add_test(tc_core, test_string_rule);
     tcase_add_loop_test(tc_core, test_window_matching,0,4);

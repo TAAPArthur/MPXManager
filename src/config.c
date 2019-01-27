@@ -109,7 +109,7 @@ Binding customBindings[]={
     {Mod4Mask | ControlMask ,XK_Print, RUN_OR_RAISE_CLASS("simplescreenrecorder")},
     {0, XF86XK_Eject, SPAWN("dmenu-pycalc")},
     {0, XF86XK_Calculator, SPAWN("dmenu-pycalc")},
-    {Mod4Mask,XK_Delete, RUN_OR_RAISE_TITLE("xfce4-terminal -e gt5 -T gt5","gt5")},
+    {Mod4Mask,XK_Delete, RUN_OR_RAISE_ENV_TITLE("$TERMINAL -e gt5 -T gt5","gt5")},
 
     {ControlMask | Mod1Mask , XK_Delete, RUN_OR_RAISE_CLASS("xfce4-taskmanager")},
     {Mod4Mask | ControlMask | Mod1Mask  , XK_l, SPAWN("xtrlock")},
