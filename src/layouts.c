@@ -18,6 +18,7 @@
 Layout LAYOUT_FAMILIES[]={
     LAYOUT_FAMILY(full),
     LAYOUT_FAMILY(column),
+    LAYOUT_FAMILY(masterPane),
 };
 int NUMBER_OF_LAYOUT_FAMILIES = LEN(LAYOUT_FAMILIES);
 Layout (DEFAULT_LAYOUTS[])={
@@ -27,6 +28,7 @@ Layout (DEFAULT_LAYOUTS[])={
     {.name="2 Row",.layoutFunction=column, .args={.dim=1, .arg={2}}},
     {.name="2 Pane",.layoutFunction=column, .args={.dim=0, .arg={2},.limit=2}},
     {.name="2 HPane",.layoutFunction=column, .args={.dim=1, .arg={2},.limit=2}},
+    {.name="Master",.layoutFunction=masterPane,.args={.arg={.7}}},
 
 };
 int NUMBER_OF_DEFAULT_LAYOUTS = LEN(DEFAULT_LAYOUTS);
@@ -152,6 +154,7 @@ void configureWindow(LayoutState*state,WindowInfo* winInfo,short values[CONFIG_L
 
 int getDimIndex(LayoutArgs*args){return args->dim==0?CONFIG_WIDTH:CONFIG_HEIGHT;}
 int getOtherDimIndex(LayoutArgs*args){return args->dim==0?CONFIG_HEIGHT:CONFIG_WIDTH;}
+int dimIndexToPos(int dim){return dim-2;}
 
 void cycleLayouts(int dir){
     Node*n=getActiveWorkspace()->layouts;
@@ -271,4 +274,23 @@ void column(LayoutState*state){
             getOtherDimIndex(state->args),size/numCol+(rem-->0?1:0));
         values[splitDim-2]+=values[splitDim];
     }
+}
+
+void masterPane(LayoutState*state){
+    int size = state->numWindows;
+    if(size==1){
+        full(state);
+        return;
+    }
+    Node*windowStack=state->stack;
+    short values[CONFIG_LEN];
+    memcpy(values, &state->monitor->viewX, sizeof(short)*4);
+    int dimIndex=getDimIndex(state->args);
+    int dim=values[dimIndex];
+    values[dimIndex]=MAX(dim*state->args->arg[0],1);
+    configureWindow(state,getValue(windowStack),values);
+
+    values[dimIndexToPos(dimIndex)]+=values[dimIndex];
+    values[dimIndex]=dim-values[dimIndex];
+    splitEven(state,windowStack->next, values, getOtherDimIndex(state->args),size-1);
 }
