@@ -40,8 +40,8 @@
  * @see Bindings
  */
 typedef enum{
-    NO_PASSTHROUGH=0,      //!< NO_PASSTHROUGH always abort after processing
-    ALWAYS_PASSTHROUGH=1,  //!< ALWAYS_PASSTHROUGH never abort
+    NO_PASSTHROUGH=1,      //!< NO_PASSTHROUGH always abort after processing
+    ALWAYS_PASSTHROUGH=0,  //!< ALWAYS_PASSTHROUGH never abort
     PASSTHROUGH_IF_TRUE=2, //!< PASSTHROUGH_IF_TRUE abort if the BoundFunction return 0
     PASSTHROUGH_IF_FALSE=3,//!< PASSTHROUGH_IF_FALSE abort if the BoundFunction did not return 0
 }PassThrough;

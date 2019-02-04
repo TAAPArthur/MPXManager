@@ -73,9 +73,9 @@ void addIgnoreRule(void){
     appendRule(ProcessingWindow,&ignoreRule);
 }
 void addFloatRules(void){
-    static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
+    static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow),);
     appendRule(RegisteringWindow, &dialogRule);
-    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
+    static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow));
     appendRule(RegisteringWindow, &notificationRule);
 }
 
