@@ -85,10 +85,11 @@ WindowInfo* createWindowInfo(unsigned int id){
     wInfo->cloneList=createEmptyHead();
     return wInfo;
 }
-Master *createMaster(int id,int partnerId){
+Master *createMaster(int id,int partnerId,char* name){
     Master*master= calloc(1,sizeof(Master));
     master->id=id;
     master->pointerId=partnerId;
+    strncpy(master->name,name,sizeof(master->name));
     master->windowStack=createEmptyHead(NULL);
     master->focusedWindow=master->windowStack;
     master->windowsToIgnore=createEmptyHead();
@@ -324,14 +325,14 @@ Workspace* getWorkspaceByIndex(int index){
 
 
 
-int addMaster(unsigned int keyboardMasterId,unsigned int masterPointerId){
+int addMaster(unsigned int keyboardMasterId,unsigned int masterPointerId,char*name){
 
     assert(keyboardMasterId);
 
     if(isInList(masterList, keyboardMasterId))
         return 0;
 
-    Master *keyboardMaster = createMaster(keyboardMasterId,masterPointerId);
+    Master *keyboardMaster = createMaster(keyboardMasterId,masterPointerId,name);
     if(!isNotEmpty(masterList))
         setActiveMaster(keyboardMaster);
     insertHead(masterList, keyboardMaster);

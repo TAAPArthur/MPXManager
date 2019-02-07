@@ -124,6 +124,7 @@ extern int defaultScreenNumber;
 /**Border width when borders for windows*/
 extern int DEFAULT_BORDER_WIDTH;
 
+
 /**
  * Indicates how long we should poll for events before switching to blocking
  * We will wait POLL_INTERVAL ms OLL_COUNT times (for aa total of POLL_COUNT*POLL_INTERVAL ms)
@@ -132,6 +133,9 @@ extern int DEFAULT_BORDER_WIDTH;
 extern int POLL_COUNT;
 /// @copydoc POLL_COUNT
 extern int POLL_INTERVAL;
+
+///  File path of config file dictating ideal master(s)/slaves configuration
+extern char * MASTER_INFO_PATH;
 /**
  * Init globals var like deviceBindigns and eventRules
  * Should be called when program starts up

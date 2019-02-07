@@ -103,16 +103,15 @@ void onXConnect(void){
 void onHiearchyChangeEvent(void){
     xcb_input_hierarchy_event_t*event=getLastEvent();
 
-    if(event->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED|XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED){
+    if(event->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED){
+        LOG(LOG_LEVEL_DEBUG,"detected new master\n");
+        initCurrentMasters();
+    }
+    if(event->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED){
 
         xcb_input_hierarchy_info_iterator_t iter = xcb_input_hierarchy_infos_iterator(event);
         while(iter.rem){
-
-            if(iter.data->type==XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD && iter.data->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED){
-                LOG(LOG_LEVEL_DEBUG,"detected new master %d %d\n",iter.data->deviceid, iter.data->attachment);
-                addMaster(iter.data->deviceid, iter.data->attachment);
-            }
-            else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED){
+            if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED){
                 LOG(LOG_LEVEL_DEBUG,"Master %d %d has been removed\n",iter.data->deviceid, iter.data->attachment);
                 removeMaster(iter.data->deviceid);
             }

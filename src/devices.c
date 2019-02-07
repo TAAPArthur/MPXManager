@@ -39,6 +39,14 @@ int getClientKeyboard(int win){
     return getAssociatedMasterDevice(masterPointer);
 }
 
+void attachSlaveToMaster(int slaveId,int masterId){
+    LOG(LOG_LEVEL_DEBUG,"attaching %d to %d\n",slaveId,masterId);
+    XIAnyHierarchyChangeInfo changes;
+    changes.type=XIAttachSlave;
+    changes.attach.deviceid=slaveId;
+    changes.attach.new_master=masterId;
+    XIChangeHierarchy(dpy, &changes, 1);
+}
 void destroyMasterDevice(int id,int returnPointer,int returnKeyboard){
     XIRemoveMasterInfo remove;
     remove.type = XIRemoveMaster;
@@ -88,7 +96,13 @@ void initCurrentMasters(){
     for (int i = 0; i < ndevices; i++) {
         device = &devices[i];
         if(device->use == XIMasterKeyboard){
-            addMaster(device->deviceid,device->attachment);
+            int lastSpace=0;
+            for(int n=0;device->name[n];n++)
+                if(device->name[n]==' ')
+                    lastSpace=n;
+            if(lastSpace)
+                device->name[lastSpace]=0;
+            addMaster(device->deviceid,device->attachment,device->name);
         }
     }
     XIFreeDeviceInfo(devices);
@@ -115,9 +129,10 @@ void setActiveMasterByDeviceId(int id){
     XIFreeDeviceInfo(masterDevices);
     assert(getActiveMaster());
 }
-
-Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves){
-    assert(ids);
+Node*getSlavesOfMaster(Master*master){
+    return getSlavesOfMasterByID((int[]){master->id,master->pointerId},2,NULL);
+}
+Node* getSlavesOfMasterByID(int*ids,int num,int*numberOfSlaves){
     int ndevices;
     XIDeviceInfo *devices, *device;
     devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
@@ -127,22 +142,27 @@ Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves){
     int count=0;
     for (int i = 0; i < ndevices; i++) {
         device = &devices[i];
-        for(int n=0;n<num;n++)
-            if(device->attachment==ids[n]){
-                if(device->use == XISlaveKeyboard||
-                        device->use == XISlavePointer){
-
-                    if(isTestDevice(device->name))
-                        continue;
-                    count++;
-                    SlaveDevice*slaveDevice=malloc(sizeof(SlaveDevice));
-                    slaveDevice->id=device->deviceid;
-                    slaveDevice->attachment=ids[n];
-                    slaveDevice->offset=n;
-                    insertHead(list,slaveDevice);
-                }
-                break;
+        if(device->use == XISlaveKeyboard|| device->use == XISlavePointer){
+            int n=0;
+            if(ids){
+                for(;n<num;n++)
+                    if(device->attachment==ids[n])
+                        break;
+                if(n>=num)continue;
             }
+            if(isTestDevice(device->name))
+                continue;
+            count++;
+            SlaveDevice*slaveDevice=malloc(sizeof(SlaveDevice));
+            slaveDevice->id=device->deviceid;
+            slaveDevice->attachment=device->attachment;
+            strncpy(slaveDevice->name,device->name,sizeof(slaveDevice->name));
+            //force NULL terminate the string it were to overfil the buffer
+            slaveDevice->name[sizeof(slaveDevice->name)-1]=0;
+            slaveDevice->keyboard=device->use == XISlaveKeyboard;
+            slaveDevice->offset=n;
+            insertHead(list,slaveDevice);
+        }
     }
     XIFreeDeviceInfo(devices);
     if(numberOfSlaves)
@@ -268,20 +288,16 @@ void swapDeviceId(Master*master1,Master*master2){
 
     int ids[]={master1->id,master1->pointerId,master2->id,master2->pointerId};
     int idMap[]={master2->id,master2->pointerId,master1->id,master1->pointerId};
-    Node*slaves=getSlavesOfMaster(ids, 4, &ndevices);
+    Node*slaves=getSlavesOfMasterByID(ids, 4, &ndevices);
     Node*temp=slaves;
-    int actualChanges=0;
-    XIAnyHierarchyChangeInfo changes[ndevices];
     FOR_EACH(slaves,
-           changes[actualChanges].type=XIAttachSlave;
-           changes[actualChanges].attach.deviceid=getIntValue(slaves);
-           changes[actualChanges].attach.new_master=idMap[((SlaveDevice*)getValue(slaves))->offset];
-           actualChanges++;
+        //swap slave devices
+        attachSlaveToMaster(
+            getIntValue(slaves),
+            idMap[((SlaveDevice*)getValue(slaves))->offset]
+        );
     )
     deleteList(temp);
-    assert(actualChanges==ndevices);
-    //swap slave devices
-    XIChangeHierarchy(dpy, changes, ndevices);
 
     int tempId=master1->id,tempPointerId=master1->pointerId;
     master1->id=master2->id;

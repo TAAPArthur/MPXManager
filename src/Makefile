@@ -16,7 +16,7 @@ LAYER0_SRCS := logger.c
 LAYER1_SRCS := mywm-util.c util.c
 LAYER2_SRCS := globals.c bindings.c xsession.c devices.c test-functions.c monitors.c events.c
 LAYER3_SRCS := state.c layouts.c wmfunctions.c functions.c default-rules.c
-LAYER4_SRCS := window-clone.c
+LAYER4_SRCS := mpx.c window-clone.c
 LIBSRCS :=  mywm.c config.c
 
 SRCS := mywm.c config.c ${LIBSRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
@@ -38,7 +38,7 @@ debug: ${SRCS}
 quick-test: QUICK=1
 quick-test: test
 
-test: unitTest1 unitTest2 unitTest3 #unitTest4
+test: unitTest1 unitTest2 unitTest3 unitTest4
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 	${CC}  $^ -o $@ ${TESTFLAGS} ${TESTLIBS}

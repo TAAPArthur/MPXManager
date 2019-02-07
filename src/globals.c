@@ -53,6 +53,7 @@ int CRASH_ON_ERRORS=0;
 int POLL_COUNT=10;
 int POLL_INTERVAL=10;
 
+char * MASTER_INFO_PATH="master-info.txt";
 
 int DEFAULT_POINTER=2;
 int DEFAULT_KEYBOARD=3;

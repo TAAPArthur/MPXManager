@@ -97,6 +97,7 @@ START_TEST(test_create_master){
     assert(m->id==1);
     assert(m->pointerId==2);
     assert(m->windowStack);
+    assert(m->name && m->name[0]+1);
     assert(m->workspaceHistory);
     assert(m->focusedWindow);
     assert(getActiveMaster()==m);

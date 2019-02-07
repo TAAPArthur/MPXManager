@@ -58,8 +58,8 @@ START_TEST(test_create_destroy_master){
 }END_TEST
 
 START_TEST(test_get_associated_device){
-    Node*keyboardSlaves=getSlavesOfMaster(&getActiveMaster()->id, 1, NULL);
-    Node*mouseSlaves=getSlavesOfMaster(&getActiveMaster()->pointerId, 1, NULL);
+    Node*keyboardSlaves=getSlavesOfMasterByID(&getActiveMaster()->id, 1, NULL);
+    Node*mouseSlaves=getSlavesOfMasterByID(&getActiveMaster()->pointerId, 1, NULL);
     int slaveKeyboardId=getIntValue(keyboardSlaves);
     int slavePointerId=getIntValue(mouseSlaves);
     assert(getActiveMasterKeyboardID()==getAssociatedMasterDevice(slaveKeyboardId));
@@ -73,8 +73,8 @@ START_TEST(test_get_associated_device){
 START_TEST(test_set_active_master_by_id){
     int masterKeyboard=getActiveMasterKeyboardID();
     int masterPointer=getActiveMasterPointerID();
-    int slaveKeyboardId=getIntAndFree(getSlavesOfMaster(&getActiveMaster()->id, 1, 0));
-    int slavePointerId=getIntAndFree(getSlavesOfMaster(&getActiveMaster()->pointerId, 1, 0));
+    int slaveKeyboardId=getIntAndFree(getSlavesOfMasterByID(&getActiveMaster()->id, 1, 0));
+    int slavePointerId=getIntAndFree(getSlavesOfMasterByID(&getActiveMaster()->pointerId, 1, 0));
     assert(slaveKeyboardId!=slavePointerId);
     Master*realMaster=getActiveMaster();
     int fakeId=10000;
@@ -121,25 +121,32 @@ START_TEST(test_detect_test_slaves){
 }END_TEST
 START_TEST(test_get_slaves){
     int slaveKeyboardSize=0;
-    Node* slaveKeyboards=getSlavesOfMaster(&getActiveMaster()->id,1,&slaveKeyboardSize);
-    Node* slaveKeyboards2=getSlavesOfMaster(&getActiveMaster()->id,1,NULL);
+    Node* slaveKeyboards=getSlavesOfMasterByID(&getActiveMaster()->id,1,&slaveKeyboardSize);
+    Node* slaveKeyboards2=getSlavesOfMasterByID(&getActiveMaster()->id,1,NULL);
     assert(slaveKeyboards);
     assert(listsEqual(slaveKeyboards, slaveKeyboards2));
     assert(getSize(slaveKeyboards)==slaveKeyboardSize);
 
     int slavePointerSize;
-    Node* slavePointers=getSlavesOfMaster(&getActiveMaster()->pointerId,1,&slavePointerSize);
-    Node* slavePointers2=getSlavesOfMaster(&getActiveMaster()->pointerId,1,NULL);
+    Node* slavePointers=getSlavesOfMasterByID(&getActiveMaster()->pointerId,1,&slavePointerSize);
+    Node* slavePointers2=getSlavesOfMasterByID(&getActiveMaster()->pointerId,1,NULL);
     assert(listsEqual(slavePointers,slavePointers2));
     assert(getSize(slaveKeyboards)==slavePointerSize);
     assert(slavePointers);
 
     int size;
-    Node*slaves=getSlavesOfMaster(&getActiveMaster()->id,2,&size);
-    Node*slaves2=getSlavesOfMaster(&getActiveMaster()->id,2,NULL);
+    Node*slaves=getSlavesOfMasterByID(&getActiveMaster()->id,2,&size);
+    Node*slaves2=getSlavesOfMasterByID(&getActiveMaster()->id,2,NULL);
     assert(listsEqual(slaves, slaves2));
     assert(getSize(slaves)==size);
     assert(slaveKeyboardSize+slavePointerSize == getSize(slaves));
+
+    //Xephry will create 2 non dummy slaves
+    assert(slavePointerSize==1);
+    assert(slaveKeyboardSize==1);
+
+    Node*slavesOfMaster=getSlavesOfMaster(getActiveMaster());
+    assert(listsEqual(slavesOfMaster, slaves));
 
     Node* n=slaveKeyboards;
     FOR_EACH(n,assert(!isInList(slavePointers, getIntValue(n))));
@@ -152,6 +159,7 @@ START_TEST(test_get_slaves){
     deleteList(slaveKeyboards2);
     deleteList(slaves);
     deleteList(slaves2);
+    deleteList(slavesOfMaster);
 }END_TEST
 
 START_TEST(test_slave_swapping_same_device){
@@ -171,12 +179,12 @@ START_TEST(test_slave_swapping){
 
     int idKeyboard1=master1->id,idPointer1=master1->pointerId;
     int idKeyboard2=master2->id,idPointer2=master2->pointerId;
-    Node*slaves1=getSlavesOfMaster(&master1->id, 2,NULL);
-    Node*slaves2=getSlavesOfMaster(&master2->id,2,NULL);
+    Node*slaves1=getSlavesOfMasterByID(&master1->id, 2,NULL);
+    Node*slaves2=getSlavesOfMasterByID(&master2->id,2,NULL);
 
     swapDeviceId(master1,master2);
-    Node*slavesSwap1=getSlavesOfMaster(&master1->id, 2,NULL);
-    Node*slavesSwap2=getSlavesOfMaster(&master2->id, 2,NULL);
+    Node*slavesSwap1=getSlavesOfMasterByID(&master1->id, 2,NULL);
+    Node*slavesSwap2=getSlavesOfMasterByID(&master2->id, 2,NULL);
     assert(master1->id==idKeyboard2 && master1->pointerId==idPointer2);
     assert(master2->id==idKeyboard1 && master2->pointerId==idPointer1);
     assert(listsEqual(slaves1,slavesSwap1));
@@ -185,8 +193,8 @@ START_TEST(test_slave_swapping){
     deleteList(slavesSwap2);
 
     swapDeviceId(master1,master2);
-    slavesSwap1=getSlavesOfMaster(&master1->id, 2,NULL);
-    slavesSwap2=getSlavesOfMaster(&master2->id, 2,NULL);
+    slavesSwap1=getSlavesOfMasterByID(&master1->id, 2,NULL);
+    slavesSwap2=getSlavesOfMasterByID(&master2->id, 2,NULL);
     assert(master1->id==idKeyboard1 && master1->pointerId==idPointer1);
     assert(master2->id==idKeyboard2 && master2->pointerId==idPointer2);
     assert(listsEqual(slaves1,slavesSwap1));

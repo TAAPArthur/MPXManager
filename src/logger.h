@@ -29,6 +29,7 @@ int getLogLevel();
 void setLogLevel(int level);
 void printNodeList(Node*n);
 void printSummary(void);
+void printMasterSummary(void);
 void dumpAllWindowInfo(void);
 void dumpWindowInfo(WindowInfo* win);
 void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms);

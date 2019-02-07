@@ -19,6 +19,11 @@
 
 #include "util.h"
 
+///Fixed size of all struct fields the keep an array of arbitary sized names
+#ifndef NAME_BUFFER
+    #define NAME_BUFFER 32
+#endif
+
 ///Types of docks
 typedef enum {DOCK_LEFT,DOCK_RIGHT,DOCK_TOP,DOCK_BOTTOM}DockTypes;
 
@@ -104,6 +109,9 @@ typedef struct{
     int id;
     /**pointer master id associated with id;*/
     int pointerId;
+    /// the name of the master keyboard
+    char name[NAME_BUFFER];
+
     /**Stack of windows in order of most recently focused*/
     Node* windowStack;
     /**Contains the window with current focus,
@@ -297,9 +305,10 @@ Node* getAllMasters();
  * the master list is empty
  * @param keyboardMasterId  the id of the master device.
  * @param pointerMasterId  the id of the associated master pointer
+ * @param name the name of the master keyboard
  * @return 1 iff a new master was inserted; 0 o.w.
  */
-int addMaster(unsigned int keyboardMasterId,unsigned int pointerMasterId);
+int addMaster(unsigned int keyboardMasterId,unsigned int pointerMasterId,char*name);
 
 /**
  * Removes the master with the specifed id
@@ -648,9 +657,12 @@ void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num);
 
 /**
  * Creates a pointer to a Master instance and sets its id to id.
+ * @param id keyboard id
+ * @param pointerId pointer id
+ * @param name the name of the master keyboard
  * @return pointer to object
  */
-Master *createMaster(int id,int pointerId);
+Master *createMaster(int id,int pointerId,char*name);
 
 /**
  * Init a an array of workspaces to default values.

@@ -9,17 +9,27 @@
 #include "mywm-util.h"
 
 /**
- * The value pointed to by the Node list returned by getSlavesOfMaster()
+ * The value pointed to by the Node list returned by getSlavesOfMasterByID()
  */
 typedef struct{
     ///The id of the slave
     int id;
     ///the id of the associated master device
     int attachment;
-    ///Convience field: the index of attachment in the list passed to getSlavesOfMaster()
+    ///the name of the slave device
+    char name[NAME_BUFFER];
+    /// Whether this is a keyboard(1) or a pointer device(0)
+    char keyboard;
+    ///Convience field: the index of attachment in the list passed to getSlavesOfMasterByID()
     unsigned char offset;
 }SlaveDevice;
 
+/**
+ * Attaches the specifed slave to the specified master
+ * @param slaveId
+ * @param masterId
+ */
+void attachSlaveToMaster(int slaveId,int masterId);
 /**
  * Creates a master device with the specified name
  * @param name the user set prefix of the master device pair
@@ -74,7 +84,13 @@ int getClientKeyboard(int win);
  * @param numberOfSlaves if not NULL, it will be set to the number of slaves found
  * @return a Node list container where each value is a SlaveDeivce
  */
-Node* getSlavesOfMaster(int*ids,int num,int*numberOfSlaves);
+Node* getSlavesOfMasterByID(int*ids,int num,int*numberOfSlaves);
+/**
+ * Returns a node list of both types of SlaveDevices for the given master
+ * @param master 
+ */
+Node*getSlavesOfMaster(Master*master);
+
 /**
  * Checks to see if the device is prefixed with XTEST
  * @param str
