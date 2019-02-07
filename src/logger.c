@@ -15,7 +15,7 @@
 #include "mywm-util.h"
 #include "logger.h"
 #include "globals.h"
-#include "wmfunctions.h"
+#include "windows.h"
 
 extern xcb_connection_t *dis;
 
@@ -86,17 +86,16 @@ void printSummary(void){
         LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
     );
     LOG(LOG_LEVEL_DEBUG,"\n");
-    for(int i=0;i<getNumberOfWorkspaces();i++)
-        for(int l=0;l<NUMBER_OF_LAYERS;l++){
-            Node*n=getWindowStackAtLayer(getWorkspaceByIndex(i),l);
-            if(!isNotEmpty(n))continue;
-            LOG(LOG_LEVEL_DEBUG,"%d @%d\n",i,l);
-            FOR_EACH(n,
-                WindowInfo*winInfo=getValue(n);
-                LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
-            );
-            LOG(LOG_LEVEL_DEBUG,"\n");
-        }
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        Node*n=getWindowStack(getWorkspaceByIndex(i));
+        if(!isNotEmpty(n))continue;
+        LOG(LOG_LEVEL_DEBUG,"%d \n",i);
+        FOR_EACH(n,
+            WindowInfo*winInfo=getValue(n);
+            LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
+        );
+        LOG(LOG_LEVEL_DEBUG,"\n");
+    }
 }
 void dumpAllWindowInfo(void){
     Node*n=getAllWindows();

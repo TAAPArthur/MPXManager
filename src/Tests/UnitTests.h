@@ -15,6 +15,7 @@
 #include<sys/wait.h>
 
 #include "../mywm-util.h"
+#include "../monitors.h"
 
 //const int size=10;
 
@@ -32,6 +33,11 @@
 
 static inline int addFakeMaster(int pointerId,int keyboardID){
     return addMaster(pointerId,keyboardID,"",0);
+}
+static inline void addFakeMonitor(int id){
+    Monitor*m=(Monitor*)malloc(sizeof(Monitor));
+    m->id=id;
+    addMonitor(m);
 }
 
 static inline int listsEqual(Node*n,Node*n2){

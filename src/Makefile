@@ -6,22 +6,21 @@ ERROR_FLAGS ?= -Werror -Wall -Wextra
 CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING  --coverage -Wno-unused-function
-TESTLIBS ?= -lcheck -lm
-LDFLAGS ?= -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
+TESTLIBS ?= -lcheck
+LDFLAGS ?= -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 #-pedantic
 RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} -DNDEBUG
 DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
 
 LAYER0_SRCS := logger.c
 LAYER1_SRCS := mywm-util.c util.c
-LAYER2_SRCS := globals.c bindings.c xsession.c devices.c test-functions.c monitors.c events.c
-LAYER3_SRCS := state.c layouts.c wmfunctions.c functions.c default-rules.c
-LAYER4_SRCS := mpx.c window-clone.c
-LIBSRCS :=  mywm.c config.c
+LAYER2_SRCS := globals.c xsession.c devices.c test-functions.c bindings.c monitors.c events.c windows.c
+LAYER3_SRCS :=  layouts.c wmfunctions.c default-rules.c state.c
+LAYER4_SRCS := mpx.c window-clone.c functions.c
+SRCS := mywm.c config.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 
-SRCS := mywm.c config.c ${LIBSRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 
-CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(focusFollowMouse|spawn|spawnPipe)'" |grep -A 1 "Function" | grep -v '100'     |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
+CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(focusFollowMouse|spawn|spawnPipe)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 

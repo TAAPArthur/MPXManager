@@ -166,22 +166,6 @@ void shiftTop(void);
  */
 void swapWithTop(void);
 
-/**
- * Cycle through the layouts of the active workspace
- * @param index either UP or DOWN
- */
-void cycleLayouts(int dir);
-
-/**
- * Apply this external layout to the workspace if it is not already the active layout
- * @param layout
- */
-void toggleLayout(Layout* layout);
-
-/**
- * Manually retile the active workspace
- */
-void retile(void);
 
 /**
  * Get the next window in the stacking order in the given direction
@@ -207,7 +191,6 @@ void unlockWindow(WindowInfo*winInfo);
 
 void moveTargetWindowWithMouse(void);
 
-void setLastKnowMasterPosition(int x,int y);
 
 void moveWindowWithMouse(WindowInfo*winInfo);
 void resizeWindowWithMouse(WindowInfo*winInfo);
@@ -215,7 +198,6 @@ void resizeWindowWithMouse(WindowInfo*winInfo);
 void floatWindow(WindowInfo* win);
 void sinkWindow(WindowInfo* win);
 
-void setMasterTarget(int id);
 void startMouseOperation(WindowInfo*winInfo);
 void stopMouseOperation(WindowInfo*winInfo);
 #endif

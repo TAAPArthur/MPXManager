@@ -29,142 +29,6 @@
 
 
 
-START_TEST(test_mask_add_remove_toggle){
-    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
-    addWindowInfo(winInfo);
-    assert(winInfo->mask==0);
-    addMask(winInfo, 1);
-    assert(winInfo->mask==1);
-    addMask(winInfo, 6);
-    assert(winInfo->mask==7);
-    removeMask(winInfo, 12);
-    assert(winInfo->mask==3);
-    assert(!hasMask(winInfo, 6));
-    toggleMask(winInfo, 6);
-    assert(hasMask(winInfo, 6));
-    assert(winInfo->mask==7);
-    toggleMask(winInfo, 6);
-    assert(!hasMask(winInfo, 6));
-    assert(winInfo->mask==1);
-}END_TEST
-
-START_TEST(test_mask_reset){
-    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
-    addWindowInfo(winInfo);
-    addMask(winInfo, X_MAXIMIZED_MASK|Y_MAXIMIZED_MASK|ROOT_FULLSCREEN_MASK|FULLSCREEN_MASK);
-    int nonUserMask=MAPPED_MASK|PARTIALLY_VISIBLE;
-    addMask(winInfo,nonUserMask);
-    resetUserMask(winInfo);
-    assert(winInfo->mask==nonUserMask);
-}END_TEST
-
-START_TEST(test_mask_save_restore){
-
-    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
-    WindowInfo*winInfo2=createWindowInfo(createNormalWindow());
-    assert(processNewWindow(winInfo));
-    //add a USER_MASK
-    addMask(winInfo, NO_TILE_MASK);
-
-    xcb_ewmh_get_atoms_reply_t reply;
-    int hasState=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
-    assert(hasState);
-
-    catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo2->id, reply.atoms_len,reply.atoms));
-    assert(processNewWindow(winInfo2));
-    assert(getSize(getAllWindows())==2);
-    assert(getMask(winInfo)==getMask(winInfo2));
-    xcb_ewmh_get_atoms_reply_wipe(&reply);
-}END_TEST
-
-START_TEST(test_get_set_geometry_config){
-    WindowInfo*winInfo=createWindowInfo(1);
-    addWindowInfo(winInfo);
-    short arr[10]={1,2,3,4,5,6,7,8,9,10};
-    assert(LEN(arr)==LEN(winInfo->geometry)+LEN(winInfo->config) && "array size needs to be increased");
-    int offset=LEN(winInfo->geometry);
-    setGeometry(winInfo,arr);
-    short *geo=getGeometry(winInfo);
-    setConfig(winInfo,&arr[offset]);
-    short *config=getConfig(winInfo);
-    for(int i=0;i<LEN(arr);i++)
-        assert(arr[i]==(i<offset?geo[i]:config[i-offset]));
-}END_TEST
-
-START_TEST(test_connect_to_xserver){
-    connectToXserver();
-    assert(getActiveMaster()!=NULL);
-    assert(getActiveWorkspace()!=NULL);
-    assert(getSize(getActiveMasterWindowStack())==0);
-    assert(getSize(getAllWindows())==0);
-    assert(getActiveMaster());
-    Monitor*m=getValue(getAllMonitors());
-    assert(m!=NULL);
-    assert(getMonitorFromWorkspace(getActiveWorkspace()));
-
-}END_TEST
-
-
-
-START_TEST(test_window_property_alt_loading){
-    int win=createUnmappedWindow();
-    WindowInfo*winInfo=createWindowInfo(win);
-    char*name="test";
-    xcb_icccm_set_wm_name(dis, win, XCB_ATOM_STRING, 8, strlen(name), name);
-    addWindowInfo(winInfo);
-    loadWindowProperties(winInfo);
-    assert(strcmp(winInfo->title,name)==0);
-}END_TEST
-START_TEST(test_window_property_loading){
-    int win=createIgnoredWindow();
-    WindowInfo*winInfo=createWindowInfo(win);
-    addWindowInfo(winInfo);
-    //no properties are set don't crash
-    loadWindowProperties(winInfo);
-    assert(winInfo->className==NULL);
-    assert(winInfo->instanceName==NULL);
-    assert(winInfo->title==NULL);
-    assert(winInfo->typeName==NULL||winInfo->implicitType);
-    assert(winInfo->type==0||winInfo->implicitType);
-
-    setProperties(win);
-
-    //reloaeding should break anything
-    for(int i=0;i<2;i++){
-        loadWindowProperties(winInfo);
-        checkProperties(winInfo);
-    }
-}END_TEST
-START_TEST(test_window_property_reloading){
-    int win=createUnmappedWindow();
-    int win2=createUnmappedWindow();
-    WindowInfo*winInfo=createWindowInfo(win);
-    addWindowInfo(winInfo);
-    setProperties(win);
-    loadWindowProperties(winInfo);
-    //very hacky way to unset the title property of the window
-    winInfo->id=win2;
-    //don't double free window properties
-    loadWindowProperties(winInfo);
-    loadWindowProperties(winInfo);
-}END_TEST
-START_TEST(test_window_extra_property_loading){
-
-    int win=createUnmappedWindow();
-    int groupLead=createUnmappedWindow();
-    int trasientForWindow=createUnmappedWindow();
-    WindowInfo*winInfo=createWindowInfo(win);
-    xcb_icccm_wm_hints_t hints;
-    xcb_icccm_wm_hints_set_window_group(&hints, groupLead);
-    xcb_icccm_set_wm_hints(dis, win, &hints);
-    xcb_icccm_set_wm_transient_for(dis, win, trasientForWindow);
-    flush();
-    addWindowInfo(winInfo);
-    loadWindowProperties(winInfo);
-    assert(winInfo->groupId==groupLead);
-    assert(winInfo->transientFor==trasientForWindow);
-}END_TEST
-
 START_TEST(test_sync_state){
 
     int win=mapArbitraryWindow();
@@ -183,7 +47,6 @@ START_TEST(test_sync_state){
 
     assert(xcb_request_check(dis, xcb_ewmh_set_current_desktop_checked(ewmh, defaultScreenNumber, activeWorkspace))==NULL);
     assert(xcb_request_check(dis,xcb_ewmh_set_wm_desktop(ewmh, win, windowWorkspace))==NULL);
-    //setLogLevel(LOG_LEVEL_TRACE);
     LOAD_SAVED_STATE=1;
     syncState();
     scan(root);
@@ -195,109 +58,6 @@ START_TEST(test_sync_state){
 
 }END_TEST
 
-START_TEST(test_window_state){
-
-    xcb_atom_t net_atoms[] = {WM_TAKE_FOCUS,WM_DELETE_WINDOW,SUPPORTED_STATES};
-    int win=createNormalWindow();
-    WindowInfo*winInfo=createWindowInfo(win);
-    addWindowInfo(winInfo);
-    addWindowToWorkspace(winInfo, 0);
-
-    //Check to make sure some mask is set
-    //should not error
-    setWindowStateFromAtomInfo(NULL, net_atoms, LEN(net_atoms), XCB_EWMH_WM_STATE_REMOVE);
-    setWindowStateFromAtomInfo(winInfo, net_atoms, LEN(net_atoms), XCB_EWMH_WM_STATE_REMOVE);
-    assert(winInfo->mask==0);
-    setWindowStateFromAtomInfo(winInfo, net_atoms, LEN(net_atoms), XCB_EWMH_WM_STATE_ADD);
-    assert(winInfo->mask);
-    setWindowStateFromAtomInfo(winInfo, net_atoms, LEN(net_atoms), XCB_EWMH_WM_STATE_TOGGLE);
-    assert(winInfo->mask==0);
-
-    catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo->id, 1,(unsigned int[]){-1}));
-    setXWindowStateFromMask(winInfo);
-    xcb_ewmh_get_atoms_reply_t reply;
-    int hasState=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
-    assert(hasState);
-    for(int i=0;i<reply.atoms_len;i++)
-        if(reply.atoms[i]==-1){
-            xcb_ewmh_get_atoms_reply_wipe(&reply);
-            return;
-        }
-    assert(0);
-}END_TEST
-
-START_TEST(test_window_state_sync){
-    int win=createNormalWindow();
-    scan(root);
-    WindowInfo*winInfo=getWindowInfo(win);
-    moveWindowToWorkspaceAtLayer(winInfo, getActiveWorkspaceIndex(), UPPER_LAYER);
-    addMask(winInfo, -1);
-
-    xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
-    xcb_ewmh_get_atoms_reply_t reply;
-    int count=0;
-
-    int status=xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, win), &reply, NULL);
-    assert(status);
-    for(int j=0;j<LEN(net_atoms);j++)
-        for(int i=0;i<reply.atoms_len;i++)
-            if(reply.atoms[i]==net_atoms[j]){
-                count++;
-                break;
-            }
-    assert(count+1==LEN(net_atoms));
-    xcb_ewmh_get_atoms_reply_wipe(&reply);
-}END_TEST
-
-START_TEST(test_layer_move){
-
-    int win=createUnmappedWindow();
-    WindowInfo*winInfo=createWindowInfo(win);
-    LOAD_SAVED_STATE=0;
-    processNewWindow(winInfo);
-    for(int i=0;i<NUMBER_OF_LAYERS;i++){
-        moveWindowToWorkspaceAtLayer(winInfo, getActiveWorkspaceIndex(), i);
-        assert(isInList(getActiveWorkspace()->windows[i], winInfo->id));
-    }
-}END_TEST
-
-START_TEST(test_process_window){
-    DEFAULT_WINDOW_MASKS=0;
-    xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
-    int win=createUnmappedWindow();
-    setProperties(win);
-
-    xcb_ewmh_set_wm_state(ewmh, win, LEN(net_atoms), net_atoms);
-    flush();
-    assert(!isNotEmpty(getAllWindows()));
-    WindowInfo*winInfo=createWindowInfo(win);
-    processNewWindow(winInfo);
-    assert(isNotEmpty(getAllWindows()));
-    assert(getSize(getAllWindows())==1);
-    checkProperties(getValue(getAllWindows()));
-    xcb_get_window_attributes_reply_t *attr;
-    attr=xcb_get_window_attributes_reply(dis,xcb_get_window_attributes(dis, win),NULL);
-    assert(attr->your_event_mask==NON_ROOT_EVENT_MASKS);
-    free(attr);
-    assert(winInfo->mask);
-}END_TEST
-START_TEST(test_window_scan){
-    assert(!isNotEmpty(getAllWindows()));
-    scan(root);
-    assert(!isNotEmpty(getAllWindows()));
-    int win=createUnmappedWindow();
-    int win2=createUnmappedWindow();
-    int win3=createUnmappedWindow();
-    assert(!isWindowMapped(win));
-    assert(!isWindowMapped(win2));
-    assert(!isWindowMapped(win3));
-    mapWindow(win);
-    xcb_flush(dis);
-    scan(root);
-    assert(isInList(getAllWindows(), win));
-    assert(isInList(getAllWindows(), win2));
-    assert(isInList(getAllWindows(), win3));
-}END_TEST
 
 START_TEST(test_focus_window){
     int win=mapArbitraryWindow();
@@ -418,43 +178,6 @@ START_TEST(test_invalid_state){
     assert(getWindowInfo(win)->workspaceIndex<getNumberOfWorkspaces());
 }END_TEST
 
-START_TEST(test_raise_window_layer){
-    int windowsPerLayer=2;
-    setActiveLayout(NULL);
-    //bottom to top stacking order;
-    WindowInfo* stackingOrder[NUMBER_OF_LAYERS*windowsPerLayer];
-    for(int i=NUMBER_OF_LAYERS-1;i>=0;i--){
-        for(int n=0;n<windowsPerLayer;n++){
-            int win=mapWindow(createNormalWindow());
-            WindowInfo*winInfo=createWindowInfo(win);
-            addWindowInfo(winInfo);
-            moveWindowToWorkspaceAtLayer(winInfo,getActiveWorkspaceIndex(),i);
-            stackingOrder[i*windowsPerLayer+n]=winInfo;
-            assert(raiseWindowInfo(winInfo));
-        }
-    }
-    flush();
-    for(int n=0;n<2;n++){
-        xcb_query_tree_reply_t *reply;
-        reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
-        assert(reply && "could not query tree");
-        int numberOfChildren = xcb_query_tree_children_length(reply);
-        xcb_window_t *children = xcb_query_tree_children(reply);
-        int counter=0;
-        for (int i = 0; i < numberOfChildren; i++) {
-            if(children[i]==stackingOrder[counter]->id){
-                counter++;
-                if(counter==LEN(stackingOrder))
-                    break;
-            }
-        }
-        assert(counter==LEN(stackingOrder));
-        free(reply);
-        for(int i=0;i<LEN(stackingOrder);i++){
-            assert(raiseWindowInfo(stackingOrder[i]));
-        }
-    }
-}END_TEST
     
 START_TEST(test_raise_window){
     //windows are in same spot
@@ -466,12 +189,13 @@ START_TEST(test_raise_window){
 
     WindowInfo*info=getValue(isInList(getAllWindows(), bottom));
     WindowInfo*infoTop=getValue(isInList(getAllWindows(), top));
-    assert(info);
-    assert(infoTop);
+    assert(info&&infoTop);
     assert(raiseWindow(bottom));
     flush();
-    waitForNormalEvent(XCB_VISIBILITY_NOTIFY);
-    waitForNormalEvent(XCB_VISIBILITY_NOTIFY);
+    int stackingOrder[]={top,bottom,top};
+    assert(checkStackingOrder(stackingOrder,2));
+    assert(raiseWindowInfo(infoTop));
+    assert(checkStackingOrder(stackingOrder+1,2));
 }END_TEST
 START_TEST(test_workspace_change){
 
@@ -537,75 +261,8 @@ START_TEST(test_workspace_activation){
     assert(getIntValue(getActiveWindowStack())==info1);
 }END_TEST
 
-START_TEST(test_privileged_windows_size){
-    Monitor* m=getValue(getAllMonitors());
-    assert(m);
-    int view[]={10,20,30,40};
-    m->viewX=*view;
-    WindowInfo *privilgedWindowInfo=createWindowInfo(1);
-    WindowInfo *normalWindowInfo=createWindowInfo(2);
-    addWindowInfo(normalWindowInfo);
-    addWindowInfo(privilgedWindowInfo);
-    assert(getMaxDimensionForWindow(m, normalWindowInfo, 1)==0);
-    assert(getMaxDimensionForWindow(m, normalWindowInfo, 0)==0);
 
-    addMask(privilgedWindowInfo,X_MAXIMIZED_MASK);
-    assert(getMaxDimensionForWindow(m, privilgedWindowInfo, 0)==m->viewWidth);
-    addMask(privilgedWindowInfo,Y_MAXIMIZED_MASK);
-    assert(getMaxDimensionForWindow(m, privilgedWindowInfo, 1)==m->viewHeight);
 
-    addMask(privilgedWindowInfo,FULLSCREEN_MASK);
-
-    assert(getMaxDimensionForWindow(m, privilgedWindowInfo, 0)==m->width);
-    assert(getMaxDimensionForWindow(m, privilgedWindowInfo, 1)==m->height);
-    addMask(privilgedWindowInfo,ROOT_FULLSCREEN_MASK);
-    assert(getMaxDimensionForWindow(m, privilgedWindowInfo, 0)==screen->width_in_pixels);
-    assert(getMaxDimensionForWindow(m, privilgedWindowInfo, 1)==screen->height_in_pixels);
-}END_TEST
-
-START_TEST(test_tile_windows){
-    LOAD_SAVED_STATE=0;
-    int win[NUMBER_OF_LAYERS];
-    for(int i =0;i<LEN(win);i++)
-        win[i]=mapWindow(createNormalWindow());
-    if(_i)
-        xcb_icccm_set_wm_transient_for(dis, win[UPPER_LAYER], win[NORMAL_LAYER]);
-    scan(root);
-    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
-    for(int i=LEN(win)-1;i>=0;i--){
-        assert(raiseWindow(win[i]));
-        moveWindowToWorkspaceAtLayer(getWindowInfo(win[i]), getActiveWorkspaceIndex(), i);
-    }
-
-    for(int i =0;i<LEN(win);i++)
-        assert(getSize(getActiveWorkspace()->windows[i])==1);
-    consumeEvents();
-    tileWorkspace(getActiveWorkspaceIndex());
-    for(int i=0;i<LEN(win);i++)
-        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
-    checkStackingOrder(win,LEN(win));
-}END_TEST
-
-START_TEST(test_empty_layout){
-    LOAD_SAVED_STATE=0;
-    mapWindow(createNormalWindow());
-    scan(root);
-    setActiveLayout(NULL);
-    consumeEvents();
-    tileWorkspace(getActiveWorkspaceIndex());
-    assert(!xcb_poll_for_event(dis));
-    Layout l={};
-    setActiveLayout(&l);
-    tileWorkspace(getActiveWorkspaceIndex());
-    assert(!xcb_poll_for_event(dis));
-    int returnFalse(){return 0;}
-    void dummy(){exit(1);}
-    l.layoutFunction=dummy;
-    l.conditionFunction=returnFalse;
-    setActiveLayout(&l);
-    tileWorkspace(getActiveWorkspaceIndex());
-    assert(!xcb_poll_for_event(dis));
-}END_TEST
 START_TEST(test_configure_windows){
     int win=createNormalWindow();
     WindowInfo*winInfo=createWindowInfo(win);
@@ -632,16 +289,17 @@ START_TEST(test_configure_windows){
 }END_TEST
 
 START_TEST(test_float_sink_window){
-    WindowInfo*winInfo=createWindowInfo(createNormalWindow());
-    processNewWindow(winInfo);
-    assert(isNotEmpty(getActiveWindowStack()));
-    floatWindow(winInfo);
-    assert(!isNotEmpty(getActiveWindowStack()));
+    int win=mapWindow(createNormalWindow());
+    WindowInfo*winInfo;
+    START_MY_WM
+    WAIT_UNTIL_TRUE(winInfo=getWindowInfo(win))
+    WAIT_UNTIL_TRUE(isTileable(winInfo));
+    lock();floatWindow(winInfo);unlock();
+    assert(!isTileable(winInfo));
     assert(hasMask(winInfo, FLOATING_MASK));
-    sinkWindow(winInfo);
+    lock();sinkWindow(winInfo);unlock();
     assert(!hasMask(winInfo, FLOATING_MASK));
-    assert(!hasMask(winInfo, -1));
-    assert(isNotEmpty(getActiveWindowStack()));
+    WAIT_UNTIL_TRUE(isTileable(winInfo));
 }END_TEST
 
 START_TEST(test_toggle_show_desktop){
@@ -726,52 +384,39 @@ static void setup(){
     onStartup();
     START_MY_WM
 }
+START_TEST(test_connect_to_xserver){
+    connectToXserver();
+    assert(getActiveMaster()!=NULL);
+    assert(getActiveWorkspace()!=NULL);
+    assert(getSize(getActiveMasterWindowStack())==0);
+    assert(getSize(getAllWindows())==0);
+    assert(getActiveMaster());
+    Monitor*m=getValue(getAllMonitors());
+    assert(m!=NULL);
+    assert(getMonitorFromWorkspace(getActiveWorkspace()));
+
+}END_TEST
 
 Suite *x11Suite(void) {
 
     Suite*s = suite_create("Window Manager Functions");
     TCase* tc_core;
 
-    tc_core = tcase_create("Window fields");
-    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
-    tcase_add_test(tc_core, test_mask_add_remove_toggle);
-    tcase_add_test(tc_core, test_mask_reset);
-    tcase_add_test(tc_core, test_mask_save_restore);
-    tcase_add_test(tc_core, test_get_set_geometry_config);
-    suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("X Server");
     tcase_add_checked_fixture(tc_core, createSimpleContext, destroyContext);
     tcase_add_test(tc_core, test_connect_to_xserver);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Window_Detection");
+    tc_core = tcase_create("Sync_State");
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
-    tcase_add_test(tc_core, test_window_property_loading);
-    tcase_add_test(tc_core, test_window_property_reloading);
-    tcase_add_test(tc_core, test_window_property_alt_loading);
-    tcase_add_test(tc_core, test_window_extra_property_loading);
-    tcase_add_test(tc_core, test_process_window);
-    tcase_add_test(tc_core, test_window_scan);
     tcase_add_test(tc_core, test_sync_state);
-    tcase_add_test(tc_core, test_window_state);
-    tcase_add_test(tc_core, test_window_state_sync);
-    suite_add_tcase(s, tc_core);
-
-
-    tc_core = tcase_create("Layers");
-    tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
-    tcase_add_test(tc_core, test_layer_move);
-    suite_add_tcase(s, tc_core);
-
-    tc_core = tcase_create("Invalid State");
-    tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_invalid_state);
     suite_add_tcase(s, tc_core);
+
     tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_raise_window);
-    tcase_add_test(tc_core, test_raise_window_layer);
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
 
@@ -782,9 +427,6 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_workspace_change);
 
     tcase_add_test(tc_core, test_kill_window);
-    tcase_add_test(tc_core, test_privileged_windows_size);
-    tcase_add_loop_test(tc_core, test_tile_windows,0,2);
-    tcase_add_test(tc_core, test_empty_layout);
     tcase_add_test(tc_core, test_configure_windows);
     tcase_add_test(tc_core, test_float_sink_window);
     suite_add_tcase(s, tc_core);

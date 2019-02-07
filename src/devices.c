@@ -315,3 +315,12 @@ void swapDeviceId(Master*master1,Master*master2){
     master2->pointerId=tempPointerId;
     XFlush(dpy);
 }
+void setLastKnowMasterPosition(int x,int y){
+    memcpy(getActiveMaster()->prevMousePos,getActiveMaster()->currentMousePos,sizeof(getActiveMaster()->prevMousePos));
+    getActiveMaster()->currentMousePos[0]=x;
+    getActiveMaster()->currentMousePos[1]=y;
+}
+void getMouseDelta(Master*master,short result[2]){
+    for(int i=0;i<2;i++)
+        result[i]=master->currentMousePos[i]-master->prevMousePos[i];
+}

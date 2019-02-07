@@ -320,6 +320,19 @@ START_TEST(test_mouse_location){
 */
 }END_TEST
 
+START_TEST(test_mouse_pos_tracking){
+    Master*m=getActiveMaster();
+    short result[2];
+    getMouseDelta(m,result);
+    assert(result[0]==0&&result[1]==0);
+    setLastKnowMasterPosition(1,2);
+    getMouseDelta(m,result);
+    assert(result[0]==1&&result[1]==2);
+    setLastKnowMasterPosition(2,1);
+    getMouseDelta(m,result);
+    assert(result[0]==1&&result[1]==-1);
+}END_TEST
+
 Suite *devicesSuite() {
     Suite*s = suite_create("Devices");
 
@@ -342,6 +355,7 @@ Suite *devicesSuite() {
     tc_core = tcase_create("Mouse");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, closeConnection);
     tcase_add_test(tc_core, test_mouse_location);
+    tcase_add_test(tc_core, test_mouse_pos_tracking);
     suite_add_tcase(s, tc_core);
     
     tc_core = tcase_create("Grab");

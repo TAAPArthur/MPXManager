@@ -9,6 +9,7 @@
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
 #include "../../state.h"
+#include "../../layouts.h"
 #include "../../wmfunctions.h"
 
 static int calledMasks;

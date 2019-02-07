@@ -3,7 +3,6 @@
 extern Suite *stateSuite();
 extern Suite *x11Suite();
 extern Suite *layoutSuite();
-extern Suite *functionsSuite();
 extern Suite *defaultRulesSuite();
 
 CREATE_HANDLER
@@ -18,7 +17,6 @@ int main(void) {
     srunner_add_suite(runner, x11Suite());
     srunner_add_suite(runner, layoutSuite());
     srunner_add_suite(runner, defaultRulesSuite());
-    srunner_add_suite(runner,functionsSuite());
 
     srunner_run_all(runner, CK_NORMAL);
     int failures=srunner_ntests_failed(runner);

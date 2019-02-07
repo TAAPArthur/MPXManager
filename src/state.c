@@ -11,6 +11,8 @@
 /// \endcond
 
 #include "mywm-util.h"
+#include "monitors.h"
+#include "windows.h"
 #include "wmfunctions.h"
 #include "logger.h"
 

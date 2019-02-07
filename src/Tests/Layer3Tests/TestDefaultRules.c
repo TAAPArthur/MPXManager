@@ -212,6 +212,12 @@ START_TEST(test_ignored_windows){
     assert(getSize(getAllWindows())==0);
 }END_TEST
 
+START_TEST(test_dock_windows){
+    int win=createDock(1,1,1);
+    catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_DOCK));
+    scan(root);
+    assert(getIntValue(getAllDocks())==win);
+}END_TEST
 START_TEST(test_map_windows){
 
     int win=createUnmappedWindow();
@@ -522,9 +528,10 @@ Suite *defaultRulesSuite() {
     tcase_add_test(tc_core, test_property_update);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Extra Events");
+    tc_core = tcase_create("WindowCategories");
     tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_ignored_windows);
+    tcase_add_test(tc_core, test_dock_windows);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Requests");

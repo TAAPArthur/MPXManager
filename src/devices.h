@@ -220,4 +220,7 @@ int ungrabAllMasterDevices(void);
  */
 int isKeyboardMask(int mask);
 
+void setLastKnowMasterPosition(int x,int y);
+void getMouseDelta(Master*master,short result[2]);
+
 #endif /* DEVICES_H_ */

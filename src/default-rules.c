@@ -15,6 +15,7 @@
 #include "events.h"
 #include "bindings.h"
 #include "wmfunctions.h"
+#include "windows.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
@@ -28,12 +29,20 @@
 void tileChangeWorkspaces(void){
     updateState(tileWorkspace);
 }
+void autoAddToWorkspace(WindowInfo*winInfo){
+    if(winInfo->dock)return;    
+    int index=LOAD_SAVED_STATE?getSavedWorkspaceIndex(winInfo->id):getActiveWorkspaceIndex();
+    moveWindowToWorkspace(winInfo, index);
+    //char state=XCB_ICCCM_WM_STATE_WITHDRAWN;
+    //xcb_change_property(dis,XCB_PROP_MODE_REPLACE,win,ewmh->_NET_WM_STATE,ewmh->_NET_WM_STATE,32,0,&state);
+}
 void addAutoTileRules(void){
     static Rule autoTileRule=CREATE_DEFAULT_EVENT_RULE(markState);
     static Rule tileWorkspace=CREATE_DEFAULT_EVENT_RULE(tileChangeWorkspaces);
     int events[]={XCB_MAP_NOTIFY,XCB_UNMAP_NOTIFY,
             XCB_INPUT_KEY_PRESS+GENERIC_EVENT_OFFSET,XCB_INPUT_KEY_RELEASE+GENERIC_EVENT_OFFSET,
-            XCB_INPUT_BUTTON_PRESS+GENERIC_EVENT_OFFSET,XCB_INPUT_BUTTON_RELEASE+GENERIC_EVENT_OFFSET
+            XCB_INPUT_BUTTON_PRESS+GENERIC_EVENT_OFFSET,XCB_INPUT_BUTTON_RELEASE+GENERIC_EVENT_OFFSET,
+            XCB_RANDR_NOTIFY_OUTPUT_CHANGE + MONITOR_EVENT_OFFSET,
     };
     for(int i=0;i<LEN(events);i++)
         appendRule(events[i],&autoTileRule);
@@ -46,7 +55,7 @@ void addDefaultDeviceRules(void){
         appendRule(GENERIC_EVENT_OFFSET+i,&deviceEventRule);
     }
 }
-int ignoreFunction(WindowInfo*winInfo){
+int isImplicitType(WindowInfo*winInfo){
    return winInfo->implicitType;
 }
 
@@ -60,7 +69,7 @@ void addPrintRule(void){
 }
 void addIgnoreRule(void){
     
-    static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);
+    static Rule ignoreRule= CREATE_WILDCARD(BIND(isImplicitType),.passThrough=PASSTHROUGH_IF_FALSE);
     appendRule(ProcessingWindow,&ignoreRule);
 }
 void addFloatRules(void){
@@ -69,8 +78,9 @@ void addFloatRules(void){
     static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
     appendRule(RegisteringWindow, &notificationRule);
 }
+
+static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK",TYPE|LITERAL,AND(BIND(loadDockProperties),BIND(markAsDock)),.passThrough=PASSTHROUGH_IF_TRUE};
 void addAvoidDocksRule(void){
-    static Rule avoidDocksRule = CREATE_RULE("_NET_WM_WINDOW_TYPE_DOCK",TYPE|LITERAL,BIND(addDock));
     appendRule(ProcessingWindow, &avoidDocksRule);
 }
 void addFocusFollowsMouseRule(void){
@@ -293,17 +303,16 @@ void onClientMessage(void){
                 moveWindowToWorkspace(getWindowInfo(win), destIndex);
     }
     else if (message==ewmh->_NET_WM_STATE){
+        LOG(LOG_LEVEL_DEBUG,"Settings client wm state\n");
         dumpAtoms((xcb_atom_t *) &data.data32[1], 2);
         WindowInfo*winInfo=getWindowInfo(win);
         if(winInfo){
             setWindowStateFromAtomInfo(winInfo,(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
-            setXWindowStateFromMask(winInfo);
         }
         else{
             WindowInfo fakeWinInfo={.mask=0,.id=win};
             loadSavedAtomState(&fakeWinInfo);
             setWindowStateFromAtomInfo(&fakeWinInfo,(xcb_atom_t *) &data.data32[1], 2,data.data32[0]);
-            setXWindowStateFromMask(&fakeWinInfo);
         }
     }
     else if(message==ewmh->WM_PROTOCOLS){
@@ -373,35 +382,39 @@ void onStartup(void){
     connectToXserver();
 }
 
+static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
+    [0]= CREATE_DEFAULT_EVENT_RULE(onError),
+    [XCB_VISIBILITY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onVisibilityEvent),
+    [XCB_CREATE_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onCreateEvent),
+
+    [XCB_DESTROY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onDestroyEvent),
+    [XCB_UNMAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onUnmapEvent),
+    [XCB_MAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onMapEvent),
+    [XCB_MAP_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onMapRequestEvent),
+    [XCB_CONFIGURE_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onConfigureRequestEvent),
+    [XCB_CONFIGURE_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onConfigureNotifyEvent),
+
+
+    [XCB_PROPERTY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onPropertyEvent),
+    [XCB_CLIENT_MESSAGE] = CREATE_DEFAULT_EVENT_RULE(onClientMessage),
+
+    [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
+
+    [XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
+    [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
+    [XCB_RANDR_NOTIFY_OUTPUT_CHANGE + MONITOR_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
+
+    [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
+    [RegisteringWindow] =CREATE_WILDCARD(AND(BIND(autoAddToWorkspace),BIND(updateEWMHClientList))),
+};
 
 void addBasicRules(void){
-    static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
-        [0]= CREATE_DEFAULT_EVENT_RULE(onError),
-        [XCB_VISIBILITY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onVisibilityEvent),
-        [XCB_CREATE_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onCreateEvent),
-
-        [XCB_DESTROY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onDestroyEvent),
-        [XCB_UNMAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onUnmapEvent),
-        [XCB_MAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onMapEvent),
-        [XCB_MAP_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onMapRequestEvent),
-        [XCB_CONFIGURE_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onConfigureRequestEvent),
-        [XCB_CONFIGURE_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onConfigureNotifyEvent),
-
-
-        [XCB_PROPERTY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onPropertyEvent),
-        [XCB_CLIENT_MESSAGE] = CREATE_DEFAULT_EVENT_RULE(onClientMessage),
-
-        [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
-
-        [XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
-        [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
-
-        [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect)
-    };
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
         if(NORMAL_RULES[i].onMatch.type)
             insertHead(getEventRules(i),&NORMAL_RULES[i]);
 }
+
+
 void addDefaultRules(void){
 
     addBasicRules();

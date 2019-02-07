@@ -174,44 +174,6 @@ START_TEST(test_swap_top){
     assert(getValue(getLast(getActiveWindowStack()))==top);
 }END_TEST
 
-START_TEST(test_layout_toggle){
-    addLayoutsToWorkspace(getActiveWorkspaceIndex(), DEFAULT_LAYOUTS, 1);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-    toggleLayout(&DEFAULT_LAYOUTS[1]);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[1]);
-    toggleLayout(&DEFAULT_LAYOUTS[1]);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-}END_TEST
-
-START_TEST(test_layout_cycle){
-    addLayoutsToWorkspace(getActiveWorkspaceIndex(), DEFAULT_LAYOUTS, 2);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-    cycleLayouts(3);
-    assert(getValue(getActiveWorkspace()->layouts)==&DEFAULT_LAYOUTS[1]);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[1]);
-    cycleLayouts(1);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-}END_TEST
-START_TEST(test_layout_cycle_reverse){
-    addLayoutsToWorkspace(getActiveWorkspaceIndex(), DEFAULT_LAYOUTS, 2);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-    cycleLayouts(-1);
-    assert(getValue(getActiveWorkspace()->layouts)==&DEFAULT_LAYOUTS[1]);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[1]);
-    cycleLayouts(-1);
-    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-}END_TEST
-static int count=0;
-static void dummy(){
-    count++;
-}
-START_TEST(test_retile){
-    Layout l={.layoutFunction=dummy};
-    clearLayoutsOfWorkspace(getActiveWorkspaceIndex());
-    addLayoutsToWorkspace(getActiveWorkspaceIndex(), &l, 1);
-    retile();
-    assert(count==1);
-}END_TEST
 
 START_TEST(test_swap_position){
     onWindowFocus(bottom->id);
@@ -360,8 +322,8 @@ Suite *functionsSuite() {
 
     tc_core = tcase_create("Mouse_Functions");
     tcase_add_checked_fixture(tc_core, functionSetup, fullCleanup);
-    tcase_add_test(tc_core, test_mouse_lock);
     tcase_add_loop_test(tc_core, test_move_resize_window_with_mouse,0,3);
+    tcase_add_test(tc_core, test_mouse_lock);
     suite_add_tcase(s, tc_core);
 
 
@@ -372,13 +334,6 @@ Suite *functionsSuite() {
     tcase_add_test(tc_core,test_spawn);
     suite_add_tcase(s, tc_core);
 
-    tc_core = tcase_create("Layout_Functions");
-    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
-    tcase_add_test(tc_core, test_layout_toggle);
-    tcase_add_test(tc_core, test_layout_cycle);
-    tcase_add_test(tc_core, test_layout_cycle_reverse);
-    tcase_add_test(tc_core, test_retile);
-    suite_add_tcase(s, tc_core);
     tc_core = tcase_create("MISC_Functions");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_kill_focused);

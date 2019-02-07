@@ -116,7 +116,7 @@ int loadGenericEvent(xcb_ge_generic_event_t*event){
     }
     else //if(event->extension == xcb_get_extension_data(dis, &xcb_randr_id)->major_opcode)
     {
-        return 1+MONITOR_EVENT_OFFSET;
+        return XCB_RANDR_NOTIFY_OUTPUT_CHANGE+MONITOR_EVENT_OFFSET;
     }
 }
 
@@ -142,4 +142,5 @@ void registerForWindowEvents(int window,int mask){
 void registerForEvents(){
     registerForWindowEvents(root,ROOT_EVENT_MASKS);
     registerForDeviceEvents();
+    registerForMonitorChange();
 }

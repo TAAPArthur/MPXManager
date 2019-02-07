@@ -35,6 +35,8 @@ typedef struct window_info{
     unsigned int id;
     /**Window mask */
     unsigned int mask;
+    /// set to 1 iff the window is a dock 
+    int dock;
     /**xcb_atom representing the window type*/
     int type;
     /**string xcb_atom representing the window type*/
@@ -56,11 +58,7 @@ typedef struct window_info{
      * Note that his field may not contain all the workspaces an window belongs to
      */
     int workspaceIndex;
-    int layer;
-    /**
-     * THe number of workspaces this window is in that are currently viewable
-     */
-    int activeWorkspaceCount;
+
     /**The time this window was minimized*/
     int minimizedTimeStamp;
     ///time the window was last pinged
@@ -95,6 +93,7 @@ typedef struct window_info{
      * to the NON_ROOT_DEFAULT_WINDOW_MASKS when processing a new window
      */
     int eventMasks;
+
     /**The dock is only applied to the primary monitor*/
     char onlyOnPrimary;
     /**Special properties the window may have
@@ -102,7 +101,6 @@ typedef struct window_info{
      * for clone windows
      * */
     int properties[WINDOW_STRUCT_ARRAY_SIZE];
-
 } WindowInfo;
 
 struct binding_struct;
@@ -153,78 +151,10 @@ typedef struct{
 
 } Master;
 
-/**
- * Represents a rectangular region where workspaces will be tiled
- */
-typedef struct{
-    /**TODO Needs to be an unsigned long*/
-    int name;
-    /**1 iff the monitor is the primary*/
-    char primary;
-    /**The unmodified size of the monitor*/
-    ///@{
-    short int x;
-    short int y;
-    short int width;
-    short int height;
-    ///@}
-    /** The modified size of the monitor after docks are avoided */
-    ///@{
-    short int viewX;
-    short int viewY;
-    short int viewWidth;
-    short int viewHeight;
-    ///@}
+typedef struct Monitor Monitor;
 
-} Monitor;
-//
-///holds meta data to to determine what tiling function to call and and when/how to call it
-typedef struct {
-    /**
-     * Arguments to pass into layout functions.
-     * These vary with the function but the first arguments are
-     * limit and border
-     */
-    int* args;
-    /**
-     * The name of the layout. Used solely for user
-     */
-    char* name;
-    /**
-     * The function to call to tile the windows
-     * @param the monitor to tile on
-     * @param the list of windows
-     * @param list of arguments to pass
-     */
-    void (*layoutFunction)(Monitor*,Node*,int*);
-    /**
-     * When cycling layouts this, layout will only be applied if this function is not set or returns true.
-     * This function can prevent cycling between layouts that look identical with a set number of windows
-     * @param an argument
-     * @return 1 iff the layout should be cycled to
-     */
-    int (*conditionFunction)(int);
-    /**
-     * Argument to pass to the condition function
-     */
-    int conditionArg;
-} Layout;
+typedef struct Layout Layout;
 
-///The EWMH spec considers 5 layers
-typedef enum {
-    /**Bottom most layer eg desktop*/
-    DESKTOP_LAYER,
-    /**For windows that are below normal windows*/
-    LOWER_LAYER,
-    /**Layer where tiling occurs*/
-    NORMAL_LAYER,
-    /**For windows that are above normal windows - 'always on top windows'*/
-    UPPER_LAYER,
-    /**Top most layer; use for full screen applications*/
-    FULL_LAYER,
-    /**NOT A VALID VALUE; COUNT OF LAYERS*/
-    NUMBER_OF_LAYERS,
-}Layers;
 ///metadata on Workspace
 typedef struct{
     ///workspace index
@@ -238,8 +168,8 @@ typedef struct{
     /// is hiding all windows
     char showingDesktop;
 
-    ///an array of windows stacks for all the layers
-    Node*windows[NUMBER_OF_LAYERS];
+    ///an windows stack
+    Node*windows;
 
     ///the currently applied layout; does not have to be in layouts
     Layout* activeLayout;
@@ -422,6 +352,11 @@ WindowInfo* getWindowInfo(unsigned int win);
  */
 Node*getAllWindows();
 
+/**
+ *
+ * @return list of docks
+ */
+Node*getAllDocks(void);
 
 
 
@@ -482,17 +417,11 @@ void setActiveWorkspaceIndex(int index);
 
 /**
  * @param workspace
- * @return the windows in the normal layer of the workspace
+ * @return the windows stack of the workspace
  */
 Node*getWindowStack(Workspace*workspace);
 
 
-/**
- * @param workspace
- * @param layer
- * @return the windows in the specified workspace at the given layer
- */
-Node* getWindowStackAtLayer(Workspace*workspace,int layer);
 
 int getWorkspaceIndexOfWindow(WindowInfo*winInfo);
 Workspace* getWorkspaceOfWindow(WindowInfo*winInfo);
@@ -572,25 +501,6 @@ void swapMonitors(int index1,int index2);
  */
 Master* getLastMasterToFocusWindow(int win);
 
-/**
- * True if the monitor is marked as primary
- * @param monitor
- * @return
- */
-int isPrimary(Monitor*monitor);
-/**
- *
- * @param id id of monitor TODO need to convert handle long to int conversion
- * @param primary   if the monitor the primary
- * @param geometry an array containing the x,y,width,height of the monitor
- * @return 1 iff a new monitor was added
- */
-int addMonitor(int id,int primary,short geometry[4]);
-/**
- * Resets the viewport to be the size of the rectangle
- * @param m
- */
-void resetMonitor(Monitor*m);
 
 /**
  * Assgins a workspace to a monitor. The workspace is now considered visible
@@ -598,12 +508,6 @@ void resetMonitor(Monitor*m);
  * @param m
  */
 void setMonitorForWorkspace(Workspace*w,Monitor*m);
-/**
- * Removes a monitor and frees related info
- * @param id identifier of the monitor
- * @return 1 iff the montior was removed
- */
-int removeMonitor(unsigned int id);
 
 
 /**
@@ -611,20 +515,14 @@ int removeMonitor(unsigned int id);
  * @return list of all monitors
  */
 Node*getAllMonitors();
+void addMonitor(Monitor*m);
 
-/**
- * Clears all layouts assosiated with the give workspace.
- * The layouts themselves are not freeded
- * @param workspaceIndex the workspace to clear
- */
-void clearLayoutsOfWorkspace(int workspaceIndex);
 /**
  * The the currently used layout for the active workspace.
  * Note that this layout does not have to be in the list of layout for the active workspace
  * @param layout the new active layout
- * @return 1 iff the layout has changed
  */
-int setActiveLayout(Layout*layout);
+void setActiveLayout(Layout*layout);
 
 /**
  *
@@ -633,23 +531,10 @@ int setActiveLayout(Layout*layout);
 Layout* getActiveLayout();
 
 /**
-* Returns the name of the given layout
-* @param layout
-* @return
-*/
-char* getNameOfLayout(Layout*layout);
-/**
  * @param workspaceIndex
  * @return the active layout for the specified workspace
  */
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
-/**
- * Addes an array of layouts to the specified workspace
- * @param workspaceIndex
- * @param layout - layouts to add
- * @param num - number of layouts to add
- */
-void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num);
 
 
 
@@ -674,7 +559,7 @@ Master *createMaster(int id,int pointerId,char*name,int focusColor);
  */
 Workspace*createWorkspaces(int numberOfWorkspaces);
 /**
- * Does a simple seach to see if the window is in the workspace's stack in any layer
+ * Does a simple seach to see if the window is in the workspace's stack
  * Does not handle advaned cases like cloning
  * @param winInfo
  * @param workspaceIndex
@@ -702,15 +587,6 @@ void removeWindowFromAllWorkspaces(WindowInfo* winInfo);
  */
 int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex);
 int removeWindowFromActiveWorkspace(WindowInfo* winInfo);
-/**
- * Adds a windows to a given workspace at a given layer
- * First the window is removed from any layer if the given workspace if present
- * @param winInfo
- * @param workspaceIndex
- * @param layer
- * @return 1 iff the window was actually added
- */
-int addWindowToWorkspaceAtLayer(WindowInfo* winInfo,int workspaceIndex,int layer);
 /**
  *
  * @param info
@@ -748,7 +624,7 @@ void deleteWindowNode(Node*winNode);
  * @return 1 iff this pointer was added
  */
 int addWindowInfo(WindowInfo* wInfo);
-
+void markAsDock(WindowInfo*winInfo);
 
 /**
  * Returns a list of clone windows for the given window
@@ -757,4 +633,7 @@ int addWindowInfo(WindowInfo* wInfo);
  */
 Node* getClonesOfWindow(WindowInfo*winInfo);
 int getLayer(WindowInfo*winInfo);
+
+
+Node*getMonitors(void);
 #endif

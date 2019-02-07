@@ -96,7 +96,7 @@ extern xcb_screen_t* screen;
 /// The last supported standard x event
 #define GENERIC_EVENT_OFFSET LASTEvent
 /// offset for all monitor related events
-#define MONITOR_EVENT_OFFSET GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS
+#define MONITOR_EVENT_OFFSET GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS+1
 /// max value of supported X events (not total events)
 #define LAST_REAL_EVENT   MONITOR_EVENT_OFFSET+8
 

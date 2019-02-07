@@ -16,7 +16,7 @@ pthread_t pThread=0;
 void destroyWindow(int win){
     assert(NULL==xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 }
-static int createWindow(int mapped,int ignored,int userIgnored){
+static int createWindow(int parent,int mapped,int ignored,int userIgnored){
 
     assert(ignored<2);
     assert(dis);
@@ -24,7 +24,7 @@ static int createWindow(int mapped,int ignored,int userIgnored){
     xcb_void_cookie_t c=xcb_create_window_checked (dis,                    /* Connection          */
           XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
           window,                        /* window Id           */
-          root,                  /* parent window       */
+          parent,                  /* parent window       */
           0, 0,                          /* x, y                */
           150, 150,                      /* width, height       */
           10,                            /* border_width        */
@@ -48,16 +48,19 @@ static int createWindow(int mapped,int ignored,int userIgnored){
     return window;
 }
 int createUserIgnoredWindow(void){
-    return createWindow(1,0,1);
+    return createWindow(root,1,0,1);
 }
 int createIgnoredWindow(void){
-    return createWindow(1,1,0);
+    return createWindow(root,1,1,0);
 }
 int createNormalWindow(void){
-    return createWindow(1,0,0);
+    return createWindow(root,1,0,0);
+}
+int createNormalSubWindow(int parent){
+    return createWindow(parent,1,0,0);
 }
 int  createUnmappedWindow(void){
-    return createWindow(0,0,0);
+    return createWindow(root,0,0,0);
 }
 
 int mapWindow(int win){
@@ -291,4 +294,13 @@ int checkStackingOrder(int* stackingOrder,int num){
     }
     free(reply);
     return counter==num;
+}
+int ignoreFunction(WindowInfo*winInfo){
+   return winInfo->implicitType;
+}
+
+void addDummyIgnoreRule(void){
+    
+    static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);
+    appendRule(ProcessingWindow,&ignoreRule);
 }

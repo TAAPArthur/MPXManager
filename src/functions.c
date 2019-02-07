@@ -9,10 +9,13 @@
 #include <err.h>
 /// \endcond
 #include "functions.h"
+#include "layouts.h"
 #include "wmfunctions.h"
+#include "windows.h"
 #include "mywm-util.h"
 #include "logger.h"
 #include "bindings.h"
+#include "devices.h"
 #include "globals.h"
 
 void cycleWindows( int delta){
@@ -158,39 +161,9 @@ void sendWindowToWorkspaceByName(WindowInfo*winInfo,char*name){
     moveWindowToWorkspace(winInfo, getIndexFromName(name));
 }
 
-void cycleLayouts(int dir){
-    Node*n=getActiveWorkspace()->layouts;
-    if(dir>=0)
-        FOR_AT_MOST(n,dir)
-    else
-        FOR_AT_MOST_REVERSED(n,-dir)
-
-    getActiveWorkspace()->layouts=n;
-    if(setActiveLayout(getValue(n)))
-        retile();
-}
-void toggleLayout(Layout* layout){
-    if(layout!=getActiveLayout()){
-        if(setActiveLayout(layout))
-            retile();
-    }
-    else cycleLayouts(0);
-}
-void retile(void){
-    tileWorkspace(getActiveWorkspaceIndex());
-}
 
 
 
-void setLastKnowMasterPosition(int x,int y){
-    memcpy(getActiveMaster()->prevMousePos,getActiveMaster()->currentMousePos,sizeof(getActiveMaster()->prevMousePos));
-    getActiveMaster()->currentMousePos[0]=x;
-    getActiveMaster()->currentMousePos[1]=y;
-}
-void getMouseDelta(Master*master,short result[2]){
-    for(int i=0;i<2;i++)
-        result[i]=master->currentMousePos[i]-master->prevMousePos[i];
-}
 
 void resizeWindowWithMouse(WindowInfo*winInfo){
     assert(winInfo);
@@ -230,18 +203,10 @@ void killFocusedWindow(void){
     if(getFocusedWindow())
         killWindowInfo(getFocusedWindow());
 }
-void floatWindow(WindowInfo* winInfo){
-    addMask(winInfo, FLOATING_MASK);
-    moveWindowToLayer(winInfo,UPPER_LAYER);
-
-}
-void sinkWindow(WindowInfo* winInfo){
-    removeMask(winInfo, FLOATING_MASK);
-    moveWindowToLayer(winInfo,NORMAL_LAYER);
-}
 void setMasterTarget(int id){
     getActiveMaster()->targetWindow=id;
 }
+
 void startMouseOperation(WindowInfo*winInfo){
     setMasterTarget(winInfo->id);
     lockWindow(winInfo);

@@ -13,6 +13,12 @@
 ///list of all windows
 Node* windows;
 
+/**
+ * List of docks.
+ * Docks are a special kind of window that isn't managed by us
+ */
+Node*docks;
+
 ///lists of all masters
 Node* masterList;
 ///the active master
@@ -20,10 +26,6 @@ Master* master;
 
 ///list of all monitors
 Node*monitors;
-///width of the screen
-int screenWidth;
-///height of the screen
-int screenHeigth;
 
 ///list of all workspaces
 Workspace*workspaces;
@@ -31,6 +33,8 @@ Workspace*workspaces;
 int numberOfWorkspaces;
 char active=0;
 
+/// called when a dock is added/removed
+extern void (*onDockAddRemove)();
 
 
 
@@ -39,20 +43,18 @@ void destroyContext(){
         return;
     active=0;
     while(isNotEmpty(getAllWindows()))
-        removeWindow(getIntValue(getAllWindows()));
+        deleteWindowNode(getAllWindows());
     deleteList(getAllWindows());
+    destroyList(getAllDocks());
 
     while(isNotEmpty(getAllMasters()))
         removeMaster(getIntValue(getAllMasters()));
     deleteList(getAllMasters());
 
-    while(isNotEmpty(getAllMonitors()))
-        removeMonitor(getIntValue(getAllMonitors()));
     deleteList(getAllMonitors());
 
     for(int i=numberOfWorkspaces-1;i>=0;i--){
-       for(int n=0;n<NUMBER_OF_LAYERS;n++)
-           destroyList(workspaces[i].windows[n]);
+       destroyList(workspaces[i].windows);
        destroyList(workspaces[i].layouts);
     }
     free(workspaces);
@@ -62,11 +64,13 @@ void createContext(int numberOfWorkspacesToCreate){
     assert(!active);
     active=1;
     windows=createEmptyHead();
+    docks=createEmptyHead();
     masterList=createEmptyHead();
     master=NULL;
     numberOfWorkspaces=numberOfWorkspacesToCreate;
     workspaces=createWorkspaces(numberOfWorkspaces);
     monitors=createEmptyHead();
+
 }
 WindowInfo* createWindowInfo(unsigned int id){
     WindowInfo *wInfo =calloc(1,sizeof(WindowInfo));
@@ -110,42 +114,21 @@ Workspace*createWorkspaces(int size){
         workspaces[i].monitor=NULL;
         workspaces[i].activeLayout=NULL;
         workspaces[i].layouts=createCircularHead(NULL);
-        for(int n=0;n<NUMBER_OF_LAYERS;n++)
-            workspaces[i].windows[n]=createEmptyHead();
+        workspaces[i].windows=createEmptyHead();
     }
     return workspaces;
 }
-void clearLayoutsOfWorkspace(int workspaceIndex){
-    clearList(workspaces[workspaceIndex].layouts);
-    workspaces[workspaceIndex].activeLayout=NULL;
-}
-int setActiveLayout(Layout*layout){
-    if(getActiveLayout()==layout)
-        return 0;
+void setActiveLayout(Layout*layout){
     getActiveWorkspace()->activeLayout=layout;
-    return 1;
 }
 
 Layout* getActiveLayout(){
     return getActiveLayoutOfWorkspace(getActiveWorkspaceIndex());
 }
-
-char* getNameOfLayout(Layout*layout){
-    if(layout)
-        return layout->name;
-    else return NULL;
-}
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex){
     return workspaces[workspaceIndex].activeLayout;
 }
-void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num){
-    assert(workspaceIndex>=0);
-    assert(workspaceIndex<numberOfWorkspaces);
-    if(num && !isNotEmpty(getWorkspaceByIndex(workspaceIndex)->layouts))
-        getWorkspaceByIndex(workspaceIndex)->activeLayout=layout;
-    for(int n=0;n<num;n++)
-        insertTail(getWorkspaceByIndex(workspaceIndex)->layouts, &layout[n]);
-}
+
 
 int getNumberOfWorkspaces(){
     return numberOfWorkspaces;
@@ -233,9 +216,8 @@ int isWorkspaceVisible(int index){
     return workspaces[index].monitor?1:0;
 }
 int isWorkspaceNotEmpty(int index){
-    for(int i=0;i<NUMBER_OF_LAYERS;i++)
-        if(isNotEmpty(workspaces[index].windows[i]))
-            return 1;
+    if(isNotEmpty(workspaces[index].windows))
+        return 1;
     return 0;
 
 }
@@ -261,7 +243,7 @@ Workspace*getNextWorkspace(int dir,int mask){
 Workspace*getWorkspaceFromMonitor(Monitor*monitor){
     assert(monitor);
     for(int i=0;i<numberOfWorkspaces;i++)
-        if(workspaces[i].monitor && workspaces[i].monitor->name==monitor->name)
+        if(workspaces[i].monitor==monitor)
             return &workspaces[i];
     return NULL;
 }
@@ -295,10 +277,7 @@ Node* getNextWindowInFocusStack(int dir){
        return focusedNode->prev?focusedNode->prev:getActiveMasterWindowStack();
 }
 Node*getWindowStack(Workspace*workspace){
-    return getWindowStackAtLayer(workspace,NORMAL_LAYER);
-}
-Node* getWindowStackAtLayer(Workspace*workspace,int layer){
-    return workspace->windows[layer];
+    return workspace->windows;
 }
 int getWorkspaceIndexOfWindow(WindowInfo*winInfo){
     return winInfo->workspaceIndex;
@@ -307,10 +286,7 @@ Workspace* getWorkspaceOfWindow(WindowInfo*winInfo){
     return getWorkspaceByIndex(getWorkspaceIndexOfWindow(winInfo));
 }
 Node* getWindowStackOfWindow(WindowInfo*winInfo){
-   return getWindowStackAtLayer(getWorkspaceOfWindow(winInfo),getLayer(winInfo));
-}
-int getLayer(WindowInfo*winInfo){
-    return winInfo->layer;
+   return getWindowStack(getWorkspaceOfWindow(winInfo));
 }
 
 //Workspace methods
@@ -362,51 +338,6 @@ int removeMaster(unsigned int id){
 }
 
 
-int removeMonitor(unsigned int id){
-    Node *n=isInList(monitors, id);
-
-    if(!n)
-        return 0;
-
-    Workspace*w=getWorkspaceFromMonitor(getValue(n));
-    if(w)
-        w->monitor=NULL;
-    if(n)
-        deleteNode(n);
-    return n?1:0;
-}
-
-int isPrimary(Monitor*monitor){
-    return monitor->primary;
-}
-int addMonitor(int id,int primary,short geometry[4]){
-    if(isInList(monitors, id))
-        return 0;
-
-    Workspace*workspace;
-    if(!isWorkspaceVisible(getActiveWorkspaceIndex()))
-        workspace=getActiveWorkspace();
-    else {
-
-        workspace=getNextWorkspace(1, HIDDEN|NON_EMPTY);
-        if(!workspace){
-            workspace=getNextWorkspace(1, HIDDEN);
-        }
-    }
-    Monitor*m=calloc(1,sizeof(Monitor));
-    *m=(Monitor){id,primary?1:0};
-    memcpy(&m->x, geometry, sizeof(short)*4);
-    insertHead(monitors, m);
-    resetMonitor(m);
-    if(workspace)
-        workspace->monitor=m;
-    return 1;
-}
-
-void resetMonitor(Monitor*m){
-    assert(m);
-    memcpy(&m->viewX, &m->x, sizeof(short)*4);
-}
 
 
 void removeWindowFromAllWorkspaces(WindowInfo* winInfo){
@@ -422,13 +353,7 @@ int isWindowInVisibleWorkspace(WindowInfo* winInfo){
 Node* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex){
     if(!winInfo)return NULL;
     Workspace*workspace=getWorkspaceByIndex(workspaceIndex);
-    Node*node;
-    for(int i=0;i<NUMBER_OF_LAYERS;i++){
-        node=isInList(workspace->windows[i], winInfo->id);
-        if(node)
-            return node;
-    }
-    return NULL;
+    return isInList(workspace->windows,winInfo->id);
 }
 int removeWindowFromActiveWorkspace(WindowInfo* winInfo){
     return removeWindowFromWorkspace(winInfo,getActiveWorkspaceIndex());
@@ -447,25 +372,26 @@ int removeWindowFromWorkspace(WindowInfo* winInfo,int workspaceIndex){
 int addWindowToActiveWorkspace(WindowInfo*winInfo){
     return addWindowToWorkspace(winInfo,getActiveWorkspaceIndex());
 }
-int addWindowToWorkspace(WindowInfo*info,int workspaceIndex){
-    return addWindowToWorkspaceAtLayer(info, workspaceIndex, NORMAL_LAYER);
-}
-int addWindowToWorkspaceAtLayer(WindowInfo*winInfo,int workspaceIndex,int layer){
+int addWindowToWorkspace(WindowInfo*winInfo,int workspaceIndex){
     assert(workspaceIndex>=0);
-    assert(layer>=0);
     assert(workspaceIndex<numberOfWorkspaces);
     Workspace*workspace=getWorkspaceByIndex(workspaceIndex);
     assert(winInfo!=NULL);
-    if(addUnique(workspace->windows[layer], winInfo)){
+    if(addUnique(workspace->windows, winInfo)){
         winInfo->workspaceIndex=workspaceIndex;
-        winInfo->layer=layer;
         return 1;
     }
     return 0;
 }
 
-int addWindowInfo(WindowInfo* wInfo){
-    return addUnique(getAllWindows(), wInfo);
+void markAsDock(WindowInfo*winInfo){winInfo->dock=1;}
+int addWindowInfo(WindowInfo* winInfo){
+    if(winInfo->dock){
+        addUnique(getAllDocks(),winInfo);
+        if(onDockAddRemove)
+            onDockAddRemove();
+     }
+    return addUnique(getAllWindows(), winInfo);
 }
 
 
@@ -501,7 +427,7 @@ void deleteWindowNode(Node*winNode){
 int removeWindow(unsigned int winToRemove){
     assert(winToRemove!=0);
 
-    Node *winNode =isInList(windows, winToRemove);
+    Node *winNode =isInList(getAllWindows(), winToRemove);
     if(!winNode)
         return 0;
 
@@ -509,6 +435,11 @@ int removeWindow(unsigned int winToRemove){
     FOR_EACH(list,removeWindowFromMaster(getValue(list),winToRemove));
     removeWindowFromAllWorkspaces(getValue(winNode));
 
+    if(((WindowInfo*)getValue(winNode))->dock){
+        softDeleteNode(isInList(getAllDocks(), winToRemove));
+        if(onDockAddRemove)
+            onDockAddRemove();
+    }
     deleteWindowNode(winNode);
     return 1;
 }
@@ -517,6 +448,25 @@ Node*getAllWindows(void){
     return windows;
 }
 
+Node*getAllDocks(){
+    return docks;
+}
+
+void addMonitor(Monitor*m){
+    Workspace*workspace;
+    if(!isWorkspaceVisible(getActiveWorkspaceIndex()))
+        workspace=getActiveWorkspace();
+    else {
+
+        workspace=getNextWorkspace(1, HIDDEN|NON_EMPTY);
+        if(!workspace){
+            workspace=getNextWorkspace(1, HIDDEN);
+        }
+    }
+    if(workspace)
+        workspace->monitor=m;
+    insertHead(getAllMonitors(), m);
+}
 Node*getAllMonitors(void){
     return monitors;
 }

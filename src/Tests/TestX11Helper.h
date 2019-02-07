@@ -13,6 +13,7 @@
 
 #include "../default-rules.h"
 #include "../xsession.h"
+#include "../windows.h"
 #include "../logger.h"
 #include "../events.h"
 #include "../bindings.h"
@@ -27,8 +28,10 @@ extern pthread_t pThread;
 void destroyWindow(int win);
 int createUserIgnoredWindow(void);
 int  createUnmappedWindow(void);
+void addDummyIgnoreRule(void);
 int createIgnoredWindow(void);
 int createNormalWindow(void);
+int createNormalSubWindow(int parent);
 int mapWindow(int win);
 int  mapArbitraryWindow(void);
 void createSimpleContext();

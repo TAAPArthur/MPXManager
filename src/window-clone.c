@@ -12,6 +12,7 @@
 #include "window-clone.h"
 #include "default-rules.h"
 #include "logger.h"
+#include "windows.h"
 
 
 WindowInfo* cloneWindow(WindowInfo*winInfo){
@@ -71,11 +72,9 @@ void swapWithOriginal(void){
         WindowInfo*origin=getWindowInfo(winInfo->cloneOrigin);
         LOG(LOG_LEVEL_TRACE,"swaping clone %d with %d\n",winInfo->id,origin?origin->id:0);
         if(origin){
-            int t1=winInfo->workspaceIndex,t2=winInfo->layer;
+            int index=winInfo->workspaceIndex;
             winInfo->workspaceIndex=origin->workspaceIndex;
-            winInfo->layer=origin->layer;
-            origin->workspaceIndex=t1;
-            origin->layer=t2;
+            origin->workspaceIndex=index;
             swap(isInList(getWindowStackOfWindow(winInfo),winInfo->id),
                 isInList(getWindowStackOfWindow(origin),origin->id));
         }

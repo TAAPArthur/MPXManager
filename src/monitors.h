@@ -6,12 +6,57 @@
 
 #include "mywm-util.h"
 
+/**
+ * Represents a rectangular region where workspaces will be tiled
+ */
+typedef struct Monitor{
+    /**id for monitor*/
+    long id;
+    /**1 iff the monitor is the primary*/
+    char primary;
+    /**The unmodified size of the monitor*/
+    ///@{
+    short int x;
+    short int y;
+    short int width;
+    short int height;
+    ///@}
+    /** The modified size of the monitor after docks are avoided */
+    ///@{
+    short int viewX;
+    short int viewY;
+    short int viewWidth;
+    short int viewHeight;
+    ///@}
+
+} Monitor;
 
 /**
- *
- * @return list of docks
+ * True if the monitor is marked as primary
+ * @param monitor
+ * @return
  */
-Node*getAllDocks(void);
+int isPrimary(Monitor*monitor);
+/**
+ *
+ * @param id id of monitor TODO need to convert handle long to int conversion
+ * @param primary   if the monitor the primary
+ * @param geometry an array containing the x,y,width,height of the monitor
+ * @return 1 iff a new monitor was added
+ */
+int updateMonitor(long id,int primary,short geometry[4]);
+/**
+ * Removes a monitor and frees related info
+ * @param id identifier of the monitor
+ * @return 1 iff the montior was removed
+ */
+int removeMonitor(unsigned long id);
+/**
+ * Resets the viewport to be the size of the rectangle
+ * @param m
+ */
+void resetMonitor(Monitor*m);
+
 
 /**
  * Add properties to winInfo that will be used to avoid docks
@@ -27,17 +72,11 @@ void setDockArea(WindowInfo* winInfo,int numberofProperties,int properties[WINDO
 /**
  * Reads (one of) the struct property to loads the info into properties and
  * add a dock to the list of docks.
- * @param info the dock to add
- * @return true if this dock was added
+ * @param info the dock
+ * @return true if properties were successfully loaded
  */
-int addDock(WindowInfo* info);
+int loadDockProperties(WindowInfo* info);
 
-/**
- * Removes a dock
- * @param winToRemove
- * @return 1 if a dock was actually removed
- */
-int removeDock(unsigned int winToRemove);
 /**
  * Query for all monitors
  */
