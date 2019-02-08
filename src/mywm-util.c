@@ -11,27 +11,28 @@
 #include "mywm-util.h"
 
 ///list of all windows
-Node* windows;
+static Node* windows;
 
 /**
  * List of docks.
  * Docks are a special kind of window that isn't managed by us
  */
-Node*docks;
+static Node*docks;
 
 ///lists of all masters
-Node* masterList;
+static Node* masterList;
 ///the active master
-Master* master;
+static Master* master;
 
 ///list of all monitors
-Node*monitors;
+static Node*monitors;
 
 ///list of all workspaces
-Workspace*workspaces;
+static Workspace*workspaces;
 ///number of workspaces
-int numberOfWorkspaces;
-char active=0;
+static int numberOfWorkspaces;
+/// whether there is an active context
+static char active=0;
 
 /// called when a dock is added/removed
 extern void (*onDockAddRemove)();

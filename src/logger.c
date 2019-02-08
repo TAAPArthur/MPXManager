@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "globals.h"
 #include "windows.h"
+#include "monitors.h"
 
 extern xcb_connection_t *dis;
 
@@ -45,7 +46,10 @@ void printMask(int mask){
     PRINT_MASK(Y_MAXIMIZED_MASK,mask);
     PRINT_MASK(FULLSCREEN_MASK,mask);
     PRINT_MASK(ROOT_FULLSCREEN_MASK,mask);
+    PRINT_MASK(BELOW_MASK,mask);
+    PRINT_MASK(ABOVE_MASK,mask);
     PRINT_MASK(NO_TILE_MASK,mask);
+
     PRINT_MASK(STICKY_MASK,mask);
     PRINT_MASK(HIDDEN_MASK,mask);
     PRINT_MASK(EXTERNAL_RESIZE_MASK,mask);
@@ -77,43 +81,65 @@ void printMasterSummary(void){
     );
     LOG(LOG_LEVEL_DEBUG,"\n");
 }
-void printSummary(void){
-    LOG(LOG_LEVEL_DEBUG,"Summary:\n");
-    printMasterSummary();
-    Node*n=getActiveMasterWindowStack();
+void printMonitorSummary(void){
+    Node *n=getAllMonitors();
+    FOR_EACH(n,
+        Monitor *m=getValue(n);
+        LOG(LOG_LEVEL_DEBUG,"Monitor %ld primary %d",m->id,m->primary);
+        PRINT_ARR(&m->x,4);
+        PRINT_ARR(&m->viewX,4);
+    );
+    LOG(LOG_LEVEL_DEBUG,"\n");
+}
+void printWindowStackSummary(Node*n){
     FOR_EACH(n,
         WindowInfo*winInfo=getValue(n);
         LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
     );
     LOG(LOG_LEVEL_DEBUG,"\n");
-    for(int i=0;i<getNumberOfWorkspaces();i++){
-        Node*n=getWindowStack(getWorkspaceByIndex(i));
-        if(!isNotEmpty(n))continue;
-        LOG(LOG_LEVEL_DEBUG,"%d \n",i);
+}
+void printSummary(void){
+    LOG(LOG_LEVEL_DEBUG,"Summary:\n");
+    printMasterSummary();
+    printMonitorSummary();
+    Node*n=getActiveMasterWindowStack();
+    if(isNotEmpty(n)){
+        LOG(LOG_LEVEL_DEBUG,"Active master window stack:\n");
         FOR_EACH(n,
             WindowInfo*winInfo=getValue(n);
             LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
         );
-        LOG(LOG_LEVEL_DEBUG,"\n");
+    }
+    LOG(LOG_LEVEL_DEBUG,"\n");
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        Node*n=getWindowStack(getWorkspaceByIndex(i));
+        if(!isNotEmpty(n))continue;
+        LOG(LOG_LEVEL_DEBUG,"%d \n",i);
+        printWindowStackSummary(n);
+    }
+    if(isNotEmpty(getAllDocks())){
+        LOG(LOG_LEVEL_DEBUG,"%d Docks: \n",getSize(getAllDocks()));
+        printWindowStackSummary(getAllDocks());
     }
 }
 void dumpAllWindowInfo(void){
     Node*n=getAllWindows();
-    FOR_EACH(n,dumpWindowInfo(getValue(n)));
+    
+    FOR_EACH(n,dumpWindowInfo(getValue(n));LOG(LOG_LEVEL_DEBUG,"\n"););
 }
 
 void dumpWindowInfo(WindowInfo* win){
     if(!win)return;
 
-    LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x) Transient for %d\n",win->id,win->id,win->groupId,win->groupId,win->transientFor);
-    LOG(LOG_LEVEL_DEBUG,"Lables class %s (%s)\n",win->className,win->instanceName);
-    LOG(LOG_LEVEL_DEBUG,"Type is %d (%s) implicit: %d\n",win->type,win->typeName,win->implicitType);
+    LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n",win->id,win->id,win->groupId,win->groupId,win->transientFor,win->transientFor);
+    LOG(LOG_LEVEL_DEBUG,"Labels class %s (%s)\n",win->className,win->instanceName);
+    LOG(LOG_LEVEL_DEBUG,"Type is %d (%s) implicit: %d Dock %d\n",win->type,win->typeName,win->implicitType,win->dock);
 
     LOG(LOG_LEVEL_DEBUG,"Title class %s\n",win->title);
 
     LOG(LOG_LEVEL_DEBUG,"Mask %d\n",win->mask);
     printMask(win->mask);
-    LOG(LOG_LEVEL_DEBUG,"last active workspace %d\n",win->workspaceIndex);
+    LOG(LOG_LEVEL_DEBUG,"Workspace %d\n",win->workspaceIndex);
 }
 
 void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms){

@@ -145,7 +145,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
 
     mods&=~IGNORE_MASK;
 
-    LOG(LOG_LEVEL_DEBUG,"detail: %d mod: %d mask: %d\n\n",keyCode,mods,mask);
+    LOG(LOG_LEVEL_DEBUG,"detail: %d mod: %d mask: %d\n",keyCode,mods,mask);
 
     Binding* chainBinding=getActiveBinding();
     int bindingsTriggered=0;
@@ -156,6 +156,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
                 LOG(LOG_LEVEL_DEBUG,"Calling chain binding\n");
                 int result=callBoundedFunction(&chainBinding[i].boundFunction,winInfo);
                 if(chainBinding[i].endChain){
+                    LOG(LOG_LEVEL_DEBUG,"chain is ending because exit key was pressed\n");
                     //chain has ended
                     endChain();
                 }

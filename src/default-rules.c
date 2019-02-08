@@ -195,10 +195,12 @@ void onUnmapEvent(void){
 void focusFollowMouse(void){
     xcb_input_enter_event_t*event= getLastEvent();
     setActiveMasterByDeviceId(event->deviceid);
-    WindowInfo*winInfo=getWindowInfo(event->event);
+    int win=event->event;
+    WindowInfo*winInfo=getWindowInfo(win);
+    LOG(LOG_LEVEL_DEBUG,"focus following mouse %d win %d\n",getActiveMaster()->id,win);
     if(winInfo)
         focusWindowInfo(winInfo);
-    else focusWindow(event->event);
+    else focusWindow(win);
 }
 void onFocusInEvent(void){
     xcb_input_focus_in_event_t*event= getLastEvent();
@@ -344,7 +346,7 @@ WindowInfo* getTargetWindow(int root,int event,int child){
 }
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"device event %d %d %d %d %d %d %d %d\n\n",
+    LOG(LOG_LEVEL_DEBUG,"device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
         event->sequence,event->event_type,event->deviceid,event->sourceid,event->flags,
         event->root,event->event,event->child);
 
