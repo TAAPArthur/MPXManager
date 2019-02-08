@@ -594,6 +594,14 @@ START_TEST(test_arraylist){
     }
 }END_TEST
 
+START_TEST(test_get_time){
+    unsigned int time=getTime();
+    for(int i=0;i<100;i++){
+        assert(time<=getTime());
+        time=getTime();
+        msleep(11);
+    }
+}END_TEST
 
 Suite *utilSuite() {
     Suite*s = suite_create("Util");
@@ -642,6 +650,10 @@ Suite *utilSuite() {
 
     tc_core = tcase_create("ArrayList");
     tcase_add_test(tc_core, test_arraylist);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("MISC");
+    tcase_add_test(tc_core,test_get_time);
     suite_add_tcase(s, tc_core);
 
     return s;

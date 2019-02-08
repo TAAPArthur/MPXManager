@@ -59,13 +59,6 @@ void testWindowAddRemove(Node*head,
     }
 }
 
-START_TEST(test_get_time){
-    unsigned int time=getTime();
-    for(int i=0;i<100;i++){
-        assert(time<=getTime());
-        time=getTime();
-    }
-}END_TEST
 
 START_TEST(test_init_context){
     assert(!isNotEmpty(getAllWindows()));
@@ -283,7 +276,6 @@ START_TEST(test_last_master_to_focus_window){
         onWindowFocus(1);
         assert(getLastMasterToFocusWindow(1));
         assert(getLastMasterToFocusWindow(1)->id==i);
-        msleep(1);
     }
     for(int i=size*2-1;i>2;i-=2){
         removeMaster(i);
@@ -771,9 +763,7 @@ void teardown(){
 Suite *mywmUtilSuite(void) {
     Suite*s = suite_create("Context");
 
-    TCase*tc_core = tcase_create("MISC");
-    tcase_add_test(tc_core,test_get_time);
-    suite_add_tcase(s, tc_core);
+    TCase*tc_core;
 
     tc_core = tcase_create("Init");
     tcase_add_checked_fixture(tc_core, setup, teardown);

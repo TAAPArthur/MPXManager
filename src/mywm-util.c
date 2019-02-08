@@ -3,7 +3,6 @@
  */
 
 /// \cond
-#include <time.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,15 +32,6 @@ int numberOfWorkspaces;
 char active=0;
 
 
-void msleep(int mil){
-    int sec=mil/1000;
-    mil=mil%1000;
-    nanosleep((const struct timespec[]){{sec, mil*1e6}}, NULL);
-}
-
-unsigned int getTime () {
-   return time(NULL);
-}
 
 
 void destroyContext(){

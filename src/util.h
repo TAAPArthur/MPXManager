@@ -45,6 +45,15 @@ typedef struct ArrayList{
 #define MAX(a,b) (a>b?a:b)
 
 /**
+ * @return the current time (ms)
+ */
+unsigned int getTime ();
+/**
+ * Sleep of mil milliseconds
+ * @param mil number of milliseconds to sleep
+ */
+void msleep(int mil);
+/**
  * Creates a pointer to a head of an empty node list.
  *
  * This function is equivalent to calling createHead(NULL)

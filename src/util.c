@@ -4,6 +4,8 @@
 /// \cond
 #include <assert.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
 /// \endcond
 
 #include "util.h"
@@ -12,6 +14,18 @@
 #ifndef INITIAL_ARRAY_LIST_CAP
     #define INITIAL_ARRAY_LIST_CAP 8
 #endif
+
+void msleep(int mil){
+    int sec=mil/1000;
+    mil=mil%1000;
+    nanosleep((const struct timespec[]){{sec, mil*1e6}}, NULL);
+}
+
+unsigned int getTime () {
+    struct timeval start;
+    gettimeofday(&start, NULL);
+    return start.tv_sec*1000+start.tv_usec*1e-3;
+}
 
 static void _join(Node*prev,Node*next){
     if(prev)

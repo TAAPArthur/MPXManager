@@ -249,15 +249,6 @@ typedef struct{
 
 
 
-/**
- * @return the current time in seconds
- */
-unsigned int getTime ();
-/**
- * Sleep of mil milliseconds
- * @param mil number of milliseconds to sleep
- */
-void msleep(int mil);
 
 /**
  * Initializes a context object to default values.
