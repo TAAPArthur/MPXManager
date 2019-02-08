@@ -317,11 +317,13 @@ void onClientMessage(void){
     }
     else if(message==ewmh->WM_PROTOCOLS){
         if(data.data32[0]==ewmh->_NET_WM_PING){
-            LOG(LOG_LEVEL_DEBUG,"Ping received\n");
-            WindowInfo*winInfo=getWindowInfo(data.data32[2]);
-            if(winInfo){
-                LOG(LOG_LEVEL_DEBUG,"Updated ping timestamp for window %d\n\n",winInfo->id);
-                winInfo->pingTimeStamp=getTime();
+            if(win==root){
+                LOG(LOG_LEVEL_DEBUG,"Pong received\n");
+                WindowInfo*winInfo=getWindowInfo(data.data32[2]);
+                if(winInfo){
+                    LOG(LOG_LEVEL_DEBUG,"Updated ping timestamp for window %d\n\n",winInfo->id);
+                    winInfo->pingTimeStamp=getTime();
+                }
             }
         }
     }

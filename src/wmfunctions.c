@@ -154,25 +154,33 @@ int getSavedWorkspaceIndex(xcb_window_t win){
 }
 
 void* waitForWindowToDie(int id){
-    int wait=1;
-    while(wait && !isShuttingDown()){
-        xcb_ewmh_send_wm_ping(ewmh, id, 0);
-        flush();
-        msleep(KILL_TIMEOUT);
-        if(!isShuttingDown()){
-            lock();
-            WindowInfo*winInfo=getWindowInfo(id);
-            if(!winInfo){
-                LOG(LOG_LEVEL_DEBUG,"Window %d no longer exists\n", id);
-                wait=0;
-            }
-            else if(getTime()-winInfo->pingTimeStamp>=KILL_TIMEOUT){
-                LOG(LOG_LEVEL_DEBUG,"Window %d is not responsive; force killing\n", id);
-                killWindow(id);
-                wait=0;
-            }
-            unlock();
+    lock();
+    WindowInfo*winInfo=getWindowInfo(id);
+    int hasPingMask=0;
+    if(winInfo){
+        winInfo->pingTimeStamp=getTime();
+        hasPingMask=hasMask(winInfo, WM_PING_MASK);
+    }
+    unlock();
+    while(!isShuttingDown()){
+        if(hasPingMask){
+            xcb_ewmh_send_wm_ping(ewmh, id, 0);
+            flush();
         }
+        lock();
+        winInfo=getWindowInfo(id);
+        int timeout=winInfo?getTime()-winInfo->pingTimeStamp>=KILL_TIMEOUT:0;
+        unlock();
+        if(!winInfo){
+            LOG(LOG_LEVEL_DEBUG,"Window %d no longer exists\n", id);
+            break;
+        }
+        else if(timeout){
+            LOG(LOG_LEVEL_DEBUG,"Window %d is not responsive; force killing\n", id);
+            lock();killWindow(id);unlock();
+            break;
+        }
+        msleep(KILL_TIMEOUT);
     }
     LOG(LOG_LEVEL_DEBUG,"Finshed waiting for window %d\n", id);
     return NULL;
@@ -190,8 +198,7 @@ void killWindowInfo(WindowInfo* winInfo){
         ev.data.data32[1] = getTime();
         xcb_send_event(dis, 0, winInfo->id, XCB_EVENT_MASK_NO_EVENT, (char *)&ev);
         LOG(LOG_LEVEL_INFO,"Sending request to delete window\n");
-        if(hasMask(winInfo, WM_PING_MASK))
-            runInNewThread((void *(*)(void *))waitForWindowToDie,(void*) winInfo->id,1);
+        runInNewThread((void *(*)(void *))waitForWindowToDie,(void*) winInfo->id,1);
     }
     else{
         killWindow(winInfo->id);

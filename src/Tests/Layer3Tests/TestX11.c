@@ -91,35 +91,35 @@ START_TEST(test_activate_window){
     assert(activateWindow(getWindowInfo(win2)));
 }END_TEST
 START_TEST(test_delete_window_request){
-    KILL_TIMEOUT=20;
+    KILL_TIMEOUT=_i==0?0:100;
     int fd[2];
-    int fd2[2];
     pipe(fd);
-    pipe(fd2);
     if(!fork()){
         openXDisplay();
         int win=mapArbitraryWindow();
         xcb_atom_t atoms[]={WM_DELETE_WINDOW,ewmh->_NET_WM_PING};
-        xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, _i?2:1, atoms);
+        xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, _i==0?2:1, atoms);
+        consumeEvents();
         write(fd[1],&win,sizeof(int));
         close(fd[1]);
         close(fd[0]);
         flush();
-        read(fd2[0],&win,sizeof(int));
         close(1);
         close(2);
-        close(fd2[1]);
-        close(fd2[0]);
-        if(_i==1){
+        
+        if(_i){
             msleep(KILL_TIMEOUT*10);
-            mapArbitraryWindow();
-            LOG(LOG_LEVEL_NONE,"Code should have terminated\n");
-            msleep(KILL_TIMEOUT*10000);
         }
-        waitForNormalEvent(XCB_CLIENT_MESSAGE);
-        closeConnection();
-        msleep(KILL_TIMEOUT*2);
-        exit(0);
+        if(_i==0){
+            /// wait for client message
+            waitForNormalEvent(XCB_CLIENT_MESSAGE);
+            exit(0);
+        }
+        flush();
+        assert(!xcb_connection_has_error(dis));
+        if(checkStackingOrder(&win,1)==0)
+            exit(0);
+        WAIT_UNTIL_TRUE(0);
     }
     int win;
     read(fd[0],&win,sizeof(int));
@@ -129,25 +129,23 @@ START_TEST(test_delete_window_request){
     WindowInfo*winInfo=getWindowInfo(win);
     assert(hasMask(winInfo, WM_DELETE_WINDOW_MASK));
     consumeEvents();
+    START_MY_WM
     lock();
-    killWindowInfo(winInfo);
-    flush();
-    unlock();
-    write(fd2[1],&win,sizeof(int));
-    close(fd2[0]);
-    close(fd2[1]);
-    if(_i==2){
-        lock();
+    if(_i!=1){
+        if(_i==2){
+            WindowInfo dummy={.id=1};
+            addMask(&dummy,WM_DELETE_WINDOW_MASK);
+            killWindowInfo(&dummy);
+            msleep(KILL_TIMEOUT*2);
+        }
+        killWindowInfo(winInfo);
+        flush();
+    }
+    else{ 
         removeWindow(win);
         killWindow(win);
-        unlock();
-        msleep(KILL_TIMEOUT*2);
     }
-    else if(_i==3){
-        requestShutdown();
-        msleep(KILL_TIMEOUT*2);
-        return;
-    }
+    unlock();
     wait(NULL);
 }END_TEST
 
@@ -420,7 +418,7 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
 
-    tcase_add_loop_test(tc_core, test_delete_window_request,1,4);
+    tcase_add_loop_test(tc_core, test_delete_window_request,0,3);
     tcase_add_test(tc_core, test_activate_window);
     tcase_add_test(tc_core, test_set_border_color);
     tcase_add_test(tc_core, test_workspace_activation);
