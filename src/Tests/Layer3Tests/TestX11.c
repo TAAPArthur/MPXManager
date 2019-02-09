@@ -300,24 +300,6 @@ START_TEST(test_float_sink_window){
     WAIT_UNTIL_TRUE(isTileable(winInfo));
 }END_TEST
 
-START_TEST(test_toggle_show_desktop){
-    LOAD_SAVED_STATE=0;
-    int win[10];
-    for(int i=0;i<LEN(win);i++){
-        win[i]=mapWindow(createNormalWindow());
-    }
-    flush();
-
-    WAIT_UNTIL_TRUE(getSize(getAllWindows())==LEN(win));
-
-    toggleShowDesktop();
-
-    Node*n=getAllWindows();
-    FOR_EACH(n,WAIT_UNTIL_TRUE(!hasMask(getValue(n),MAPPED_MASK)))
-    toggleShowDesktop();
-    n=getAllWindows();
-    FOR_EACH(n,WAIT_UNTIL_TRUE(hasMask(getValue(n),MAPPED_MASK)))
-}END_TEST
 
 START_TEST(test_apply_gravity){
     int win=createNormalWindow();
@@ -430,7 +412,6 @@ Suite *x11Suite(void) {
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
-    tcase_add_test(tc_core, test_toggle_show_desktop);
     tcase_add_test(tc_core, test_apply_gravity);
     suite_add_tcase(s, tc_core);
 

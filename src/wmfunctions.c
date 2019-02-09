@@ -488,18 +488,6 @@ void setWorkspaceNames(char*names[],int numberOfNames){
         getWorkspaceByIndex(i)->name=names[i];
     xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
 }
-int isShowingDesktop(int index){
-    return getWorkspaceByIndex(index)->showingDesktop;
-}
-void setShowingDesktop(int index,int value){
-    getWorkspaceByIndex(index)->showingDesktop=value;
-    setWorkspaceState(getActiveWorkspaceIndex(),!value);
-    xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
-}
-void toggleShowDesktop(){
-    int hideDesktop=isShowingDesktop(getActiveWorkspaceIndex());
-    setShowingDesktop(getActiveWorkspaceIndex(),!hideDesktop);
-}
 
 void applyGravity(int win,short pos[5],int gravity){
 

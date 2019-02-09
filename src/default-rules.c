@@ -246,10 +246,7 @@ void onClientMessage(void){
             activateWindow(winInfo);
         }
     }
-    else if(message== ewmh->_NET_SHOWING_DESKTOP){
-        LOG(LOG_LEVEL_DEBUG,"Chainign showing desktop to %d\n\n",data.data32[0]);
-        setShowingDesktop(getActiveWorkspaceIndex(), data.data32[0]);
-    }
+    else if(message== ewmh->_NET_SHOWING_DESKTOP){}
     else if(message==ewmh->_NET_CLOSE_WINDOW){
         LOG(LOG_LEVEL_DEBUG,"Killing window %d\n\n",win);
         WindowInfo*winInfo=getWindowInfo(win);

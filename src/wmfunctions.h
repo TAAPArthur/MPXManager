@@ -270,24 +270,6 @@ void killWindow(xcb_window_t win);
  * @see killWindow();
  */
 void killWindowInfo(WindowInfo* winInfo);
-/**
- * Check to see if we are showing the desktop.
- * When showing the desktop all windows in the workspace are hidden except for windows in the Desktop Layer
- * @param index
- * @return 1 if we are currently showing the desktop
- */
-int isShowingDesktop(int index);
-/**
- * show or hide desktop depending on values
- * @param index workpsace index
- * @param value 1 or 0
- */
-void setShowingDesktop(int index,int value);
-/**
- * Toggle showing of the desktop
- * @see isShowingDesktop()
- */
-void toggleShowDesktop();
 
 void updateEWMHClientList(void);
 
