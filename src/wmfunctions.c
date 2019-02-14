@@ -138,8 +138,9 @@ int getSavedWorkspaceIndex(xcb_window_t win){
 
     if ((xcb_ewmh_get_wm_desktop_reply(ewmh,
               xcb_ewmh_get_wm_desktop(ewmh, win), &workspaceIndex, NULL))) {
-        if(workspaceIndex>=getNumberOfWorkspaces())
+        if(workspaceIndex!=-1&&workspaceIndex>=getNumberOfWorkspaces()){
             workspaceIndex=getNumberOfWorkspaces()-1;
+        }
     }
     else workspaceIndex = getActiveWorkspaceIndex();
     return workspaceIndex;
@@ -288,12 +289,17 @@ int attemptToMapWindow(int id){
     return 0;
 }
 
-static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,int map){
-    if(map){
+static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,int swappedWith){
+    if(isWorkspaceVisible(workspaceIndex)){
         attemptToMapWindow(winInfo->id);
-        winInfo->workspaceIndex=workspaceIndex;
     }
     else{
+        if(hasMask(winInfo,STICKY_MASK)){
+            LOG(LOG_LEVEL_DEBUG,"Moving sticky window %d to workspace %d\n",winInfo->id,swappedWith);
+            if(swappedWith!=-1)
+                moveWindowToWorkspace(winInfo,swappedWith);
+            return;
+        }
         catchError(xcb_unmap_window_checked(dis, winInfo->id));
         Master*active=getActiveMaster();
         FOR_EACH(Master*master,getAllMasters(),
@@ -309,10 +315,7 @@ static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,in
         setActiveMaster(active);
     }
 }
-static void setWorkspaceState(int workspaceIndex,int map){
-    LOG(LOG_LEVEL_DEBUG,"Setting workspace %d to %d:\n",workspaceIndex,map);
-    FOR_EACH(WindowInfo*winInfo,getWindowStack(getWorkspaceByIndex(workspaceIndex)),updateWindowWorkspaceState(winInfo,workspaceIndex,map))
-}
+
 void swapWorkspaces(int index1,int index2){
     swapMonitors(index1,index2);
     if(isWorkspaceVisible(index1)!=isWorkspaceVisible(index2)){
@@ -338,12 +341,9 @@ void switchToWorkspace(int workspaceIndex){
         currentIndex=getNextWorkspace(1, VISIBLE)->id;
     }
     assert(isWorkspaceVisible(currentIndex));
-    //we need to map new windows
     LOG(LOG_LEVEL_DEBUG,"Swaping visible workspace %d with %d\n",currentIndex,workspaceIndex);
-    swapMonitors(workspaceIndex,currentIndex);
-    setWorkspaceState(workspaceIndex,1);
-    setWorkspaceState(currentIndex,0);
-
+    //we need to map new windows
+    swapWorkspaces(workspaceIndex,currentIndex);
     setActiveWorkspaceIndex(workspaceIndex);
     updateEWMHWorkspaceProperties();
     xcb_ewmh_set_current_desktop_checked(
@@ -352,12 +352,16 @@ void switchToWorkspace(int workspaceIndex){
 
 
 void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex){
-    assert(destIndex>=0 && destIndex<getNumberOfWorkspaces());
+    
+    assert(destIndex==-1 || destIndex>=0 && destIndex<getNumberOfWorkspaces());
     assert(winInfo);
-
+    if(destIndex==-1){
+        addMask(winInfo,STICKY_MASK);
+        destIndex=getActiveWorkspaceIndex();
+    }
     removeWindowFromWorkspace(winInfo);
     addWindowToWorkspace(winInfo, destIndex);
-    updateWindowWorkspaceState(winInfo, destIndex, isWorkspaceVisible(destIndex));
+    updateWindowWorkspaceState(winInfo, destIndex, -1);
 
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, destIndex);
 

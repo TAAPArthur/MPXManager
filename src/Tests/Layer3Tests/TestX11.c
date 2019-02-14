@@ -194,6 +194,49 @@ START_TEST(test_raise_window){
     assert(raiseWindowInfo(infoTop));
     assert(checkStackingOrder(stackingOrder+1,2));
 }END_TEST
+START_TEST(test_sticky_window_add){
+    LOAD_SAVED_STATE=0;
+    mapArbitraryWindow();
+    int win=mapArbitraryWindow();
+    scan(root);
+    retile();
+    WindowInfo*winInfo=getWindowInfo(win);
+    moveWindowToWorkspace(winInfo,-1);
+    assert(hasMask(winInfo,STICKY_MASK));
+}END_TEST
+
+START_TEST(test_window_swap){
+    int win[4];
+    for(int i=0;i<LEN(win);i++)win[i]=mapArbitraryWindow();
+    scan(root);
+    retile();
+    int nonActiveWorkspace=!getActiveWorkspaceIndex();
+    WindowInfo*winInfo=getWindowInfo(win[0]);
+    moveWindowToWorkspace(winInfo,nonActiveWorkspace);
+    swapWindows(getElement(getActiveWindowStack(),0),winInfo);
+    assert(winInfo->workspaceIndex==getActiveWorkspaceIndex());
+    assert(getHead(getActiveWindowStack())==winInfo);
+    swapWindows(getElement(getActiveWindowStack(),1),winInfo);
+    assert(getElement(getActiveWindowStack(),1)==winInfo);
+    swapWindows(getElement(getActiveWindowStack(),0),winInfo);
+    assert(getElement(getActiveWindowStack(),0)==winInfo);
+
+}END_TEST
+
+START_TEST(test_sticky_workspace_change){
+    LOAD_SAVED_STATE=0;
+    mapArbitraryWindow();
+    int win=mapArbitraryWindow();
+    scan(root);
+    retile();
+    WindowInfo*winInfo=getWindowInfo(win);
+    addMask(winInfo,STICKY_MASK);
+    for(int i=0;i<getNumberOfWorkspaces();i++){
+        switchToWorkspace(i);
+        assert(find(getActiveWindowStack(),winInfo,sizeof(WindowInfo*)));
+        assert(getWorkspaceIndexOfWindow(winInfo)==i);
+    }
+}END_TEST
 
 START_TEST(test_workspace_change){
 
@@ -405,6 +448,10 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_set_border_color);
     tcase_add_test(tc_core, test_workspace_activation);
     tcase_add_test(tc_core, test_workspace_change);
+
+    tcase_add_test(tc_core, test_sticky_workspace_change);
+    tcase_add_test(tc_core, test_sticky_window_add);
+    tcase_add_test(tc_core, test_window_swap);
 
     tcase_add_test(tc_core, test_kill_window);
     tcase_add_test(tc_core, test_configure_windows);
