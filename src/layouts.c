@@ -11,6 +11,7 @@
 
 #include "monitors.h"
 #include "globals.h"
+#include "bindings.h"
 #include "logger.h"
 
 #define LAYOUT_FAMILY(S) {.name=""#S,.layoutFunction=S}
@@ -179,7 +180,7 @@ void retile(void){
 }
 
 void tileWorkspace(int index){
-    //TODO support if(!applyRules(getEventRules(TilingWindows),&index))return;
+    applyRules(getEventRules(TileWorkspace),NULL);
 
     if(!isWorkspaceVisible(index))
         return;

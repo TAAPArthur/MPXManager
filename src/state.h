@@ -6,6 +6,10 @@
  */
 void markState(void);
 /**
+ * Unmarks that the state may have possibility changed
+ */
+void unmarkState(void);
+/**
  * Calls onChange (if not NULL) for every (currently visible) workspace changed since 
  * this function was last called. A workspace if considered to have changed if
  * <ul>

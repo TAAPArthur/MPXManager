@@ -26,7 +26,7 @@
 #include "functions.h"
 #include "layouts.h"
 
-void tileChangeWorkspaces(void){
+static void tileChangeWorkspaces(void){
     updateState(tileWorkspace);
 }
 void autoAddToWorkspace(WindowInfo*winInfo){
@@ -406,6 +406,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
     [RegisteringWindow] =CREATE_WILDCARD(AND(BIND(autoAddToWorkspace),BIND(updateEWMHClientList))),
+    [TileWorkspace] = CREATE_DEFAULT_EVENT_RULE(unmarkState),
 };
 
 void addBasicRules(void){

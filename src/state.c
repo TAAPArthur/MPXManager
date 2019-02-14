@@ -46,6 +46,10 @@ void markState(void){
     LOG(LOG_LEVEL_TRACE,"marking state\n");
     couldStateHaveChanged=1;
 }
+void unmarkState(void){
+    LOG(LOG_LEVEL_TRACE,"marking state\n");
+    couldStateHaveChanged=0;
+}
 
 static void destroyCurrentState(){
     for(int i=0;i<numberOfRecordedWorkspaces;i++){
@@ -117,7 +121,7 @@ static int compareState(void(*onChange)(int)){
             memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(int)*savedStates[i].size)
             ||memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(int)*savedStates[i].size)
             ){
-                couldStateHaveChanged=0;
+                unmarkState();
                 changed=1;
                 LOG(LOG_LEVEL_TRACE,"Detected change in workspace %d. \n",i);
                 if(onChange)

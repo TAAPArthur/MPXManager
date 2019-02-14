@@ -108,6 +108,7 @@ enum{
     ProcessingWindow,
     /// called after the newly created window has been added to a workspace
     RegisteringWindow,
+    TileWorkspace,
     /// called when the connection is idle
     Idle,
     /// max value of supported events
