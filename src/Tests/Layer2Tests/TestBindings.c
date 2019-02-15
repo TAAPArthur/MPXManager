@@ -377,11 +377,11 @@ START_TEST(test_literal_string_rule){
         target|=ENV_VAR;
     }
     else var ="A";
-    Rule r=CREATE_LITERAL_RULE(var,target,NULL);
+    Rule r=CREATE_LITERAL_RULE(var,target|CASE_SENSITIVE,NULL);
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "a")==0);
     assert(doesStringMatchRule(&r, "b")==0);
-    Rule r2=CREATE_LITERAL_RULE(var,target|CASE_INSENSITIVE,NULL);
+    Rule r2=CREATE_LITERAL_RULE(var,target,NULL);
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "b")==0);
@@ -403,7 +403,7 @@ START_TEST(test_string_rule){
     assert(doesStringMatchRule(&r2, "B")==0);
     regfree(r2.regexExpression);
     free(r2.regexExpression);
-    Rule r3=CREATE_RULE("A",(MATCH_ANY_REGEX) - (CASE_INSENSITIVE),NULL);
+    Rule r3=CREATE_RULE("A",(MATCH_ANY_REGEX|CASE_SENSITIVE),NULL);
     assert(doesStringMatchRule(&r3, "A"));
     assert(doesStringMatchRule(&r3, "a")==0);
     assert(doesStringMatchRule(&r3, "B")==0);

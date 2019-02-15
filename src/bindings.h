@@ -18,7 +18,7 @@
 /**Rule will be interpreted literally as opposed to Regex */
 #define LITERAL             1<<0
 /**Rule will be will ignore case */
-#define CASE_INSENSITIVE    1<<1
+#define CASE_SENSITIVE    1<<1
 /**Rule will match on window type name */
 #define TYPE                1<<2
 /**Rule will match on window class name */
@@ -28,9 +28,9 @@
 /**Rule will match on window title/name */
 #define TITLE               1<<5
 /**Rule will match on above property of window literally */
-#define MATCH_ANY_LITERAL   ((1<<6) -1)
+#define MATCH_ANY_LITERAL   (TITLE|RESOURCE|CLASS|TYPE|LITERAL)
 /**Rule will match on above property of window not literally */
-#define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL - LITERAL)
+#define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL ^ LITERAL)
 /**Rule subsitute env variables for designated strings (strings starting with '$')*/
 #define ENV_VAR             1<<6
 /**

@@ -191,9 +191,10 @@ int doesStringMatchRule(Rule*rule,char*str){
     if(!rule->init)
         initRule(rule);
     if(rule->ruleTarget & LITERAL){
-        if(rule->ruleTarget & CASE_INSENSITIVE)
+        if(rule->ruleTarget & CASE_SENSITIVE)
+            return strcmp(rule->literal,str)==0;
+        else 
             return strcasecmp(rule->literal,str)==0;
-        else return strcmp(rule->literal,str)==0;
     }
     else{
         assert(rule->regexExpression!=NULL);
@@ -341,7 +342,7 @@ void initRule(Rule*rule){
     if(rule->literal && (rule->ruleTarget & LITERAL) == 0){
         rule->regexExpression=malloc(sizeof(regex_t));
         regcomp(rule->regexExpression,rule->literal,
-                (DEFAULT_REGEX_FLAG)|((rule->ruleTarget & CASE_INSENSITIVE)?REG_ICASE:0));
+                (DEFAULT_REGEX_FLAG)|((rule->ruleTarget & CASE_SENSITIVE)?0:REG_ICASE));
     }
     rule->init=1;
 }
