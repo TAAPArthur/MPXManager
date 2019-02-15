@@ -100,11 +100,10 @@ START_TEST(test_check_bindings){
             int effectiveMod=mod==0?WILDCARD_MODIFIER:mod;
             Binding arr[]={
                 {10,10,BIND(exit,10),.passThrough=passThrough, .detail=10},
-                {effectiveMod,detail,BIND(funcNoArg),.passThrough=passThrough, .detail=detail},
+                {effectiveMod,detail,BIND(funcNoArg),.passThrough=passThrough, .detail=detail,.windowTarget=mod==0?FOCUSED_WINDOW:TARGET_WINDOW},
                 {effectiveMod,detail,BIND(funcNoArg),.passThrough=NO_PASSTHROUGH,.detail=detail},
                 {effectiveMod,detail,BIND(exit,11),.passThrough=passThrough, .detail=detail},
             };
-            clearList(getDeviceBindings());
             addBindings(arr,LEN(arr));
 
             checkBindings(1, 1, mask, NULL);
@@ -112,7 +111,37 @@ START_TEST(test_check_bindings){
             if(mod!=2 && detail!=2)
                 targetCount+=2*((passThrough==ALWAYS_PASSTHROUGH)+1);
             assert(count==targetCount);
+            clearList(getDeviceBindings());
     }
+    count=0;
+    WindowInfo*dummy=(WindowInfo*)1;
+    WindowInfo* focusDummy=createWindowInfo(2);
+    addWindowInfo(focusDummy);
+    onWindowFocus(focusDummy->id);
+    
+    void funcWinArg(WindowInfo*winInfo){
+        switch(count){
+            case DEFAULT:
+            case FOCUSED_WINDOW:
+                assert(focusDummy==winInfo);
+                break;
+            case TARGET_WINDOW:
+                assert(dummy==winInfo);
+        }
+        count++;
+    }
+    int numTypes=4;
+    for(WindowParamType i=0;i<numTypes+1;i++){
+        Binding b={WILDCARD_MODIFIER,0,BIND(funcWinArg), .mask=KEYBOARD_MASKS,.detail=0,.windowTarget=i};
+        if(i==numTypes){
+            dummy=NULL;
+            b.windowTarget=TARGET_WINDOW;
+        }
+        addBindings(&b,1);
+        checkBindings(1, 1, mask, dummy);
+        clearList(getDeviceBindings());
+    }
+    assert(count==numTypes);
 }END_TEST
 
 

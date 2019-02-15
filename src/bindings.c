@@ -139,6 +139,18 @@ int doesBindingMatch(Binding*binding,int detail,int mods,int mask){
     return (binding->mask & mask || mask==0) && (binding->mod == WILDCARD_MODIFIER|| binding->mod==mods) &&
             (binding->detail==0||binding->detail==detail);
 }
+
+static WindowInfo*getWindowToActOn(Binding*binding,WindowInfo*target){
+    switch(binding->windowTarget){
+        default:
+        case DEFAULT:
+            return isKeyboardMask(binding->mask)?getFocusedWindow():target;
+        case FOCUSED_WINDOW:
+            return getFocusedWindow();
+        case TARGET_WINDOW:
+            return target;
+    }
+}
 int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
 
     mods&=~IGNORE_MASK;
@@ -152,7 +164,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
         do{
             if(doesBindingMatch(&chainBinding[i],keyCode,mods,mask)){
                 LOG(LOG_LEVEL_DEBUG,"Calling chain binding\n");
-                int result=callBoundedFunction(&chainBinding[i].boundFunction,winInfo);
+                int result=callBoundedFunction(&chainBinding[i].boundFunction,getWindowToActOn(&chainBinding[i],winInfo));
                 if(chainBinding[i].endChain){
                     LOG(LOG_LEVEL_DEBUG,"chain is ending because exit key was pressed\n");
                     //chain has ended
@@ -179,7 +191,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
         if(doesBindingMatch(binding,keyCode,mods,mask)){
             bindingsTriggered+=1;
             LOG(LOG_LEVEL_DEBUG,"Calling non-chain binding\n");
-            if(!passThrough(callBoundedFunction(&binding->boundFunction,winInfo),binding->passThrough))
+            if(!passThrough(callBoundedFunction(&binding->boundFunction,getWindowToActOn(binding,winInfo)),binding->passThrough))
                return 0;
         }
     )

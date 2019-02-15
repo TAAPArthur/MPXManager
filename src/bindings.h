@@ -95,6 +95,17 @@ typedef union{
 }BoundFunctionArg;
 
 /**
+ * Details which window to act on for Bindings
+ */
+typedef enum{
+    /// Use the focused window for key bindings and the target/event window for mouse bindings
+    DEFAULT=0,
+    /// Always use the focused window
+    FOCUSED_WINDOW,
+    /// Always use the target window (the target of the active master if set of the event window)
+    TARGET_WINDOW
+}WindowParamType;
+/**
  * Used to bind a function with arguments to a Rule or Binding
  * such that when the latter is triggered the the bound function
  * is called with arguments
@@ -139,6 +150,8 @@ typedef struct binding_struct{
     char endChain;
     /**If a binding is pressed that doesn't match the chain, don't end it*/
     char noEndOnPassThrough;
+    /// Details which window to pass to the boundFunction
+    WindowParamType windowTarget;
 
     /**Converted detail of key bindings. Should not be set manually*/
     int detail;
