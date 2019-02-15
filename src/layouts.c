@@ -265,7 +265,7 @@ void column(LayoutState*state){
         return;
     }
     int numCol= state->args->arg[0]==0?log2(size+1):state->args->arg[0];
-    int rem = size%numCol;
+    int rem = numCol - size%numCol;
     // split of width(0) or height(1)
     int splitDim=getDimIndex(state->args);
     short values[CONFIG_LEN];
@@ -275,7 +275,7 @@ void column(LayoutState*state){
     int offset=0;
     for(int i=0;i<numCol;i++){
         offset=splitEven(state, windowStack,offset,values, 
-            getOtherDimIndex(state->args),size/numCol+(rem-->0?1:0));
+            getOtherDimIndex(state->args),size/numCol+(rem-->0?0:1));
         values[splitDim-2]+=values[splitDim];
     }
 }
