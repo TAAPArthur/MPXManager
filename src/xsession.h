@@ -1,12 +1,19 @@
 /**
  * @file xsession.h
- * @brief Create/destroy XConnection
+ * @brief Create/destroy XConnection and set global X vars
  */
 
 #ifndef XSESSION_H_
 #define XSESSION_H_
 
+/// \cond
 #include <xcb/xcb.h>
+#include <xcb/xcb_ewmh.h>
+#include <X11/extensions/XInput2.h>
+#include <X11/extensions/XI.h>
+#include <xcb/xinput.h>
+#include <X11/Xlib.h>
+/// \endcond
 
 ///global graphics context
 extern xcb_gcontext_t graphics_context;
@@ -34,6 +41,17 @@ extern xcb_atom_t WM_STATE_NO_TILE;
  */
 extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 
+/**XDisplay instance (only used for events/device commands)*/
+extern Display *dpy;
+/**XCB display instance*/
+extern xcb_connection_t *dis;
+/**EWMH instance*/
+extern xcb_ewmh_connection_t *ewmh;
+/**Root window*/
+extern int root;
+/**Default screen (assumed to be only 1*/
+extern xcb_screen_t* screen;
+
 /**
  * Opens a connection to the Xserver
  *
@@ -48,12 +66,9 @@ void openXDisplay(void);
 
 /**
  * Closes an open XConnection
+ * If is not safe to call this method on an already closed connection
  */
 void closeConnection(void);
-/**
- * exits the application
- */
-void quit(void);
 
 /**
  * Flush the X connection

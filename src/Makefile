@@ -12,15 +12,15 @@ LDFLAGS ?= -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -l
 RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} -DNDEBUG
 DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
 
-LAYER0_SRCS := logger.c
-LAYER1_SRCS := mywm-util.c util.c
-LAYER2_SRCS := globals.c xsession.c devices.c test-functions.c bindings.c monitors.c events.c windows.c
-LAYER3_SRCS :=  layouts.c wmfunctions.c default-rules.c state.c
+LAYER0_SRCS := logger.c globals.c 
+LAYER1_SRCS := util.c 
+LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
+LAYER3_SRCS := layouts.c wmfunctions.c default-rules.c state.c
 LAYER4_SRCS := mpx.c window-clone.c functions.c
 SRCS := mywm.c config.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 
 
-CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(focusFollowMouse|spawn|spawnPipe)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
+CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 
@@ -40,12 +40,12 @@ quick-test: test
 test: unitTest1 unitTest2 unitTest3 unitTest4
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
-	${CC}  $^ -o $@ ${TESTFLAGS} ${TESTLIBS}
+	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_TEST, ./$@ )
 	$(call CHECK_TEST_COVERAGE,${LAYER1_SRCS})
 
-unitTest2: Tests/*.c Tests/Layer2Tests/*.c ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
-	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+unitTest2: Tests/*.c Tests/Layer2Tests/*.c ${LAYER2_SRCS} ${LAYER1_SRCS}
+	${CC} ${LAYER0_SRCS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_XTEST_NO_DISPLAY)
 	$(call RUN_XTEST)
 	$(call CHECK_TEST_COVERAGE,${LAYER2_SRCS})

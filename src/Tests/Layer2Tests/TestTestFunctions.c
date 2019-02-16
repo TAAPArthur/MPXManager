@@ -67,8 +67,8 @@ static void setup(){
 }
 
 Suite *testFunctionSuite() {
-    Suite*s = suite_create("Test Events");
-    TCase* tc_core = tcase_create("Test Events");
+    Suite*s = suite_create("Test Functions");
+    TCase* tc_core = tcase_create("Test Functions");
     tcase_add_checked_fixture(tc_core, setup, closeConnection);
     tcase_add_test(tc_core, test_send_key_press);
     tcase_add_test(tc_core, test_send_key_release);

@@ -20,6 +20,8 @@ static void splitMasterHack(int i){
     event->sourceid=i;
 }
 START_TEST(test_split_master){
+    POLL_COUNT=10;
+    POLL_INTERVAL=10;
     START_MY_WM
     int size=getSize(getAllMasters());
     int id=splitMaster(); 
@@ -27,9 +29,8 @@ START_TEST(test_split_master){
     Master*newMaster=getMasterById(id);
     assert(size+1==getSize(getAllMasters()));
     int numOfSlaves;
-    Node*slaves= getSlavesOfMasterByID(NULL,0,&numOfSlaves);
+    ArrayList*slaves= getSlavesOfMasterByID(NULL,0,&numOfSlaves);
     assert(numOfSlaves==2);
-    Node*copy=slaves;
     lock();
     int keyboardId=0,mouseId=0;
     void dummySlaveInput(SlaveDevice*device){
@@ -43,7 +44,7 @@ START_TEST(test_split_master){
         else mouseId=device->id;
         sendDeviceAction(device->id,detail,type);
     }
-    FOR_EACH(slaves,dummySlaveInput(getValue(slaves)));
+    FOR_EACH(SlaveDevice*slave,slaves,dummySlaveInput(slave));
     flush();
     assert(keyboardId);
     assert(mouseId);
@@ -54,16 +55,17 @@ START_TEST(test_split_master){
     int idle=getIdleCount();
     unlock();
     WAIT_UNTIL_TRUE(getIdleCount()>idle)
-    Node*newSlaves= getSlavesOfMaster(newMaster);
-    assert(listsEqual(newSlaves,copy));
+    ArrayList*newSlaves= getSlavesOfMaster(newMaster);
+    assert(listsEqual(newSlaves,slaves));
     deleteList(newSlaves);
+    free(newSlaves);
     endSplitMaster();
-    slaves=copy;
     lock();
-    FOR_EACH(slaves,dummySlaveInput(getValue(slaves)));
+    FOR_EACH(SlaveDevice*slave,slaves,dummySlaveInput(slave));
     assert(!xcb_poll_for_event(dis));
     unlock();
-    deleteList(copy);
+    deleteList(slaves);
+    free(slaves);
     stopMPX();
 }END_TEST
 START_TEST(test_start_mpx_empty){
@@ -91,10 +93,7 @@ START_TEST(test_save_load_mpx){
     createMasterDevice("test1");
     WAIT_UNTIL_TRUE(getSize(getAllMasters())==2);
 
-    Node*masterNode=getAllMasters();
-    if(getValue(masterNode)==getActiveMaster())
-        masterNode=masterNode->next;
-    Master*master=getValue(masterNode);
+    Master*master=getElement(getAllMasters(),!indexOf(getAllMasters(),getActiveMaster(),sizeof(int)));
     int masterFocusColor=255;
     int activeMasterFocusColor=256;
 
@@ -107,24 +106,27 @@ START_TEST(test_save_load_mpx){
     getActiveMaster()->focusColor=activeMasterFocusColor;
 
     lock();
-    Node*slaves= getSlavesOfMasterByID(&defaultMasterID,1,&numOfSlaves);
+    ArrayList*slaves= getSlavesOfMasterByID(&defaultMasterID,1,&numOfSlaves);
     assert(numOfSlaves==1);
-    attachSlaveToMaster(getIntValue(slaves),newMasterID);
+    attachSlaveToMaster(((SlaveDevice*)getHead(slaves))->id,newMasterID);
     deleteList(slaves);
+    free(slaves);
     flush();
     idle=getIdleCount();
     unlock();
     WAIT_UNTIL_TRUE(idle!=getIdleCount());
 
+    lock();
     slaves= getSlavesOfMaster(getActiveMaster());
     assert(getSize(slaves)==1);
     deleteList(slaves);
+    free(slaves);
     slaves= getSlavesOfMasterByID(&newMasterID,1,&numOfSlaves);
     assert(numOfSlaves==1);
     deleteList(slaves);
+    free(slaves);
     saveMasterInfo();
 
-    lock();
     stopMPX();
     unlock();
     WAIT_UNTIL_TRUE(getSize(getAllMasters())==1);
@@ -132,27 +134,23 @@ START_TEST(test_save_load_mpx){
     slaves= getSlavesOfMaster(getActiveMaster());
     assert(getSize(slaves)==2);
     deleteList(slaves);
+    free(slaves);
     loadMasterInfo();
     startMPX();
-    idle=getIdleCount();
-    unlock();
 
-    WAIT_UNTIL_TRUE(idle!=getIdleCount());
     assert(getSize(getAllMasters())==2);
     slaves= getSlavesOfMasterByID(&defaultMasterID,1,&numOfSlaves);
     deleteList(slaves);
+    free(slaves);
     assert(numOfSlaves==0);
     slaves= getSlavesOfMasterByID(&newMasterID,1,&numOfSlaves);
     deleteList(slaves);
+    free(slaves);
     assert(numOfSlaves==1);
 
-    masterNode=getAllMasters();
-    if(getValue(masterNode)==getActiveMaster())
-        masterNode=masterNode->next;
-    master=getValue(masterNode);
+    master=getElement(getAllMasters(),!indexOf(getAllMasters(),getActiveMaster(),sizeof(int)));
     assert(master->focusColor==masterFocusColor);
     assert(getActiveMaster()->focusColor==activeMasterFocusColor);
-    lock();
     stopMPX();
     unlock();
 }END_TEST

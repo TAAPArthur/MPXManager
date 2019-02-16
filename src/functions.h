@@ -12,31 +12,29 @@
 
 #include "bindings.h"
 
+/// Direction towards the head of the list
 #define UP -1
+/// Direction away from the head of the list
 #define DOWN 1
 
-#define RUN_RAISE_ANY(STR_TO_MATCH)    RUN_OR_RAISE_TYPE(STR_TO_MATCH,ANY,STR_TO_MATCH)
+#define _RUN_OR_RAISE(TYPE,STR_TO_MATCH,COMMAND_STR) \
+    OR(BIND((int (*)(void*))findAndRaise,(&((Rule)CREATE_RULE(STR_TO_MATCH,TYPE,NULL)))), BIND(spawn,COMMAND_STR))
 
-#define RUN_OR_RAISE_CLASS(STR_TO_MATCH)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,CLASS|CASE_INSENSITIVE|LITERAL,STR_TO_MATCH)
-#define RUN_OR_RAISE_ENV_CLASS(STR_TO_MATCH)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,CLASS|CASE_INSENSITIVE|LITERAL|ENV_VAR,STR_TO_MATCH)
-
-#define RUN_OR_RAISE_TITLE(STR_TO_MATCH,COMMAND)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,TITLE|LITERAL,COMMAND)
-#define RUN_OR_RAISE_ENV_TITLE(STR_TO_MATCH,COMMAND)  RUN_OR_RAISE_TYPE(STR_TO_MATCH,TITLE|LITERAL|ENV_VAR,COMMAND)
-
+#define _RUN_OR_RAISE_HELPER(_1,_2,NAME,...) NAME
+#define _RUN_OR_RAISE_IMPLICIT(TYPE,STR_TO_MATCH) _RUN_OR_RAISE(TYPE,STR_TO_MATCH,STR_TO_MATCH) 
 
 /**
- * Used to create a binding to a function that returns void and takes a
- * list of Rules as an argument.
- *
- * @param F the function to bind to
+ * Creates a rule with type TYPE that tries to find window with property STR and if it can't it will run COM
+ * @param TYPE rule type
+ * @param args if args has two elements then STR is the first ad COM is the 2nd else both are args
  */
-#define BIND_TO_RULE_FUNC(F,...) BIND(F,(Rules*)(Rules[]){__VA_ARGS__})
+#define RUN_OR_RAISE(TYPE,args...) _RUN_OR_RAISE_HELPER(args,_RUN_OR_RAISE,_RUN_OR_RAISE_IMPLICIT)(TYPE,args)
 
-#define RUN_OR_RAISE_TYPE(STR_TO_MATCH,TYPE,COMMAND_STR) \
-    OR(BIND((int (*)(void*))findAndRaise,(&((Rule)CREATE_RULE(STR_TO_MATCH,TYPE,NULL)))), SPAWN(COMMAND_STR))
-
-#define SPAWN(COMMAND_STR)  BIND((void (*)(void*))spawn,COMMAND_STR)
-
+/**
+ * Creates a set of bindings related to switching workspacse
+ * @param K the key to bind; various modiers will be used for the diffrent functions
+ * @param N the workspace to switch to/act on
+ */
 #define WORKSPACE_OPERATION(K,N) \
     {  Mod4Mask,             K, BIND(switchToWorkspace,N)}, \
     {  Mod4Mask|ShiftMask,   K, BIND(moveWindowToWorkspace,N)}/*, \
@@ -46,6 +44,13 @@
     {  Mod4Mask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(giveToWorkspace,N)},\
     {  Mod4Mask|ControlMask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(tradeWithWorkspace,N)}*/
 
+/**
+ * Creates a set of bindings related to the windowStack
+ * @param KEY_UP
+ * @param KEY_DOWN
+ * @param KEY_LEFT
+ * @param KEY_RIGHT
+ */
 #define STACK_OPERATION(KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT) \
     {  Mod4Mask,             KEY_UP, BIND(swapPosition,UP)}, \
     {  Mod4Mask,             KEY_DOWN, BIND(swapPosition,DOWN)}, \
@@ -69,7 +74,6 @@
 
 
 
-#define CYCLE(D,M1,K1,M2,K2)    {M1,K1,AUTO_CHAIN({M1,K1,BIND(cycleWindows,D)},END_CHAIN(M2,K2,BIND(endCycleWindows)))}
 /**
  * Call to stop cycling windows
  *
@@ -92,7 +96,6 @@ void cycleWindows( int delta);
  * Then all windows are checked
  * and finally the master's window complete window stack is checked
  * @param rule
- * @param numberOfRules
  * @return 1 if a matching window was found
  */
 int findAndRaise(Rule*rule);
@@ -102,13 +105,18 @@ int findAndRaise(Rule*rule);
  * @return
  */
 int findAndRaiseLazy(Rule*rule);
-Node* findWindow(Rule*rule,Node*searchList,Node*ignoreList);
+/**
+ * Checks to see if any window in searchList matches rule ignoring any in ignoreList
+ * @param rule
+ * @param searchList
+ * @param ignoreList can be NULL
+ * @return the first window that matches rule or NULL
+ */
+WindowInfo* findWindow(Rule*rule,ArrayList*searchList,ArrayList*ignoreList);
 /**
  * Sends a kill signal to the focused window
  */
 void killFocusedWindow(void);
-
-int focusActiveWindow(WindowInfo *winInfo);
 
 /**
  * Forks and runs command in SHELL
@@ -123,39 +131,23 @@ void spawnPipe(char* command);
 
 /**
  * Send the active window to the first workspace with the given name
+ * @param winInfo
  * @param name
- * @param window
  */
 void sendWindowToWorkspaceByName(WindowInfo*winInfo,char*name);
 
 /**
- * Adds the window to new workspace without removing it
+ * Swapped the active window with the dir-th window from its current position
+ * @param dir
  */
-void cloneToWorkspace(int index);
-
-
-void swapWithWorkspace(int index);
-void stealFromWorkspace(int index);
-void giveToWorkspace(int index);
-void tradeWithWorkspace(int index);
-
-void swapPosition(int index);
+void swapPosition(int dir);
 /**
  * Shifts the focus up or down the window stack
  * @param index
  * @return
  */
 int shiftFocus(int index);
-void popMin();
-void pushMin();
-void sendToNextWorkNonEmptySpace(int index);
 
-/**
- * Swap monitors with the active workspace
- * @param index the index of the workspace to swap with
- */
-void swapWithNextMonitor(int index);
-void sendToNextMonitor(int index);
 
 /**
  * Shifts the focused window to the top of the window stack
@@ -172,7 +164,7 @@ void swapWithTop(void);
  * @param dir
  * @return
  */
-Node* getNextWindowInStack(int dir);
+WindowInfo* getNextWindowInStack(int dir);
 
 /**
  * Activates the window at the bottom of the Workspace stack
@@ -184,20 +176,26 @@ int focusBottom(void);
  * @return 1 if successful
  */
 int focusTop(void);
-void sendFromBottomToTop(void);
-
-void lockWindow(WindowInfo*winInfo);
-void unlockWindow(WindowInfo*winInfo);
-
-void moveTargetWindowWithMouse(void);
 
 
+/**
+ * Will shift the position of the window in response the change in mouse movements
+ * @param winInfo
+ */
 void moveWindowWithMouse(WindowInfo*winInfo);
+/**
+ * Will change the size of the window in response the change in mouse movements
+ * @param winInfo
+ */
 void resizeWindowWithMouse(WindowInfo*winInfo);
 
-void floatWindow(WindowInfo* win);
-void sinkWindow(WindowInfo* win);
-
+/**
+ * Prepares for operations on a fixed window. Multiple operations can be performed on a given window at once.
+ *
+ * Window geometry won't be updated until all operations finish
+ * @param winInfo 
+ */
 void startMouseOperation(WindowInfo*winInfo);
+/// @copydoc startMouseOperation
 void stopMouseOperation(WindowInfo*winInfo);
 #endif

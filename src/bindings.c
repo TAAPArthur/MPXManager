@@ -13,11 +13,16 @@
 /// \endcond
 
 #include "bindings.h"
+#include "xsession.h"
 #include "devices.h"
+#include "masters.h"
 #include "globals.h"
 #include "logger.h"
 
 
+ArrayList* getActiveChains(){
+    return &getActiveMaster()->activeChains;
+}
 /**
  * Push a binding to the active master stack.
  * Should not be called directly
@@ -25,24 +30,17 @@
  */
 static void pushBinding(BoundFunction*chain){
     assert(chain);
-    insertHead(getActiveMaster()->activeChains,chain);
+    addToList(getActiveChains(),chain);
 }
 /**
  * Pop the last added binding from the master stack
  * @return
  */
 static BoundFunction* popActiveBinding(){
-    BoundFunction*b=getValue(getActiveMaster()->activeChains);
-    softDeleteNode(getActiveMaster()->activeChains);
-    return b;
-}
-Node* getActiveBindingNode(){
-    return getActiveMaster()->activeChains;
+    return pop(getActiveChains());
 }
 Binding* getActiveBinding(){
-    if(!isNotEmpty(getActiveBindingNode()))
-        return NULL;
-    return ((BoundFunction*)getValue(getActiveBindingNode()))->func.chainBindings;
+    return isNotEmpty(getActiveChains())?((BoundFunction*)getLast(getActiveChains()))->func.chainBindings:NULL;
 }
 
 int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
@@ -145,7 +143,7 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
 
     mods&=~IGNORE_MASK;
 
-    LOG(LOG_LEVEL_DEBUG,"detail: %d mod: %d mask: %d\n",keyCode,mods,mask);
+    LOG(LOG_LEVEL_TRACE,"detail: %d mod: %d mask: %d\n",keyCode,mods,mask);
 
     Binding* chainBinding=getActiveBinding();
     int bindingsTriggered=0;
@@ -164,20 +162,23 @@ int checkBindings(int keyCode,int mods,int mask,WindowInfo*winInfo){
                     return 0;
                 bindingsTriggered+=1;
             }
-            else if(chainBinding[i].endChain && !chainBinding[i].noEndOnPassThrough){
-                LOG(LOG_LEVEL_DEBUG,"chain is ending because external key was pressed\n");
-                endChain();
-            }
+            else if(chainBinding[i].endChain)
+                if(!chainBinding[i].noEndOnPassThrough){
+                    LOG(LOG_LEVEL_TRACE,"chain is ending because external key was pressed\n");
+                    endChain();
+                }
+                else {
+                    LOG(LOG_LEVEL_TRACE,"chain is not ending despite external key was pressed\n");
+                }
         }while(!chainBinding[i++].endChain);
         if(chainBinding==getActiveBinding())
             break;
         else chainBinding=getActiveBinding();
     }
-    Node*n=getDeviceBindings();
-    FOR_EACH_CIRCULAR(n,
-        Binding*binding=getValue(n);
+    FOR_EACH(Binding*binding,getDeviceBindings(),
         if(doesBindingMatch(binding,keyCode,mods,mask)){
             bindingsTriggered+=1;
+            LOG(LOG_LEVEL_DEBUG,"Calling non-chain binding\n");
             if(!passThrough(callBoundedFunction(&binding->boundFunction,winInfo),binding->passThrough))
                return 0;
         }
@@ -232,28 +233,25 @@ int applyRule(Rule*rule,WindowInfo*winInfo){
     return 1;
 }
 
-int applyRules(Node* head,WindowInfo*winInfo){
+int applyRules(ArrayList* head,WindowInfo*winInfo){
     assert(head);
-    FOR_EACH_CIRCULAR(head,
-        Rule *rule=getValue(head);
+    FOR_EACH(Rule *rule,head,
         assert(rule);
         if(!applyRule(rule,winInfo))
             return 0;
         )
     return 1;
 }
-Node*getDeviceBindings(){
-    static Node*deviceBindings;
-    if(!deviceBindings)
-        deviceBindings=createCircularHead(NULL);
-    return deviceBindings;
+ArrayList*getDeviceBindings(){
+    static ArrayList deviceBindings;
+    return &deviceBindings;
 }
 void addBindings(Binding*bindings,int num){
     for(int i=0;i<num;i++)
         addBinding(&bindings[i]);
 }
 void addBinding(Binding*binding){
-    insertTail(getDeviceBindings(), binding);
+    addToList(getDeviceBindings(), binding);
 }
 /**
  * Convience method for grabBinding() and ungrabBinding()
@@ -349,31 +347,22 @@ void initRule(Rule*rule){
 }
 
 /// Holds a Node list of rules that will be applied in response to various conditions
-static Node* eventRules[NUMBER_OF_EVENT_RULES];
+static ArrayList eventRules[NUMBER_OF_EVENT_RULES];
 
-Node* getEventRules(int i){
-    if(!eventRules[i])
-        eventRules[i]=createCircularHead(NULL);
-    return eventRules[i];
+ArrayList* getEventRules(int i){
+    return &eventRules[i];
 }
 void removeRule(int i,Rule*rule){
-    Node*rules=getEventRules(i);
-    if(getValue(rules)==rule){
-        eventRules[i]=eventRules[i]->next;
-    }
-    FOR_EACH_CIRCULAR(rules,
-        if(getValue(rules)==rule){
-            softDeleteNode(rules);
-            break;
-        }
-    );
+    ArrayList*rules=getEventRules(i);
+    int index=indexOf(rules,rule,sizeof(Rule));
+    if(index!=-1)
+        removeFromList(rules,index);
 }
 void prependRule(int i,Rule*rule){
-    insertHead(getEventRules(i), rule);
-    eventRules[i]=eventRules[i]->prev;
+    prependToList(getEventRules(i), rule);
 }
 void appendRule(int i,Rule*rule){
-    insertTail(getEventRules(i), rule);
+    addToList(getEventRules(i), rule);
 }
 void clearAllRules(void){
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)

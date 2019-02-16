@@ -14,6 +14,19 @@
 #include "logger.h"
 #include "windows.h"
 
+WindowInfo*cloneWindowInfo(unsigned int id,WindowInfo*winInfo){
+    WindowInfo *clone =malloc(sizeof(WindowInfo));
+    memcpy(clone, winInfo, sizeof(WindowInfo));
+    clearList(getClonesOfWindow(clone));
+    clone->id=id;
+    clone->cloneOrigin=winInfo->id;
+    addToList(getClonesOfWindow(winInfo),clone);
+    char**fields=&winInfo->typeName;
+    for(int i=0;i<4;i++)
+        if(fields[i])
+            fields[i]=strcpy(calloc(1+(strlen(fields[i])),sizeof(char)),fields[i]);
+    return clone;
+}
 
 WindowInfo* cloneWindow(WindowInfo*winInfo){
     assert(winInfo);
@@ -32,7 +45,7 @@ WindowInfo* cloneWindow(WindowInfo*winInfo){
     catchError(xcb_map_window_checked(dis, window));
     WindowInfo*clone=cloneWindowInfo(window,winInfo);
     processNewWindow(clone);
-    insertHead(winInfo->cloneList,clone);
+    addToList(getClonesOfWindow(winInfo),clone);
 
 
     int masks=NON_ROOT_DEVICE_EVENT_MASKS;
@@ -60,23 +73,17 @@ void updateClone(WindowInfo*winInfo,WindowInfo* dest){
 
 void updateAllClones(WindowInfo*winInfo){
       if(winInfo){
-          Node* list=winInfo->cloneList;
-          FOR_EACH(list,updateClone(winInfo, getValue(list)));
+          FOR_EACH(WindowInfo*clone,getClonesOfWindow(winInfo),updateClone(winInfo, clone));
       }
 }
-
 void swapWithOriginal(void){
     xcb_input_enter_event_t* event=getLastEvent();
     WindowInfo*winInfo=getWindowInfo(event->event);
     if(winInfo && winInfo->cloneOrigin){
         WindowInfo*origin=getWindowInfo(winInfo->cloneOrigin);
-        LOG(LOG_LEVEL_TRACE,"swaping clone %d with %d\n",winInfo->id,origin?origin->id:0);
         if(origin){
-            int index=winInfo->workspaceIndex;
-            winInfo->workspaceIndex=origin->workspaceIndex;
-            origin->workspaceIndex=index;
-            swap(isInList(getWindowStackOfWindow(winInfo),winInfo->id),
-                isInList(getWindowStackOfWindow(origin),origin->id));
+            LOG(LOG_LEVEL_TRACE,"swaping clone %d with %d\n",winInfo->id,origin?origin->id:0);
+            swapWindows(origin,winInfo);
         }
     }
 }
@@ -85,24 +92,22 @@ void onExpose(void){
     LOG(LOG_LEVEL_DEBUG,"expose event received %d\n",event->window);
     WindowInfo*winInfo=getWindowInfo(event->window);
     if(winInfo){
-        LOG(LOG_LEVEL_DEBUG,"updating %d clones \n",getSize(winInfo->cloneList));
-        Node* list=winInfo->cloneList;
+        LOG(LOG_LEVEL_DEBUG,"updating %d clones \n",getSize(getClonesOfWindow(winInfo)));
         if(winInfo->cloneOrigin)
             updateClone(getWindowInfo(winInfo->cloneOrigin), winInfo);
-        FOR_EACH(list,updateClone(winInfo, getValue(list)));
+        FOR_EACH(WindowInfo*clone,getClonesOfWindow(winInfo),updateClone(winInfo, clone));
     }
 }
 void* autoUpdateClones(void){
     assert(CLONE_REFRESH_RATE);
     while(!isShuttingDown()){
         lock();
-        Node*n=getAllWindows();
-        FOR_EACH(n, 
-            updateAllClones(getValue(n));
-            int origin=getCloneOrigin(getValue(n));
+        FOR_EACH(WindowInfo*winInfo,getAllWindows(), 
+            updateAllClones(winInfo);
+            int origin=getCloneOrigin(winInfo);
             if(origin!=0)
-                if(!isInList(getAllWindows(),origin))
-                    removeWindow(getIntValue(n));
+                if(!getWindowInfo(origin))
+                    removeWindow(winInfo->id);
         )
         unlock();
         msleep(CLONE_REFRESH_RATE);

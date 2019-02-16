@@ -4,6 +4,7 @@
 #include "../../wmfunctions.h"
 #include "../../functions.h"
 #include "../../devices.h"
+#include "../../masters.h"
 
 
 static WindowInfo*top;
@@ -15,49 +16,48 @@ void functionSetup(){
     for(int i=0;i<size;i++)
         mapWindow(createNormalWindow());
     scan(root);
-    top=getValue(getActiveWindowStack());
-    bottom=getValue(getLast(getActiveWindowStack()));
+    top=getHead(getActiveWindowStack());
+    bottom=getLast(getActiveWindowStack());
 }
 
 START_TEST(test_cycle_window){
     IGNORE_KEY_REPEAT=1;
-    int startKeySym=XK_Tab;
-    int endKeySym=XK_Escape;
-    Binding binding=CYCLE(1,0,startKeySym,0,endKeySym);
-    initBinding(&binding);
-    addBinding(&binding);
-    grabBinding(&binding);
     START_MY_WM
 
-    int size=3;
+    int size=4;
     int win[size];
     for(int i=0;i<size;i++)
         win[i]=mapWindow(createNormalWindow());
 
-    WAIT_UNTIL_TRUE(getSize(getAllWindows())==3);
-    Node*n=getAllWindows();
-    FOR_EACH(n,focusWindow(getIntValue(n)));
-    WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack())==3);
-
-    typeKey(getKeyCode(startKeySym));
+    int hidden=mapWindow(createNormalWindow());
+    WAIT_UNTIL_TRUE(getSize(getAllWindows())==size+1);
+    addMask(getWindowInfo(hidden),HIDDEN_MASK);
+    FOR_EACH_REVERSED(WindowInfo*winInfo,getAllWindows(),if(isInteractable(winInfo))focusWindow(winInfo->id));
+    mapWindow(createNormalWindow());
+    WAIT_UNTIL_TRUE(getSize(getAllWindows())==size+2);
+    WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack())==size);
+    lock();
+    assert(win[0]==getFocusedWindow()->id);
+    focusWindowInfo(getWindowInfo(win[1]));
+    unlock();
+    WAIT_UNTIL_TRUE(win[1]==getFocusedWindow()->id);
+    lock();
+    moveWindowToWorkspace(getWindowInfo(win[0]),!getActiveWorkspaceIndex());
+    activateWindow(getWindowInfo(win[0]));
     flush();
-
-    WAIT_UNTIL_TRUE(getValue(getActiveMasterWindowStack())!=getFocusedWindow());
-    assert(isFocusStackFrozen());
-    for(int i=1;i<size*2;i++){
-        int oldFocusedWindow=getFocusedWindow()->id;
+    unlock();
+    WAIT_UNTIL_TRUE(win[0]==getFocusedWindow()->id);
+    for(int i=0;i<size*2;i++){
         int newFocusedWindow=win[(i+1)%size];
         lock();
-        typeKey(getKeyCode(startKeySym));
+        cycleWindows(DOWN);
+        assert(isFocusStackFrozen());
         flush();
         unlock();
-        WAIT_UNTIL_TRUE(getFocusedWindow()->id!=oldFocusedWindow);
-        assert(getFocusedWindow()->id==newFocusedWindow);
+        WAIT_UNTIL_TRUE(getFocusedWindow()->id==newFocusedWindow);
     }
-    typeKey(getKeyCode(endKeySym));
-    WAIT_UNTIL_TRUE(!isFocusStackFrozen());
-
-
+    endCycleWindows();
+    assert(!isFocusStackFrozen());
 }END_TEST
 
 void assertWindowIsFocused(int win){
@@ -73,11 +73,12 @@ START_TEST(test_find_and_raise){
     Window win[size];
     for(int n=0;n<2;n++){
         for(int i=0;i<size;i++){
-            win[i]=mapWindow(createNormalWindow());
+            int temp=mapWindow(createNormalWindow());;
+            if(n==0)win[i]=temp;
             assert(xcb_request_check(dis,
                     xcb_ewmh_set_wm_name_checked(ewmh,
                             win[i], 1, titles[i]))==NULL);
-            processNewWindow(createWindowInfo(win[i]));
+            processNewWindow(createWindowInfo(temp));
         }
     }
     for(int i=0;i<size*2;i++){
@@ -125,19 +126,24 @@ START_TEST(test_spawn){
     assert(getExitStatusOfFork()==122);
 }END_TEST
 
+START_TEST(test_get_next_window_in_stack_fail){
+    FOR_EACH(WindowInfo*winInfo,getAllWindows(),addMask(winInfo,HIDDEN_MASK));
+    assert(getNextWindowInStack(0)==NULL);
+    assert(getNextWindowInStack(1)==NULL);
+    assert(getNextWindowInStack(-1)==NULL);
+}END_TEST
 START_TEST(test_get_next_window_in_stack){
     addMask(bottom, HIDDEN_MASK);
     onWindowFocus(top->id);
-    assert(getValue(getNextWindowInFocusStack(0))==top);
-    assert(getValue(getNextWindowInStack(DOWN))==getValue(getActiveWindowStack()->next));
+    assert(getFocusedWindow()==top);
+    assert(getNextWindowInStack(0)==top);
+    assert(getNextWindowInStack(DOWN)==getElement(getActiveWindowStack(),1));
     //bottom is marked hidden
-    assert(getValue(getNextWindowInStack(UP))!=bottom);
-    assert(getValue(getNextWindowInStack(UP))==getValue(getLast(getActiveWindowStack())->prev));
+    assert(getNextWindowInStack(UP)!=bottom);
+    assert(getNextWindowInStack(UP)==getElement(getActiveWindowStack(),getSize(getActiveWindowStack())-2));
     assert(getFocusedWindow()==top);
     switchToWorkspace(!getActiveWorkspaceIndex());
-    Node*n=getNextWindowInStack(0);
-    assert(n);
-    assert(getValue(n)!=getFocusedWindow());
+    assert(getNextWindowInStack(0)!=getFocusedWindow());
 }END_TEST
 
 START_TEST(test_activate_top_bottom){
@@ -153,14 +159,12 @@ START_TEST(test_activate_top_bottom){
 START_TEST(test_shift_top){
     onWindowFocus(bottom->id);
     shiftTop();
-    assert(getValue(getActiveWindowStack())==bottom);
-    assert(getValue(getActiveWindowStack()->next)==top);
+    assert(getHead(getActiveWindowStack())==bottom);
+    assert(getElement(getActiveWindowStack(),1)==top);
 }END_TEST
 START_TEST(test_shift_focus){
-
-    Node *n=getActiveWindowStack();
-    FOR_EACH(n,
-            onWindowFocus(getIntValue(n));
+    FOR_EACH(WindowInfo*winInfo,getActiveWindowStack(),
+            onWindowFocus(winInfo->id);
             int id=shiftFocus(1);
             assert(id);
             assertWindowIsFocused(id);
@@ -170,21 +174,19 @@ START_TEST(test_shift_focus){
 START_TEST(test_swap_top){
     onWindowFocus(bottom->id);
     swapWithTop();
-    assert(getValue(getActiveWindowStack())==bottom);
-    assert(getValue(getLast(getActiveWindowStack()))==top);
+    assert(getHead(getActiveWindowStack())==bottom);
+    assert(getLast(getActiveWindowStack())==top);
 }END_TEST
 
 
 START_TEST(test_swap_position){
     onWindowFocus(bottom->id);
     swapPosition(1);
-    assert(isInList(getActiveWindowStack(), bottom->id)->next);
+    
+    assert(getHead(getActiveWindowStack())==bottom);
+    assert(getLast(getActiveWindowStack())==top);
 }END_TEST
 
-START_TEST(test_focuse_window){
-    focusActiveWindow(top);
-    assert(getActiveFocus()==top->id);
-}END_TEST
 
 
 START_TEST(test_mouse_lock){
@@ -303,6 +305,7 @@ Suite *functionsSuite() {
     tc_core = tcase_create("Helper_Functions");
     tcase_add_checked_fixture(tc_core, functionSetup, fullCleanup);
     tcase_add_test(tc_core, test_get_next_window_in_stack);
+    tcase_add_test(tc_core, test_get_next_window_in_stack_fail);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Simple functions");
@@ -312,7 +315,6 @@ Suite *functionsSuite() {
     tcase_add_test(tc_core, test_shift_focus);
     tcase_add_test(tc_core, test_swap_top);
     tcase_add_test(tc_core, test_swap_position);
-    tcase_add_test(tc_core, test_focuse_window);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Workspace_Functions");

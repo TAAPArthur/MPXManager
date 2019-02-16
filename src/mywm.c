@@ -29,6 +29,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "config.h"
 #include "logger.h"
@@ -38,8 +39,6 @@
 #include "globals.h"
 
 int enterEventLoop=1;
-int runAsWindowManager=1;
-int numberOfWorkspaces=10;
 
 void handler(int sig) {
   void *array[32];
@@ -56,11 +55,10 @@ void handler(int sig) {
 
 void parseAgrs(int argc, char * argv[]){
     int             c;
-    const char    * short_opt = "pn";
+    const char    * short_opt = "chn";
     struct option   long_opt[] =
     {
       {"help",          no_argument,       NULL, 'h'},
-      {"patch",          no_argument, NULL, 'p'},
       {"no-event-loop",          no_argument, NULL, 'n'},
       {"crash-on-error",          no_argument, NULL, 'c'},
       {NULL,            0,                 NULL, 0  }
@@ -78,11 +76,11 @@ void parseAgrs(int argc, char * argv[]){
          case 'n':
              enterEventLoop=0;
              break;
-         case 'p':
-             runAsWindowManager=0;
-             break;
          case 'h':
              break;
+        default:
+            LOG(LOG_LEVEL_ERROR,"unknown option %c\n",c);
+            assert(0);
       }
     }
 }

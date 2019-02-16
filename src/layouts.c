@@ -7,22 +7,26 @@
 
 #include "wmfunctions.h"
 #include "windows.h"
+#include "workspaces.h"
+#include "masters.h"
 #include "layouts.h"
+#include "xsession.h"
 
 #include "monitors.h"
 #include "globals.h"
 #include "bindings.h"
 #include "logger.h"
 
-#define LAYOUT_FAMILY(S) {.name=""#S,.layoutFunction=S}
+
+#define _LAYOUT_FAMILY(S) {.name=""#S,.layoutFunction=S}
 
 Layout LAYOUT_FAMILIES[]={
-    LAYOUT_FAMILY(full),
-    LAYOUT_FAMILY(column),
-    LAYOUT_FAMILY(masterPane),
+    _LAYOUT_FAMILY(full),
+    _LAYOUT_FAMILY(column),
+    _LAYOUT_FAMILY(masterPane),
 };
 int NUMBER_OF_LAYOUT_FAMILIES = LEN(LAYOUT_FAMILIES);
-Layout (DEFAULT_LAYOUTS[])={
+Layout DEFAULT_LAYOUTS[]={
     {.name="Full",.layoutFunction=full,.args={.noBorder=1,.raiseFocused=1}},
     {.name="Grid",.layoutFunction=column},
     {.name="2 Column",.layoutFunction=column, .args={.dim=0, .arg={2}}},
@@ -35,45 +39,35 @@ Layout (DEFAULT_LAYOUTS[])={
 int NUMBER_OF_DEFAULT_LAYOUTS = LEN(DEFAULT_LAYOUTS);
 
 
-#define _FOR_EACH_TILE_AT_MOST(dir,stack,N,...) {\
-    int __size__=0;\
-    _FOR_EACH(dir,stack,\
-            if(__size__==N)break;\
-            if(isTileable(getValue(stack))){__size__++;__VA_ARGS__;})}
-#define FOR_EACH_TILE_AT_MOST(stack,N,...) _FOR_EACH_TILE_AT_MOST(next,stack,N,__VA_ARGS__)
-#define FOR_EACH_TILE(stack,...)\
-        FOR_EACH_TILE_AT_MOST(stack,-1,__VA_ARGS__)
-#define FOR_EACH_TILE_AT_MOST_REVERSE(stack,N,...)\
-        _FOR_EACH_TILE_AT_MOST(prev,stack,N,__VA_ARGS__;)
 
-#define FOR_EACH_TILE_REVERSE(stack,...)\
-    FOR_EACH_TILE_AT_MOST_REVERSE(stack,-1,__VA_ARGS__)
+static int getDimIndex(LayoutArgs*args){return args->dim==0?CONFIG_WIDTH:CONFIG_HEIGHT;}
+static int getOtherDimIndex(LayoutArgs*args){return args->dim==0?CONFIG_HEIGHT:CONFIG_WIDTH;}
+static int dimIndexToPos(int dim){return dim-2;}
 
 char* getNameOfLayout(Layout*layout){
     return layout?layout->name: NULL;
 }
 void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num){
-    if(num && !isNotEmpty(getWorkspaceByIndex(workspaceIndex)->layouts))
+    if(num && !isNotEmpty(&getWorkspaceByIndex(workspaceIndex)->layouts))
         getWorkspaceByIndex(workspaceIndex)->activeLayout=layout;
     for(int n=0;n<num;n++)
-        insertTail(getWorkspaceByIndex(workspaceIndex)->layouts, &layout[n]);
+        addToList(&getWorkspaceByIndex(workspaceIndex)->layouts, &layout[n]);
 }
 void clearLayoutsOfWorkspace(int workspaceIndex){
-    clearList(getWorkspaceByIndex(workspaceIndex)->layouts);
+    clearList(&getWorkspaceByIndex(workspaceIndex)->layouts);
     getWorkspaceByIndex(workspaceIndex)->activeLayout=NULL;
 }
 
-int getNumberOfWindowsToTile(Node*windowStack,LayoutArgs*args,Node**last){
+int getNumberOfWindowsToTile(ArrayList*windowStack,LayoutArgs*args){
     assert(windowStack!=NULL);
     int size=0;
-    FOR_EACH(windowStack,
+    for(int i=0;i<getSize(windowStack);i++){
+        WindowInfo*winInfo=getElement(windowStack,i);
         if(args&&args->limit&&size==args->limit)break;
-        if(isTileable(getValue(windowStack))){
-            if(last)
-                *last=windowStack;
+        if(isTileable(winInfo)){
             size++;
         }
-    )
+    }
     return size;
 }
 void transformConfig(LayoutState*state,int config[CONFIG_LEN]){
@@ -153,19 +147,13 @@ void configureWindow(LayoutState*state,WindowInfo* winInfo,short values[CONFIG_L
 }
 
 
-int getDimIndex(LayoutArgs*args){return args->dim==0?CONFIG_WIDTH:CONFIG_HEIGHT;}
-int getOtherDimIndex(LayoutArgs*args){return args->dim==0?CONFIG_HEIGHT:CONFIG_WIDTH;}
-int dimIndexToPos(int dim){return dim-2;}
 
 void cycleLayouts(int dir){
-    Node*n=getActiveWorkspace()->layouts;
-    if(dir>=0)
-        FOR_AT_MOST(n,dir)
-    else
-        FOR_AT_MOST_REVERSED(n,-dir)
-
-    getActiveWorkspace()->layouts=n;
-    setActiveLayout(getValue(n));
+    ArrayList*layouts=&getActiveWorkspace()->layouts;
+    if(!isNotEmpty(layouts))return;
+    int pos=getNextIndex(layouts,getActiveWorkspace()->layoutOffset,dir);
+    setActiveLayout(getElement(layouts,pos));
+    getActiveWorkspace()->layoutOffset=pos;
     retile();
 }
 void toggleLayout(Layout* layout){
@@ -186,19 +174,25 @@ void tileWorkspace(int index){
         return;
     Workspace*workspace=getWorkspaceByIndex(index);
     applyLayout(workspace);
-    Node*n;
-    n=getWindowStack(workspace);
+
+    ArrayList*list=getWindowStack(workspace);
     LayoutState dummyState={.monitor=getMonitorFromWorkspace(workspace)};
-    FOR_EACH(n,
-        if(hasPartOfMask(getValue(n),FULLSCREEN_MASK|ROOT_FULLSCREEN_MASK)){
+
+    FOR_EACH(WindowInfo*winInfo,list,
+        if(hasPartOfMask(winInfo,FULLSCREEN_MASK|ROOT_FULLSCREEN_MASK)){
             short config[CONFIG_LEN]={0};
-            configureWindow(&dummyState,getValue(n),config);
+            configureWindow(&dummyState,winInfo,config);
         }
     )
-    n=getWindowStack(workspace);
-    FOR_EACH(n,if(hasMask(getValue(n),BELOW_MASK))raiseLowerWindowInfo(getValue(n),0))
-    n=getLast(getWindowStack(workspace));
-    FOR_EACH_REVERSED(n,if(hasMask(getValue(n),ABOVE_MASK))raiseLowerWindowInfo(getValue(n),1))
+    for(int i=0;i<getSize(list);i++){
+        WindowInfo*winInfo;
+        winInfo=getElement(list,i);
+        if(hasMask(winInfo,BELOW_MASK))
+            raiseLowerWindowInfo(winInfo,0);
+        winInfo=getElement(list,getSize(list)-i-1);
+        if(hasMask(winInfo,ABOVE_MASK))
+            raiseLowerWindowInfo(winInfo,1);
+    }
 }
 
 void applyLayout(Workspace*workspace){
@@ -210,15 +204,15 @@ void applyLayout(Workspace*workspace){
     Monitor*m=getMonitorFromWorkspace(workspace);
     assert(m);
 
-    Node* windowStack=getWindowStack(workspace);
+    ArrayList* windowStack=getWindowStack(workspace);
     if(!isNotEmpty(windowStack)){
         LOG(LOG_LEVEL_TRACE,"no windows in workspace\n");
         return;
     }
     int raiseFocusedWindow=layout->args.raiseFocused&&
-        getFocusedWindow()&&isInList(windowStack,getFocusedWindow()->id)&&isTileable(getFocusedWindow());
-    Node*last=NULL;
-    int size = getNumberOfWindowsToTile(windowStack,&layout->args,&last);
+        getFocusedWindow()&&find(windowStack,getFocusedWindow(),sizeof(int))&&isTileable(getFocusedWindow());
+    ArrayList*last=NULL;
+    int size = getNumberOfWindowsToTile(windowStack,&layout->args);
     LayoutState state={.args=&layout->args,.monitor=m,.numWindows=size,.stack=windowStack,.last=last};
     if(size)
         if(layout->layoutFunction){
@@ -234,13 +228,7 @@ void applyLayout(Workspace*workspace){
         raiseWindowInfo(getFocusedWindow());
 }
 
-void full(LayoutState* state){
-    short int values[CONFIG_LEN];
-    memcpy(&values, &state->monitor->viewX, sizeof(short int)*4);
-    Node*windowStack=state->last;
-    FOR_EACH_TILE_REVERSE(windowStack,configureWindow(state,getValue(windowStack),values));
-}
-Node*splitEven(LayoutState*state,Node*stack,short const* baseValues,int dim,int num){
+static int splitEven(LayoutState*state,ArrayList*stack,int offset,short const* baseValues,int dim,int num){
     assert(stack);
     assert(num);
     short values[CONFIG_LEN];
@@ -248,13 +236,27 @@ Node*splitEven(LayoutState*state,Node*stack,short const* baseValues,int dim,int 
     int sizePerWindow =values[dim]/num;
     int rem=values[dim]%num;
     LOG(LOG_LEVEL_DEBUG,"tiling at most %d windows size %d %d\n",num,sizePerWindow,dim);
-    FOR_EACH_TILE_AT_MOST(stack,num,
-            values[dim]=sizePerWindow+(rem-->0?1:0);
-            configureWindow(state,getValue(stack),values);
-            values[dim-2]+=values[dim];//convert width/height index to x/y
-     )
-    return stack;
+    int i=offset;
+    int count=0;
+    for(;i<getSize(stack);i++){
+        if(count==num)break;
+        WindowInfo*winInfo=getElement(stack,i);
+        if(!isTileable(winInfo))continue;
+        count++;
+        values[dim]=sizePerWindow+(rem-->0?1:0);
+        configureWindow(state,winInfo,values);
+        values[dim-2]+=values[dim];//convert width/height index to x/y
+    }
+    return i;
 }
+
+void full(LayoutState* state){
+    short int values[CONFIG_LEN];
+    memcpy(&values, &state->monitor->viewX, sizeof(short int)*4);
+    FOR_EACH_REVERSED(WindowInfo*winInfo,state->stack,
+        configureWindow(state,winInfo,values));
+}
+
 void column(LayoutState*state){
 
     int size = state->numWindows;
@@ -269,9 +271,10 @@ void column(LayoutState*state){
     short values[CONFIG_LEN];
     memcpy(values, &state->monitor->viewX, sizeof(short)*4);
     values[splitDim]/=numCol;
-    Node*windowStack=state->stack;
+    ArrayList*windowStack=state->stack;
+    int offset=0;
     for(int i=0;i<numCol;i++){
-        windowStack=splitEven(state, windowStack,values, 
+        offset=splitEven(state, windowStack,offset,values, 
             getOtherDimIndex(state->args),size/numCol+(rem-->0?1:0));
         values[splitDim-2]+=values[splitDim];
     }
@@ -283,15 +286,15 @@ void masterPane(LayoutState*state){
         full(state);
         return;
     }
-    Node*windowStack=state->stack;
+    ArrayList*windowStack=state->stack;
     short values[CONFIG_LEN];
     memcpy(values, &state->monitor->viewX, sizeof(short)*4);
     int dimIndex=getDimIndex(state->args);
     int dim=values[dimIndex];
     values[dimIndex]=MAX(dim*state->args->arg[0],1);
-    configureWindow(state,getValue(windowStack),values);
+    configureWindow(state,getHead(windowStack),values);
 
     values[dimIndexToPos(dimIndex)]+=values[dimIndex];
     values[dimIndex]=dim-values[dimIndex];
-    splitEven(state,windowStack->next, values, getOtherDimIndex(state->args),size-1);
+    splitEven(state,windowStack,1, values, getOtherDimIndex(state->args),size-1);
 }

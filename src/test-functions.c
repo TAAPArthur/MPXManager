@@ -2,13 +2,15 @@
  * @file test-functions.c
  */
 
+/// \cond
 #include <xcb/xtest.h>
+/// \endcond
 
-#include "test-functions.h"
-
-#include "globals.h"
-#include "mywm-util.h"
 #include "logger.h"
+#include "masters.h"
+#include "mywm-util.h"
+#include "test-functions.h"
+#include "xsession.h"
 
 void sendDeviceActionToWindow(int id,int detail,int type,int window){
     catchError(xcb_test_fake_input_checked(dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id));

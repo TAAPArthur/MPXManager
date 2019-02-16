@@ -84,12 +84,12 @@ int getClientKeyboard(int win);
  * @param numberOfSlaves if not NULL, it will be set to the number of slaves found
  * @return a Node list container where each value is a SlaveDeivce
  */
-Node* getSlavesOfMasterByID(int*ids,int num,int*numberOfSlaves);
+ArrayList* getSlavesOfMasterByID(int*ids,int num,int*numberOfSlaves);
 /**
  * Returns a node list of both types of SlaveDevices for the given master
  * @param master 
  */
-Node*getSlavesOfMaster(Master*master);
+ArrayList*getSlavesOfMaster(Master*master);
 
 /**
  * Checks to see if the device is prefixed with XTEST
@@ -120,7 +120,7 @@ void swapDeviceId(Master*master1,Master*master2);
 /**
  * Add all existing masters to the list of master devices
  */
-void initCurrentMasters();
+void initCurrentMasters(void);
 
 
 /**
@@ -169,7 +169,7 @@ int ungrabDetail(int deviceID,int detail,int mod,int isKeyboard);
  * Grabs the active keyboard
  * @return 1 iff the grab succeeded
  */
-int grabActiveKeyboard();
+int grabActiveKeyboard(void);
 /**
  *
  * @param id
@@ -189,7 +189,7 @@ int grabPointer(int id);
  * Grabs the active pointer
  * @return 1 iff the grab succeeded
  */
-int grabActivePointer();
+int grabActivePointer(void);
 
 /**
  * Establishes a passive grab on the given window for events indicated by mask.
@@ -201,7 +201,6 @@ void passiveGrab(int window,int maskValue);
 /**
  * Ends a passive grab on the given window for events indicated by mask.
  * @param window
- * @param id 
  */
 void passiveUngrab(int window);
 /**
@@ -220,7 +219,27 @@ int ungrabAllMasterDevices(void);
  */
 int isKeyboardMask(int mask);
 
+/**
+ * Sets the current master position to x,y
+ * the previous current position is saved and the delta can be got with getMouseDelta
+ * @param x
+ * @param y
+ */
 void setLastKnowMasterPosition(int x,int y);
+
+/**
+ * For a given mouse, store the change in position between the last two calls of setLastKnowMasterPosition() in result
+ * @param master
+ * @param result holds the {dx,dy}
+ */
 void getMouseDelta(Master*master,short result[2]);
+
+/**
+ * Queries the X Server and returns the focused window.
+ * Note this method is different thatn getFocusedWindow() in that we are not looking our view of focus but the Xservers
+ * @param id a keyboard master device
+ * @return the the current window focused by the given keyboard device
+ */
+int getActiveFocus(int id);
 
 #endif /* DEVICES_H_ */

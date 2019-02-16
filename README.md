@@ -15,7 +15,7 @@ We strived to make as few assumptions as possible while still be compliant with 
 ## Non Goals
 We did not make it a priority to be small or efficient
 
-# Features
+## Features
   * MPX Support
   * Workspaces
     *  Windows can be in multiple workspaces
@@ -29,14 +29,14 @@ We did not make it a priority to be small or efficient
   *  Scriptable (TODO)
 
 
-# Missing Features
+## Missing Features
   * Advanced layouts
   * Live config editing (needs to be recompiled)
 
 
 
-# Features
-## Event Hooks
+## Features
+### Event Hooks
 We all users to add run arbitrary function when certain events (either standard X11 events or changes in out internal state) are detected.
 
 ## Key/Mouse Bindings

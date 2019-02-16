@@ -21,6 +21,8 @@
 #include "mywm-util.h"
 #include "wmfunctions.h"
 #include "windows.h"
+#include "masters.h"
+#include "workspaces.h"
 #include "devices.h"
 #include "logger.h"
 #include "xsession.h"
@@ -29,7 +31,6 @@
 #include "events.h"
 #include "layouts.h"
 
-static Node initialMappingOrder;
 
 int isWindowVisible(WindowInfo* winInfo){
     return winInfo && hasMask(winInfo, PARTIALLY_VISIBLE);
@@ -38,11 +39,8 @@ int isWindowVisible(WindowInfo* winInfo){
 int isMappable(WindowInfo* winInfo){
     return winInfo && hasMask(winInfo, MAPABLE_MASK);
 }
-int isMapped(WindowInfo* winInfo){
-    return winInfo && hasMask(winInfo, MAPPED_MASK);
-}
 int isInteractable(WindowInfo* winInfo){
-    return isMapped(winInfo) && !(winInfo->mask & HIDDEN_MASK);
+    return hasMask(winInfo,MAPPED_MASK) && !hasMask(winInfo,HIDDEN_MASK);
 }
 int isTileable(WindowInfo*winInfo){
     return isInteractable(winInfo) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
@@ -123,16 +121,10 @@ void updateEWMHClientList(){
     int num=getSize(getAllWindows());
     xcb_window_t stackingOrder[num];
     xcb_window_t mappingOrder[num];
-    Node*n=getAllWindows();
     int i=0;
-    FOR_EACH(n,
-            stackingOrder[num-++i]=getIntValue(n);
-    )
+    FOR_EACH(WindowInfo*winInfo,getAllWindows(),stackingOrder[num-++i]=winInfo->id;)
     i=0;
-    n=&initialMappingOrder;
-    FOR_EACH(n,
-            mappingOrder[num-++i]=getIntValue(n);
-    )
+    FOR_EACH(WindowInfo*winInfo,getAllWindows(),mappingOrder[num-++i]=winInfo->id);
 
     xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, num, mappingOrder);
     xcb_ewmh_set_client_list_stacking(ewmh, defaultScreenNumber, num, stackingOrder);
@@ -153,7 +145,7 @@ int getSavedWorkspaceIndex(xcb_window_t win){
     return workspaceIndex;
 }
 
-void* waitForWindowToDie(int id){
+static void* waitForWindowToDie(int id){
     lock();
     WindowInfo*winInfo=getWindowInfo(id);
     int hasPingMask=0;
@@ -253,10 +245,9 @@ void raiseLowerWindowInfo(WindowInfo*winInfo,int above){
 int raiseWindowInfo(WindowInfo* winInfo){
     int result= winInfo?raiseWindow(winInfo->id):0;
     if(result){
-        Node*n=getAllWindows();
-        FOR_EACH(n,
-            if(isInteractable(getValue(n))&&((WindowInfo*)getValue(n))->transientFor==winInfo->id)
-                raiseLowerWindowInfo(getValue(n),1);
+        FOR_EACH(WindowInfo*winInfo,getAllWindows(),
+            if(isInteractable(winInfo)&&winInfo->transientFor==winInfo->id)
+                raiseLowerWindowInfo(winInfo,1);
         )
     }
     return result;
@@ -291,8 +282,7 @@ int deleteWindow(xcb_window_t winToRemove){
 }
 
 int attemptToMapWindow(int id){
-    WindowInfo* winInfo=getValue(isInList(getAllWindows(), id));
-    LOG(LOG_LEVEL_TRACE,"Mappable status %d %d %d\n",id,isWindowInVisibleWorkspace(winInfo),isMappable(winInfo));
+    WindowInfo* winInfo=getWindowInfo(id);
     if(!winInfo || isWindowInVisibleWorkspace(winInfo) && isMappable(winInfo))
         return catchError(xcb_map_window_checked(dis, id));
     return 0;
@@ -306,14 +296,14 @@ static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,in
     else{
         catchError(xcb_unmap_window_checked(dis, winInfo->id));
         Master*active=getActiveMaster();
-        Node*master=getLast(getAllMasters());
-        FOR_EACH_REVERSED(master,
-            Node* masterWindowStack=getWindowStackByMaster(getValue(master));
-            if(getValue(masterWindowStack)==winInfo){
-                setActiveMaster(getValue(master));
-                UNTIL_FIRST(masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(getValue(masterWindowStack))->id));
-                if(masterWindowStack)
-                    focusWindowInfo(getValue(masterWindowStack));
+        FOR_EACH(Master*master,getAllMasters(),
+            ArrayList* masterWindowStack=getWindowStackByMaster(master);
+            if(getFocusedWindowByMaster(master)==winInfo){
+                setActiveMaster(master);
+                WindowInfo*nextMasterWindowToFocus=NULL;
+                UNTIL_FIRST(nextMasterWindowToFocus,masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(nextMasterWindowToFocus)->id));
+                if(nextMasterWindowToFocus)
+                    focusWindowInfo(nextMasterWindowToFocus);
             }
         );
         setActiveMaster(active);
@@ -321,8 +311,16 @@ static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,in
 }
 static void setWorkspaceState(int workspaceIndex,int map){
     LOG(LOG_LEVEL_DEBUG,"Setting workspace %d to %d:\n",workspaceIndex,map);
-    Node*stack=getWindowStack(getWorkspaceByIndex(workspaceIndex));
-    FOR_EACH(stack,updateWindowWorkspaceState(getValue(stack),workspaceIndex,map))
+    FOR_EACH(WindowInfo*winInfo,getWindowStack(getWorkspaceByIndex(workspaceIndex)),updateWindowWorkspaceState(winInfo,workspaceIndex,map))
+}
+void swapWorkspaces(int index1,int index2){
+    swapMonitors(index1,index2);
+    if(isWorkspaceVisible(index1)!=isWorkspaceVisible(index2)){
+        ArrayList*stack=getWindowStack(getWorkspaceByIndex(index1));
+        FOR_EACH_REVERSED(WindowInfo*winInfo,stack,updateWindowWorkspaceState(winInfo,index1,index2));
+        stack=getWindowStack(getWorkspaceByIndex(index2));
+        FOR_EACH_REVERSED(WindowInfo*winInfo,stack,updateWindowWorkspaceState(winInfo,index2,index1));
+    }
 }
 void switchToWorkspace(int workspaceIndex){
     if(isWorkspaceVisible(workspaceIndex)){
@@ -357,7 +355,7 @@ void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex){
     assert(destIndex>=0 && destIndex<getNumberOfWorkspaces());
     assert(winInfo);
 
-    removeWindowFromAllWorkspaces(winInfo);
+    removeWindowFromWorkspace(winInfo);
     addWindowToWorkspace(winInfo, destIndex);
     updateWindowWorkspaceState(winInfo, destIndex, isWorkspaceVisible(destIndex));
 
@@ -390,7 +388,7 @@ int resetBorder(WindowInfo*winInfo){
 }
 
 
-int filterConfigValues(int*filteredArr,WindowInfo*winInfo,short values[5],xcb_window_t sibling,int stackMode,int configMask){
+static int filterConfigValues(int*filteredArr,WindowInfo*winInfo,short values[5],xcb_window_t sibling,int stackMode,int configMask){
     int i=0;
     int n=0;
     if(configMask & XCB_CONFIG_WINDOW_X && ++n && isExternallyMoveable(winInfo))
@@ -528,4 +526,13 @@ void applyGravity(int win,short pos[5],int gravity){
         default:
             pos[0]+=pos[2]/2;
     }
+}
+void swapWindows(WindowInfo*winInfo1,WindowInfo*winInfo2){
+    int index1=indexOf(getWindowStackOfWindow(winInfo1),winInfo1,sizeof(int));
+    int index2=indexOf(getWindowStackOfWindow(winInfo2),winInfo2,sizeof(int));
+    setElement(getWindowStackOfWindow(winInfo1),index1,winInfo2);
+    setElement(getWindowStackOfWindow(winInfo2),index2,winInfo1);
+    int temp=winInfo1->workspaceIndex;
+    winInfo1->workspaceIndex=winInfo2->workspaceIndex;
+    winInfo2->workspaceIndex=temp;
 }

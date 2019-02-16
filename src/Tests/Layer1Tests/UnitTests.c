@@ -4,7 +4,6 @@
 //int getLogLevel(){return 0;}
 
 extern Suite *utilSuite();
-extern Suite *mywmUtilSuite();
 CREATE_HANDLER
 int main(void) {
     signal(SIGSEGV, handler);   // install our handler
@@ -12,7 +11,6 @@ int main(void) {
 
     SRunner *runner;
     runner = srunner_create(utilSuite());
-    srunner_add_suite(runner,mywmUtilSuite());
     srunner_run_all(runner, CK_NORMAL);
     int failures=srunner_ntests_failed(runner);
     srunner_free(runner);

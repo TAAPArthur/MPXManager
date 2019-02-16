@@ -138,8 +138,8 @@ START_TEST(test_num_workspaces_grow){
     markState();
     int num=getNumberOfWorkspaces();
     assert(num>2);
-    destroyContext();
-    createContext(_i?num*2:num/2);
+    NUMBER_OF_WORKSPACES=_i?num*2:num/2;
+    resetContext();
     assert(num!=getNumberOfWorkspaces());
     //detect change only when growing
     assert(updateState(NULL)==_i);

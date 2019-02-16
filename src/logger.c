@@ -16,6 +16,8 @@
 #include "logger.h"
 #include "globals.h"
 #include "windows.h"
+#include "masters.h"
+#include "workspaces.h"
 #include "monitors.h"
 
 extern xcb_connection_t *dis;
@@ -34,10 +36,10 @@ int getLogLevel(){
 void setLogLevel(int level){
     LOG_LEVEL=level;
 }
-void printNodeList(Node*n){
-    printf("Printing list: \n");
-    FOR_EACH(n,printf("%d ",getIntValue(n)));
-    printf("\n");
+void printArrayList(ArrayList*n){
+    LOG(LOG_LEVEL_DEBUG,"Printing list: \n");
+    FOR_EACH(void*v,n,LOG(LOG_LEVEL_DEBUG,"%d ",*(int*)v));
+    LOG(LOG_LEVEL_DEBUG,"\n");
 }
 #define PRINT_MASK(str,mask) if( str & mask)LOG(LOG_LEVEL_DEBUG,#str " ");
 void printMask(int mask){
@@ -74,48 +76,37 @@ void printMask(int mask){
 }
 void printMasterSummary(void){
     LOG(LOG_LEVEL_DEBUG,"Active Master %d\n",getActiveMaster()->id);
-    Node *n=getAllMasters();
-    FOR_EACH(n,
-        Master*master=getValue(n);
-        LOG(LOG_LEVEL_DEBUG,"(%d, %d: %s %06x) ",master->id,master->pointerId,master->name, master->focusColor);
+    FOR_EACH(Master*master,getAllMasters(),LOG(LOG_LEVEL_DEBUG,"(%d, %d: %s %06x) ",master->id,master->pointerId,master->name, master->focusColor);
     );
     LOG(LOG_LEVEL_DEBUG,"\n");
 }
 void printMonitorSummary(void){
-    Node *n=getAllMonitors();
-    FOR_EACH(n,
-        Monitor *m=getValue(n);
+    FOR_EACH(Monitor*m,getAllMonitors(),
         LOG(LOG_LEVEL_DEBUG,"Monitor %ld primary %d",m->id,m->primary);
         PRINT_ARR(&m->x,4);
         PRINT_ARR(&m->viewX,4);
     );
     LOG(LOG_LEVEL_DEBUG,"\n");
 }
-void printWindowStackSummary(Node*n){
-    FOR_EACH(n,
-        WindowInfo*winInfo=getValue(n);
-        LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
-    );
+void printWindowStackSummary(ArrayList*list){
+    FOR_EACH(WindowInfo*winInfo,list,LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title););
     LOG(LOG_LEVEL_DEBUG,"\n");
 }
 void printSummary(void){
     LOG(LOG_LEVEL_DEBUG,"Summary:\n");
     printMasterSummary();
     printMonitorSummary();
-    Node*n=getActiveMasterWindowStack();
-    if(isNotEmpty(n)){
+    ArrayList*list=getActiveMasterWindowStack();
+    if(isNotEmpty(list)){
         LOG(LOG_LEVEL_DEBUG,"Active master window stack:\n");
-        FOR_EACH(n,
-            WindowInfo*winInfo=getValue(n);
-            LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title);
-        );
+        FOR_EACH(WindowInfo*winInfo,list,LOG(LOG_LEVEL_DEBUG,"(%d: %s) ",winInfo->id,winInfo->title););
     }
     LOG(LOG_LEVEL_DEBUG,"\n");
     for(int i=0;i<getNumberOfWorkspaces();i++){
-        Node*n=getWindowStack(getWorkspaceByIndex(i));
-        if(!isNotEmpty(n))continue;
-        LOG(LOG_LEVEL_DEBUG,"%d \n",i);
-        printWindowStackSummary(n);
+        ArrayList*list=getWindowStack(getWorkspaceByIndex(i));
+        if(!isNotEmpty(list))continue;
+        LOG(LOG_LEVEL_DEBUG,"Workspace: %d \n",i);
+        printWindowStackSummary(list);
     }
     if(isNotEmpty(getAllDocks())){
         LOG(LOG_LEVEL_DEBUG,"%d Docks: \n",getSize(getAllDocks()));
@@ -123,9 +114,7 @@ void printSummary(void){
     }
 }
 void dumpAllWindowInfo(void){
-    Node*n=getAllWindows();
-    
-    FOR_EACH(n,dumpWindowInfo(getValue(n));LOG(LOG_LEVEL_DEBUG,"\n"););
+    FOR_EACH(WindowInfo*winInfo,getAllWindows(),dumpWindowInfo(winInfo);LOG(LOG_LEVEL_DEBUG,"\n"););
 }
 
 void dumpWindowInfo(WindowInfo* win){

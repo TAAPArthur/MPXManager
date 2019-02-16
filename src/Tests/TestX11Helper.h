@@ -50,13 +50,14 @@ int isWindowMapped(int win);
 Window createDock(int i,int size,int full);
 void fullCleanup();
 
+void loadSampleProperties(WindowInfo*winInfo);
 int getExitStatusOfFork();
 void waitForCleanExit();
 void setProperties(int win);
 void checkProperties(WindowInfo*winInfo);
-int getActiveFocus();
 /**
  * checks to marking the window ids in stacking are in bottom to top order
  */
 int checkStackingOrder(int* stackingOrder,int num);
+static inline void* isInList(ArrayList*list,int value){return find(list,&value,sizeof(int));}
 #endif /* TESTS_UNITTESTS_H_ */

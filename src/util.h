@@ -1,38 +1,22 @@
 /**
  * @file util.h
- * @brief Linked list implementation and helper methods
+ * @brief ArrayList and other generic helper methods
  *
  */
 #ifndef MYWM_UTIL
 #define MYWM_UTIL
 
-/**
- * @brief A Linked list struct
- * The struct can hold any value, but
- * there are convience methods that work best when the
- * value points to an int.
- *
- * Nodes are just holders for values ie the value a node holds can change to
- * another value in the list. This property is mainly set so that the pointer
- * to the head of a list will always point to the head of the list while the list exists.
- * A list is considered to not exist when it is destroyed (via @see destroyList) or it is
- * joined with another list (@see insertBefore @see insertAfter)
- *
- * A node can only hold a value of NULL if it is an empty head of a list.
- * Relatedly, a node is defined to be empty (sie==0) if its value is NULL
- */
-typedef struct node_struct{
-    /** The value this node has or NULL if node is empty*/
-    void * value;
-    /** Pointer to next element in the list or NULL*/
-    struct node_struct * next;
-    /** Pointer to prev element in the list or NULL*/
-    struct node_struct * prev;
-} Node;
+///Returns the length of the array
+#define LEN(X) (sizeof X / sizeof X[0])
+/// Returns the min of a,b
+#define MIN(a,b) (a<b?a:b)
+/// Returns the max of a,b
+#define MAX(a,b) (a>b?a:b)
+
 /**
  * Simple ArrayList struct
  */
-typedef struct ArrayList{
+typedef struct {
     ///backing arr
     void**arr;
     ///number of elements in list
@@ -41,10 +25,10 @@ typedef struct ArrayList{
     int maxSize;
 }ArrayList;
 
-#define MIN(a,b) (a<b?a:b)
-#define MAX(a,b) (a>b?a:b)
+
 
 /**
+ * Returns a monotonically increasing number that servers a the time in ms.
  * @return the current time (ms)
  */
 unsigned int getTime ();
@@ -53,281 +37,54 @@ unsigned int getTime ();
  * @param mil number of milliseconds to sleep
  */
 void msleep(int mil);
-/**
- * Creates a pointer to a head of an empty node list.
- *
- * This function is equivalent to calling createHead(NULL)
- * @see createHead(void*value)
- * @return a pointer to node
- */
-Node* createEmptyHead();
-/**
- * Creates a pointer to a node with the given value.
- * The next and prev pointers are set to null
- * @param value - the value of the new node
- * @return a pointer to node
- */
-Node* createHead(void*value);
-/**
- * Creates the head of a cirular linked list with the given values.
- * A circular linked list is defined to have the next pointer of the last node
- * point to the head of the list and prev pointer of the head to point to the last element.
- * Once created no function shall break the above invariant until the entire list is freed
- * @param value the value of the linked list
- * @return a pointer a node
- */
-Node* createCircularHead(void*value);
 
 
 /**
- * Adds a new new to the list such that the
- * head's current value to reflect value and all pointers to head are still valid
- * @param head
- * @param value
- */
-void insertHead(Node* head,void *value);
-
-/**
- * Adds a new new to the end of the list.
- * Using this method on non-circular list is undefined behavior
- * @param head
- * @param value
- */
-void insertTail(Node* head,void *value);
-/**
- * Given list A--B--C, and D--E--F, list insertBefore(A,E) will result in
- * A--E--F--B--C and D
- *
- * Insert a new node with value n->value after n,
- * and change n's value to value.
- *
- * Note behavious is undefined either param is empty
- * @param node the head of the list
- * @param newNode the new node to insert
- */
-void insertAfter(Node* node,Node* newNode);
-/**
- * Given list A--B--C, and D--E--F, list insertBefore(A,E) will result in
- * E--F--A--B--C, and D
- * The pointer to head will always point to the start of the list
- * even if it means shifting values of other nodes in the list
- *
- * Note behavious is undefined either param is empty
- * @param head the head of the list
- * @param newNode the new node to insert
- */
-void insertBefore(Node* head,Node* newNode);
-
-
-
-/**
- * @brief Iterates over head and runs arbitrary command(s).
- * The value of head will be updated upon every iteration.
+ * @brief Iterates over list and runs arbitrary command(s).
+ * The value of list will be updated upon every iteration.
  * Note that behavior is undefined if the list is modified while iterating
- * @param head - starting point for iteration. Will be set to the NULL upon completion
- * @param ... - code to run on every iteration
+ * @param var the value represents the ith value of list 
+ * @param list - starting point for iteration. Will be set to the NULL upon completion
+ * @param code - code to run on every iteration
  */
-#define FOR_EACH(head,...) \
-        _FOR_EACH(next,head,__VA_ARGS__)
-
-
-/**
- * @brief Iterates over head and runs arbitrary command(s) util the end
- * is reached or until the list wraps around back to head.
- * The value of head will be updated upon every iteration.
- * Note that behavior is undefined if the list is modified while iterating
- * @param head - starting point for iteration. Will be set to the NULL upon completion
- * @param ... - code to run on every iteration
- */
-#define FOR_EACH_CIRCULAR(head,...) {\
-        Node*__start__=head; \
-        FOR_EACH(head,__VA_ARGS__;if(__start__==head->next){head=NULL;break;})\
+#define FOR_EACH(var,list,code...) \
+    for(int _i=0;_i<getSize(list);_i++){\
+        var = getElement(list,_i);\
+        code;\
     }
-/**
- * Iterates over head backwards and runs arbitary command(s).
- * The value of head will be updated upon every iteration
- * Note that behavior is undefined if the list is modified while iterating
- * @param head - starting point for iteration. Will be set to the NULL upon completion
- */
-#define FOR_EACH_REVERSED(head,...) \
-        _FOR_EACH(prev,head,__VA_ARGS__)
-/**
- * itererates over head in the specified direction(either next or prev) and
- * runs arbitary command(s).
- * The value of head will be updated upon every iteration
- * head will be set to either the last or front element.
- *
- * Note that it is safe to modify the list while iterating
- *
- * You probably don't want to use this function
- * @param dir - the direction to transverse (next or prev)
- * @param head  - starting point for iteration. Will be set to the NULL upon completion
- * @see FOR_EACH_REVERSED(head,...)
- * @see FOR_EACH(head,...)
- */
-#define _FOR_EACH(dir,head,...) \
-    if(head->value)while(head){Node*__temp=head->dir;__VA_ARGS__;head=__temp;}else head=NULL;
 
 /**
- * Like for each but stops after N iterations
- * @see FOR_EACH(head,...)
- * @param head - starting point for iteration. Will be set to the last element visited
- * @param N - max number of iterations
+ * @brief Iterates backwards over list and runs arbitrary command(s).
+ * The value of var will be updated upon every iteration.
+ * Note that behavior is undefined if the list is modified while iterating unless the element is modified at the current posistion or later
+ * @param var the value represents the ith value of list 
+ * @param list the list to iterate over
+ * @param code - code to run on every iteration
  */
-#define FOR_AT_MOST(head,N,...) \
-    {int __temp_size__=0; FOR_EACH(head,if(__temp_size__++==N)break; __VA_ARGS__;)}
-///@copydoc FOR_AT_MOST
-#define FOR_AT_MOST_REVERSED(head,N,...) \
-    {int __temp_size__=0; FOR_EACH_REVERSED(head,if(__temp_size__++==N)break; __VA_ARGS__;)}
-/**
- * Iterates over head and set head to the node in the last | EXPR is maximized
- * In the case of ties, the element closet to the head of the list is chosen
- */
-#define GET_MAX(head,CONDITION,EXPR) \
-    {\
-        unsigned int __maxValue__=0;Node*__maxNode__=NULL;\
-        FOR_EACH(head,if(CONDITION && (!__maxNode__||((unsigned int)EXPR)>__maxValue__)){__maxValue__=(unsigned int)EXPR;__maxNode__=head;})\
-        head=__maxNode__;\
+#define FOR_EACH_REVERSED(var,list,code...) \
+    for(int _i=getSize(list)-1;_i>=0;_i--){\
+        var = getElement(list,_i);\
+        code;\
     }
 
 /**
  * Iterates over head until EXPR is true
- * head will be set to the first value that makes EXPR true or
- * NULL if it is never true
+ * var will either be set to the first element of head that satifies EXPR or NULL if no such element exists
+ * @param var 
+ * @param head the list to iterate over
+ * @param EXPR the expression to evaluate
  */
-#define UNTIL_FIRST(head,EXPR)\
-    FOR_EACH_CIRCULAR(head,if(EXPR)break;);
-
-
+#define UNTIL_FIRST(var,head,EXPR)\
+    FOR_EACH(var,head,if(EXPR)break;else var=NULL;);
 
 
 /**
- *
  * @param list
- * @param value
- * @return the node whose value is value or NULL
+ * @return true if list is not empty (size!=0)
  */
-Node* isInList(Node* list,int value);
+int isNotEmpty(ArrayList*list);
 
 
-
-/**
- * Returns the number of nodes in this (sub)section of the list
- * Returns the number of elements from head to the end of the list.
- * If this is an cirular list, then it will returns the
- * number of elements between head and itself.
- *
- * Note that if this contains a circular list and head does not start it,
- * this method will hang forever
- * @param head the starting node
- * @return the number of element to the end of the last starting from head
- */
-int getSize(Node*head);
-/**
- * Checks it the node has a value
- * @param head the node to check
- * @return true if head has a non-Null value
- */
-int isNotEmpty(Node*head);
-
-/**
- * Swaps the value of n and n2
- * @param n
- * @param n2
- */
-void swap(Node* n,Node* n2);
-
-/**
- * Returns last node in list
- * @param list the last to check
- * @return pointer to the last value in the list
- */
-Node* getLast(Node* list);
-
-
-/**
- * Frees all the nodes in the linked list. The values themselves are not freed
- * @param head
- */
-void destroyList(Node* head);
-
-/**
- * Frees all the nodes in the linked list. The values themselves are freed
- * @param head
- */
-void deleteList(Node* head);
-
-/**
- * Like destroyList the list but preserves just the reference to the head.
- * Values are not freed and all references to values in this list will be lost
- * @param head
- */
-void clearList(Node* head);
-/**
- * Separates node for all earlier values if any
- * @param node
- */
-void partitionLeft(Node*node);
-/**
- * Separates node for all laster values if any
- * @param node
- */
-void partitionRight(Node*node);
-
-
-/**
- * Pops node from list and re-inserts it at the head
- * If the node is not already in the list, then the outcome is undefiend
- * @param list
- * @param node a node in list
- * @return
- */
-int shiftToHead(Node* list,Node *node);
-
-/**
- * Pops the node from its list and frees the node and its value.
- * This is the only method that frees the nodes value
- * @param node
- */
-void deleteNode(Node* node);
-
-/**
- * Pops the node from its list but does not free the node and its value.
- * @param node
- */
-void softDeleteNode(Node* node);
-
-
-/**
- * Gets an integer representation of the return value
- * If the node or value is null,0 is returned
- * @param node
- * @return
- */
-int getIntValue(Node*node);
-/**
- * Returns the value of the given node
- * @param node
- * @return
- */
-void* getValue(Node*node);
-
-
-/**
- * Adds a new element if it is not currently in the list.
- * If it is in the list, the first matching element is shifted to the head
- * @param head
- * @param value
- * @return 0 if the value is already present in head 1 o.w.
- */
-int addUnique(Node* head,void* value);
-
-/**
- * Initilize the backing array for the given list.
- * If an list has already been initilized it should be cleared first
- * @param list the list to init
- */
-void initArrayList(ArrayList*list);
 /**
  * Adds value to the end of list
  * @param list the list to append to 
@@ -335,17 +92,44 @@ void initArrayList(ArrayList*list);
  */
 void addToList(ArrayList*list,void* value);
 /**
+ * Adds value to the front of the list
+ * @param list the list to append to 
+ * @param value the value to append
+ */
+void prependToList(ArrayList*list,void* value);
+/**
+ * Removes and returns the last element of the list
+ * @param list
+ * @return the (former) last element of the list
+ */
+void* pop(ArrayList*list);
+
+/**
+ * Removes the index-th element and re-inserts it at the head of the list
+ * @param list
+ * @param index
+ */
+void shiftToHead(ArrayList*list,int index);
+/**
+ * Adds value to the list iff there exists no element whose value is equal to value (wrt the first size bytes)
+ * @param list
+ * @param value
+ * @param size
+ * return 1 iff a new element was inserted
+ */
+int addUnique(ArrayList*list,void* value,int size);
+/**
  * Frees all internal memory of list and resets size
  * The list does not need to be initilized again before it can be used
  * @param list
  */
-void clearArrayList(ArrayList*list);
+void clearList(ArrayList*list);
 /**
  * This method is safe to call on uninitlized lists and cleared lists
  * @param list
  * @return the number of elements in the list
  */
-int getSizeOfList(ArrayList*list);
+int getSize(ArrayList*list);
 /**
  * Note this method does not perform anys bounds checking
  * @param list
@@ -353,5 +137,62 @@ int getSizeOfList(ArrayList*list);
  * @return the element at the index-th position in list
  */
 void* getElement(ArrayList*list,int index);
-
+/**
+ * Note this method does not perform anys bounds checking
+ * @param list
+ * @param index
+ * @param value the new value of the index-th element
+ */
+void setElement(ArrayList*list,int index,void *value);
+/**
+ * Returns the first element in the list
+ */
+void* getHead(ArrayList*list);
+/**
+ * Clear the list and free all elements
+ */
+void deleteList(ArrayList*list);
+/**
+ * Remove the index-th element form list
+ * @param list 
+ * @param index
+ * @return the element that was removed
+ */
+void* removeFromList(ArrayList*list,int index);
+/**
+ * @param list
+ * @param value
+ * @param size
+ * @return the index of the element whose mem address starts with the first size byte of value
+ */
+int indexOf(ArrayList*list,void*value,int size);
+/**
+ * @param list
+ * @param value
+ * @param size
+ * @return the element whose mem address starts with the first size byte of value
+ */
+void*find(ArrayList*list,void*value,int size);
+/**
+ * @param list
+ * @return the last element in list
+ */
+void* getLast(ArrayList*list);
+/**
+ * Returns the element at index current + delta if the array list where to wrap around
+ * For example:
+ *   getNextIndex(list,0,-1) returns getSize(list)-1
+ *   getNextIndex(list,getSize(list)-1,1) returns 0
+ * @param list
+ * @param current must be a valid index of the list
+ * @param delta
+ */
+int getNextIndex(ArrayList*list,int current,int delta);
+/**
+ * Swaps the element at index1 with index2
+ * @param list
+ * @param index1
+ * @param index2
+ */
+void swap(ArrayList*list,int index1,int index2);
 #endif

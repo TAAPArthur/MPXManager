@@ -15,11 +15,7 @@ START_TEST(test_layout_add){
         setActiveWorkspaceIndex(n);
         for(int i=1;i<=10;i++){
             addLayoutsToWorkspace(n, l, 1);
-            assert(getSize(getActiveWorkspace()->layouts)==i);
-            if(i)
-                assert(getValue(getActiveWorkspace()->layouts->prev)==l);
-            else
-                assert(getValue(getActiveWorkspace()->layouts)==l);
+            assert(getSize(&getActiveWorkspace()->layouts)==i);
         }
     }
     for(int n=0;n<getNumberOfWorkspaces();n++){
@@ -32,10 +28,9 @@ START_TEST(test_layout_add_multiple){
     int size=10;
     Layout* l=calloc(size, sizeof(Layout));
     addLayoutsToWorkspace(getActiveWorkspaceIndex(), l, size);
-    assert(getSize(getActiveWorkspace()->layouts)==size);
-    Node*n=getActiveWorkspace()->layouts;
+    assert(getSize(&getActiveWorkspace()->layouts)==size);
     int i=0;
-    FOR_AT_MOST(n,size,assert(getValue(n)==&l[i++]))
+    FOR_EACH(Layout*layout,&getActiveWorkspace()->layouts,assert(layout==&l[i++]))
     free(l);
 }END_TEST
 START_TEST(test_active_layout){
@@ -61,7 +56,7 @@ START_TEST(test_layout_name){
 
 START_TEST(test_layouts){
     DEFAULT_BORDER_WIDTH=0;
-    Monitor*m=getValue(getAllMonitors());
+    Monitor*m=getHead(getAllMonitors());
     int targetArea=m->viewWidth*m->viewHeight;
     int layoutIndex=_i;
     if(layoutIndex==NUMBER_OF_LAYOUT_FAMILIES){
@@ -83,17 +78,16 @@ START_TEST(test_layouts){
         createNormalWindow();
         flush();
         unlock();
-        WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),NULL,NULL)>=i)
+        WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)>=i)
 
         do{
-            assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL,NULL)==i);
-            assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL,NULL)==getSize(getActiveWindowStack()));
-            Node*p1=getActiveWindowStack();
+            assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==i);
+            assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==getSize(getActiveWindowStack()));
             area=0;
 
-            FOR_EACH(p1,
-                reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, getIntValue(p1)), NULL);
-                if(isWindowVisible(getValue(p1))){
+            FOR_EACH(WindowInfo*winInfo,getActiveWindowStack(),
+                reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
+                if(isWindowVisible(winInfo)){
                     area+=reply1->width*reply1->height;
                 }
                 free(reply1);
@@ -101,24 +95,21 @@ START_TEST(test_layouts){
             msleep(10);
         }while(area!=targetArea);
     }
-    Node*p1=getActiveWindowStack();
+    ArrayList*list=getActiveWindowStack();
     int count=0;
-    FOR_EACH(p1,
+    for(int i=0;i<getSize(list);i++){
         count++;
-        if(isWindowVisible(getValue(p1))){
-            reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, getIntValue(p1)), NULL);
-            Node*p2=p1->next;
-            if(p2)
-                FOR_EACH(p2,
-                    if(isWindowVisible(getValue(p2))){
-                        reply2=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, getIntValue(p2)), NULL);
-                        assert(intersects(&reply1->x, &reply2->x)==0);
-                        free(reply2);
-                    }
-                )
+        if(isWindowVisible(getElement(list,i))){
+            reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,i))->id ), NULL);
+            for(int n=i+1;n<getSize(list);n++)
+                if(isWindowVisible(getElement(list,n))){
+                    reply2=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,n))->id ), NULL);
+                    assert(intersects(&reply1->x, &reply2->x)==0);
+                    free(reply2);
+                }
             free(reply1);
-        }
-    )
+       } 
+    }
 }END_TEST
 
 START_TEST(test_layouts_transition){
@@ -135,22 +126,22 @@ START_TEST(test_layouts_transition){
     initCurrentMasters();
     WindowInfo*markedWindows[numOfMasters];
     Master*masterList[numOfMasters];
-    Node*masters=getAllMasters();
+    ArrayList*masters=getAllMasters();
 
     int i=0;
     int idle;
-    FOR_AT_MOST(masters,numOfMasters,masterList[i++]=getValue(masters));
+    FOR_EACH(Master*master,masters,masterList[i++]=master);
     START_MY_WM
     lock();
     for(int i=0;i<size;i++)
         createNormalWindow();
     flush();
     unlock();
-    WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),NULL,NULL)==size)
+    WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==size)
     lock();
-    Node*stack=getLast(getActiveWindowStack());
+    ArrayList*stack=getActiveWindowStack();
     i=0;
-    FOR_AT_MOST_REVERSED(stack,numOfMasters,markedWindows[i++]=getValue(stack));
+    FOR_EACH_REVERSED(WindowInfo*winInfo,stack,markedWindows[i++]=winInfo);
     unlock();
     for(int i=0;i<numOfMasters;i++){
         lock();
@@ -173,7 +164,7 @@ START_TEST(test_layouts_transition){
 
     assert(getActiveWorkspaceIndex()!=startingWorkspace);
     lock();
-    WindowInfo* tempWindow=(getValue(getActiveWindowStack()));
+    WindowInfo* tempWindow=(getHead(getActiveWindowStack()));
     for(int i=0;i<numOfMasters;i++){
         setActiveMaster(masterList[i]);
         focusWindowInfo(tempWindow);
@@ -184,7 +175,7 @@ START_TEST(test_layouts_transition){
     WAIT_UNTIL_TRUE(getIdleCount()!=idle);
     lock();
     for(int i=0;i<numOfMasters;i++){
-        assert(getValue(getFocusedWindowByMaster(masterList[i]))==tempWindow);
+        assert(getFocusedWindowByMaster(masterList[i])==tempWindow);
     }
     switchToWorkspace(startingWorkspace);
     assert(getActiveWorkspaceIndex()==startingWorkspace);
@@ -193,7 +184,7 @@ START_TEST(test_layouts_transition){
     unlock();
     WAIT_UNTIL_TRUE(getIdleCount()!=idle);
     for(int i=0;i<numOfMasters;i++){
-        assert(getValue(getFocusedWindowByMaster(masterList[i]))==markedWindows[i]);
+        assert(getFocusedWindowByMaster(masterList[i])==markedWindows[i]);
     }
     for(int i=0;i<numOfMasters;i++)
         destroyMasterDevice(masterList[i]->id, 2, 3);
@@ -209,7 +200,7 @@ START_TEST(test_fixed_position_windows){
     flush();
     scan(root);
     short config[]={1,2,3,4,5};
-    WindowInfo*winInfo=getValue(getAllWindows());
+    WindowInfo*winInfo=getHead(getAllWindows());
     assert(LEN(config)==LEN(winInfo->config));
     setConfig(winInfo, config);
     setActiveLayout(&LAYOUT_FAMILIES[_i]);
@@ -282,7 +273,6 @@ START_TEST(test_transient_windows){
     assert(transTarget<transIndex);
     WindowInfo* transWin;
     for(int i=0,count=0;count<LEN(stackingOrder);count++){
-        PRINT_ARR(stackingOrder,5);
         int win=mapWindow(createNormalWindow());
         WindowInfo*winInfo=createWindowInfo(win);
         addWindowInfo(winInfo);
@@ -290,6 +280,7 @@ START_TEST(test_transient_windows){
         if(i!=transIndex||stackingOrder[transTarget+1]!=0){
             stackingOrder[i]=win;
             moveWindowToWorkspace(winInfo,getActiveWorkspaceIndex());
+            shiftToHead(getActiveWindowStack(),getSize(getActiveWindowStack())-1);
             if(i==transTarget)i++;
             i++;
         }
@@ -302,6 +293,7 @@ START_TEST(test_transient_windows){
     }
     assert(transWin);
     moveWindowToWorkspace(transWin,getActiveWorkspaceIndex());
+    shiftToHead(getActiveWindowStack(),getSize(getActiveWindowStack())-1);
     retile();
     flush();
     assert(checkStackingOrder(stackingOrder,LEN(stackingOrder)));
@@ -355,7 +347,6 @@ START_TEST(test_layout_cycle){
     addLayoutsToWorkspace(getActiveWorkspaceIndex(), DEFAULT_LAYOUTS, 2);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
     cycleLayouts(3);
-    assert(getValue(getActiveWorkspace()->layouts)==&DEFAULT_LAYOUTS[1]);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[1]);
     cycleLayouts(1);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
@@ -365,7 +356,6 @@ START_TEST(test_layout_cycle_reverse){
     addLayoutsToWorkspace(getActiveWorkspaceIndex(), DEFAULT_LAYOUTS, 2);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
     cycleLayouts(-1);
-    assert(getValue(getActiveWorkspace()->layouts)==&DEFAULT_LAYOUTS[1]);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[1]);
     cycleLayouts(-1);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
@@ -385,18 +375,18 @@ START_TEST(test_retile){
 }END_TEST
 
 START_TEST(test_privileged_windows_size){
-    Monitor* m=getValue(getAllMonitors());
+    Monitor* m=getHead(getAllMonitors());
     assert(m);
     int view[]={10,20,30,40};
     m->viewX=*view;
     WindowInfo *winInfo=createWindowInfo(mapWindow(createNormalWindow()));
     addWindowInfo(winInfo);
-    addWindowToActiveWorkspace(winInfo);
+    addWindowToWorkspace(winInfo,getActiveWorkspaceIndex());
 
     static short baseConfig[CONFIG_LEN]={20,30,40,50};
     void dummyLayout(LayoutState*state){
         LOG(LOG_LEVEL_DEBUG,"here\n");
-        configureWindow(state,getValue(state->stack),baseConfig);
+        configureWindow(state,getHead(state->stack),baseConfig);
     }
     Layout l={.layoutFunction=dummyLayout, .args.noBorder=1};
     setActiveLayout(&l);
@@ -426,7 +416,7 @@ Suite *layoutSuite() {
     TCase* tc_core;
 
     tc_core = tcase_create("Layout Interface");
-    tcase_add_checked_fixture(tc_core, createSimpleContext, destroyContext);
+    tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
     tcase_add_test(tc_core, test_layout_add);
     tcase_add_test(tc_core, test_layout_add_multiple);
     tcase_add_test(tc_core, test_active_layout);

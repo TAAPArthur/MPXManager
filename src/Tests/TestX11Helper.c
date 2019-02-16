@@ -73,11 +73,7 @@ int  mapArbitraryWindow(void){
 }
 
 void createSimpleContext(){
-    createContext(10);
-}
-void createSimpleContextWthMaster(){
-    createSimpleContext();
-    addFakeMaster(2, 3);
+    resetContext();
 }
 
 void createContextAndSimpleConnection(){
@@ -88,7 +84,7 @@ void createContextAndSimpleConnection(){
 }
 void destroyContextAndConnection(){
     closeConnection();
-    destroyContext();
+    resetContext();
 }
 
 void* getNextDeviceEvent(){
@@ -97,8 +93,6 @@ void* getNextDeviceEvent(){
     LOG(LOG_LEVEL_DEBUG,"Event received%d\n\n",((xcb_generic_event_t*)event)->response_type);
     if(((xcb_generic_event_t*)event)->response_type>=XCB_GE_GENERIC)
         loadGenericEvent(event);
-    //printf("%d\n\n",event->response_type);
-    //assert((event->response_type&127)==XCB_GE_GENERIC);
     return event;
 }
 void triggerBinding(Binding* b){
@@ -113,9 +107,7 @@ void triggerBinding(Binding* b){
 }
 void triggerAllBindings(int mask){
     flush();
-    Node*n=getDeviceBindings();
-    FOR_EACH_CIRCULAR(n,
-        Binding*b=getValue(n);
+    FOR_EACH(Binding*b,getDeviceBindings(),
         if(mask & b->mask)
             triggerBinding(b);
     );
@@ -207,8 +199,7 @@ void fullCleanup(){
     if(pThread)
         pthread_join(pThread,((void *)0));
     destroyAllNonDefaultMasters();
-    xcb_disconnect(dis);
-    destroyContext();
+    destroyContextAndConnection();
 }
 int getExitStatusOfFork(){
     int status=0;
@@ -232,6 +223,12 @@ static char*typeName;
 static xcb_atom_t* atomTypes;
 static xcb_atom_t* atom;
 
+void loadSampleProperties(WindowInfo*winInfo){
+    const char*dummyString="dummy";
+    char**fields=&winInfo->typeName;
+    for(int i=0;i<4;i++)
+        fields[i]=memcpy(calloc(strlen(dummyString)+1, sizeof(char)), dummyString, strlen(dummyString)*sizeof(char));
+}
 void setProperties(int win){
     if(!atom){
         atom=&ewmh->_NET_WM_WINDOW_TYPE_DIALOG;
@@ -262,14 +259,6 @@ void checkProperties(WindowInfo*winInfo){
     assert(*atomTypes== winInfo->type);
     assert(strcmp(instace, winInfo->instanceName)==0);
     assert(strcmp(clazz, winInfo->className)==0);
-}
-int getActiveFocus(){
-    int win;
-    xcb_input_xi_get_focus_reply_t *reply;
-    reply=xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis, getActiveMasterKeyboardID()), NULL);
-    win=reply->focus;
-    free(reply);
-    return win;
 }
 int checkStackingOrder(int* stackingOrder,int num){
     xcb_query_tree_reply_t *reply;

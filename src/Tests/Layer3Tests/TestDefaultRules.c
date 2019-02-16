@@ -35,6 +35,7 @@ static void deviceEventsetup(){
     LOAD_SAVED_STATE=0;
     CRASH_ON_ERRORS=1;
     DEFAULT_WINDOW_MASKS=SRC_ANY;
+    POLL_COUNT=10;
 
     if(!startUpMethod)
         startUpMethod=sampleStartupMethod;
@@ -72,14 +73,6 @@ static void nonDefaultDeviceEventsetup(){
 
 }
 
-static void deviceEventTeardown(){
-    Node*n=getAllMasters();
-    FOR_EACH(n,
-        if(getValue(n)!=defaultMaster)
-            destroyMasterDevice(getIntValue(n), getActiveMasterPointerID(), getActiveMasterKeyboardID()));
-    flush();
-    fullCleanup();
-}
 static void regularEventsetup(){
     onStartup();
 }
@@ -216,7 +209,7 @@ START_TEST(test_dock_windows){
     int win=createDock(1,1,1);
     catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_DOCK));
     scan(root);
-    assert(getIntValue(getAllDocks())==win);
+    assert(((WindowInfo*)getHead(getAllDocks()))->id==win);
 }END_TEST
 START_TEST(test_map_windows){
 
@@ -279,11 +272,11 @@ START_TEST(test_focus_follows_mouse){
     focusWindow(id1);
     movePointer(getActiveMasterPointerID(), id1, 0,0);
     flush();
-    WAIT_UNTIL_TRUE(getActiveFocus()==id1);
+    WAIT_UNTIL_TRUE(getActiveFocus(getActiveMaster()->id)==id1);
     for(int i=0;i<4;i++){
         int id=(i%2?id1:id2);
         int n=0;
-        WAIT_UNTIL_TRUE(getActiveFocus()==id,
+        WAIT_UNTIL_TRUE(getActiveFocus(getActiveMaster()->id)==id,
             setActiveMaster(defaultMaster);
             movePointer(getActiveMasterPointerID(), id, n,n);
             n=!n;
@@ -295,14 +288,15 @@ START_TEST(test_focus_follows_mouse){
 
 static void clientSetup(){
     LOAD_SAVED_STATE=0;
-    pid=fork();
-    if(!pid){
+    setLogLevel(LOG_LEVEL_NONE);
+    onStartup();
+    if(!fork()){
         ROOT_EVENT_MASKS=XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-        onStartup();
+        openXDisplay();
+        registerForEvents();
     }
     else{
         DEFAULT_WINDOW_MASKS|=EXTERNAL_MOVE_MASK;
-        onStartup();
         START_MY_WM
         waitForCleanExit();
         fullCleanup();
@@ -331,9 +325,8 @@ START_TEST(test_client_activate_window){
     lock();
     assert(focusWindow(winInfo2->id));
     assert(focusWindow(winInfo->id));
-    Master*mainMaster=getActiveMaster();
-    Master*other=getValue(getAllMasters()->next);
-    assert(mainMaster!=other && "testing error");
+    Master*mainMaster=getElement(getAllMasters(),0);
+    Master*other=getElement(getAllMasters(),1);
     setActiveMaster(other);
     focusWindow(winInfo->id);
     setClientPointerForWindow(winInfo->id);
@@ -345,8 +338,8 @@ START_TEST(test_client_activate_window){
     flush();
     unlock();
     WAIT_UNTIL_TRUE(getActiveWorkspaceIndex()==index);
-    WAIT_UNTIL_TRUE(getValue(getFocusedWindowByMaster(other))==winInfo2);
-    assert(getValue(getFocusedWindowByMaster(mainMaster))==winInfo);
+    WAIT_UNTIL_TRUE(getFocusedWindowByMaster(other)==winInfo2);
+    assert(getFocusedWindowByMaster(mainMaster)==winInfo);
 }END_TEST
 
 START_TEST(test_client_change_desktop){
@@ -359,6 +352,7 @@ START_TEST(test_client_change_desktop){
 
 START_TEST(test_client_close_window){
     DEFAULT_WINDOW_MASKS|=SRC_ANY;
+    setLogLevel(LOG_LEVEL_NONE);
     if(!fork()){
         openXDisplay();
         int id=_i?createNormalWindow():createIgnoredWindow();
@@ -382,7 +376,7 @@ START_TEST(test_client_close_window){
 START_TEST(test_client_set_sticky_window){
     mapArbitraryWindow();
     WAIT_UNTIL_TRUE(getSize(getAllWindows()));
-    WindowInfo*winInfo=getValue(getAllWindows());
+    WindowInfo*winInfo=getHead(getAllWindows());
     xcb_ewmh_request_change_wm_desktop(ewmh, defaultScreenNumber, winInfo->id, -1, 0);
     flush();
     WAIT_UNTIL_TRUE(hasMask(winInfo, STICKY_MASK));
@@ -541,23 +535,23 @@ Suite *defaultRulesSuite() {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Default Device Events");
-    tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
+    tcase_add_checked_fixture(tc_core, deviceEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_master_device_add_remove);
     tcase_add_test(tc_core, test_device_event);
     tcase_add_test(tc_core, test_focus_update);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Non_Default_Device_Events");
-    tcase_add_checked_fixture(tc_core, nonDefaultDeviceEventsetup, deviceEventTeardown);
+    tcase_add_checked_fixture(tc_core, nonDefaultDeviceEventsetup, fullCleanup);
     tcase_add_loop_test(tc_core, test_focus_follows_mouse,0,2);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("KeyEvent");
-    tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
+    tcase_add_checked_fixture(tc_core, deviceEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_key_repeat);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Client_Messages");
-    tcase_add_checked_fixture(tc_core, deviceEventsetup, deviceEventTeardown);
+    tcase_add_checked_fixture(tc_core, deviceEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_client_activate_window);
     tcase_add_test(tc_core, test_client_change_desktop);
     tcase_add_test(tc_core, test_client_set_window_workspace);
@@ -572,8 +566,9 @@ Suite *defaultRulesSuite() {
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Special Client Messages");
-    tcase_add_checked_fixture(tc_core, onStartup, deviceEventTeardown);
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_loop_test(tc_core, test_client_close_window,0,2);
     suite_add_tcase(s, tc_core);
+
     return s;
 }

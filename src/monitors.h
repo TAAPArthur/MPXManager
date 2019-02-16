@@ -4,7 +4,7 @@
 #ifndef MONITORS_H_
 #define MONITORS_H_
 
-#include "mywm-util.h"
+#include "mywm-structs.h"
 
 /**
  * Represents a rectangular region where workspaces will be tiled
@@ -30,6 +30,21 @@ typedef struct Monitor{
     ///@}
 
 } Monitor;
+
+///Types of docks
+typedef enum {DOCK_LEFT,DOCK_RIGHT,DOCK_TOP,DOCK_BOTTOM}DockTypes;
+
+/**
+ *
+ * @return list of all monitors
+ */
+ArrayList*getAllMonitors(void);
+/**
+ *
+ * @return list of docks
+ */
+ArrayList*getAllDocks(void);
+
 
 /**
  * True if the monitor is marked as primary
@@ -67,7 +82,7 @@ void resetMonitor(Monitor*m);
  * @see xcb_ewmh_get_extents_reply_t
  * @see avoidStruct
  */
-void setDockArea(WindowInfo* winInfo,int numberofProperties,int properties[WINDOW_STRUCT_ARRAY_SIZE]);
+void setDockArea(WindowInfo* winInfo,int numberofProperties,int* properties);
 
 /**
  * Reads (one of) the struct property to loads the info into properties and
@@ -82,7 +97,6 @@ int loadDockProperties(WindowInfo* info);
  */
 void detectMonitors(void);
 
-void avoidStruct(WindowInfo*info);
 /**
  *
  * @param arg1 x,y,width,height

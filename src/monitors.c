@@ -8,13 +8,25 @@
 
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
+#include <xcb/xcb_ewmh.h>
 ///\endcond
 
-#include "mywm-util.h"
+#include "xsession.h"
 #include "monitors.h"
+#include "workspaces.h"
 
 #include "globals.h"
 #include "logger.h"
+
+/**
+ * List of docks.
+ * Docks are a special kind of window that isn't managed by us
+ */
+static ArrayList docks;
+
+
+///list of all monitors
+static ArrayList monitors;
 /**
  * Checks to if two lines intersect
  * (either both vertical or both horizontal
@@ -36,9 +48,9 @@ int intersects(short int arg1[4],short int arg2[4]){
     return 0;
 }
 
-void setDockArea(WindowInfo* info,int numberofProperties,int properties[WINDOW_STRUCT_ARRAY_SIZE]){
+void setDockArea(WindowInfo* info,int numberofProperties,int* properties){
     assert(numberofProperties);
-    for(int i=0;i<WINDOW_STRUCT_ARRAY_SIZE;i++)
+    for(int i=0;i<LEN(info->properties);i++)
         info->properties[i]=0;
     if(numberofProperties)
         memcpy(info->properties, properties, numberofProperties * sizeof(int));
@@ -68,23 +80,17 @@ int getRootHeight(void){
     return screen->height_in_pixels;
 }
 
-static unsigned short* getScreenWidth(void){
-    return &screen->width_in_pixels;
+static unsigned short getScreenDim(int i){
+    return i==0?getRootWidth():getRootHeight();
 }
 
-void resizeMonitorToAvoidAllStructs(Monitor*m){
+static void resizeMonitorToAvoidAllStructs(Monitor*m){
     resetMonitor(m);
-    Node*docks=getAllDocks();
-    FOR_EACH(docks,resizeMonitorToAvoidStruct(m,getValue(docks)));
+    FOR_EACH(WindowInfo*dock,getAllDocks(),resizeMonitorToAvoidStruct(m,dock));
 }
 void resizeAllMonitorsToAvoidAllStructs(void){
-    Node *mon=getAllMonitors();
-    if(isNotEmpty(mon))
-        FOR_EACH(mon,resizeMonitorToAvoidAllStructs(getValue(mon)))
+    FOR_EACH(Monitor*mon,getAllMonitors(),resizeMonitorToAvoidAllStructs(mon))
 }
-
-/// called when a dock is added/removed
-void (*onDockAddRemove)()=resizeAllMonitorsToAvoidAllStructs;
 
 int resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo){
     assert(m);
@@ -108,12 +114,12 @@ int resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo){
                 continue;
         }
         if(end==0)
-            end=(getScreenWidth())[(offset+1)%2];
+            end=getScreenDim((offset+1)%2);
 
         short int values[]={0,0,0,0};
         values[offset]=fromPositiveSide?0:
                 (winInfo->onlyOnPrimary?
-                    (&m->width)[offset]:(getScreenWidth())[offset])
+                    (&m->width)[offset]:getScreenDim(offset))
                 -dim;
         values[(offset+1)%2]=start;
         values[offset+2]=dim;
@@ -141,8 +147,7 @@ void detectMonitors(void){
     xcb_randr_get_monitors_reply_t *monitors=xcb_randr_get_monitors_reply(dis, cookie, NULL);
     assert(monitors);
     xcb_randr_monitor_info_iterator_t iter=xcb_randr_get_monitors_monitors_iterator(monitors);
-    ArrayList monitorNames;
-    initArrayList(&monitorNames);
+    ArrayList monitorNames={0};
     while(iter.rem){
         xcb_randr_monitor_info_t *monitorInfo = iter.data;
         updateMonitor(monitorInfo->name,monitorInfo->primary,&monitorInfo->x);
@@ -150,42 +155,49 @@ void detectMonitors(void){
         xcb_randr_monitor_info_next(&iter);
     }
     free(monitors);
-    Node*list=getAllMonitors();
-    FOR_EACH(list,
+    FOR_EACH(Monitor*m,getAllMonitors(),
         int i;
-        for(i=getSizeOfList(&monitorNames)-1;i>=0;i--)
-            if(((Monitor*)getValue(list))->id==(long)getElement(&monitorNames,i))
+        for(i=getSize(&monitorNames)-1;i>=0;i--)
+            if(m->id==(long)getElement(&monitorNames,i))
                 break;
         if(i==-1)
-            removeMonitor(((Monitor*)getValue(list))->id);
+            removeMonitor(m->id);
     )
-    clearArrayList(&monitorNames);
+    clearList(&monitorNames);
 }
 
-Node* getMonitorNodeByID(long id){
-    Node*list=getAllMonitors();
-    FOR_EACH_CIRCULAR(list,if(id==(*(long*)list->value))return list;);
-    return NULL;
-}
 int removeMonitor(unsigned long id){
-    Node *n=getMonitorNodeByID(id);
-
-    if(!n)
+    int index=indexOf(getAllMonitors(),&id,sizeof(id));
+    if(index==-1)
         return 0;
 
-    Workspace*w=getWorkspaceFromMonitor(getValue(n));
+    Workspace*w=getWorkspaceFromMonitor(getElement(getAllMonitors(),index));
     if(w)
         w->monitor=NULL;
-    if(n)
-        deleteNode(n);
-    return n?1:0;
+    free(removeFromList(getAllMonitors(),index));
+    return 1;
 }
 
 int isPrimary(Monitor*monitor){
     return monitor->primary;
 }
+static void addMonitor(Monitor*m){
+    Workspace*workspace;
+    if(!isWorkspaceVisible(getActiveWorkspaceIndex()))
+        workspace=getActiveWorkspace();
+    else {
+
+        workspace=getNextWorkspace(1, HIDDEN|NON_EMPTY);
+        if(!workspace){
+            workspace=getNextWorkspace(1, HIDDEN);
+        }
+    }
+    if(workspace)
+        workspace->monitor=m;
+    addToList(getAllMonitors(), m);
+}
 int updateMonitor(long id,int primary,short geometry[4]){
-    Monitor*m=getValue(getMonitorNodeByID(id));
+    Monitor*m=find(getAllMonitors(),&id,sizeof(int));
     int newMonitor=!m;
     if(!m){
         m=calloc(1,sizeof(Monitor));
@@ -201,4 +213,10 @@ int updateMonitor(long id,int primary,short geometry[4]){
 void resetMonitor(Monitor*m){
     assert(m);
     memcpy(&m->viewX, &m->x, sizeof(short)*4);
+}
+ArrayList*getAllDocks(){
+    return &docks;
+}
+ArrayList*getAllMonitors(void){
+    return &monitors;
 }

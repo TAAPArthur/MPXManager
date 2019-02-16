@@ -71,7 +71,7 @@ START_TEST(test_regular_events){
 
         Rule r=CREATE_DEFAULT_EVENT_RULE(func);
         assert(!isNotEmpty(getEventRules(i)));
-        insertHead(getEventRules(i),&r);
+        appendRule(i,&r);
 
         xcb_void_cookie_t cookie;
         if(i){
@@ -125,9 +125,8 @@ START_TEST(test_register_for_device_events){
     ROOT_DEVICE_EVENT_MASKS=XI_KeyPressMask|XI_KeyReleaseMask|
                 XI_ButtonPressMask|XI_ButtonReleaseMask;
     registerForDeviceEvents();
-    Node*n=getDeviceBindings();
     assert(getSize(getDeviceBindings()));
-    FOR_EACH_CIRCULAR(n,assert(((Binding*)getValue(n))->detail));
+    FOR_EACH(Binding*binding,getDeviceBindings(),assert(binding->detail));
     triggerAllBindings(ROOT_DEVICE_EVENT_MASKS);
     waitToReceiveInput(ROOT_DEVICE_EVENT_MASKS);
 }END_TEST
@@ -135,7 +134,12 @@ START_TEST(test_register_for_device_events){
 START_TEST(test_monitors){
     registerForMonitorChange();
     xcb_flush(dis);
-    system("xrandr --output default --rotate left");
+    if(!fork()){
+        close(1);close(2);
+        system("xrandr --output default --rotate left");
+        exit(0);
+    }
+    wait(NULL);
     free(getNextDeviceEvent());
 
 }END_TEST
@@ -156,12 +160,12 @@ Suite *eventSuite(void) {
     tc_core = tcase_create("Threads");
     tcase_add_loop_test(tc_core, test_threads,0,2);
     suite_add_tcase(s, tc_core);
+
     tc_core = tcase_create("Events");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_regular_events);
     tcase_add_test(tc_core, test_register_events);
     suite_add_tcase(s, tc_core);
-
 
     tc_core= tcase_create("Register for device events");
     tcase_add_checked_fixture(tc_core, bindingSetup, destroyContextAndConnection);

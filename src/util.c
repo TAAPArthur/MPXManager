@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <sys/time.h>
 /// \endcond
 
@@ -27,246 +28,98 @@ unsigned int getTime () {
     return start.tv_sec*1000+start.tv_usec*1e-3;
 }
 
-static void _join(Node*prev,Node*next){
-    if(prev)
-        prev->next=next;
-    if(next)
-        next->prev=prev;
-}
-
-Node* createEmptyHead(){
-    return calloc(1, sizeof(Node));
-}
-Node* createHead(void*value){
-    Node*head= createEmptyHead();
-    head->value=value;
-    return head;
-}
-Node* createCircularHead(void*value){
-    Node*head=createHead(value);
-    head->next=head;
-    head->prev=head;
-    return head;
-}
-
-int isNotEmpty(Node*head){
-    assert(head);
-    return head->value?1:0;
-}
-int getSize(Node*head){
-    assert(head);
-    int size=0;
-    FOR_EACH_CIRCULAR(head,size++)
-    return size;
-}
-
-
-Node* isInList(Node* list,int value){
-    assert(list);
-    FOR_EACH_CIRCULAR(list,if(value==(*(int*)list->value))return list;);
-    return NULL;
-}
-
-Node* getLast(Node* list){
-    assert(list!=NULL);
-    if(!isNotEmpty(list))return list;
-    UNTIL_FIRST(list, !list->next)
-    return list;
-}
-
-int getIntValue(Node*node){
-    return node&&node->value?*(int*)node->value:0;
-}
-void* getValue(Node*node){
-    return node?node->value:NULL;
-}
-
-
-static void _freeNode(Node* node){
-    if(!node)return;
-    free(node);
-    return;
-}
-void partitionLeft(Node*node){
-    if(node->prev)
-        node->prev->next=NULL;
-    node->prev=NULL;
-}
-void partitionRight(Node*node){
-    if(node->next)
-        node->next->prev=NULL;
-    node->next=NULL;
-}
-void clearList(Node* head){
-    assert(head);
-    while(head->next && head->next!=head){
-        Node*temp=head->next->next;
-        _freeNode(head->next);
-        head->next=temp;
-    }
-    head->prev=head->next;
-    head->value=NULL;
-}
-
-static void _deleteList(Node* head,int freeValue){
-    assert(head);
-    partitionLeft(head);
-    while(head){
-        Node*temp=head->next;
-        if(freeValue)
-            free(getValue(head));
-
-        _freeNode(head);
-        head=temp;
-    }
-}
-void deleteList(Node* head){
-    _deleteList(head,1);
-}
-void destroyList(Node* head){
-    _deleteList(head,0);
-}
-
-/**
- * Removes the give node from the list.
- * If node is the head of the list,
-     * If the list is empty, node->value is set to null
-     * else node->value is et to node->next->value and popNode is called on node->next
- * @param node
- * @return a pointer to the node that was removed or NULL
- */
-static Node* popNode(Node* node){
-
-    assert(node);
-    if(!node->prev){ //head of list
-        if(node->next){
-            swap(node,node->next);
-            node=node->next;
-        }
-        else{
-            node->value=NULL;
-            return NULL;
-        }
-    }
-    if(node->prev==node->next && node->next==node){
-        node->value=NULL;
-        return NULL;
-    }
-
-    Node*prev=node->prev;
-    Node*next=node->next;
-    partitionLeft(node);
-    partitionRight(node);
-    _join(prev,next);
-    return node;
-}
-void deleteNode(Node* node){
-    if(getValue(node))
-        free(getValue(node));
-    softDeleteNode(node);
-}
-void softDeleteNode(Node* node){
-    _freeNode(popNode(node));
-}
-
-void insertBefore(Node* head,Node* newNode){
-    assert(isNotEmpty(head));
-    assert(isNotEmpty(newNode));
-
-
-    if(head->prev){
-        insertAfter(head->prev, newNode);
-        return;
-    }
-    Node*nextNode=newNode->next;
-    //disconnect node from later values
-    partitionRight(newNode);
-    //set new Nodes' value to head
-    swap(head,newNode);
-    //insert head's old value
-    insertAfter(head, newNode);
-    //insert the reset of the new node list between head and newNode
-    if(nextNode)
-        insertAfter(head, nextNode);
-}
-void insertAfter(Node* node,Node* newNode){
-    assert(isNotEmpty(node));
-    assert(isNotEmpty(newNode));
-    partitionLeft(newNode);
-    Node*end=getLast(newNode);
-    _join(end,node->next);
-    _join(node,newNode);
-}
-
-void insertTail(Node* head,void *value){
-    if(isNotEmpty(head))
-        insertBefore(head, createHead(value));
-    else head->value=value;
-}
-void insertHead(Node* head,void *value){
-    assert(head!=NULL);
-    assert(value!=NULL);
-    if(head->value){
-        Node* newNode = createHead(value);
-        if(head->prev)
-            insertBefore(head, newNode);
-        else{
-            swap(newNode,head);
-            insertAfter(head,newNode);
-        }
-    }
-    else
-        head->value=value;
-}
-int shiftToHead(Node* list,Node *node){
-    assert(node);
-    assert(list);
-    if(list==node)
-        return 0;
-
-    assert(node->prev);
-    Node *singleNode=popNode(node);
-    assert(singleNode==node);
-    if(singleNode)
-        insertBefore(list,singleNode);
-    return 0;
-}
-void swap(Node* n,Node* n2){
-    void*temp=n->value;
-    n->value=n2->value;
-    n2->value=temp;
-}
-int addUnique(Node* head,void* value){
-    assert(head!=NULL);
-    Node* node=isInList(head, *(int*)value);
-
-    if(!node)
-        insertHead(head, value);
-    else
-        shiftToHead(head, node);
-    return node?0:1;
-}
-
-int getSizeOfList(ArrayList*list){return list->size;}
-void* getElement(ArrayList*list,int index){return list->arr[index];}
-void addToList(ArrayList*list,void* value){
-    if(list->arr==NULL)
-        initArrayList(list);
-    if(list->size==list->maxSize){
-        list->maxSize*=2;
-        list->arr=realloc(list->arr,list->maxSize*sizeof(void*));
-    }
-    list->arr[list->size++]=value;
-}
-void initArrayList(ArrayList*list){
+static void initArrayList(ArrayList*list){
     list->size=0;
     list->maxSize=INITIAL_ARRAY_LIST_CAP;
     list->arr=malloc(sizeof(void*)*list->maxSize);
 }
-void clearArrayList(ArrayList*list){
+void* getElement(ArrayList*list,int index){
+    return list->arr[index];
+}
+void setElement(ArrayList*list,int index,void *value){
+    list->arr[index]=value;
+}
+
+int isNotEmpty(ArrayList*list){
+    return getSize(list)?1:0;
+}
+int indexOf (ArrayList*list,void*value,int size){
+    for(int n=0;n<getSize(list);n++)
+        if(memcmp(getElement(list,n),value,size)==0)
+            return n;
+    return -1;
+}
+void*find(ArrayList*list,void*value,int size){
+    int index=indexOf(list,value,size);
+    return index==-1?NULL:getElement(list,index);
+}
+void*getHead(ArrayList*list){
+    return getElement(list,0);
+}
+void* pop(ArrayList*list){
+    return removeFromList(list,getSize(list)-1);
+}
+void* removeFromList(ArrayList*list,int index){
+    void*value=getElement(list,index);
+    assert(index>=0 && index<getSize(list));
+    for(int i=index;i<getSize(list)-1;i++)
+        setElement(list,i,getElement(list,i+1));
+    list->size--;
+    return value;
+}
+void shiftToHead(ArrayList*list,int index){
+    void*newHead=getElement(list,index);
+    for(int i=index;i>0;i--)
+        setElement(list,i,getElement(list,i-1));
+    setElement(list,0,newHead);
+}
+int getSize(ArrayList*list){
+    return list->size;
+}
+int getNextIndex(ArrayList*list,int current,int delta){
+    assert(isNotEmpty(list));
+    return (current+delta%getSize(list)+getSize(list))%getSize(list);
+}
+static inline void autoResize(ArrayList*list){
+    if(list->size==list->maxSize){
+        list->maxSize*=2;
+        list->arr=realloc(list->arr,list->maxSize*sizeof(void*));
+    }
+}
+void* getLast(ArrayList*list){
+    return getElement(list,getSize(list)-1);
+}
+void prependToList(ArrayList*list,void* value){
+    addToList(list,value);
+    shiftToHead(list,getSize(list)-1);
+}
+
+int addUnique(ArrayList*list,void* value,int size){
+    if(!find(list,value,size))
+        addToList(list,value);
+    else return 0;
+    return 1;
+};
+void addToList(ArrayList*list,void* value){
+    if(list->arr==NULL)
+        initArrayList(list);
+    autoResize(list);
+    setElement(list,list->size++,value);
+}
+void clearList(ArrayList*list){
     if(list->arr)
         free(list->arr);
     list->size=0;
     list->maxSize=INITIAL_ARRAY_LIST_CAP;
     list->arr=NULL;
+}
+void deleteList(ArrayList*list){
+    for(int i=0;i<getSize(list);i++)
+        free(getElement(list,i));
+    clearList(list);
+}
+void swap(ArrayList*list,int index1,int index2){
+    void*temp=getElement(list,index1);
+    list->arr[index1]=getElement(list,index2);
+    list->arr[index2]=temp;
 }

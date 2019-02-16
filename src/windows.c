@@ -17,16 +17,29 @@
 /// \endcond
 
 #include "mywm-util.h"
+#include "workspaces.h"
+#include "masters.h"
 #include "windows.h"
 #include "devices.h"
 #include "logger.h"
 #include "xsession.h"
-#include "monitors.h"
 #include "globals.h"
+#include "monitors.h"
 #include "ewmh.h"
 #include "events.h"
 #include "bindings.h"
 
+
+///list of all windows
+static ArrayList windows;
+ArrayList*getAllWindows(void){
+    return &windows;
+}
+WindowInfo* createWindowInfo(unsigned int id){
+    WindowInfo *wInfo =calloc(1,sizeof(WindowInfo));
+    wInfo->id=id;
+    return wInfo;
+}
 int getMask(WindowInfo*winInfo){
     return winInfo->mask;
 }
@@ -305,7 +318,7 @@ void unlockWindow(WindowInfo*winInfo){
 
 void registerWindow(WindowInfo*winInfo){
     assert(winInfo);
-    assert(!isInList(getAllWindows(), winInfo->id) && "Window registered exists" );
+    assert(!find(getAllWindows(), winInfo,sizeof(int)) && "Window registered exists" );
     addWindowInfo(winInfo);
 
     addMask(winInfo, DEFAULT_WINDOW_MASKS);
@@ -346,7 +359,8 @@ void scan(xcb_window_t baseWindow) {
         for (int i = 0; i < numberOfChildren; i++)
             cookies[i]=xcb_get_window_attributes(dis, children[i]);
 
-        for (int i = 0; i < numberOfChildren; i++) {
+        // iterate in top to bottom order
+        for (int i = numberOfChildren-1; i>=0; i--) {
             LOG(LOG_LEVEL_TRACE,"processing child %d\n",children[i]);
             attr = xcb_get_window_attributes_reply(dis,cookies[i], NULL);
 
@@ -367,4 +381,74 @@ void scan(xcb_window_t baseWindow) {
         }
         free(reply);
     }
+}
+
+
+void markAsDock(WindowInfo*winInfo){winInfo->dock=1;}
+
+int addWindowInfo(WindowInfo* winInfo){
+    if(addUnique(getAllWindows(), winInfo,sizeof(int))){
+        if(winInfo->dock){
+            addUnique(getAllDocks(),winInfo,sizeof(int));
+            resizeAllMonitorsToAvoidAllStructs();
+         }
+        return 1;
+    }
+    return 0;
+}
+void deleteWindowInfo(WindowInfo*winInfo){
+    clearList(getClonesOfWindow(winInfo));
+    char**fields=&winInfo->typeName;
+    for(int i=0;i<4;i++)
+        if(fields[i])
+            free(fields[i]);
+    free(winInfo);
+}
+int removeWindow(unsigned int winToRemove){
+    assert(winToRemove!=0);
+
+    int index=indexOf(getAllWindows(), &winToRemove,sizeof(int));
+    if(index==-1)
+        return 0;
+
+    WindowInfo*winInfo=getElement(getAllWindows(),index);
+    ArrayList*list=getAllMasters();
+    FOR_EACH(Master*master,list,removeWindowFromMaster(master,winToRemove));
+    removeWindowFromWorkspace(winInfo);
+
+    if(winInfo->dock){
+        int index=indexOf(getAllDocks(), &winToRemove,sizeof(int));
+        assert(index!=-1);
+        removeFromList(getAllDocks(),index);
+        resizeAllMonitorsToAvoidAllStructs();
+    }
+    deleteWindowInfo(winInfo);
+    removeFromList(getAllWindows(),index);
+    return 1;
+}
+WindowInfo* getWindowInfo(unsigned int win){
+    int index=indexOf(getAllWindows(), &win,sizeof(int));
+    return index==-1?NULL:getElement(getAllWindows(),index);
+}
+ArrayList* getClonesOfWindow(WindowInfo*winInfo){
+    return &winInfo->cloneList;
+}
+void onWindowFocus(unsigned int win){
+
+    int index=indexOf(getAllWindows(),&win, sizeof(int));
+
+    if(index==-1)return;
+    WindowInfo*winInfo=getElement(getAllWindows(),index);
+    int pos=indexOf(getActiveMasterWindowStack(), winInfo,sizeof(int));
+    if(! isFocusStackFrozen()){
+        if(pos==-1){
+            addToList(getActiveMasterWindowStack(),winInfo);
+            pos=getSize(getActiveMasterWindowStack())-1;
+        }
+        shiftToHead(getActiveMasterWindowStack(),pos);
+    }
+    else if(pos!=-1){
+       getActiveMaster()->focusedWindowIndex=pos;
+    }
+    getActiveMaster()->focusedTimeStamp = getTime();
 }

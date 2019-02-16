@@ -14,7 +14,6 @@
 
 #include "logger.h"
 #include "xsession.h"
-#include "globals.h"
 
 /**
  * Shorthand marco to init a X11 atom
@@ -33,6 +32,13 @@ xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 
 xcb_gcontext_t graphics_context;
+
+Display *dpy;
+xcb_connection_t *dis;
+int root;
+xcb_ewmh_connection_t*ewmh;
+xcb_screen_t* screen;
+int defaultScreenNumber;
 
 static xcb_gcontext_t create_graphics_context(void) {
     uint32_t mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND | XCB_GC_GRAPHICS_EXPOSURES;
@@ -102,14 +108,6 @@ void closeConnection(void){
     //dpy=NULL;
 }
 
-void quit(void){
-    LOG(LOG_LEVEL_INFO,"Shuttign down\n");
-    //shuttingDown=1;
-    closeConnection();
-    LOG(LOG_LEVEL_INFO,"destroying context\n");
-    destroyContext();
-    exit(0);
-}
 void flush(void){
     XFlush(dpy);
     xcb_flush(dis);

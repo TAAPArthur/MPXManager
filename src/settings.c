@@ -8,6 +8,8 @@
 
 #include "bindings.h"
 #include "devices.h"
+#include "masters.h"
+#include "workspaces.h"
 #include "default-rules.h"
 #include "functions.h"
 #include "globals.h"

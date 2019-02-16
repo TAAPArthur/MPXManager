@@ -8,28 +8,18 @@ START_TEST(test_detect_monitors){
     assert(isNotEmpty(getAllMonitors()));
     LOG(LOG_LEVEL_NONE,"Detected %d monitor\n",getSize(getAllMonitors()));
 }END_TEST
-START_TEST(test_dock_add_remove){
-    int id=1;
-    WindowInfo*winInfo=createWindowInfo(id);
-    markAsDock(winInfo);
-    assert(addWindowInfo(winInfo));
-    assert(!addWindowInfo(winInfo));
-    assert(removeWindow(id));
-    assert(!removeWindow(id));
-}END_TEST
 START_TEST(test_avoid_struct){
     int dim=100;
     int dockSize=10;
-    updateMonitor(2, 0, (short[]){dim, 0, dim,dim});
-    updateMonitor(1, 1, (short[]){0, 0, dim,dim});
+    int monitorIndex=1,sideMonitorIndex=2;
+    updateMonitor(sideMonitorIndex, 0, (short[]){dim, 0, dim,dim});
+    updateMonitor(monitorIndex, 1, (short[]){0, 0, dim,dim});
 
     int arrSize=_i==0?12:4;
-    Monitor* monitor=getValue(getAllMonitors());
-    Monitor* sideMonitor=getValue(getAllMonitors()->next);
+    Monitor* monitor=find(getAllMonitors(),&monitorIndex,sizeof(int));
+    Monitor* sideMonitor=find(getAllMonitors(),&sideMonitorIndex,sizeof(int));
     assert(monitor!=NULL);
     assert(sideMonitor!=NULL);
-    assert(sideMonitor->id==2);
-    assert(monitor->id==1);
 
     short arr[4][4]={
             {0,0,dockSize,monitor->height},//left
@@ -37,7 +27,6 @@ START_TEST(test_avoid_struct){
             {0,0,monitor->width,dockSize},//top
             {0,monitor->height-dockSize,monitor->width,dockSize}
     };
-
     for(int i=0;i<4;i++){
         WindowInfo*info=createWindowInfo(i+1);
         markAsDock(info);
@@ -121,14 +110,14 @@ START_TEST(test_fake_dock){
 }END_TEST
 START_TEST(test_avoid_docks){
     int size=10;
-    for(int i=3;i>=0;i--){
+    for(int i=0;i<4;i++){
         WindowInfo*winInfo=createWindowInfo(createDock(i,size,_i));
         loadDockProperties(winInfo);
         markAsDock(winInfo);
         addWindowInfo(winInfo);
     }
     assert(getSize(getAllDocks())==4);
-    Monitor*m=getValue(getAllMonitors());
+    Monitor*m=getHead(getAllMonitors());
 
     short arr[4][4]={
             {0,0,size,m->height},//left
@@ -136,10 +125,8 @@ START_TEST(test_avoid_docks){
             {0,0,m->width,size},//top
             {0,m->height-size,m->width,size}
     };
-    Node*n=getAllDocks();
     int index=0;
-    FOR_EACH(n,
-        WindowInfo*winInfo=getValue(n);
+    FOR_EACH(WindowInfo*winInfo,getAllDocks(),
 
         int type=index++;
         assert(winInfo->properties[type]);
@@ -156,9 +143,7 @@ START_TEST(test_avoid_docks){
 
 START_TEST(test_root_dim){
     int width=0,height=0;
-    Node*n=getAllMonitors();
-    FOR_EACH(n,
-        Monitor*m=getValue(n);
+    FOR_EACH(Monitor*m,getAllMonitors(),
         width+=m->width;
         height+=m->height;
     )
@@ -179,7 +164,7 @@ START_TEST(test_monitor_init){
         for(int y=0;y<2;y++){
             short dim[4]={x,y,size*size+y,size*2+x};
             assert(updateMonitor(count, !count, dim));
-            Monitor *m=getValue(getAllMonitors());
+            Monitor *m=find(getAllMonitors(),&count,sizeof(int));
             assert(m->id==count);
             assert(isPrimary(m)==!count);
             for(int i=0;i<4;i++){
@@ -197,7 +182,7 @@ START_TEST(test_monitor_add_remove){
     for(int n=0;n<2;n++){
         for(int i=1;i<=size+1;i++){
             updateMonitor(i, 1, (short[]){0, 0, 100, 100});
-            Workspace *w=getWorkspaceFromMonitor(getValue(isInList(getAllMonitors(), i)));
+            Workspace *w=getWorkspaceFromMonitor(find(getAllMonitors(), &i,sizeof(int)));
             if(i>size)
                 assert(!w);
             else assert(w);
@@ -207,18 +192,11 @@ START_TEST(test_monitor_add_remove){
     //for(int i=0;i<getNumberOfWorkspaces();i++)
         //assert(getWorkspaceByIndex(i)->monitor==NULL);
     while(isNotEmpty(getAllMonitors()))
-        assert(removeMonitor(getIntValue(getAllMonitors())));
+        assert(removeMonitor(((Monitor*)getLast(getAllMonitors()))->id));
     for(int i=0;i<getNumberOfWorkspaces();i++)
         assert(getWorkspaceByIndex(i)->monitor==NULL);
     assert(!removeMonitor(0));
 }END_TEST
-
-
-
-
-
-
-
 
 
 Suite *monitorsSuite() {
@@ -226,7 +204,7 @@ Suite *monitorsSuite() {
     TCase* tc_core;
     
     tc_core = tcase_create("Monitor");
-    tcase_add_checked_fixture(tc_core, createSimpleContext, destroyContext);
+    tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
     tcase_add_test(tc_core, test_monitor_init);
     tcase_add_test(tc_core,test_monitor_add_remove);
     suite_add_tcase(s, tc_core);
@@ -243,10 +221,6 @@ Suite *monitorsSuite() {
     tcase_add_loop_test(tc_core, test_avoid_struct,0,2);
     tcase_add_loop_test(tc_core, test_avoid_docks,0,2);
     tcase_add_test(tc_core,test_fake_dock);
-    tcase_add_test(tc_core,test_dock_add_remove);
-
-
-
 
     suite_add_tcase(s, tc_core);
     return s;

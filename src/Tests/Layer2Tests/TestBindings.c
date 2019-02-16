@@ -28,13 +28,11 @@ START_TEST(test_init_binding){
 START_TEST(test_binding_add){
     assert(!isNotEmpty(getDeviceBindings()));
     Binding arr[5]={0};
+    addBindings(arr,LEN(arr));
+    assert(getSize(getDeviceBindings())==LEN(arr));
     Binding single;
     addBinding(&single);
-    assert(getValue(getDeviceBindings()->prev)==&single);
-    addBindings(arr,LEN(arr));
-    int i=0;
-    Node *n =getDeviceBindings()->next;
-    FOR_AT_MOST(n,LEN(arr),assert(getValue(n)==&arr[i++]));
+    assert(getLast(getDeviceBindings())==&single);
 }END_TEST
 START_TEST(test_binding_target_id){
     Binding binding={.targetID=-1};
@@ -300,7 +298,7 @@ START_TEST(test_chain_bindings){
     assert(count==0);
     //enter second chain chain
     checkBindings(1, 0, mask, NULL);
-    assert(getSize(getActiveBindingNode())==2);
+    assert(getSize(getActiveChains())==2);
     assert(count==0);
     checkBindings(2, 0, mask, NULL);
     assert(count==1);
@@ -309,10 +307,10 @@ START_TEST(test_chain_bindings){
     //exit 2nd layer of chain
     checkBindings(123, 0, mask, NULL);
     assert(count==1);
-    assert(getSize(getActiveBindingNode())==1);
+    assert(getSize(getActiveChains())==1);
     //re-enter 2nd layer of chain
     checkBindings(1, 0, mask, NULL);
-    assert(getSize(getActiveBindingNode())==2);
+    assert(getSize(getActiveChains())==2);
     assert(count==1);
     //passthrough via inner chain
     checkBindings(123, outerChainEndMod, mask, NULL);
@@ -446,21 +444,22 @@ START_TEST(test_apply_rules){
     }
     Rule dummy=CREATE_RULE("",LITERAL,NULL);
     assert(applyRule(&dummy, NULL));
-    Node*head=createCircularHead(NULL);
-    assert(applyRules(head, NULL));
+    static ArrayList head;
+    assert(applyRules(&head, NULL));
     int size=MATCH_ANY_LITERAL;
     size=8;
     int target=0;
+    int eventIndex=2;
     Rule r[size];
     for(int i=0;i<size;i++){
-        r[i]=(Rule)CREATE_WILDCARD(BIND(funcNoArg),.passThrough=i<size/2?ALWAYS_PASSTHROUGH:NO_PASSTHROUGH);
+        r[i]=(Rule)CREATE_WILDCARD(BIND(funcNoArg),.passThrough=i>size/2?ALWAYS_PASSTHROUGH:NO_PASSTHROUGH);
         target+=r[i].passThrough==ALWAYS_PASSTHROUGH;
-        insertHead(head,&r[i]);
+        prependRule(eventIndex,&r[i]);
     }
 
-    applyRules(head, NULL);
+    applyRules(getEventRules(eventIndex), NULL);
     assert(count==target+1);
-    destroyList(head);
+    clearList(&head);
 
 }END_TEST
 START_TEST(test_passthrough_rules){
@@ -483,15 +482,15 @@ START_TEST(test_passthrough_rules){
 }END_TEST
 
 START_TEST(test_add_remove_rule){
-    int size=3;
-    Rule rules[size];
+    static Rule rules[3];
+    int size=LEN(rules);
     for(int n=0;n<6;n++){
         for(int i=0;i<size;i++){
             if(n%2)
                 appendRule(n,&rules[i]);
             else prependRule(n,&rules[i]);
             assert(getSize(getEventRules(n))==i+1);
-            assert(getValue(getEventRules(n))==(n%2?&rules[0]:&rules[i]));
+            assert(getElement(getEventRules(n),0)==(n%2?&rules[0]:&rules[i]));
         }
         if(n<2)
             for(int i=0;i<size;i++){
@@ -511,7 +510,7 @@ static void setup(){
     createContextAndSimpleConnection();
 }
 Suite *bindingsSuite(void) {
-    Suite*s = suite_create("Context");
+    Suite*s = suite_create("Bindings");
 
     TCase*tc_core;
 

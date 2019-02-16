@@ -26,14 +26,11 @@ static void setup(){
     mapWindow(window);
 
     scan(root);
+    retile();
     START_MY_WM
-    winInfo=getValue(getAllWindows());
+    winInfo=getHead(getAllWindows());
     assert(winInfo);
     clone=cloneWindow(winInfo);
-    lock();
-    int idle=getIdleCount();
-    unlock();
-    WAIT_UNTIL_TRUE(idle!=getIdleCount());
 
 }
 START_TEST(test_clone_window){
@@ -41,15 +38,10 @@ START_TEST(test_clone_window){
    assert(checkStackingOrder((int*)&clone->id,1));
 }END_TEST
 START_TEST(test_swap_with_original){
-    Node*head=getActiveWindowStack(); 
-    int cloneHead=getValue(head)==clone;
+    int index=indexOf(getActiveWindowStack(),clone,sizeof(int)); 
     movePointer(getActiveMasterPointerID(),winInfo->id,0,0);
     movePointer(getActiveMasterPointerID(),clone->id,0,0);
-    lock();
-    int idle=getIdleCount();
-    unlock();
-    WAIT_UNTIL_TRUE(idle!=getIdleCount());
-    assert(cloneHead!=(getValue(head)==clone));
+    WAIT_UNTIL_TRUE(index!=indexOf(getActiveWindowStack(),clone,sizeof(int))); 
 }END_TEST
 START_TEST(test_update_clone){
     updateClone(winInfo, clone);
@@ -62,9 +54,32 @@ START_TEST(test_auto_update_clones){
     pthread_join(thread,((void *)0));
 }END_TEST
 
+START_TEST(test_window_clone){
+    WindowInfo*winInfo=createWindowInfo(1);
+    addWindowInfo(winInfo);
+    loadSampleProperties(winInfo);
+    assert(winInfo);
+    WindowInfo* clone=cloneWindowInfo(2,winInfo);
+    assert(getSize(getClonesOfWindow(winInfo))==1);
+    assert(getHead(getClonesOfWindow(winInfo))==clone);
+    assert(getSize(getClonesOfWindow(clone))==0);
+    assert(clone->cloneOrigin==winInfo->id);
+    assert(clone->mask==winInfo->mask);
+    assert(clone->id!=winInfo->id);
+    assert(strcmp(clone->title,winInfo->title)==0);
+    addWindowInfo(clone);
+}END_TEST
 Suite *windowCloneSuite() {
     Suite*s = suite_create("My Window Manager");
-    TCase* tc_core = tcase_create("Clone");
+
+    TCase* tc_core;
+
+    tc_core = tcase_create("Window");
+    tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
+    tcase_add_test(tc_core, test_window_clone);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("Clone");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_clone_window);
     tcase_add_test(tc_core, test_update_clone);

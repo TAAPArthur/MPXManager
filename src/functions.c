@@ -11,6 +11,8 @@
 #include "functions.h"
 #include "layouts.h"
 #include "wmfunctions.h"
+#include "masters.h"
+#include "workspaces.h"
 #include "windows.h"
 #include "mywm-util.h"
 #include "logger.h"
@@ -18,14 +20,40 @@
 #include "devices.h"
 #include "globals.h"
 
+static int getNextInteractableWindowInStack(ArrayList*stack,int pos,int delta){
+    if(!isNotEmpty(stack))return -1;
+    int dir=delta==0?0:delta>0?1:-1;
+    int index;
+    for(int i=0;i<getSize(stack);i++){
+        index=getNextIndex(stack,pos,delta);
+        if(isActivatable(getElement(stack,index))){
+            return index;
+        }
+        delta+=dir;
+    }
+    return -1;
+}
+static int getNextIndexInStack(int dir){
+    ArrayList*activeWindows=getActiveWindowStack();
+    if(!isNotEmpty(activeWindows))return -1;
+    int index=-1;
+    if(getFocusedWindow())
+        index=indexOf(activeWindows, getFocusedWindow(),sizeof(int));
+    if(index==-1)
+        index=0;
+    int newIndex=getNextInteractableWindowInStack(activeWindows,index,dir);
+    return newIndex;
+}
+WindowInfo* getNextWindowInStack(int dir){
+    int index=getNextIndexInStack(dir);
+    return index>=0?getElement(getActiveWindowStack(),index):NULL;
+}
 void cycleWindows( int delta){
     setFocusStackFrozen(1);
-    int size=getSize(getActiveMasterWindowStack());
-    for(int i=0;i<size;i++){
-        Node* nextWindowNode=getNextWindowInFocusStack(delta);
-        if(activateWindow(getValue(nextWindowNode)))
-            break;
-    }
+    Master*m=getActiveMaster();
+    int index=getNextInteractableWindowInStack(getWindowStackByMaster(m),m->focusedWindowIndex,delta);
+    if(index>=0)
+        activateWindow(getElement(getWindowStackByMaster(m),index));
 }
 
 void endCycleWindows(void){
@@ -35,21 +63,21 @@ void endCycleWindows(void){
 //////Run or Raise code
 
 
-Node* findWindow(Rule*rule,Node*searchList,Node*ignoreList){
-    UNTIL_FIRST(searchList,
-            (!ignoreList||!isInList(ignoreList,getIntValue(searchList)))&&
-            isActivatable(getValue(searchList))&&
-            doesWindowMatchRule(rule, getValue(searchList)));
+WindowInfo* findWindow(Rule*rule,ArrayList*searchList,ArrayList*ignoreList){
+    WindowInfo*winInfo=NULL;
+    UNTIL_FIRST(winInfo,searchList,
+            (!ignoreList||!find(ignoreList,winInfo,sizeof(int)))&&
+            isActivatable(winInfo)&&
+            doesWindowMatchRule(rule, winInfo));
 
-    assert(searchList==NULL||doesWindowMatchRule(rule, getValue(searchList)));
-    return searchList;
+    assert(winInfo==NULL||doesWindowMatchRule(rule, winInfo));
+    return winInfo;
 }
-static int processFindResult(Node*target){
+static int processFindResult(WindowInfo*target){
     if(target){
-        WindowInfo*winInfo=getValue(target);
-        activateWindow(winInfo);
-        updateWindowCache(winInfo);
-        return winInfo->id;
+        activateWindow(target);
+        updateWindowCache(target);
+        return target->id;
     }
     else return 0;
 }
@@ -57,13 +85,12 @@ int findAndRaiseLazy(Rule*rule){
     return processFindResult(findWindow(rule,getAllWindows(),NULL));
 }
 int findAndRaise(Rule*rule){
-    Node*topWindow=getActiveMasterWindowStack();
-    if(isNotEmpty(topWindow))
-        updateWindowCache(getValue(topWindow));
+    ArrayList*topWindow=getActiveMasterWindowStack();
+    if(getFocusedWindow())
+        updateWindowCache(getFocusedWindow());
 
-    Node* target=NULL;
-    Node *windowsToIgnore = getWindowCache(getActiveMaster());
-    target=findWindow(rule,topWindow,windowsToIgnore);
+    ArrayList *windowsToIgnore = getWindowCache(getActiveMaster());
+    WindowInfo*target=findWindow(rule,topWindow,windowsToIgnore);
     if(!target){
         target=findWindow(rule,getAllWindows(),windowsToIgnore);
         if(!target && isNotEmpty(windowsToIgnore)){
@@ -106,56 +133,26 @@ void spawn(char* command){
         err(1, "error forking\n");
 }
 
-Node* getNextWindowInStack(int dir){
-    Node*activeWindows=getActiveWindowStack();
-    Node*node=NULL;
-    if(getFocusedWindow())
-        node=isInList(activeWindows, getFocusedWindow()->id);
 
-    if(!node)
-        node=activeWindows;
-
-
-    if(dir==0)
-        return node;
-    Node*starting=node;
-    do{
-        if(dir>0)
-            node=node->next?node->next:activeWindows;
-        else
-            node=node->prev?node->prev:getLast(activeWindows);
-        if(isInteractable(getValue(node)))
-            break;
-    }while(node!=starting);
-    return node;
-}
 
 int focusBottom(void){
-    return activateWindow(getValue(getLast(getActiveWindowStack())));
+    return activateWindow(getLast(getActiveWindowStack()));
 }
 int focusTop(void){
-    return activateWindow(getValue(getActiveWindowStack()));
+    return activateWindow(getHead(getActiveWindowStack()));
 }
 void shiftTop(void){
-    shiftToHead(getActiveWindowStack(), getNextWindowInStack(0));
+    shiftToHead(getActiveWindowStack(), getNextIndexInStack(0));
 }
 void swapWithTop(void){
-    swap(getActiveWindowStack(),getNextWindowInStack(0));
+    swap(getActiveWindowStack(),0,getNextIndexInStack(0));
 }
 void swapPosition(int dir){
-    swap(getNextWindowInStack(0),getNextWindowInStack(dir));
+    swap(getActiveWindowStack(),getNextIndexInStack(0),getNextIndexInStack(dir));
 }
 int shiftFocus(int dir){
-    return activateWindow(getValue(getNextWindowInStack(dir)));
+    return activateWindow(getNextWindowInStack(dir));
 }
-
-/*
-void swapWithNextMonitor(int index){
-    swapMonitors(getActiveWorkspaceIndex(), getActiveWorkspaceIndex()+index);
-}
-void sendToNextMonitor(int index){
-
-}*/
 
 void sendWindowToWorkspaceByName(WindowInfo*winInfo,char*name){
     moveWindowToWorkspace(winInfo, getIndexFromName(name));
@@ -196,14 +193,11 @@ void moveWindowWithMouse(WindowInfo*winInfo){
     getGeometry(winInfo)[1]=values[1];
 }
 
-int focusActiveWindow(WindowInfo *winInfo){
-    return winInfo && focusWindowInfo(winInfo);
-}
 void killFocusedWindow(void){
     if(getFocusedWindow())
         killWindowInfo(getFocusedWindow());
 }
-void setMasterTarget(int id){
+static void setMasterTarget(int id){
     getActiveMaster()->targetWindow=id;
 }
 

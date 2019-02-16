@@ -16,6 +16,9 @@
 
 #include "../mywm-util.h"
 #include "../monitors.h"
+#include "../workspaces.h"
+#include "../masters.h"
+#include "../monitors.h"
 
 //const int size=10;
 
@@ -35,21 +38,18 @@ static inline int addFakeMaster(int pointerId,int keyboardID){
     return addMaster(pointerId,keyboardID,"",0);
 }
 static inline void addFakeMonitor(int id){
-    Monitor*m=(Monitor*)malloc(sizeof(Monitor));
-    m->id=id;
-    addMonitor(m);
+    short arr[4]={0};
+    updateMonitor(id,0,arr);
 }
 
-static inline int listsEqual(Node*n,Node*n2){
+static inline int listsEqual(ArrayList*n,ArrayList*n2){
     if(n==n2)
         return 1;
     if(getSize(n)!=getSize(n2))
         return 0;
-    FOR_EACH(n,
-        if(getIntValue(n)!=getIntValue(n2))
+    for(int i=0;i<getSize(n);i++)
+        if(*(int*)getElement(n,i)!=*(int*)getElement(n2,i))
             return 0;
-        n2=n2->next;
-    )
     return 1;
 }
 #endif /* TESTS_UNITTESTS_H_ */

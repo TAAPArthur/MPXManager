@@ -5,18 +5,11 @@
 #define GLOBALS_H_
 
 /// \cond
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
 #include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
 #include <xcb/xinput.h>
-#include <X11/Xlib.h>
 /// \endcond
 
-#include "util.h"
 
-///Returns the length of the array
-#define LEN(X) (sizeof X / sizeof X[0])
 ///Returns the field descriptor used to commuicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
 
@@ -82,16 +75,6 @@ extern char IGNORE_SEND_EVENT;
 /// If true ignor all device events with the key repeat flag set
 extern char IGNORE_KEY_REPEAT;
 
-/**XDisplay instance (only used for events/device commands)*/
-extern Display *dpy;
-/**XCB display instance*/
-extern xcb_connection_t *dis;
-/**EWMH instance*/
-extern xcb_ewmh_connection_t *ewmh;
-/**Root window*/
-extern int root;
-/**Default screen (assumed to be only 1*/
-extern xcb_screen_t* screen;
 
 /// The last supported standard x event
 #define GENERIC_EVENT_OFFSET LASTEvent

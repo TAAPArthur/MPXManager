@@ -1,4 +1,9 @@
+#ifndef MPX_H
+#define MPX_H 
 
+/**
+ * Adds hiearchy rules that will detect master/slave addition/removal and make the correct pairings
+ */
 void addAutoMPXRules(void);
 /**
  * Attaches all slaves to their propper masters
@@ -33,3 +38,4 @@ int splitMaster(void);
  * Removes all the event rules created by splitMaster()
  */
 void endSplitMaster(void);
+#endif

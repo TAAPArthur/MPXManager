@@ -152,8 +152,7 @@ START_TEST(test_delete_window_request){
 START_TEST(test_set_border_color){
     int win=mapWindow(createNormalWindow());
     scan(root);
-    Node*n=isInList(getAllWindows(),win);
-    WindowInfo*winInfo=getValue(n);
+    WindowInfo*winInfo=isInList(getAllWindows(),win);
     unsigned int colors[]={0,255,255*255,255*255*255};
     for(int i=0;i<LEN(colors);i++){
         assert(setBorderColor(win, colors[i]));
@@ -185,8 +184,8 @@ START_TEST(test_raise_window){
     registerForWindowEvents(top, XCB_EVENT_MASK_VISIBILITY_CHANGE);
     scan(root);
 
-    WindowInfo*info=getValue(isInList(getAllWindows(), bottom));
-    WindowInfo*infoTop=getValue(isInList(getAllWindows(), top));
+    WindowInfo*info=getWindowInfo(bottom);
+    WindowInfo*infoTop=getWindowInfo(top);
     assert(info&&infoTop);
     assert(raiseWindow(bottom));
     flush();
@@ -195,6 +194,7 @@ START_TEST(test_raise_window){
     assert(raiseWindowInfo(infoTop));
     assert(checkStackingOrder(stackingOrder+1,2));
 }END_TEST
+
 START_TEST(test_workspace_change){
 
     int nonEmptyIndex=getActiveWorkspaceIndex();
@@ -214,7 +214,7 @@ START_TEST(test_workspace_change){
     switchToWorkspace(nonEmptyIndex);
     assert(getSize(getActiveWindowStack())==2);
 
-    moveWindowToWorkspace(getValue(getActiveWindowStack()), !nonEmptyIndex);
+    moveWindowToWorkspace(getHead(getActiveWindowStack()), !nonEmptyIndex);
     assert(getSize(getActiveWindowStack())==1);
     assert(getSize(getWindowStack(getWorkspaceByIndex(!nonEmptyIndex)))==1);
 
@@ -227,10 +227,10 @@ START_TEST(test_workspace_activation){
     scan(root);
     int index1=getActiveWorkspaceIndex();
     int index2=!index1;
-    moveWindowToWorkspace(getValue(getActiveWindowStack()), index2);
+    moveWindowToWorkspace(getHead(getActiveWindowStack()), index2);
 
-    WindowInfo* winInfo1=getValue(getWindowStack(getWorkspaceByIndex(index1)));
-    WindowInfo* winInfo2=getValue(getWindowStack(getWorkspaceByIndex(index2)));
+    WindowInfo* winInfo1=getHead(getWindowStack(getWorkspaceByIndex(index1)));
+    WindowInfo* winInfo2=getHead(getWindowStack(getWorkspaceByIndex(index2)));
     int info1=winInfo1->id;
     int info2=winInfo2->id;
 
@@ -250,13 +250,13 @@ START_TEST(test_workspace_activation){
     assert(isWindowInVisibleWorkspace(winInfo2));
     assert(!isWindowInVisibleWorkspace(winInfo1));
     WAIT_UNTIL_TRUE(isWindowMapped(info2)&&!isWindowMapped(info1)&&getActiveWorkspaceIndex()==index2);
-    assert(getIntValue(getActiveWindowStack())==info2);
+    assert(getHead(getActiveWindowStack())==winInfo2);
     activateWindow(winInfo1);
     assert(isWindowInVisibleWorkspace(winInfo1));
     assert(!isWindowInVisibleWorkspace(winInfo2));
     WAIT_UNTIL_TRUE(isWindowMapped(info1)&&!isWindowMapped(info2)&&getActiveWorkspaceIndex()==index1);
     assert(getSize(getActiveWindowStack())==1);
-    assert(getIntValue(getActiveWindowStack())==info1);
+    assert(getHead(getActiveWindowStack())==winInfo1);
 }END_TEST
 
 
@@ -371,7 +371,7 @@ START_TEST(test_connect_to_xserver){
     assert(getSize(getActiveMasterWindowStack())==0);
     assert(getSize(getAllWindows())==0);
     assert(getActiveMaster());
-    Monitor*m=getValue(getAllMonitors());
+    Monitor*m=getHead(getAllMonitors());
     assert(m!=NULL);
     assert(getMonitorFromWorkspace(getActiveWorkspace()));
 
@@ -384,7 +384,7 @@ Suite *x11Suite(void) {
 
 
     tc_core = tcase_create("X Server");
-    tcase_add_checked_fixture(tc_core, createSimpleContext, destroyContext);
+    tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
     tcase_add_test(tc_core, test_connect_to_xserver);
     suite_add_tcase(s, tc_core);
 

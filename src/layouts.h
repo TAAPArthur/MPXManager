@@ -9,10 +9,30 @@
 
 #include "mywm-util.h"
 
+/// size of config parameters
 #define CONFIG_LEN 6
 
+/// Number of transformations
 #define TRANSFORM_LEN 6
-typedef enum {NONE=0,ROT_90=1,ROT_180,ROT_270,REFLECT_HOR,REFLECT_VERT}Transform;
+
+/**
+ * Transformations that can be applied to layouts.
+ * Everything is relative to the midpoint of the view port of the monitor
+ */
+typedef enum {
+    /// Apply no transformation
+    NONE=0,
+    /// Rotate everything by 90 deg 
+    ROT_90=1,
+    /// Rotate by 180 deg
+    ROT_180,
+    /// Rotate by 270 deg
+    ROT_270,
+    /// Reflect across x axis
+    REFLECT_HOR,
+    /// Reflect across the y axis
+    REFLECT_VERT
+}Transform;
 enum{CONFIG_X=0,CONFIG_Y=1,CONFIG_WIDTH,CONFIG_HEIGHT,CONFIG_BORDER,CONFIG_STACK};
 
 /**
@@ -50,9 +70,9 @@ typedef struct{
     /// number of windows that should be layed out
     int numWindows;
     /// the stack of windows
-    Node*stack;
+    ArrayList*stack;
     /// the last window in the stack to be tiled
-    Node*last;
+    ArrayList*last;
 } LayoutState;
 
 ///holds meta data to to determine what tiling function to call and and when/how to call it
@@ -107,7 +127,7 @@ void clearLayoutsOfWorkspace(int workspaceIndex);
 
 /**
  * Cycle through the layouts of the active workspace
- * @param index either UP or DOWN
+ * @param dir
  */
 void cycleLayouts(int dir);
 
@@ -150,10 +170,9 @@ void applyLayout(Workspace*workspace);
  *
  * @param windowStack the list of nodes that could possibly be tiled
  * @param args can control the max number of windows tiled (args->limit)
- * @param last if not null, the last tileable node will be return to last
  * @return the number of windows that will be tiled
  */
-int getNumberOfWindowsToTile(Node*windowStack,LayoutArgs*args,Node**last);
+int getNumberOfWindowsToTile(ArrayList*windowStack,LayoutArgs*args);
 
 /**
  * Provides a transformation of config
@@ -161,6 +180,12 @@ int getNumberOfWindowsToTile(Node*windowStack,LayoutArgs*args,Node**last);
  * @param config the config that will be modified
  */
 void transformConfig(LayoutState*state,int config[CONFIG_LEN]);
+/**
+ * Configures the winInfo using values as refrence points and apply various properties of winInfo's mask and set configuration which will override values
+ * @param state
+ * @param winInfo the window to tile
+ * @param values where the layout wants to position the window
+ */
 void configureWindow(LayoutState*state,WindowInfo* winInfo,short values[CONFIG_LEN]);
 /**
  *
@@ -179,11 +204,19 @@ Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
  * @param state
  */
 void full(LayoutState*state);
+
 /**
- * Windows will be the size of the monitor view port
+ * If the number of windows to tile is 1, this method behaves like full();
+ * Windows will be arranged in state->args->arg[0] columns. If arg[0] is 0 then there will log2(num windows to tile) columns 
+ * All columns will have the same number of windows (+/-1) and the later columns will have less
  * @param state
  */
 void column(LayoutState*state);
+/**
+ * If the number of windows to tile is 1, this method behaves like full();
+ * The head of the windowStack will take up MAX(state->args->arg[0]% of the screen, 1) and the remaining windows will be in a single column
+ * @param state
+ */
 void masterPane(LayoutState*state);
 
 #endif /* LAYOUTS_H_ */

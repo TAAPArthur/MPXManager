@@ -43,17 +43,10 @@ int DEFAULT_BINDING_MASKS=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
 int DEFAULT_WORKSPACE_INDEX=0;
 
 
-Display *dpy;
-xcb_connection_t *dis;
-int root;
-xcb_ewmh_connection_t*ewmh;
-xcb_screen_t* screen;
-int defaultScreenNumber;
-
 int CRASH_ON_ERRORS=0;
 
 
-int POLL_COUNT=10;
+int POLL_COUNT=0;
 int POLL_INTERVAL=10;
 
 char * MASTER_INFO_PATH="master-info.txt";

@@ -10,7 +10,7 @@
 #include "globals.h"
 /// \endcond
 
-#include "mywm-util.h"
+#include "workspaces.h"
 #include "monitors.h"
 #include "windows.h"
 #include "wmfunctions.h"
@@ -82,14 +82,14 @@ static WorkspaceState* computeState(){
         states[i].layout=getActiveLayoutOfWorkspace(i);
         long m=getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
         states[i].monitor=m?m:i<numberOfRecordedWorkspaces?savedStates[i].monitor:0;
-        Node*node=getWindowStack(getWorkspaceByIndex(i));
-        int size=getSize(node);
+        ArrayList*list=getWindowStack(getWorkspaceByIndex(i));
+        int size=getSize(list);
         int j=0;
         if(size){
             states[i].windowIds=malloc(size*sizeof(int));
             states[i].windowMasks=malloc(size*sizeof(int));
-            FOR_EACH(node,
-                WindowInfo*winInfo=getValue(node);
+            FOR_EACH(WindowInfo*winInfo,list,
+                
                 if(isTileable(winInfo)){
                     states[i].windowIds[j]=winInfo->id;
                     states[i].windowMasks[j]=getUserMask(winInfo);

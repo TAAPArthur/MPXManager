@@ -49,7 +49,15 @@ int isTileable(WindowInfo* winInfo);
  * @return 1 iff external resize requests should be granted
  */
 int isExternallyResizable(WindowInfo* winInfo);
+/**
+ * @param winInfo
+ * @return 1 iff external raise requests should be granted
+ */
 int isExternallyRaisable(WindowInfo* winInfo);
+/**
+ * @param winInfo
+ * @return 1 iff external border requests should be granted
+ */
 int isExternallyBorderConfigurable(WindowInfo* winInfo);
 /**
  * @param winInfo
@@ -78,11 +86,6 @@ void connectToXserver();
  */
 void syncState();
 
-/**
- * Queries the XServer for all top level windows and process all of them
- * that do not have override redirect
- */
-void scan(xcb_window_t baseWindow);
 
 /**
  * Sets the EWMH property to be the given window
@@ -167,7 +170,13 @@ int raiseWindow(xcb_window_t win);
  */
 int raiseWindowInfo(WindowInfo* winInfo);
 
-void raiseLowerWindowInfo(WindowInfo*winInfo,int above);
+/**
+ * Raises or lowers the winInfo depening on raise.
+ * If the transientFor property is set, then the window is raised lowered releative to is tansientFor window
+ * @param winInfo
+ * @param raise
+ */
+void raiseLowerWindowInfo(WindowInfo*winInfo,int raise);
 
 /**
  * Maps the window specified by id
@@ -227,6 +236,12 @@ char*getWorkspaceName(int index);
  * all visible windows
  */
 void switchToWorkspace(int workspaceIndex);
+/**
+ * Workspace index1 and index2 swap monitors with no checks preformed
+ * @param index1
+ * @param index2
+ */
+void swapWorkspaces(int index1,int index2);
 
 /**
  * Moves a window to the workspace given by destIndex at the NORMAL_LAYER
@@ -271,6 +286,25 @@ void killWindow(xcb_window_t win);
  */
 void killWindowInfo(WindowInfo* winInfo);
 
+/**
+ * Updates the root window with a list of windows we are managing
+ */
 void updateEWMHClientList(void);
 
+
+/**
+ * Adds the FLOATING_MASK to a given window
+ */
+void floatWindow(WindowInfo* win);
+/**
+ * Removes any all all masks that would cause the window to not be tiled
+ */
+void sinkWindow(WindowInfo* win);
+
+/**
+ * Swaps the workspaces and positions in said workspaces between the two windows
+ * @param winInfo1
+ * @param winInfo2
+ */
+void swapWindows(WindowInfo*winInfo1,WindowInfo*winInfo2);
 #endif

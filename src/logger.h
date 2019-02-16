@@ -27,7 +27,7 @@ enum {LOG_LEVEL_ALL,LOG_LEVEL_TRACE,LOG_LEVEL_DEBUG,LOG_LEVEL_INFO,
 
 int getLogLevel();
 void setLogLevel(int level);
-void printNodeList(Node*n);
+void printArrayList(ArrayList*list);
 void printSummary(void);
 void printMonitorSummary(void);
 void printMasterSummary(void);

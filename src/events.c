@@ -55,10 +55,12 @@ static inline xcb_generic_event_t *getNextEvent(){
             event = xcb_poll_for_event(dis);
             if(event)return event;
         }
+        lock();
         applyRules(getEventRules(Idle),NULL);
         idle++;
         flush();
         LOG(LOG_LEVEL_TRACE,"Idle %d\n",idle);
+        unlock();
         event = xcb_wait_for_event (dis);
     }
     return event;
@@ -124,12 +126,12 @@ void registerForMonitorChange(){
     xcb_randr_select_input(dis, root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
 }
 void registerForDeviceEvents(){
-    Node*list=getDeviceBindings();
+    ArrayList*list=getDeviceBindings();
 
     LOG(LOG_LEVEL_DEBUG,"Grabbing %d buttons/keys\n",getSize(list));
-    FOR_EACH_CIRCULAR(list,
-        initBinding(getValue(list));
-        grabBinding(getValue(list));
+    FOR_EACH(Binding*binding,list,
+        initBinding(binding);
+        grabBinding(binding);
     )
     LOG(LOG_LEVEL_DEBUG,"listening for device event;  masks: %d\n",ROOT_DEVICE_EVENT_MASKS);
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);

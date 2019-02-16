@@ -128,12 +128,12 @@ typedef struct binding_struct{
     /**Function to call on match**/
     BoundFunction boundFunction;
     /**Whether more bindings should be considered*/
-    int passThrough;
+    PassThrough passThrough;
     /**Whether a device should be grabbed or not*/
     int noGrab;
     ///The mask to grab; if 0 the mask will automatically be determined
     int mask;
-    /**The target of the grab;; Defaukt: is ALL_MASTER*/
+    /**The target of the grab;; Default: is ALL_MASTER*/
     int targetID;
     /**If in an array, this property being set to 1 signifies the end*/
     char endChain;
@@ -421,7 +421,7 @@ int applyRule(Rule*rule,WindowInfo*winInfo);
  * @param winInfo
  * @return 1 if no rule was matched that had passThrough == false
  */
-int applyRules(Node* head,WindowInfo*winInfo);
+int applyRules(ArrayList* head,WindowInfo*winInfo);
 
 /**
  * Adds a binding to the head of deviceBindings
@@ -437,20 +437,20 @@ void addBinding(Binding*binding);
 void addBindings(Binding*bindings,int num);
 
 /**
- * @return the last node added to the activeChain stack
- */
-Node* getActiveBindingNode();
-/**
  * @return the last Chain added the active chain stack
  */
 Binding* getActiveBinding();
+/**
+ * Returns the list of chains the active master is currently triggering
+ */
+ArrayList* getActiveChains();
 
 /**
  * Returns a Node list of all regisitered bidings
  * @see deviceBindings; 
 */
 
-Node*getDeviceBindings();
+ArrayList*getDeviceBindings();
 
 /**
  * Initilize a rule
@@ -461,7 +461,7 @@ void initRule(Rule*rule);
  * @param i index of eventRules
  * @return the specified event list
  */
-Node* getEventRules(int i);
+ArrayList* getEventRules(int i);
 /**
  * Adds rule to the end of the specified event list
  * @param i index of eventRules

@@ -17,11 +17,8 @@
 #include "../../mywm-util.h"
 #include "../../logger.h"
 #include "../../events.h"
-#include "../../wmfunctions.h"
-#include "../../functions.h"
 #include "../../ewmh.h"
 #include "../../globals.h"
-#include "../../layouts.h"
 
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
@@ -197,7 +194,7 @@ START_TEST(test_process_window){
     processNewWindow(winInfo);
     assert(isNotEmpty(getAllWindows()));
     assert(getSize(getAllWindows())==1);
-    checkProperties(getValue(getAllWindows()));
+    checkProperties(getHead(getAllWindows()));
     xcb_get_window_attributes_reply_t *attr;
     attr=xcb_get_window_attributes_reply(dis,xcb_get_window_attributes(dis, win),NULL);
     assert(attr->your_event_mask==NON_ROOT_EVENT_MASKS);
@@ -220,9 +217,9 @@ START_TEST(test_window_scan){
     mapWindow(win);
     xcb_flush(dis);
     scan(root);
-    assert(isInList(getAllWindows(), win));
-    assert(isInList(getAllWindows(), win2));
-    assert(isInList(getAllWindows(), win3));
+    assert(find(getAllWindows(), &win,sizeof(int)));
+    assert(find(getAllWindows(), &win2,sizeof(int)));
+    assert(find(getAllWindows(), &win3,sizeof(int)));
     assert(getSize(getAllWindows())==3);
 }END_TEST
 START_TEST(test_child_window_scan){
@@ -230,7 +227,7 @@ START_TEST(test_child_window_scan){
     int parent=createNormalWindow();
     int win=createNormalSubWindow(parent);
     scan(parent);
-    assert(isInList(getAllWindows(), win));
+    assert(find(getAllWindows(), &win,sizeof(int)));
     assert(getSize(getAllWindows())==1);
 }END_TEST
 

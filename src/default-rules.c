@@ -19,11 +19,12 @@
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
-#include "mywm-util.h"
+#include "masters.h"
+#include "workspaces.h"
+#include "xsession.h"
 #include "state.h"
 #include "monitors.h"
 #include "default-rules.h"
-#include "functions.h"
 #include "layouts.h"
 
 static void tileChangeWorkspaces(void){
@@ -92,21 +93,10 @@ void addFocusFollowsMouseRule(void){
 
 void onXConnect(void){
     scan(root);
-    Node*master=getAllMasters();
     //for each master try to make set the focused window to the currently focused window (or closet one by id)
-    FOR_EACH(master,
-        setActiveMaster(getValue(master));
-        xcb_input_xi_get_focus_reply_t *reply;
-        reply=xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis, getIntValue(master)), NULL);
-        if(reply){
-            Node*n=getAllWindows();
-            int focus=0;
-            FOR_EACH(n,
-                if(abs(getIntValue(n)-focus)<focus-reply->focus)
-                    focus=getIntValue(n));
-            onWindowFocus(focus);
-            free(reply);
-        }
+    FOR_EACH(Master*master,getAllMasters(),
+        setActiveMaster(master);
+        onWindowFocus(getActiveFocus(master->id));
     );
 }
 
@@ -204,7 +194,7 @@ void focusFollowMouse(void){
 }
 void onFocusInEvent(void){
     xcb_input_focus_in_event_t*event= getLastEvent();
-    LOG(LOG_LEVEL_TRACE,"id %d window %d %d\n",event->deviceid,event->event,event->event);
+    LOG(LOG_LEVEL_TRACE,"id %d window %d %d\n",event->deviceid,event->event,event->child);
     setActiveMasterByDeviceId(event->deviceid);
     WindowInfo*winInfo=getWindowInfo(event->event);
     WindowInfo*oldFocus=getFocusedWindow();
@@ -212,7 +202,7 @@ void onFocusInEvent(void){
         updateFocusState(winInfo);
         setBorder(winInfo);
     }
-    if(oldFocus)
+    if(oldFocus && oldFocus!=winInfo)
         resetBorder(oldFocus);
     setActiveWindowProperty(event->event);
     //setBorder(event->child);
@@ -343,7 +333,7 @@ WindowInfo* getTargetWindow(int root,int event,int child){
 }
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
+    LOG(LOG_LEVEL_TRACE,"device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
         event->sequence,event->event_type,event->deviceid,event->sourceid,event->flags,
         event->root,event->event,event->child);
 
@@ -368,7 +358,7 @@ void onStartup(void){
         preStartUpMethod();
     addDefaultRules();
     //TODO find way to customize number of workspaces in config
-    createContext(NUMBER_OF_WORKSPACES);
+    resetContext();
     if(startUpMethod)
         startUpMethod();
 
@@ -377,8 +367,7 @@ void onStartup(void){
             addLayoutsToWorkspace(i,DEFAULT_LAYOUTS,NUMBER_OF_DEFAULT_LAYOUTS);
 
     for(int i=0;i<NUMBER_OF_EVENT_RULES;i++){
-        Node*n=getEventRules(i);
-        FOR_EACH_CIRCULAR(n,initRule(getValue(n)));
+        FOR_EACH(Rule*rule,getEventRules(i),initRule(rule));
     }
     connectToXserver();
 }
@@ -413,7 +402,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
 void addBasicRules(void){
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
         if(NORMAL_RULES[i].onMatch.type)
-            insertHead(getEventRules(i),&NORMAL_RULES[i]);
+            addToList(getEventRules(i),&NORMAL_RULES[i]);
 }
 
 

@@ -1,9 +1,4 @@
 #include "../UnitTests.h"
-#include "../TestX11Helper.h"
-#include <X11/keysym.h>
-#include "../../mywm-util.h"
-#include "../../globals.h"
-#include "../../bindings.h"
 #include "../../xsession.h"
 
 extern Suite *bindingsSuite();
@@ -14,6 +9,7 @@ extern Suite *testFunctionSuite();
 extern Suite *monitorsSuite();
 extern Suite *eventSuite();
 extern Suite *windowsSuite();
+extern Suite *mywmUtilSuite();
 
 CREATE_HANDLER
 
@@ -33,7 +29,7 @@ int main(int argc, char **argv __attribute__((unused)) ) {
     SRunner *runner;
     runner = srunner_create(xsessionSuite());
     srunner_add_suite(runner,testFunctionSuite());
-
+    srunner_add_suite(runner,mywmUtilSuite());
     srunner_add_suite(runner,devicesSuite());
     srunner_add_suite(runner,monitorsSuite());
 

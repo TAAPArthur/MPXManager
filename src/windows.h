@@ -81,6 +81,7 @@ typedef enum {
 
     ///Keeps track on the visibility state of the window
     PARTIALLY_VISIBLE =     1<<27,
+    ///Keeps track on the visibility state of the window
     FULLY_VISIBLE =         1<<28 | PARTIALLY_VISIBLE,
     ///Inidicates the window is not withdrawn
     MAPABLE_MASK =           1<<29,
@@ -232,4 +233,113 @@ short*getGeometry(WindowInfo*winInfo);
  * @param geometry
  */
 void setGeometry(WindowInfo*winInfo,short*geometry);
+void lockWindow(WindowInfo*winInfo);
+void unlockWindow(WindowInfo*winInfo);
+/**
+ * Queries the XServer for all top level windows and process all of them
+ * that do not have override redirect
+ */
+void scan(xcb_window_t baseWindow);
+
+
+/**
+ * @param workspace
+ * @return the windows stack of the workspace
+ */
+ArrayList*getWindowStack(Workspace*workspace);
+
+
+
+int getWorkspaceIndexOfWindow(WindowInfo*winInfo);
+Workspace* getWorkspaceOfWindow(WindowInfo*winInfo);
+ArrayList* getWindowStackOfWindow(WindowInfo*winInfo);
+
+/**
+ * Creates a pointer to a WindowInfo object and sets its id to id
+ *
+ * The workspaceIndex of the window is set to NO_WORKSPACE
+ * @param id    the id of the WindowInfo object
+ * @return  pointer to the newly created object
+ */
+WindowInfo* createWindowInfo(unsigned int id);
+
+/**
+ * Clones a WindowInfo object and sets its id to id
+ *
+ * @param id    the id of the WindowInfo object
+ * @param winInfo    the window to clone
+ * @return  pointer to the newly created object
+ */
+WindowInfo*cloneWindowInfo(unsigned int id,WindowInfo*winInfo);
+
+/**
+ * Returns a struct with stored metadata on the given window
+ * @param win
+ * @return pointer to struct with info on the given window
+ */
+WindowInfo* getWindowInfo(unsigned int win);
+
+
+/**
+ * @return a list of windows with the most recently used windows first
+ */
+ArrayList*getAllWindows();
+
+
+
+
+/**
+ * To be called when a master focuses a given window.
+ *
+ * If the window is not in the window list, nothing is done
+ * else
+ * The window is added to the active master's stack
+ * if the master is not frozen, then the window is added/shifted to the head of the master stack
+ * The window is shifted the head of the global window list
+ * The master is promoted to the head of the master stack
+ *
+ * Note that if a new window is focused, it won't be added to the master stack if it is
+ * frozen
+ * @param win
+ */
+void onWindowFocus(unsigned int win);
+
+
+
+
+
+
+
+/**
+ * Removes window from context and master(s)/workspace lists.
+ * The Nodes containing the window and the windows value are freeded also
+ * @param winToRemove
+ */
+int removeWindow(unsigned int winToRemove);
+/**
+ * Frees winInfo and interal structs
+ * @param winInfo
+ * @see removeWindow()
+ */
+void deleteWindowInfo(WindowInfo*winInfo);
+
+
+/**
+ * Adds a window to the list of windows in context iff it
+ * isn't already in the list
+ * Note that the creted window is not added to a master window list or
+ * a workspace
+ * @param wInfo    instance to add
+ * @return 1 iff this pointer was added
+ */
+int addWindowInfo(WindowInfo* wInfo);
+void markAsDock(WindowInfo*winInfo);
+
+/**
+ * Returns a list of clone windows for the given window
+ * @param winInfo
+ * @return
+ */
+ArrayList* getClonesOfWindow(WindowInfo*winInfo);
+
 #endif
