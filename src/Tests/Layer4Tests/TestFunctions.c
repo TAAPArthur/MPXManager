@@ -22,6 +22,7 @@ void functionSetup(){
 
 START_TEST(test_cycle_window){
     IGNORE_KEY_REPEAT=1;
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT=-1;
     START_MY_WM
 
     int size=4;

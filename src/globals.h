@@ -59,6 +59,9 @@ extern int DEFAULT_BINDING_MASKS;
 ///The started workspace if !LOAD_STATE or the root CURRENT_DESKTOP property is not set
 extern int DEFAULT_WORKSPACE_INDEX;
 
+/// time (in seconds) between when windows is detected and mapped, that it will be auto focused (local state is updated immediatly); set to -1 to disable
+extern int AUTO_FOCUS_NEW_WINDOW_TIMEOUT;
+
 ///Masks to ignore; Default is ModMask2 (NUM_LOCK)
 extern int IGNORE_MASK;
 ///IF True we will crash if an error is received

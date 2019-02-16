@@ -139,6 +139,7 @@ void onCreateEvent(void){
     xcb_create_notify_event_t *event= getLastEvent();
     if(event->override_redirect||getWindowInfo(event->window))return;
     WindowInfo*winInfo=createWindowInfo(event->window);
+    winInfo->creationTime=getTime();
     LOG(LOG_LEVEL_DEBUG,"window: %d parent: %d\n",event->window,event->parent);
     processNewWindow(winInfo);
 }

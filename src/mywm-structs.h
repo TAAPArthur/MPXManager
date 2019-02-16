@@ -37,6 +37,8 @@ typedef struct{
      */
     int workspaceIndex;
 
+    /// used to tell if a window has attempted to be mapped before
+    char mappedBefore;
     ///Time window was first detected
     int creationTime;
     /**The time this window was minimized*/

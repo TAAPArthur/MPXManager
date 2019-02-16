@@ -471,6 +471,15 @@ void updateMapState(int id,int map){
         if(map){
             loadWindowHints(winInfo);
             addMask(winInfo, MAPPED_MASK);
+            if(winInfo->mappedBefore)return;
+            else winInfo->mappedBefore=1;
+            long delta=getTime()-winInfo->creationTime;
+            if(delta<AUTO_FOCUS_NEW_WINDOW_TIMEOUT)
+                if(focusWindowInfo(winInfo)){
+                    LOG(LOG_LEVEL_DEBUG,"auto focusing window %d (Detected %ldms ago)\n",winInfo->id,delta);
+                    updateFocusState(winInfo);
+                    raiseWindowInfo(winInfo);
+                }
         }
         else
             removeMask(winInfo, MAPPED_MASK);

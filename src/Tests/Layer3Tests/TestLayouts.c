@@ -113,7 +113,7 @@ START_TEST(test_layouts){
 }END_TEST
 
 START_TEST(test_layouts_transition){
-
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT=-1;
     LOAD_SAVED_STATE=0;
     int layoutIndex=_i;
     setActiveLayout(&LAYOUT_FAMILIES[layoutIndex]);
