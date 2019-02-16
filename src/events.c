@@ -65,6 +65,12 @@ static inline xcb_generic_event_t *getNextEvent(){
     }
     return event;
 }
+
+int isSyntheticEvent(){
+    xcb_generic_event_t *event=getLastEvent();
+    return event->response_type>127;
+}
+
 void *runEventLoop(void*arg __attribute__((unused))){
     LOG(LOG_LEVEL_TRACE,"starting event loop\n");
     xcb_generic_event_t *event;

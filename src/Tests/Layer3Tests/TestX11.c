@@ -175,7 +175,17 @@ START_TEST(test_invalid_state){
     assert(getWindowInfo(win)->workspaceIndex<getNumberOfWorkspaces());
 }END_TEST
 
-    
+START_TEST(test_withdraw_window){
+    int win=createNormalWindow();
+    WAIT_UNTIL_TRUE(getWindowInfo(win))
+    WindowInfo*winInfo=getWindowInfo(win);
+    IGNORE_SEND_EVENT=0;
+    WAIT_UNTIL_TRUE(hasMask(winInfo,MAPABLE_MASK));
+    xcb_unmap_notify_event_t event={.response_type=XCB_UNMAP_NOTIFY,.event=root,.window=win};
+    catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS,(char*) &event));
+    WAIT_UNTIL_FALSE(hasMask(winInfo,MAPABLE_MASK));
+
+}END_TEST 
 START_TEST(test_raise_window){
     //windows are in same spot
     int bottom=mapArbitraryWindow();
@@ -460,6 +470,7 @@ Suite *x11Suite(void) {
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_apply_gravity);
+    tcase_add_test(tc_core, test_withdraw_window);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("MISC");

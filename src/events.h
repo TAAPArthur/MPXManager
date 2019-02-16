@@ -82,4 +82,8 @@ void registerForDeviceEvents();
  */
 void registerForMonitorChange();
 
+/**
+ * @return 1 iff the last event was synthetic (not sent by the XServer)
+ */
+int isSyntheticEvent();
 #endif /* EVENTS_H_ */

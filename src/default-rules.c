@@ -178,8 +178,12 @@ void onMapRequestEvent(void){
 void onUnmapEvent(void){
     xcb_unmap_notify_event_t*event= getLastEvent();
     updateMapState(event->window,0);
-    if(getWindowInfo(event->window))
-        removeMask(getWindowInfo(event->window), FULLY_VISIBLE);
+    WindowInfo*winInfo=getWindowInfo(event->window);
+    if(winInfo){
+        removeMask(winInfo, FULLY_VISIBLE);
+        if(isSyntheticEvent())
+            removeMask(winInfo, MAPABLE_MASK);
+    }
 }
 
 void focusFollowMouse(void){

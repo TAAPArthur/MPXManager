@@ -57,6 +57,8 @@ START_TEST(test_regular_events){
     void func(void){
         assert(i==(((xcb_generic_event_t*)getLastEvent())->response_type & 127));
         count++;
+        if(i>2)
+            assert(isSyntheticEvent());
     }
     IGNORE_SEND_EVENT=0;
     POLL_COUNT=1;
