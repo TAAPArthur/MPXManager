@@ -135,7 +135,7 @@ void cycleLayouts(int dir);
  * Apply this external layout to the workspace if it is not already the active layout
  * @param layout
  */
-void toggleLayout(Layout* layout);
+int toggleLayout(Layout* layout);
 
 /**
  * Manually retile the active workspace

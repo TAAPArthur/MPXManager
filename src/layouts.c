@@ -156,12 +156,17 @@ void cycleLayouts(int dir){
     getActiveWorkspace()->layoutOffset=pos;
     retile();
 }
-void toggleLayout(Layout* layout){
+int toggleLayout(Layout* layout){
     if(layout!=getActiveLayout()){
         setActiveLayout(layout);
     }
-    else cycleLayouts(0);
+    else{
+        cycleLayouts(0);
+        if(layout==getActiveLayout())
+            return 0;
+    }
     retile();
+    return 1;
 }
 void retile(void){
     tileWorkspace(getActiveWorkspaceIndex());

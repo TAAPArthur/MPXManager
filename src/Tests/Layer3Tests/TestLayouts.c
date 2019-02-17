@@ -334,11 +334,13 @@ START_TEST(test_tile_windows){
 }END_TEST
 
 START_TEST(test_layout_toggle){
-    addLayoutsToWorkspace(getActiveWorkspaceIndex(), DEFAULT_LAYOUTS, 1);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
-    toggleLayout(&DEFAULT_LAYOUTS[1]);
+    assert(toggleLayout(&DEFAULT_LAYOUTS[1]));
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[1]);
-    toggleLayout(&DEFAULT_LAYOUTS[1]);
+    assert(toggleLayout(&DEFAULT_LAYOUTS[1]));
+    assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
+    
+    assert(toggleLayout(&DEFAULT_LAYOUTS[0])==0);
     assert(getActiveLayout()==&DEFAULT_LAYOUTS[0]);
 }END_TEST
 

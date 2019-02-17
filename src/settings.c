@@ -38,11 +38,12 @@ static Binding DEFAULLT_BINDINGS[]={
     {Mod4Mask,Button1,BIND(floatWindow), .passThrough=ALWAYS_PASSTHROUGH ,.mask=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask,XK_t, BIND(sinkWindow)},
 
-    {0, XF86XK_AudioPlay, BIND(toggleLayout,&DEFAULT_LAYOUTS[FULL])},
-    {Mod4Mask, XK_F11, BIND(toggleLayout,&DEFAULT_LAYOUTS[FULL]) },
+    {0, XF86XK_AudioPlay, OR(BIND(toggleLayout,&DEFAULT_LAYOUTS[FULL]),BIND(cycleLayouts,DOWN))},
+    {Mod4Mask, XK_F11, OR(BIND(toggleLayout,&DEFAULT_LAYOUTS[FULL]),BIND(cycleLayouts,DOWN))},
     {Mod4Mask, XF86XK_AudioPlay, BIND(toggleMask,FULLSCREEN_MASK) },
 
-    {Mod4Mask,XK_space, BIND(cycleLayouts,1)},
+    {Mod4Mask,XK_space, BIND(cycleLayouts,DOWN)},
+
     {Mod4Mask,Button1,BOTH(BIND(startMouseOperation),CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE|XCB_INPUT_XI_EVENT_MASK_MOTION,
         {Mod4Mask,Button1,BIND(moveWindowWithMouse),.mask=XCB_INPUT_XI_EVENT_MASK_MOTION|XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS,.noGrab=1,.passThrough=NO_PASSTHROUGH},
         {Mod4Mask,0,BIND(moveWindowWithMouse),.mask=XCB_INPUT_XI_EVENT_MASK_MOTION,.noGrab=1,.passThrough=NO_PASSTHROUGH},
