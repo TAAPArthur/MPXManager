@@ -38,7 +38,7 @@ static inline int addFakeMaster(int pointerId,int keyboardID){
     return addMaster(pointerId,keyboardID,"",0);
 }
 static inline void addFakeMonitor(int id){
-    short arr[4]={0};
+    Rect arr={0};
     updateMonitor(id,0,arr);
 }
 

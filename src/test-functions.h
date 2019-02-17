@@ -9,10 +9,7 @@
 #define TEST_FUNCTIONS_H_
 /**
  * \copydoc sendDeviceAction()
- * @param id
- * @param detail
- * @param type
- * @param window
+ * @param window to send an action to
  */
 void sendDeviceActionToWindow(int id,int detail,int type,int window);
 

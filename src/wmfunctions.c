@@ -106,7 +106,7 @@ static void updateEWMHWorkspaceProperties(){
     for(int i=0;i<getNumberOfWorkspaces();i++){
         if(isWorkspaceVisible(i)){
             for(int n=0;n<4;n++)
-                ((int*)&workAreas[i])[n]=(&getMonitorFromWorkspace(getWorkspaceByIndex(i))->viewX)[n];
+                ((int*)&workAreas[i])[n]=(&getMonitorFromWorkspace(getWorkspaceByIndex(i))->view.x)[n];
         }
     }
     xcb_ewmh_set_desktop_viewport(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), viewPorts);

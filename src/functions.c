@@ -136,19 +136,19 @@ void spawn(char* command){
 
 
 int focusBottom(void){
-    return activateWindow(getLast(getActiveWindowStack()));
+    return isNotEmpty(getActiveWindowStack())?activateWindow(getLast(getActiveWindowStack())):0;
 }
 int focusTop(void){
-    return activateWindow(getHead(getActiveWindowStack()));
+    return isNotEmpty(getActiveWindowStack())?activateWindow(getHead(getActiveWindowStack())):0;
 }
 void shiftTop(void){
-    shiftToHead(getActiveWindowStack(), getNextIndexInStack(0));
+     isNotEmpty(getActiveWindowStack())?shiftToHead(getActiveWindowStack(), getNextIndexInStack(0)):NULL;
 }
 void swapWithTop(void){
-    swap(getActiveWindowStack(),0,getNextIndexInStack(0));
+     isNotEmpty(getActiveWindowStack())?swap(getActiveWindowStack(),0,getNextIndexInStack(0)):NULL;
 }
 void swapPosition(int dir){
-    swap(getActiveWindowStack(),getNextIndexInStack(0),getNextIndexInStack(dir));
+    isNotEmpty(getActiveWindowStack())?swap(getActiveWindowStack(),getNextIndexInStack(0),getNextIndexInStack(dir)):NULL;
 }
 int shiftFocus(int dir){
     return activateWindow(getNextWindowInStack(dir));
@@ -193,10 +193,6 @@ void moveWindowWithMouse(WindowInfo*winInfo){
     getGeometry(winInfo)[1]=values[1];
 }
 
-void killFocusedWindow(void){
-    if(getFocusedWindow())
-        killWindowInfo(getFocusedWindow());
-}
 static void setMasterTarget(int id){
     getActiveMaster()->targetWindow=id;
 }

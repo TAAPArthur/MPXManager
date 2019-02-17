@@ -81,17 +81,25 @@ START_TEST(test_destroy_context){
 
 
 START_TEST(test_create_master){
-    addFakeMaster(1, 2);
+    int size=NAME_BUFFER+10;
+    char *name=malloc(size);
+    for(int i=0;i<size;i++)
+        name[i]='A';
+    
+    addMaster(1,2,name,'B');
     Master*m=getMasterById(1);
     assert(getSize(getAllMasters())==1);
     assert(m->id==1);
     assert(m->pointerId==2);
     assert(getSize(&m->windowStack)==0);
-    assert(m->name && m->name[0]+1);
     assert(m->focusedWindowIndex==0);
     assert(getActiveMaster()==m);
     assert(!getSize(getActiveMasterWindowStack()));
     assert(getActiveWorkspaceIndex()==0);
+    assert(strncmp(m->name,name,NAME_BUFFER-1)==0);
+    assert(m->name[NAME_BUFFER-1]==0);
+    free(name);
+    assert(m->name && m->name[0]+1);
 
 }END_TEST
 

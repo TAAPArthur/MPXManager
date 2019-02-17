@@ -41,7 +41,7 @@ void printArrayList(ArrayList*n){
     FOR_EACH(void*v,n,LOG(LOG_LEVEL_DEBUG,"%d ",*(int*)v));
     LOG(LOG_LEVEL_DEBUG,"\n");
 }
-#define PRINT_MASK(str,mask) if( (str & mask)==mask)LOG(LOG_LEVEL_DEBUG,#str " ");
+#define PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))LOG(LOG_LEVEL_DEBUG,#str " ");
 void printMask(int mask){
     PRINT_MASK(NO_MASK,mask);
     PRINT_MASK(X_MAXIMIZED_MASK,mask);
@@ -83,8 +83,8 @@ void printMasterSummary(void){
 void printMonitorSummary(void){
     FOR_EACH(Monitor*m,getAllMonitors(),
         LOG(LOG_LEVEL_DEBUG,"Monitor %ld primary %d",m->id,m->primary);
-        PRINT_ARR(&m->x,4);
-        PRINT_ARR(&m->viewX,4);
+        PRINT_ARR("Base",&m->base.x,4," ");
+        PRINT_ARR("View",&m->view.x,4,"\n");
     );
     LOG(LOG_LEVEL_DEBUG,"\n");
 }

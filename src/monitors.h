@@ -7,6 +7,19 @@
 #include "mywm-structs.h"
 
 /**
+ * holds topleft coordinates and width/height of the bounding box
+ */
+typedef struct{
+    /// top left coordinate of the bounding box
+    short x;
+    /// top left coordinate of the bounding box
+    short y;
+    /// width of the bounding box
+    short width;
+    /// height of the bounding box
+    short height;
+}Rect;
+/**
  * Represents a rectangular region where workspaces will be tiled
  */
 typedef struct Monitor{
@@ -15,19 +28,9 @@ typedef struct Monitor{
     /**1 iff the monitor is the primary*/
     char primary;
     /**The unmodified size of the monitor*/
-    ///@{
-    short int x;
-    short int y;
-    short int width;
-    short int height;
-    ///@}
+    Rect base;
     /** The modified size of the monitor after docks are avoided */
-    ///@{
-    short int viewX;
-    short int viewY;
-    short int viewWidth;
-    short int viewHeight;
-    ///@}
+    Rect view;
 
 } Monitor;
 
@@ -59,7 +62,7 @@ int isPrimary(Monitor*monitor);
  * @param geometry an array containing the x,y,width,height of the monitor
  * @return 1 iff a new monitor was added
  */
-int updateMonitor(long id,int primary,short geometry[4]);
+int updateMonitor(long id,int primary,Rect geometry);
 /**
  * Removes a monitor and frees related info
  * @param id identifier of the monitor
@@ -103,7 +106,7 @@ void detectMonitors(void);
  * @param arg2 x,y,width,height
  * @return 1 iff the 2 specified rectangles intersect
  */
-int intersects(short int arg1[4],short int arg2[4]);
+int intersects(Rect arg1,Rect arg2);
 
 /**
  * Resizes the monitor such that its viewport does not intersec the given dock

@@ -113,10 +113,6 @@ int findAndRaiseLazy(Rule*rule);
  * @return the first window that matches rule or NULL
  */
 WindowInfo* findWindow(Rule*rule,ArrayList*searchList,ArrayList*ignoreList);
-/**
- * Sends a kill signal to the focused window
- */
-void killFocusedWindow(void);
 
 /**
  * Forks and runs command in SHELL

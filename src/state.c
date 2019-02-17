@@ -66,8 +66,8 @@ static long getMonitorLocationFromWorkspace(Workspace*workspace){
     Monitor *m=getMonitorFromWorkspace(workspace);
     if(!m)return 0;
     long l;
-    //copy the next 4 shorts after m->viewX into l
-    memcpy(&l,&m->viewX,8);
+    //copy the next 4 shorts after m->view.x into l
+    memcpy(&l,&m->view.x,sizeof(long));
     return l;
 }
 static WorkspaceState* computeState(){

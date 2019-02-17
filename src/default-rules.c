@@ -340,7 +340,7 @@ WindowInfo* getTargetWindow(int root,int event,int child){
 }
 void onDeviceEvent(void){
     xcb_input_key_press_event_t*event=getLastEvent();
-    LOG(LOG_LEVEL_DEBUG,"device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
+    LOG(LOG_LEVEL_TRACE,"device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
         event->sequence,event->event_type,event->deviceid,event->sourceid,event->flags,
         event->root,event->event,event->child);
 
@@ -363,9 +363,9 @@ void onGenericEvent(void){
 void onStartup(void){
     if(preStartUpMethod)
         preStartUpMethod();
-    addDefaultRules();
     //TODO find way to customize number of workspaces in config
     resetContext();
+    addDefaultRules();
     if(startUpMethod)
         startUpMethod();
 

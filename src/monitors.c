@@ -40,10 +40,10 @@ static int intersects1D(int P1,int D1,int P2,int D2){
     return P1 < P2 +D2 && P1 +D1 > P2;
 }
 
-int intersects(short int arg1[4],short int arg2[4]){
+int intersects(Rect arg1,Rect arg2){
 
-    if( intersects1D(arg1[0],arg1[2],arg2[0],arg2[2]) &&
-            intersects1D(arg1[1],arg1[3],arg2[1],arg2[3]))
+    if( intersects1D(arg1.x,arg1.width,arg2.x,arg2.width) &&
+            intersects1D(arg1.y,arg1.height,arg2.y,arg2.height))
             return 1;
     return 0;
 }
@@ -109,7 +109,7 @@ int resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo){
 
         if(winInfo->onlyOnPrimary){
             if(end==0)
-                end=(&m->x)[offset];
+                end=(&m->base.x)[offset];
             if(!m->primary)
                 continue;
         }
@@ -119,24 +119,24 @@ int resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo){
         short int values[]={0,0,0,0};
         values[offset]=fromPositiveSide?0:
                 (winInfo->onlyOnPrimary?
-                    (&m->width)[offset]:getScreenDim(offset))
+                    (&m->base.width)[offset]:getScreenDim(offset))
                 -dim;
         values[(offset+1)%2]=start;
         values[offset+2]=dim;
         values[(offset+1)%2+2]=end-start;
 
 
-        if(!intersects(&m->viewX, values))
+        if(!intersects(m->view, *(Rect*)values))
             continue;
 
         int intersectionWidth=fromPositiveSide?
-                dim-(&m->viewX)[offset]:
-                (&m->viewX)[offset]+(&m->viewWidth)[offset]-values[offset];
+                dim-(&m->view.x)[offset]:
+                (&m->view.x)[offset]+(&m->view.width)[offset]-values[offset];
 
         assert(intersectionWidth>0);
-        (&m->viewWidth)[offset]-=intersectionWidth;
+        (&m->view.width)[offset]-=intersectionWidth;
         if(fromPositiveSide)
-            (&m->viewX)[offset]=dim;
+            (&m->view.x)[offset]=dim;
         changed++;
     }
     return changed;
@@ -150,7 +150,7 @@ void detectMonitors(void){
     ArrayList monitorNames={0};
     while(iter.rem){
         xcb_randr_monitor_info_t *monitorInfo = iter.data;
-        updateMonitor(monitorInfo->name,monitorInfo->primary,&monitorInfo->x);
+        updateMonitor(monitorInfo->name,monitorInfo->primary,*(Rect*)&monitorInfo->x);
         addToList(&monitorNames,(void*)monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
@@ -196,7 +196,7 @@ static void addMonitor(Monitor*m){
         workspace->monitor=m;
     addToList(getAllMonitors(), m);
 }
-int updateMonitor(long id,int primary,short geometry[4]){
+int updateMonitor(long id,int primary,Rect geometry){
     Monitor*m=find(getAllMonitors(),&id,sizeof(int));
     int newMonitor=!m;
     if(!m){
@@ -205,14 +205,14 @@ int updateMonitor(long id,int primary,short geometry[4]){
         addMonitor(m);
     }
     m->primary=primary?1:0;
-    memcpy(&m->x, geometry, sizeof(short)*4);
+    m->base=geometry;
     resizeMonitorToAvoidAllStructs(m);
     return newMonitor;
 }
 
 void resetMonitor(Monitor*m){
     assert(m);
-    memcpy(&m->viewX, &m->x, sizeof(short)*4);
+    memcpy(&m->view, &m->base, sizeof(short)*4);
 }
 ArrayList*getAllDocks(){
     return &docks;

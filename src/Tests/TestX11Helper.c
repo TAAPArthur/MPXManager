@@ -27,7 +27,7 @@ static int createWindow(int parent,int mapped,int ignored,int userIgnored,int in
           parent,                  /* parent window       */
           0, 0,                          /* x, y                */
           150, 150,                      /* width, height       */
-          10,                            /* border_width        */
+          1,                            /* border_width        */
           XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class               */
           screen->root_visual,           /* visual              */
           XCB_CW_OVERRIDE_REDIRECT, &ignored);                     /* masks, not used yet */
@@ -275,10 +275,8 @@ int checkStackingOrder(int* stackingOrder,int num){
     int numberOfChildren = xcb_query_tree_children_length(reply);
     xcb_window_t *children = xcb_query_tree_children(reply);
     int counter=0;
-    LOG(LOG_LEVEL_DEBUG,"Stacking order: ");
-    PRINT_ARR(children,numberOfChildren);
-    LOG(LOG_LEVEL_DEBUG,"Target order: ");
-    PRINT_ARR(stackingOrder,num);
+    PRINT_ARR("stacking order",children,numberOfChildren,"\n");
+    PRINT_ARR("Target order: ",stackingOrder,num,"\n");
     for (int i = 0; i < numberOfChildren; i++) {
         if(children[i]==stackingOrder[counter]){
             counter++;
