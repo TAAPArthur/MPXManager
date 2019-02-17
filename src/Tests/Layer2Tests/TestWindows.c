@@ -223,12 +223,21 @@ START_TEST(test_window_scan){
     assert(getSize(getAllWindows())==3);
 }END_TEST
 START_TEST(test_child_window_scan){
+    IGNORE_SUBWINDOWS=1;
     assert(!isNotEmpty(getAllWindows()));
     int parent=createNormalWindow();
     int win=createNormalSubWindow(parent);
+    int child=createNormalSubWindow(win);
+    int grandChild=createNormalSubWindow(child);
     scan(parent);
     assert(find(getAllWindows(), &win,sizeof(int)));
+    assert(!find(getAllWindows(), &child,sizeof(int)));
     assert(getSize(getAllWindows())==1);
+    IGNORE_SUBWINDOWS=0;
+    scan(win);
+    assert(find(getAllWindows(), &child,sizeof(int)));
+    assert(find(getAllWindows(), &grandChild,sizeof(int)));
+    assert(getSize(getAllWindows())==3);
 }END_TEST
 
 

@@ -70,6 +70,8 @@ typedef struct{
      * Window id of related window
      */
     unsigned int groupId;
+    /// the parent of this window
+    unsigned int parent;
     /**
      * Indicator of the masks an event has. This will be bitwise added
      * to the NON_ROOT_DEFAULT_WINDOW_MASKS when processing a new window

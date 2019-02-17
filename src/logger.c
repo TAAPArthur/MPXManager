@@ -41,7 +41,7 @@ void printArrayList(ArrayList*n){
     FOR_EACH(void*v,n,LOG(LOG_LEVEL_DEBUG,"%d ",*(int*)v));
     LOG(LOG_LEVEL_DEBUG,"\n");
 }
-#define PRINT_MASK(str,mask) if( str & mask)LOG(LOG_LEVEL_DEBUG,#str " ");
+#define PRINT_MASK(str,mask) if( (str & mask)==mask)LOG(LOG_LEVEL_DEBUG,#str " ");
 void printMask(int mask){
     PRINT_MASK(NO_MASK,mask);
     PRINT_MASK(X_MAXIMIZED_MASK,mask);
@@ -122,7 +122,7 @@ void dumpWindowInfo(WindowInfo* win){
 
     LOG(LOG_LEVEL_DEBUG,"Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n",win->id,win->id,win->groupId,win->groupId,win->transientFor,win->transientFor);
     LOG(LOG_LEVEL_DEBUG,"Labels class %s (%s)\n",win->className,win->instanceName);
-    LOG(LOG_LEVEL_DEBUG,"Type is %d (%s) implicit: %d Dock %d\n",win->type,win->typeName,win->implicitType,win->dock);
+    LOG(LOG_LEVEL_DEBUG,"Parent %d,Type is %d (%s) implicit: %d Dock %d\n",win->parent,win->type,win->typeName,win->implicitType,win->dock);
 
     LOG(LOG_LEVEL_DEBUG,"Title class %s\n",win->title);
 

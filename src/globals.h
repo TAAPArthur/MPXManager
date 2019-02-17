@@ -114,6 +114,9 @@ extern int DEFAULT_UNFOCUS_BORDER_COLOR;
 /**Default Border color for focused windows*/
 extern int DEFAULT_FOCUS_BORDER_COLOR;
 
+/// if true we igore non-top level windows
+extern int IGNORE_SUBWINDOWS;
+
 /**
  * Indicates how long we should poll for events before switching to blocking
  * We will wait POLL_INTERVAL ms OLL_COUNT times (for aa total of POLL_COUNT*POLL_INTERVAL ms)

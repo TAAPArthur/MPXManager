@@ -138,8 +138,10 @@ void onCreateEvent(void){
     LOG(LOG_LEVEL_TRACE,"create event received\n");
     xcb_create_notify_event_t *event= getLastEvent();
     if(event->override_redirect||getWindowInfo(event->window))return;
+    if(IGNORE_SUBWINDOWS && event->parent!=root)return;
     WindowInfo*winInfo=createWindowInfo(event->window);
     winInfo->creationTime=getTime();
+    winInfo->parent=event->parent;
     LOG(LOG_LEVEL_DEBUG,"window: %d parent: %d\n",event->window,event->parent);
     processNewWindow(winInfo);
 }

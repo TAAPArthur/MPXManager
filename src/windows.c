@@ -370,11 +370,12 @@ void scan(xcb_window_t baseWindow) {
             }
             else {
                 WindowInfo *winInfo=createWindowInfo(children[i]);
+                winInfo->parent=baseWindow;
                 //if the window is not unmapped
                 if(attr->map_state)
                     addMask(winInfo, MAPABLE_MASK|MAPPED_MASK);
-
-                if(processNewWindow(winInfo))
+                
+                if(processNewWindow(winInfo)&&!IGNORE_SUBWINDOWS)
                     scan(children[i]);
             }
             free(attr);
