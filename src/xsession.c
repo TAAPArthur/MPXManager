@@ -30,6 +30,7 @@ xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_DELETE_WINDOW;
 xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
+xcb_atom_t WM_SELECTION_ATOM;
 
 xcb_gcontext_t graphics_context;
 
@@ -88,6 +89,13 @@ void openXDisplay(void){
     CREATE_ATOM(WM_DELETE_WINDOW);
     CREATE_ATOM(WM_STATE_NO_TILE);
     CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
+
+    char selectionName[]={'W','M','_','S','0'+defaultScreenNumber,'\0'};
+    xcb_intern_atom_reply_t* reply=xcb_intern_atom_reply(dis,
+            xcb_intern_atom(dis, 0, strlen(selectionName), selectionName),NULL);
+    assert(reply);
+    WM_SELECTION_ATOM=reply->atom;
+    free(reply);
 
     create_graphics_context();
 

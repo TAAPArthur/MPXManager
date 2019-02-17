@@ -199,7 +199,7 @@ void fullCleanup(){
     if(pThread)
         pthread_join(pThread,((void *)0));
     destroyAllNonDefaultMasters();
-    destroyContextAndConnection();
+    quit();
 }
 int getExitStatusOfFork(){
     int status=0;

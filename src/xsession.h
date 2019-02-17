@@ -41,6 +41,11 @@ extern xcb_atom_t WM_STATE_NO_TILE;
  */
 extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 
+/**
+ * Atom for the WM_SELECTION for the default screen
+ */
+extern xcb_atom_t WM_SELECTION_ATOM;
+
 /**XDisplay instance (only used for events/device commands)*/
 extern Display *dpy;
 /**XCB display instance*/

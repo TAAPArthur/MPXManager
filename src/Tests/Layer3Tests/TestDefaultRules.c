@@ -100,6 +100,15 @@ START_TEST(test_print_method){
     assert(getDummyCount());
 }END_TEST
 
+START_TEST(test_detect_wm){
+
+   if(!fork()){
+        setLogLevel(LOG_LEVEL_NONE);
+        onStartup();
+    }
+    wait(NULL);
+}END_TEST
+
 START_TEST(test_handle_error){
     CRASH_ON_ERRORS=0;
     setLogLevel(LOG_LEVEL_NONE);
@@ -511,6 +520,7 @@ Suite *defaultRulesSuite() {
     tcase_add_test(tc_core, test_on_startup);
     tcase_add_test(tc_core, test_print_method);
     tcase_add_test(tc_core, test_handle_error);
+    tcase_add_test(tc_core, test_detect_wm);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Normal Events");

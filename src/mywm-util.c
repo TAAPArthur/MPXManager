@@ -38,6 +38,8 @@ void resetContext(void){
 void quit(void){
     LOG(LOG_LEVEL_INFO,"Shutting down\n");
     //shuttingDown=1;
+    if(dis)
+        catchError(xcb_set_selection_owner_checked(dis, XCB_NONE, WM_SELECTION_ATOM, XCB_CURRENT_TIME));
     closeConnection();
     LOG(LOG_LEVEL_INFO,"destroying context\n");
     resetContext();

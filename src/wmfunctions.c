@@ -79,8 +79,6 @@ void connectToXserver(){
     registerForEvents();
     if(applyRules(getEventRules(onXConnection),NULL)){
         broadcastEWMHCompilence();
-        dumpAllWindowInfo();
-        printSummary();
     }
 }
 void syncState(){
@@ -445,16 +443,25 @@ void broadcastEWMHCompilence(){
     xcb_ewmh_set_supporting_wm_check(ewmh, root, checkwin);
     xcb_ewmh_set_wm_name(ewmh, checkwin, strlen(WM_NAME), WM_NAME);
 
-    /*
-    char selectionName[]={'W','M','_','S','0'+defaultScreenNumber,'\0'};
-
-
-    xcb_intern_atom_reply_t* reply=xcb_intern_atom_reply(dis,
-            xcb_intern_atom(dis, 0, strlen(selectionName), selectionName),NULL);
-    assert(reply);
-    xcb_set_selection_owner(dis, checkwin, reply->atom, XCB_CURRENT_TIME);
-    free(reply);
-    */
+    
+    xcb_get_selection_owner_reply_t* ownerReply=xcb_get_selection_owner_reply(dis,xcb_get_selection_owner(dis, WM_SELECTION_ATOM),NULL);
+    if(ownerReply->owner){
+        LOG(LOG_LEVEL_ERROR,"Selection %d is already owned by window %d\n",WM_SELECTION_ATOM,ownerReply->owner);
+        exit(1);
+    }
+    
+    if(catchError(xcb_set_selection_owner_checked(dis, checkwin, WM_SELECTION_ATOM, XCB_CURRENT_TIME))==0){
+        xcb_client_message_event_t ev={0};
+        ev.response_type = XCB_CLIENT_MESSAGE;
+        ev.format = 32;
+        ev.window = checkwin;
+        ev.type = ewmh->WM_PROTOCOLS;
+        ev.data.data32[0] = getTime();
+        ev.data.data32[1] = WM_SELECTION_ATOM;
+        ev.data.data32[2] = checkwin;
+        xcb_send_event(dis, 0, root, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (char *)&ev);
+    }
+    free(ownerReply);
     LOG(LOG_LEVEL_TRACE,"ewmh initilized\n");
 }
 
