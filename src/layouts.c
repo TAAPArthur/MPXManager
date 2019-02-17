@@ -31,8 +31,8 @@ Layout DEFAULT_LAYOUTS[]={
     {.name="Grid",.layoutFunction=column},
     {.name="2 Column",.layoutFunction=column, .args={.dim=0, .arg={2}}},
     {.name="2 Row",.layoutFunction=column, .args={.dim=1, .arg={2}}},
-    {.name="2 Pane",.layoutFunction=column, .args={.dim=0, .arg={2},.limit=2}},
-    {.name="2 HPane",.layoutFunction=column, .args={.dim=1, .arg={2},.limit=2}},
+    {.name="2 Pane",.layoutFunction=column, .args={.raiseFocused=1,.dim=0, .arg={2},.limit=2}},
+    {.name="2 HPane",.layoutFunction=column, .args={.raiseFocused=1,.dim=1, .arg={2},.limit=2}},
     {.name="Master",.layoutFunction=masterPane,.args={.arg={.7}}},
 
 };
@@ -73,10 +73,10 @@ int getNumberOfWindowsToTile(ArrayList*windowStack,LayoutArgs*args){
 void transformConfig(LayoutState*state,int config[CONFIG_LEN]){
     Monitor*m=state->monitor;
     if(state->args){
-        int midX=m->viewX+m->viewWidth/2;
-        int midY=m->viewY+m->viewHeight/2;
-        int endX=m->viewX*2+m->viewWidth;
-        int endY=m->viewY*2+m->viewHeight;
+        int midX=m->view.x+m->view.width/2;
+        int midY=m->view.y+m->view.height/2;
+        int endX=m->view.x*2+m->view.width;
+        int endY=m->view.y*2+m->view.height;
         const int x=config[CONFIG_X],y=config[CONFIG_Y];
         switch(state->args->transform){
             case NONE:
@@ -117,15 +117,13 @@ static void applyMasksToConfig(Monitor*m,int *values,WindowInfo*winInfo){
         values[CONFIG_HEIGHT]=getRootWidth();
     }
     else if(hasMask(winInfo,FULLSCREEN_MASK)){
-        values[CONFIG_X]=m->x;
-        values[CONFIG_Y]=m->y;
-        values[CONFIG_WIDTH]=m->width;
-        values[CONFIG_HEIGHT]=m->height;
+        for(int i=0;i<4;i++)
+            values[CONFIG_X+i]=(&m->base.x)[i];
     }
     else if(hasMask(winInfo,Y_MAXIMIZED_MASK))
-        values[CONFIG_HEIGHT]=m->viewHeight;
+        values[CONFIG_HEIGHT]=m->view.height;
     else if(hasMask(winInfo,X_MAXIMIZED_MASK))
-        values[CONFIG_WIDTH]=m->viewWidth;
+        values[CONFIG_WIDTH]=m->view.width;
 }
 
 void configureWindow(LayoutState*state,WindowInfo* winInfo,short values[CONFIG_LEN]){
@@ -135,8 +133,12 @@ void configureWindow(LayoutState*state,WindowInfo* winInfo,short values[CONFIG_L
         XCB_CONFIG_WINDOW_BORDER_WIDTH|XCB_CONFIG_WINDOW_STACK_MODE;
     int config[CONFIG_LEN]={[CONFIG_BORDER]=winInfo->config[CONFIG_BORDER],[CONFIG_STACK]=XCB_STACK_MODE_ABOVE};
     assert(LEN(winInfo->config)==CONFIG_LEN-1);
-    for(int i=0;i<=CONFIG_HEIGHT;i++)
-        config[i]=winInfo->config[i]?winInfo->config[i]:values[i];
+    for(int i=0;i<=CONFIG_HEIGHT;i++){
+        int fixedValue=winInfo->config[i];
+        int refPoint= (&state->monitor->view.x)[i];
+        int refEndPoint= refPoint+(&state->monitor->view.x)[(i+2)%2];
+        config[i]=fixedValue?fixedValue<0?fixedValue+refEndPoint:fixedValue:values[i];
+    }
     applyMasksToConfig(state->monitor,config,winInfo);
     transformConfig(state,config);
     if(winInfo->config[CONFIG_BORDER])
@@ -264,7 +266,7 @@ static int splitEven(LayoutState*state,ArrayList*stack,int offset,short const* b
 
 void full(LayoutState* state){
     short int values[CONFIG_LEN];
-    memcpy(&values, &state->monitor->viewX, sizeof(short int)*4);
+    memcpy(&values, &state->monitor->view.x, sizeof(short int)*4);
     FOR_EACH_REVERSED(WindowInfo*winInfo,state->stack,
         configureWindow(state,winInfo,values));
 }
@@ -281,7 +283,7 @@ void column(LayoutState*state){
     // split of width(0) or height(1)
     int splitDim=getDimIndex(state->args);
     short values[CONFIG_LEN];
-    memcpy(values, &state->monitor->viewX, sizeof(short)*4);
+    memcpy(values, &state->monitor->view.x, sizeof(short)*4);
     values[splitDim]/=numCol;
     ArrayList*windowStack=state->stack;
     int offset=0;
@@ -300,7 +302,7 @@ void masterPane(LayoutState*state){
     }
     ArrayList*windowStack=state->stack;
     short values[CONFIG_LEN];
-    memcpy(values, &state->monitor->viewX, sizeof(short)*4);
+    memcpy(values, &state->monitor->view.x, sizeof(short)*4);
     int dimIndex=getDimIndex(state->args);
     int dim=values[dimIndex];
     values[dimIndex]=MAX(dim*state->args->arg[0],1);

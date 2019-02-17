@@ -18,7 +18,7 @@
 enum {LOG_LEVEL_ALL,LOG_LEVEL_TRACE,LOG_LEVEL_DEBUG,LOG_LEVEL_INFO,
     LOG_LEVEL_WARN,LOG_LEVEL_ERROR,LOG_LEVEL_NONE};
 
-#define PRINT_ARR(arr,size,label...) {LOG(LOG_LEVEL_DEBUG,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",(arr)[_n]);LOG(LOG_LEVEL_DEBUG,"\n");}
+#define PRINT_ARR(label,arr,size,suffix) {LOG(LOG_LEVEL_DEBUG,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",(arr)[_n]);LOG(LOG_LEVEL_DEBUG,suffix);}
 #define PRINT_ARR_PTR(arr,size) {for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",*(int*)(arr)[_n]);LOG(LOG_LEVEL_DEBUG,"\n");}
 
 #define LOGGING 1

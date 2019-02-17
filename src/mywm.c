@@ -1,26 +1,3 @@
-/**
- * TODO
- * Complex Functions -- done
- * Layers
- * State
- * Printing 1hr
- * Common functions
- *
- * Testing
- * Doc
- *
- * Layouts
- * Fake monitors
- *
- * Restart/recompile
- *
- * Convience functions (focus follows mouse) -- done
- * Scripting //2hr
- *
- * Optimization/Benchmarking
- *
- * Patch mode  -- done
- */
 
 #include <execinfo.h>
 #include <signal.h>

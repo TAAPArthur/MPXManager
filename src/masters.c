@@ -8,6 +8,7 @@ Master *createMaster(int id,int partnerId,char* name,int focusColor){
     master->pointerId=partnerId;
     master->focusColor=focusColor;
     strncpy(master->name,name,sizeof(master->name));
+    master->name[NAME_BUFFER-1]=0;
     return master;
 }
 ///lists of all masters

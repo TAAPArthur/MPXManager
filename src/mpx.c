@@ -216,6 +216,7 @@ int loadMasterInfo(void){
             info=calloc(1,sizeof(MasterInfo));
             addToList(&masterInfoList,info);
             strncpy(info->name,line,sizeof(info->name));
+            info->name[NAME_BUFFER-1]=0;
             break;
         case 1:
             info->focusColor=(int)strtol(line,NULL,16);

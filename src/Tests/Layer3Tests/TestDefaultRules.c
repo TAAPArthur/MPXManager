@@ -72,7 +72,6 @@ static void nonDefaultDeviceEventsetup(){
     deviceEventsetup();
 
 }
-
 static void regularEventsetup(){
     onStartup();
 }
@@ -131,6 +130,8 @@ START_TEST(test_detect_new_windows){
 
 START_TEST(test_delete_windows){
 
+    CRASH_ON_ERRORS=0;
+    setLogLevel(LOG_LEVEL_NONE);
     int win=createUnmappedWindow();
     int win2=createUnmappedWindow();
     int win3=createUnmappedWindow();
@@ -297,6 +298,7 @@ START_TEST(test_focus_follows_mouse){
 
 static void clientSetup(){
     LOAD_SAVED_STATE=0;
+    CRASH_ON_ERRORS=0;
     setLogLevel(LOG_LEVEL_NONE);
     onStartup();
     if(!fork()){
@@ -314,19 +316,25 @@ static void clientSetup(){
 }
 
 START_TEST(test_map_request){
-    mapWindow(_i?createUnmappedWindow():createIgnoredWindow());
-    flush();
-    waitForNormalEvent(XCB_MAP_NOTIFY);
+    for(int i=0;i<2;i++){
+        mapWindow(i?createUnmappedWindow():createIgnoredWindow());
+        flush();
+        waitForNormalEvent(XCB_MAP_NOTIFY);
+    }
 }END_TEST
+
 START_TEST(test_configure_request){
-    int win=mapWindow(_i?createUnmappedWindow():createIgnoredWindow());
 
     int values[]={2,1,1000,1000,1,XCB_STACK_MODE_ABOVE};
     int mask= XCB_CONFIG_WINDOW_X|XCB_CONFIG_WINDOW_Y|
         XCB_CONFIG_WINDOW_WIDTH|XCB_CONFIG_WINDOW_HEIGHT |
         XCB_CONFIG_WINDOW_BORDER_WIDTH|XCB_CONFIG_WINDOW_STACK_MODE;
-    assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
-    waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+    
+    for(int i=0;i<2;i++){
+        int win=mapWindow(i?createUnmappedWindow():createIgnoredWindow());
+        assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
+        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+    }
 }END_TEST
 
 START_TEST(test_client_activate_window){
@@ -360,6 +368,7 @@ START_TEST(test_client_change_desktop){
 }END_TEST
 
 START_TEST(test_client_close_window){
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT=-1;
     DEFAULT_WINDOW_MASKS|=SRC_ANY;
     setLogLevel(LOG_LEVEL_NONE);
     if(!fork()){
@@ -540,8 +549,8 @@ Suite *defaultRulesSuite() {
 
     tc_core = tcase_create("Requests");
     tcase_add_checked_fixture(tc_core, clientSetup, fullCleanup);
-    tcase_add_loop_test(tc_core, test_map_request,0,2);
-    tcase_add_loop_test(tc_core, test_configure_request,0,2);
+    tcase_add_test(tc_core, test_map_request);
+    tcase_add_test(tc_core, test_configure_request);
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Default Device Events");

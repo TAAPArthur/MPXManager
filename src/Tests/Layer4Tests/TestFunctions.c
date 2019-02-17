@@ -266,26 +266,6 @@ START_TEST(test_send_to_workspace_by_name){
 }END_TEST
 
 
-START_TEST(test_kill_focused){
-
-    assert(!getFocusedWindow());
-    //no focused window is set so it should do nothing
-    killFocusedWindow();
-    if(!fork()){
-        openXDisplay();
-        int win=createNormalWindow();
-        addWindowInfo(createWindowInfo(win));
-        onWindowFocus(win);
-        assert(getFocusedWindow());
-        close(2);
-        registerForWindowEvents(win, XCB_EVENT_MASK_STRUCTURE_NOTIFY);
-        killFocusedWindow();
-        flush();
-        msleep(10000);
-    }
-    else wait(NULL);
-}END_TEST
-
 START_TEST(test_function_bindings){
     int arbitNum=1001;
     Binding bindings[]={STACK_OPERATION(arbitNum,arbitNum,arbitNum,arbitNum)};
@@ -335,11 +315,6 @@ Suite *functionsSuite() {
     tcase_add_test(tc_core, test_cycle_window);
     tcase_add_test(tc_core, test_find_and_raise);
     tcase_add_test(tc_core,test_spawn);
-    suite_add_tcase(s, tc_core);
-
-    tc_core = tcase_create("MISC_Functions");
-    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
-    tcase_add_test(tc_core, test_kill_focused);
     suite_add_tcase(s, tc_core);
 
     return s;

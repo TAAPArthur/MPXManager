@@ -12,8 +12,8 @@ START_TEST(test_avoid_struct){
     int dim=100;
     int dockSize=10;
     int monitorIndex=1,sideMonitorIndex=2;
-    updateMonitor(sideMonitorIndex, 0, (short[]){dim, 0, dim,dim});
-    updateMonitor(monitorIndex, 1, (short[]){0, 0, dim,dim});
+    updateMonitor(sideMonitorIndex, 0, (Rect){dim, 0, dim,dim});
+    updateMonitor(monitorIndex, 1, (Rect){0, 0, dim,dim});
 
     int arrSize=_i==0?12:4;
     Monitor* monitor=find(getAllMonitors(),&monitorIndex,sizeof(int));
@@ -21,11 +21,11 @@ START_TEST(test_avoid_struct){
     assert(monitor!=NULL);
     assert(sideMonitor!=NULL);
 
-    short arr[4][4]={
-            {0,0,dockSize,monitor->height},//left
-            {monitor->width-dockSize,0,dockSize,monitor->height},
-            {0,0,monitor->width,dockSize},//top
-            {0,monitor->height-dockSize,monitor->width,dockSize}
+    Rect arr[4]={
+            {0,0,dockSize,monitor->base.height},//left
+            {monitor->base.width-dockSize,0,dockSize,monitor->base.height},
+            {0,0,monitor->base.width,dockSize},//top
+            {0,monitor->base.height-dockSize,monitor->base.width,dockSize}
     };
     for(int i=0;i<4;i++){
         WindowInfo*info=createWindowInfo(i+1);
@@ -40,16 +40,16 @@ START_TEST(test_avoid_struct){
         setDockArea(info, arrSize, properties);
 
         assert(addWindowInfo(info));
-        assert(intersects(arr[i], &monitor->x));
-        assert(intersects(arr[i], &monitor->viewX)==0);
+        assert(intersects(arr[i], monitor->base));
+        assert(intersects(arr[i], monitor->view)==0);
 
-        assert(!intersects(arr[i], &sideMonitor->x));
+        assert(!intersects(arr[i], sideMonitor->base));
         for(int n=0;n<4;n++)
-            assert((&sideMonitor->x)[n]==(&sideMonitor->viewX)[n]);
+            assert((&sideMonitor->base.x)[n]==(&sideMonitor->view.x)[n]);
 
 
         removeWindow(info->id);
-        assert(intersects(arr[i], &monitor->viewX));
+        assert(intersects(arr[i], monitor->view));
     }
     for(int c=0;c<3;c++){
         WindowInfo*info=createWindowInfo(c+1);
@@ -64,8 +64,8 @@ START_TEST(test_avoid_struct){
         setDockArea(info, arrSize, properties);
         assert(addWindowInfo(info));
     }
-    assert(monitor->viewWidth*monitor->viewHeight == (dim-dockSize*2)*(dim-dockSize*2));
-    assert(sideMonitor->viewWidth*sideMonitor->viewHeight == dim*dim);
+    assert(monitor->view.width*monitor->view.height == (dim-dockSize*2)*(dim-dockSize*2));
+    assert(sideMonitor->view.width*sideMonitor->view.height == dim*dim);
 
 }END_TEST
 
@@ -74,9 +74,9 @@ START_TEST(test_intersection){
     int dimY=200;
     int offsetX=10;
     int offsetY=20;
-    short rect[]={offsetX, offsetY, dimX, dimY};
+    Rect rect={offsetX, offsetY, dimX, dimY};
 
-#define _intersects(arr,x,y,w,h) intersects(arr,(short int *)(short int[]){x,y,w,h})
+#define _intersects(arr,x,y,w,h) intersects(arr,(Rect){x,y,w,h})
     //easy to see if fail
     assert(!_intersects(rect, 0,0,offsetX,offsetY));
     assert(!_intersects(rect, 0,offsetY,offsetX,offsetY));
@@ -119,11 +119,11 @@ START_TEST(test_avoid_docks){
     assert(getSize(getAllDocks())==4);
     Monitor*m=getHead(getAllMonitors());
 
-    short arr[4][4]={
-            {0,0,size,m->height},//left
-            {m->width-size,0,size,m->height},
-            {0,0,m->width,size},//top
-            {0,m->height-size,m->width,size}
+    Rect arr[4]={
+            {0,0,size,m->base.height},//left
+            {m->base.width-size,0,size,m->base.height},
+            {0,0,m->base.width,size},//top
+            {0,m->base.height-size,m->base.width,size}
     };
     int index=0;
     FOR_EACH(WindowInfo*winInfo,getAllDocks(),
@@ -137,15 +137,15 @@ START_TEST(test_avoid_docks){
     );
 
     for(int i=0;i<4;i++)
-        assert(intersects(&m->viewX,arr[i])==0);
+        assert(intersects(m->view,arr[i])==0);
 
 }END_TEST
 
 START_TEST(test_root_dim){
     int width=0,height=0;
     FOR_EACH(Monitor*m,getAllMonitors(),
-        width+=m->width;
-        height+=m->height;
+        width+=m->base.width;
+        height+=m->base.height;
     )
     assert(width==getRootWidth());
     assert(height==getRootHeight());
@@ -163,13 +163,13 @@ START_TEST(test_monitor_init){
     for(int x=0;x<2;x++)
         for(int y=0;y<2;y++){
             short dim[4]={x,y,size*size+y,size*2+x};
-            assert(updateMonitor(count, !count, dim));
+            assert(updateMonitor(count, !count, *(Rect*)dim));
             Monitor *m=find(getAllMonitors(),&count,sizeof(int));
             assert(m->id==count);
             assert(isPrimary(m)==!count);
             for(int i=0;i<4;i++){
-                assert((&m->x)[i]==(&m->viewX)[i]);
-                assert(dim[i]==(&m->x)[i]);
+                assert((&m->base.x)[i]==(&m->view.x)[i]);
+                assert(dim[i]==(&m->base.x)[i]);
             }
             assert(getWorkspaceFromMonitor(m));
             assert(getWorkspaceFromMonitor(m)->id==count++);
@@ -181,7 +181,7 @@ START_TEST(test_monitor_add_remove){
     int size=getNumberOfWorkspaces();
     for(int n=0;n<2;n++){
         for(int i=1;i<=size+1;i++){
-            updateMonitor(i, 1, (short[]){0, 0, 100, 100});
+            updateMonitor(i, 1, (Rect){0, 0, 100, 100});
             Workspace *w=getWorkspaceFromMonitor(find(getAllMonitors(), &i,sizeof(int)));
             if(i>size)
                 assert(!w);

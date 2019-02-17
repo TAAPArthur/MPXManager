@@ -57,58 +57,52 @@ START_TEST(test_layout_name){
 START_TEST(test_layouts){
     DEFAULT_BORDER_WIDTH=0;
     Monitor*m=getHead(getAllMonitors());
-    int targetArea=m->viewWidth*m->viewHeight;
+    int targetArea=m->view.width*m->view.height;
     int layoutIndex=_i;
-    if(layoutIndex==NUMBER_OF_LAYOUT_FAMILIES){
-        DEFAULT_WINDOW_MASKS=FULLSCREEN_MASK;
-        targetArea=m->width*m->height;
-        layoutIndex=0;
-    }
     setActiveLayout(&LAYOUT_FAMILIES[layoutIndex]);
 
     int size=5;
-    tileWorkspace(getActiveWorkspaceIndex());
 
     assert(!isNotEmpty(getAllWindows()));
     START_MY_WM
     int area;
     xcb_get_geometry_reply_t*reply1,*reply2;
+    ArrayList*list=getActiveWindowStack();
     for(int i=1;i<=size;i++){
         lock();
         createNormalWindow();
         flush();
         unlock();
         WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)>=i)
+        lock();
+        retile();
+        assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==i);
+        assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==getSize(getActiveWindowStack()));
+        area=0;
 
-        do{
-            assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==i);
-            assert(getNumberOfWindowsToTile(getActiveWindowStack(),NULL)==getSize(getActiveWindowStack()));
-            area=0;
-
-            FOR_EACH(WindowInfo*winInfo,getActiveWindowStack(),
-                reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
-                if(isWindowVisible(winInfo)){
-                    area+=reply1->width*reply1->height;
-                }
-                free(reply1);
-            )
-            msleep(10);
-        }while(area!=targetArea);
-    }
-    ArrayList*list=getActiveWindowStack();
-    int count=0;
-    for(int i=0;i<getSize(list);i++){
-        count++;
-        if(isWindowVisible(getElement(list,i))){
-            reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,i))->id ), NULL);
-            for(int n=i+1;n<getSize(list);n++)
-                if(isWindowVisible(getElement(list,n))){
-                    reply2=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,n))->id ), NULL);
-                    assert(intersects(&reply1->x, &reply2->x)==0);
-                    free(reply2);
-                }
+        FOR_EACH(WindowInfo*winInfo,getActiveWindowStack(),
+            reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
+            if(isWindowVisible(winInfo)){
+                area+=reply1->width*reply1->height;
+            }
             free(reply1);
-       } 
+        )
+        assert(area==targetArea);
+        int count=0;
+        for(int i=0;i<getSize(list);i++){
+            count++;
+            if(isWindowVisible(getElement(list,i))){
+                reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,i))->id ), NULL);
+                for(int n=i+1;n<getSize(list);n++)
+                    if(isWindowVisible(getElement(list,n))){
+                        reply2=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,n))->id ), NULL);
+                        assert(intersects(*(Rect*)&reply1->x,*(Rect*)&reply2->x)==0);
+                        free(reply2);
+                    }
+                free(reply1);
+           } 
+        }
+        unlock();
     }
     lock();
     int limit=3;
@@ -228,7 +222,7 @@ START_TEST(test_identity_transform_config){
     int n=10; 
     int d=_i%2?0:n;
     _i/=2;
-    Monitor monitor={.viewX=d,.viewY=d,.viewWidth=n,.viewHeight=n};
+    Monitor monitor={.view.x=d,.view.y=d,.view.width=n,.view.height=n};
     int config[CONFIG_LEN]={d,d,n,n};
     int correctConfig[4]={d,d,n,n};
     LayoutArgs prop={.transform=_i};
@@ -238,7 +232,7 @@ START_TEST(test_identity_transform_config){
 }END_TEST
 START_TEST(test_simple_transform_config){
     DEFAULT_BORDER_WIDTH=0;
-    Monitor monitor={.viewX=0,.viewY=0,.viewWidth=0,.viewHeight=0};
+    Monitor monitor={.view.x=0,.view.y=0,.view.width=0,.view.height=0};
     Monitor*m=&monitor;
     for(int i=1;i<5;i++){
         int config[CONFIG_LEN]={i%2,i/2,0,0};
@@ -390,7 +384,7 @@ START_TEST(test_privileged_windows_size){
     Monitor* m=getHead(getAllMonitors());
     assert(m);
     int view[]={10,20,30,40};
-    m->viewX=*view;
+    m->view.x=*view;
     WindowInfo *winInfo=createWindowInfo(mapWindow(createNormalWindow()));
     addWindowInfo(winInfo);
     addWindowToWorkspace(winInfo,getActiveWorkspaceIndex());
@@ -404,9 +398,9 @@ START_TEST(test_privileged_windows_size){
     setActiveLayout(&l);
     short arr[][5]={
         {0, baseConfig[0],baseConfig[1],baseConfig[2],baseConfig[3]},
-        {X_MAXIMIZED_MASK, baseConfig[0],baseConfig[1],m->viewWidth,baseConfig[3]},
-        {Y_MAXIMIZED_MASK, baseConfig[0],baseConfig[1],baseConfig[2],m->viewHeight},
-        {FULLSCREEN_MASK, m->x,m->y,m->width,m->height},
+        {X_MAXIMIZED_MASK, baseConfig[0],baseConfig[1],m->view.width,baseConfig[3]},
+        {Y_MAXIMIZED_MASK, baseConfig[0],baseConfig[1],baseConfig[2],m->view.height},
+        {FULLSCREEN_MASK, m->base.x,m->base.y,m->base.width,m->base.height},
         {ROOT_FULLSCREEN_MASK, 0,0,getRootWidth(),getRootHeight()},
     };
 
