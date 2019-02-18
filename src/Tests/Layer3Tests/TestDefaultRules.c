@@ -54,7 +54,7 @@ static void deviceEventsetup(){
 
     flush();
     static Rule postInitRule=CREATE_DEFAULT_EVENT_RULE(finishedInit);
-    addRule(Idle,&postInitRule);
+    appendRule(Idle,&postInitRule);
     START_MY_WM
     WAIT_UNTIL_TRUE(completedInit);
     winInfo=getWindowInfo(win1);
@@ -89,17 +89,6 @@ static void clientTeardown(){
     fullCleanup();
 }
 
-START_TEST(test_add_remove_rule){
-    addDefaultRules();
-    for(int n=0;n<2;n++){
-        int size=0;
-        for(int i=0;i<NUMBER_OF_EVENT_RULES;i++)
-            size+=getSize(eventRules[i]);
-        assert(n?!size:size);
-        clearAllRules();
-    }
-}END_TEST
-
 START_TEST(test_on_startup){
 
     assert(isNotEmpty(getAllMonitors()));
@@ -114,7 +103,7 @@ START_TEST(test_print_method){
     printStatusMethod=dummy;
     // set to an open FD
     STATUS_FD=1;
-    applyRules(eventRules[Idle],NULL);
+    applyRules(getEventRules(Idle),NULL);
     assert(getDummyCount());
 }END_TEST
 
@@ -123,7 +112,7 @@ START_TEST(test_handle_error){
     setLogLevel(LOG_LEVEL_NONE);
     xcb_input_key_press_event_t event={0};
     setLastEvent(&event);
-    applyRules(eventRules[0],NULL);
+    applyRules(getEventRules(0),NULL);
 }END_TEST
 
 START_TEST(test_detect_new_windows){
@@ -426,7 +415,7 @@ START_TEST(test_auto_tile){
     Layout layout={.layoutFunction=fakeLayout,.name="Dummy"};
 
     void addFakeLayout(){
-        assert(isNotEmpty(eventRules[onXConnection]));
+        assert(isNotEmpty(getEventRules(onXConnection)));
         assert(getNumberOfWorkspaces());
         for(int i=0;i<getNumberOfWorkspaces();i++){
             addLayoutsToWorkspace(i, &layout, 1);
@@ -435,7 +424,7 @@ START_TEST(test_auto_tile){
     }
     void addDummyWindows(){
         static Rule rule=CREATE_DEFAULT_EVENT_RULE(createNormalWindow);
-        addRule(onXConnection, &rule);
+        appendRule(onXConnection, &rule);
     }
     preStartUpMethod=addDummyWindows;
     startUpMethod=addFakeLayout;
@@ -459,7 +448,7 @@ START_TEST(test_client_show_desktop){
 
 START_TEST(test_client_request_frame_extents){
     static Rule properyChangeDummyRule=CREATE_DEFAULT_EVENT_RULE(dummy);
-    addRule(XCB_PROPERTY_NOTIFY, &properyChangeDummyRule);
+    appendRule(XCB_PROPERTY_NOTIFY, &properyChangeDummyRule);
     xcb_ewmh_request_frame_extents(ewmh, defaultScreenNumber, winInfo->id);
     flush();
     WAIT_UNTIL_TRUE(getDummyCount());
@@ -511,10 +500,6 @@ Suite *defaultRulesSuite() {
     Suite*s = suite_create("Default events");
     TCase* tc_core;
 
-    tc_core = tcase_create("Rule loading Events");
-    tcase_add_checked_fixture(tc_core, init, NULL);
-    tcase_add_test(tc_core, test_add_remove_rule);
-    suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Startup Events");
     tcase_add_checked_fixture(tc_core, NULL, fullCleanup);

@@ -442,4 +442,31 @@ Node*getDeviceBindings();
  * @param rule 
  */
 void initRule(Rule*rule);
+/**
+ * @param i index of eventRules
+ * @return the specified event list
+ */
+Node* getEventRules(int i);
+/**
+ * Adds rule to the end of the specified event list
+ * @param i index of eventRules
+ * @param rule the rule to remove
+ */
+void appendRule(int i,Rule*rule);
+/**
+ * Adds rule to the head of the specified event list
+ * @param i index of eventRules
+ * @param rule the rule to remove
+ */
+void prependRule(int i,Rule*rule);
+/**
+ * Removes rule from the ith list of eventRules
+ * @param i index of eventRules
+ * @param rule the rule to remove
+ */
+void removeRule(int i,Rule*rule);
+/**
+ * Removes all rules from the all eventRules
+ */
+void clearAllRules(void);
 #endif

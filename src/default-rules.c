@@ -25,14 +25,6 @@
 #include "functions.h"
 #include "layouts.h"
 
-
-void addRule(int i,Rule*rule){
-    insertTail(eventRules[i], rule);
-}
-void clearAllRules(void){
-    for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
-        clearList(eventRules[i]);
-}
 void tileChangeWorkspaces(void){
     updateState(tileWorkspace);
 }
@@ -44,14 +36,14 @@ void addAutoTileRules(void){
             XCB_INPUT_BUTTON_PRESS+GENERIC_EVENT_OFFSET,XCB_INPUT_BUTTON_RELEASE+GENERIC_EVENT_OFFSET
     };
     for(int i=0;i<LEN(events);i++)
-        addRule(events[i],&autoTileRule);
-    addRule(Idle,&tileWorkspace);
+        appendRule(events[i],&autoTileRule);
+    appendRule(Idle,&tileWorkspace);
 }
 
 void addDefaultDeviceRules(void){
     static Rule deviceEventRule = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent);
     for(int i=XCB_INPUT_KEY_PRESS;i<=XCB_INPUT_BUTTON_RELEASE;i++){
-        addRule(GENERIC_EVENT_OFFSET+i,&deviceEventRule);
+        appendRule(GENERIC_EVENT_OFFSET+i,&deviceEventRule);
     }
 }
 int ignoreFunction(WindowInfo*winInfo){
@@ -64,28 +56,28 @@ static void printStatus(void){
 }
 void addPrintRule(void){
     static Rule printRule=CREATE_DEFAULT_EVENT_RULE(printStatus);
-    addRule(Idle,&printRule);
+    appendRule(Idle,&printRule);
 }
 void addIgnoreRule(void){
     
     static Rule ignoreRule= CREATE_WILDCARD(BIND(ignoreFunction),.passThrough=PASSTHROUGH_IF_FALSE);
-    addRule(ProcessingWindow,&ignoreRule);
+    appendRule(ProcessingWindow,&ignoreRule);
 }
 void addFloatRules(void){
     static Rule dialogRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
-    addRule(RegisteringWindow, &dialogRule);
+    appendRule(RegisteringWindow, &dialogRule);
     static Rule notificationRule=CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NOTIFICATION",TYPE,BIND(floatWindow),.passThrough=NO_PASSTHROUGH);
-    addRule(RegisteringWindow, &notificationRule);
+    appendRule(RegisteringWindow, &notificationRule);
 }
 void addAvoidDocksRule(void){
     static Rule avoidDocksRule = CREATE_RULE("_NET_WM_WINDOW_TYPE_DOCK",TYPE|LITERAL,BIND(addDock));
-    addRule(ProcessingWindow, &avoidDocksRule);
+    appendRule(ProcessingWindow, &avoidDocksRule);
 }
 void addFocusFollowsMouseRule(void){
 
     static Rule focusFollowsMouseRule=CREATE_DEFAULT_EVENT_RULE(focusFollowMouse);
     NON_ROOT_DEVICE_EVENT_MASKS|=XCB_INPUT_XI_EVENT_MASK_ENTER;
-    addRule(GENERIC_EVENT_OFFSET+XCB_INPUT_ENTER,&focusFollowsMouseRule);
+    appendRule(GENERIC_EVENT_OFFSET+XCB_INPUT_ENTER,&focusFollowsMouseRule);
 }
 
 void onXConnect(void){
@@ -343,7 +335,7 @@ void onDeviceEvent(void){
 }
 
 void onGenericEvent(void){
-    applyRules(eventRules[loadGenericEvent(getLastEvent())], NULL);
+    applyRules(getEventRules(loadGenericEvent(getLastEvent())), NULL);
 }
 
 
@@ -363,7 +355,7 @@ void onStartup(void){
             addLayoutsToWorkspace(i,DEFAULT_LAYOUTS,NUMBER_OF_DEFAULT_LAYOUTS);
 
     for(int i=0;i<NUMBER_OF_EVENT_RULES;i++){
-        Node*n=eventRules[i];
+        Node*n=getEventRules(i);
         FOR_EACH_CIRCULAR(n,initRule(getValue(n)));
     }
     connectToXserver();
@@ -396,7 +388,7 @@ void addBasicRules(void){
     };
     for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
         if(NORMAL_RULES[i].onMatch.type)
-            insertHead(eventRules[i],&NORMAL_RULES[i]);
+            insertHead(getEventRules(i),&NORMAL_RULES[i]);
 }
 void addDefaultRules(void){
 

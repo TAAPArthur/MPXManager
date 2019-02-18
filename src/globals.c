@@ -49,7 +49,6 @@ int defaultScreenNumber;
 
 int CRASH_ON_ERRORS=0;
 
-Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 int POLL_COUNT=10;
 int POLL_INTERVAL=10;
@@ -66,8 +65,6 @@ void init(void){
     pipe(statusPipeFD);
     SHELL=getenv("SHELL");
     deviceBindings=createCircularHead(NULL);
-    for(int i=0;i<NUMBER_OF_EVENT_RULES;i++)
-        eventRules[i]=createCircularHead(NULL);
 }
 
 ///Last registered event

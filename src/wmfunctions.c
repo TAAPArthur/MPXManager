@@ -109,7 +109,7 @@ void connectToXserver(){
     detectMonitors();
     syncState();
     registerForEvents();
-    if(applyRules(eventRules[onXConnection],NULL)){
+    if(applyRules(getEventRules(onXConnection),NULL)){
         broadcastEWMHCompilence();
         dumpAllWindowInfo();
         printSummary();
@@ -207,7 +207,7 @@ int processNewWindow(WindowInfo* winInfo){
 
     if(winInfo->cloneOrigin==0)
         loadWindowProperties(winInfo);
-    if(!applyRules(eventRules[ProcessingWindow],winInfo)){
+    if(!applyRules(getEventRules(ProcessingWindow),winInfo)){
         LOG(LOG_LEVEL_DEBUG,"Window is to be ignored; freeing winInfo\n");
         deleteWindowInfo(winInfo);
         return 0;
@@ -363,7 +363,7 @@ void registerWindow(WindowInfo*winInfo){
     passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
 
     moveWindowToWorkspaceAtLayer(winInfo, winInfo->workspaceIndex,NORMAL_LAYER);
-    if(!applyRules(eventRules[RegisteringWindow],winInfo))\
+    if(!applyRules(getEventRules(RegisteringWindow),winInfo))\
         return;
     char state=XCB_ICCCM_WM_STATE_WITHDRAWN;
     xcb_change_property(dis,XCB_PROP_MODE_REPLACE,win,ewmh->_NET_WM_STATE,ewmh->_NET_WM_STATE,32,0,&state);
@@ -751,7 +751,7 @@ void tileUpperLayers(Workspace*workspace,int startingLayer){
     }
 }
 void tileWorkspace(int index){
-    //TDOD support if(!applyRules(eventRules[TilingWindows],&index))return;
+    //TDOD support if(!applyRules(getEventRules(TilingWindows),&index))return;
 
     if(!isWorkspaceVisible(index))
         return;

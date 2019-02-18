@@ -56,7 +56,7 @@ static inline xcb_generic_event_t *getNextEvent(){
             if(event)return event;
         }
         idle++;
-        applyRules(eventRules[Idle],NULL);
+        applyRules(getEventRules(Idle),NULL);
         flush();
         LOG(LOG_LEVEL_TRACE,"Idle %d\n",idle);
         event = xcb_wait_for_event (dis);
@@ -81,10 +81,10 @@ void *runEventLoop(void*arg __attribute__((unused))){
 
         assert(type<NUMBER_OF_EVENT_RULES);
         LOG(LOG_LEVEL_TRACE,"Event detected %d %s number of rules: %d\n",
-                        event->response_type,eventTypeToString(type),getSize(eventRules[type]));
+                        event->response_type,eventTypeToString(type),getSize(getEventRules(type)));
         lock();
         setLastEvent(event);
-        applyRules(eventRules[type<35?type:35],NULL);
+        applyRules(getEventRules(type<35?type:35),NULL);
         unlock();
         free(event);
         LOG(LOG_LEVEL_TRACE,"event proccesed %d\n",getActiveWorkspaceIndex());

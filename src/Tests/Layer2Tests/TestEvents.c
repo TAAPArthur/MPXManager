@@ -50,8 +50,6 @@ static void setup(){
  * @param START_TEST(test_regular_events)
  */
 START_TEST(test_regular_events){
-    assert(LEN(eventRules)==NUMBER_OF_EVENT_RULES);
-
     int count=-1;
     int i;
     //int lastType=-1;
@@ -72,8 +70,8 @@ START_TEST(test_regular_events){
         event->response_type=i;
 
         Rule r=CREATE_DEFAULT_EVENT_RULE(func);
-        assert(!isNotEmpty(eventRules[i]));
-        insertHead(eventRules[i],&r);
+        assert(!isNotEmpty(getEventRules(i)));
+        insertHead(getEventRules(i),&r);
 
         xcb_void_cookie_t cookie;
         if(i){

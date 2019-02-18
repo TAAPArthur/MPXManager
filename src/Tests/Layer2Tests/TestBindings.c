@@ -451,6 +451,29 @@ START_TEST(test_passthrough_rules){
 
 }END_TEST
 
+START_TEST(test_add_remove_rule){
+    int size=3;
+    Rule rules[size];
+    for(int n=0;n<6;n++){
+        for(int i=0;i<size;i++){
+            if(n%2)
+                appendRule(n,&rules[i]);
+            else prependRule(n,&rules[i]);
+            assert(getSize(getEventRules(n))==i+1);
+            assert(getValue(getEventRules(n))==(n%2?&rules[0]:&rules[i]));
+        }
+        if(n<2)
+            for(int i=0;i<size;i++){
+                assert(getSize(getEventRules(n))==size-i);
+                removeRule(n,&rules[i]);
+            }
+        else 
+            clearAllRules();
+        assert(getSize(getEventRules(n))==0);
+        if(n==4)size=1;
+    }
+}END_TEST
+
 
 static void setup(){
     DEFAULT_BINDING_MASKS=XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
@@ -489,6 +512,10 @@ Suite *bindingsSuite(void) {
     tcase_add_test(tc_core,test_wildcard_rule);
     tcase_add_test(tc_core, test_passthrough_rules);
     tcase_add_test(tc_core,test_apply_rules);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("Rule_Loading_Events");
+    tcase_add_test(tc_core, test_add_remove_rule);
     suite_add_tcase(s, tc_core);
 
     return s;

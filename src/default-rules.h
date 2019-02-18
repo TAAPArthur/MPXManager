@@ -47,8 +47,6 @@ void onClientMessage(void);
 void detectMonitors(void);
 
 void onStartup(void);
-void clearAllRules(void);
-void addRule(int i,Rule*rule);
 
 /**
  * Default hook that will be called on connection to the XServer.

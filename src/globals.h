@@ -117,8 +117,6 @@ enum{
     /// max value of supported events
     NUMBER_OF_EVENT_RULES
 };
-/// Holds a Node list of rules that will be applied in response to various conditions
-extern Node* eventRules[NUMBER_OF_EVENT_RULES];
 
 /// Used for select xcb functions
 extern int defaultScreenNumber;

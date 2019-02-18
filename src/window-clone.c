@@ -110,9 +110,9 @@ int getCloneOrigin(WindowInfo*winInfo){
 Rule onExposeRule=CREATE_DEFAULT_EVENT_RULE(onExpose);
 Rule swapWithOriginalRule=CREATE_DEFAULT_EVENT_RULE(swapWithOriginal);
 void addCloneRules(void){
-    insertHead(eventRules[XCB_EXPOSE], &onExposeRule);
-    insertHead(eventRules[XCB_INPUT_MOTION + GENERIC_EVENT_OFFSET], &swapWithOriginalRule);
-    insertHead(eventRules[XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET], &swapWithOriginalRule);
+    insertHead(getEventRules(XCB_EXPOSE), &onExposeRule);
+    insertHead(getEventRules(XCB_INPUT_MOTION + GENERIC_EVENT_OFFSET), &swapWithOriginalRule);
+    insertHead(getEventRules(XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET), &swapWithOriginalRule);
 }
 void onExpose(void){
     xcb_expose_event_t *event=getLastEvent();

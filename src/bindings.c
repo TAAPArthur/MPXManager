@@ -295,6 +295,38 @@ void initRule(Rule*rule){
     }
     rule->init=1;
 }
+
+/// Holds a Node list of rules that will be applied in response to various conditions
+static Node* eventRules[NUMBER_OF_EVENT_RULES];
+
+Node* getEventRules(int i){
+    if(!eventRules[i])
+        eventRules[i]=createCircularHead(NULL);
+    return eventRules[i];
+}
+void removeRule(int i,Rule*rule){
+    Node*rules=getEventRules(i);
+    if(getValue(rules)==rule){
+        eventRules[i]=eventRules[i]->next;
+    }
+    FOR_EACH_CIRCULAR(rules,
+        if(getValue(rules)==rule){
+            softDeleteNode(rules);
+            break;
+        }
+    );
+}
+void prependRule(int i,Rule*rule){
+    insertHead(getEventRules(i), rule);
+    eventRules[i]=eventRules[i]->prev;
+}
+void appendRule(int i,Rule*rule){
+    insertTail(getEventRules(i), rule);
+}
+void clearAllRules(void){
+    for(unsigned int i=0;i<NUMBER_OF_EVENT_RULES;i++)
+        clearList(getEventRules(i));
+}
 /*if(chain!=getActiveMaster()->lastBindingTriggered){
         Master *m=getActiveMaster();
         clearWindowCache(m);
