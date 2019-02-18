@@ -78,6 +78,7 @@ typedef enum {
     /**Used in conjuction with WM_DELETE_WINDOW_MASK to kill the window */
     WM_PING_MASK = 1<<19,
 
+    ALWAYS_ON_TOP = 1<<20,
 
     ///Keeps track on the visibility state of the window
     PARTIALLY_VISIBLE =     1<<27,
