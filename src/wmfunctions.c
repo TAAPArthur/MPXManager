@@ -274,7 +274,20 @@ int activateWindow(WindowInfo* winInfo){
 }
 
 int deleteWindow(xcb_window_t winToRemove){
+    ArrayList mastersFocusedOnWindow={0};
+    FOR_EACH(Master*master,getAllMasters(),
+        if(getFocusedWindowByMaster(master) && getFocusedWindowByMaster(master)->id==winToRemove)
+            addToList(&mastersFocusedOnWindow,master););
     int result = removeWindow(winToRemove);
+    FOR_EACH(Master*master,&mastersFocusedOnWindow,
+        LOG(LOG_LEVEL_DEBUG,"updating master focus from %d\n",winToRemove);
+        if(getFocusedWindowByMaster(master))
+            activateWindow(getFocusedWindowByMaster(master));
+        else if (isNotEmpty(getActiveWindowStack()))
+            activateWindow(getHead(getActiveWindowStack()));
+    )
+    clearList(&mastersFocusedOnWindow);
+            
     if(result)
         updateEWMHClientList();
     return result;
