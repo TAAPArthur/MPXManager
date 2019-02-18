@@ -139,10 +139,14 @@ void restoreMPX(void){
 }
 void startMPX(void){
     mpxEnabled=1;
+    if(!isNotEmpty(&masterInfoList))
+        loadMasterInfo();
     for(int i=0;i<getSize(&masterInfoList);i++){
         char *name=((MasterInfo*)getElement(&masterInfoList,i))->name;
-        if(!getMasterByName(name))
+        if(!getMasterByName(name)){
             createMasterDevice(name);
+            LOG(LOG_LEVEL_DEBUG,"creating master %s",name);
+        }
     }
     initCurrentMasters();
     restoreMPX();
