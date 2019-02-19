@@ -58,8 +58,11 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo){
     if(boundFunction->dynamic==2)
         arg.intArg=callBoundedFunction(boundFunction->arg.voidArg, winInfo);
 
-    else if(boundFunction->dynamic==1)
+    else if(boundFunction->dynamic==1){
+        if(winInfo==NULL)
+            return 0;
         arg.voidArg=winInfo;
+    }
 
     int result=0;
     switch(boundFunction->type){
