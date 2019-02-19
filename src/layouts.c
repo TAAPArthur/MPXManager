@@ -233,7 +233,7 @@ void applyLayout(Workspace*workspace){
         raiseWindowInfo(getFocusedWindow());
 }
 
-static int splitEven(LayoutState*state,ArrayList*stack,int offset,short const* baseValues,int dim,int num){
+static int splitEven(LayoutState*state,ArrayList*stack,int offset,short const* baseValues,int dim,int num,int last){
     assert(stack);
     assert(num);
     short values[CONFIG_LEN];
@@ -243,14 +243,21 @@ static int splitEven(LayoutState*state,ArrayList*stack,int offset,short const* b
     LOG(LOG_LEVEL_DEBUG,"tiling at most %d windows size %d %d\n",num,sizePerWindow,dim);
     int i=offset;
     int count=0;
-    for(;i<getSize(stack);i++){
-        if(count==num)break;
-        WindowInfo*winInfo=getElement(stack,i);
+    while(i<getSize(stack)){
+        WindowInfo*winInfo=getElement(stack,i++);
         if(!isTileable(winInfo))continue;
         count++;
         values[dim]=sizePerWindow+(rem-->0?1:0);
         configureWindow(state,winInfo,values);
+        if(count==num)break;
         values[dim-2]+=values[dim];//convert width/height index to x/y
+    }
+    if(last){
+        for(;i<getSize(stack);i++){
+            WindowInfo*winInfo=getElement(stack,i);
+            if(isTileable(winInfo))
+                configureWindow(state,winInfo,values);
+        }
     }
     return i;
 }
@@ -280,7 +287,7 @@ void column(LayoutState*state){
     int offset=0;
     for(int i=0;i<numCol;i++){
         offset=splitEven(state, windowStack,offset,values, 
-            getOtherDimIndex(state->args),size/numCol+(rem-->0?0:1));
+            getOtherDimIndex(state->args),size/numCol+(rem-->0?0:1),i==numCol-1);
         values[splitDim-2]+=values[splitDim];
     }
 }
@@ -301,5 +308,5 @@ void masterPane(LayoutState*state){
 
     values[dimIndexToPos(dimIndex)]+=values[dimIndex];
     values[dimIndex]=dim-values[dimIndex];
-    splitEven(state,windowStack,1, values, getOtherDimIndex(state->args),size-1);
+    splitEven(state,windowStack,1, values, getOtherDimIndex(state->args),size-1,1);
 }

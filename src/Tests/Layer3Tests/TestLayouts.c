@@ -110,6 +110,16 @@ START_TEST(test_layouts){
             free(reply1);
        } 
     }
+    lock();
+    int limit=3;
+    getActiveLayout()->args.limit=limit;
+    retile();
+    reply1=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,size-1))->id ), NULL);
+    reply2=xcb_get_geometry_reply(dis, xcb_get_geometry(dis, ((WindowInfo*)getElement(list,limit))->id ), NULL);
+    assert(memcmp(&reply1->x, &reply2->x,sizeof(reply1->x)*4)==0);
+    free(reply1);
+    free(reply2);
+    unlock();
 }END_TEST
 
 START_TEST(test_layouts_transition){
