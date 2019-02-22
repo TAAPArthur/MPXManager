@@ -31,6 +31,7 @@ int  createUnmappedWindow(void);
 void addDummyIgnoreRule(void);
 int createIgnoredWindow(void);
 int createNormalWindow(void);
+int createInputWindow(int input);
 int createNormalSubWindow(int parent);
 int mapWindow(int win);
 int  mapArbitraryWindow(void);

@@ -181,6 +181,23 @@ START_TEST(test_window_extra_property_loading){
     assert(winInfo->transientFor==trasientForWindow);
 }END_TEST
 
+START_TEST(test_window_input_focus_detection){
+    for(int i=0;i<4;i++){
+        DEFAULT_WINDOW_MASKS=i%2?0:INPUT_MASK;
+        int win=createInputWindow(i);
+        WindowInfo*winInfo=createWindowInfo(win);
+        flush();
+        processNewWindow(winInfo);
+        assert(hasMask(winInfo,INPUT_MASK)==(i?1:0));
+        removeWindow(win);
+        winInfo=createWindowInfo(win);
+        if(i!=3) 
+            catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
+        processNewWindow(winInfo);
+        assert(hasMask(winInfo,INPUT_MASK)==i%2);
+    }
+}END_TEST
+
 START_TEST(test_process_window){
     DEFAULT_WINDOW_MASKS=0;
     xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
@@ -317,6 +334,7 @@ Suite *windowsSuite(void) {
     tcase_add_test(tc_core, test_window_property_loading);
     tcase_add_test(tc_core, test_window_property_reloading);
     tcase_add_test(tc_core, test_window_property_alt_loading);
+    tcase_add_test(tc_core, test_window_input_focus_detection);
     tcase_add_test(tc_core, test_window_extra_property_loading);
     tcase_add_test(tc_core, test_process_window);
     tcase_add_test(tc_core, test_window_scan);

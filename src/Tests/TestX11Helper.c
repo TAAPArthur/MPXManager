@@ -16,7 +16,7 @@ pthread_t pThread=0;
 void destroyWindow(int win){
     assert(NULL==xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 }
-static int createWindow(int parent,int mapped,int ignored,int userIgnored){
+static int createWindow(int parent,int mapped,int ignored,int userIgnored,int input){
 
     assert(ignored<2);
     assert(dis);
@@ -37,30 +37,35 @@ static int createWindow(int parent,int mapped,int ignored,int userIgnored){
         logError(e);
         err(1, "could not create window\n");
     }
-    xcb_icccm_wm_hints_t hints={.input=1,.initial_state=mapped};
-    e=xcb_request_check(dis,xcb_icccm_set_wm_hints_checked(dis, window, &hints));
-    if(e){
-        err(1, "could not set hintsfor window on creation\n");
+    if (input <=1){
+        xcb_icccm_wm_hints_t hints={.input=input,.initial_state=mapped};
+        e=xcb_request_check(dis,xcb_icccm_set_wm_hints_checked(dis, window, &hints));
+        if(e){
+            err(1, "could not set hintsfor window on creation\n");
+        }
     }
     flush();
     if(!userIgnored&&!ignored)
         catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &ewmh->_NET_WM_WINDOW_TYPE_NORMAL));
     return window;
 }
+int  createInputWindow(int input){
+    return createWindow(root,1,0,0,input);
+}
 int createUserIgnoredWindow(void){
-    return createWindow(root,1,0,1);
+    return createWindow(root,1,0,1,1);
 }
 int createIgnoredWindow(void){
-    return createWindow(root,1,1,0);
+    return createWindow(root,1,1,0,1);
 }
 int createNormalWindow(void){
-    return createWindow(root,1,0,0);
+    return createWindow(root,1,0,0,1);
 }
 int createNormalSubWindow(int parent){
-    return createWindow(parent,1,0,0);
+    return createWindow(parent,1,0,0,1);
 }
 int  createUnmappedWindow(void){
-    return createWindow(root,0,0,0);
+    return createWindow(root,0,0,0,1);
 }
 
 int mapWindow(int win){

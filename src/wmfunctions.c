@@ -46,7 +46,7 @@ int isTileable(WindowInfo*winInfo){
     return isInteractable(winInfo) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
 }
 int isActivatable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & MAPABLE_MASK && !(winInfo->mask & HIDDEN_MASK);
+    return !winInfo || hasMask(winInfo,MAPABLE_MASK | INPUT_MASK )&& !(winInfo->mask & HIDDEN_MASK);
 }
 
 int isExternallyResizable(WindowInfo* winInfo){
@@ -209,6 +209,7 @@ void killWindow(xcb_window_t win){
 }
 
 int focusWindowInfo(WindowInfo*winInfo){
+    if(!hasMask(winInfo,INPUT_MASK))return 0;
     /*
     if(hasMask(winInfo, WM_TAKE_FOCUS_MASK)){
         uint32_t data[]={WM_TAKE_FOCUS,getTime()};

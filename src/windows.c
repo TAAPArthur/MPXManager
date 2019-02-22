@@ -156,13 +156,19 @@ void loadWindowType(WindowInfo *winInfo){
 void loadWindowHints(WindowInfo *winInfo){
     assert(winInfo);
     xcb_icccm_wm_hints_t hints;
+    int inputFocus=0;
     if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->id), &hints, NULL)){
         winInfo->groupId=hints.window_group;
-        if(hints.input)
-            addMask(winInfo, INPUT_MASK);
+        inputFocus=hints.input;
         if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
             addMask(winInfo, MAPABLE_MASK);
     }
+    else if (winInfo->type==ewmh->_NET_WM_WINDOW_TYPE_NORMAL)
+        inputFocus=1;
+    if(inputFocus)
+        addMask(winInfo, INPUT_MASK);
+    else
+        removeMask(winInfo, INPUT_MASK);
 }
 
 void loadProtocols(WindowInfo *winInfo){
@@ -186,7 +192,6 @@ void loadWindowProperties(WindowInfo *winInfo){
     LOG(LOG_LEVEL_TRACE,"loading window properties %d\n",winInfo->id);
     loadClassInfo(winInfo);
     loadTitleInfo(winInfo);
-    loadWindowHints(winInfo);
     loadProtocols(winInfo);
 
     xcb_window_t prop;
@@ -195,6 +200,7 @@ void loadWindowProperties(WindowInfo *winInfo){
         winInfo->transientFor=prop;
     }
     loadWindowType(winInfo);
+    loadWindowHints(winInfo);
     //dumpWindowInfo(winInfo);
 }
 void loadSavedAtomState(WindowInfo*winInfo){
@@ -321,7 +327,6 @@ void registerWindow(WindowInfo*winInfo){
     assert(!find(getAllWindows(), winInfo,sizeof(int)) && "Window registered exists" );
     addWindowInfo(winInfo);
 
-    addMask(winInfo, DEFAULT_WINDOW_MASKS);
     Window win=winInfo->id;
     assert(win);
     if(LOAD_SAVED_STATE){
@@ -335,6 +340,7 @@ void registerWindow(WindowInfo*winInfo){
 int processNewWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_DEBUG,"processing %d (%x)\n",winInfo->id,(unsigned int)winInfo->id);
 
+    addMask(winInfo, DEFAULT_WINDOW_MASKS);
     if(winInfo->cloneOrigin==0)
         loadWindowProperties(winInfo);
     if(!applyRules(getEventRules(ProcessingWindow),winInfo)){
