@@ -194,4 +194,6 @@ void resizeWindowWithMouse(WindowInfo*winInfo);
 void startMouseOperation(WindowInfo*winInfo);
 /// @copydoc startMouseOperation
 void stopMouseOperation(WindowInfo*winInfo);
+
+void activateWorkspaceUnderMouse(void);
 #endif

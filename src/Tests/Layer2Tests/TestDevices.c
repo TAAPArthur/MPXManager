@@ -336,6 +336,7 @@ START_TEST(test_mouse_pos_tracking){
     getMouseDelta(m,result);
     assert(result[0]==0&&result[1]==0);
     setLastKnowMasterPosition(1,2);
+    assert(getLastKnownMasterPosition()[0]==1&&getLastKnownMasterPosition()[1]==2);
     getMouseDelta(m,result);
     assert(result[0]==1&&result[1]==2);
     setLastKnowMasterPosition(2,1);

@@ -328,6 +328,9 @@ void setLastKnowMasterPosition(int x,int y){
     getActiveMaster()->currentMousePos[0]=x;
     getActiveMaster()->currentMousePos[1]=y;
 }
+const short* getLastKnownMasterPosition(void){
+    return getActiveMaster()->currentMousePos;
+}
 void getMouseDelta(Master*master,short result[2]){
     for(int i=0;i<2;i++)
         result[i]=master->currentMousePos[i]-master->prevMousePos[i];

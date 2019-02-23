@@ -227,6 +227,8 @@ int isKeyboardMask(int mask);
  */
 void setLastKnowMasterPosition(int x,int y);
 
+const short* getLastKnownMasterPosition(void);
+
 /**
  * For a given mouse, store the change in position between the last two calls of setLastKnowMasterPosition() in result
  * @param master

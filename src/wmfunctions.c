@@ -340,6 +340,7 @@ void swapWorkspaces(int index1,int index2){
     }
 }
 void switchToWorkspace(int workspaceIndex){
+    setActiveWorkspaceIndex(workspaceIndex);
     if(isWorkspaceVisible(workspaceIndex)){
         LOG(LOG_LEVEL_TRACE,"Workspace is already visible %d:\n",workspaceIndex);
         return;
@@ -358,7 +359,6 @@ void switchToWorkspace(int workspaceIndex){
     LOG(LOG_LEVEL_DEBUG,"Swaping visible workspace %d with %d\n",currentIndex,workspaceIndex);
     //we need to map new windows
     swapWorkspaces(workspaceIndex,currentIndex);
-    setActiveWorkspaceIndex(workspaceIndex);
     updateEWMHWorkspaceProperties();
     xcb_ewmh_set_current_desktop_checked(
                 ewmh, DefaultScreen(dpy), workspaceIndex);

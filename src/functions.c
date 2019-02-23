@@ -12,6 +12,7 @@
 #include "layouts.h"
 #include "wmfunctions.h"
 #include "masters.h"
+#include "monitors.h"
 #include "workspaces.h"
 #include "windows.h"
 #include "mywm-util.h"
@@ -204,4 +205,14 @@ void startMouseOperation(WindowInfo*winInfo){
 void stopMouseOperation(WindowInfo*winInfo){
     setMasterTarget(0);
     unlockWindow(winInfo);
+}
+
+void activateWorkspaceUnderMouse(void){
+    const short*pos=getLastKnownMasterPosition();
+    Rect rect={pos[0],pos[1],1,1};
+    Monitor*monitor=NULL;
+    UNTIL_FIRST(monitor,getAllMonitors(),  intersects(monitor->base,rect));
+    if(monitor)
+        setActiveWorkspaceIndex(getWorkspaceFromMonitor(monitor)->id);
+    
 }
