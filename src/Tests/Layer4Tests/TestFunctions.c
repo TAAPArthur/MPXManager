@@ -223,6 +223,17 @@ START_TEST(test_mouse_lock){
     assert(count==0);
 }END_TEST
 
+START_TEST(test_activate_workspace_with_mouse){
+    assert(getSize(getAllMonitors())==1); 
+    Monitor*m=getHead(getAllMonitors());
+    Rect bounds=m->base;
+    bounds.x+=bounds.width;
+    updateMonitor(1,0,bounds);
+    
+    setLastKnowMasterPosition(bounds.x+1,bounds.y+1);
+    activateWorkspaceUnderMouse();
+    assert(m!=getMonitorFromWorkspace(getActiveWorkspace()));
+}END_TEST
 
 START_TEST(test_move_resize_window_with_mouse){
     
@@ -301,6 +312,8 @@ Suite *functionsSuite() {
     tc_core = tcase_create("Workspace_Functions");
     tcase_add_checked_fixture(tc_core, functionSetup, fullCleanup);
     tcase_add_test(tc_core, test_send_to_workspace_by_name);
+    tcase_add_test(tc_core, test_activate_workspace_with_mouse);
+
     suite_add_tcase(s, tc_core);
 
     tc_core = tcase_create("Mouse_Functions");
