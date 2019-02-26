@@ -75,6 +75,8 @@ void connectToXserver(){
     initCurrentMasters();
     assert(getActiveMaster()!=NULL);
     detectMonitors();
+    //update workspace names
+    setWorkspaceNames(NULL,0);
     syncState();
     registerForEvents();
     if(applyRules(getEventRules(onXConnection),NULL)){
@@ -518,7 +520,8 @@ int getIndexFromName(char*name){
 void setWorkspaceNames(char*names[],int numberOfNames){
     for(int i=0;i<numberOfNames && i<getNumberOfWorkspaces();i++)
         getWorkspaceByIndex(i)->name=names[i];
-    xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
+    if(ewmh)
+        xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
 }
 
 void applyGravity(int win,short pos[5],int gravity){
