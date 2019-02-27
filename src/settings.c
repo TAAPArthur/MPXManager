@@ -74,7 +74,8 @@ Mod4Mask,Button3,BOTH(BIND(startMouseOperation),CHAIN_GRAB(XCB_INPUT_XI_EVENT_MA
 };
 
 void defaultPrintFunction(void){
-    const char* format="<fc=%s>%s:%s</fc> ";
+    const char* format="<fc=%s>%s%s:%s</fc> ";
+    int activeWorkspaceIndex=getActiveWorkspaceIndex();
     for(int i=0;i<getNumberOfWorkspaces();i++){
         char * color;
         if(isWorkspaceVisible(i))
@@ -82,7 +83,7 @@ void defaultPrintFunction(void){
         else if(isWorkspaceNotEmpty(i))
             color="yellow";
         else continue;
-        dprintf(STATUS_FD,format,color,getWorkspaceName(i),getNameOfLayout(getActiveLayoutOfWorkspace(i)));
+        dprintf(STATUS_FD,format,color,getWorkspaceName(i),i==activeWorkspaceIndex?"*":"",getNameOfLayout(getActiveLayoutOfWorkspace(i)));
     }
     if(getFocusedWindow())
         dprintf(STATUS_FD,"<fc=%s>%s</fc>","green",getFocusedWindow()->title);

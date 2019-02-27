@@ -36,13 +36,9 @@
  * @param N the workspace to switch to/act on
  */
 #define WORKSPACE_OPERATION(K,N) \
-    {  Mod4Mask,             K, BIND(switchToWorkspace,N)}, \
-    {  Mod4Mask|ShiftMask,   K, BIND(moveWindowToWorkspace,N)}/*, \
-    {  Mod4Mask|ControlMask,   K, BIND_TO_INT_FUNC(cloneToWorkspace,N)}, \
-    {  Mod4Mask|Mod1Mask,   K, BIND_TO_INT_FUNC(swapWithWorkspace,N)}, \
-    {  Mod4Mask|ControlMask|Mod1Mask,   K, BIND_TO_INT_FUNC(stealFromWorkspace,N)}, \
-    {  Mod4Mask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(giveToWorkspace,N)},\
-    {  Mod4Mask|ControlMask|Mod1Mask|ShiftMask,   K, BIND_TO_INT_FUNC(tradeWithWorkspace,N)}*/
+    {  Mod4Mask,             K, AND(BIND(switchToWorkspace,N),BIND(activateWorkspace,N))}, \
+    {  Mod4Mask|ShiftMask,   K, BIND(moveWindowToWorkspace,N)}, \
+    {  Mod4Mask|ControlMask,   K, AND(BIND(swapWithWorkspace,N),BIND(activateWorkspace,N))}
 
 /**
  * Creates a set of bindings related to the windowStack

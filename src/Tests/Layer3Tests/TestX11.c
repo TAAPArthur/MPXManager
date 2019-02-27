@@ -457,6 +457,58 @@ START_TEST(test_connect_to_xserver){
 
 }END_TEST
 
+START_TEST(test_activate_workspace){
+    int masterStackSize=getSize(getWindowStackByMaster(getActiveMaster()));
+    int idle;
+    for(int i=0;i<2;i++){
+        lock();
+        activateWorkspace(i);
+        assert(i==getActiveWorkspaceIndex()); 
+        idle=getIdleCount();
+        unlock();
+        WAIT_UNTIL_TRUE(idle!=getIdleCount());
+        assert(getSize(getWindowStackByMaster(getActiveMaster()))==masterStackSize);
+    }
+    lock();
+    activateWorkspace(2);
+    assert(2==getActiveWorkspaceIndex()); 
+    idle=getIdleCount();
+    unlock();
+    WAIT_UNTIL_TRUE(idle!=getIdleCount());
+    assert(getSize(getWindowStackByMaster(getActiveMaster()))==masterStackSize+1);
+}END_TEST
+
+START_TEST(test_swap_workspace){
+    int index=getActiveWorkspaceIndex();
+    swapWithWorkspace(!index);
+    assert(getActiveWorkspaceIndex()==index);
+}END_TEST
+
+void multiWorkspaceStartup(void){
+    CRASH_ON_ERRORS=1; 
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT=-1;
+    onStartup();
+    switchToWorkspace(0);
+    START_MY_WM;
+    createNormalWindow();
+    createNormalWindow();
+    WAIT_UNTIL_TRUE(getSize(getAllWindows())==2)
+    lock();
+    focusWindowInfo(getLast(getActiveWindowStack()));
+    switchToWorkspace(1);
+    createNormalWindow();
+    createNormalWindow();
+    unlock();
+    WAIT_UNTIL_TRUE(getSize(getAllWindows())==4)
+    lock();
+    focusWindowInfo(getHead(getActiveWindowStack()));
+    switchToWorkspace(2);
+    createNormalWindow();
+    unlock();
+    WAIT_UNTIL_TRUE(getSize(getAllWindows())==5)
+    assert(getSize(getWindowStackByMaster(getActiveMaster()))==2);
+}
+
 Suite *x11Suite(void) {
 
     Suite*s = suite_create("Window Manager Functions");
@@ -495,6 +547,14 @@ Suite *x11Suite(void) {
     tcase_add_test(tc_core, test_configure_windows);
     tcase_add_test(tc_core, test_float_sink_window);
     suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("WorkspaceOperations");
+    tcase_add_checked_fixture(tc_core, multiWorkspaceStartup, fullCleanup);
+    tcase_add_test(tc_core, test_activate_workspace);
+    tcase_add_test(tc_core, test_swap_workspace);
+
+    suite_add_tcase(s, tc_core);
+
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_apply_gravity);

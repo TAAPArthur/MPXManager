@@ -236,8 +236,18 @@ char*getWorkspaceName(int index);
  * all visible windows
  */
 void switchToWorkspace(int workspaceIndex);
+
+void activateWorkspace(int workspaceIndex);
+
+/**
+ * Swap the active workspace and the workspace with index workspaceIndex
+ * @param workspaceIndex
+ * @see swapWorkspaces()
+ */
+void swapWithWorkspace(int workspaceIndex);
 /**
  * Workspace index1 and index2 swap monitors with no checks preformed
+ * This method does not modify the active workspace index
  * @param index1
  * @param index2
  */
