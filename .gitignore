@@ -1,0 +1,10 @@
+*.gc*
+vgcore*
+html
+latex
+*.out
+*.log
+unitTest*
+*.c.*
+*.h.*
+config.c
