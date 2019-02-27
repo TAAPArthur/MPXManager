@@ -276,19 +276,26 @@ int activateWindow(WindowInfo* winInfo){
     return raiseWindowInfo(winInfo) && focusWindowInfo(winInfo)?winInfo->id:0;
 }
 
+static void focusNextVisibleWindow(ArrayList*masters,WindowInfo*defaultWinInfo){
+    Master*active=getActiveMaster();
+    FOR_EACH(Master*master,masters,
+        ArrayList* masterWindowStack=getWindowStackByMaster(master);
+        setActiveMaster(master);
+        WindowInfo*winToFocus=NULL;
+        UNTIL_FIRST(winToFocus,masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(winToFocus)->id) && isActivatable(winToFocus)&&focusWindowInfo(winToFocus));
+        if (!winToFocus && defaultWinInfo)
+            focusWindowInfo(defaultWinInfo);
+    );
+    setActiveMaster(active);
+}
+
 int deleteWindow(xcb_window_t winToRemove){
     ArrayList mastersFocusedOnWindow={0};
     FOR_EACH(Master*master,getAllMasters(),
         if(getFocusedWindowByMaster(master) && getFocusedWindowByMaster(master)->id==winToRemove)
             addToList(&mastersFocusedOnWindow,master););
     int result = removeWindow(winToRemove);
-    FOR_EACH(Master*master,&mastersFocusedOnWindow,
-        LOG(LOG_LEVEL_DEBUG,"updating master focus from %d\n",winToRemove);
-        if(getFocusedWindowByMaster(master))
-            activateWindow(getFocusedWindowByMaster(master));
-        else if (isNotEmpty(getActiveWindowStack()))
-            activateWindow(getHead(getActiveWindowStack()));
-    )
+    focusNextVisibleWindow(&mastersFocusedOnWindow,isNotEmpty(getActiveWindowStack())?getHead(getActiveWindowStack()):NULL);
     clearList(&mastersFocusedOnWindow);
             
     if(result)
@@ -315,18 +322,13 @@ static void updateWindowWorkspaceState(WindowInfo*winInfo, int workspaceIndex,in
             return;
         }
         catchError(xcb_unmap_window_checked(dis, winInfo->id));
-        Master*active=getActiveMaster();
+        ArrayList masters={0};
         FOR_EACH(Master*master,getAllMasters(),
-            ArrayList* masterWindowStack=getWindowStackByMaster(master);
-            if(getFocusedWindowByMaster(master)==winInfo){
-                setActiveMaster(master);
-                WindowInfo*nextMasterWindowToFocus=NULL;
-                UNTIL_FIRST(nextMasterWindowToFocus,masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(nextMasterWindowToFocus)->id));
-                if(nextMasterWindowToFocus)
-                    focusWindowInfo(nextMasterWindowToFocus);
-            }
+            if(getFocusedWindowByMaster(master)==winInfo)
+                addToList(&masters,master);
         );
-        setActiveMaster(active);
+        focusNextVisibleWindow(&masters,NULL);
+        clearList(&masters);
     }
 }
 
@@ -339,29 +341,41 @@ void swapWorkspaces(int index1,int index2){
         FOR_EACH_REVERSED(WindowInfo*winInfo,stack,updateWindowWorkspaceState(winInfo,index2,index1));
     }
 }
+void swapWithWorkspace(int workspaceIndex){
+    swapWorkspaces(getActiveWorkspaceIndex(),workspaceIndex);
+}
+void activateWorkspace(int workspaceIndex){
+    switchToWorkspace(workspaceIndex);
+    ArrayList* masterWindowStack=getWindowStackByMaster(getActiveMaster());
+    WindowInfo*winToFocus=NULL;
+    UNTIL_FIRST(winToFocus,masterWindowStack,workspaceIndex==getWorkspaceOfWindow(winToFocus)->id && isActivatable(winToFocus));
+    LOG(LOG_LEVEL_DEBUG,"Activating window\n");
+    if(winToFocus)
+        activateWindow(winToFocus);
+    else if (isNotEmpty(getActiveWindowStack()))
+        activateWindow(getHead(getActiveWindowStack()));
+    LOG(LOG_LEVEL_DEBUG,"Done\n");
+}
 void switchToWorkspace(int workspaceIndex){
+    if(!isWorkspaceVisible(workspaceIndex)){
+        int currentIndex=getActiveWorkspaceIndex();
+        LOG(LOG_LEVEL_DEBUG,"Switching to workspace %d:\n",workspaceIndex);
+        /*
+         * Each master can have independent active workspaces. While an active workspace is generally visible when it is set,
+         * it can become invisible due to another master switching workspaces. So when the master in the invisible workspaces
+         * wants its workspace to become visbile it must first find a visible workspace to swap with
+         */
+        if(!isWorkspaceVisible(currentIndex)){
+            currentIndex=getNextWorkspace(1, VISIBLE)->id;
+        }
+        LOG(LOG_LEVEL_DEBUG,"Swaping visible workspace %d with %d\n",currentIndex,workspaceIndex);
+        //we need to map new windows
+        swapWorkspaces(workspaceIndex,currentIndex);
+        updateEWMHWorkspaceProperties();
+        xcb_ewmh_set_current_desktop_checked(
+                    ewmh, DefaultScreen(dpy), workspaceIndex);
+    }
     setActiveWorkspaceIndex(workspaceIndex);
-    if(isWorkspaceVisible(workspaceIndex)){
-        LOG(LOG_LEVEL_TRACE,"Workspace is already visible %d:\n",workspaceIndex);
-        return;
-    }
-    int currentIndex=getActiveWorkspaceIndex();
-    LOG(LOG_LEVEL_DEBUG,"Switching to workspace %d:\n",workspaceIndex);
-    /*
-     * Each master can have independent active workspaces. While an active workspace is generally visible when it is set,
-     * it can become invisible due to another master switching workspaces. So when the master in the invisible workspaces
-     * wants its workspace to become visbile it must first find a visible workspace to swap with
-     */
-    if(currentIndex==workspaceIndex){
-        currentIndex=getNextWorkspace(1, VISIBLE)->id;
-    }
-    assert(isWorkspaceVisible(currentIndex));
-    LOG(LOG_LEVEL_DEBUG,"Swaping visible workspace %d with %d\n",currentIndex,workspaceIndex);
-    //we need to map new windows
-    swapWorkspaces(workspaceIndex,currentIndex);
-    updateEWMHWorkspaceProperties();
-    xcb_ewmh_set_current_desktop_checked(
-                ewmh, DefaultScreen(dpy), workspaceIndex);
 }
 
 
