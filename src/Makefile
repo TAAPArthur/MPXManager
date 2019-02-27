@@ -1,43 +1,65 @@
-CC := gcc -std=c11
-OPTIMIZATION_FLAGS ?= -O3
-DEBUGGING_FLAGS ?= -g -rdynamic -O0
-IGNORED_FLAGS ?= -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-int-to-pointer-cast -Wno-cast-function-type
-ERROR_FLAGS ?= -Werror -Wall -Wextra
-CFLAGS ?= -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE
+CC := gcc -std=gnu11
+SHELL := /bin/bash
+DEBUGGING_FLAGS := -g -rdynamic -O0 -DDEBUG
+RELEASE_FLAGS := -O3 -DNDEBUG
+
+IGNORED_FLAGS := -Wno-implicit-fallthrough -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-int-to-pointer-cast -Wno-cast-function-type
+ERROR_FLAGS := -Werror -Wall -Wextra
+CFLAGS := -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE 
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING  --coverage -Wno-unused-function
-TESTLIBS ?= -lcheck
-LDFLAGS ?= -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
-#-pedantic
-RELEASE_FLAGS := ${CFLAGS} ${OPTIMIZATION_FLAGS} -DNDEBUG
-DEBUG_FLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
+TESTLIBS := -lcheck
+LDFLAGS := -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
 LAYER0_SRCS := logger.c globals.c 
 LAYER1_SRCS := util.c 
 LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
 LAYER3_SRCS := layouts.c wmfunctions.c default-rules.c state.c
 LAYER4_SRCS := mpx.c window-clone.c functions.c
-SRCS := mywm.c config.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
+BASE_SRCS := settings.c args.c mpxmanager.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
+SRCS := ${BASE_SRCS} config.c 
 
 
-CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
+CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 
 RUN_XTEST = Tests/xisolate $(call RUN_TEST, ./$@ )
 RUN_XTEST_NO_DISPLAY = Tests/xisolate --no-xserver $(call RUN_TEST, ./$@ --test-no-xdisplay )
 
-all: quick-test mywm
+ifeq ($(DEBUG),1)
+  CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
+else
+  CFLAGS += ${RELEASE_FLAGS} 
+endif
 
-mywm: ${SRCS}
-	${CC} $^ -o $@  ${RELEASE_FLAGS} ${LDFLAGS}
-debug: ${SRCS}
-	${CC} $^ -o $@  ${DEBUG_FLAGS} ${LDFLAGS}
+pkgname := mpxmanager
 
-quick-test: QUICK=1
-quick-test: test
+all: mpxmanager
 
-test: unitTest1 unitTest2 unitTest3 unitTest4
+install: mpxmanager.1 libmpxmanager.so
+	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.so
+	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
+	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.c
+	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
+	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
+
+mpxmanager.1: mpxmanager.sh
+	help2man -No mpxmanager.1 ./mpxmanager.sh
+
+mpxmanager: ${SRCS}
+	${CC} $^ -o $@  ${CFLAGS} ${LDFLAGS}
+
+recompile:
+	gcc $$HOME/.mpxmanager/config.c -o temp-Linux -lmpxmanager   ${CFLAGS} ${LDFLAGS}
+
+libmpxmanager.so: ${BASE_SRCS}
+	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
+
+config.c:
+	cp --no-clobber sample-config.c config.c
+
+test: unitTest1 unitTest2 unitTest3 unitTest4 unitTest5
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
@@ -55,12 +77,32 @@ unitTest3: Tests/*.c Tests/Layer3Tests/*.c ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER
 	$(call RUN_XTEST)
 	$(call CHECK_TEST_COVERAGE,${LAYER3_SRCS})
 		
-unitTest4: Tests/*.c Tests/Layer4Tests/* ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
+unitTest4: Tests/*.c Tests/Layer4Tests/*.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 	${CC} $^ -o $@ ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_XTEST)
-	$(call CHECK_TEST_COVERAGE,${LAYER4_SRCS},100)
+	$(call CHECK_TEST_COVERAGE,${LAYER4_SRCS})
 
-.PHONY: test all clean doc
+unitTest5: QUICK=1
+unitTest5: mpxmanager Tests/arg-tests.sh
+	$(call RUN_TEST, Tests/arg-tests.sh )
+
+
+FORMATTER := t=$$(stat -c %y "$$file"); hash="$$(md5sum $$file)";astyle --project "$$file" >/dev/null && sed -ri "s/\)\s+\{/){/g" "$$file"; [ "$$(md5sum $$file)" == "$$hash" ] && (touch -d "$$t" "$$file" && rm -f "$$file.orig") || true
+
+format:
+	cd ..;while read file; do \
+		$(FORMATTER);\
+	done < <(git diff --name-only|grep -E '\.(c|h)$$')
+
+format-all:
+	find . \( -name '*.c' -o -name '*.h' \) -exec bash -c 'file="$$0"; $(FORMATTER);' {} \;
+
+package:
+	+$(MAKE) -C .. $@
+doc:
+	+$(MAKE) -C .. $@
+
+.PHONY: test all clean doc format format-all install package unitTest5
 
 .DELETE_ON_ERROR:
 

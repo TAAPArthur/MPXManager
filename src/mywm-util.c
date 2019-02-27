@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 /// \endcond
 
 #include "globals.h"
@@ -17,6 +18,9 @@
 #include "xsession.h"
 #include "logger.h"
 
+
+int numPassedArguments;
+char** passedArguments;
 
 void resetContext(void){
     deleteList(getAllMonitors());
@@ -32,7 +36,8 @@ void resetContext(void){
     for(int i = 0; i < NUMBER_OF_WORKSPACES; i++)
         addToList(getListOfWorkspaces(), createWorkspace());
 }
-void quit(void){
+
+static void stop(void){
     LOG(LOG_LEVEL_INFO, "Shutting down\n");
     //shuttingDown=1;
     if(dis)
@@ -40,6 +45,14 @@ void quit(void){
     closeConnection();
     LOG(LOG_LEVEL_INFO, "destroying context\n");
     resetContext();
+}
+
+void restart(void){
+    stop();
+    execv(passedArguments[0], passedArguments);
+}
+void quit(void){
+    stop();
     exit(0);
 }
 

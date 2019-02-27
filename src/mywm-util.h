@@ -14,12 +14,16 @@
  *
  *
  */
-#ifndef MYWM_XUTIL
-#define MYWM_XUTIL
+#ifndef MYWM_SESSION
+#define MYWM_SESSION
 
 #include "util.h"
 #include "mywm-structs.h"
 
+/// the number of arguments passed into the main method
+extern int numPassedArguments;
+/// the argument list passed into the main method
+extern char** passedArguments;
 /**
  * Destroys the resources related to our internal representation.
  * It does nothing if resources have already been cleared or never initally created
@@ -30,6 +34,11 @@ void resetContext();
  * exits the application
  */
 void quit(void);
+
+/**
+ * restart the application
+ */
+void restart(void);
 
 
 #endif

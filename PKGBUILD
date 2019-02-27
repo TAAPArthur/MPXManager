@@ -1,24 +1,21 @@
 # Maintainer: Arthur Williams <taaparthur@gmail.com>
 
 
-pkgname='cycle-windows'
-pkgver='0.5.2'
+pkgname='mpxmanager'
+pkgver='0.9.2'
 _language='en-US'
 pkgrel=1
-pkgdesc='Control mouse from keyboard'
+pkgdesc='My Personal XWindow Manager'
 
 arch=('any')
 license=('MIT')
-depends=('xorg-server' 'libx11' 'xdotool')
+depends=('xorg-server' 'libx11' 'libxcb')
 md5sums=('SKIP')
 
-source=("git://github.com/TAAPArthur/CycleWindows.git")
-_srcDir="CycleWindows"
+source=("git://github.com/TAAPArthur/MyPersonalXWindowManager.git")
+_srcDir="MyPersonalXWindowManager"
 
 package() {
-
   cd "$_srcDir"
-  mkdir -p "$pkgdir/usr/bin/"
-  mkdir -p "$pkgdir/usr/lib/$pkgname/"
-  install -D -m 0755 "cycle-windows" "$pkgdir/usr/bin/"
+  make DESTDIR=$pkgdir install
 }

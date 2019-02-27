@@ -229,7 +229,7 @@ int ungrabDevice(int id){
 int grabDetail(int deviceID, int detail, int mod, int maskValue){
     XIEventMask eventmask = {deviceID, 2, (unsigned char*)& maskValue};
     XIGrabModifiers modifiers[2] = {{mod}, {mod | IGNORE_MASK}};
-    LOG(LOG_LEVEL_TRACE, "Grabbing device:%d detail:%d mod:%d mask: %d %d\n",
+    LOG(LOG_LEVEL_VERBOSE, "Grabbing device:%d detail:%d mod:%d mask: %d %d\n",
         deviceID, detail, mod, maskValue, isKeyboardMask(maskValue));
     if(!isKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,

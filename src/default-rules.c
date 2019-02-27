@@ -139,7 +139,6 @@ void onConfigureRequestEvent(void){
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
 void onCreateEvent(void){
-    LOG(LOG_LEVEL_TRACE, "create event received\n");
     xcb_create_notify_event_t* event = getLastEvent();
     if(event->override_redirect || getWindowInfo(event->window))return;
     if(IGNORE_SUBWINDOWS && event->parent != root)return;
@@ -150,9 +149,7 @@ void onCreateEvent(void){
     processNewWindow(winInfo);
 }
 void onDestroyEvent(void){
-    LOG(LOG_LEVEL_TRACE, "destroy event received\n");
     xcb_destroy_notify_event_t* event = getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "destroy event received %d %d\n", event->event, event->window);
     deleteWindow(event->window);
 }
 void onVisibilityEvent(void){

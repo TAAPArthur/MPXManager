@@ -58,7 +58,7 @@ static inline xcb_generic_event_t* getNextEvent(){
         applyRules(getEventRules(Idle), NULL);
         idle++;
         flush();
-        LOG(LOG_LEVEL_TRACE, "Idle %d\n", idle);
+        LOG(LOG_LEVEL_VERBOSE, "Idle %d\n", idle);
         unlock();
         event = xcb_wait_for_event(dis);
     }

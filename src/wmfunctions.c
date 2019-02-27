@@ -73,13 +73,12 @@ void connectToXserver(){
     initCurrentMasters();
     assert(getActiveMaster() != NULL);
     detectMonitors();
+    broadcastEWMHCompilence();
     //update workspace names
     setWorkspaceNames(NULL, 0);
     syncState();
     registerForEvents();
-    if(applyRules(getEventRules(onXConnection), NULL)){
-        broadcastEWMHCompilence();
-    }
+    applyRules(getEventRules(onXConnection), NULL);
 }
 void syncState(){
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
@@ -449,7 +448,11 @@ void processConfigureRequest(int win, short values[5], xcb_window_t sibling, int
     WindowInfo* winInfo = getWindowInfo(win);
     configMask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
     if(configMask){
+#ifdef DEBUG
+        catchError(xcb_configure_window_checked(dis, win, configMask, actualValues));
+#else
         xcb_configure_window(dis, win, configMask, actualValues);
+#endif
         LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d\n", win, configMask);
     }
     else

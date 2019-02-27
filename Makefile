@@ -1,11 +1,11 @@
 MAKE_SRC := +$(MAKE) -C src $@
-%: all
-
-all:
+%:
 	+$(MAKE) -C src $@
 
 doc:
 	doxygen dconfig 
+package:
+	sed -i "s/pkgver=.*\$$/pkgver='$$(src/mpxmanager.sh --version)'/g" PKGBUILD
 
-.PHONY: doc
+.PHONY: doc package
 

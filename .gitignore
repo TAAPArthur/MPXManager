@@ -1,0 +1,15 @@
+*.gc*
+vgcore*
+html
+latex
+*.out
+*.log
+unitTest*
+*.c.*
+*.h.*
+*.so
+*.o
+*.1
+config.c*
+mpxmanager
+mpxmanager-*

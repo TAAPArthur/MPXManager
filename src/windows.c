@@ -92,7 +92,7 @@ void loadClassInfo(WindowInfo* info){
     strcpy(info->className, prop.class_name);
     strcpy(info->instanceName, prop.instance_name);
     xcb_icccm_get_wm_class_reply_wipe(&prop);
-    LOG(LOG_LEVEL_TRACE, "class name %s instance name: %s \n", info->className, info->instanceName);
+    LOG(LOG_LEVEL_VERBOSE, "class name %s instance name: %s \n", info->className, info->instanceName);
 }
 void loadTitleInfo(WindowInfo* winInfo){
     xcb_ewmh_get_utf8_strings_reply_t wtitle;
@@ -116,7 +116,7 @@ void loadTitleInfo(WindowInfo* winInfo){
         }
     }
     if(winInfo->title)
-        LOG(LOG_LEVEL_TRACE, "window title %s\n", winInfo->title);
+        LOG(LOG_LEVEL_VERBOSE, "window title %s\n", winInfo->title);
 }
 void loadWindowType(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t name;
@@ -141,7 +141,7 @@ void loadWindowType(WindowInfo* winInfo){
         free(winInfo->typeName);
     winInfo->typeName = calloc(reply->name_len + 1, sizeof(char));
     memcpy(winInfo->typeName, xcb_get_atom_name_name(reply), reply->name_len * sizeof(char));
-    LOG(LOG_LEVEL_TRACE, "window type %s\n", winInfo->typeName);
+    LOG(LOG_LEVEL_VERBOSE, "window type %s\n", winInfo->typeName);
     free(reply);
 }
 void loadWindowHints(WindowInfo* winInfo){

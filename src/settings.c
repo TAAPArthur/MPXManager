@@ -6,6 +6,7 @@
 #include <X11/XF86keysym.h>
 #include <xcb/xinput.h>
 
+#include "settings.h"
 #include "bindings.h"
 #include "devices.h"
 #include "masters.h"
@@ -19,6 +20,7 @@
 #include "xsession.h"
 #include "mpx.h"
 #include "logger.h"
+#include "args.h"
 
 static Binding DEFAULLT_BINDINGS[] = {
     WORKSPACE_OPERATION(XK_1, 0),
@@ -77,7 +79,11 @@ static Binding DEFAULLT_BINDINGS[] = {
     {Mod4Mask, XK_Return, BIND(shiftTop)},
     {Mod4Mask | ShiftMask, XK_Return, BIND(focusTop)},
 
-    {Mod4Mask | ShiftMask, XK_q, BIND(quit)}
+    {Mod4Mask | ShiftMask, XK_q, BIND(quit)},
+    {Mod4Mask, XK_q, AND(PIPE(BIND(spawn, "mpxmanager --recompile"), BIND(waitForChild)), BIND(restart))},
+
+    {Mod4Mask | ShiftMask, XK_asciitilde, BIND(printSummary)},
+    {Mod4Mask | ControlMask | ShiftMask, XK_asciitilde, BIND(dumpAllWindowInfo)},
 };
 
 void defaultPrintFunction(void){
@@ -103,4 +109,5 @@ void loadNormalSettings(){
     SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;
     addBindings(DEFAULLT_BINDINGS, LEN(DEFAULLT_BINDINGS));
+    startReadingUserInput();
 }
