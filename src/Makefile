@@ -55,12 +55,18 @@ unitTest3: Tests/*.c Tests/Layer3Tests/*.c ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER
 	$(call RUN_XTEST)
 	$(call CHECK_TEST_COVERAGE,${LAYER3_SRCS})
 		
-unitTest4: Tests/*.c Tests/Layer4Tests/* ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
+unitTest4: Tests/*.c Tests/Layer4Tests/*.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 	${CC} $^ -o $@ ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_XTEST)
 	$(call CHECK_TEST_COVERAGE,${LAYER4_SRCS},100)
 
-.PHONY: test all clean doc
+format:
+
+	find . \( -name '*.c' -o -name '*.h' \) -exec bash -c 't=$$(stat -c %y "$$0"); astyle --project "$$0" >/dev/null && sed -ri "s/\)\s+\{/){/g" "$$0"; touch -d "$$t" "$$0"' {} \;
+
+doc:
+	+$(MAKE) -C .. $@
+.PHONY: test all clean doc format
 
 .DELETE_ON_ERROR:
 

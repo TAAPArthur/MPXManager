@@ -1,0 +1,17 @@
+--style=java
+--pad-oper
+--unpad-paren 
+
+--attach-closing-while
+
+--align-pointer=type
+--break-closing-braces
+--delete-empty-lines
+
+--max-code-length=120
+--break-after-logical
+
+--indent-preproc-block
+--indent-switches
+
+--indent-preproc-block
