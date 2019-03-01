@@ -21,9 +21,9 @@
  */
 typedef enum {
     /// Apply no transformation
-    NONE=0,
-    /// Rotate everything by 90 deg 
-    ROT_90=1,
+    NONE = 0,
+    /// Rotate everything by 90 deg
+    ROT_90 = 1,
     /// Rotate by 180 deg
     ROT_180,
     /// Rotate by 270 deg
@@ -32,51 +32,51 @@ typedef enum {
     REFLECT_HOR,
     /// Reflect across the y axis
     REFLECT_VERT
-}Transform;
-enum{CONFIG_X=0,CONFIG_Y=1,CONFIG_WIDTH,CONFIG_HEIGHT,CONFIG_BORDER,CONFIG_STACK};
+} Transform;
+enum {CONFIG_X = 0, CONFIG_Y = 1, CONFIG_WIDTH, CONFIG_HEIGHT, CONFIG_BORDER, CONFIG_STACK};
 
 /**
  * Options used to customize layouts
  */
-typedef struct{
+typedef struct {
     /// at most limit windows will be tiled
     unsigned char limit;
     /// if set windows won't have a border
-    unsigned int noBorder:1;
+    unsigned int noBorder: 1;
     /// if set windows won't have a border
-    unsigned int noAdjustForBorders:1;
+    unsigned int noAdjustForBorders: 1;
     /// the transformation (about the center of the monitor) to apply to all window positions
     Transform transform;
     /// if set layouts based on X/WIDTH will use Y/HEIGHT instead
-    int dim:1;
+    int dim: 1;
     /// will tile layouts backwards -- starting with the last windows and going upwards
-    int reverse:1;
+    int reverse: 1;
     /// will raise the focused window
-    int raiseFocused:1;
+    int raiseFocused: 1;
     /// whether to raise or lower windows when tiling
-    int lowerWindows:1;
+    int lowerWindows: 1;
     /// generic argument
     float arg[1];
-}LayoutArgs;
+} LayoutArgs;
 
 /**
  * Contains info provided to layout functions (and helper methods) that detail how the windows should be layed out
  */
-typedef struct{
+typedef struct {
     /// Customized to the layout family
-    LayoutArgs*args;
+    LayoutArgs* args;
     /// the monitor used to layout the window
-    Monitor*monitor;
+    Monitor* monitor;
     /// number of windows that should be layed out
     int numWindows;
     /// the stack of windows
-    ArrayList*stack;
+    ArrayList* stack;
     /// the last window in the stack to be tiled
-    ArrayList*last;
+    ArrayList* last;
 } LayoutState;
 
 ///holds meta data to to determine what tiling function to call and and when/how to call it
-typedef struct Layout{
+typedef struct Layout {
     /**
      * Arguments to pass into layout functions.
      * These vary with the function but the first arguments are
@@ -94,13 +94,13 @@ typedef struct Layout{
 } Layout;
 
 /// Convience indexes into DEFAULT_LAYOUTS
-enum {FULL,GRID,TWO_COLUMN,TWO_PANE,LAST_LAYOUT};
+enum {FULL, GRID, TWO_COLUMN, TWO_PANE, LAST_LAYOUT};
 
 /// Array of layout familes (layouts with different layout functions
 extern Layout LAYOUT_FAMILIES[];
-/// Array of different layout 
+/// Array of different layout
 extern Layout DEFAULT_LAYOUTS[];
-/// number of DEFAULT_LAYOUTS 
+/// number of DEFAULT_LAYOUTS
 extern int NUMBER_OF_DEFAULT_LAYOUTS;
 /// number of LAYOUT_FAMILIES
 extern int NUMBER_OF_LAYOUT_FAMILIES;
@@ -110,14 +110,14 @@ extern int NUMBER_OF_LAYOUT_FAMILIES;
 * @param layout
 * @return
 */
-char* getNameOfLayout(Layout*layout);
+char* getNameOfLayout(Layout* layout);
 /**
  * Addes an array of layouts to the specified workspace
  * @param workspaceIndex
  * @param layout - layouts to add
  * @param num - number of layouts to add
  */
-void addLayoutsToWorkspace(int workspaceIndex,Layout*layout,int num);
+void addLayoutsToWorkspace(int workspaceIndex, Layout* layout, int num);
 /**
  * Clears all layouts assosiated with the give workspace.
  * The layouts themselves are not freeded
@@ -145,14 +145,14 @@ void retile(void);
 /**
  * Tile the windows with BELOW_MASK to be under all normal windows
  */
-void tileLowerLayers(Workspace*workspace);
+void tileLowerLayers(Workspace* workspace);
 /**
  * Tile the windows with ABOVE_MASK to be under all normal windows
  */
-void tileUpperLayers(Workspace*workspace);
+void tileUpperLayers(Workspace* workspace);
 /**
  * Tiles the specified workspace.
- * First the windows in the NORMAL_LAYER are tiled according to the active layout's layoutFunction 
+ * First the windows in the NORMAL_LAYER are tiled according to the active layout's layoutFunction
  * (if sett) or the conditionFunction is not true then the windows are left as in.
  * Afterwards the remaining layers are tiled in ascending order
  * @param index the index of the workspace to tile
@@ -164,7 +164,7 @@ void tileWorkspace(int index);
  * Apply the workspace's active layout on the given workspace
  * @param workspace
  */
-void applyLayout(Workspace*workspace);
+void applyLayout(Workspace* workspace);
 
 /**
  *
@@ -172,21 +172,21 @@ void applyLayout(Workspace*workspace);
  * @param args can control the max number of windows tiled (args->limit)
  * @return the number of windows that will be tiled
  */
-int getNumberOfWindowsToTile(ArrayList*windowStack,LayoutArgs*args);
+int getNumberOfWindowsToTile(ArrayList* windowStack, LayoutArgs* args);
 
 /**
  * Provides a transformation of config
  * @param state holds info related to the layout like the monitor
  * @param config the config that will be modified
  */
-void transformConfig(LayoutState*state,int config[CONFIG_LEN]);
+void transformConfig(LayoutState* state, int config[CONFIG_LEN]);
 /**
  * Configures the winInfo using values as refrence points and apply various properties of winInfo's mask and set configuration which will override values
  * @param state
  * @param winInfo the window to tile
  * @param values where the layout wants to position the window
  */
-void configureWindow(LayoutState*state,WindowInfo* winInfo,short values[CONFIG_LEN]);
+void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFIG_LEN]);
 /**
  *
  * @return the active layout for the active workspace
@@ -203,20 +203,20 @@ Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
  * Windows will be the size of the monitor view port
  * @param state
  */
-void full(LayoutState*state);
+void full(LayoutState* state);
 
 /**
  * If the number of windows to tile is 1, this method behaves like full();
- * Windows will be arranged in state->args->arg[0] columns. If arg[0] is 0 then there will log2(num windows to tile) columns 
+ * Windows will be arranged in state->args->arg[0] columns. If arg[0] is 0 then there will log2(num windows to tile) columns
  * All columns will have the same number of windows (+/-1) and the later columns will have less
  * @param state
  */
-void column(LayoutState*state);
+void column(LayoutState* state);
 /**
  * If the number of windows to tile is 1, this method behaves like full();
  * The head of the windowStack will take up MAX(state->args->arg[0]% of the screen, 1) and the remaining windows will be in a single column
  * @param state
  */
-void masterPane(LayoutState*state);
+void masterPane(LayoutState* state);
 
 #endif /* LAYOUTS_H_ */

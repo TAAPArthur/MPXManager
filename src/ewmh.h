@@ -22,7 +22,7 @@
     ewmh->_NET_WM_ACTION_RESIZE,\
     ewmh->_NET_WM_ALLOWED_ACTIONS
 
-#define SET_ALLOWED_ACTIONS(ewmh) {\
+#define SET_ALLOWED_ACTIONS(ewmh){\
     xcb_atom_t actions[] = {ALLOWED_ACTIONS};\
     xcb_ewmh_set_wm_allowed_actions_checked(ewmh, win, LEN(actions), list);\
     }
@@ -57,7 +57,7 @@
  * _NET_DESKTOP_GEOMETRY,_NET_DESKTOP_VIEWPORT,_NET_WORKAREA are have the "default" values
  * We don't currently support ewmh->_NET_SHOWING_DESKTOP
  */
-#define SET_SUPPORTED_OPERATIONS(ewmh) {\
+#define SET_SUPPORTED_OPERATIONS(ewmh){\
     xcb_atom_t net_atoms[] = { \
            ewmh->_NET_SUPPORTED,\
            ewmh->_NET_SUPPORTING_WM_CHECK,\

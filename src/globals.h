@@ -87,9 +87,9 @@ extern char IGNORE_KEY_REPEAT;
 #define LAST_REAL_EVENT   MONITOR_EVENT_OFFSET+8
 
 //TODO consistent naming
-enum{
+enum {
     ///if all rules are passed through, then the window is added as a normal window
-    onXConnection=LAST_REAL_EVENT,
+    onXConnection = LAST_REAL_EVENT,
     /// deterime if a newly detected window should be recorded/monitored/controlled by us
     ProcessingWindow,
     /// called after the newly created window has been added to a workspace
@@ -127,7 +127,7 @@ extern int POLL_COUNT;
 extern int POLL_INTERVAL;
 
 ///  File path of config file dictating ideal master(s)/slaves configuration
-extern char * MASTER_INFO_PATH;
+extern char* MASTER_INFO_PATH;
 
 /// the X pointer that exists by default
 extern int DEFAULT_POINTER;

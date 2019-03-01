@@ -10,7 +10,7 @@ void markState(void);
  */
 void unmarkState(void);
 /**
- * Calls onChange (if not NULL) for every (currently visible) workspace changed since 
+ * Calls onChange (if not NULL) for every (currently visible) workspace changed since
  * this function was last called. A workspace if considered to have changed if
  * <ul>
  * <li> the bounding box of the active monitor has changed </li>

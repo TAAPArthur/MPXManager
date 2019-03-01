@@ -11,7 +11,7 @@
 /**
  * The value pointed to by the Node list returned by getSlavesOfMasterByID()
  */
-typedef struct{
+typedef struct {
     ///The id of the slave
     int id;
     ///the id of the associated master device
@@ -22,19 +22,19 @@ typedef struct{
     char keyboard;
     ///Convience field: the index of attachment in the list passed to getSlavesOfMasterByID()
     unsigned char offset;
-}SlaveDevice;
+} SlaveDevice;
 
 /**
  * Attaches the specifed slave to the specified master
  * @param slaveId
  * @param masterId
  */
-void attachSlaveToMaster(int slaveId,int masterId);
+void attachSlaveToMaster(int slaveId, int masterId);
 /**
  * Creates a master device with the specified name
  * @param name the user set prefix of the master device pair
  */
-void createMasterDevice(char*name);
+void createMasterDevice(char* name);
 /**
  * Sends a XIChangeHierarchy request to remove the specified master.
  * The internal state will not be updated until we receive a Hierarchy change event
@@ -42,7 +42,7 @@ void createMasterDevice(char*name);
  * @param returnPointer
  * @param returnKeyboard
  */
-void destroyMasterDevice(int id,int returnPointer,int returnKeyboard);
+void destroyMasterDevice(int id, int returnPointer, int returnKeyboard);
 /**
  * Calls destroyMasterDevice for all non default masters
  */
@@ -84,19 +84,19 @@ int getClientKeyboard(int win);
  * @param numberOfSlaves if not NULL, it will be set to the number of slaves found
  * @return a Node list container where each value is a SlaveDeivce
  */
-ArrayList* getSlavesOfMasterByID(int*ids,int num,int*numberOfSlaves);
+ArrayList* getSlavesOfMasterByID(int* ids, int num, int* numberOfSlaves);
 /**
  * Returns a node list of both types of SlaveDevices for the given master
- * @param master 
+ * @param master
  */
-ArrayList*getSlavesOfMaster(Master*master);
+ArrayList* getSlavesOfMaster(Master* master);
 
 /**
  * Checks to see if the device is prefixed with XTEST
  * @param str
  * @return 1 iff str is the name of a test slave as opposed to one backed by a physical device
  */
-int isTestDevice(char*str);
+int isTestDevice(char* str);
 
 /**
  * Gets the pointer position relative to a given window
@@ -105,7 +105,7 @@ int isTestDevice(char*str);
  * @param result where the x,y location will be stored
  * @return 1 if result now contains position
  */
-int getMousePosition(int id,int relativeWindow,int result[2]);
+int getMousePosition(int id, int relativeWindow, int result[2]);
 
 /**
  * Swap the ids of master devices backed by master1 and master2
@@ -115,7 +115,7 @@ int getMousePosition(int id,int relativeWindow,int result[2]);
  * @param master1
  * @param master2
  */
-void swapDeviceId(Master*master1,Master*master2);
+void swapDeviceId(Master* master1, Master* master2);
 
 /**
  * Add all existing masters to the list of master devices
@@ -145,7 +145,7 @@ int ungrabDevice(int id);
  * @param maskValue mask of the events to grab
  * @see XIGrabDevice
  */
-int grabDevice(int deviceID,int maskValue);
+int grabDevice(int deviceID, int maskValue);
 /**
  * Grabs the specified detail/mod combination
  *
@@ -155,7 +155,7 @@ int grabDevice(int deviceID,int maskValue);
  * @param maskValue specifies what type of event we are interested in
  * @return 1 iff the grab succeeded
  */
-int grabDetail(int deviceID,int detail,int mod,int maskValue);
+int grabDetail(int deviceID, int detail, int mod, int maskValue);
 /**
  * Ungrabs the specified detail/mod combination
  * @param deviceID the device id to grab (supports special ids)
@@ -164,7 +164,7 @@ int grabDetail(int deviceID,int detail,int mod,int maskValue);
  * @param isKeyboard used to tell if a key or button should be grabbed
  * @return 1 iff the grab succeeded
  */
-int ungrabDetail(int deviceID,int detail,int mod,int isKeyboard);
+int ungrabDetail(int deviceID, int detail, int mod, int isKeyboard);
 /**
  * Grabs the active keyboard
  * @return 1 iff the grab succeeded
@@ -197,7 +197,7 @@ int grabActivePointer(void);
  * @param window
  * @param maskValue
  */
-void passiveGrab(int window,int maskValue);
+void passiveGrab(int window, int maskValue);
 /**
  * Ends a passive grab on the given window for events indicated by mask.
  * @param window
@@ -225,7 +225,7 @@ int isKeyboardMask(int mask);
  * @param x
  * @param y
  */
-void setLastKnowMasterPosition(int x,int y);
+void setLastKnowMasterPosition(int x, int y);
 
 const short* getLastKnownMasterPosition(void);
 
@@ -234,7 +234,7 @@ const short* getLastKnownMasterPosition(void);
  * @param master
  * @param result holds the {dx,dy}
  */
-void getMouseDelta(Master*master,short result[2]);
+void getMouseDelta(Master* master, short result[2]);
 
 /**
  * Queries the X Server and returns the focused window.

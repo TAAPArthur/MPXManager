@@ -36,7 +36,7 @@ extern xcb_atom_t WM_DELETE_WINDOW;
 extern xcb_atom_t WM_STATE_NO_TILE;
 
 /**
- *Custom atom store in window's state to indicate that this window should 
+ *Custom atom store in window's state to indicate that this window should
  * have the ROOT_FULLSCREEN mask
  */
 extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
@@ -47,11 +47,11 @@ extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 extern xcb_atom_t WM_SELECTION_ATOM;
 
 /**XDisplay instance (only used for events/device commands)*/
-extern Display *dpy;
+extern Display* dpy;
 /**XCB display instance*/
-extern xcb_connection_t *dis;
+extern xcb_connection_t* dis;
 /**EWMH instance*/
-extern xcb_ewmh_connection_t *ewmh;
+extern xcb_ewmh_connection_t* ewmh;
 /**Root window*/
 extern int root;
 /**Default screen (assumed to be only 1*/

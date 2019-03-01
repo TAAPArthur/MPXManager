@@ -8,23 +8,23 @@
     #define NAME_BUFFER 32
 #endif
 ///holds data on a window
-typedef struct{
+typedef struct {
     /**Window id */
     unsigned int id;
     /**Window mask */
     unsigned int mask;
-    /// set to 1 iff the window is a dock 
+    /// set to 1 iff the window is a dock
     int dock;
     /**xcb_atom representing the window type*/
     int type;
     /**string xcb_atom representing the window type*/
-    char*typeName;
+    char* typeName;
     /**class name of window*/
-    char*className;
+    char* className;
     /** instance name of window*/
-    char*instanceName;
+    char* instanceName;
     /**title of window*/
-    char*title;
+    char* title;
 
     /**1 iff the window type was not explicilty set*/
     char implicitType;
@@ -89,7 +89,7 @@ typedef struct{
 
 struct binding_struct;
 ///holds data on a master device pair like the ids and focus history
-typedef struct{
+typedef struct {
     /**keyboard master id;*/
     int id;
     /**pointer master id associated with id;*/
@@ -141,13 +141,13 @@ typedef struct Monitor Monitor;
 typedef struct Layout Layout;
 
 ///metadata on Workspace
-typedef struct{
+typedef struct {
     ///workspace index
     int id;
     ///user facing name of the workspace
-    char*name;
+    char* name;
     ///the monitor the workspace is on
-    Monitor*monitor;
+    Monitor* monitor;
 
 
     /// is hiding all windows
@@ -162,5 +162,5 @@ typedef struct{
     ArrayList layouts;
     /// offset into layouts when cycling
     int layoutOffset;
-}Workspace;
+} Workspace;
 #endif

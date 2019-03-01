@@ -3,16 +3,15 @@
 
 //int getLogLevel(){return 0;}
 
-extern Suite *utilSuite();
+extern Suite* utilSuite();
 CREATE_HANDLER
-int main(void) {
+int main(void){
     signal(SIGSEGV, handler);   // install our handler
     signal(SIGABRT, handler);   // install our handler
-
-    SRunner *runner;
+    SRunner* runner;
     runner = srunner_create(utilSuite());
     srunner_run_all(runner, CK_NORMAL);
-    int failures=srunner_ntests_failed(runner);
+    int failures = srunner_ntests_failed(runner);
     srunner_free(runner);
     return failures;
 }

@@ -38,7 +38,7 @@ void onVisibilityEvent(void);
  */
 void onCreateEvent(void);
 /**
- * Removes the destroyed window 
+ * Removes the destroyed window
  */
 void onDestroyEvent(void);
 
