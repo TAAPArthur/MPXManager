@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 /// \endcond
-#include "mpx.h"
+#include "mpxmanager.h"
 #include "devices.h"
 #include "bindings.h"
 #include "masters.h"

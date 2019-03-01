@@ -16,7 +16,7 @@ LAYER0_SRCS := logger.c globals.c
 LAYER1_SRCS := util.c 
 LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
 LAYER3_SRCS := layouts.c wmfunctions.c default-rules.c state.c
-LAYER4_SRCS := mpx.c window-clone.c functions.c
+LAYER4_SRCS := mpxmanager.c window-clone.c functions.c
 SRCS := mywm.c config.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 
 
@@ -29,7 +29,7 @@ RUN_XTEST_NO_DISPLAY = Tests/xisolate --no-xserver $(call RUN_TEST, ./$@ --test-
 
 all: quick-test mywm
 
-mywm: ${SRCS}
+mpxmanager: ${SRCS}
 	${CC} $^ -o $@  ${RELEASE_FLAGS} ${LDFLAGS}
 debug: ${SRCS}
 	${CC} $^ -o $@  ${DEBUG_FLAGS} ${LDFLAGS}

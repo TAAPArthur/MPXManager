@@ -20,5 +20,6 @@ package() {
   cd "$_srcDir"
   mkdir -p "$pkgdir/usr/bin/"
   mkdir -p "$pkgdir/usr/lib/$pkgname/"
+  make
   install -D -m 0755 "mpxmanager" "$pkgdir/usr/bin/"
 }

@@ -13,7 +13,7 @@
 #include "../../wmfunctions.h"
 #include "../../functions.h"
 #include "../../devices.h"
-#include "../../mpx.h"
+#include "../../mpxmanager.h"
 
 static void splitMasterHack(int i){
     xcb_input_key_press_event_t* event = getLastEvent();
