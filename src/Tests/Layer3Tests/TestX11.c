@@ -421,6 +421,7 @@ START_TEST(test_unkown_window){
 }END_TEST
 START_TEST(test_bad_window){
     setLogLevel(LOG_LEVEL_NONE);
+    CRASH_ON_ERRORS=0;
     int win =-2;
     assert(!focusWindow(win));
     assert(!raiseWindow(win));
