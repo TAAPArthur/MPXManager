@@ -11,7 +11,7 @@
  * @param focusColor
  * @return pointer to object
  */
-Master *createMaster(int id,int pointerId,char*name,int focusColor);
+Master* createMaster(int id, int pointerId, char* name, int focusColor);
 /**
  *
  * @return a list of all master devices
@@ -29,7 +29,7 @@ ArrayList* getAllMasters();
  * @param focusColor
  * @return 1 iff a new master was inserted; 0 o.w.
  */
-int addMaster(unsigned int keyboardMasterId,unsigned int pointerMasterId,char*name,int focusColor);
+int addMaster(unsigned int keyboardMasterId, unsigned int pointerMasterId, char* name, int focusColor);
 
 /**
  * Removes the master with the specifed id
@@ -43,7 +43,7 @@ int removeMaster(unsigned int id);
  * @param winToRemove
  * @return 1 iff the window was actually removed
  */
-int removeWindowFromMaster(Master*master,int winToRemove);
+int removeWindowFromMaster(Master* master, int winToRemove);
 
 /**
  * @return the id of the active master
@@ -69,7 +69,7 @@ void setFocusStackFrozen(int value);
  *
  * @return Returns a list of windows that have been put in the cache
 */
-ArrayList*getWindowCache();
+ArrayList* getWindowCache();
 /**
  * Clears the window cache for the active master
  */
@@ -78,7 +78,7 @@ void clearWindowCache();
  * Adds a window to the cache if not already present
  * @param winInfo  the window to add
  */
-int updateWindowCache(WindowInfo*winInfo);
+int updateWindowCache(WindowInfo* winInfo);
 
 /**
  * Returns the top window in the stack relative to given master.
@@ -91,7 +91,7 @@ ArrayList* getActiveMasterWindowStack(void);
  * Returns the top window in the stack relative to given master.
  * @return
  */
-ArrayList* getWindowStackByMaster(Master*master);
+ArrayList* getWindowStackByMaster(Master* master);
 
 
 /**
@@ -100,7 +100,7 @@ ArrayList* getWindowStackByMaster(Master*master);
  * @param master
  * @return the currently focused window for master
  */
-WindowInfo* getFocusedWindowByMaster(Master*master);
+WindowInfo* getFocusedWindowByMaster(Master* master);
 /**
  * Get the WindowInfo representing the window the master is
  * currently focused on.
@@ -120,25 +120,25 @@ ArrayList* getFocusedWindowNode();
  * @param m
  * @return the time the master focused the window
  */
-unsigned getFocusedTime(Master*m);
+unsigned getFocusedTime(Master* m);
 /**
  *
  * @return The master device currently interacting with the wm
  * @see setActiveMasterNodeById
  */
-Master*getActiveMaster(void);
+Master* getActiveMaster(void);
 /**
  * The active master should be set whenever the user interacts with the
  * wm (key/mouse  binding, mouse press etc)
  * @param master the new active master
  */
-void setActiveMaster(Master*master);
+void setActiveMaster(Master* master);
 /**
  * @brief returns the master node with id == keyboardId
  * @param keyboardID id of the master device
  * @return the master device with the give node
  */
-Master*getMasterById(int keyboardID);
+Master* getMasterById(int keyboardID);
 /**
  * Get the master who most recently focused window.
  * Should be called to reset border focus after the active master's

@@ -14,7 +14,7 @@
  * Locks/unlocks the global mutex
  *
  * It is not safe to modify most structs from multiple threads so the main event loop lock/unlocks a
- * global mutex. Any addition thread that runs alongside the main thread of if in general, there 
+ * global mutex. Any addition thread that runs alongside the main thread of if in general, there
  * is a race, lock/unlock should be used
  */
 void lock(void);
@@ -41,14 +41,14 @@ int getIdleCount(void);
  * @param detached creates a detached thread; When a detached thread terminates, its resources are automatically released back to the system without the need for another thread to join with the terminated thread.
  * @return a pthread identifier
  */
-pthread_t runInNewThread(void *(*method) (void *),void*arg,int detached);
+pthread_t runInNewThread(void* (*method)(void*), void* arg, int detached);
 /**
  * TODO rename
  * Continually listens and responds to event and applying corresponding Rules.
  * This method will only exit when the x connection is lost
  * @param arg unused
  */
-void *runEventLoop(void*arg);
+void* runEventLoop(void* arg);
 /**
  * Attemps to translate the generic event receive into an extension event and applyies corresponding Rules.
  */
@@ -65,13 +65,13 @@ void registerForEvents();
  * @param window
  * @param mask
  */
-void registerForWindowEvents(int window,int mask);
+void registerForWindowEvents(int window, int mask);
 
 /**
  * To be called when a generic event is received
  * loads info related to the generic event which can be accesed by getLastEvent()
  */
-int loadGenericEvent(xcb_ge_generic_event_t*event);
+int loadGenericEvent(xcb_ge_generic_event_t* event);
 
 /**
  * Grab all specified keys/buttons and listen for select device events on events

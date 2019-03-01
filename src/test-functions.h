@@ -11,7 +11,7 @@
  * \copydoc sendDeviceAction()
  * @param window to send an action to
  */
-void sendDeviceActionToWindow(int id,int detail,int type,int window);
+void sendDeviceActionToWindow(int id, int detail, int type, int window);
 
 /**
  * Wrappers around xcb_test_fake_input
@@ -22,7 +22,7 @@ void sendDeviceActionToWindow(int id,int detail,int type,int window);
  * @param type XCB_event type to send; valid values are key/button press/release
  * @see xcb_test_fake_input
  */
-void sendDeviceAction(int id,int detail,int type);
+void sendDeviceAction(int id, int detail, int type);
 /**
  * Simulates a button press
  * @param button the button that was pressed
@@ -63,6 +63,6 @@ void clickButton(int button);
  * @param x
  * @param y
  */
-void movePointer(int id,int relativeWindow,int x,int y);
+void movePointer(int id, int relativeWindow, int x, int y);
 
 #endif

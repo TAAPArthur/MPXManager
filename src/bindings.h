@@ -39,23 +39,23 @@
  * @see Rule
  * @see Bindings
  */
-typedef enum{
-    NO_PASSTHROUGH=1,      //!< NO_PASSTHROUGH always abort after processing
-    ALWAYS_PASSTHROUGH=0,  //!< ALWAYS_PASSTHROUGH never abort
-    PASSTHROUGH_IF_TRUE=2, //!< PASSTHROUGH_IF_TRUE abort if the BoundFunction return 0
-    PASSTHROUGH_IF_FALSE=3,//!< PASSTHROUGH_IF_FALSE abort if the BoundFunction did not return 0
-}PassThrough;
+typedef enum {
+    NO_PASSTHROUGH = 1,    //!< NO_PASSTHROUGH always abort after processing
+    ALWAYS_PASSTHROUGH = 0, //!< ALWAYS_PASSTHROUGH never abort
+    PASSTHROUGH_IF_TRUE = 2, //!< PASSTHROUGH_IF_TRUE abort if the BoundFunction return 0
+    PASSTHROUGH_IF_FALSE = 3, //!< PASSTHROUGH_IF_FALSE abort if the BoundFunction did not return 0
+} PassThrough;
 /**
  * All the supported types of Functions that can be bound
 */
-typedef enum{
+typedef enum {
     /**Don't call a function*/
-    UNSET=0,
+    UNSET = 0,
     /**Start a chain binding*/
     CHAIN,
     /**Start a auto chain binding*/
     CHAIN_AUTO,
-    
+
     /// & for bindings
     FUNC_BOTH,
     /// && for bindings
@@ -69,7 +69,7 @@ typedef enum{
     /**Call a function that takes a single int argument*/
     INT_ARG,
     /**Call a function that takes a single int argument*/
-    INT_ARGS_RETURN_INT,
+    INT_ARG_RETURN_INT,
     /**Call a function that takes a WindowInfo as an object */
     WIN_ARG,
     /**Call a function that takes a WindowInfo as an object */
@@ -81,45 +81,45 @@ typedef enum{
     /// Call a function that takes a non-function pointer as an argument
     VOID_ARG,
     /// Call a function that takes a non-function pointer as an argument
-    VOID_ARGS_RETURN_INT
-}BindingType;
+    VOID_ARG_RETURN_INT
+} BindingType;
 
 /**
  *Union holding the argument to a bounded function.
  */
-typedef union{
+typedef union {
     /**an int*/
     int intArg;
     /**a pointer*/
     void* voidArg;
-}BoundFunctionArg;
+} BoundFunctionArg;
 
 /**
  * Details which window to act on for Bindings
  */
-typedef enum{
+typedef enum {
     /// Use the focused window for key bindings and the target/event window for mouse bindings
-    DEFAULT=0,
+    DEFAULT = 0,
     /// Always use the focused window
     FOCUSED_WINDOW,
     /// Always use the target window (the target of the active master if set of the event window)
     TARGET_WINDOW
-}WindowParamType;
+} WindowParamType;
 /**
  * Used to bind a function with arguments to a Rule or Binding
  * such that when the latter is triggered the the bound function
  * is called with arguments
  */
-typedef struct bound_function_struct{
+typedef struct bound_function_struct {
     /**Union of supported functions*/
-    union{
+    union {
         /**Function*/
         void (*func)();
         int (*funcReturnInt)();
         /**An array of Bindings terminated with a by the last member having .endChain==1*/
-        struct binding_struct *chainBindings;
+        struct binding_struct* chainBindings;
         ///Used with and/or bindings
-        struct bound_function_struct *boundFunctionArr;
+        struct bound_function_struct* boundFunctionArr;
 
     } func;
     /**Arguments to pass into the bound function*/
@@ -131,7 +131,7 @@ typedef struct bound_function_struct{
     char dynamic;
 } BoundFunction;
 ///used for key/mouse bindings
-typedef struct binding_struct{
+typedef struct binding_struct {
     /**Modifer to match on*/
     unsigned int mod;
     /**Either Button or KeySym to match**/
@@ -158,7 +158,7 @@ typedef struct binding_struct{
 } Binding;
 
 ///trigger some function when certain conditions are met
-typedef struct{
+typedef struct {
     /**Literal expression*/
     char* literal;
     /**What the rule should match*/
@@ -169,7 +169,7 @@ typedef struct{
     int passThrough;
     /**Compiled regex used for matching with non-literal rules*/
     regex_t* regexExpression;
-    /** boolean indicating whether the rule has been initilized or not 
+    /** boolean indicating whether the rule has been initilized or not
      *  @see initRule
     */
     char init;
@@ -201,12 +201,12 @@ typedef struct{
 
 #define BIND_HELPER(_1,_2,_3,NAME,...) NAME
 
-#define _BIND(F,A,D) {.func=(void (*)()) F, .arg={.voidArg=(void*)A},.dynamic=D, .type=\
+#define _BIND(F,A,D){.func=(void (*)()) F, .arg={.voidArg=(void*)A},.dynamic=D, .type=\
    _Generic((F), \
         void (*)(void):NO_ARGS, \
         int (*)(void):NO_ARGS_RETURN_INT, \
         void (*)(int): INT_ARG, \
-        int (*)(int): INT_ARGS_RETURN_INT, \
+        int (*)(int): INT_ARG_RETURN_INT, \
         void (*)(WindowInfo*): WIN_ARG, \
         int (*)(WindowInfo*): WIN_ARG_RETURN_INT, \
         void (*)(WindowInfo*,int): WIN_INT_ARG, \
@@ -214,8 +214,8 @@ typedef struct{
         void (*)(Layout*): VOID_ARG, \
         void (*)(char*): VOID_ARG, \
         void (*)(void*): VOID_ARG, \
-        int (*)(Layout*): VOID_ARGS_RETURN_INT, \
-        int (*)(void*): VOID_ARGS_RETURN_INT \
+        int (*)(Layout*): VOID_ARG_RETURN_INT, \
+        int (*)(void*): VOID_ARG_RETURN_INT \
 )}
 ///\endcond
 
@@ -244,12 +244,12 @@ typedef struct{
  * @param AUTO when the chain is actiated, auto trigger the first binding
  * @param ... the members of the chain
  */
-#define AUTO_CHAIN_GRAB(GRAB,AUTO,...) {.func={.chainBindings=(Binding*)(Binding[]){__VA_ARGS__}},.arg={.intArg=GRAB},.type=AUTO?CHAIN_AUTO:CHAIN}
+#define AUTO_CHAIN_GRAB(GRAB,AUTO,...){.func={.chainBindings=(Binding*)(Binding[]){__VA_ARGS__}},.arg={.intArg=GRAB},.type=AUTO?CHAIN_AUTO:CHAIN}
 /**
  * Used to create a Keybinding that will server as the terminator for the chain.
  * When this binding is triggered the chain will end
  */
-#define END_CHAIN(...) {__VA_ARGS__,.endChain=1}
+#define END_CHAIN(...){__VA_ARGS__,.endChain=1}
 
 /**
  * When called, call the BoundFunctions will be triggered until one of them returns false
@@ -286,15 +286,15 @@ typedef struct{
  * be called unless another Rule terminates the loop first
  *
  */
-#define CREATE_WILDCARD(...) {NULL,0,__VA_ARGS__}
+#define CREATE_WILDCARD(...){NULL,0,__VA_ARGS__}
 /**
  * Macro to create a rule
  */
-#define CREATE_RULE(expression,target,func) {expression,target,func}
+#define CREATE_RULE(expression,target,func){expression,target,func}
 /**
  * Macro to create a rule that will be interpreted literally
  */
-#define CREATE_LITERAL_RULE(E,T,...) {E,(T|LITERAL),__VA_ARGS__}
+#define CREATE_LITERAL_RULE(E,T,...){E,(T|LITERAL),__VA_ARGS__}
 
 
 
@@ -308,7 +308,7 @@ typedef struct{
  * to X11 special ids for the targetID
  * @param binding
  */
-void initBinding(Binding*binding);
+void initBinding(Binding* binding);
 /**
  *
  * @param keysym
@@ -321,19 +321,19 @@ int getKeyCode(int keysym);
  * @param binding
  * @return the id of the device to grab
  */
-int getIDOfBindingTarget(Binding*binding);
+int getIDOfBindingTarget(Binding* binding);
 
- /**
-  * Comapres Bindings with detail and mods to see if it should be triggered.
-  * If bindings->mod ==anyModier, then it will match any modiers.
-  * If bindings->detail or keycode is 0 it will match any detail
-  * @param binding
-  * @param detail either a keycode or a button
-  * @param mods modiers
-  * @param mask
-  * @return Returns true if the binding should be triggered based on the combination of detail and mods
-  */
- int doesBindingMatch(Binding*binding,int detail,int mods,int mask);
+/**
+ * Comapres Bindings with detail and mods to see if it should be triggered.
+ * If bindings->mod ==anyModier, then it will match any modiers.
+ * If bindings->detail or keycode is 0 it will match any detail
+ * @param binding
+ * @param detail either a keycode or a button
+ * @param mods modiers
+ * @param mask
+ * @return Returns true if the binding should be triggered based on the combination of detail and mods
+ */
+int doesBindingMatch(Binding* binding, int detail, int mods, int mask);
 
 
 /**
@@ -342,7 +342,7 @@ int getIDOfBindingTarget(Binding*binding);
  * @param winInfo - arg to pass into to function if the type is winArgs
  * @see BoundFunction
  */
-int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo);
+int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo);
 
 
 /**
@@ -353,7 +353,7 @@ int callBoundedFunction(BoundFunction*boundFunction,WindowInfo*winInfo);
  * @param winInfo the relevant window
  * @return 1 if a binding was matched that had passThrough == false
  */
-int checkBindings(int detail,int mods,int bindingType,WindowInfo*winInfo);
+int checkBindings(int detail, int mods, int bindingType, WindowInfo* winInfo);
 
 
 /**
@@ -364,7 +364,7 @@ int checkBindings(int detail,int mods,int bindingType,WindowInfo*winInfo);
  * All members of the chain are grabbed unless noGrab is true
  * @param boundFunction
  */
-void startChain(BoundFunction *boundFunction);
+void startChain(BoundFunction* boundFunction);
 /**
  * Ends the active chain for the active master
  * Undoes all of startChain()
@@ -376,13 +376,13 @@ void endChain();
  * @param binding
  * @return 0 iff the grab was successful
  */
-int grabBinding(Binding*binding);
+int grabBinding(Binding* binding);
 /**
  * Wrapper around ungrabDetail()
  * @param binding
  * @return 0 iff the grab was successful
  */
-int ungrabBinding(Binding*binding);
+int ungrabBinding(Binding* binding);
 
 
 /**
@@ -390,7 +390,7 @@ int ungrabBinding(Binding*binding);
  * @param chain the given chain
  * @return the end of the chain
  */
-Binding* getEndOfChain(Binding*chain);
+Binding* getEndOfChain(Binding* chain);
 
 /**
  * Returns 1 iff the str matches the regex/literal expression.
@@ -400,21 +400,21 @@ Binding* getEndOfChain(Binding*chain);
  * @param str the str to match
  * @return 1 iff the str could cause the rule to be trigger
  */
-int doesStringMatchRule(Rule*rule,char*str);
+int doesStringMatchRule(Rule* rule, char* str);
 /**
  *
  * @param rules the rule to match against
  * @param winInfo the window to match
  * @return true if the window caused the rule to be triggered
  */
-int doesWindowMatchRule(Rule *rules,WindowInfo*winInfo);
+int doesWindowMatchRule(Rule* rules, WindowInfo* winInfo);
 /**
  *
  * @param result the result of callBoundFunction
  * @param pass the pass through value of the rule or binding
  * @return 1 iff the code should proceed or 0 iff it should return immediatly
  */
-int passThrough(int result,PassThrough pass);
+int passThrough(int result, PassThrough pass);
 /**
  * Checks to see a the window matches the rule and applies the rule if it does
  * If this functions returns 0 subsequent rules via applyRules will be skipped
@@ -425,7 +425,7 @@ int passThrough(int result,PassThrough pass);
  * @see doesWindowMatchRule
  * @see callBoundedFunction
  */
-int applyRule(Rule*rule,WindowInfo*winInfo);
+int applyRule(Rule* rule, WindowInfo* winInfo);
 
 /**
  * Iterates over head and applies the stored rules in order stopping when a rule matches
@@ -434,20 +434,20 @@ int applyRule(Rule*rule,WindowInfo*winInfo);
  * @param winInfo
  * @return 1 if no rule was matched that had passThrough == false
  */
-int applyRules(ArrayList* head,WindowInfo*winInfo);
+int applyRules(ArrayList* head, WindowInfo* winInfo);
 
 /**
  * Adds a binding to the head of deviceBindings
  * @param binding
  */
-void addBinding(Binding*binding);
+void addBinding(Binding* binding);
 /**
  * Adds num bindings to the head of deviceBindings
  * @param bindings array of bindings to add
  * @param num number of bindings to add
  * @see addBinding
  */
-void addBindings(Binding*bindings,int num);
+void addBindings(Binding* bindings, int num);
 
 /**
  * @return the last Chain added the active chain stack
@@ -460,16 +460,16 @@ ArrayList* getActiveChains();
 
 /**
  * Returns a Node list of all regisitered bidings
- * @see deviceBindings; 
+ * @see deviceBindings;
 */
 
-ArrayList*getDeviceBindings();
+ArrayList* getDeviceBindings();
 
 /**
  * Initilize a rule
- * @param rule 
+ * @param rule
  */
-void initRule(Rule*rule);
+void initRule(Rule* rule);
 /**
  * @param i index of eventRules
  * @return the specified event list
@@ -480,19 +480,19 @@ ArrayList* getEventRules(int i);
  * @param i index of eventRules
  * @param rule the rule to remove
  */
-void appendRule(int i,Rule*rule);
+void appendRule(int i, Rule* rule);
 /**
  * Adds rule to the head of the specified event list
  * @param i index of eventRules
  * @param rule the rule to remove
  */
-void prependRule(int i,Rule*rule);
+void prependRule(int i, Rule* rule);
 /**
  * Removes rule from the ith list of eventRules
  * @param i index of eventRules
  * @param rule the rule to remove
  */
-void removeRule(int i,Rule*rule);
+void removeRule(int i, Rule* rule);
 /**
  * Removes all rules from the all eventRules
  */

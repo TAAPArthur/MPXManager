@@ -9,12 +9,12 @@
  * @see createContext
  */
 int getNumberOfWorkspaces();
-ArrayList*getListOfWorkspaces(void);
+ArrayList* getListOfWorkspaces(void);
 /**
  *
  * @return the windows in the active workspace at the NORMAL_LAYER
  */
-ArrayList*getActiveWindowStack();
+ArrayList* getActiveWindowStack();
 
 
 /**
@@ -37,29 +37,29 @@ int isWorkspaceVisible(int i);
 int isWorkspaceNotEmpty(int index);
 
 ///@see getNextWorkspace()
-typedef enum{
+typedef enum {
     ///only return visible workspaces
-    VISIBLE=1,
+    VISIBLE = 1,
     ///only return invisible workspaces
-    HIDDEN=2,
+    HIDDEN = 2,
     ///only return non empty workspaces
-    NON_EMPTY=1<<2,
+    NON_EMPTY = 1 << 2,
     ///only return empty workspaces
-    EMPTY=2<<2
-}WorkSpaceFilter;
+    EMPTY = 2 << 2
+} WorkSpaceFilter;
 /**
  * Get the next workspace in the given direction according to the filters
  * @param dir the interval of workspaces to check
  * @param mask species a filter for workpspaces @see WorkSpaceFilter
  * @return the next workspace in the given direction that matches the criteria
  */
-Workspace*getNextWorkspace(int dir,int mask);
+Workspace* getNextWorkspace(int dir, int mask);
 /**
  * The the currently used layout for the active workspace.
  * Note that this layout does not have to be in the list of layout for the active workspace
  * @param layout the new active layout
  */
-void setActiveLayout(Layout*layout);
+void setActiveLayout(Layout* layout);
 
 /**
  *
@@ -73,11 +73,11 @@ Layout* getActiveLayout();
  */
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
 
-ArrayList* getLayouts(Workspace*w);
+ArrayList* getLayouts(Workspace* w);
 /**
  * @return newly created workspace
  */
-Workspace*createWorkspace();
+Workspace* createWorkspace();
 /**
  * Does a simple seach to see if the window is in the workspace's stack
  * Does not handle advaned cases like cloning
@@ -85,7 +85,7 @@ Workspace*createWorkspace();
  * @param workspaceIndex
  * @return true if the window with the given id is the specifed workspace
  */
-ArrayList* isWindowInWorkspace(WindowInfo* winInfo,int workspaceIndex);
+ArrayList* isWindowInWorkspace(WindowInfo* winInfo, int workspaceIndex);
 /**
  *
  * @param winInfo
@@ -108,27 +108,27 @@ int removeWindowFromWorkspace(WindowInfo* winInfo);
  * @return 1 iff the window was actually added
  * @see addWindowToWorkspaceAtLayer
  */
-int addWindowToWorkspace(WindowInfo*info,int workspaceIndex);
+int addWindowToWorkspace(WindowInfo* info, int workspaceIndex);
 /**
  * Returns the workspace currently displayed by the monitor or null
 
  * @param monitor
  * @return
  */
-Workspace*getWorkspaceFromMonitor(Monitor*monitor);
+Workspace* getWorkspaceFromMonitor(Monitor* monitor);
 
 /**
  * @param workspace
  * @return the monitor assoicated with the given workspace if any
  */
-Monitor*getMonitorFromWorkspace(Workspace*workspace);
+Monitor* getMonitorFromWorkspace(Workspace* workspace);
 
 /**
  * Swaps the monitors assosiated with the given workspaces
  * @param index1
  * @param index2
  */
-void swapMonitors(int index1,int index2);
+void swapMonitors(int index1, int index2);
 
 
 
@@ -137,7 +137,7 @@ void swapMonitors(int index1,int index2);
  * @param w
  * @param m
  */
-void setMonitorForWorkspace(Workspace*w,Monitor*m);
+void setMonitorForWorkspace(Workspace* w, Monitor* m);
 /**
  * Return the first non-special workspace that a window is in
  * starting from the least recently focused window

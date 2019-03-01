@@ -26,7 +26,7 @@
 #define WAIT_UNTIL_FALSE(COND,EXPR...) while(COND){msleep(100);EXPR;}
 #define WAIT_UNTIL_TRUE(COND,EXPR...) WAIT_UNTIL_FALSE(!(COND),EXPR)
 
-#define CREATE_HANDLER void handler(int sig) { \
+#define CREATE_HANDLER void handler(int sig){ \
   int n=30; \
   void *array[n]; \
    fprintf(stderr, "Error: signal %d:\n", sig); \
@@ -34,21 +34,21 @@
   exit(1); \
 }
 
-static inline int addFakeMaster(int pointerId,int keyboardID){
-    return addMaster(pointerId,keyboardID,"",0);
+static inline int addFakeMaster(int pointerId, int keyboardID){
+    return addMaster(pointerId, keyboardID, "", 0);
 }
 static inline void addFakeMonitor(int id){
-    Rect arr={0};
-    updateMonitor(id,0,arr);
+    Rect arr = {0};
+    updateMonitor(id, 0, arr);
 }
 
-static inline int listsEqual(ArrayList*n,ArrayList*n2){
-    if(n==n2)
+static inline int listsEqual(ArrayList* n, ArrayList* n2){
+    if(n == n2)
         return 1;
-    if(getSize(n)!=getSize(n2))
+    if(getSize(n) != getSize(n2))
         return 0;
-    for(int i=0;i<getSize(n);i++)
-        if(*(int*)getElement(n,i)!=*(int*)getElement(n2,i))
+    for(int i = 0; i < getSize(n); i++)
+        if(*(int*)getElement(n, i) != *(int*)getElement(n2, i))
             return 0;
     return 1;
 }

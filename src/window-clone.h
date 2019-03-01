@@ -8,11 +8,11 @@
 #include "mywm-util.h"
 #include "wmfunctions.h"
 
-WindowInfo* cloneWindow(WindowInfo*winInfo);
+WindowInfo* cloneWindow(WindowInfo* winInfo);
 
-void updateClone(WindowInfo*winInfo,WindowInfo* dest);
-void updateAllClones(WindowInfo*winInfo);
-int getCloneOrigin(WindowInfo*winInfo);
+void updateClone(WindowInfo* winInfo, WindowInfo* dest);
+void updateAllClones(WindowInfo* winInfo);
+int getCloneOrigin(WindowInfo* winInfo);
 
 void* autoUpdateClones();
 void addCloneRules(void);

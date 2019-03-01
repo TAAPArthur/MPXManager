@@ -15,11 +15,12 @@
 #include "mywm-util.h"
 
 
-enum {LOG_LEVEL_ALL,LOG_LEVEL_TRACE,LOG_LEVEL_DEBUG,LOG_LEVEL_INFO,
-    LOG_LEVEL_WARN,LOG_LEVEL_ERROR,LOG_LEVEL_NONE};
+enum {LOG_LEVEL_ALL, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO,
+      LOG_LEVEL_WARN, LOG_LEVEL_ERROR, LOG_LEVEL_NONE
+     };
 
-#define PRINT_ARR(label,arr,size,suffix) {LOG(LOG_LEVEL_DEBUG,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",(arr)[_n]);LOG(LOG_LEVEL_DEBUG,suffix);}
-#define PRINT_ARR_PTR(arr,size) {for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",*(int*)(arr)[_n]);LOG(LOG_LEVEL_DEBUG,"\n");}
+#define PRINT_ARR(label,arr,size,suffix){LOG(LOG_LEVEL_DEBUG,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",(arr)[_n]);LOG(LOG_LEVEL_DEBUG,suffix);}
+#define PRINT_ARR_PTR(arr,size){for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",*(int*)(arr)[_n]);LOG(LOG_LEVEL_DEBUG,"\n");}
 
 #define LOGGING 1
 #define LOG(i,...) \
@@ -27,15 +28,15 @@ enum {LOG_LEVEL_ALL,LOG_LEVEL_TRACE,LOG_LEVEL_DEBUG,LOG_LEVEL_INFO,
 
 int getLogLevel();
 void setLogLevel(int level);
-void printArrayList(ArrayList*list);
+void printArrayList(ArrayList* list);
 void printSummary(void);
 void printMonitorSummary(void);
 void printMasterSummary(void);
 void dumpAllWindowInfo(void);
 void dumpWindowInfo(WindowInfo* win);
-void dumpAtoms(xcb_atom_t*atoms,int numberOfAtoms);
-char *genericEventTypeToString(int type);
-char *eventTypeToString(int type);
+void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms);
+char* genericEventTypeToString(int type);
+char* eventTypeToString(int type);
 
 int catchError(xcb_void_cookie_t cookie);
 void logError(xcb_generic_error_t* e);

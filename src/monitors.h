@@ -9,7 +9,7 @@
 /**
  * holds topleft coordinates and width/height of the bounding box
  */
-typedef struct{
+typedef struct {
     /// top left coordinate of the bounding box
     short x;
     /// top left coordinate of the bounding box
@@ -18,11 +18,11 @@ typedef struct{
     short width;
     /// height of the bounding box
     short height;
-}Rect;
+} Rect;
 /**
  * Represents a rectangular region where workspaces will be tiled
  */
-typedef struct Monitor{
+typedef struct Monitor {
     /**id for monitor*/
     long id;
     /**1 iff the monitor is the primary*/
@@ -35,18 +35,18 @@ typedef struct Monitor{
 } Monitor;
 
 ///Types of docks
-typedef enum {DOCK_LEFT,DOCK_RIGHT,DOCK_TOP,DOCK_BOTTOM}DockTypes;
+typedef enum {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} DockTypes;
 
 /**
  *
  * @return list of all monitors
  */
-ArrayList*getAllMonitors(void);
+ArrayList* getAllMonitors(void);
 /**
  *
  * @return list of docks
  */
-ArrayList*getAllDocks(void);
+ArrayList* getAllDocks(void);
 
 
 /**
@@ -54,7 +54,7 @@ ArrayList*getAllDocks(void);
  * @param monitor
  * @return
  */
-int isPrimary(Monitor*monitor);
+int isPrimary(Monitor* monitor);
 /**
  *
  * @param id id of monitor TODO need to convert handle long to int conversion
@@ -62,7 +62,7 @@ int isPrimary(Monitor*monitor);
  * @param geometry an array containing the x,y,width,height of the monitor
  * @return 1 iff a new monitor was added
  */
-int updateMonitor(long id,int primary,Rect geometry);
+int updateMonitor(long id, int primary, Rect geometry);
 /**
  * Removes a monitor and frees related info
  * @param id identifier of the monitor
@@ -73,7 +73,7 @@ int removeMonitor(unsigned long id);
  * Resets the viewport to be the size of the rectangle
  * @param m
  */
-void resetMonitor(Monitor*m);
+void resetMonitor(Monitor* m);
 
 
 /**
@@ -85,7 +85,7 @@ void resetMonitor(Monitor*m);
  * @see xcb_ewmh_get_extents_reply_t
  * @see avoidStruct
  */
-void setDockArea(WindowInfo* winInfo,int numberofProperties,int* properties);
+void setDockArea(WindowInfo* winInfo, int numberofProperties, int* properties);
 
 /**
  * Reads (one of) the struct property to loads the info into properties and
@@ -106,7 +106,7 @@ void detectMonitors(void);
  * @param arg2 x,y,width,height
  * @return 1 iff the 2 specified rectangles intersect
  */
-int intersects(Rect arg1,Rect arg2);
+int intersects(Rect arg1, Rect arg2);
 
 /**
  * Resizes the monitor such that its viewport does not intersec the given dock
@@ -114,7 +114,7 @@ int intersects(Rect arg1,Rect arg2);
  * @param winInfo the dock to avoid
  * @return if the size was changed
  */
-int resizeMonitorToAvoidStruct(Monitor*m,WindowInfo*winInfo);
+int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo);
 /**
  * @see resizeMonitorToAvoidStruct
  */
@@ -123,7 +123,7 @@ void resizeAllMonitorsToAvoidAllStructs(void);
  * @param winInfo the dock to avoid
  * @see resizeMonitorToAvoidStruct
  */
-void resizeAllMonitorsToAvoidStruct(WindowInfo*winInfo);
+void resizeAllMonitorsToAvoidStruct(WindowInfo* winInfo);
 
 /**
  *

@@ -1,5 +1,5 @@
 #ifndef MPX_H
-#define MPX_H 
+#define MPX_H
 
 /**
  * Adds hiearchy rules that will detect master/slave addition/removal and make the correct pairings
@@ -12,7 +12,7 @@ void restoreMPX(void);
 /**
  * Creates master devices according to saved masterInfo.
  * Note that a master device won't be created if one with the same name already exists
- * loadMasterInfo should be called prior. 
+ * loadMasterInfo should be called prior.
  */
 void startMPX(void);
 /**

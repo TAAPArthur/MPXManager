@@ -110,14 +110,14 @@ int getSavedWorkspaceIndex(xcb_window_t win);
  * @param state the new state
  * @return  true if the state actuall changed
  */
-void updateMapState(int id,int state);
+void updateMapState(int id, int state);
 
 /**
  * Updates our view of the focused window
  * @param winInfo
  * @see onWindowFocus()
  */
-void updateFocusState(WindowInfo*winInfo);
+void updateFocusState(WindowInfo* winInfo);
 
 
 /**
@@ -126,20 +126,20 @@ void updateFocusState(WindowInfo*winInfo);
  * @param color the new window border color
  * @return 1 iff no error was deteced
  */
-int setBorderColor(xcb_window_t win,unsigned int color);
+int setBorderColor(xcb_window_t win, unsigned int color);
 
 /**
  * Sets the border color of the window to match the active master
- * @param winInfo 
+ * @param winInfo
  * @return 1 iff no error was deteced
  */
 int setBorder(WindowInfo* winInfo);
 /**
- * Sets the border color of the window to match the master that last focused this window or to the default color 
- * @param winInfo 
+ * Sets the border color of the window to match the master that last focused this window or to the default color
+ * @param winInfo
  * @return 1 iff no error was deteced
  */
-int resetBorder(WindowInfo*winInfo);
+int resetBorder(WindowInfo* winInfo);
 
 /**
  * Switch to window's worksspace, raise and focus the window
@@ -155,10 +155,10 @@ int activateWindow(WindowInfo* winInfo);
 int focusWindow(int win);
 /**
  * Focus the given window
- * This method is diffrent from focusWindow in that it allows diffrent protocals for 
+ * This method is diffrent from focusWindow in that it allows diffrent protocals for
  * focusing the window based on window masks
  */
-int focusWindowInfo(WindowInfo*winInfo);
+int focusWindowInfo(WindowInfo* winInfo);
 /**
  * Raises the given window
  * @param win   the window to raise
@@ -176,7 +176,7 @@ int raiseWindowInfo(WindowInfo* winInfo);
  * @param winInfo
  * @param raise
  */
-void raiseLowerWindowInfo(WindowInfo*winInfo,int raise);
+void raiseLowerWindowInfo(WindowInfo* winInfo, int raise);
 
 /**
  * Maps the window specified by id
@@ -198,41 +198,41 @@ int deleteWindow(xcb_window_t winToRemove);
  * @param source
  * @return
  */
-int allowRequestFromSource(WindowInfo* winInfo,int source);
+int allowRequestFromSource(WindowInfo* winInfo, int source);
 /**
  * Applies the gravity to pos
  * @param win if gravity is 0 look up the gravity from the ICCCM normal hints on this window
  * @param pos array of values x,y,w,h,border
  * @param gravity the gravity to use
  */
-void applyGravity(int win,short pos[5],int gravity);
+void applyGravity(int win, short pos[5], int gravity);
 
 /**
  * Assigns names to the first n workspaces
  * @param names
  * @param numberOfNames
  */
-void setWorkspaceNames(char*names[],int numberOfNames);
+void setWorkspaceNames(char* names[], int numberOfNames);
 
 /**
  * Returns the first workspace index whose names matches name
  * @param name
  * @return
  */
-int getIndexFromName(char*name);
+int getIndexFromName(char* name);
 
 /**
 * Returns the name of the workspace at the specifed index
-* @param index 
+* @param index
 *
 * @return the name of the workspace
 */
-char*getWorkspaceName(int index);
+char* getWorkspaceName(int index);
 /**
  * Make the active workspace the one designated by workspaceIndex
- * For the workspace to become active,it must become visible. For this to be true it must 
+ * For the workspace to become active,it must become visible. For this to be true it must
  * swap monitor with an already visible workspace
- * Upon switching, the focus for all masters is updated to be the last focused window out of 
+ * Upon switching, the focus for all masters is updated to be the last focused window out of
  * all visible windows
  */
 void switchToWorkspace(int workspaceIndex);
@@ -251,23 +251,23 @@ void swapWithWorkspace(int workspaceIndex);
  * @param index1
  * @param index2
  */
-void swapWorkspaces(int index1,int index2);
+void swapWorkspaces(int index1, int index2);
 
 /**
  * Moves a window to the workspace given by destIndex at the NORMAL_LAYER
  */
-void moveWindowToWorkspace(WindowInfo* winInfo,int destIndex);
+void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex);
 
 /**
  * Filters the configure request to allowed actions then configures the window
  * @param win
  * @param values
- * @param sibling 
+ * @param sibling
  * @param stackMode
  * @param configMask
  * @see xcb_configure_window
  */
-void processConfigureRequest(int win,short values[5],xcb_window_t sibling,int stackMode,int configMask);
+void processConfigureRequest(int win, short values[5], xcb_window_t sibling, int stackMode, int configMask);
 
 /**
  * Do everything needed to comply when EWMH.
@@ -281,7 +281,7 @@ void broadcastEWMHCompilence();
  * @param win
  * @param layer
  */
-void moveWindowToLayer(WindowInfo* win,int layer);
+void moveWindowToLayer(WindowInfo* win, int layer);
 
 /**
  * Send a kill signal to the client with the window
@@ -316,5 +316,5 @@ void sinkWindow(WindowInfo* win);
  * @param winInfo1
  * @param winInfo2
  */
-void swapWindows(WindowInfo*winInfo1,WindowInfo*winInfo2);
+void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
 #endif
