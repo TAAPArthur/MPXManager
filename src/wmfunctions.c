@@ -282,10 +282,8 @@ static void focusNextVisibleWindow(ArrayList*masters,WindowInfo*defaultWinInfo){
         ArrayList* masterWindowStack=getWindowStackByMaster(master);
         setActiveMaster(master);
         WindowInfo*winToFocus=NULL;
-        UNTIL_FIRST(winToFocus,masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(winToFocus)->id) && isActivatable(winToFocus));
-        if(winToFocus)
-            focusWindowInfo(winToFocus);
-        else if (defaultWinInfo)
+        UNTIL_FIRST(winToFocus,masterWindowStack,isWorkspaceVisible(getWorkspaceOfWindow(winToFocus)->id) && isActivatable(winToFocus)&&focusWindowInfo(winToFocus));
+        if (!winToFocus && defaultWinInfo)
             focusWindowInfo(defaultWinInfo);
     );
     setActiveMaster(active);
