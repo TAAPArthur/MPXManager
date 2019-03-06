@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <err.h>
 /// \endcond
 #include "functions.h"
@@ -101,7 +102,7 @@ int findAndRaise(Rule* rule){
 }
 
 
-void spawnPipe(char* command){
+int spawnPipe(char* command){
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
     if(statusPipeFD[0]){
         close(statusPipeFD[0]);
@@ -118,9 +119,10 @@ void spawnPipe(char* command){
         err(1, "error forking\n");
     dup2(statusPipeFD[1], 1);
     close(statusPipeFD[0]);
+    return pid;
 }
 
-void spawn(char* command){
+int spawn(char* command){
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
     int pid = fork();
     if(pid == 0){
@@ -129,8 +131,11 @@ void spawn(char* command){
     }
     else if(pid < 0)
         err(1, "error forking\n");
+    return pid;
 }
-
+int waitForChild(int pid){
+    return waitpid(pid, NULL, 0);
+}
 
 
 int focusBottom(void){

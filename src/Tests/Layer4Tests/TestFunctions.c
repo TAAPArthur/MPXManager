@@ -128,6 +128,12 @@ START_TEST(test_spawn){
 }
 END_TEST
 
+START_TEST(test_spawn_wait){
+    assert(waitForChild(spawn("exit 0")));
+    assert(waitForChild(spawn("exit 122")));
+}
+END_TEST
+
 START_TEST(test_get_next_window_in_stack_fail){
     FOR_EACH(WindowInfo * winInfo, getAllWindows(), addMask(winInfo, HIDDEN_MASK));
     assert(getNextWindowInStack(0) == NULL);
@@ -328,6 +334,7 @@ Suite* functionsSuite(){
     tcase_add_test(tc_core, test_cycle_window);
     tcase_add_test(tc_core, test_find_and_raise);
     tcase_add_test(tc_core, test_spawn);
+    tcase_add_test(tc_core, test_spawn_wait);
     suite_add_tcase(s, tc_core);
     return s;
 }

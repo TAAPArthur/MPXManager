@@ -215,6 +215,7 @@ typedef struct {
         void (*)(char*): VOID_ARG, \
         void (*)(void*): VOID_ARG, \
         int (*)(Layout*): VOID_ARG_RETURN_INT, \
+        int (*)(char*): VOID_ARG_RETURN_INT, \
         int (*)(void*): VOID_ARG_RETURN_INT \
 )}
 ///\endcond
