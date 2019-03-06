@@ -149,7 +149,7 @@ START_TEST(test_call_bounded_function){
     int integer = 1;
     void* voidPointer = "c";
     int count = 0;
-    int targetCounts[] = {6, 6, 5};
+    int targetCounts[] = {6, 6, 6};
     int individualCounts[LEN(targetCounts)] = {0};
     void funcNoArg(void){
         count++;
@@ -200,15 +200,17 @@ START_TEST(test_call_bounded_function){
         assert(integer == i);
         individualCounts[2]++;
     }
+    int funcEcho(int i){
+        count++;
+        assert(integer == i);
+        individualCounts[2]++;
+        return i;
+    }
     int funcIntReturn(int i){
         count++;
         assert(integer == i);
         individualCounts[2]++;
         return 5;
-    }
-    int funcEcho(int i){
-        assert(i == integer);
-        return i;
     }
     assert(getActiveBinding() == NULL);
     BoundFunction unset = BIND(exit, 110);
@@ -224,7 +226,6 @@ START_TEST(test_call_bounded_function){
         BIND(funcNoArgReturn),
         BIND(funcInt, integer),
         BIND(funcIntReturn, integer),
-        BIND(funcInt, &((BoundFunction)BIND(funcEcho, integer))),
         BIND(funcVoidArg, voidPointer),
         BIND(funcVoidArgReturn, voidPointer),
         BIND(funcWinArg),
@@ -234,6 +235,7 @@ START_TEST(test_call_bounded_function){
         AND(BIND(funcInt, integer), BIND(funcIntReturn, integer)),
         OR(BIND(funcNoArg), BIND(funcNoArgReturn)),
         BOTH(BIND(funcNoArg), BIND(funcNoArgReturn)),
+        PIPE(BIND(funcEcho, integer), BIND(funcInt)),
         AUTO_CHAIN_GRAB(0, 1,
         {0, Button1, OR(BIND(funcNoArg), BIND(funcNoArgReturn)), .noGrab = 1},
         {0, Button1, BIND(exit, 1), .noGrab = 1},
@@ -244,14 +246,12 @@ START_TEST(test_call_bounded_function){
     int size = sizeof(b) / sizeof(BoundFunction);
     int sum = 0;
     for(int i = 0; i < size; i++){
-        int c = count;
         int result = callBoundedFunction(&b[i], voidPointer);
         assert(result);
         sum += result;
         if(i < LEN(b) - 4)
-            if(i > 1)
-                assert(count - c == 1);
-            else assert(count == 0);
+            if(i == 1)
+                assert(count == 0);
     }
     for(int i = 0; i < LEN(targetCounts); i++){
         assert(targetCounts[i] == individualCounts[i]);

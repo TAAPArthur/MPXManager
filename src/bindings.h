@@ -62,6 +62,8 @@ typedef enum {
     FUNC_AND,
     /// || for bindings
     FUNC_OR,
+    /// pipe(|) for bindings
+    FUNC_PIPE,
     /**Call a function that takes no arguments*/
     NO_ARGS,
     /**Call a function that takes no arguments*/
@@ -190,6 +192,8 @@ typedef struct {
     _Generic((F), \
             void(*)(void):0,\
             int(*)(void):0,\
+            void(*)(int):0,\
+            int(*)(int):0,\
             default:1 \
             ))
 
@@ -269,6 +273,12 @@ typedef struct {
  * @param B
  */
 #define OR(B...) _UNION(FUNC_OR,B)
+
+/**
+ * When called, call the BoundFunctions in order and pass the output as input to the next
+ * @param B
+ */
+#define PIPE(B...) _UNION(FUNC_PIPE,B)
 
 /// Helper macro for AND, OR and BOTH
 #define _UNION(TYPE,B...){.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=LEN(((BoundFunction[]){B}))},.type=TYPE}

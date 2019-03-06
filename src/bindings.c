@@ -42,14 +42,11 @@ static BoundFunction* popActiveBinding(){
 Binding* getActiveBinding(){
     return isNotEmpty(getActiveChains()) ? ((BoundFunction*)getLast(getActiveChains()))->func.chainBindings : NULL;
 }
-
 int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
     assert(boundFunction);
     LOG(LOG_LEVEL_ALL, "calling function %d\n", boundFunction->type);
     BoundFunctionArg arg = boundFunction->arg;
-    if(boundFunction->dynamic == 2)
-        arg.intArg = callBoundedFunction(boundFunction->arg.voidArg, winInfo);
-    else if(boundFunction->dynamic == 1){
+    if(boundFunction->dynamic == 1){
         if(winInfo == NULL)
             return 0;
         arg.voidArg = winInfo;
@@ -81,6 +78,13 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
                 if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo))
                     return 1;
             return 0;
+        case FUNC_PIPE:
+            result = callBoundedFunction(&boundFunction->func.boundFunctionArr[0], winInfo);
+            for(int i = 1; i < boundFunction->arg.intArg; i++){
+                boundFunction->func.boundFunctionArr[i].arg.intArg = result;
+                result = callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo);
+            }
+            return result;
         case NO_ARGS:
             boundFunction->func.func();
             break;
