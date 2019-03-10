@@ -315,19 +315,25 @@ START_TEST(test_configure_windows){
     processNewWindow(winInfo);
     dumpWindowInfo(winInfo);
     short values[] = {1, 2, 3, 4, 5};
-    int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_HEIGHT | XCB_CONFIG_WINDOW_WIDTH |
+    int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
                    XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_HEIGHT, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_BORDER_WIDTH};
+    int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
+    int defaultValues[] = {10, 10, 10, 10, 10};
     for(int i = 0; i < LEN(masks); i++){
-        short defaultValues[] = {10, 10, 10, 10, 10, 10};
         xcb_configure_window(dis, win, allMasks, defaultValues);
         processConfigureRequest(win, values, 0, 0, masks[i]);
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
         xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
-        for(int n = 0; n <= 5; n++)
-            assert((&reply->x)[n] == n == i ? values[n] : defaultValues[n]);
+        for(int n = 0; n < 5; n++)
+            assert((&reply->x)[n] == (n == i ? values[0] : defaultValues[0]));
         free(reply);
     }
+    xcb_configure_window(dis, win, allMasks, defaultValues);
+    processConfigureRequest(win, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+    xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
+    assert(reply->width == values[0]);
+    assert(reply->height == values[1]);
+    free(reply);
     //TODO check below
     processConfigureRequest(win, NULL, root, XCB_STACK_MODE_ABOVE,
                             XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);

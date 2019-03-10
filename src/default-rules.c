@@ -127,7 +127,12 @@ void onConfigureNotifyEvent(void){
 void onConfigureRequestEvent(void){
     xcb_configure_request_event_t* event = getLastEvent();
     applyGravity(event->window, &event->x, 0);
-    processConfigureRequest(event->window, &event->x, event->sibling, event->stack_mode, event->value_mask);
+    short values[5];
+    int n = 0;
+    for(int i = 0; i < LEN(values); i++)
+        if(event->value_mask & (1 << i))
+            values[n++] = (&event->x)[i];
+    processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
 void onCreateEvent(void){
     LOG(LOG_LEVEL_TRACE, "create event received\n");

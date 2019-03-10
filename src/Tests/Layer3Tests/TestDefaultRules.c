@@ -286,6 +286,7 @@ END_TEST
 static void clientSetup(){
     LOAD_SAVED_STATE = 0;
     CRASH_ON_ERRORS = 0;
+    DEFAULT_WINDOW_MASKS = EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK;
     setLogLevel(LOG_LEVEL_NONE);
     onStartup();
     if(!fork()){
@@ -317,9 +318,25 @@ START_TEST(test_configure_request){
                XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
                XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     for(int i = 0; i < 2; i++){
-        int win = mapWindow(i ? createUnmappedWindow() : createIgnoredWindow());
+        int win = i ? createUnmappedWindow() : createIgnoredWindow();
         assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+    }
+    consumeEvents();
+    int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+                   XCB_CONFIG_WINDOW_BORDER_WIDTH;
+    int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
+    int defaultValues[] = {10, 10, 10, 10, 10};
+    int win = createUnmappedWindow();
+    for(int i = 0; i < LEN(masks); i++){
+        catchError(xcb_configure_window_checked(dis, win, allMasks, defaultValues));
+        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+        catchError(xcb_configure_window_checked(dis, win, masks[i], values));
+        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+        xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
+        for(int n = 0; n < 5; n++)
+            assert((&reply->x)[n] == (n == i ? values[0] : defaultValues[0]));
+        free(reply);
     }
 }
 END_TEST
