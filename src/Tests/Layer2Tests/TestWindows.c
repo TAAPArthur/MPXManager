@@ -312,7 +312,7 @@ START_TEST(test_window_state_sync){
                 count++;
                 break;
             }
-    assert(count + 1 == LEN(net_atoms));
+    assert(count == LEN(net_atoms));
     xcb_ewmh_get_atoms_reply_wipe(&reply);
 }
 END_TEST

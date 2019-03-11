@@ -235,7 +235,7 @@ void setXWindowStateFromMask(WindowInfo* winInfo){
     if(hasMask(winInfo, NO_TILE_MASK))
         windowState[count++] = WM_STATE_NO_TILE;
     if(hasMask(winInfo, ABOVE_MASK))
-        windowState[count++] = ewmh->_NET_WM_STATE_BELOW;
+        windowState[count++] = ewmh->_NET_WM_STATE_ABOVE;
     if(hasMask(winInfo, BELOW_MASK))
         windowState[count++] = ewmh->_NET_WM_STATE_BELOW;
     xcb_ewmh_set_wm_state(ewmh, winInfo->id, count, windowState);
@@ -351,7 +351,7 @@ void scan(xcb_window_t baseWindow){
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
             assert(attr);
             if(attr->override_redirect || attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY){
-                LOG(LOG_LEVEL_TRACE, "Skipping child override redirect: %d class: %d\n", attr->override_redirect, attr->_class);
+                LOG(LOG_LEVEL_VERBOSE, "Skipping child override redirect: %d class: %d\n", attr->override_redirect, attr->_class);
             }
             else {
                 WindowInfo* winInfo = createWindowInfo(children[i]);
