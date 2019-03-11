@@ -108,8 +108,11 @@ START_TEST(test_avoid_docks){
     for(int i = 0; i < 4; i++){
         WindowInfo* winInfo = createWindowInfo(createDock(i, size, _i));
         loadDockProperties(winInfo);
-        markAsDock(winInfo);
+        if(i < 2)
+            markAsDock(winInfo);
         addWindowInfo(winInfo);
+        if(i >= 2)
+            markAsDock(winInfo);
     }
     assert(getSize(getAllDocks()) == 4);
     Monitor* m = getHead(getAllMonitors());

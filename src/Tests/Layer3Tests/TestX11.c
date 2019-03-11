@@ -382,21 +382,21 @@ START_TEST(test_auto_focus){
     winInfo->creationTime = getTime();
     winInfo2->creationTime = getTime();
     winInfo3->creationTime = getTime();
-    addWindowInfo(winInfo);
+    processNewWindow(winInfo);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     updateMapState(winInfo->id, 1);
     assert(winInfo->id == getActiveFocus(getActiveMasterKeyboardID()));
     focusWindow(focusHolder);
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
-    addWindowInfo(winInfo2);
+    processNewWindow(winInfo2);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     updateMapState(winInfo2->id, 1);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     int delay = 25;
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = delay;
     msleep(delay * 2);
-    addWindowInfo(winInfo3);
-    updateMapState(winInfo2->id, 1);
+    processNewWindow(winInfo3);
+    updateMapState(winInfo3->id, 1);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
 }
 END_TEST

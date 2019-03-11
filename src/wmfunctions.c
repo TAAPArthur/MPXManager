@@ -491,7 +491,6 @@ void updateMapState(int id, int map){
     WindowInfo* winInfo = getWindowInfo(id);
     if(winInfo)
         if(map){
-            loadWindowHints(winInfo);
             addMask(winInfo, MAPPED_MASK);
             if(winInfo->mappedBefore)return;
             else winInfo->mappedBefore = 1;

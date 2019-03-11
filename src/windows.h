@@ -57,7 +57,9 @@ typedef enum {
     /// Window cannot be externally raised/lowered (configure requests are blocked)
     EXTERNAL_RAISE_MASK =   1 << 11,
     /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse
-    FLOATING_MASK =            ABOVE_MASK | EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
+    EXTERNAL_CONFIGURABLE_MASK =            EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
+    /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse) and is above other windows
+    FLOATING_MASK =            ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
 
     ///Allow client requests from older clients who don't specify what they are
     SRC_INDICATION_OTHER =   1 << SRC_INDICATION_OFFSET,

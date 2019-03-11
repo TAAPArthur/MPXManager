@@ -79,9 +79,13 @@ void addFloatRules(void){
     appendRule(RegisteringWindow, &notificationRule);
 }
 
-static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, AND(BIND(loadDockProperties), BIND(markAsDock)), .passThrough = PASSTHROUGH_IF_TRUE};
+static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BOTH(BIND(loadDockProperties), BIND(markAsDock), BIND(addMask, EXTERNAL_CONFIGURABLE_MASK))};
 void addAvoidDocksRule(void){
-    appendRule(ProcessingWindow, &avoidDocksRule);
+    appendRule(PropertyLoad, &avoidDocksRule);
+}
+void addNoDockFocusRule(void){
+    static Rule disallowDocksFocusRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BIND(removeMask, INPUT_MASK)};
+    appendRule(PropertyLoad, &disallowDocksFocusRule);
 }
 void addFocusFollowsMouseRule(void){
     static Rule focusFollowsMouseRule = CREATE_DEFAULT_EVENT_RULE(focusFollowMouse);
@@ -172,8 +176,10 @@ void onMapEvent(void){
 void onMapRequestEvent(void){
     xcb_map_request_event_t* event = getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
-    if(winInfo)
+    if(winInfo){
+        loadWindowProperties(winInfo);
         addMask(winInfo, MAPABLE_MASK);
+    }
     attemptToMapWindow(event->window);
 }
 void onUnmapEvent(void){
@@ -217,7 +223,8 @@ void onPropertyEvent(void){
     xcb_property_notify_event_t* event = getLastEvent();
     if(getWindowInfo(event->window))
         loadWindowProperties(getWindowInfo(event->window));
-    else processNewWindow(createWindowInfo(event->window));
+    else
+        processNewWindow(createWindowInfo(event->window));
 }
 
 void onClientMessage(void){

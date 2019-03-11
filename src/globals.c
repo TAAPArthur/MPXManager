@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "windows.h"
 #include <unistd.h>
 
 
@@ -40,6 +41,7 @@ char* SHELL = "/bin/sh";
 int CLONE_REFRESH_RATE = 15;
 
 int DEFAULT_WINDOW_MASKS = 0;
+int DEFAULT_DOCK_MASKS = EXTERNAL_MOVE_MASK | EXTERNAL_RESIZE_MASK | NO_TILE_MASK;
 
 int DEFAULT_BINDING_MASKS = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
 

@@ -189,7 +189,7 @@ void loadWindowProperties(WindowInfo* winInfo){
     }
     loadWindowType(winInfo);
     loadWindowHints(winInfo);
-    //dumpWindowInfo(winInfo);
+    applyRules(getEventRules(PropertyLoad), winInfo);
 }
 void loadSavedAtomState(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t reply;
@@ -371,6 +371,10 @@ void scan(xcb_window_t baseWindow){
 
 void markAsDock(WindowInfo* winInfo){
     winInfo->dock = 1;
+    if(indexOf(getAllWindows(), winInfo, sizeof(int)) != -1){
+        addUnique(getAllDocks(), winInfo, sizeof(int));
+        resizeAllMonitorsToAvoidAllStructs();
+    }
 }
 
 int addWindowInfo(WindowInfo* winInfo){

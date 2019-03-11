@@ -51,6 +51,8 @@ extern char* SHELL;
 extern int CLONE_REFRESH_RATE;
 ///Defaults masks to be applied to windows
 extern int DEFAULT_WINDOW_MASKS;
+///Defaults masks to be applied to docks windows
+extern int DEFAULT_DOCK_MASKS;
 ///If unspecifed the mask of a Binding
 extern int DEFAULT_BINDING_MASKS;
 ///If unspecifed the mask, used during a chaing binding grab
@@ -90,6 +92,8 @@ extern char IGNORE_KEY_REPEAT;
 enum {
     ///if all rules are passed through, then the window is added as a normal window
     onXConnection = LAST_REAL_EVENT,
+    /// Run after properties have been loaded
+    PropertyLoad,
     /// deterime if a newly detected window should be recorded/monitored/controlled by us
     ProcessingWindow,
     /// called after the newly created window has been added to a workspace

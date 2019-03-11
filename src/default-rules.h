@@ -89,6 +89,11 @@ void onXConnect(void);
  * Adds rules to have windows avoid docks (default)
  */
 void addAvoidDocksRule(void);
+
+/**
+ * Adds rules to strip docks of INPUT_MASK on PropertyLoad so they won't be able to be focused (non-default)
+ */
+void addNoDockFocusRule(void);
 /**
  * Adds the full set of default rules
  */
