@@ -420,6 +420,33 @@ START_TEST(test_auto_focus){
 }
 END_TEST
 
+START_TEST(test_auto_focus_delete){
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
+    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
+    START_MY_WM
+    for(int i = 0; i < 3; i++)
+        mapWindow(createNormalWindow());
+    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 3);
+    WAIT_UNTIL_TRUE(getSize(getActiveWindowStack()) == 3);
+    WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack()) == 3);
+    lock();
+    retile();
+    unlock();
+    WindowInfo* head = getHead(getActiveWindowStack());
+    WindowInfo* middle = getElement(getActiveWindowStack(), 1);
+    WindowInfo* lastFocused = getHead(getActiveMasterWindowStack());
+    WindowID stackingOrder[] = {head->id, middle->id, lastFocused->id};
+    assert(checkStackingOrder(stackingOrder, 3));
+    lock();
+    int idle = getIdleCount();
+    assert(catchError(xcb_destroy_window_checked(dis, lastFocused->id)) == 0);
+    unlock();
+    WAIT_UNTIL_TRUE(idle != getIdleCount())
+    assert(getSize(getAllWindows()) == 2);
+    assert(checkStackingOrder(stackingOrder, 2));
+    assert(middle->id == getActiveFocus(getActiveMasterKeyboardID()));
+}
+END_TEST
 
 
 START_TEST(test_set_workspace_names){
@@ -560,6 +587,7 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
     tcase_add_test(tc_core, test_auto_focus);
+    tcase_add_test(tc_core, test_auto_focus_delete);
     tcase_add_loop_test(tc_core, test_delete_window_request, 0, 3);
     tcase_add_test(tc_core, test_activate_window);
     tcase_add_test(tc_core, test_set_border_color);

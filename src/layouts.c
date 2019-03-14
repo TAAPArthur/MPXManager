@@ -215,8 +215,6 @@ void applyLayout(Workspace* workspace){
         LOG(LOG_LEVEL_TRACE, "no windows in workspace\n");
         return;
     }
-    int raiseFocusedWindow = layout->args.raiseFocused &&
-                             getFocusedWindow() && find(windowStack, getFocusedWindow(), sizeof(int)) && isTileable(getFocusedWindow());
     ArrayList* last = NULL;
     int size = getNumberOfWindowsToTile(windowStack, &layout->args);
     LayoutState state = {.args = &layout->args, .monitor = m, .numWindows = size, .stack = windowStack, .last = last};
@@ -229,8 +227,12 @@ void applyLayout(Workspace* workspace){
             LOG(LOG_LEVEL_WARN, "WARNING there is not a set layout function\n");
     else
         LOG(LOG_LEVEL_TRACE, "there are no windows to tile\n");
-    if(raiseFocusedWindow)
-        raiseWindowInfo(getFocusedWindow());
+    if(layout->args.raiseFocused){
+        FOR_EACH_REVERSED(WindowInfo*, winInfo, getActiveMasterWindowStack()){
+            if(getWorkspaceOfWindow(winInfo) == getActiveWorkspace())
+                raiseWindowInfo(winInfo);
+        }
+    }
 }
 
 static int splitEven(LayoutState* state, ArrayList* stack, int offset, short const* baseValues, int dim, int num,
