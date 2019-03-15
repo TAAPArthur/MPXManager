@@ -57,7 +57,7 @@ int getUserMask(WindowInfo* winInfo){
 }
 ///return true iff mask as any USER_MASK bits set
 int isUserMask(int mask){
-    return ((char)mask) ? 1 : 0;
+    return mask & USER_MASKS ? 1 : 0;
 }
 
 void toggleMask(WindowInfo* winInfo, int mask){
