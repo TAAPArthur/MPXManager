@@ -49,6 +49,10 @@ extern char* SHELL;
 
 /// How often we update the display on cloned windows (in ms)
 extern int CLONE_REFRESH_RATE;
+
+///Syncs _NET_WM_STATE automatically with masks
+extern int SYNC_WINDOW_MASKS;
+
 ///Defaults masks to be applied to windows
 extern int DEFAULT_WINDOW_MASKS;
 ///Defaults masks to be applied to docks windows

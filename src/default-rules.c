@@ -301,11 +301,12 @@ void onClientMessage(void){
                 moveWindowToWorkspace(getWindowInfo(win), destIndex);
     }
     else if(message == ewmh->_NET_WM_STATE){
-        LOG(LOG_LEVEL_DEBUG, "Settings client wm state\n");
+        LOG(LOG_LEVEL_DEBUG, "Settings client wm state %d\n", data.data32[3]);
         dumpAtoms((xcb_atom_t*) &data.data32[1], 2);
         WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo){
-            setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], 2, data.data32[0]);
+            if(allowRequestFromSource(winInfo, data.data32[3]))
+                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], 2, data.data32[0]);
         }
         else {
             WindowInfo fakeWinInfo = {.mask = 0, .id = win};

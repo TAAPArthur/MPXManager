@@ -68,12 +68,12 @@ void toggleMask(WindowInfo* winInfo, int mask){
 }
 void addMask(WindowInfo* winInfo, int mask){
     winInfo->mask |= mask;
-    if(isUserMask(mask))
+    if(SYNC_WINDOW_MASKS && isUserMask(mask))
         setXWindowStateFromMask(winInfo);
 }
 void removeMask(WindowInfo* winInfo, int mask){
     winInfo->mask &= ~mask;
-    if(isUserMask(mask))
+    if(SYNC_WINDOW_MASKS && isUserMask(mask))
         setXWindowStateFromMask(winInfo);
 }
 

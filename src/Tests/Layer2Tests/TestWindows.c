@@ -25,6 +25,7 @@
 
 
 START_TEST(test_mask_add_remove_toggle){
+    SYNC_WINDOW_MASKS = 1;
     WindowInfo* winInfo = createWindowInfo(createNormalWindow());
     addWindowInfo(winInfo);
     assert(winInfo->mask == 0);
@@ -58,6 +59,7 @@ START_TEST(test_mask_reset){
 END_TEST
 
 START_TEST(test_mask_save_restore){
+    SYNC_WINDOW_MASKS = 1;
     WindowInfo* winInfo = createWindowInfo(createNormalWindow());
     WindowInfo* winInfo2 = createWindowInfo(createNormalWindow());
     assert(processNewWindow(winInfo));
@@ -297,6 +299,7 @@ START_TEST(test_window_state){
 END_TEST
 
 START_TEST(test_window_state_sync){
+    SYNC_WINDOW_MASKS = 1;
     int win = createNormalWindow();
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);

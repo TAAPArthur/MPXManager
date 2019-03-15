@@ -421,6 +421,7 @@ START_TEST(test_client_set_window_workspace){
 }
 END_TEST
 START_TEST(test_client_set_window_state){
+    SYNC_WINDOW_MASKS = 1;
     int states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
     int ignoredWindow = createIgnoredWindow();
     for(int i = 0; i < LEN(states); i++){
