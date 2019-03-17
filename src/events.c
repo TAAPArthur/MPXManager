@@ -40,13 +40,18 @@ pthread_t runInNewThread(void* (*method)(void*), void* arg, int detached){
     return thread;
 }
 static volatile int idle;
+static int periodCounter;
 int getIdleCount(){
     return idle;
 }
 
 
 static inline xcb_generic_event_t* getNextEvent(){
-    xcb_generic_event_t* event;
+    if(++periodCounter > EVENT_PERIOD){
+        periodCounter = 0;
+        applyRules(getEventRules(Periodic), NULL);
+    }
+    static xcb_generic_event_t* event;
     event = xcb_poll_for_event(dis);
     if(!event && !xcb_connection_has_error(dis)){
         for(int i = 0; i < POLL_COUNT; i++){
@@ -54,12 +59,14 @@ static inline xcb_generic_event_t* getNextEvent(){
             event = xcb_poll_for_event(dis);
             if(event)return event;
         }
+        periodCounter = 0;
         lock();
+        applyRules(getEventRules(Periodic), NULL);
         applyRules(getEventRules(Idle), NULL);
         idle++;
         flush();
-        LOG(LOG_LEVEL_VERBOSE, "Idle %d\n", idle);
         unlock();
+        LOG(LOG_LEVEL_VERBOSE, "Idle %d\n", idle);
         event = xcb_wait_for_event(dis);
     }
     return event;

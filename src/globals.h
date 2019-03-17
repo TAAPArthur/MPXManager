@@ -103,6 +103,8 @@ enum {
     /// called after the newly created window has been added to a workspace
     RegisteringWindow,
     TileWorkspace,
+    /// called after a set number of events or when the connection is idle
+    Periodic,
     /// called when the connection is idle
     Idle,
     /// max value of supported events
@@ -133,6 +135,8 @@ extern int IGNORE_SUBWINDOWS;
 extern int POLL_COUNT;
 /// @copydoc POLL_COUNT
 extern int POLL_INTERVAL;
+/// after this number of events (or when the connection is idle) Period events with will be triggered
+extern int EVENT_PERIOD;
 
 ///  File path of config file dictating ideal master(s)/slaves configuration
 extern char* MASTER_INFO_PATH;

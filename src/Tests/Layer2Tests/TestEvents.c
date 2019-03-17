@@ -110,6 +110,24 @@ START_TEST(test_regular_events){
 }
 END_TEST
 
+START_TEST(test_event_spam){
+    ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
+    registerForDeviceEvents();
+    Rule exitRule = CREATE_WILDCARD(BIND(requestShutdown));
+    POLL_COUNT = 10;
+    POLL_INTERVAL = 10;
+    appendRule(Idle, &exitRule);
+    appendRule(Periodic, &exitRule);
+    xcb_generic_event_t event = {.response_type = 2};
+    while(!isShuttingDown()){
+        sendButtonPress(1);
+        flush();
+        xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
+        flush();
+    }
+}
+END_TEST
+
 START_TEST(test_register_events){
     registerForEvents();
     xcb_get_window_attributes_reply_t* attr;
@@ -164,6 +182,7 @@ Suite* eventSuite(void){
     tc_core = tcase_create("Events");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_regular_events);
+    tcase_add_test(tc_core, test_event_spam);
     tcase_add_test(tc_core, test_register_events);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Register for device events");

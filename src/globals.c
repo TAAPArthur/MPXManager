@@ -58,6 +58,7 @@ int IGNORE_SUBWINDOWS = 1;
 
 int POLL_COUNT = 0;
 int POLL_INTERVAL = 10;
+int EVENT_PERIOD = 10;
 
 char* MASTER_INFO_PATH = "master-info.txt";
 
