@@ -13,7 +13,7 @@
  */
 typedef struct {
     ///The id of the slave
-    int id;
+    MasterID id;
     ///the id of the associated master device
     int attachment;
     ///the name of the slave device
@@ -42,7 +42,7 @@ void createMasterDevice(char* name);
  * @param returnPointer
  * @param returnKeyboard
  */
-void destroyMasterDevice(int id, int returnPointer, int returnKeyboard);
+void destroyMasterDevice(MasterID id, int returnPointer, int returnKeyboard);
 /**
  * Calls destroyMasterDevice for all non default masters
  */
@@ -61,19 +61,19 @@ int getAssociatedMasterDevice(int deviceId);
  * @param deviceId either master keyboard or slave keyboard (or master pointer)id
  * @return 1 iff keyboardSlaveId was a master keyboard device
  */
-void setActiveMasterByDeviceId(int deviceId);
+void setActiveMasterByDeviceId(MasterID deviceId);
 
 /**
  * Sets the client pointer for the given window to the active master
  * @param window
  */
-void setClientPointerForWindow(int window);
+void setClientPointerForWindow(WindowID window);
 /**
  * Returns the client keyboard for the given window
  * @param win
  * @return
  */
-int getClientKeyboard(int win);
+int getClientKeyboard(WindowID win);
 
 
 
@@ -84,7 +84,7 @@ int getClientKeyboard(int win);
  * @param numberOfSlaves if not NULL, it will be set to the number of slaves found
  * @return a Node list container where each value is a SlaveDeivce
  */
-ArrayList* getSlavesOfMasterByID(int* ids, int num, int* numberOfSlaves);
+ArrayList* getSlavesOfMasterByID(MasterID* ids, int num, int* numberOfSlaves);
 /**
  * Returns a node list of both types of SlaveDevices for the given master
  * @param master
@@ -105,7 +105,7 @@ int isTestDevice(char* str);
  * @param result where the x,y location will be stored
  * @return 1 if result now contains position
  */
-int getMousePosition(int id, int relativeWindow, int result[2]);
+int getMousePosition(MasterID id, int relativeWindow, int result[2]);
 
 /**
  * Swap the ids of master devices backed by master1 and master2
@@ -136,7 +136,7 @@ int getDeviceIDByMask(int mask);
  *
  * @param id    id of the device to ungrab
  */
-int ungrabDevice(int id);
+int ungrabDevice(MasterID id);
 /**
  * Wrapper around XIGrabDevice
  *
@@ -175,7 +175,7 @@ int grabActiveKeyboard(void);
  * @param id
  * @return 1 iff the grab succeded
  */
-int grabKeyboard(int id);
+int grabKeyboard(MasterID id);
 
 
 /**
@@ -184,7 +184,7 @@ int grabKeyboard(int id);
  * @return 1 iff the grab succeded
  * @see grabActivePointer()
  */
-int grabPointer(int id);
+int grabPointer(MasterID id);
 /**
  * Grabs the active pointer
  * @return 1 iff the grab succeeded
@@ -197,12 +197,12 @@ int grabActivePointer(void);
  * @param window
  * @param maskValue
  */
-void passiveGrab(int window, int maskValue);
+void passiveGrab(WindowID window, int maskValue);
 /**
  * Ends a passive grab on the given window for events indicated by mask.
  * @param window
  */
-void passiveUngrab(int window);
+void passiveUngrab(WindowID window);
 /**
  * grabs all master devices
  */
@@ -227,6 +227,11 @@ int isKeyboardMask(int mask);
  */
 void setLastKnowMasterPosition(int x, int y);
 
+/**
+ * Gets the current master position to x,y
+ * the previous current position is saved and the delta can be got with getMouseDelta
+ * @return an array with the x and y position
+ */
 const short* getLastKnownMasterPosition(void);
 
 /**
@@ -242,6 +247,6 @@ void getMouseDelta(Master* master, short result[2]);
  * @param id a keyboard master device
  * @return the the current window focused by the given keyboard device
  */
-int getActiveFocus(int id);
+WindowID getActiveFocus(MasterID id);
 
 #endif /* DEVICES_H_ */

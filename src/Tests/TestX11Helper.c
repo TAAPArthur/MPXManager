@@ -13,7 +13,7 @@
 
 pthread_t pThread = 0;
 
-void destroyWindow(int win){
+void destroyWindow(WindowID win){
     assert(NULL == xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 }
 static int createWindow(int parent, int mapped, int ignored, int userIgnored, int input){
@@ -66,7 +66,7 @@ int  createUnmappedWindow(void){
     return createWindow(root, 0, 0, 0, 1);
 }
 
-int mapWindow(int win){
+int mapWindow(WindowID win){
     assert(xcb_request_check(dis, xcb_map_window_checked(dis, win)) == NULL);
     flush();
     return win;
@@ -109,10 +109,10 @@ void triggerBinding(Binding* b){
 }
 void triggerAllBindings(int mask){
     flush();
-    FOR_EACH(Binding * b, getDeviceBindings(),
-             if(mask & b->mask)
-             triggerBinding(b);
-            );
+    FOR_EACH(Binding*, b, getDeviceBindings()){
+        if(mask & b->mask)
+            triggerBinding(b);
+    }
     xcb_flush(dis);
 }
 
@@ -158,7 +158,7 @@ int waitForNormalEvent(int type){
     return 1;
 }
 
-int isWindowMapped(int win){
+int isWindowMapped(WindowID win){
     xcb_get_window_attributes_reply_t* reply;
     reply = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, win), NULL);
     int result = reply->map_state != XCB_MAP_STATE_UNMAPPED;
@@ -226,7 +226,7 @@ void loadSampleProperties(WindowInfo* winInfo){
     for(int i = 0; i < 4; i++)
         fields[i] = memcpy(calloc(strlen(dummyString) + 1, sizeof(char)), dummyString, strlen(dummyString) * sizeof(char));
 }
-void setProperties(int win){
+void setProperties(WindowID win){
     if(!atom){
         atom = &ewmh->_NET_WM_WINDOW_TYPE_DIALOG;
         typeName = "_NET_WM_WINDOW_TYPE_DIALOG";
@@ -254,7 +254,7 @@ void checkProperties(WindowInfo* winInfo){
     assert(strcmp(instace, winInfo->instanceName) == 0);
     assert(strcmp(clazz, winInfo->className) == 0);
 }
-int checkStackingOrder(int* stackingOrder, int num){
+int checkStackingOrder(WindowID* stackingOrder, int num){
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
     if(!reply){

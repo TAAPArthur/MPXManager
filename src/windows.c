@@ -35,7 +35,7 @@ static ArrayList windows;
 ArrayList* getAllWindows(void){
     return &windows;
 }
-WindowInfo* createWindowInfo(unsigned int id){
+WindowInfo* createWindowInfo(WindowID id){
     WindowInfo* wInfo = calloc(1, sizeof(WindowInfo));
     wInfo->id = id;
     return wInfo;
@@ -78,7 +78,7 @@ void removeMask(WindowInfo* winInfo, int mask){
 }
 
 void loadClassInfo(WindowInfo* info){
-    int win = info->id;
+    WindowID win = info->id;
     xcb_icccm_get_wm_class_reply_t prop;
     xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_class(dis, win);
     if(!xcb_icccm_get_wm_class_reply(dis, cookie, &prop, NULL))
@@ -152,7 +152,7 @@ void loadWindowHints(WindowInfo* winInfo){
         winInfo->groupId = hints.window_group;
         inputFocus = hints.input;
         if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
-            addMask(winInfo, MAPABLE_MASK);
+            addMask(winInfo, MAPPABLE_MASK);
     }
     else if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_NORMAL)
         inputFocus = 1;
@@ -363,7 +363,7 @@ void scan(xcb_window_t baseWindow){
                 winInfo->parent = baseWindow;
                 //if the window is not unmapped
                 if(attr->map_state)
-                    addMask(winInfo, MAPABLE_MASK | MAPPED_MASK);
+                    addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
                 if(processNewWindow(winInfo) && !IGNORE_SUBWINDOWS)
                     scan(children[i]);
             }
@@ -400,14 +400,13 @@ void deleteWindowInfo(WindowInfo* winInfo){
             free(fields[i]);
     free(winInfo);
 }
-int removeWindow(unsigned int winToRemove){
+int removeWindow(WindowID winToRemove){
     assert(winToRemove != 0);
     int index = indexOf(getAllWindows(), &winToRemove, sizeof(int));
     if(index == -1)
         return 0;
     WindowInfo* winInfo = getElement(getAllWindows(), index);
-    ArrayList* list = getAllMasters();
-    FOR_EACH(Master * master, list, removeWindowFromMaster(master, winToRemove));
+    FOR_EACH(Master*, master, getAllMasters()) removeWindowFromMaster(master, winToRemove);
     removeWindowFromWorkspace(winInfo);
     if(winInfo->dock){
         int index = indexOf(getAllDocks(), &winToRemove, sizeof(int));
@@ -419,14 +418,14 @@ int removeWindow(unsigned int winToRemove){
     removeFromList(getAllWindows(), index);
     return 1;
 }
-WindowInfo* getWindowInfo(unsigned int win){
+WindowInfo* getWindowInfo(WindowID win){
     int index = indexOf(getAllWindows(), &win, sizeof(int));
     return index == -1 ? NULL : getElement(getAllWindows(), index);
 }
 ArrayList* getClonesOfWindow(WindowInfo* winInfo){
     return &winInfo->cloneList;
 }
-void onWindowFocus(unsigned int win){
+void onWindowFocus(WindowID win){
     int index = indexOf(getAllWindows(), &win, sizeof(int));
     if(index == -1)return;
     WindowInfo* winInfo = getElement(getAllWindows(), index);

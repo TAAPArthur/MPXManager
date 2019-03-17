@@ -127,10 +127,10 @@ void attachSlaveToPropperMaster(SlaveDevice* slaveDevice){
         attachSlaveToMaster(slaveDevice->id, id);
 }
 void restoreMPX(void){
-    FOR_EACH(Master * m, getAllMasters(), restoreFocusColor(m));
+    FOR_EACH(Master*, m, getAllMasters()) restoreFocusColor(m);
     int num;
     ArrayList* slaves = getSlavesOfMasterByID(NULL, 0, &num);
-    FOR_EACH(SlaveDevice * slave, slaves, attachSlaveToPropperMaster(slave));
+    FOR_EACH(SlaveDevice*, slave, slaves) attachSlaveToPropperMaster(slave);
     deleteList(slaves);
     free(slaves);
 }
@@ -151,12 +151,12 @@ void startMPX(void){
 void stopMPX(void){
     mpxEnabled = 0;
     //destroyAllNonDefaultMasters();
-    FOR_EACH_REVERSED(Master * master, getAllMasters(),
-    if(master->id != DEFAULT_KEYBOARD){
-    destroyMasterDevice(master->id, DEFAULT_POINTER, DEFAULT_KEYBOARD);
-        removeMaster(master->id);
+    FOR_EACH_REVERSED(Master*, master, getAllMasters()){
+        if(master->id != DEFAULT_KEYBOARD){
+            destroyMasterDevice(master->id, DEFAULT_POINTER, DEFAULT_KEYBOARD);
+            removeMaster(master->id);
+        }
     }
-                     )
     assert(getSize(getAllMasters()) == 1);
     assert(getActiveMaster()->id == DEFAULT_KEYBOARD);
     flush();
@@ -166,17 +166,17 @@ int saveMasterInfo(void){
     FILE* fp = fopen(MASTER_INFO_PATH, "w");
     if(!fp)
         return 0;
-    FOR_EACH(Master * master, getAllMasters(),
-             fprintf(fp, "%s\n", getNameOfMaster(master));
-             fprintf(fp, "%06X\n", master->focusColor);
-             ArrayList* slaves = getSlavesOfMaster(master);
-             FOR_EACH(SlaveDevice * slave, slaves,
-                      fprintf(fp, "%s\n", getNameOfSlave(slave));
-                     )
-             deleteList(slaves);
-             free(slaves);
-             fprintf(fp, "\n");
-            )
+    FOR_EACH(Master*, master, getAllMasters()){
+        fprintf(fp, "%s\n", getNameOfMaster(master));
+        fprintf(fp, "%06X\n", master->focusColor);
+        ArrayList* slaves = getSlavesOfMaster(master);
+        FOR_EACH(SlaveDevice*, slave, slaves){
+            fprintf(fp, "%s\n", getNameOfSlave(slave));
+        }
+        deleteList(slaves);
+        free(slaves);
+        fprintf(fp, "\n");
+    };
     fclose(fp);
     return 1;
 }

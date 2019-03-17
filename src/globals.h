@@ -102,6 +102,7 @@ enum {
     ProcessingWindow,
     /// called after the newly created window has been added to a workspace
     RegisteringWindow,
+    /// when a workspace is tiled
     TileWorkspace,
     /// called after a set number of events or when the connection is idle
     Periodic,

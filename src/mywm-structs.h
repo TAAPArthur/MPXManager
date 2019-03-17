@@ -7,6 +7,13 @@
 #ifndef NAME_BUFFER
     #define NAME_BUFFER 32
 #endif
+
+typedef unsigned int WindowMask;
+typedef unsigned int WindowID;
+typedef unsigned int MasterID;
+typedef unsigned int WorkspaceID;
+typedef unsigned long MonitorID;
+
 ///holds data on a window
 typedef struct {
     /**Window id */
@@ -91,9 +98,9 @@ struct binding_struct;
 ///holds data on a master device pair like the ids and focus history
 typedef struct {
     /**keyboard master id;*/
-    int id;
+    MasterID id;
     /**pointer master id associated with id;*/
-    int pointerId;
+    MasterID pointerId;
     /// the name of the master keyboard
     char name[NAME_BUFFER];
     /// the color windows when this device has the most recent focus
@@ -143,7 +150,7 @@ typedef struct Layout Layout;
 ///metadata on Workspace
 typedef struct {
     ///workspace index
-    int id;
+    WorkspaceID id;
     ///user facing name of the workspace
     char* name;
     ///the monitor the workspace is on

@@ -26,7 +26,7 @@ extern pthread_t pThread;
         pThread=runInNewThread(runEventLoop,NULL,0);
 #define KILL_MY_WM  requestEventLoopShutdown();pthread_join(pThread,NULL);
 
-void destroyWindow(int win);
+void destroyWindow(WindowID win);
 int createUserIgnoredWindow(void);
 int  createUnmappedWindow(void);
 void addDummyIgnoreRule(void);
@@ -34,7 +34,7 @@ int createIgnoredWindow(void);
 int createNormalWindow(void);
 int createInputWindow(int input);
 int createNormalSubWindow(int parent);
-int mapWindow(int win);
+int mapWindow(WindowID win);
 int  mapArbitraryWindow(void);
 void createSimpleContext();
 void createSimpleContextWthMaster();
@@ -48,19 +48,19 @@ void waitToReceiveInput(int mask);
 void consumeEvents();
 int waitForNormalEvent(int mask);
 
-int isWindowMapped(int win);
+int isWindowMapped(WindowID win);
 Window createDock(int i, int size, int full);
 void fullCleanup();
 
 void loadSampleProperties(WindowInfo* winInfo);
 int getExitStatusOfFork();
 void waitForCleanExit();
-void setProperties(int win);
+void setProperties(WindowID win);
 void checkProperties(WindowInfo* winInfo);
 /**
  * checks to marking the window ids in stacking are in bottom to top order
  */
-int checkStackingOrder(int* stackingOrder, int num);
+int checkStackingOrder(WindowID* stackingOrder, int num);
 static inline void* isInList(ArrayList* list, int value){
     return find(list, &value, sizeof(int));
 }

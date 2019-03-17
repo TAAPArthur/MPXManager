@@ -18,59 +18,6 @@
 #define WM_NAME "MPX Manger"
 
 
-/**
- * @param winInfo
- * @return 1 iff the window is PARTIALLY_VISIBLE or VISIBLE
- */
-int isWindowVisible(WindowInfo* winInfo);
-
-/**
- *
- * @param winInfo the window whose map state to query
- * @return the window map state either UNMAPPED(0) or MAPPED(1)
- */
-int isMappable(WindowInfo* winInfo);
-
-/**
- * Returns true if the user can interact (ie focus,type etc)  with the window
- * For this to be true the window would have to be mapped and not hidden
- */
-int isInteractable(WindowInfo* winInfo);
-
-/**
- * Determines if a window should be tiled given its mapState and masks
- * @param winInfo
- * @return true if the window should be tiled
- */
-int isTileable(WindowInfo* winInfo);
-
-/**
- * @param winInfo
- * @return 1 iff external resize requests should be granted
- */
-int isExternallyResizable(WindowInfo* winInfo);
-/**
- * @param winInfo
- * @return 1 iff external raise requests should be granted
- */
-int isExternallyRaisable(WindowInfo* winInfo);
-/**
- * @param winInfo
- * @return 1 iff external border requests should be granted
- */
-int isExternallyBorderConfigurable(WindowInfo* winInfo);
-/**
- * @param winInfo
- * @return 1 iff external move requests should be granted
- */
-int isExternallyMoveable(WindowInfo* winInfo);
-
-/**
- *A window is actiable if it is MAPPABLE and not HIDDEN
- * @param winInfo
- * @return true if the window can receive focus
- */
-int isActivatable(WindowInfo* winInfo);
 
 /**
  * Establishes a connection with the X server.
@@ -91,7 +38,7 @@ void syncState();
  * Sets the EWMH property to be the given window
  * @param win
  */
-void setActiveWindowProperty(int win);
+void setActiveWindowProperty(WindowID win);
 
 
 /**
@@ -101,7 +48,7 @@ void setActiveWindowProperty(int win);
  * @param win
  * @return the workspace the window should be placed in by default
  */
-int getSavedWorkspaceIndex(xcb_window_t win);
+int getSavedWorkspaceIndex(WindowID win);
 
 
 /**
@@ -126,7 +73,7 @@ void updateFocusState(WindowInfo* winInfo);
  * @param color the new window border color
  * @return 1 iff no error was deteced
  */
-int setBorderColor(xcb_window_t win, unsigned int color);
+int setBorderColor(WindowID win, unsigned int color);
 
 /**
  * Sets the border color of the window to match the active master
@@ -152,7 +99,7 @@ int activateWindow(WindowInfo* winInfo);
  * @param win   the window to focus
  * @return 1 iff no error was detected
  */
-int focusWindow(int win);
+int focusWindow(WindowID win);
 /**
  * Focus the given window
  * This method is diffrent from focusWindow in that it allows diffrent protocals for
@@ -164,7 +111,7 @@ int focusWindowInfo(WindowInfo* winInfo);
  * @param win   the window to raise
  * @return 1 iff no error was detected
  */
-int raiseWindow(xcb_window_t win);
+int raiseWindow(WindowID win);
 /**
  * Raise the given window within its onw layer
  */
@@ -188,24 +135,17 @@ int attemptToMapWindow(int id);
  * Removes a window from our records and updates EWMH client list if the window was present
  * @return 1 iff the window was already in our records
  */
-int deleteWindow(xcb_window_t winToRemove);
+int deleteWindow(WindowID winToRemove);
 
 
 
-/**
- * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
- * @param winInfo
- * @param source
- * @return
- */
-int allowRequestFromSource(WindowInfo* winInfo, int source);
 /**
  * Applies the gravity to pos
  * @param win if gravity is 0 look up the gravity from the ICCCM normal hints on this window
  * @param pos array of values x,y,w,h,border
  * @param gravity the gravity to use
  */
-void applyGravity(int win, short pos[5], int gravity);
+void applyGravity(WindowID win, short pos[5], int gravity);
 
 /**
  * Assigns names to the first n workspaces
@@ -237,6 +177,10 @@ char* getWorkspaceName(int index);
  */
 void switchToWorkspace(int workspaceIndex);
 
+/**
+ * Switch to workspace and activate the last focused window of the actie master
+ * @param workspaceIndex
+ */
 void activateWorkspace(int workspaceIndex);
 
 /**
@@ -267,7 +211,7 @@ void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex);
  * @param configMask
  * @see xcb_configure_window
  */
-void processConfigureRequest(int win, short values[5], xcb_window_t sibling, int stackMode, int configMask);
+void processConfigureRequest(WindowID win, short values[5], WindowID sibling, int stackMode, int configMask);
 
 /**
  * Do everything needed to comply when EWMH.
@@ -287,7 +231,7 @@ void moveWindowToLayer(WindowInfo* win, int layer);
  * Send a kill signal to the client with the window
  * @param win
  */
-void killWindow(xcb_window_t win);
+void killWindow(WindowID win);
 
 /**
  * Sends a WM_DELETE_WINDOW message or sends a kill requests

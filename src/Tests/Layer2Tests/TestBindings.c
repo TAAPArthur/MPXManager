@@ -433,7 +433,7 @@ START_TEST(test_window_matching){
     WindowInfo* noMatchInfo = &all[1];
     WindowInfo* nullInfo = &all[2];
     char* s = "test";
-    int windowResourceIndex = _i;
+    WindowID windowResourceIndex = _i;
     (&info->typeName)[windowResourceIndex] = s;
     (&noMatchInfo->typeName)[windowResourceIndex] = "gibberish";
     int mask = 1 << (_i + 2);

@@ -14,7 +14,7 @@
 #include "logger.h"
 #include "windows.h"
 
-WindowInfo* cloneWindowInfo(unsigned int id, WindowInfo* winInfo){
+WindowInfo* cloneWindowInfo(WindowID id, WindowInfo* winInfo){
     WindowInfo* clone = malloc(sizeof(WindowInfo));
     memcpy(clone, winInfo, sizeof(WindowInfo));
     clearList(getClonesOfWindow(clone));
@@ -33,7 +33,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_DEBUG, "Cloning window %d\n", winInfo->id);
     uint32_t mask = XCB_CW_EVENT_MASK;
     uint32_t values[1] = {XCB_EVENT_MASK_EXPOSURE};
-    int window = xcb_generate_id(dis);
+    WindowID window = xcb_generate_id(dis);
     xcb_void_cookie_t cookie = xcb_create_window_checked(dis,
                                XCB_COPY_FROM_PARENT, window, screen->root,
                                0, 0, 10, 10, 0,
@@ -69,7 +69,7 @@ void updateClone(WindowInfo* winInfo, WindowInfo* dest){
 
 void updateAllClones(WindowInfo* winInfo){
     if(winInfo){
-        FOR_EACH(WindowInfo * clone, getClonesOfWindow(winInfo), updateClone(winInfo, clone));
+        FOR_EACH(WindowInfo*, clone, getClonesOfWindow(winInfo)) updateClone(winInfo, clone);
     }
 }
 void swapWithOriginal(void){
@@ -91,21 +91,19 @@ void onExpose(void){
         LOG(LOG_LEVEL_DEBUG, "updating %d clones \n", getSize(getClonesOfWindow(winInfo)));
         if(winInfo->cloneOrigin)
             updateClone(getWindowInfo(winInfo->cloneOrigin), winInfo);
-        FOR_EACH(WindowInfo * clone, getClonesOfWindow(winInfo), updateClone(winInfo, clone));
+        FOR_EACH(WindowInfo*, clone, getClonesOfWindow(winInfo)) updateClone(winInfo, clone);
     }
 }
 void* autoUpdateClones(void){
     assert(CLONE_REFRESH_RATE);
     while(!isShuttingDown()){
         lock();
-        FOR_EACH(WindowInfo * winInfo, getAllWindows(),
-                 updateAllClones(winInfo);
-                 int origin = getCloneOrigin(winInfo);
-                 if(origin != 0)
-                 if(!getWindowInfo(origin))
-                     removeWindow(winInfo->id);
-                    )
-                unlock();
+        FOR_EACH_REVERSED(WindowInfo*, winInfo, getAllWindows()){
+            updateAllClones(winInfo);
+            int origin = getCloneOrigin(winInfo);
+            if(origin && !getWindowInfo(origin))removeWindow(winInfo->id);
+        }
+        unlock();
         msleep(CLONE_REFRESH_RATE);
     }
     return NULL;

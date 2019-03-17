@@ -30,9 +30,9 @@
 
 
 START_TEST(test_sync_state){
-    int win = mapArbitraryWindow();
+    WindowID win = mapArbitraryWindow();
     int activeWorkspace = 1;
-    int windowWorkspace = 3;
+    WindowID windowWorkspace = 3;
     LOAD_SAVED_STATE = 0;
     DEFAULT_WORKSPACE_INDEX = 2;
     syncState();
@@ -57,7 +57,7 @@ END_TEST
 
 
 START_TEST(test_focus_window){
-    int win = mapArbitraryWindow();
+    WindowID win = mapArbitraryWindow();
     scan(root);
     focusWindow(win);
     xcb_input_xi_get_focus_reply_t* reply = xcb_input_xi_get_focus_reply(dis,
@@ -69,7 +69,7 @@ END_TEST
 
 START_TEST(test_focus_window_request){
     //TODO update when the X11 request focus methods supports multi focus
-    int win = mapArbitraryWindow();
+    WindowID win = mapArbitraryWindow();
     scan(root);
     focusWindowInfo(getWindowInfo(win));
     xcb_input_xi_get_focus_reply_t* reply = xcb_input_xi_get_focus_reply(dis,
@@ -80,8 +80,8 @@ START_TEST(test_focus_window_request){
 END_TEST
 
 START_TEST(test_activate_window){
-    int win = createUnmappedWindow();
-    int win2 = createNormalWindow();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createNormalWindow();
     scan(root);
     assert(!activateWindow(getWindowInfo(win)));
     assert(activateWindow(getWindowInfo(win2)));
@@ -93,7 +93,7 @@ START_TEST(test_delete_window_request){
     pipe(fd);
     if(!fork()){
         openXDisplay();
-        int win = mapArbitraryWindow();
+        WindowID win = mapArbitraryWindow();
         xcb_atom_t atoms[] = {WM_DELETE_WINDOW, ewmh->_NET_WM_PING};
         xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, _i == 0 ? 2 : 1, atoms);
         consumeEvents();
@@ -117,7 +117,7 @@ START_TEST(test_delete_window_request){
             exit(0);
         WAIT_UNTIL_TRUE(0);
     }
-    int win;
+    WindowID win;
     read(fd[0], &win, sizeof(int));
     close(fd[0]);
     close(fd[1]);
@@ -147,7 +147,7 @@ START_TEST(test_delete_window_request){
 END_TEST
 
 START_TEST(test_set_border_color){
-    int win = mapWindow(createNormalWindow());
+    WindowID win = mapWindow(createNormalWindow());
     scan(root);
     WindowInfo* winInfo = isInList(getAllWindows(), win);
     unsigned int colors[] = {0, 255, 255 * 255, 255 * 255 * 255};
@@ -163,7 +163,7 @@ START_TEST(test_set_border_color){
 END_TEST
 
 START_TEST(test_invalid_state){
-    int win = mapArbitraryWindow();
+    WindowID win = mapArbitraryWindow();
     xcb_ewmh_set_wm_desktop(ewmh, win, getNumberOfWorkspaces() + 1);
     xcb_ewmh_set_current_desktop(ewmh, defaultScreenNumber, getNumberOfWorkspaces() + 1);
     flush();
@@ -175,14 +175,14 @@ START_TEST(test_invalid_state){
 END_TEST
 
 START_TEST(test_withdraw_window){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     WAIT_UNTIL_TRUE(getWindowInfo(win))
     WindowInfo* winInfo = getWindowInfo(win);
     IGNORE_SEND_EVENT = 0;
-    WAIT_UNTIL_TRUE(hasMask(winInfo, MAPABLE_MASK));
+    WAIT_UNTIL_TRUE(hasMask(winInfo, MAPPABLE_MASK));
     xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .event = root, .window = win};
     catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
-    WAIT_UNTIL_FALSE(hasMask(winInfo, MAPABLE_MASK));
+    WAIT_UNTIL_FALSE(hasMask(winInfo, MAPPABLE_MASK));
 }
 END_TEST
 START_TEST(test_raise_window){
@@ -197,16 +197,35 @@ START_TEST(test_raise_window){
     assert(info && infoTop);
     assert(raiseWindow(bottom));
     flush();
-    int stackingOrder[] = {top, bottom, top};
+    WindowID stackingOrder[] = {top, bottom, top};
     assert(checkStackingOrder(stackingOrder, 2));
     assert(raiseWindowInfo(infoTop));
     assert(checkStackingOrder(stackingOrder + 1, 2));
 }
 END_TEST
+START_TEST(test_raise_window_special){
+    //windows are in same spot
+    int bottom = createNormalWindow();
+    int top = createNormalWindow();
+    registerForWindowEvents(bottom, XCB_EVENT_MASK_VISIBILITY_CHANGE);
+    registerForWindowEvents(top, XCB_EVENT_MASK_VISIBILITY_CHANGE);
+    scan(root);
+    WindowInfo* info = getWindowInfo(bottom);
+    WindowInfo* infoTop = getWindowInfo(top);
+    addMask(infoTop, ALWAYS_ON_TOP);
+    assert(info && infoTop);
+    assert(raiseWindowInfo(info));
+    flush();
+    WindowID stackingOrder[] = {bottom, top};
+    assert(checkStackingOrder(stackingOrder, 2));
+    assert(raiseWindowInfo(infoTop));
+    assert(checkStackingOrder(stackingOrder, 2));
+}
+END_TEST
 START_TEST(test_sticky_window_add){
     LOAD_SAVED_STATE = 0;
     mapArbitraryWindow();
-    int win = mapArbitraryWindow();
+    WindowID win = mapArbitraryWindow();
     scan(root);
     retile();
     WindowInfo* winInfo = getWindowInfo(win);
@@ -216,7 +235,7 @@ START_TEST(test_sticky_window_add){
 END_TEST
 
 START_TEST(test_window_swap){
-    int win[4];
+    WindowID win[4];
     for(int i = 0; i < LEN(win); i++)win[i] = mapArbitraryWindow();
     scan(root);
     retile();
@@ -236,7 +255,7 @@ END_TEST
 START_TEST(test_sticky_workspace_change){
     LOAD_SAVED_STATE = 0;
     mapArbitraryWindow();
-    int win = mapArbitraryWindow();
+    WindowID win = mapArbitraryWindow();
     scan(root);
     retile();
     WindowInfo* winInfo = getWindowInfo(win);
@@ -309,7 +328,7 @@ END_TEST
 
 
 START_TEST(test_configure_windows){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     DEFAULT_WINDOW_MASKS = EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK;
     processNewWindow(winInfo);
@@ -341,7 +360,7 @@ START_TEST(test_configure_windows){
 END_TEST
 
 START_TEST(test_float_sink_window){
-    int win = mapWindow(createNormalWindow());
+    WindowID win = mapWindow(createNormalWindow());
     WindowInfo* winInfo;
     START_MY_WM
     WAIT_UNTIL_TRUE(winInfo = getWindowInfo(win))
@@ -361,7 +380,7 @@ END_TEST
 
 
 START_TEST(test_apply_gravity){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     xcb_size_hints_t hints;
     xcb_icccm_size_hints_set_win_gravity(&hints, XCB_GRAVITY_CENTER);
     xcb_icccm_set_wm_size_hints(dis, win, XCB_ATOM_WM_NORMAL_HINTS, &hints);
@@ -415,7 +434,7 @@ START_TEST(test_set_workspace_names){
 }
 END_TEST
 START_TEST(test_unkown_window){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     mapWindow(win);
     assert(focusWindow(win));
@@ -430,7 +449,7 @@ END_TEST
 START_TEST(test_bad_window){
     setLogLevel(LOG_LEVEL_NONE);
     CRASH_ON_ERRORS = 0;
-    int win = -2;
+    WindowID win = -2;
     assert(!focusWindow(win));
     assert(!raiseWindow(win));
     short arr[5];
@@ -439,7 +458,7 @@ START_TEST(test_bad_window){
 END_TEST
 
 START_TEST(test_kill_window){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     if(!fork()){
         openXDisplay();
         killWindow(win);
@@ -537,6 +556,7 @@ Suite* x11Suite(void){
     tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_raise_window);
+    tcase_add_test(tc_core, test_raise_window_special);
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
     tcase_add_test(tc_core, test_auto_focus);

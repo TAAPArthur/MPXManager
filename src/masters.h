@@ -11,7 +11,7 @@
  * @param focusColor
  * @return pointer to object
  */
-Master* createMaster(int id, int pointerId, char* name, int focusColor);
+Master* createMaster(MasterID id, int pointerId, char* name, int focusColor);
 /**
  *
  * @return a list of all master devices
@@ -29,21 +29,21 @@ ArrayList* getAllMasters();
  * @param focusColor
  * @return 1 iff a new master was inserted; 0 o.w.
  */
-int addMaster(unsigned int keyboardMasterId, unsigned int pointerMasterId, char* name, int focusColor);
+int addMaster(MasterID keyboardMasterId, MasterID pointerMasterId, char* name, int focusColor);
 
 /**
  * Removes the master with the specifed id
  * @param id    the id to remove
  * @return 1 iff a node was removed 0 o.w.
  */
-int removeMaster(unsigned int id);
+int removeMaster(MasterID id);
 /**
  * Removes a window from the master stack
  * @param master
  * @param winToRemove
  * @return 1 iff the window was actually removed
  */
-int removeWindowFromMaster(Master* master, int winToRemove);
+int removeWindowFromMaster(Master* master, WindowID winToRemove);
 
 /**
  * @return the id of the active master
@@ -146,5 +146,5 @@ Master* getMasterById(int keyboardID);
  * @param win
  * @return
  */
-Master* getLastMasterToFocusWindow(int win);
+Master* getLastMasterToFocusWindow(WindowID win);
 #endif

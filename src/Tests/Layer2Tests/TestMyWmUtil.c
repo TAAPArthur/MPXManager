@@ -136,7 +136,7 @@ START_TEST(test_master_stack_add_remove){
         testAddUnique(getActiveMasterWindowStack(),
                       fakeOnWindowFocus);
     }
-    FOR_EACH(Master * m, getAllMasters(), assert(getSize(getWindowStackByMaster(m)) == size);)
+    FOR_EACH(Master*, m, getAllMasters()) assert(getSize(getWindowStackByMaster(m)) == size);;
 }
 END_TEST
 /*
@@ -256,7 +256,7 @@ START_TEST(test_focus_delete){
     assert(addWindowInfo(createWindowInfo(2)));
     assert(addWindowInfo(createWindowInfo(1)));
     assert(getFocusedWindow() == NULL);
-    FOR_EACH(WindowInfo * winInfo, getAllWindows(), onWindowFocus(winInfo->id))
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) onWindowFocus(winInfo->id);
     assert(getSize(getActiveMasterWindowStack()) == 3);
     assert(getFocusedWindow() == getWindowInfo(1));
     //head is 1
@@ -463,12 +463,12 @@ START_TEST(test_window_cycle){
     int currentFocusedWindow = ((WindowInfo*)getHead(node))->id;
     onWindowFocus(currentFocusedWindow);
     assert(getFocusedWindow());
-    FOR_EACH(WindowInfo * winInfo, node,
-             int size = getSize(node);
-             onWindowFocus(winInfo->id);
-             assert(getFocusedWindow() == winInfo);
-             assert(size == getSize(node));
-            )
+    FOR_EACH(WindowInfo*, winInfo, node){
+        int size = getSize(node);
+        onWindowFocus(winInfo->id);
+        assert(getFocusedWindow() == winInfo);
+        assert(size == getSize(node));
+    }
 }
 END_TEST
 START_TEST(test_active){
@@ -485,7 +485,7 @@ START_TEST(test_active){
 END_TEST
 START_TEST(test_workspace_window_add_remove){
     addFakeMaster(1, 1);
-    int remove(unsigned int win){
+    int remove(WindowID win){
         WindowInfo* winInfo = getWindowInfo(win);
         int i = removeWindowFromWorkspace(winInfo);
         return i;
@@ -504,7 +504,7 @@ START_TEST(test_monitor_workspace){
     addFakeMaster(1, 1);
     addFakeMonitor(1);
     addFakeMonitor(2);
-    FOR_EACH(Monitor * monitor, getAllMonitors(), assert(getWorkspaceFromMonitor(monitor) != NULL))
+    FOR_EACH(Monitor*, monitor, getAllMonitors()) assert(getWorkspaceFromMonitor(monitor) != NULL);
     assert(getWorkspaceFromMonitor((void*) -1) == NULL);
     int count = 0;
     for(int i = 0; i < size; i++){
@@ -544,7 +544,7 @@ START_TEST(test_complete_window_remove){
     }
     addWindowToWorkspace(getWindowInfo(1), 0);
     assert(removeWindow(1));
-    FOR_EACH(Master * m, getAllMasters(), assert(getSize(getWindowStackByMaster(m)) == 0);)
+    FOR_EACH(Master*, m, getAllMasters()) assert(getSize(getWindowStackByMaster(m)) == 0);;
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         assert(getSize(getWindowStack(getWorkspaceByIndex(i))) == 0);
     }

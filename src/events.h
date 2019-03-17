@@ -10,6 +10,8 @@
 #include <pthread.h>
 #include <xcb/xcb.h>
 
+#include "mywm-structs.h"
+
 /**
  * Locks/unlocks the global mutex
  *
@@ -65,7 +67,7 @@ void registerForEvents();
  * @param window
  * @param mask
  */
-int registerForWindowEvents(int window, int mask);
+int registerForWindowEvents(WindowID window, int mask);
 
 /**
  * To be called when a generic event is received

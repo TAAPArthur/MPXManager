@@ -24,7 +24,7 @@ typedef struct {
  */
 typedef struct Monitor {
     /**id for monitor*/
-    long id;
+    MonitorID id;
     /**1 iff the monitor is the primary*/
     char primary;
     /**The unmodified size of the monitor*/
@@ -62,13 +62,13 @@ int isPrimary(Monitor* monitor);
  * @param geometry an array containing the x,y,width,height of the monitor
  * @return 1 iff a new monitor was added
  */
-int updateMonitor(long id, int primary, Rect geometry);
+int updateMonitor(MonitorID id, int primary, Rect geometry);
 /**
  * Removes a monitor and frees related info
  * @param id identifier of the monitor
  * @return 1 iff the montior was removed
  */
-int removeMonitor(unsigned long id);
+int removeMonitor(MonitorID id);
 /**
  * Resets the viewport to be the size of the rectangle
  * @param m

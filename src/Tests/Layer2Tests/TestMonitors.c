@@ -5,7 +5,14 @@
 
 START_TEST(test_detect_monitors){
     detectMonitors();
+    int num = getSize(getAllMonitors());
     assert(isNotEmpty(getAllMonitors()));
+    updateMonitor(0, 1, (Rect){
+        0, 0, 100, 100
+    });
+    assert(getSize(getAllMonitors()) == num + 1);
+    detectMonitors();
+    assert(getSize(getAllMonitors()) == num);
     LOG(LOG_LEVEL_NONE, "Detected %d monitor\n", getSize(getAllMonitors()));
 }
 END_TEST
@@ -123,13 +130,13 @@ START_TEST(test_avoid_docks){
         {0, m->base.height - size, m->base.width, size}
     };
     int index = 0;
-    FOR_EACH(WindowInfo * winInfo, getAllDocks(),
-             int type = index++;
-             assert(winInfo->properties[type]);
-             for(int j = 0; j < 4; j++)
-             if(j != type)
-                 assert(winInfo->properties[j] == 0);
-                );
+    FOR_EACH(WindowInfo*, winInfo, getAllDocks()){
+        int type = index++;
+        assert(winInfo->properties[type]);
+        for(int j = 0; j < 4; j++)
+            if(j != type)
+                assert(winInfo->properties[j] == 0);
+    }
     for(int i = 0; i < 4; i++)
         assert(intersects(m->view, arr[i]) == 0);
 }
@@ -137,10 +144,10 @@ END_TEST
 
 START_TEST(test_root_dim){
     int width = 0, height = 0;
-    FOR_EACH(Monitor * m, getAllMonitors(),
-             width += m->base.width;
-             height += m->base.height;
-            )
+    FOR_EACH(Monitor*, m, getAllMonitors()){
+        width += m->base.width;
+        height += m->base.height;
+    }
     assert(width == getRootWidth());
     assert(height == getRootHeight());
 }

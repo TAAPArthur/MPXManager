@@ -141,7 +141,7 @@ START_TEST(test_register_for_device_events){
                               XI_ButtonPressMask | XI_ButtonReleaseMask;
     registerForDeviceEvents();
     assert(getSize(getDeviceBindings()));
-    FOR_EACH(Binding * binding, getDeviceBindings(), assert(binding->detail));
+    FOR_EACH(Binding*, binding, getDeviceBindings()) assert(binding->detail);
     triggerAllBindings(ROOT_DEVICE_EVENT_MASKS);
     waitToReceiveInput(ROOT_DEVICE_EVENT_MASKS);
 }

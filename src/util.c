@@ -38,6 +38,8 @@ static void initArrayList(ArrayList* list){
     list->arr = malloc(sizeof(void*)*list->maxSize);
 }
 void* getElement(ArrayList* list, int index){
+    assert(index >= 0);
+    assert(index < getSize(list));
     return list->arr[index];
 }
 void setElement(ArrayList* list, int index, void* value){

@@ -37,11 +37,11 @@ void setLogLevel(int level){
     LOG_LEVEL = level;
 }
 void printArrayList(ArrayList* n){
-    LOG(LOG_LEVEL_DEBUG, "Printing list: \n");
-    FOR_EACH(void* v, n, LOG(LOG_LEVEL_DEBUG, "%d ", *(int*)v));
-    LOG(LOG_LEVEL_DEBUG, "\n");
+    LOG(LOG_LEVEL_INFO, "Printing list: \n");
+    FOR_EACH(void*, v, n) LOG(LOG_LEVEL_INFO, "%d ", *(int*)v);
+    LOG(LOG_LEVEL_INFO, "\n");
 }
-#define PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))LOG(LOG_LEVEL_DEBUG,#str " ");
+#define PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))LOG(LOG_LEVEL_INFO,#str " ");
 void printMask(int mask){
     PRINT_MASK(NO_MASK, mask);
     PRINT_MASK(X_MAXIMIZED_MASK, mask);
@@ -68,66 +68,76 @@ void printMask(int mask){
     PRINT_MASK(WM_PING_MASK, mask);
     PRINT_MASK(PARTIALLY_VISIBLE, mask);
     PRINT_MASK(FULLY_VISIBLE, mask);
-    PRINT_MASK(MAPABLE_MASK, mask);
+    PRINT_MASK(MAPPABLE_MASK, mask);
     PRINT_MASK(MAPPED_MASK, mask);
     PRINT_MASK(URGENT_MASK, mask);
-    LOG(LOG_LEVEL_DEBUG, "\n");
+    LOG(LOG_LEVEL_INFO, "\n");
 }
 void printMasterSummary(void){
-    LOG(LOG_LEVEL_DEBUG, "Active Master %d\n", getActiveMaster()->id);
-    FOR_EACH(Master * master, getAllMasters(), LOG(LOG_LEVEL_DEBUG, "(%d, %d: %s %06x) ", master->id, master->pointerId,
-             master->name, master->focusColor);
-            );
-    LOG(LOG_LEVEL_DEBUG, "\n");
+    LOG(LOG_LEVEL_INFO, "Active Master %d\n", getActiveMaster()->id);
+    FOR_EACH(Master*, master, getAllMasters()){
+        LOG(LOG_LEVEL_INFO, "(%d, %d: %s %06x) ", master->id, master->pointerId,
+            master->name, master->focusColor);
+    }
+    LOG(LOG_LEVEL_INFO, "\n");
 }
 void printMonitorSummary(void){
-    FOR_EACH(Monitor * m, getAllMonitors(),
-             LOG(LOG_LEVEL_DEBUG, "Monitor %ld primary %d", m->id, m->primary);
-             PRINT_ARR("Base", &m->base.x, 4, " ");
-             PRINT_ARR("View", &m->view.x, 4, "\n");
-            );
-    LOG(LOG_LEVEL_DEBUG, "\n");
+    FOR_EACH(Monitor*, m, getAllMonitors()){
+        LOG(LOG_LEVEL_INFO, "Monitor %ld primary %d ", m->id, m->primary);
+        PRINT_ARR("Base", &m->base.x, 4, " ");
+        PRINT_ARR("View", &m->view.x, 4, "\n");
+    }
+    LOG(LOG_LEVEL_INFO, "\n");
 }
 void printWindowStackSummary(ArrayList* list){
-    FOR_EACH(WindowInfo * winInfo, list, LOG(LOG_LEVEL_DEBUG, "(%d: %s) ", winInfo->id, winInfo->title););
-    LOG(LOG_LEVEL_DEBUG, "\n");
+    FOR_EACH(WindowInfo*, winInfo, list){
+        LOG(LOG_LEVEL_INFO, "(%d: %s)%s ", winInfo->id, winInfo->title,
+            isTileable(winInfo) ? "*" : " ");
+    }
+    LOG(LOG_LEVEL_INFO, "\n");
 }
 void printSummary(void){
-    LOG(LOG_LEVEL_DEBUG, "Summary:\n");
+    LOG(LOG_LEVEL_INFO, "Summary:\n");
     printMasterSummary();
     printMonitorSummary();
     ArrayList* list = getActiveMasterWindowStack();
     if(isNotEmpty(list)){
-        LOG(LOG_LEVEL_DEBUG, "Active master window stack:\n");
-        FOR_EACH(WindowInfo * winInfo, list, LOG(LOG_LEVEL_DEBUG, "(%d: %s) ", winInfo->id, winInfo->title););
+        LOG(LOG_LEVEL_INFO, "Active master window stack:\n");
+        FOR_EACH(WindowInfo*, winInfo, list){
+            LOG(LOG_LEVEL_INFO, "(%d: %s) ", winInfo->id, winInfo->title);
+        }
     }
-    LOG(LOG_LEVEL_DEBUG, "\n");
+    LOG(LOG_LEVEL_INFO, "\n");
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         ArrayList* list = getWindowStack(getWorkspaceByIndex(i));
         if(!isNotEmpty(list))continue;
-        LOG(LOG_LEVEL_DEBUG, "Workspace: %d \n", i);
+        LOG(LOG_LEVEL_INFO, "Workspace: %d \n", i);
         printWindowStackSummary(list);
     }
     if(isNotEmpty(getAllDocks())){
-        LOG(LOG_LEVEL_DEBUG, "%d Docks: \n", getSize(getAllDocks()));
+        LOG(LOG_LEVEL_INFO, "%d Docks: \n", getSize(getAllDocks()));
         printWindowStackSummary(getAllDocks());
     }
 }
-void dumpAllWindowInfo(void){
-    FOR_EACH(WindowInfo * winInfo, getAllWindows(), dumpWindowInfo(winInfo); LOG(LOG_LEVEL_DEBUG, "\n"););
+void dumpAllWindowInfo(int filterMask){
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
+        if(!filterMask ||  hasMask(winInfo, filterMask))
+            dumpWindowInfo(winInfo);
+    }
 }
 
 void dumpWindowInfo(WindowInfo* win){
     if(!win)return;
-    LOG(LOG_LEVEL_DEBUG, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", win->id, win->id,
+    LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", win->id, win->id,
         win->groupId, win->groupId, win->transientFor, win->transientFor);
-    LOG(LOG_LEVEL_DEBUG, "Labels class %s (%s)\n", win->className, win->instanceName);
-    LOG(LOG_LEVEL_DEBUG, "Parent %d,Type is %d (%s) implicit: %d Dock %d\n", win->parent, win->type, win->typeName,
+    LOG(LOG_LEVEL_INFO, "Labels class %s (%s)\n", win->className, win->instanceName);
+    LOG(LOG_LEVEL_INFO, "Parent %d,Type is %d (%s) implicit: %d Dock %d\n", win->parent, win->type, win->typeName,
         win->implicitType, win->dock);
-    LOG(LOG_LEVEL_DEBUG, "Title class %s\n", win->title);
-    LOG(LOG_LEVEL_DEBUG, "Mask %d\n", win->mask);
+    LOG(LOG_LEVEL_INFO, "Title class %s\n", win->title);
+    LOG(LOG_LEVEL_INFO, "Mask %d\n", win->mask);
     printMask(win->mask);
-    LOG(LOG_LEVEL_DEBUG, "Workspace %d\n", win->workspaceIndex);
+    LOG(LOG_LEVEL_INFO, "Workspace %d\n", win->workspaceIndex);
+    LOG(LOG_LEVEL_INFO, "\n");
 }
 
 void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
@@ -135,7 +145,7 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
     for(int i = 0; i < numberOfAtoms; i++){
         reply = xcb_get_atom_name_reply(dis, xcb_get_atom_name(dis, atoms[i]), NULL);
         if(!reply)continue;
-        LOG(LOG_LEVEL_DEBUG, "atom: %.*s\n", reply->name_len, xcb_get_atom_name_name(reply));
+        LOG(LOG_LEVEL_INFO, "atom: %.*s\n", reply->name_len, xcb_get_atom_name_name(reply));
         free(reply);
     }
 }

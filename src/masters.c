@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "masters.h"
-Master* createMaster(int id, int partnerId, char* name, int focusColor){
+Master* createMaster(MasterID id, int partnerId, char* name, int focusColor){
     Master* master = calloc(1, sizeof(Master));
     master->id = id;
     master->pointerId = partnerId;
@@ -51,22 +51,22 @@ WindowInfo* getFocusedWindowByMaster(Master* master){
 WindowInfo* getFocusedWindow(){
     return getFocusedWindowByMaster(getActiveMaster());
 }
-Master* getLastMasterToFocusWindow(int win){
+Master* getLastMasterToFocusWindow(WindowID win){
     int maxValue = 0;
     Master* maxMaster = NULL;
-    FOR_EACH(Master * m, getAllMasters(),
-             if(getFocusedWindowByMaster(m) && getFocusedWindowByMaster(m)->id == win)
-    if(getFocusedTime(m) >= maxValue){
-        maxMaster = m;
-        maxValue = getFocusedTime(m);
-        }
-            );
+    FOR_EACH(Master*, m, getAllMasters()){
+        if(getFocusedWindowByMaster(m) && getFocusedWindowByMaster(m)->id == win)
+            if(getFocusedTime(m) >= maxValue){
+                maxMaster = m;
+                maxValue = getFocusedTime(m);
+            }
+    }
     return maxMaster;
 }
 unsigned int getFocusedTime(Master* m){
     return m->focusedTimeStamp;
 }
-int addMaster(unsigned int keyboardMasterId, unsigned int masterPointerId, char* name, int focusColor){
+int addMaster(MasterID keyboardMasterId, MasterID masterPointerId, char* name, int focusColor){
     assert(keyboardMasterId);
     if(indexOf(&masterList, &keyboardMasterId, sizeof(int)) != -1)
         return 0;
@@ -76,7 +76,7 @@ int addMaster(unsigned int keyboardMasterId, unsigned int masterPointerId, char*
     addToList(&masterList, keyboardMaster);
     return 1;
 }
-int removeMaster(unsigned int id){
+int removeMaster(MasterID id){
     int index = indexOf(getAllMasters(), &id, sizeof(int));
     //if id is not in node
     if(index == -1)
@@ -91,7 +91,7 @@ int removeMaster(unsigned int id){
     free(master);
     return 1;
 }
-int removeWindowFromMaster(Master* master, int winToRemove){
+int removeWindowFromMaster(Master* master, WindowID winToRemove){
     int index = indexOf(getWindowStackByMaster(master), &winToRemove, sizeof(int));
     if(index != -1)
         removeFromList(getWindowStackByMaster(master), index);

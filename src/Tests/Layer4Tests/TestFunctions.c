@@ -25,13 +25,15 @@ START_TEST(test_cycle_window){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     START_MY_WM
     int size = 4;
-    int win[size];
+    WindowID win[size];
     for(int i = 0; i < size; i++)
         win[i] = mapWindow(createNormalWindow());
     int hidden = mapWindow(createNormalWindow());
     WAIT_UNTIL_TRUE(getSize(getAllWindows()) == size + 1);
     addMask(getWindowInfo(hidden), HIDDEN_MASK);
-    FOR_EACH_REVERSED(WindowInfo * winInfo, getAllWindows(), if(isInteractable(winInfo))focusWindow(winInfo->id));
+    FOR_EACH_REVERSED(WindowInfo*, winInfo, getAllWindows()){
+        if(isInteractable(winInfo))focusWindow(winInfo->id);
+    }
     mapWindow(createNormalWindow());
     WAIT_UNTIL_TRUE(getSize(getAllWindows()) == size + 2);
     WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack()) == size);
@@ -60,7 +62,7 @@ START_TEST(test_cycle_window){
 }
 END_TEST
 
-void assertWindowIsFocused(int win){
+void assertWindowIsFocused(WindowID win){
     xcb_input_xi_get_focus_reply_t* reply = xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis,
                                             getActiveMasterKeyboardID()), NULL);
     assert(reply->focus == win);
@@ -135,7 +137,7 @@ START_TEST(test_spawn_wait){
 END_TEST
 
 START_TEST(test_get_next_window_in_stack_fail){
-    FOR_EACH(WindowInfo * winInfo, getAllWindows(), addMask(winInfo, HIDDEN_MASK));
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) addMask(winInfo, HIDDEN_MASK);
     assert(getNextWindowInStack(0) == NULL);
     assert(getNextWindowInStack(1) == NULL);
     assert(getNextWindowInStack(-1) == NULL);
@@ -173,13 +175,13 @@ START_TEST(test_shift_top){
 }
 END_TEST
 START_TEST(test_shift_focus){
-    FOR_EACH(WindowInfo * winInfo, getActiveWindowStack(),
-             onWindowFocus(winInfo->id);
-             int id = shiftFocus(1);
-             assert(id);
-             assertWindowIsFocused(id);
-             onWindowFocus(id);
-            )
+    FOR_EACH(WindowInfo*, winInfo, getActiveWindowStack()){
+        onWindowFocus(winInfo->id);
+        int id = shiftFocus(1);
+        assert(id);
+        assertWindowIsFocused(id);
+        onWindowFocus(id);
+    }
 }
 END_TEST
 START_TEST(test_swap_top){

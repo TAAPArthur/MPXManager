@@ -31,7 +31,7 @@ START_TEST(test_layout_add_multiple){
     addLayoutsToWorkspace(getActiveWorkspaceIndex(), l, size);
     assert(getSize(&getActiveWorkspace()->layouts) == size);
     int i = 0;
-    FOR_EACH(Layout * layout, &getActiveWorkspace()->layouts, assert(layout == &l[i++]))
+    FOR_EACH(Layout*, layout, &getActiveWorkspace()->layouts) assert(layout == &l[i++]);
     free(l);
 }
 END_TEST
@@ -81,13 +81,13 @@ START_TEST(test_layouts){
         assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == i);
         assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == getSize(getActiveWindowStack()));
         area = 0;
-        FOR_EACH(WindowInfo * winInfo, getActiveWindowStack(),
-                 reply1 = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
-        if(isWindowVisible(winInfo)){
-        area += reply1->width * reply1->height;
-    }
-    free(reply1);
-            )
+        FOR_EACH(WindowInfo*, winInfo, getActiveWindowStack()){
+            reply1 = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
+            if(isWindowVisible(winInfo)){
+                area += reply1->width * reply1->height;
+            }
+            free(reply1);
+        }
         assert(area == targetArea);
         int count = 0;
         for(int i = 0; i < getSize(list); i++){
@@ -137,7 +137,7 @@ START_TEST(test_layouts_transition){
     ArrayList* masters = getAllMasters();
     int i = 0;
     int idle;
-    FOR_EACH(Master * master, masters, masterList[i++] = master);
+    FOR_EACH(Master*, master, masters) masterList[i++] = master;
     START_MY_WM
     lock();
     for(int i = 0; i < size; i++)
@@ -148,7 +148,7 @@ START_TEST(test_layouts_transition){
     lock();
     ArrayList* stack = getActiveWindowStack();
     i = 0;
-    FOR_EACH_REVERSED(WindowInfo * winInfo, stack, markedWindows[i++] = winInfo);
+    FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) markedWindows[i++] = winInfo;
     unlock();
     for(int i = 0; i < numOfMasters; i++){
         lock();
@@ -275,13 +275,13 @@ START_TEST(test_empty_layout){
 }
 END_TEST
 START_TEST(test_transient_windows){
-    int stackingOrder[5] = {0};
+    WindowID stackingOrder[5] = {0};
     int transIndex = 3;
     int transTarget = 0;
     assert(transTarget < transIndex);
     WindowInfo* transWin;
     for(int i = 0, count = 0; count < LEN(stackingOrder); count++){
-        int win = mapWindow(createNormalWindow());
+        WindowID win = mapWindow(createNormalWindow());
         WindowInfo* winInfo = createWindowInfo(win);
         addWindowInfo(winInfo);
         addMask(winInfo, ABOVE_MASK);
@@ -317,7 +317,7 @@ START_TEST(test_transient_windows_always_above){
     loadWindowProperties(winInfo2);
     moveWindowToWorkspace(winInfo2, getActiveWorkspaceIndex());
     for(int i = 0; i < 2; i++){
-        assert(checkStackingOrder((int[]){
+        assert(checkStackingOrder((WindowID[]){
             winInfo->id, winInfo2->id
         }, 2));
         activateWindow(winInfo);
@@ -327,10 +327,10 @@ END_TEST
 START_TEST(test_tile_windows){
     setActiveLayout(NULL);
     //bottom to top stacking order;
-    int stackingOrder[3] = {0};
+    WindowID stackingOrder[3] = {0};
     int masks[] = {BELOW_MASK, 0, ABOVE_MASK};
     for(int i = 0; i < LEN(stackingOrder); i++){
-        int win = mapWindow(createNormalWindow());
+        WindowID win = mapWindow(createNormalWindow());
         WindowInfo* winInfo = createWindowInfo(win);
         addWindowInfo(winInfo);
         moveWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
@@ -413,7 +413,7 @@ START_TEST(test_privileged_windows_size){
         {ROOT_FULLSCREEN_MASK, 0, 0, getRootWidth(), getRootHeight()},
     };
     xcb_get_geometry_reply_t* reply;
-    int baseMask = MAPABLE_MASK | MAPPED_MASK;
+    int baseMask = MAPPABLE_MASK | MAPPED_MASK;
     int i = _i;
     removeMask(winInfo, -1);
     addMask(winInfo, baseMask | arr[i][0]);

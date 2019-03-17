@@ -87,12 +87,15 @@ typedef enum {
     ///Keeps track on the visibility state of the window
     FULLY_VISIBLE =         1 << 28 | PARTIALLY_VISIBLE,
     ///Inidicates the window is not withdrawn
-    MAPABLE_MASK =           1 << 29,
+    MAPPABLE_MASK =           1 << 29,
     ///the window is currently mapped
     MAPPED_MASK =           1 << 30,
 
     /**Marks the window as urgent*/
     URGENT_MASK =           1 << 31,
+    RETILE_MASKS =           USER_MASKS | MAPPED_MASK,
+    /// set all masks
+    ALL_MASK =              -1
 
 } WindowMasks;
 
@@ -264,23 +267,14 @@ ArrayList* getWindowStackOfWindow(WindowInfo* winInfo);
  * @param id    the id of the WindowInfo object
  * @return  pointer to the newly created object
  */
-WindowInfo* createWindowInfo(unsigned int id);
-
-/**
- * Clones a WindowInfo object and sets its id to id
- *
- * @param id    the id of the WindowInfo object
- * @param winInfo    the window to clone
- * @return  pointer to the newly created object
- */
-WindowInfo* cloneWindowInfo(unsigned int id, WindowInfo* winInfo);
+WindowInfo* createWindowInfo(WindowID id);
 
 /**
  * Returns a struct with stored metadata on the given window
  * @param win
  * @return pointer to struct with info on the given window
  */
-WindowInfo* getWindowInfo(unsigned int win);
+WindowInfo* getWindowInfo(WindowID win);
 
 
 /**
@@ -305,7 +299,7 @@ ArrayList* getAllWindows();
  * frozen
  * @param win
  */
-void onWindowFocus(unsigned int win);
+void onWindowFocus(WindowID win);
 
 
 
@@ -318,7 +312,7 @@ void onWindowFocus(unsigned int win);
  * The Nodes containing the window and the windows value are freeded also
  * @param winToRemove
  */
-int removeWindow(unsigned int winToRemove);
+int removeWindow(WindowID winToRemove);
 /**
  * Frees winInfo and interal structs
  * @param winInfo
@@ -345,4 +339,98 @@ void markAsDock(WindowInfo* winInfo);
  */
 ArrayList* getClonesOfWindow(WindowInfo* winInfo);
 
+/**
+ * @param winInfo
+ * @return 1 iff the window is PARTIALLY_VISIBLE or VISIBLE
+ */
+static inline int isWindowVisible(WindowInfo* winInfo);
+
+/**
+ *
+ * @param winInfo the window whose map state to query
+ * @return the window map state either UNMAPPED(0) or MAPPED(1)
+ */
+static inline int isMappable(WindowInfo* winInfo);
+
+/**
+ * Returns true if the user can static inline interact (ie focus,type etc)  with the window
+ * For this to be true the window would have to be mapped and not hidden
+ */
+static inline int isInteractable(WindowInfo* winInfo);
+
+/**
+ * Determines if a window should be tiled given its mapState and masks
+ * @param winInfo
+ * @return true if the window should be tiled
+ */
+static inline int isTileable(WindowInfo* winInfo);
+
+/**
+ * @param winInfo
+ * @return 1 iff external resize requests should be granted
+ */
+static inline int isExternallyResizable(WindowInfo* winInfo);
+/**
+ * @param winInfo
+ * @return 1 iff external raise requests should be granted
+ */
+static inline int isExternallyRaisable(WindowInfo* winInfo);
+/**
+ * @param winInfo
+ * @return 1 iff external border requests should be granted
+ */
+static inline int isExternallyBorderConfigurable(WindowInfo* winInfo);
+/**
+ * @param winInfo
+ * @return 1 iff external move requests should be granted
+ */
+static inline int isExternallyMoveable(WindowInfo* winInfo);
+
+/**
+ *A window is actiable if it is MAPPABLE and not HIDDEN
+ * @param winInfo
+ * @return true if the window can receive focus
+ */
+static inline int isActivatable(WindowInfo* winInfo);
+/**
+ * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
+ * @param winInfo
+ * @param source
+ * @return
+ */
+static int allowRequestFromSource(WindowInfo* winInfo, int source);
+static inline int isWindowVisible(WindowInfo* winInfo){
+    return winInfo && hasMask(winInfo, PARTIALLY_VISIBLE);
+}
+
+static inline int isMappable(WindowInfo* winInfo){
+    return winInfo && hasMask(winInfo, MAPPABLE_MASK);
+}
+static inline int isInteractable(WindowInfo* winInfo){
+    return hasMask(winInfo, MAPPED_MASK) && !hasMask(winInfo, HIDDEN_MASK);
+}
+static inline int isTileable(WindowInfo* winInfo){
+    return isInteractable(winInfo) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
+}
+static inline int isActivatable(WindowInfo* winInfo){
+    return !winInfo || (hasMask(winInfo, MAPPABLE_MASK | INPUT_MASK) && !(winInfo->mask & HIDDEN_MASK));
+}
+
+static inline int isExternallyResizable(WindowInfo* winInfo){
+    return !winInfo || winInfo->mask & EXTERNAL_RESIZE_MASK;
+}
+
+static inline int isExternallyMoveable(WindowInfo* winInfo){
+    return !winInfo || winInfo->mask & EXTERNAL_MOVE_MASK;
+}
+
+static inline int isExternallyBorderConfigurable(WindowInfo* winInfo){
+    return !winInfo || winInfo->mask & EXTERNAL_BORDER_MASK;
+}
+static inline int isExternallyRaisable(WindowInfo* winInfo){
+    return !winInfo || winInfo->mask & EXTERNAL_RAISE_MASK;
+}
+static inline int allowRequestFromSource(WindowInfo* winInfo, int source){
+    return !winInfo || hasMask(winInfo, 1 << (source + SRC_INDICATION_OFFSET));
+}
 #endif

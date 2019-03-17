@@ -43,7 +43,7 @@ START_TEST(test_split_master){
         else mouseId = device->id;
         sendDeviceAction(device->id, detail, type);
     }
-    FOR_EACH(SlaveDevice * slave, slaves, dummySlaveInput(slave));
+    FOR_EACH(SlaveDevice*, slave, slaves) dummySlaveInput(slave);
     flush();
     assert(keyboardId);
     assert(mouseId);
@@ -60,7 +60,7 @@ START_TEST(test_split_master){
     free(newSlaves);
     endSplitMaster();
     lock();
-    FOR_EACH(SlaveDevice * slave, slaves, dummySlaveInput(slave));
+    FOR_EACH(SlaveDevice*, slave, slaves) dummySlaveInput(slave);
     assert(!xcb_poll_for_event(dis));
     unlock();
     deleteList(slaves);
@@ -98,8 +98,8 @@ START_TEST(test_save_load_mpx){
     int masterFocusColor = 255;
     int activeMasterFocusColor = 256;
     int numOfSlaves;
-    int defaultMasterID = _i ? getActiveMaster()->id : getActiveMaster()->pointerId;
-    int newMasterID = _i ? master->id : master->pointerId;
+    MasterID defaultMasterID = _i ? getActiveMaster()->id : getActiveMaster()->pointerId;
+    MasterID newMasterID = _i ? master->id : master->pointerId;
     int idle;
     master->focusColor = masterFocusColor;
     getActiveMaster()->focusColor = activeMasterFocusColor;

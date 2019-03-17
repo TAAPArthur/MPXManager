@@ -31,9 +31,9 @@ typedef struct {
     /// the size of windowIds and windowMasks arrays
     int size;
     ///list of window ids in workspace stack order
-    int* windowIds;
+    WindowID* windowIds;
     /// list of user masks of windows in workspace stack order
-    int* windowMasks;
+    WindowMask* windowMasks;
     /// the layout of the workspace
     void* layout;
 } WorkspaceState;
@@ -88,13 +88,13 @@ static WorkspaceState* computeState(){
         if(size){
             states[i].windowIds = malloc(size * sizeof(int));
             states[i].windowMasks = malloc(size * sizeof(int));
-            FOR_EACH(WindowInfo * winInfo, list,
-            if(isTileable(winInfo)){
-            states[i].windowIds[j] = winInfo->id;
-                states[i].windowMasks[j] = getUserMask(winInfo);
-                j++;
+            FOR_EACH(WindowInfo*, winInfo, list){
+                if(isTileable(winInfo)){
+                    states[i].windowIds[j] = winInfo->id;
+                    states[i].windowMasks[j] = hasPartOfMask(winInfo, RETILE_MASKS);
+                    j++;
+                }
             }
-                    )
         }
         states[i].size = j;
     }
@@ -116,8 +116,8 @@ static int compareState(void(*onChange)(int)){
             i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
             savedStates[i].monitor != currentState[i].monitor ||
             savedStates[i].layout != currentState[i].layout ||
-            memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(int)*savedStates[i].size)
-            || memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(int)*savedStates[i].size)
+            memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size)
+            || memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size)
         ){
             unmarkState();
             changed = 1;

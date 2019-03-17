@@ -32,40 +32,6 @@
 #include "layouts.h"
 
 
-int isWindowVisible(WindowInfo* winInfo){
-    return winInfo && hasMask(winInfo, PARTIALLY_VISIBLE);
-}
-
-int isMappable(WindowInfo* winInfo){
-    return winInfo && hasMask(winInfo, MAPABLE_MASK);
-}
-int isInteractable(WindowInfo* winInfo){
-    return hasMask(winInfo, MAPPED_MASK) && !hasMask(winInfo, HIDDEN_MASK);
-}
-int isTileable(WindowInfo* winInfo){
-    return isInteractable(winInfo) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
-}
-int isActivatable(WindowInfo* winInfo){
-    return !winInfo || hasMask(winInfo, MAPABLE_MASK | INPUT_MASK) && !(winInfo->mask & HIDDEN_MASK);
-}
-
-int isExternallyResizable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_RESIZE_MASK;
-}
-
-int isExternallyMoveable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_MOVE_MASK;
-}
-
-int isExternallyBorderConfigurable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_BORDER_MASK;
-}
-int isExternallyRaisable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_RAISE_MASK;
-}
-int allowRequestFromSource(WindowInfo* winInfo, int source){
-    return !winInfo || hasMask(winInfo, 1 << (source + SRC_INDICATION_OFFSET));
-}
 
 
 void connectToXserver(){
@@ -95,7 +61,7 @@ void syncState(){
     switchToWorkspace(currentWorkspace);
 }
 
-void setActiveWindowProperty(int win){
+void setActiveWindowProperty(WindowID win){
     xcb_ewmh_set_active_window(ewmh, defaultScreenNumber, win);
 }
 
@@ -115,12 +81,12 @@ static void updateEWMHWorkspaceProperties(){
 
 void updateEWMHClientList(){
     int num = getSize(getAllWindows());
-    xcb_window_t stackingOrder[num];
-    xcb_window_t mappingOrder[num];
+    WindowID stackingOrder[num];
+    WindowID mappingOrder[num];
     int i = 0;
-    FOR_EACH(WindowInfo * winInfo, getAllWindows(), stackingOrder[num - ++i] = winInfo->id;)
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) stackingOrder[num - ++i] = winInfo->id;
     i = 0;
-    FOR_EACH(WindowInfo * winInfo, getAllWindows(), mappingOrder[num - ++i] = winInfo->id);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) mappingOrder[num - ++i] = winInfo->id;
     xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, num, mappingOrder);
     xcb_ewmh_set_client_list_stacking(ewmh, defaultScreenNumber, num, stackingOrder);
 }
@@ -128,7 +94,7 @@ void updateEWMHClientList(){
 
 
 
-int getSavedWorkspaceIndex(xcb_window_t win){
+int getSavedWorkspaceIndex(WindowID win){
     unsigned int workspaceIndex = 0;
     if((xcb_ewmh_get_wm_desktop_reply(ewmh,
                                       xcb_ewmh_get_wm_desktop(ewmh, win), &workspaceIndex, NULL))){
@@ -199,7 +165,7 @@ void floatWindow(WindowInfo* winInfo){
 void sinkWindow(WindowInfo* winInfo){
     removeMask(winInfo, ALL_NO_TILE_MASKS);
 }
-void killWindow(xcb_window_t win){
+void killWindow(WindowID win){
     assert(win);
     LOG(LOG_LEVEL_DEBUG, "Killing window %d\n", win);
     catchError(xcb_kill_client_checked(dis, win));
@@ -218,7 +184,7 @@ int focusWindowInfo(WindowInfo* winInfo){
     else*/
     return focusWindow(winInfo->id);
 }
-int focusWindow(int win){
+int focusWindow(WindowID win){
     LOG(LOG_LEVEL_DEBUG, "Trying to set focus to %d for master %d\n", win, getActiveMaster()->id);
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME, getActiveMaster()->id);
@@ -243,14 +209,14 @@ void raiseLowerWindowInfo(WindowInfo* winInfo, int above){
 int raiseWindowInfo(WindowInfo* winInfo){
     int result = winInfo ? raiseWindow(winInfo->id) : 0;
     if(result){
-        FOR_EACH(WindowInfo * winInfo, getAllWindows(),
-                 if(isInteractable(winInfo) && winInfo->transientFor == winInfo->id || hasMask(winInfo, ALWAYS_ON_TOP))
-                 raiseLowerWindowInfo(winInfo, 1);
-                )
+        FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
+            if(isInteractable(winInfo) && winInfo->transientFor == winInfo->id || hasMask(winInfo, ALWAYS_ON_TOP))
+                raiseLowerWindowInfo(winInfo, 1);
         }
+    }
     return result;
 }
-int raiseWindow(xcb_window_t win){
+int raiseWindow(WindowID win){
     assert(dis);
     assert(win);
     LOG(LOG_LEVEL_TRACE, "Trying to raise window %d\n", win);
@@ -273,23 +239,25 @@ int activateWindow(WindowInfo* winInfo){
 
 static void focusNextVisibleWindow(ArrayList* masters, WindowInfo* defaultWinInfo){
     Master* active = getActiveMaster();
-    FOR_EACH(Master * master, masters,
-             ArrayList* masterWindowStack = getWindowStackByMaster(master);
-             setActiveMaster(master);
-             WindowInfo* winToFocus = NULL;
-             UNTIL_FIRST(winToFocus, masterWindowStack, isWorkspaceVisible(getWorkspaceOfWindow(winToFocus)->id) &&
-                         isActivatable(winToFocus) && focusWindowInfo(winToFocus));
-             if(!winToFocus && defaultWinInfo)
-             focusWindowInfo(defaultWinInfo);
-            );
+    FOR_EACH(Master*, master, masters){
+        ArrayList* masterWindowStack = getWindowStackByMaster(master);
+        setActiveMaster(master);
+        WindowInfo* winToFocus = NULL;
+        UNTIL_FIRST(winToFocus, masterWindowStack, isWorkspaceVisible(getWorkspaceOfWindow(winToFocus)->id) &&
+                    isActivatable(winToFocus) && focusWindowInfo(winToFocus));
+        if(!winToFocus && defaultWinInfo)
+            focusWindowInfo(defaultWinInfo);
+    }
     setActiveMaster(active);
 }
 
-int deleteWindow(xcb_window_t winToRemove){
+int deleteWindow(WindowID winToRemove){
+    LOG(LOG_LEVEL_DEBUG, "window %d has been removed\n", winToRemove);
     ArrayList mastersFocusedOnWindow = {0};
-    FOR_EACH(Master * master, getAllMasters(),
-             if(getFocusedWindowByMaster(master) && getFocusedWindowByMaster(master)->id == winToRemove)
-             addToList(&mastersFocusedOnWindow, master););
+    FOR_EACH(Master*, master, getAllMasters()){
+        if(getFocusedWindowByMaster(master) && getFocusedWindowByMaster(master)->id == winToRemove)
+            addToList(&mastersFocusedOnWindow, master);
+    }
     int result = removeWindow(winToRemove);
     focusNextVisibleWindow(&mastersFocusedOnWindow,
                            isNotEmpty(getActiveWindowStack()) ? getHead(getActiveWindowStack()) : NULL);
@@ -319,10 +287,10 @@ static void updateWindowWorkspaceState(WindowInfo* winInfo, int workspaceIndex, 
         }
         catchError(xcb_unmap_window_checked(dis, winInfo->id));
         ArrayList masters = {0};
-        FOR_EACH(Master * master, getAllMasters(),
-                 if(getFocusedWindowByMaster(master) == winInfo)
-                 addToList(&masters, master);
-                );
+        FOR_EACH(Master*, master, getAllMasters()){
+            if(getFocusedWindowByMaster(master) == winInfo)
+                addToList(&masters, master);
+        }
         focusNextVisibleWindow(&masters, NULL);
         clearList(&masters);
     }
@@ -332,9 +300,9 @@ void swapWorkspaces(int index1, int index2){
     swapMonitors(index1, index2);
     if(isWorkspaceVisible(index1) != isWorkspaceVisible(index2)){
         ArrayList* stack = getWindowStack(getWorkspaceByIndex(index1));
-        FOR_EACH_REVERSED(WindowInfo * winInfo, stack, updateWindowWorkspaceState(winInfo, index1, index2));
+        FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index1, index2);
         stack = getWindowStack(getWorkspaceByIndex(index2));
-        FOR_EACH_REVERSED(WindowInfo * winInfo, stack, updateWindowWorkspaceState(winInfo, index2, index1));
+        FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index2, index1);
     }
 }
 void swapWithWorkspace(int workspaceIndex){
@@ -394,7 +362,7 @@ void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex){
 
 //window methods
 
-int setBorderColor(xcb_window_t win, unsigned int color){
+int setBorderColor(WindowID win, unsigned int color){
     xcb_void_cookie_t c;
     if(color > 0xFFFFFF){
         LOG(LOG_LEVEL_WARN, "Color %d is out f range\n", color);
@@ -415,7 +383,7 @@ int resetBorder(WindowInfo* winInfo){
 }
 
 
-static int filterConfigValues(int* filteredArr, WindowInfo* winInfo, short values[5], xcb_window_t sibling,
+static int filterConfigValues(int* filteredArr, WindowInfo* winInfo, short values[5], WindowID sibling,
                               int stackMode, int configMask){
     int i = 0;
     int n = 0;
@@ -442,21 +410,21 @@ static int filterConfigValues(int* filteredArr, WindowInfo* winInfo, short value
     else configMask &= ~XCB_CONFIG_WINDOW_STACK_MODE;
     return configMask;
 }
-void processConfigureRequest(int win, short values[5], xcb_window_t sibling, int stackMode, int configMask){
+void processConfigureRequest(WindowID win, short values[5], WindowID sibling, int stackMode, int configMask){
     LOG(LOG_LEVEL_TRACE, "processing configure request window %d\n", win);
     int actualValues[7];
     WindowInfo* winInfo = getWindowInfo(win);
-    configMask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
-    if(configMask){
+    int mask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
+    if(mask){
 #ifdef DEBUG
-        catchError(xcb_configure_window_checked(dis, win, configMask, actualValues));
+        catchError(xcb_configure_window_checked(dis, win, mask, actualValues));
 #else
-        xcb_configure_window(dis, win, configMask, actualValues);
+        xcb_configure_window(dis, win, mask, actualValues);
 #endif
-        LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d\n", win, configMask);
+        LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d\n", win, mask);
     }
     else
-        LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d\n", win, winInfo ? winInfo->mask : -1);
+        LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
 }
 void broadcastEWMHCompilence(){
     LOG(LOG_LEVEL_TRACE, "Compliying with EWMH\n");
@@ -532,7 +500,7 @@ void setWorkspaceNames(char* names[], int numberOfNames){
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
 }
 
-void applyGravity(int win, short pos[5], int gravity){
+void applyGravity(WindowID win, short pos[5], int gravity){
     if(gravity == XCB_GRAVITY_STATIC)
         return;
     if(!gravity){

@@ -185,12 +185,12 @@ void tileWorkspace(int index){
     applyLayout(workspace);
     ArrayList* list = getWindowStack(workspace);
     LayoutState dummyState = {.monitor = getMonitorFromWorkspace(workspace)};
-    FOR_EACH(WindowInfo * winInfo, list,
-    if(hasPartOfMask(winInfo, FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)){
-    short config[CONFIG_LEN] = {0};
-        configureWindow(&dummyState, winInfo, config);
+    FOR_EACH(WindowInfo*, winInfo, list){
+        if(hasPartOfMask(winInfo, FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)){
+            short config[CONFIG_LEN] = {0};
+            configureWindow(&dummyState, winInfo, config);
+        }
     }
-            )
     for(int i = 0; i < getSize(list); i++){
         WindowInfo* winInfo;
         winInfo = getElement(list, i);
@@ -266,8 +266,9 @@ static int splitEven(LayoutState* state, ArrayList* stack, int offset, short con
 void full(LayoutState* state){
     short int values[CONFIG_LEN];
     memcpy(&values, &state->monitor->view.x, sizeof(short int) * 4);
-    FOR_EACH_REVERSED(WindowInfo * winInfo, state->stack,
-                      configureWindow(state, winInfo, values));
+    FOR_EACH_REVERSED(WindowInfo*, winInfo, state->stack){
+        configureWindow(state, winInfo, values);
+    }
 }
 
 void column(LayoutState* state){

@@ -84,10 +84,10 @@ static unsigned short getScreenDim(int i){
 
 static void resizeMonitorToAvoidAllStructs(Monitor* m){
     resetMonitor(m);
-    FOR_EACH(WindowInfo * dock, getAllDocks(), resizeMonitorToAvoidStruct(m, dock));
+    FOR_EACH(WindowInfo*, dock, getAllDocks()) resizeMonitorToAvoidStruct(m, dock);
 }
 void resizeAllMonitorsToAvoidAllStructs(void){
-    FOR_EACH(Monitor * mon, getAllMonitors(), resizeMonitorToAvoidAllStructs(mon))
+    FOR_EACH(Monitor*, mon, getAllMonitors()) resizeMonitorToAvoidAllStructs(mon);
 }
 
 int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo){
@@ -142,22 +142,22 @@ void detectMonitors(void){
     while(iter.rem){
         xcb_randr_monitor_info_t* monitorInfo = iter.data;
         updateMonitor(monitorInfo->name, monitorInfo->primary, *(Rect*)&monitorInfo->x);
-        addToList(&monitorNames, (void*)monitorInfo->name);
+        addToList(&monitorNames, (void*)(long)monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
     free(monitors);
-    FOR_EACH(Monitor * m, getAllMonitors(),
-             int i;
-             for(i = getSize(&monitorNames) - 1; i >= 0; i--)
-             if(m->id == (long)getElement(&monitorNames, i))
-                 break;
-                 if(i == -1)
-                     removeMonitor(m->id);
-                    )
-                clearList(&monitorNames);
+    FOR_EACH(Monitor*, m, getAllMonitors()){
+        int i;
+        for(i = getSize(&monitorNames) - 1; i >= 0; i--)
+            if(m->id == (MonitorID)getElement(&monitorNames, i))
+                break;
+        if(i == -1)
+            removeMonitor(m->id);
+    }
+    clearList(&monitorNames);
 }
 
-int removeMonitor(unsigned long id){
+int removeMonitor(MonitorID id){
     int index = indexOf(getAllMonitors(), &id, sizeof(id));
     if(index == -1)
         return 0;
@@ -185,7 +185,7 @@ static void addMonitor(Monitor* m){
         workspace->monitor = m;
     addToList(getAllMonitors(), m);
 }
-int updateMonitor(long id, int primary, Rect geometry){
+int updateMonitor(MonitorID id, int primary, Rect geometry){
     Monitor* m = find(getAllMonitors(), &id, sizeof(int));
     int newMonitor = !m;
     if(!m){

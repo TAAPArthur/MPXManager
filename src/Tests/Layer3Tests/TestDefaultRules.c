@@ -48,8 +48,8 @@ static void deviceEventsetup(){
     onStartup();
     setActiveLayout(startingLayout);
     defaultMaster = getActiveMaster();
-    int win1 = mapWindow(createNormalWindow());
-    int win2 = mapWindow(createNormalWindow());
+    WindowID win1 = mapWindow(createNormalWindow());
+    WindowID win2 = mapWindow(createNormalWindow());
     xcb_icccm_set_wm_protocols(dis, win2, ewmh->WM_PROTOCOLS, 1, &ewmh->_NET_WM_PING);
     flush();
     createMasterDevice("device2");
@@ -116,10 +116,10 @@ START_TEST(test_handle_error){
 END_TEST
 
 START_TEST(test_detect_new_windows){
-    int win = createUnmappedWindow();
-    int win2 = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createUnmappedWindow();
     START_MY_WM
-    int win3 = createUnmappedWindow();
+    WindowID win3 = createUnmappedWindow();
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) &&
                     isInList(getAllWindows(), win2) &&
                     isInList(getAllWindows(), win3));
@@ -130,15 +130,15 @@ END_TEST
 START_TEST(test_delete_windows){
     CRASH_ON_ERRORS = 0;
     setLogLevel(LOG_LEVEL_NONE);
-    int win = createUnmappedWindow();
-    int win2 = createUnmappedWindow();
-    int win3 = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createUnmappedWindow();
+    WindowID win3 = createUnmappedWindow();
     destroyWindow(win);
     mapWindow(win2);
     assert(getSize(getAllWindows()) == 0);
     addDummyIgnoreRule();
     START_MY_WM
-    int win4 = createUnmappedWindow();
+    WindowID win4 = createUnmappedWindow();
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win4) &&
                     isInList(getAllWindows(), win2) &&
                     isInList(getAllWindows(), win3))
@@ -157,12 +157,12 @@ START_TEST(test_visibility_update){
     clearLayoutsOfWorkspace(getActiveWorkspaceIndex());
     START_MY_WM
     lock();
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     unlock();
     WAIT_UNTIL_TRUE(getWindowInfo(win))
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win)));
     lock();
-    int win2 = createNormalWindow();
+    WindowID win2 = createNormalWindow();
     unlock();
     WAIT_UNTIL_TRUE(getWindowInfo(win2))
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win2)));
@@ -179,7 +179,7 @@ END_TEST
 
 START_TEST(test_property_update){
     START_MY_WM
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     WAIT_UNTIL_TRUE(getWindowInfo(win))
     setProperties(win);
     WAIT_UNTIL_TRUE(getWindowInfo(win)->title);
@@ -208,7 +208,7 @@ START_TEST(test_ignored_windows){
 END_TEST
 
 START_TEST(test_dock_windows){
-    int win = createDock(1, 1, 1);
+    WindowID win = createDock(1, 1, 1);
     catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_DOCK));
     scan(root);
     assert(((WindowInfo*)getHead(getAllDocks()))->id == win);
@@ -222,10 +222,10 @@ START_TEST(test_dock_windows){
 }
 END_TEST
 START_TEST(test_map_windows){
-    int win = createUnmappedWindow();
-    int win2 = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createUnmappedWindow();
     START_MY_WM
-    int win3 = createUnmappedWindow();
+    WindowID win3 = createUnmappedWindow();
     mapWindow(win3);
     mapWindow(win2);
     //wait for all to be in list
@@ -328,7 +328,7 @@ START_TEST(test_configure_request){
                XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
                XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     for(int i = 0; i < 2; i++){
-        int win = i ? createUnmappedWindow() : createIgnoredWindow();
+        WindowID win = i ? createUnmappedWindow() : createIgnoredWindow();
         assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
     }
@@ -337,7 +337,7 @@ START_TEST(test_configure_request){
                    XCB_CONFIG_WINDOW_BORDER_WIDTH;
     int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
     int defaultValues[] = {10, 10, 10, 10, 10};
-    int win = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
     for(int i = 0; i < LEN(masks); i++){
         catchError(xcb_configure_window_checked(dis, win, allMasks, defaultValues));
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);

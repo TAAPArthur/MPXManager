@@ -91,10 +91,10 @@ void addFocusFollowsMouseRule(void){
 void onXConnect(void){
     scan(root);
     //for each master try to make set the focused window to the currently focused window (or closet one by id)
-    FOR_EACH(Master * master, getAllMasters(),
-             setActiveMaster(master);
-             onWindowFocus(getActiveFocus(master->id));
-            );
+    FOR_EACH(Master*, master, getAllMasters()){
+        setActiveMaster(master);
+        onWindowFocus(getActiveFocus(master->id));
+    }
 }
 
 void onHiearchyChangeEvent(void){
@@ -170,7 +170,7 @@ void onMapRequestEvent(void){
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo){
         loadWindowProperties(winInfo);
-        addMask(winInfo, MAPABLE_MASK);
+        addMask(winInfo, MAPPABLE_MASK);
     }
     attemptToMapWindow(event->window);
 }
@@ -181,14 +181,14 @@ void onUnmapEvent(void){
     if(winInfo){
         removeMask(winInfo, FULLY_VISIBLE);
         if(isSyntheticEvent())
-            removeMask(winInfo, MAPABLE_MASK);
+            removeMask(winInfo, MAPPABLE_MASK);
     }
 }
 
 void focusFollowMouse(void){
     xcb_input_enter_event_t* event = getLastEvent();
     setActiveMasterByDeviceId(event->deviceid);
-    int win = event->event;
+    WindowID win = event->event;
     WindowInfo* winInfo = getWindowInfo(win);
     LOG(LOG_LEVEL_DEBUG, "focus following mouse %d win %d\n", getActiveMaster()->id, win);
     if(winInfo)
@@ -259,7 +259,7 @@ void onClientMessage(void){
                                    DEFAULT_BORDER_WIDTH);
     }
     else if(message == ewmh->_NET_MOVERESIZE_WINDOW){
-        LOG(LOG_LEVEL_TRACE, "Move/Resize window request %d\n\n", win);
+        LOG(LOG_LEVEL_DEBUG, "Move/Resize window request %d\n\n", win);
         int gravity = data.data8[0];
         int mask = data.data8[1] & 15;
         int source = (data.data8[1] >> 4) & 15;
@@ -273,10 +273,6 @@ void onClientMessage(void){
         }
     }/*
     else if(message==ewmh->_NET_WM_MOVERESIZE){
-        int intData[5];
-        for(int i=0;i<5;i++)
-            intData[i]=data[1+i];
-        moveResize(win,intData);
     }*/
     //change window's workspace
     else if(message == ewmh->_NET_WM_DESKTOP){
@@ -365,7 +361,7 @@ void onStartup(void){
         if(!getActiveLayoutOfWorkspace(i))
             addLayoutsToWorkspace(i, DEFAULT_LAYOUTS, NUMBER_OF_DEFAULT_LAYOUTS);
     for(int i = 0; i < NUMBER_OF_EVENT_RULES; i++){
-        FOR_EACH(Rule * rule, getEventRules(i), initRule(rule));
+        FOR_EACH(Rule*, rule, getEventRules(i)) initRule(rule);
     }
     connectToXserver();
 }

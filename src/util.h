@@ -38,34 +38,33 @@ unsigned int getTime();
  */
 void msleep(int mil);
 
+#define __CAT(x, y) x ## y
+#define _CAT(x, y) __CAT(x, y)
+#define _VAR_NAME _CAT(_i,__LINE__)
 
 /**
  * @brief Iterates over list and runs arbitrary command(s).
  * The value of list will be updated upon every iteration.
  * Note that behavior is undefined if the list is modified while iterating
+ * @param type - type of var
  * @param var the value represents the ith value of list
  * @param list - starting point for iteration. Will be set to the NULL upon completion
- * @param code - code to run on every iteration
  */
-#define FOR_EACH(var,list,code...) \
-    for(int _i=0;_i<getSize(list);_i++){\
-        var = getElement(list,_i);\
-        code;\
-    }
+#define FOR_EACH(type,var,list) \
+    int _VAR_NAME = 0; \
+    for(type var=NULL;_VAR_NAME<getSize(list) && ((var = getElement(list,_VAR_NAME++))||1);)
 
 /**
  * @brief Iterates backwards over list and runs arbitrary command(s).
  * The value of var will be updated upon every iteration.
  * Note that behavior is undefined if the list is modified while iterating unless the element is modified at the current posistion or later
+ * @param type - type of var
  * @param var the value represents the ith value of list
  * @param list the list to iterate over
- * @param code - code to run on every iteration
  */
-#define FOR_EACH_REVERSED(var,list,code...) \
-    for(int _i=getSize(list)-1;_i>=0;_i--){\
-        var = getElement(list,_i);\
-        code;\
-    }
+#define FOR_EACH_REVERSED(type,var,list) \
+    int _VAR_NAME = getSize(list)-1;\
+    for(type var=NULL;_VAR_NAME>=0 && ((var = getElement(list,_VAR_NAME--))||1);)
 
 /**
  * Iterates over head until EXPR is true
@@ -75,7 +74,7 @@ void msleep(int mil);
  * @param EXPR the expression to evaluate
  */
 #define UNTIL_FIRST(var,head,EXPR)\
-    FOR_EACH(var,head,if(EXPR)break;else var=NULL;);
+    FOR_EACH(,var,head)if(EXPR)break;else var=NULL;
 
 
 /**

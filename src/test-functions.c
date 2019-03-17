@@ -12,10 +12,10 @@
 #include "test-functions.h"
 #include "xsession.h"
 
-void sendDeviceActionToWindow(int id, int detail, int type, int window){
+void sendDeviceActionToWindow(MasterID id, int detail, int type, WindowID window){
     catchError(xcb_test_fake_input_checked(dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id));
 }
-void sendDeviceAction(int id, int detail, int type){
+void sendDeviceAction(MasterID id, int detail, int type){
     LOG(LOG_LEVEL_TRACE, "Sending action: id %d detail %d type %d\n", id, detail, type);
     sendDeviceActionToWindow(id, detail, type, XCB_NONE);
 }
@@ -42,6 +42,6 @@ void typeKey(int keycode){
     sendKeyRelease(keycode);
 }
 
-void movePointer(int id, int relativeWindow, int x, int y){
+void movePointer(MasterID id, WindowID relativeWindow, int x, int y){
     xcb_input_xi_warp_pointer(dis, None, relativeWindow, 0, 0, 0, 0, x, y, id);
 }

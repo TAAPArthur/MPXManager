@@ -56,7 +56,7 @@ typedef struct {
 static Option options[] = {
     {"list", {.boundFunction = BIND(listOptions)}, FUNC},
     {"restart", {.boundFunction = BIND(restart)}, FUNC},
-    {"dump", {.boundFunction = BIND(dumpAllWindowInfo, MAPABLE_MASK)}, FUNC},
+    {"dump", {.boundFunction = BIND(dumpAllWindowInfo, MAPPABLE_MASK)}, FUNC},
     {"dump-all", {.boundFunction = BIND(dumpAllWindowInfo, 0)}, FUNC},
     {"list", {.boundFunction = BIND(listOptions)}, FUNC},
     {"quit", {.boundFunction = BIND(exit, 0)}, FUNC},

@@ -24,17 +24,17 @@
 int getAssociatedMasterDevice(int deviceId){
     int ndevices;
     XIDeviceInfo* masterDevices;
-    int id;
+    MasterID id;
     masterDevices = XIQueryDevice(dpy, deviceId, &ndevices);
     id = masterDevices[0].attachment;
     XIFreeDeviceInfo(masterDevices);
     return id;
 }
 
-void setClientPointerForWindow(int window){
+void setClientPointerForWindow(WindowID window){
     xcb_input_xi_set_client_pointer(dis, window, getActiveMasterPointerID());
 }
-int getClientKeyboard(int win){
+int getClientKeyboard(WindowID win){
     int masterPointer;
     XIGetClientPointer(dpy, win, &masterPointer);
     return getAssociatedMasterDevice(masterPointer);
@@ -48,7 +48,7 @@ void attachSlaveToMaster(int slaveId, int masterId){
     changes.attach.new_master = masterId;
     XIChangeHierarchy(dpy, &changes, 1);
 }
-void destroyMasterDevice(int id, int returnPointer, int returnKeyboard){
+void destroyMasterDevice(MasterID id, int returnPointer, int returnKeyboard){
     if(id == DEFAULT_KEYBOARD || id == DEFAULT_POINTER)return;
     XIRemoveMasterInfo remove;
     remove.type = XIRemoveMaster;
@@ -69,8 +69,10 @@ void createMasterDevice(char* name){
 }
 
 void destroyAllNonDefaultMasters(void){
-    FOR_EACH(Master * master, getAllMasters(), if(master->id != DEFAULT_KEYBOARD)destroyMasterDevice(master->id,
-             DEFAULT_POINTER, DEFAULT_KEYBOARD));
+    FOR_EACH(Master*, master, getAllMasters()){
+        if(master->id != DEFAULT_KEYBOARD)
+            destroyMasterDevice(master->id, DEFAULT_POINTER, DEFAULT_KEYBOARD);
+    }
 }
 
 void initCurrentMasters(){
@@ -106,7 +108,7 @@ void initCurrentMasters(){
     }
     XIFreeDeviceInfo(devices);
 }
-void setActiveMasterByDeviceId(int id){
+void setActiveMasterByDeviceId(MasterID id){
     int ndevices;
     XIDeviceInfo* masterDevices;
     masterDevices = XIQueryDevice(dpy, id, &ndevices);
@@ -128,11 +130,11 @@ void setActiveMasterByDeviceId(int id){
     assert(getActiveMaster());
 }
 ArrayList* getSlavesOfMaster(Master* master){
-    return getSlavesOfMasterByID((int[]){
+    return getSlavesOfMasterByID((MasterID[]){
         master->id, master->pointerId
     }, 2, NULL);
 }
-ArrayList* getSlavesOfMasterByID(int* ids, int num, int* numberOfSlaves){
+ArrayList* getSlavesOfMasterByID(MasterID* ids, int num, int* numberOfSlaves){
     int ndevices;
     XIDeviceInfo* devices, *device;
     devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
@@ -171,10 +173,10 @@ ArrayList* getSlavesOfMasterByID(int* ids, int num, int* numberOfSlaves){
 }
 
 
-void passiveUngrab(int window){
+void passiveUngrab(WindowID window){
     passiveGrab(window, 0);
 }
-void passiveGrab(int window, int maskValue){
+void passiveGrab(WindowID window, int maskValue){
     XIEventMask eventmask = {XIAllDevices, 2, (unsigned char*)& maskValue};
     XISelectEvents(dpy, window, &eventmask, 1);
 }
@@ -182,13 +184,13 @@ int isKeyboardMask(int mask){
     return mask & (KEYBOARD_MASKS) ? 1 : 0;
 }
 
-int grabPointer(int id){
+int grabPointer(MasterID id){
     return grabDevice(id, POINTER_MASKS);
 }
 int grabActivePointer(){
     return grabPointer(getActiveMasterPointerID());
 }
-int grabKeyboard(int id){
+int grabKeyboard(MasterID id){
     return grabDevice(id, KEYBOARD_MASKS);
 }
 int grabActiveKeyboard(){
@@ -207,21 +209,21 @@ int grabDevice(int deviceID, int maskValue){
 }
 int grabAllMasterDevices(void){
     int result = 1;
-    FOR_EACH(Master * master, getAllMasters(),
-             result &= grabDevice(master->id, KEYBOARD_MASKS);
-             result &= grabDevice(master->pointerId, POINTER_MASKS);
-            );
+    FOR_EACH(Master*, master, getAllMasters()){
+        result &= grabDevice(master->id, KEYBOARD_MASKS);
+        result &= grabDevice(master->pointerId, POINTER_MASKS);
+    }
     return result;
 }
 int ungrabAllMasterDevices(void){
     int result = 1;
-    FOR_EACH(Master * master, getAllMasters(),
-             result &= ungrabDevice(master->id);
-             result &= ungrabDevice(master->pointerId);
-            );
+    FOR_EACH(Master*, master, getAllMasters()){
+        result &= ungrabDevice(master->id);
+        result &= ungrabDevice(master->pointerId);
+    }
     return result;
 }
-int ungrabDevice(int id){
+int ungrabDevice(MasterID id){
     return XIUngrabDevice(dpy, id, 0);
 }
 
@@ -258,7 +260,7 @@ static int endsWith(const char* str, const char* suffix){
 int isTestDevice(char* str){
     return endsWith(str, "XTEST pointer") || endsWith(str, "XTEST keyboard");
 }
-int getMousePosition(int id, int relativeWindow, int result[2]){
+int getMousePosition(MasterID id, int relativeWindow, int result[2]){
     xcb_input_xi_query_pointer_reply_t* reply1 =
         xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, relativeWindow, id), NULL);
     if(reply1){
@@ -268,8 +270,8 @@ int getMousePosition(int id, int relativeWindow, int result[2]){
     }
     return reply1 ? 1 : 0;
 }
-int getActiveFocus(int id){
-    int win;
+WindowID getActiveFocus(MasterID id){
+    WindowID win;
     xcb_input_xi_get_focus_reply_t* reply;
     reply = xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis, id), NULL);
     win = reply->focus;
@@ -294,16 +296,16 @@ void swapDeviceId(Master* master1, Master* master2){
     free(reply1);
     free(reply2);
     int ndevices;
-    int ids[] = {master1->id, master1->pointerId, master2->id, master2->pointerId};
-    int idMap[] = {master2->id, master2->pointerId, master1->id, master1->pointerId};
+    MasterID ids[] = {master1->id, master1->pointerId, master2->id, master2->pointerId};
+    MasterID idMap[] = {master2->id, master2->pointerId, master1->id, master1->pointerId};
     ArrayList* slaves = getSlavesOfMasterByID(ids, 4, &ndevices);
-    FOR_EACH(SlaveDevice * device, slaves,
-             //swap slave devices
-             attachSlaveToMaster(
-                 device->id,
-                 idMap[device->offset]
-             );
-            )
+    FOR_EACH(SlaveDevice*, device, slaves){
+        //swap slave devices
+        attachSlaveToMaster(
+            device->id,
+            idMap[device->offset]
+        );
+    }
     deleteList(slaves);
     free(slaves);
     int tempId = master1->id, tempPointerId = master1->pointerId;

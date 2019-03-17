@@ -144,6 +144,36 @@ START_TEST(test_min_max){
 }
 END_TEST
 
+START_TEST(test_for_each){
+    int i = 0;
+    FOR_EACH(int*, value, &list){
+        assert(value == getElement(&list, i++));
+    }
+    i = 0;
+    FOR_EACH(int*, value, &list){
+        assert(value == getElement(&list, i++));
+    }
+}
+END_TEST
+START_TEST(test_for_each_nested){
+    int i = 0;
+    FOR_EACH(int*, value, &list){
+        assert(value == getElement(&list, i++));
+        int i = 0;
+        FOR_EACH(int*, value, &list){
+            assert(value == getElement(&list, i++));
+        }
+    }
+}
+END_TEST
+START_TEST(test_for_each_reversed){
+    int i = getSize(&list) - 1;
+    FOR_EACH_REVERSED(int*, value, &list){
+        assert(value == getElement(&list, i--));
+    }
+}
+END_TEST
+
 Suite* utilSuite(){
     Suite* s = suite_create("Util");
     TCase* tc_core;
@@ -157,6 +187,12 @@ Suite* utilSuite(){
     tcase_add_test(tc_core, test_arraylist_pop);
     tcase_add_test(tc_core, test_get_last);
     tcase_add_test(tc_core, test_shift_to_head);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("Iter");
+    tcase_add_checked_fixture(tc_core, populateList, freeListMem);
+    tcase_add_test(tc_core, test_for_each);
+    tcase_add_test(tc_core, test_for_each_nested);
+    tcase_add_test(tc_core, test_for_each_reversed);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("MISC");
     tcase_add_test(tc_core, test_get_time);

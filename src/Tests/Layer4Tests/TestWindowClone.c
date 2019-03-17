@@ -22,7 +22,7 @@ static void setup(){
     startUpMethod = addCloneRules;
     onStartup();
     setActiveLayout(&DEFAULT_LAYOUTS[GRID]);
-    int window = createNormalWindow();
+    WindowID window = createNormalWindow();
     mapWindow(window);
     scan(root);
     retile();
@@ -33,7 +33,7 @@ static void setup(){
 }
 START_TEST(test_clone_window){
     assert(getSize(getAllWindows()) == 2);
-    assert(checkStackingOrder((int*)&clone->id, 1));
+    assert(checkStackingOrder(&clone->id, 1));
 }
 END_TEST
 START_TEST(test_swap_with_original){

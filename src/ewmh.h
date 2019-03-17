@@ -55,14 +55,13 @@
  *
  * We don't have true support for desktop geometry like atoms; they don't align with out multi monitor view
  * _NET_DESKTOP_GEOMETRY,_NET_DESKTOP_VIEWPORT,_NET_WORKAREA are have the "default" values
- * We don't currently support ewmh->_NET_SHOWING_DESKTOP
+ * We don't currently support ewmh->_NET_SHOWING_DESKTOP or ewmh->_NET_WM_MOVERESIZE,\
  */
 #define SET_SUPPORTED_OPERATIONS(ewmh){\
     xcb_atom_t net_atoms[] = { \
            ewmh->_NET_SUPPORTED,\
            ewmh->_NET_SUPPORTING_WM_CHECK,\
            ewmh->_NET_WM_NAME,\
-           ewmh->_NET_WM_MOVERESIZE,\
            \
            ewmh->_NET_CLIENT_LIST,\
            ewmh->_NET_CLIENT_LIST_STACKING,\

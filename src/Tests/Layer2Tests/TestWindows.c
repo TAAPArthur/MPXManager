@@ -124,7 +124,7 @@ END_TEST
 
 
 START_TEST(test_window_property_alt_loading){
-    int win = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     char* name = "test";
     xcb_icccm_set_wm_name(dis, win, XCB_ATOM_STRING, 8, strlen(name), name);
@@ -134,7 +134,7 @@ START_TEST(test_window_property_alt_loading){
 }
 END_TEST
 START_TEST(test_window_property_loading){
-    int win = createIgnoredWindow();
+    WindowID win = createIgnoredWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     addWindowInfo(winInfo);
     //no properties are set don't crash
@@ -153,8 +153,8 @@ START_TEST(test_window_property_loading){
 }
 END_TEST
 START_TEST(test_window_property_reloading){
-    int win = createUnmappedWindow();
-    int win2 = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createUnmappedWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     addWindowInfo(winInfo);
     setProperties(win);
@@ -167,7 +167,7 @@ START_TEST(test_window_property_reloading){
 }
 END_TEST
 START_TEST(test_window_extra_property_loading){
-    int win = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
     int groupLead = createUnmappedWindow();
     int trasientForWindow = createUnmappedWindow();
     WindowInfo* winInfo = createWindowInfo(win);
@@ -188,7 +188,7 @@ END_TEST
 START_TEST(test_window_input_focus_detection){
     for(int i = 0; i < 4; i++){
         DEFAULT_WINDOW_MASKS = i % 2 ? 0 : INPUT_MASK;
-        int win = createInputWindow(i);
+        WindowID win = createInputWindow(i);
         WindowInfo* winInfo = createWindowInfo(win);
         flush();
         processNewWindow(winInfo);
@@ -206,7 +206,7 @@ END_TEST
 START_TEST(test_process_window){
     DEFAULT_WINDOW_MASKS = 0;
     xcb_atom_t net_atoms[] = {SUPPORTED_STATES};
-    int win = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
     setProperties(win);
     xcb_ewmh_set_wm_state(ewmh, win, LEN(net_atoms), net_atoms);
     flush();
@@ -224,7 +224,7 @@ START_TEST(test_process_window){
 }
 END_TEST
 START_TEST(test_process_bad_window){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     assert(!catchError(xcb_destroy_window_checked(dis, win)));
     processNewWindow(winInfo);
@@ -236,9 +236,9 @@ START_TEST(test_window_scan){
     addDummyIgnoreRule();
     scan(root);
     assert(!isNotEmpty(getAllWindows()));
-    int win = createUnmappedWindow();
-    int win2 = createUnmappedWindow();
-    int win3 = createUnmappedWindow();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createUnmappedWindow();
+    WindowID win3 = createUnmappedWindow();
     createIgnoredWindow();
     createUserIgnoredWindow();
     assert(!isWindowMapped(win));
@@ -257,7 +257,7 @@ START_TEST(test_child_window_scan){
     IGNORE_SUBWINDOWS = 1;
     assert(!isNotEmpty(getAllWindows()));
     int parent = createNormalWindow();
-    int win = createNormalSubWindow(parent);
+    WindowID win = createNormalSubWindow(parent);
     int child = createNormalSubWindow(win);
     int grandChild = createNormalSubWindow(child);
     scan(parent);
@@ -275,7 +275,7 @@ END_TEST
 
 START_TEST(test_window_state){
     xcb_atom_t net_atoms[] = {WM_TAKE_FOCUS, WM_DELETE_WINDOW, SUPPORTED_STATES};
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     WindowInfo* winInfo = createWindowInfo(win);
     addWindowInfo(winInfo);
     addWindowToWorkspace(winInfo, 0);
@@ -308,7 +308,7 @@ END_TEST
 
 START_TEST(test_window_state_sync){
     SYNC_WINDOW_MASKS = 1;
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
     addMask(winInfo, -1);

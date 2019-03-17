@@ -124,7 +124,7 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
 void startChain(BoundFunction* boundFunction){
     Binding* chain = boundFunction->func.chainBindings;
     int mask = boundFunction->arg.intArg;
-    LOG(LOG_LEVEL_TRACE, "starting chain. mask:%d\n", mask);
+    LOG(LOG_LEVEL_DEBUG, "starting chain. mask:%d\n", mask);
     if(mask)
         grabDevice(getDeviceIDByMask(mask), mask);
     FOR_EACH_CHAIN(
@@ -141,6 +141,7 @@ void endChain(){
     if(mask)
         ungrabDevice(getDeviceIDByMask(mask));
     FOR_EACH_CHAIN(ungrabBinding(&chain[index]));
+    LOG(LOG_LEVEL_DEBUG, "ending chain");
 }
 int getIDOfBindingTarget(Binding* binding){
     return binding->targetID == -1 ?
@@ -176,7 +177,7 @@ int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo){
         int i = 0;
         do {
             if(doesBindingMatch(&chainBinding[i], keyCode, mods, mask)){
-                LOG(LOG_LEVEL_DEBUG, "Calling chain binding\n");
+                LOG(LOG_LEVEL_TRACE, "Calling chain binding\n");
                 int result = callBoundedFunction(&chainBinding[i].boundFunction, getWindowToActOn(&chainBinding[i], winInfo));
                 if(chainBinding[i].endChain){
                     LOG(LOG_LEVEL_DEBUG, "chain is ending because exit key was pressed\n");
@@ -200,14 +201,14 @@ int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo){
             break;
         else chainBinding = getActiveBinding();
     }
-    FOR_EACH(Binding * binding, getDeviceBindings(),
-    if(doesBindingMatch(binding, keyCode, mods, mask)){
-    bindingsTriggered += 1;
-    LOG(LOG_LEVEL_DEBUG, "Calling non-chain binding\n");
-        if(!passThrough(callBoundedFunction(&binding->boundFunction, getWindowToActOn(binding, winInfo)), binding->passThrough))
-            return 0;
+    FOR_EACH(Binding*, binding, getDeviceBindings()){
+        if(doesBindingMatch(binding, keyCode, mods, mask)){
+            bindingsTriggered += 1;
+            LOG(LOG_LEVEL_TRACE, "Calling non-chain binding\n");
+            if(!passThrough(callBoundedFunction(&binding->boundFunction, getWindowToActOn(binding, winInfo)), binding->passThrough))
+                return 0;
+        }
     }
-            )
     LOG(LOG_LEVEL_TRACE, "Triggered %d bindings\n", bindingsTriggered);
     return bindingsTriggered;
 }
@@ -260,12 +261,12 @@ int applyRule(Rule* rule, WindowInfo* winInfo){
 
 int applyRules(ArrayList* head, WindowInfo* winInfo){
     assert(head);
-    FOR_EACH(Rule * rule, head,
-             assert(rule);
-             if(!applyRule(rule, winInfo))
-             return 0;
-            )
-        return 1;
+    FOR_EACH(Rule*, rule, head){
+        assert(rule);
+        if(!applyRule(rule, winInfo))
+            return 0;
+    }
+    return 1;
 }
 ArrayList* getDeviceBindings(){
     static ArrayList deviceBindings;

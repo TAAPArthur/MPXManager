@@ -200,5 +200,9 @@ void startMouseOperation(WindowInfo* winInfo);
 /// @copydoc startMouseOperation
 void stopMouseOperation(WindowInfo* winInfo);
 
+/**
+ * activates the workspace that contains the mouse pointer
+ * @see getLastKnownMasterPosition()
+ */
 void activateWorkspaceUnderMouse(void);
 #endif

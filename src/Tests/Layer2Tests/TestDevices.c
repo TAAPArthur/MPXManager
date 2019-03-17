@@ -50,7 +50,7 @@ START_TEST(test_create_destroy_master){
     //re-running
     initCurrentMasters();
     assert(getSize(getAllMasters()) == 2);
-    FOR_EACH(Master * m, getAllMasters(), destroyMasterDevice(m->id, DEFAULT_POINTER, DEFAULT_KEYBOARD));
+    FOR_EACH(Master*, m, getAllMasters()) destroyMasterDevice(m->id, DEFAULT_POINTER, DEFAULT_KEYBOARD);
     deleteList(getAllMasters());
     initCurrentMasters();
     assert(getSize(getAllMasters()) == 1);
@@ -98,7 +98,7 @@ START_TEST(test_set_active_master_by_id){
 }
 END_TEST
 START_TEST(test_set_client_pointer){
-    int win = createNormalWindow();
+    WindowID win = createNormalWindow();
     setClientPointerForWindow(win);
     assert(getActiveMasterKeyboardID() == getClientKeyboard(win));
 }
@@ -149,8 +149,8 @@ START_TEST(test_get_slaves){
     assert(slaveKeyboardSize == 1);
     ArrayList* slavesOfMaster = getSlavesOfMaster(getActiveMaster());
     assert(listsEqual(slavesOfMaster, slaves));
-    FOR_EACH(SlaveDevice * d, slaveKeyboards, assert(!find(slavePointers, d, sizeof(int))));
-    FOR_EACH(SlaveDevice * d, slavePointers, assert(!find(slaveKeyboards, d, sizeof(int))));
+    FOR_EACH(SlaveDevice*, d, slaveKeyboards) assert(!find(slavePointers, d, sizeof(int)));
+    FOR_EACH(SlaveDevice*, d, slavePointers) assert(!find(slaveKeyboards, d, sizeof(int)));
     deleteList(slavePointers);
     deleteList(slavePointers2);
     deleteList(slaveKeyboards);
@@ -182,8 +182,8 @@ START_TEST(test_slave_swapping){
     assert(getSize(getAllMasters()) == 2);
     Master* master1 = getElement(getAllMasters(), 0);
     Master* master2 = getElement(getAllMasters(), 1);
-    int idKeyboard1 = master1->id, idPointer1 = master1->pointerId;
-    int idKeyboard2 = master2->id, idPointer2 = master2->pointerId;
+    MasterID idKeyboard1 = master1->id, idPointer1 = master1->pointerId;
+    MasterID idKeyboard2 = master2->id, idPointer2 = master2->pointerId;
     ArrayList* slaves1 = getSlavesOfMasterByID(&master1->id, 2, NULL);
     ArrayList* slaves2 = getSlavesOfMasterByID(&master2->id, 2, NULL);
     swapDeviceId(master1, master2);
@@ -231,10 +231,10 @@ START_TEST(test_passive_grab_ungrab){
 END_TEST
 
 START_TEST(test_grab_detail){
-    FOR_EACH(Binding * b, getDeviceBindings(), assert(!grabBinding(b)));
+    FOR_EACH(Binding*, b, getDeviceBindings()) assert(!grabBinding(b));
     if(!fork()){
         openXDisplay();
-        FOR_EACH(Binding * b, getDeviceBindings(), assert(grabBinding(b)));
+        FOR_EACH(Binding*, b, getDeviceBindings()) assert(grabBinding(b));
         closeConnection();
         exit(0);
     }
@@ -246,13 +246,13 @@ START_TEST(test_grab_detail){
 }
 END_TEST
 START_TEST(test_ungrab_detail){
-    FOR_EACH(Binding * b, getDeviceBindings(), assert(!grabBinding(b)));
-    FOR_EACH(Binding * b, getDeviceBindings(), assert(!ungrabBinding(b)));
+    FOR_EACH(Binding*, b, getDeviceBindings()) assert(!grabBinding(b));
+    FOR_EACH(Binding*, b, getDeviceBindings()) assert(!ungrabBinding(b));
     xcb_flush(dis);
     XFlush(dpy);
     if(!fork()){
         openXDisplay();
-        FOR_EACH(Binding * b, getDeviceBindings(), assert(!grabBinding(b)));
+        FOR_EACH(Binding*, b, getDeviceBindings()) assert(!grabBinding(b));
         closeConnection();
         exit(0);
     }
