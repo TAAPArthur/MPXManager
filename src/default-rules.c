@@ -58,9 +58,6 @@ void addDefaultDeviceRules(void){
         appendRule(GENERIC_EVENT_OFFSET + i, &deviceEventRule);
     }
 }
-int isImplicitType(WindowInfo* winInfo){
-    return winInfo->implicitType;
-}
 
 static void printStatus(void){
     if(printStatusMethod && STATUS_FD)
@@ -69,10 +66,6 @@ static void printStatus(void){
 void addPrintRule(void){
     static Rule printRule = CREATE_DEFAULT_EVENT_RULE(printStatus);
     appendRule(Idle, &printRule);
-}
-void addIgnoreRule(void){
-    static Rule ignoreRule = CREATE_WILDCARD(BIND(isImplicitType), .passThrough = PASSTHROUGH_IF_FALSE);
-    appendRule(ProcessingWindow, &ignoreRule);
 }
 void addFloatRules(void){
     static Rule dialogRule = CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_DIALOG", TYPE, BIND(floatWindow),);
@@ -417,6 +410,5 @@ void addDefaultRules(void){
     addAvoidDocksRule();
     addAutoTileRules();
     addPrintRule();
-    addIgnoreRule();
     addFloatRules();
 }

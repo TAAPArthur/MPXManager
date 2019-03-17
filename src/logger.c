@@ -180,28 +180,32 @@ char* eventTypeToString(int type){
 }
 int catchError(xcb_void_cookie_t cookie){
     xcb_generic_error_t* e = xcb_request_check(dis, cookie);
+    int errorCode = 0;
     if(e){
+        errorCode = e->error_code;
         logError(e);
-        //TODO finish
-        switch(e->major_code){
-            case BadAccess:
-                exit(1);
-                break;
-            case BadWindow:
-                break;
-        }
         free(e);
     }
-    return e ? 1 : 0;
+    return errorCode;
+}
+int catchErrorSilent(xcb_void_cookie_t cookie){
+    xcb_generic_error_t* e = xcb_request_check(dis, cookie);
+    int errorCode = 0;
+    if(e){
+        errorCode = e->error_code;
+        free(e);
+    }
+    return errorCode;
 }
 void logError(xcb_generic_error_t* e){
-    LOG(LOG_LEVEL_ERROR, "error occured with resource %d %d %d\n", e->resource_id, e->major_code, e->minor_code);
+    LOG(LOG_LEVEL_ERROR, "error occured with resource %d. Error code: %d %d (%d)\n", e->resource_id, e->error_code,
+        e->major_code, e->minor_code);
     int size = 256;
     char buff[size];
     XGetErrorText(dpy, e->error_code, buff, size);
-    dumpWindowInfo(getWindowInfo(e->resource_id));
-    LOG(LOG_LEVEL_ERROR, "Error code %d %s \n",
-        e->error_code, buff) ;
-    if(CRASH_ON_ERRORS)
+    if(e->error_code != BadWindow)
+        dumpWindowInfo(getWindowInfo(e->resource_id));
+    LOG(LOG_LEVEL_ERROR, "Error code %d %s \n", e->error_code, buff) ;
+    if((1 << e->error_code) & CRASH_ON_ERRORS)
         assert(0 && "Unexpected error");
 }

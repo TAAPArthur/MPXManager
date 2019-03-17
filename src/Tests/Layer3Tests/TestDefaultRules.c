@@ -39,7 +39,7 @@ static void sampleStartupMethod(){
 static Layout* startingLayout = &DEFAULT_LAYOUTS[FULL];
 static void deviceEventsetup(){
     LOAD_SAVED_STATE = 0;
-    CRASH_ON_ERRORS = 1;
+    CRASH_ON_ERRORS = -1;
     DEFAULT_WINDOW_MASKS = SRC_ANY;
     POLL_COUNT = 10;
     if(!startUpMethod)
@@ -135,6 +135,8 @@ START_TEST(test_delete_windows){
     int win3 = createUnmappedWindow();
     destroyWindow(win);
     mapWindow(win2);
+    assert(getSize(getAllWindows()) == 0);
+    addDummyIgnoreRule();
     START_MY_WM
     int win4 = createUnmappedWindow();
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win4) &&
@@ -188,6 +190,7 @@ START_TEST(test_property_update){
 END_TEST
 
 START_TEST(test_ignored_windows){
+    addDummyIgnoreRule();
     createUserIgnoredWindow();
     mapWindow(createUserIgnoredWindow());
     scan(root);

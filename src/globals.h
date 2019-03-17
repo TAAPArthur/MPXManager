@@ -73,7 +73,7 @@ extern int IGNORE_MASK;
 ///IF True we will crash if an error is received
 /// This should only be used for testing as errors can happen just by
 /// the async nature of X11
-extern int CRASH_ON_ERRORS;
+extern unsigned int CRASH_ON_ERRORS;
 
 ///Number of workspaces to create
 extern int NUMBER_OF_WORKSPACES;

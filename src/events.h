@@ -65,7 +65,7 @@ void registerForEvents();
  * @param window
  * @param mask
  */
-void registerForWindowEvents(int window, int mask);
+int registerForWindowEvents(int window, int mask);
 
 /**
  * To be called when a generic event is received

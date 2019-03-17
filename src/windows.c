@@ -306,6 +306,7 @@ void unlockWindow(WindowInfo* winInfo){
 }
 
 void registerWindow(WindowInfo* winInfo){
+    LOG(LOG_LEVEL_DEBUG, "Registering %d (%x)\n", winInfo->id, winInfo->id);
     assert(winInfo);
     assert(!find(getAllWindows(), winInfo, sizeof(int)) && "Window registered exists");
     addWindowInfo(winInfo);
@@ -314,13 +315,17 @@ void registerWindow(WindowInfo* winInfo){
     if(LOAD_SAVED_STATE){
         loadSavedAtomState(winInfo);
     }
-    //todo move to own method
-    registerForWindowEvents(win, NON_ROOT_EVENT_MASKS);
-    passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
-    applyRules(getEventRules(RegisteringWindow), winInfo);
+    if(registerForWindowEvents(win, NON_ROOT_EVENT_MASKS) != BadWindow){
+        passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
+        applyRules(getEventRules(RegisteringWindow), winInfo);
+    }
+    else {
+        LOG(LOG_LEVEL_TRACE, "Registeration failed %d (%x)\n", winInfo->id, winInfo->id);
+        removeWindow(winInfo->id);
+    }
 }
 int processNewWindow(WindowInfo* winInfo){
-    LOG(LOG_LEVEL_DEBUG, "processing %d (%x)\n", winInfo->id, (unsigned int)winInfo->id);
+    LOG(LOG_LEVEL_TRACE, "processing %d (%x)\n", winInfo->id, winInfo->id);
     addMask(winInfo, DEFAULT_WINDOW_MASKS);
     if(winInfo->cloneOrigin == 0)
         loadWindowProperties(winInfo);

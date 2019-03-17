@@ -141,10 +141,10 @@ void registerForDeviceEvents(){
     LOG(LOG_LEVEL_DEBUG, "listening for device event;  masks: %d\n", ROOT_DEVICE_EVENT_MASKS);
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
 }
-void registerForWindowEvents(int window, int mask){
+int registerForWindowEvents(int window, int mask){
     xcb_void_cookie_t cookie;
     cookie = xcb_change_window_attributes_checked(dis, window, XCB_CW_EVENT_MASK, &mask);
-    catchError(cookie);
+    return catchErrorSilent(cookie);
 }
 void registerForEvents(){
     registerForWindowEvents(root, ROOT_EVENT_MASKS);

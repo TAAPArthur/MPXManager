@@ -498,7 +498,7 @@ START_TEST(test_swap_workspace){
 END_TEST
 
 void multiWorkspaceStartup(void){
-    CRASH_ON_ERRORS = 1;
+    CRASH_ON_ERRORS = -1;
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     onStartup();
     switchToWorkspace(0);

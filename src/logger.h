@@ -32,12 +32,14 @@ void printArrayList(ArrayList* list);
 void printSummary(void);
 void printMonitorSummary(void);
 void printMasterSummary(void);
-void dumpAllWindowInfo(void);
+void dumpAllWindowInfo(int filterMask);
 void dumpWindowInfo(WindowInfo* win);
 void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms);
 char* genericEventTypeToString(int type);
 char* eventTypeToString(int type);
 
+void printMask(int mask);
+int catchErrorSilent(xcb_void_cookie_t cookie);
 int catchError(xcb_void_cookie_t cookie);
 void logError(xcb_generic_error_t* e);
 
