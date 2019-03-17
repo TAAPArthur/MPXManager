@@ -61,6 +61,9 @@ int POLL_INTERVAL = 10;
 int EVENT_PERIOD = 10;
 
 char* MASTER_INFO_PATH = "master-info.txt";
+char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
+char LD_PRELOAD_INJECTION = 0;
+char* LD_PRELOAD_PATH = "/usr/lib/mpxmanager/mpx-patch.so";
 
 int DEFAULT_POINTER = 2;
 int DEFAULT_KEYBOARD = 3;

@@ -101,6 +101,18 @@ int findAndRaise(Rule* rule){
     return processFindResult(target);
 }
 
+#include <stdlib.h>
+
+void setClientMasterEnvVar(void){
+    char strValue[32];
+    if(getActiveMaster()){
+        sprintf(strValue, "%d", getActiveMasterKeyboardID());
+        setenv(CLIENT[0], strValue, 1);
+        sprintf(strValue, "%d", getActiveMasterPointerID());
+        setenv(CLIENT[1], strValue, 1);
+    }
+    if(LD_PRELOAD_INJECTION)setenv("LD_PRELOAD", LD_PRELOAD_PATH, 1);
+}
 
 int spawnPipe(char* command){
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
@@ -111,6 +123,7 @@ int spawnPipe(char* command){
     pipe(statusPipeFD);
     int pid = fork();
     if(pid == 0){
+        setClientMasterEnvVar();
         close(statusPipeFD[1]);
         dup2(statusPipeFD[0], 0);
         execl(SHELL, SHELL, "-c", command, (char*)0);
@@ -126,6 +139,7 @@ int spawn(char* command){
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
     int pid = fork();
     if(pid == 0){
+        setClientMasterEnvVar();
         setsid();
         execl(SHELL, SHELL, "-c", command, (char*)0);
     }

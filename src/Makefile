@@ -37,8 +37,9 @@ pkgname := mpxmanager
 
 all: mpxmanager
 
-install: mpxmanager.1 libmpxmanager.so
+install: mpxmanager.1 libmpxmanager.so libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.so
+	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.c
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
@@ -55,6 +56,9 @@ recompile:
 
 libmpxmanager.so: ${BASE_SRCS}
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
+
+libmpx-patch.so: extensions/mpx-patch.c
+	${CC} -fPIC -shared -o $@ $^ ${CFLAGS} ${LDFLAGS}
 
 config.c:
 	cp --no-clobber sample-config.c config.c

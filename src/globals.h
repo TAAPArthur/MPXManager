@@ -18,6 +18,12 @@
     #define WILDCARD_MODIFIER AnyModifier
 #endif
 
+/// Holds env var names used to pass client pointer to children
+extern char* CLIENT[];
+/// if true, then preload LD_PRELOAD_PATH
+extern char LD_PRELOAD_INJECTION;
+/// the path of the lib to preload
+extern char* LD_PRELOAD_PATH;
 
 ///Returns the field descriptors used to commuicate WM status to an external program
 extern int statusPipeFD[2];

@@ -110,6 +110,11 @@ int findAndRaiseLazy(Rule* rule);
  */
 WindowInfo* findWindow(Rule* rule, ArrayList* searchList, ArrayList* ignoreList);
 
+
+/**
+ * Set env vars such to help old clients know which master device to use
+ */
+void setClientMasterEnvVar(void);
 /**
  * Forks and runs command in SHELL
  * @param command
