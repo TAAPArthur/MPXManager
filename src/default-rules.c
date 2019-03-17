@@ -39,6 +39,7 @@ void autoAddToWorkspace(WindowInfo* winInfo){
 }
 void addAutoTileRules(void){
     static Rule autoTileRule = CREATE_DEFAULT_EVENT_RULE(markState);
+    static Rule clearStateRule = CREATE_DEFAULT_EVENT_RULE(unmarkState);
     static Rule tileWorkspace = CREATE_DEFAULT_EVENT_RULE(tileChangeWorkspaces);
     int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY,
                     XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
@@ -46,8 +47,9 @@ void addAutoTileRules(void){
                     XCB_RANDR_NOTIFY_OUTPUT_CHANGE + MONITOR_EVENT_OFFSET,
                    };
     for(int i = 0; i < LEN(events); i++)
-        appendRule(events[i], &autoTileRule);
-    appendRule(Idle, &tileWorkspace);
+        prependRule(events[i], &autoTileRule);
+    appendRule(Periodic, &tileWorkspace);
+    appendRule(TileWorkspace, &clearStateRule);
 }
 
 void addDefaultDeviceRules(void){

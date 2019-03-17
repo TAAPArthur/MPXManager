@@ -161,7 +161,6 @@ void cycleLayouts(int dir){
     int pos = getNextIndex(layouts, getActiveWorkspace()->layoutOffset, dir);
     setActiveLayout(getElement(layouts, pos));
     getActiveWorkspace()->layoutOffset = pos;
-    retile();
 }
 int toggleLayout(Layout* layout){
     if(layout != getActiveLayout()){
@@ -172,7 +171,6 @@ int toggleLayout(Layout* layout){
         if(layout == getActiveLayout())
             return 0;
     }
-    retile();
     return 1;
 }
 void retile(void){
