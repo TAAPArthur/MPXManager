@@ -42,8 +42,6 @@ typedef struct {
     /**title of window*/
     char* title;
 
-    /**1 iff the window type was not explicilty set*/
-    char implicitType;
     /**
      * Used to indicate the "last seen in" workspace.
      * A window should only be tiled if the this field matches

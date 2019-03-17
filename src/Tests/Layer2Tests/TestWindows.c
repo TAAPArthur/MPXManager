@@ -142,8 +142,8 @@ START_TEST(test_window_property_loading){
     assert(winInfo->className == NULL);
     assert(winInfo->instanceName == NULL);
     assert(winInfo->title == NULL);
-    assert(winInfo->typeName == NULL || winInfo->implicitType);
-    assert(winInfo->type == 0 || winInfo->implicitType);
+    assert(winInfo->typeName == NULL || hasMask(winInfo, IMPLICIT_TYPE));
+    assert(winInfo->type == 0 || hasMask(winInfo, IMPLICIT_TYPE));
     setProperties(win);
     //reloaeding should break anything
     for(int i = 0; i < 2; i++){

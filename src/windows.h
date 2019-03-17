@@ -89,6 +89,8 @@ typedef enum {
     WM_PING_MASK = 1 << 19,
 
     ALWAYS_ON_TOP = 1 << 20,
+    /// the window type was not set explicitly
+    IMPLICIT_TYPE = 1 << 21,
 
     ///Keeps track on the visibility state of the window
     PARTIALLY_VISIBLE =     1 << 27,
@@ -424,7 +426,7 @@ static inline int isActivatable(WindowInfo* winInfo){
  * @return 1 iff external resize requests should be granted
  */
 static inline int isExternallyResizable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_RESIZE_MASK;
+    return !winInfo || hasMask(winInfo, EXTERNAL_RESIZE_MASK) || !isMappable(winInfo);
 }
 
 /**
@@ -432,7 +434,7 @@ static inline int isExternallyResizable(WindowInfo* winInfo){
  * @return 1 iff external move requests should be granted
  */
 static inline int isExternallyMoveable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_MOVE_MASK;
+    return !winInfo || hasMask(winInfo, EXTERNAL_MOVE_MASK) || !isMappable(winInfo);
 }
 
 /**
@@ -440,14 +442,14 @@ static inline int isExternallyMoveable(WindowInfo* winInfo){
  * @return 1 iff external border requests should be granted
  */
 static inline int isExternallyBorderConfigurable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_BORDER_MASK;
+    return !winInfo || hasMask(winInfo, EXTERNAL_BORDER_MASK) || !isMappable(winInfo);
 }
 /**
  * @param winInfo
  * @return 1 iff external raise requests should be granted
  */
 static inline int isExternallyRaisable(WindowInfo* winInfo){
-    return !winInfo || winInfo->mask & EXTERNAL_RAISE_MASK;
+    return !winInfo || hasMask(winInfo, EXTERNAL_RAISE_MASK) || !isMappable(winInfo);
 }
 /**
  * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored

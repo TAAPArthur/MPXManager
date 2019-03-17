@@ -81,9 +81,16 @@ void onPropertyEvent(void);
 void onClientMessage(void);
 
 /**
- * Add ProcessingWindow rule that will cause the WM to ignore windows that don't have their window type set (@see isUnkown)
+ * Add ProcessingWindow rule that will cause the WM to ignore windows that don't have their window type set (@see isUnknown). The window manager will not interact at all with these windows like to set focus
+ * (non-default)
  */
-void addIgnoreRule(void);
+void addUnknownWindowIgnoreRule(void);
+/**
+ * Add RegisteringWindow rule that will cause the WM to not add the window to any workspace. This is like permentatnly setting FLOATING_MASK and STICKY_MASK
+ * (non-default)
+ * @see isUnknown
+ */
+void addUnknownWindowRule(void);
 /**
  * Default hook that will be called on connection to the XServer.
  * It scans for existing windows and applies the default tiling layout to existing workspaces
@@ -105,6 +112,7 @@ void addNoDockFocusRule(void);
 void addDefaultRules(void);
 /**
  * Adds rules for focus to change when a mouse enters a new window (non-default)
+ * (non-default)
  */
 void addFocusFollowsMouseRule(void);
 

@@ -136,7 +136,7 @@ START_TEST(test_delete_windows){
     destroyWindow(win);
     mapWindow(win2);
     assert(getSize(getAllWindows()) == 0);
-    addDummyIgnoreRule();
+    addUnknownWindowIgnoreRule();
     START_MY_WM
     WindowID win4 = createUnmappedWindow();
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win4) &&
@@ -190,7 +190,7 @@ START_TEST(test_property_update){
 END_TEST
 
 START_TEST(test_ignored_windows){
-    addDummyIgnoreRule();
+    addUnknownWindowIgnoreRule();
     createUserIgnoredWindow();
     mapWindow(createUserIgnoredWindow());
     scan(root);
@@ -204,6 +204,15 @@ START_TEST(test_ignored_windows){
     idle = getIdleCount();
     WAIT_UNTIL_TRUE(idle != getIdleCount());
     assert(getSize(getAllWindows()) == 0);
+}
+END_TEST
+START_TEST(test_unknown_windows_no_workspace){
+    addUnknownWindowRule();
+    createUserIgnoredWindow();
+    mapWindow(createUserIgnoredWindow());
+    scan(root);
+    assert(getSize(getAllWindows()) == 2);
+    assert(getSize(getActiveWindowStack()) == 0);
 }
 END_TEST
 
@@ -561,6 +570,7 @@ Suite* defaultRulesSuite(){
     tc_core = tcase_create("WindowCategories");
     tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_ignored_windows);
+    tcase_add_test(tc_core, test_unknown_windows_no_workspace);
     tcase_add_test(tc_core, test_dock_windows);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Requests");

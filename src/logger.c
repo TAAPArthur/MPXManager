@@ -60,6 +60,7 @@ void printMask(int mask){
     _PRINT_MASK(WM_TAKE_FOCUS_MASK, mask);
     _PRINT_MASK(WM_DELETE_WINDOW_MASK, mask);
     _PRINT_MASK(WM_PING_MASK, mask);
+    _PRINT_MASK(IMPLICIT_TYPE, mask);
     _PRINT_MASK(PARTIALLY_VISIBLE, mask);
     _PRINT_MASK(FULLY_VISIBLE, mask);
     _PRINT_MASK(MAPPABLE_MASK, mask);
@@ -136,8 +137,8 @@ void dumpWindowInfo(WindowInfo* winInfo){
     LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", winInfo->id, winInfo->id,
         winInfo->groupId, winInfo->groupId, winInfo->transientFor, winInfo->transientFor);
     LOG(LOG_LEVEL_INFO, "Labels class %s (%s)\n", winInfo->className, winInfo->instanceName);
-    LOG(LOG_LEVEL_INFO, "Parent %d,Type is %d (%s) implicit: %d Dock %d\n", winInfo->parent, winInfo->type, winInfo->typeName,
-        winInfo->implicitType, winInfo->dock);
+    LOG(LOG_LEVEL_INFO, "Parent %d,Type is %d (%s) Dock %d\n", winInfo->parent, winInfo->type, winInfo->typeName,
+        winInfo->dock);
     LOG(LOG_LEVEL_INFO, "Title class %s\n", winInfo->title);
     LOG(LOG_LEVEL_INFO, "Mask %d\n", winInfo->mask);
     PRINT_ARR("Recorded Geometry", getGeometry(winInfo), 5, "\n");

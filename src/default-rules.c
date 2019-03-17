@@ -30,6 +30,14 @@
 #include "workspaces.h"
 #include "xsession.h"
 
+static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
+                                      .negateResult = 1);
+void addUnknownWindowRule(void){
+    prependRule(RegisteringWindow, &ignoreUnknownWindowRule);
+}
+void addUnknownWindowIgnoreRule(void){
+    prependRule(ProcessingWindow, &ignoreUnknownWindowRule);
+}
 static void tileChangeWorkspaces(void){
     updateState(tileWorkspace);
 }

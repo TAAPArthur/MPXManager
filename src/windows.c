@@ -132,7 +132,7 @@ void loadWindowType(WindowInfo* winInfo){
         }
         else msleep(10);
     if(!foundType){
-        winInfo->implicitType = 1;
+        addMask(winInfo, IMPLICIT_TYPE);
         winInfo->type = winInfo->transientFor ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
     }
     xcb_get_atom_name_reply_t* reply = xcb_get_atom_name_reply(

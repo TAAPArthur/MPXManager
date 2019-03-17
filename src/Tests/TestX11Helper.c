@@ -280,11 +280,9 @@ int checkStackingOrder(WindowID* stackingOrder, int num){
     free(reply);
     return counter == num;
 }
-int ignoreFunction(WindowInfo* winInfo){
-    return winInfo->implicitType;
-}
 
 void addDummyIgnoreRule(void){
-    static Rule ignoreRule = CREATE_WILDCARD(BIND(ignoreFunction), .passThrough = PASSTHROUGH_IF_FALSE, .negateResult = 1);
+    static Rule ignoreRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
+                             .negateResult = 1);
     appendRule(ProcessingWindow, &ignoreRule);
 }
