@@ -5,8 +5,16 @@ echo $1
 if [ "$1" = "--no-xserver" ];then
 	shift
 else
-       echo starting server	
 	Xephyr -noreset -r +extension RANDR -screen 100x100 $D 2>&1 &> /dev/null & pid="$!"
+    export DISPLAY=$D
+    if [ "$1" = "--fake-monitors" ];then
+        shift
+        sleep 1s
+        monitor=$(xrandr |grep " connected" |cut -d" " -f1)
+        xrandr --setmonitor test~1 640/254x1080/480+0+0 $monitor >&1 > /dev/null
+        xrandr --setmonitor test~2 640/254x1080/480+640+0 none >&1 > /dev/null
+        xrandr --fb 1280x480
+    fi
 fi
 DISPLAY=$D $@
 exitCode=$?

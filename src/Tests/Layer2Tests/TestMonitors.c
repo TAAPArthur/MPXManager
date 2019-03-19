@@ -13,7 +13,7 @@ START_TEST(test_detect_monitors){
     assert(getSize(getAllMonitors()) == num + 1);
     detectMonitors();
     assert(getSize(getAllMonitors()) == num);
-    LOG(LOG_LEVEL_NONE, "Detected %d monitor\n", getSize(getAllMonitors()));
+    assert(num == 2);
 }
 END_TEST
 START_TEST(test_avoid_struct){
@@ -142,16 +142,6 @@ START_TEST(test_avoid_docks){
 }
 END_TEST
 
-START_TEST(test_root_dim){
-    int width = 0, height = 0;
-    FOR_EACH(Monitor*, m, getAllMonitors()){
-        width += m->base.width;
-        height += m->base.height;
-    }
-    assert(width == getRootWidth());
-    assert(height == getRootHeight());
-}
-END_TEST
 
 
 
@@ -214,7 +204,6 @@ Suite* monitorsSuite(){
     tc_core = tcase_create("Detect monitors");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);
     tcase_add_test(tc_core, test_detect_monitors);
-    tcase_add_test(tc_core, test_root_dim);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Docks");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);
