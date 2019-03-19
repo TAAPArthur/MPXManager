@@ -1,9 +1,9 @@
 /**
  * @file wmfunctions.c
- * @brief Connect our internal structs to X
+ * @brief wmfunctions.h
  *
  */
-/// \cond
+
 #include <assert.h>
 #include <string.h>
 #include <strings.h>
@@ -14,22 +14,22 @@
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xinput.h>
-/// \endcond
+
 
 #include "bindings.h"
-#include "ewmh.h"
-#include "mywm-util.h"
-#include "wmfunctions.h"
-#include "windows.h"
-#include "masters.h"
-#include "workspaces.h"
 #include "devices.h"
-#include "logger.h"
-#include "xsession.h"
-#include "monitors.h"
-#include "globals.h"
 #include "events.h"
+#include "ewmh.h"
+#include "globals.h"
 #include "layouts.h"
+#include "logger.h"
+#include "masters.h"
+#include "monitors.h"
+#include "mywm-util.h"
+#include "windows.h"
+#include "wmfunctions.h"
+#include "workspaces.h"
+#include "xsession.h"
 
 
 
@@ -48,7 +48,7 @@ void connectToXserver(){
 }
 void syncState(){
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
-    unsigned int currentWorkspace = DEFAULT_WORKSPACE_INDEX;
+    WorkspaceID currentWorkspace = DEFAULT_WORKSPACE_INDEX;
     if(!LOAD_SAVED_STATE || !xcb_ewmh_get_current_desktop_reply(ewmh,
             xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
             &currentWorkspace, NULL)){
@@ -153,7 +153,7 @@ void killWindowInfo(WindowInfo* winInfo){
         ev.data.data32[1] = getTime();
         xcb_send_event(dis, 0, winInfo->id, XCB_EVENT_MASK_NO_EVENT, (char*)&ev);
         LOG(LOG_LEVEL_INFO, "Sending request to delete window\n");
-        runInNewThread((void* (*)(void*))waitForWindowToDie, (void*) winInfo->id, 1);
+        runInNewThread((void* (*)(void*))waitForWindowToDie, (void*)(long)winInfo->id, 1);
     }
     else {
         killWindow(winInfo->id);
@@ -209,8 +209,9 @@ void raiseLowerWindowInfo(WindowInfo* winInfo, int above){
 int raiseWindowInfo(WindowInfo* winInfo){
     int result = winInfo ? raiseWindow(winInfo->id) : 0;
     if(result){
+        int id = winInfo->id;
         FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
-            if(isInteractable(winInfo) && winInfo->transientFor == winInfo->id || hasMask(winInfo, ALWAYS_ON_TOP))
+            if(isInteractable(winInfo) && winInfo->transientFor == id || hasMask(winInfo, ALWAYS_ON_TOP))
                 raiseLowerWindowInfo(winInfo, 1);
         }
     }
@@ -321,7 +322,6 @@ void activateWorkspace(int workspaceIndex){
         activateWindow(winToFocus);
     else if(isNotEmpty(getActiveWindowStack()))
         activateWindow(getHead(getActiveWindowStack()));
-    LOG(LOG_LEVEL_DEBUG, "Done\n");
 }
 void switchToWorkspace(int workspaceIndex){
     if(!isWorkspaceVisible(workspaceIndex)){

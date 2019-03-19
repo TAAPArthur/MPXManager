@@ -1,31 +1,34 @@
+/**
+ * @file default-rules.c
+ * @copybrief default-rules.h
+ *
+ */
 
-///\cond
 #include <assert.h>
 
-
 #include <X11/keysym.h>
-#include <xcb/xproto.h>
+#include <xcb/randr.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-#include <xcb/randr.h>
 #include <xcb/xinput.h>
-///\endcond
+#include <xcb/xproto.h>
 
-#include "events.h"
 #include "bindings.h"
-#include "wmfunctions.h"
-#include "windows.h"
+#include "default-rules.h"
 #include "devices.h"
+#include "events.h"
 #include "globals.h"
+#include "layouts.h"
 #include "logger.h"
 #include "masters.h"
+#include "monitors.h"
+#include "mywm-util.h"
+#include "state.h"
+#include "windows.h"
+#include "wmfunctions.h"
 #include "workspaces.h"
 #include "xsession.h"
-#include "state.h"
-#include "monitors.h"
-#include "default-rules.h"
-#include "layouts.h"
 
 static void tileChangeWorkspaces(void){
     updateState(tileWorkspace);
@@ -119,6 +122,7 @@ void onError(void){
 }
 void onConfigureNotifyEvent(void){
     xcb_configure_notify_event_t* event = getLastEvent();
+    if(event->override_redirect)return;
     setGeometry(getWindowInfo(event->window), &event->x);
 }
 void onConfigureRequestEvent(void){
@@ -147,7 +151,6 @@ void onDestroyEvent(void){
 }
 void onVisibilityEvent(void){
     xcb_visibility_notify_event_t* event = getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "made it to visibility request event %d %d\n", event->window, event->state);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo)
         if(event->state == XCB_VISIBILITY_FULLY_OBSCURED)
@@ -191,11 +194,9 @@ void focusFollowMouse(void){
     LOG(LOG_LEVEL_DEBUG, "focus following mouse %d win %d\n", getActiveMaster()->id, win);
     if(winInfo)
         focusWindowInfo(winInfo);
-    else focusWindow(win);
 }
 void onFocusInEvent(void){
     xcb_input_focus_in_event_t* event = getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "id %d window %d %d\n", event->deviceid, event->event, event->child);
     setActiveMasterByDeviceId(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
     WindowInfo* oldFocus = getFocusedWindow();
@@ -320,7 +321,7 @@ void onClientMessage(void){
     */
 }
 
-WindowInfo* getTargetWindow(int root, int event, int child){
+static WindowInfo* getTargetWindow(int root, int event, int child){
     Master* master = getActiveMaster();
     int i;
     int list[] = {0, root, event, child, master->targetWindow};
@@ -350,7 +351,6 @@ void onGenericEvent(void){
 void onStartup(void){
     if(preStartUpMethod)
         preStartUpMethod();
-    //TODO find way to customize number of workspaces in config
     resetContext();
     addDefaultRules();
     if(startUpMethod)
@@ -388,7 +388,6 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
     [RegisteringWindow] = CREATE_WILDCARD(AND(BIND(autoAddToWorkspace), BIND(updateEWMHClientList))),
-    [TileWorkspace] = CREATE_DEFAULT_EVENT_RULE(unmarkState),
 };
 
 void addBasicRules(void){

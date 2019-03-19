@@ -1,14 +1,9 @@
 /**
  * @file globals.h
+ * Provides global variable declerations
  */
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
-
-/// \cond
-#include <X11/extensions/XInput2.h>
-#include <xcb/xinput.h>
-/// \endcond
-
 
 ///Returns the field descriptor used to commuicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
@@ -91,32 +86,6 @@ extern char IGNORE_SEND_EVENT;
 extern char IGNORE_KEY_REPEAT;
 
 
-/// The last supported standard x event
-#define GENERIC_EVENT_OFFSET LASTEvent
-/// offset for all monitor related events
-#define MONITOR_EVENT_OFFSET GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS+1
-/// max value of supported X events (not total events)
-#define LAST_REAL_EVENT   MONITOR_EVENT_OFFSET+8
-
-//TODO consistent naming
-enum {
-    ///if all rules are passed through, then the window is added as a normal window
-    onXConnection = LAST_REAL_EVENT,
-    /// Run after properties have been loaded
-    PropertyLoad,
-    /// deterime if a newly detected window should be recorded/monitored/controlled by us
-    ProcessingWindow,
-    /// called after the newly created window has been added to a workspace
-    RegisteringWindow,
-    /// when a workspace is tiled
-    TileWorkspace,
-    /// called after a set number of events or when the connection is idle
-    Periodic,
-    /// called when the connection is idle
-    Idle,
-    /// max value of supported events
-    NUMBER_OF_EVENT_RULES
-};
 
 /// Used for select xcb functions
 extern int defaultScreenNumber;

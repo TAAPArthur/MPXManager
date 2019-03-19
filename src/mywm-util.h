@@ -17,8 +17,6 @@
 #ifndef MYWM_SESSION
 #define MYWM_SESSION
 
-#include "util.h"
-#include "mywm-structs.h"
 
 /// the number of arguments passed into the main method
 extern int numPassedArguments;

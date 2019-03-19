@@ -2,7 +2,7 @@
  * @file xsession.c
  * @brief Create/destroy XConnection
  */
-///\cond
+
 #include <assert.h>
 #include <string.h>
 #include <strings.h>
@@ -10,7 +10,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <X11/Xlib-xcb.h>
-///\endcond
+
 
 #include "logger.h"
 #include "xsession.h"
@@ -19,7 +19,7 @@
  * Shorthand marco to init a X11 atom
  * @param name the name of the atom to init
  */
-#define CREATE_ATOM(name){\
+#define _CREATE_ATOM(name){\
     xcb_intern_atom_reply_t *reply;\
     reply=xcb_intern_atom_reply(dis,xcb_intern_atom(dis, 0, 32, # name),NULL);\
     name=reply->atom;\
@@ -80,10 +80,10 @@ void openXDisplay(void){
     ewmh = malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
-    CREATE_ATOM(WM_TAKE_FOCUS);
-    CREATE_ATOM(WM_DELETE_WINDOW);
-    CREATE_ATOM(WM_STATE_NO_TILE);
-    CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
+    _CREATE_ATOM(WM_TAKE_FOCUS);
+    _CREATE_ATOM(WM_DELETE_WINDOW);
+    _CREATE_ATOM(WM_STATE_NO_TILE);
+    _CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
     char selectionName[] = {'W', 'M', '_', 'S', '0' + defaultScreenNumber, '\0'};
     xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(dis,
                                      xcb_intern_atom(dis, 0, strlen(selectionName), selectionName), NULL);

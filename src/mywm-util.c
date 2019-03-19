@@ -1,22 +1,23 @@
 /**
  * @file mywm-util.c
+ * @copybrief mywm-util.h
  */
 
-/// \cond
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-/// \endcond
+
 
 #include "globals.h"
+#include "logger.h"
+#include "masters.h"
+#include "monitors.h"
 #include "mywm-util.h"
 #include "windows.h"
 #include "workspaces.h"
-#include "masters.h"
-#include "monitors.h"
 #include "xsession.h"
-#include "logger.h"
 
 
 int numPassedArguments;
@@ -32,9 +33,9 @@ void resetContext(void){
         clearList(getWindowStack(getWorkspaceByIndex(i)));
         clearList(getLayouts(getWorkspaceByIndex(i)));
     }
-    deleteList(getListOfWorkspaces());
+    deleteAllWorkspaces();
     for(int i = 0; i < NUMBER_OF_WORKSPACES; i++)
-        addToList(getListOfWorkspaces(), createWorkspace());
+        addNewWorkspace();
 }
 void resetPipe(){
     if(statusPipeFD[0]){

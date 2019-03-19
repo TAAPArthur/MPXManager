@@ -1,7 +1,6 @@
-
 /**
- * @file config.h
- * @brief user config file
+ * @file settings.h
+ * @brief contains default user settings
  */
 
 
@@ -20,4 +19,9 @@ void loadNormalSettings(void);
  */
 void defaultPrintFunction(void);
 
+/**
+ * Will be called on startup before the XServer is initilized so the user can set global vars, run
+ * arbitary commands and most commonly add device bindings and event rules
+ */
+void loadSettings(void);
 #endif

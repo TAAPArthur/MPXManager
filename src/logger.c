@@ -1,28 +1,26 @@
+/**
+ * @file logger.c
+ *
+ * @copybrief logger.h
+ */
 
 
 #include <assert.h>
-#include <stdlib.h>
-#include <strings.h>
-#include <string.h>
+#include <execinfo.h>
+#include <unistd.h>
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
+#include <xcb/xinput.h>
 
-
-#include "mywm-util.h"
-#include "logger.h"
+#include "bindings.h"
 #include "globals.h"
-#include "windows.h"
+#include "logger.h"
 #include "masters.h"
-#include "workspaces.h"
 #include "monitors.h"
+#include "mywm-util.h"
+#include "windows.h"
+#include "workspaces.h"
+#include "xsession.h"
 
-extern xcb_connection_t* dis;
-
-extern Display* dpy;
 
 #ifndef INIT_LOG_LEVEL
     #define INIT_LOG_LEVEL LOG_LEVEL_INFO
@@ -36,41 +34,37 @@ int getLogLevel(){
 void setLogLevel(int level){
     LOG_LEVEL = level;
 }
-void printArrayList(ArrayList* n){
-    LOG(LOG_LEVEL_INFO, "Printing list: \n");
-    FOR_EACH(void*, v, n) LOG(LOG_LEVEL_INFO, "%d ", *(int*)v);
-    LOG(LOG_LEVEL_INFO, "\n");
-}
-#define PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))LOG(LOG_LEVEL_INFO,#str " ");
+
+#define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))LOG(LOG_LEVEL_INFO,#str " ");
 void printMask(int mask){
-    PRINT_MASK(NO_MASK, mask);
-    PRINT_MASK(X_MAXIMIZED_MASK, mask);
-    PRINT_MASK(Y_MAXIMIZED_MASK, mask);
-    PRINT_MASK(FULLSCREEN_MASK, mask);
-    PRINT_MASK(ROOT_FULLSCREEN_MASK, mask);
-    PRINT_MASK(BELOW_MASK, mask);
-    PRINT_MASK(ABOVE_MASK, mask);
-    PRINT_MASK(NO_TILE_MASK, mask);
-    PRINT_MASK(STICKY_MASK, mask);
-    PRINT_MASK(HIDDEN_MASK, mask);
-    PRINT_MASK(EXTERNAL_RESIZE_MASK, mask);
-    PRINT_MASK(EXTERNAL_MOVE_MASK, mask);
-    PRINT_MASK(EXTERNAL_BORDER_MASK, mask);
-    PRINT_MASK(EXTERNAL_RAISE_MASK, mask);
-    PRINT_MASK(FLOATING_MASK, mask);
-    PRINT_MASK(SRC_INDICATION_OTHER, mask);
-    PRINT_MASK(SRC_INDICATION_APP, mask);
-    PRINT_MASK(SRC_INDICATION_PAGER, mask);
-    PRINT_MASK(SRC_ANY, mask);
-    PRINT_MASK(INPUT_MASK, mask);
-    PRINT_MASK(WM_TAKE_FOCUS_MASK, mask);
-    PRINT_MASK(WM_DELETE_WINDOW_MASK, mask);
-    PRINT_MASK(WM_PING_MASK, mask);
-    PRINT_MASK(PARTIALLY_VISIBLE, mask);
-    PRINT_MASK(FULLY_VISIBLE, mask);
-    PRINT_MASK(MAPPABLE_MASK, mask);
-    PRINT_MASK(MAPPED_MASK, mask);
-    PRINT_MASK(URGENT_MASK, mask);
+    _PRINT_MASK(NO_MASK, mask);
+    _PRINT_MASK(X_MAXIMIZED_MASK, mask);
+    _PRINT_MASK(Y_MAXIMIZED_MASK, mask);
+    _PRINT_MASK(FULLSCREEN_MASK, mask);
+    _PRINT_MASK(ROOT_FULLSCREEN_MASK, mask);
+    _PRINT_MASK(BELOW_MASK, mask);
+    _PRINT_MASK(ABOVE_MASK, mask);
+    _PRINT_MASK(NO_TILE_MASK, mask);
+    _PRINT_MASK(STICKY_MASK, mask);
+    _PRINT_MASK(HIDDEN_MASK, mask);
+    _PRINT_MASK(EXTERNAL_RESIZE_MASK, mask);
+    _PRINT_MASK(EXTERNAL_MOVE_MASK, mask);
+    _PRINT_MASK(EXTERNAL_BORDER_MASK, mask);
+    _PRINT_MASK(EXTERNAL_RAISE_MASK, mask);
+    _PRINT_MASK(FLOATING_MASK, mask);
+    _PRINT_MASK(SRC_INDICATION_OTHER, mask);
+    _PRINT_MASK(SRC_INDICATION_APP, mask);
+    _PRINT_MASK(SRC_INDICATION_PAGER, mask);
+    _PRINT_MASK(SRC_ANY, mask);
+    _PRINT_MASK(INPUT_MASK, mask);
+    _PRINT_MASK(WM_TAKE_FOCUS_MASK, mask);
+    _PRINT_MASK(WM_DELETE_WINDOW_MASK, mask);
+    _PRINT_MASK(WM_PING_MASK, mask);
+    _PRINT_MASK(PARTIALLY_VISIBLE, mask);
+    _PRINT_MASK(FULLY_VISIBLE, mask);
+    _PRINT_MASK(MAPPABLE_MASK, mask);
+    _PRINT_MASK(MAPPED_MASK, mask);
+    _PRINT_MASK(URGENT_MASK, mask);
     LOG(LOG_LEVEL_INFO, "\n");
 }
 void printMasterSummary(void){
@@ -81,11 +75,17 @@ void printMasterSummary(void){
     }
     LOG(LOG_LEVEL_INFO, "\n");
 }
+void dumpMonitorInfo(Monitor* m){
+    LOG(LOG_LEVEL_INFO, "Monitor %ld primary %d ", m->id, m->primary);
+    Workspace* w = getWorkspaceFromMonitor(m);
+    if(w)
+        LOG(LOG_LEVEL_INFO, "Workspace %d", w->id);
+    PRINT_ARR("\nBase", &m->base.x, 4, " ");
+    PRINT_ARR("View", &m->view.x, 4, "\n");
+}
 void printMonitorSummary(void){
     FOR_EACH(Monitor*, m, getAllMonitors()){
-        LOG(LOG_LEVEL_INFO, "Monitor %ld primary %d ", m->id, m->primary);
-        PRINT_ARR("Base", &m->base.x, 4, " ");
-        PRINT_ARR("View", &m->view.x, 4, "\n");
+        dumpMonitorInfo(m);
     }
     LOG(LOG_LEVEL_INFO, "\n");
 }
@@ -103,15 +103,13 @@ void printSummary(void){
     ArrayList* list = getActiveMasterWindowStack();
     if(isNotEmpty(list)){
         LOG(LOG_LEVEL_INFO, "Active master window stack:\n");
-        FOR_EACH(WindowInfo*, winInfo, list){
-            LOG(LOG_LEVEL_INFO, "(%d: %s) ", winInfo->id, winInfo->title);
-        }
+        printWindowStackSummary(list);
     }
     LOG(LOG_LEVEL_INFO, "\n");
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         ArrayList* list = getWindowStack(getWorkspaceByIndex(i));
         if(!isNotEmpty(list))continue;
-        LOG(LOG_LEVEL_INFO, "Workspace: %d \n", i);
+        LOG(LOG_LEVEL_INFO, "Workspace: %d%s\n", i, isWorkspaceVisible(i) ? "*" : "");
         printWindowStackSummary(list);
     }
     if(isNotEmpty(getAllDocks())){
@@ -125,21 +123,32 @@ void dumpAllWindowInfo(int filterMask){
             dumpWindowInfo(winInfo);
     }
 }
+void dumpMatch(char* match){
+    Rule rule = {match, MATCH_ANY_REGEX, NULL};
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
+        if(doesWindowMatchRule(&rule, winInfo))
+            dumpWindowInfo(winInfo);
+    }
+}
 
-void dumpWindowInfo(WindowInfo* win){
-    if(!win)return;
-    LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", win->id, win->id,
-        win->groupId, win->groupId, win->transientFor, win->transientFor);
-    LOG(LOG_LEVEL_INFO, "Labels class %s (%s)\n", win->className, win->instanceName);
-    LOG(LOG_LEVEL_INFO, "Parent %d,Type is %d (%s) implicit: %d Dock %d\n", win->parent, win->type, win->typeName,
-        win->implicitType, win->dock);
-    LOG(LOG_LEVEL_INFO, "Title class %s\n", win->title);
-    LOG(LOG_LEVEL_INFO, "Mask %d\n", win->mask);
-    printMask(win->mask);
-    if(win->workspaceIndex == NO_WORKSPACE)
+void dumpWindowInfo(WindowInfo* winInfo){
+    if(!winInfo)return;
+    LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", winInfo->id, winInfo->id,
+        winInfo->groupId, winInfo->groupId, winInfo->transientFor, winInfo->transientFor);
+    LOG(LOG_LEVEL_INFO, "Labels class %s (%s)\n", winInfo->className, winInfo->instanceName);
+    LOG(LOG_LEVEL_INFO, "Parent %d,Type is %d (%s) implicit: %d Dock %d\n", winInfo->parent, winInfo->type, winInfo->typeName,
+        winInfo->implicitType, winInfo->dock);
+    LOG(LOG_LEVEL_INFO, "Title class %s\n", winInfo->title);
+    LOG(LOG_LEVEL_INFO, "Mask %d\n", winInfo->mask);
+    PRINT_ARR("Recorded Geometry", getGeometry(winInfo), 5, "\n");
+    PRINT_ARR("Setconfig", getConfig(winInfo), 5, "\n");
+    if(winInfo->dock)
+        PRINT_ARR("Properties", winInfo->properties, LEN(winInfo->properties), "\n");
+    printMask(winInfo->mask);
+    if(winInfo->workspaceIndex == NO_WORKSPACE)
         LOG(LOG_LEVEL_INFO, "NO WORKPACE\n");
     else
-        LOG(LOG_LEVEL_INFO, "Workspace %d\n", win->workspaceIndex);
+        LOG(LOG_LEVEL_INFO, "Workspace %d\n", winInfo->workspaceIndex);
     LOG(LOG_LEVEL_INFO, "\n");
 }
 
@@ -153,19 +162,19 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
     }
 }
 
-#define ADD_TYPE_CASE(TYPE) case TYPE: return  #TYPE
+#define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return  #TYPE
 char* genericEventTypeToString(int type){
     switch(type){
-            ADD_TYPE_CASE(XCB_INPUT_KEY_PRESS);
-            ADD_TYPE_CASE(XCB_INPUT_KEY_RELEASE);
-            ADD_TYPE_CASE(XCB_INPUT_BUTTON_PRESS);
-            ADD_TYPE_CASE(XCB_INPUT_BUTTON_RELEASE);
-            ADD_TYPE_CASE(XCB_INPUT_MOTION);
-            ADD_TYPE_CASE(XCB_INPUT_ENTER);
-            ADD_TYPE_CASE(XCB_INPUT_LEAVE);
-            ADD_TYPE_CASE(XCB_INPUT_FOCUS_IN);
-            ADD_TYPE_CASE(XCB_INPUT_FOCUS_OUT);
-            ADD_TYPE_CASE(XCB_INPUT_HIERARCHY);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_KEY_PRESS);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_KEY_RELEASE);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_BUTTON_PRESS);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_BUTTON_RELEASE);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_MOTION);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_ENTER);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_LEAVE);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_IN);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_OUT);
+            _ADD_EVENT_TYPE_CASE(XCB_INPUT_HIERARCHY);
         default:
             return "unkown XI event";
     }
@@ -173,22 +182,33 @@ char* genericEventTypeToString(int type){
 
 char* eventTypeToString(int type){
     switch(type){
+            _ADD_EVENT_TYPE_CASE(XCB_EXPOSE);
+            _ADD_EVENT_TYPE_CASE(XCB_VISIBILITY_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_CREATE_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_DESTROY_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_UNMAP_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_MAP_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_MAP_REQUEST);
+            _ADD_EVENT_TYPE_CASE(XCB_CONFIGURE_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_CONFIGURE_REQUEST);
+            _ADD_EVENT_TYPE_CASE(XCB_PROPERTY_NOTIFY);
+            _ADD_EVENT_TYPE_CASE(XCB_CLIENT_MESSAGE);
+            _ADD_EVENT_TYPE_CASE(XCB_GE_GENERIC);
         case 0:
             return "Error";
-            ADD_TYPE_CASE(XCB_EXPOSE);
-            ADD_TYPE_CASE(XCB_VISIBILITY_NOTIFY);
-            ADD_TYPE_CASE(XCB_CREATE_NOTIFY);
-            ADD_TYPE_CASE(XCB_DESTROY_NOTIFY);
-            ADD_TYPE_CASE(XCB_UNMAP_NOTIFY);
-            ADD_TYPE_CASE(XCB_MAP_NOTIFY);
-            ADD_TYPE_CASE(XCB_MAP_REQUEST);
-            ADD_TYPE_CASE(XCB_CONFIGURE_NOTIFY);
-            ADD_TYPE_CASE(XCB_CONFIGURE_REQUEST);
-            ADD_TYPE_CASE(XCB_PROPERTY_NOTIFY);
-            ADD_TYPE_CASE(XCB_CLIENT_MESSAGE);
-            ADD_TYPE_CASE(XCB_GE_GENERIC);
         default:
             return "unknown event";
+    }
+}
+char* opcodeToString(int opcode){
+    switch(opcode){
+            _ADD_EVENT_TYPE_CASE(XCB_CREATE_WINDOW);
+            _ADD_EVENT_TYPE_CASE(XCB_CHANGE_WINDOW_ATTRIBUTES);
+            _ADD_EVENT_TYPE_CASE(XCB_MAP_WINDOW);
+            _ADD_EVENT_TYPE_CASE(XCB_CONFIGURE_WINDOW);
+            _ADD_EVENT_TYPE_CASE(XCB_CHANGE_PROPERTY);
+        default:
+            return "unknown code";
     }
 }
 int catchError(xcb_void_cookie_t cookie){
@@ -211,14 +231,25 @@ int catchErrorSilent(xcb_void_cookie_t cookie){
     return errorCode;
 }
 void logError(xcb_generic_error_t* e){
-    LOG(LOG_LEVEL_ERROR, "error occured with resource %d. Error code: %d %d (%d)\n", e->resource_id, e->error_code,
-        e->major_code, e->minor_code);
+    LOG(LOG_LEVEL_ERROR, "error occured with resource %d. Error code: %d %s (%d %d)\n", e->resource_id, e->error_code,
+        opcodeToString(e->major_code), e->major_code, e->minor_code);
     int size = 256;
     char buff[size];
     XGetErrorText(dpy, e->error_code, buff, size);
     if(e->error_code != BadWindow)
         dumpWindowInfo(getWindowInfo(e->resource_id));
     LOG(LOG_LEVEL_ERROR, "Error code %d %s \n", e->error_code, buff) ;
+    printStackTrace();
     if((1 << e->error_code) & CRASH_ON_ERRORS)
         assert(0 && "Unexpected error");
+}
+void printStackTrace(void){
+    if(isLogging(LOG_LEVEL_DEBUG)){
+        void* array[32];
+        size_t size;
+        // get void*'s for all entries on the stack
+        size = backtrace(array, LEN(array));
+        // print out all the frames to stderr
+        backtrace_symbols_fd(array, size, STDERR_FILENO);
+    }
 }

@@ -1,24 +1,22 @@
 /**
  * @file devices.c
+ * @copybrief devices.h
  */
 
-/// \cond
-#include <assert.h>
-#include <strings.h>
-#include <string.h>
-#include <stdlib.h>
 
-#include <xcb/xinput.h>
+#include <assert.h>
+#include <string.h>
+
 #include <X11/extensions/XInput2.h>
-/// \endcond
+#include <xcb/xinput.h>
+
 
 #include "devices.h"
-
-#include "xsession.h"
 #include "globals.h"
 #include "logger.h"
 #include "masters.h"
 #include "test-functions.h"
+#include "xsession.h"
 
 //Master device methods
 int getAssociatedMasterDevice(int deviceId){

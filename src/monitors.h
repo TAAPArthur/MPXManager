@@ -1,5 +1,6 @@
 /**
  * @file monitors.h
+ * Contains methods related to the Monitor struct
  */
 #ifndef MONITORS_H_
 #define MONITORS_H_
@@ -124,6 +125,12 @@ void resizeAllMonitorsToAvoidAllStructs(void);
  * @see resizeMonitorToAvoidStruct
  */
 void resizeAllMonitorsToAvoidStruct(WindowInfo* winInfo);
+/**
+ * Resizes all monitors such that its viewport does not intersec the given dock
+ *
+ * @param winInfo
+ */
+void resizeAllMonitorsToAvoidStructs(WindowInfo* winInfo);
 
 /**
  *

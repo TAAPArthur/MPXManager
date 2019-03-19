@@ -1,21 +1,21 @@
 /**
- *@file layouts.c
+ * @file layouts.c
+ * @copydoc layouts.h
  */
 #include <assert.h>
-#include <string.h>
 #include <math.h>
+#include <string.h>
 
-#include "wmfunctions.h"
-#include "windows.h"
-#include "workspaces.h"
-#include "masters.h"
-#include "layouts.h"
-#include "xsession.h"
-
-#include "monitors.h"
-#include "globals.h"
 #include "bindings.h"
+#include "globals.h"
+#include "layouts.h"
 #include "logger.h"
+#include "masters.h"
+#include "monitors.h"
+#include "windows.h"
+#include "wmfunctions.h"
+#include "workspaces.h"
+#include "xsession.h"
 
 
 #define _LAYOUT_FAMILY(S){.name=""#S,.layoutFunction=S}
@@ -149,8 +149,14 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFI
     if(winInfo->config[CONFIG_BORDER])
         config[CONFIG_BORDER] = winInfo->config[CONFIG_BORDER];
     assert(winInfo->id);
+#ifdef DEBUG
+    LOG(LOG_LEVEL_DEBUG, "Config %d: mask %d %d\n", winInfo->id, mask, __builtin_popcount(mask));
+    PRINT_ARR("values", config, CONFIG_LEN, "\n");
+    catchError(xcb_configure_window_checked(dis, winInfo->id, mask, config));
+#else
     xcb_configure_window(dis, winInfo->id, mask, config);
     //if(checkError(c, winInfo->id, "could not configure window"))assert(0);
+#endif
 }
 
 
@@ -179,8 +185,10 @@ void retile(void){
 
 void tileWorkspace(int index){
     applyRules(getEventRules(TileWorkspace), NULL);
-    if(!isWorkspaceVisible(index))
+    if(!isWorkspaceVisible(index)){
+        LOG(LOG_LEVEL_DEBUG, "refusing to tile invisible workspace %d\n", index);
         return;
+    }
     Workspace* workspace = getWorkspaceByIndex(index);
     applyLayout(workspace);
     ArrayList* list = getWindowStack(workspace);

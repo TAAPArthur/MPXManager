@@ -1,18 +1,24 @@
+/**
+ * @file window-clone.c
+ * @copybrief window-clone.h
+ *
+ */
 #include <assert.h>
 #include <string.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xtest.h>
 
-#include "globals.h"
-#include "xsession.h"
+#include "bindings.h"
+#include "default-rules.h"
 #include "devices.h"
 #include "events.h"
-#include "bindings.h"
-#include "window-clone.h"
-#include "default-rules.h"
+#include "globals.h"
 #include "logger.h"
+#include "window-clone.h"
 #include "windows.h"
+#include "wmfunctions.h"
+#include "xsession.h"
 
 WindowInfo* cloneWindowInfo(WindowID id, WindowInfo* winInfo){
     WindowInfo* clone = malloc(sizeof(WindowInfo));

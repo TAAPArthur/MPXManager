@@ -1,10 +1,12 @@
 /**
  * @file test-functions.c
+ * @copybrief test-functions.h
  */
 
-/// \cond
+
+#include <xcb/xinput.h>
 #include <xcb/xtest.h>
-/// \endcond
+
 
 #include "logger.h"
 #include "masters.h"

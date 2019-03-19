@@ -7,7 +7,7 @@
 #ifndef LAYOUTS_H_
 #define LAYOUTS_H_
 
-#include "mywm-util.h"
+#include "mywm-structs.h"
 
 /// size of config parameters
 #define CONFIG_LEN 6
@@ -49,8 +49,6 @@ typedef struct {
     Transform transform;
     /// if set layouts based on X/WIDTH will use Y/HEIGHT instead
     int dim: 1;
-    /// will tile layouts backwards -- starting with the last windows and going upwards
-    int reverse: 1;
     /// will raise the focused window
     int raiseFocused: 1;
     /// whether to raise or lower windows when tiling

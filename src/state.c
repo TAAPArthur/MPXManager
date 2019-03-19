@@ -1,20 +1,20 @@
 /**
  * @file state.c
- * Tracks state of workspaces
+ * @copybrief state.h
  */
-/// \cond
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "globals.h"
-/// \endcond
 
-#include "workspaces.h"
+#include "globals.h"
+#include "logger.h"
 #include "monitors.h"
+#include "state.h"
 #include "windows.h"
 #include "wmfunctions.h"
-#include "logger.h"
+#include "workspaces.h"
 
 /**
  * Holds metadata about all the workspaces
@@ -45,7 +45,7 @@ void markState(void){
     couldStateHaveChanged = 1;
 }
 void unmarkState(void){
-    LOG(LOG_LEVEL_TRACE, "marking state\n");
+    LOG(LOG_LEVEL_TRACE, "unmarking state\n");
     couldStateHaveChanged = 0;
 }
 

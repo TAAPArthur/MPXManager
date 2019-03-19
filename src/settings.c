@@ -1,26 +1,26 @@
+/**
+ * @file settings.c
+ * @copybrief settings.h
+ */
 
-#include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 
-#include <X11/keysym.h>
 #include <X11/XF86keysym.h>
+#include <X11/keysym.h>
 #include <xcb/xinput.h>
 
-#include "settings.h"
-#include "bindings.h"
-#include "devices.h"
-#include "masters.h"
-#include "workspaces.h"
-#include "default-rules.h"
+#include "args.h"
 #include "functions.h"
 #include "globals.h"
-#include "wmfunctions.h"
-#include "windows.h"
 #include "layouts.h"
-#include "xsession.h"
-#include "mpx.h"
 #include "logger.h"
-#include "args.h"
+#include "masters.h"
+#include "mpx.h"
+#include "mywm-util.h"
+#include "settings.h"
+#include "windows.h"
+#include "wmfunctions.h"
+#include "workspaces.h"
 
 static Binding DEFAULLT_BINDINGS[] = {
     WORKSPACE_OPERATION(XK_1, 0),
@@ -103,7 +103,6 @@ void defaultPrintFunction(void){
     if(getFocusedWindow())
         dprintf(STATUS_FD, "<fc=%s>%s</fc>", "green", getFocusedWindow()->title);
     dprintf(STATUS_FD, "\n");
-    fsync(STATUS_FD);
 }
 void loadNormalSettings(){
     addAutoMPXRules();

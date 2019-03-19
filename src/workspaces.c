@@ -1,29 +1,41 @@
+/**
+ * @file workspaces.c
+ * @copybrief workspaces.h
+ *
+ */
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#include "masters.h"
 #include "mywm-util.h"
 #include "workspaces.h"
-#include "masters.h"
-#include <stdio.h>
 ///list of all workspaces
 static ArrayList workspaces;
 
-ArrayList* getListOfWorkspaces(void){
-    return &workspaces;
+/**
+ * @return newly created workspace
+ */
+Workspace* createWorkspace(void){
+    Workspace* workspaces = calloc(1, sizeof(Workspace));
+    workspaces->id = getNumberOfWorkspaces();
+    sprintf(workspaces->name, "%d", workspaces->id + 1);
+    return workspaces;
+}
+void deleteAllWorkspaces(void){
+    deleteList(&workspaces);
+}
+void addNewWorkspace(void){
+    addToList(&workspaces, createWorkspace());
 }
 
 Workspace* getWorkspaceByIndex(int index){
     assert(index >= 0);
     assert(index < getNumberOfWorkspaces());
-    return getElement(getListOfWorkspaces(), index);
+    return getElement(&workspaces, index);
 }
 ArrayList* getWindowStack(Workspace* workspace){
     return &workspace->windows;
-}
-Workspace* createWorkspace(){
-    Workspace* workspaces = calloc(1, sizeof(Workspace));
-    workspaces->id = getNumberOfWorkspaces();
-    sprintf(workspaces->name, "%d", workspaces->id + 1);
-    return workspaces;
 }
 int getNumberOfWorkspaces(){
     return getSize(&workspaces);
@@ -55,7 +67,7 @@ ArrayList* getLayouts(Workspace* workspace){
 }
 //workspace methods
 int isWorkspaceVisible(int index){
-    return getWorkspaceByIndex(index)->monitor ? 1 : 0;
+    return getMonitorFromWorkspace(getWorkspaceByIndex(index)) ? 1 : 0;
 }
 int isWorkspaceNotEmpty(int index){
     return isNotEmpty(getWindowStack(getWorkspaceByIndex(index)));
@@ -80,7 +92,7 @@ Workspace* getNextWorkspace(int dir, int mask){
 Workspace* getWorkspaceFromMonitor(Monitor* monitor){
     assert(monitor);
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        if(getWorkspaceByIndex(i)->monitor == monitor)
+        if(getMonitorFromWorkspace(getWorkspaceByIndex(i)) == monitor)
             return getWorkspaceByIndex(i);
     return NULL;
 }

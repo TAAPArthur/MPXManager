@@ -35,7 +35,8 @@
 }
 
 static inline int addFakeMaster(int pointerId, int keyboardID){
-    return addMaster(pointerId, keyboardID, "", 0);
+    static char dummyName[] = {'a', 0};
+    return addMaster(pointerId, keyboardID, dummyName, 0);
 }
 static inline void addFakeMonitor(int id){
     Rect arr = {0};

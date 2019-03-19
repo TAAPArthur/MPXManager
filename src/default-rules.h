@@ -1,19 +1,17 @@
 
 /**
  * @file default-rules.h
- * @brief Sane defaults
+ * @brief Provides functionally common to WM and perhaps need for a good experience
  *
  */
 #ifndef DEFAULT_RULES_H_
 #define DEFAULT_RULES_H_
 
-#include "bindings.h"
-
-
+#include "mywm-structs.h"
 /**
  * Default method called on hiearchy change events which refer to modifications of master/slave device(s)
  * The event right before this method should be a xcb_input_hierarchy_event_t event
- * This method keeps our state synced with the X Sever state for master/removal deletion
+ * This method keeps our state synced with the X Sever state for master addition/removal
  */
 void onHiearchyChangeEvent(void);
 /**
@@ -29,6 +27,10 @@ void addDefaultDeviceRules();
  * Set initial window config
  */
 void onConfigureRequestEvent(void);
+/**
+ * updates window geometry
+ */
+void onConfigureNotifyEvent(void);
 /**
  * Keeps visibility masks in sync with XServer state
  */
@@ -78,7 +80,10 @@ void onPropertyEvent(void);
  */
 void onClientMessage(void);
 
-
+/**
+ * Add ProcessingWindow rule that will cause the WM to ignore windows that don't have their window type set (@see isUnkown)
+ */
+void addIgnoreRule(void);
 /**
  * Default hook that will be called on connection to the XServer.
  * It scans for existing windows and applies the default tiling layout to existing workspaces
@@ -104,7 +109,36 @@ void addDefaultRules(void);
 void addFocusFollowsMouseRule(void);
 
 /**
+ * winInfo will be automatically added to workspace
+ * If LOAD_SAVED_STATE will will added to its WM_DESKTOP workspace if set.
+ * else if will be added to the active workspace
+ * This is added to RegisterWindow
+ * @param winInfo
+ */
+void autoAddToWorkspace(WindowInfo* winInfo);
+/**
+ * Adds rules to various events that may indicate that the state has changed. (markState)
+ * When any of these are called, we check the state via a Periodic hook. If it indeed has, we retile the workspace.
+ * We unmark the state if for any reason, a workspace has been retiled
+ */
+void addAutoTileRules(void);
+
+/**
+ * Calls printStatusMethod if set (and pipe is setup) on Idle events
+ */
+void addPrintRule(void);
+/**
+ * Float all non-normal type windows
+ * RegisteringWindow rule
+ */
+void addFloatRules(void);
+/**
  * Handles initilizing the WindowManager and proccessing user settings from the config file
  */
 void onStartup(void);
+/**
+ * Adds a bunch of rules needed for the WM to function as expected
+ * The majority are wrappers to map X11 event to the corrosponding function
+ */
+void addBasicRules(void);
 #endif /* DEFAULT_RULES_H_ */

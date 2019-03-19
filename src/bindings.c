@@ -3,21 +3,21 @@
  * \copybrief bindings.h
  */
 
-/// \cond
-#include <regex.h>
-#include <strings.h>
+
 #include <assert.h>
-#include <unistd.h>
-#include <string.h>
 #include <ctype.h>
-/// \endcond
+#include <regex.h>
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
+
 
 #include "bindings.h"
-#include "xsession.h"
 #include "devices.h"
-#include "masters.h"
 #include "globals.h"
 #include "logger.h"
+#include "masters.h"
+#include "xsession.h"
 
 
 ArrayList* getActiveChains(){
@@ -113,21 +113,21 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
     }
     return 1;
 }
-///\cond
-#define FOR_EACH_CHAIN(CODE...){ int index=0;\
+
+#define _FOR_EACH_CHAIN(CODE...){ int index=0;\
     while(1){CODE;\
             if(chain[index++].endChain) \
                 break; \
         } \
     }
-///\endcond
+
 void startChain(BoundFunction* boundFunction){
     Binding* chain = boundFunction->func.chainBindings;
     int mask = boundFunction->arg.intArg;
     LOG(LOG_LEVEL_DEBUG, "starting chain. mask:%d\n", mask);
     if(mask)
         grabDevice(getDeviceIDByMask(mask), mask);
-    FOR_EACH_CHAIN(
+    _FOR_EACH_CHAIN(
         if(!chain[index].detail)
         initBinding(&chain[index]);
         grabBinding(&chain[index])
@@ -140,7 +140,7 @@ void endChain(){
     int mask = boundFunction->arg.intArg;
     if(mask)
         ungrabDevice(getDeviceIDByMask(mask));
-    FOR_EACH_CHAIN(ungrabBinding(&chain[index]));
+    _FOR_EACH_CHAIN(ungrabBinding(&chain[index]));
     LOG(LOG_LEVEL_DEBUG, "ending chain");
 }
 int getIDOfBindingTarget(Binding* binding){
@@ -371,6 +371,7 @@ void initRule(Rule* rule){
 static ArrayList eventRules[NUMBER_OF_EVENT_RULES];
 
 ArrayList* getEventRules(int i){
+    assert(i < NUMBER_OF_EVENT_RULES);
     return &eventRules[i];
 }
 void removeRule(int i, Rule* rule){

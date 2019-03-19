@@ -1,26 +1,27 @@
 /**
  * @file functions.c
- * Functions user can bind keys to
+ * @copybrief functions.h
  */
-/// \cond
+
 #include <assert.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/wait.h>
 #include <err.h>
-/// \endcond
-#include "functions.h"
-#include "layouts.h"
-#include "wmfunctions.h"
-#include "masters.h"
-#include "monitors.h"
-#include "workspaces.h"
-#include "windows.h"
-#include "mywm-util.h"
-#include "logger.h"
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+
 #include "bindings.h"
 #include "devices.h"
+#include "functions.h"
 #include "globals.h"
+#include "layouts.h"
+#include "logger.h"
+#include "masters.h"
+#include "monitors.h"
+#include "mywm-util.h"
+#include "windows.h"
+#include "wmfunctions.h"
+#include "workspaces.h"
 
 static int getNextInteractableWindowInStack(ArrayList* stack, int pos, int delta){
     if(!isNotEmpty(stack))return -1;
@@ -101,7 +102,6 @@ int findAndRaise(Rule* rule){
     return processFindResult(target);
 }
 
-#include <stdlib.h>
 
 void setClientMasterEnvVar(void){
     char strValue[32];

@@ -85,6 +85,8 @@ START_TEST(test_activate_window){
     scan(root);
     assert(!activateWindow(getWindowInfo(win)));
     assert(activateWindow(getWindowInfo(win2)));
+    removeMask(getWindowInfo(win2), ALL_MASK);
+    assert(!activateWindow(getWindowInfo(win2)));
 }
 END_TEST
 START_TEST(test_delete_window_request){
@@ -423,23 +425,22 @@ START_TEST(test_auto_focus){
 END_TEST
 
 START_TEST(test_auto_focus_delete){
-    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
     START_MY_WM
     for(int i = 0; i < 3; i++)
         mapWindow(createNormalWindow());
-    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 3);
-    WAIT_UNTIL_TRUE(getSize(getActiveWindowStack()) == 3);
     WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack()) == 3);
+    assert(getSize(getAllWindows()) == 3);
+    assert(getSize(getActiveWindowStack()) == 3);
     lock();
     retile();
-    unlock();
     WindowInfo* head = getHead(getActiveWindowStack());
     WindowInfo* middle = getElement(getActiveWindowStack(), 1);
     WindowInfo* lastFocused = getHead(getActiveMasterWindowStack());
+    assert(lastFocused == getLast(getActiveWindowStack()));
     WindowID stackingOrder[] = {head->id, middle->id, lastFocused->id};
     assert(checkStackingOrder(stackingOrder, 3));
-    lock();
     int idle = getIdleCount();
     assert(catchError(xcb_destroy_window_checked(dis, lastFocused->id)) == 0);
     unlock();
@@ -571,6 +572,8 @@ void multiWorkspaceStartup(void){
 }
 
 START_TEST(test_workspaceless_window){
+    CRASH_ON_ERRORS = 0;
+    setLogLevel(LOG_LEVEL_NONE);
     WindowInfo* winInfo = createWindowInfo(mapWindow(createNormalWindow()));
     addWindowInfo(winInfo);
     int index = getActiveWorkspaceIndex();

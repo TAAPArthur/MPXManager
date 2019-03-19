@@ -124,10 +124,10 @@ START_TEST(test_avoid_docks){
     assert(getSize(getAllDocks()) == 4);
     Monitor* m = getHead(getAllMonitors());
     Rect arr[4] = {
-        {0, 0, size, m->base.height}, //left
-        {m->base.width - size, 0, size, m->base.height},
-        {0, 0, m->base.width, size}, //top
-        {0, m->base.height - size, m->base.width, size}
+        {0, 0, size, getRootHeight()}, //left
+        {getRootWidth() - size, 0, size, getRootHeight()},
+        {0, 0, getRootWidth(), size}, //top
+        {0, getRootHeight() - size, getRootWidth(), size}
     };
     int index = 0;
     FOR_EACH(WindowInfo*, winInfo, getAllDocks()){

@@ -74,8 +74,10 @@ START_TEST(test_layouts){
         lock();
         createNormalWindow();
         flush();
+        int idle = getIdleCount();
         unlock();
-        WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) >= i)
+        WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) >= i);
+        WAIT_UNTIL_TRUE(idle != getIdleCount());
         lock();
         retile();
         assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == i);
@@ -308,14 +310,18 @@ START_TEST(test_transient_windows){
 }
 END_TEST
 START_TEST(test_transient_windows_always_above){
+    DEFAULT_WINDOW_MASKS = MAPPABLE_MASK | MAPPED_MASK;
     WindowInfo* winInfo = createWindowInfo(mapWindow(createNormalWindow()));
-    addWindowInfo(winInfo);
+    processNewWindow(winInfo);
     moveWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
     WindowInfo* winInfo2 = createWindowInfo(mapWindow(createNormalWindow()));
-    addWindowInfo(winInfo2);
+    processNewWindow(winInfo2);
     xcb_icccm_set_wm_transient_for(dis, winInfo2->id, winInfo->id);
     loadWindowProperties(winInfo2);
+    assert(winInfo2->transientFor == winInfo->id);
     moveWindowToWorkspace(winInfo2, getActiveWorkspaceIndex());
+    assert(isActivatable(winInfo) && isActivatable(winInfo2));
+    assert(isInteractable(winInfo2));
     for(int i = 0; i < 2; i++){
         assert(checkStackingOrder((WindowID[]){
             winInfo->id, winInfo2->id
@@ -396,14 +402,13 @@ END_TEST
 START_TEST(test_privileged_windows_size){
     Monitor* m = getHead(getAllMonitors());
     assert(m);
-    int view[] = {10, 20, 30, 40};
-    m->view.x = *view;
+    Rect view = {10, 20, 30, 40};
+    m->view = view;
     WindowInfo* winInfo = createWindowInfo(mapWindow(createNormalWindow()));
     addWindowInfo(winInfo);
     addWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
     static short baseConfig[CONFIG_LEN] = {20, 30, 40, 50};
     void dummyLayout(LayoutState * state){
-        LOG(LOG_LEVEL_DEBUG, "here\n");
         configureWindow(state, getHead(state->stack), baseConfig);
     }
     Layout l = {.layoutFunction = dummyLayout, .args.noBorder = 1};
@@ -422,7 +427,7 @@ START_TEST(test_privileged_windows_size){
     addMask(winInfo, baseMask | arr[i][0]);
     retile();
     reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
-    assert(memcmp(&reply->x, &arr[i][1], 4 * sizeof(short)) == 0);
+    assert(memcmp(&reply->x, &arr[i][1], sizeof(Rect)) == 0);
     free(reply);
 }
 END_TEST

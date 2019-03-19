@@ -1,3 +1,7 @@
+/**
+ * @file mywm-structs.h
+ * @brief contains global struct definitions
+ */
 #include "util.h"
 
 #ifndef MYWM_STRUCTS_H
@@ -8,10 +12,15 @@
     #define NAME_BUFFER 32
 #endif
 
+/// typeof WindowInfo::mask
 typedef unsigned int WindowMask;
+/// typeof WindowInfo::id
 typedef unsigned int WindowID;
+/// typeof Master::id
 typedef unsigned int MasterID;
+/// typeof Workspace::id
 typedef unsigned int WorkspaceID;
+/// typeof Monitor::id
 typedef unsigned long MonitorID;
 
 ///holds data on a window

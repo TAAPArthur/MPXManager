@@ -1,5 +1,12 @@
+/**
+ * @file mpx.h
+ * Contains methods to enable/setup multiple master devices
+ */
 #ifndef MPX_H
 #define MPX_H
+
+#include "mywm-structs.h"
+#include "devices.h"
 
 /**
  * Adds hiearchy rules that will detect master/slave addition/removal and make the correct pairings
@@ -38,4 +45,51 @@ int splitMaster(void);
  * Removes all the event rules created by splitMaster()
  */
 void endSplitMaster(void);
+
+
+/**
+ * Given a slaveName, scans the config to find which master the slave should be belong to
+ *
+ * @param slaveName
+ *
+ * @return the name of the master or NULL
+ */
+char* getMasterNameForSlave(char* slaveName);
+
+/**
+ * @param name
+ *
+ * @return the first master whose name is name or NULL
+ */
+Master* getMasterByName(char* name);
+/**
+ * @copybrief getMasterNameForSlave
+ *
+ * @param slaveName
+ *
+ * @return the master or NULL
+ */
+Master* getMasterForSlave(char* slaveName);
+
+/**
+ * Give a slaveDevice, find which master device it belongs to
+ *
+ * @param slaveDevice
+ *
+ * @return the master keyboard/pointer or 0 if not found
+ */
+int getMasterIdForSlave(SlaveDevice* slaveDevice);
+
+/**
+ * Looks at the config to determine which master device slaveDevice should be attached to and attaches it
+ *
+ * @param slaveDevice
+ */
+void attachSlaveToPropperMaster(SlaveDevice* slaveDevice);
+/**
+ * Sets the focusColor for master based on the config file
+ *
+ * @param master
+ */
+void restoreFocusColor(Master* master);
 #endif

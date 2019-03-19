@@ -1,9 +1,9 @@
 /**
- * @file wmfunctions.c
- * @brief Connect our internal structs to X
+ * @file windows.c
+ * @copybrief windows.h
  *
  */
-/// \cond
+
 #include <assert.h>
 #include <string.h>
 #include <strings.h>
@@ -14,20 +14,20 @@
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xinput.h>
-/// \endcond
 
-#include "mywm-util.h"
-#include "workspaces.h"
-#include "masters.h"
-#include "windows.h"
-#include "devices.h"
-#include "logger.h"
-#include "xsession.h"
-#include "globals.h"
-#include "monitors.h"
-#include "ewmh.h"
-#include "events.h"
+
 #include "bindings.h"
+#include "devices.h"
+#include "events.h"
+#include "ewmh.h"
+#include "globals.h"
+#include "logger.h"
+#include "masters.h"
+#include "monitors.h"
+#include "mywm-util.h"
+#include "windows.h"
+#include "workspaces.h"
+#include "xsession.h"
 
 
 ///list of all windows
@@ -179,7 +179,7 @@ void loadProtocols(WindowInfo* winInfo){
     }
 }
 void loadWindowProperties(WindowInfo* winInfo){
-    LOG(LOG_LEVEL_TRACE, "loading window properties %d\n", winInfo->id);
+    LOG(LOG_LEVEL_VERBOSE, "loading window properties %d\n", winInfo->id);
     loadClassInfo(winInfo);
     loadTitleInfo(winInfo);
     loadProtocols(winInfo);
@@ -331,7 +331,7 @@ int processNewWindow(WindowInfo* winInfo){
     if(winInfo->cloneOrigin == 0)
         loadWindowProperties(winInfo);
     if(!applyRules(getEventRules(ProcessingWindow), winInfo)){
-        LOG(LOG_LEVEL_DEBUG, "Window is to be ignored; freeing winInfo %d\n", winInfo->id);
+        LOG(LOG_LEVEL_VERBOSE, "Window is to be ignored; freeing winInfo %d\n", winInfo->id);
         deleteWindowInfo(winInfo);
         return 0;
     }
@@ -379,7 +379,7 @@ void markAsDock(WindowInfo* winInfo){
     winInfo->dock = 1;
     if(indexOf(getAllWindows(), winInfo, sizeof(int)) != -1){
         addUnique(getAllDocks(), winInfo, sizeof(int));
-        resizeAllMonitorsToAvoidAllStructs();
+        resizeAllMonitorsToAvoidStruct(winInfo);
     }
 }
 
@@ -387,7 +387,7 @@ int addWindowInfo(WindowInfo* winInfo){
     if(addUnique(getAllWindows(), winInfo, sizeof(int))){
         if(winInfo->dock){
             addUnique(getAllDocks(), winInfo, sizeof(int));
-            resizeAllMonitorsToAvoidAllStructs();
+            resizeAllMonitorsToAvoidStruct(winInfo);
         }
         return 1;
     }

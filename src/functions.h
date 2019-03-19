@@ -1,8 +1,7 @@
 /**
  * @file functions.h
  *
- * @brief User functions that are that
- * users may add to their config that are not used elsewhere
+ * @brief functions that users may add to their config that are not used elsewhere
  */
 
 
@@ -18,7 +17,7 @@
 #define DOWN 1
 
 #define _RUN_OR_RAISE(TYPE,STR_TO_MATCH,COMMAND_STR) \
-    OR(BIND((int (*)(void*))findAndRaise,(&((Rule)CREATE_RULE(STR_TO_MATCH,TYPE,NULL)))), BIND(spawn,COMMAND_STR))
+    OR(BIND(findAndRaise,(&((Rule)CREATE_RULE(STR_TO_MATCH,TYPE,NULL)))), BIND(spawn,COMMAND_STR))
 
 #define _RUN_OR_RAISE_HELPER(_1,_2,NAME,...) NAME
 #define _RUN_OR_RAISE_IMPLICIT(TYPE,STR_TO_MATCH) _RUN_OR_RAISE(TYPE,STR_TO_MATCH,STR_TO_MATCH)

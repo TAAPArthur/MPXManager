@@ -268,14 +268,8 @@ START_TEST(test_focus_update){
 END_TEST
 
 START_TEST(test_focus_follows_mouse){
-    lock();
     int id1 = winInfo->id;
     int id2 = winInfo2->id;
-    if(_i){
-        deleteWindow(id1);
-        deleteWindow(id2);
-    }
-    unlock();
     focusWindow(id1);
     movePointer(getActiveMasterPointerID(), id1, 0, 0);
     flush();
@@ -491,13 +485,23 @@ START_TEST(test_client_request_frame_extents){
 END_TEST
 
 START_TEST(test_client_request_restack){
+    WindowID stackingOrder[] = {winInfo->id, winInfo2->id, winInfo->id};
+    int idle;
+    lock();
+    idle = getIdleCount();
     assert(raiseWindow(winInfo2->id));
+    unlock();
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(checkStackingOrder(stackingOrder, 2));
     addMask(winInfo, EXTERNAL_RAISE_MASK);
-    LOG(LOG_LEVEL_DEBUG, "win: %d\n", winInfo->id);
     //processConfigureRequest(winInfo->id, NULL, winInfo2->id, XCB_STACK_MODE_ABOVE,  XCB_CONFIG_WINDOW_STACK_MODE|XCB_CONFIG_WINDOW_SIBLING);
+    lock();
+    idle = getIdleCount();
     xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, winInfo->id, winInfo2->id, XCB_STACK_MODE_ABOVE);
     flush();
-    WAIT_UNTIL_TRUE(isWindowVisible(winInfo));
+    unlock();
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(checkStackingOrder(stackingOrder + 1, 2));
 }
 END_TEST
 
@@ -572,7 +576,7 @@ Suite* defaultRulesSuite(){
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Non_Default_Device_Events");
     tcase_add_checked_fixture(tc_core, nonDefaultDeviceEventsetup, fullCleanup);
-    tcase_add_loop_test(tc_core, test_focus_follows_mouse, 0, 2);
+    tcase_add_test(tc_core, test_focus_follows_mouse);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("KeyEvent");
     tcase_add_checked_fixture(tc_core, deviceEventsetup, fullCleanup);

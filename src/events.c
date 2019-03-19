@@ -1,19 +1,20 @@
 /**
  * @file events.c
+ * @copybrief events.h
  */
 #include <assert.h>
 #include <pthread.h>
 
 #include <xcb/randr.h>
 
-#include "logger.h"
 #include "bindings.h"
-#include "mywm-util.h"
 #include "devices.h"
 #include "globals.h"
-#include "xsession.h"
+#include "logger.h"
+#include "mywm-util.h"
 #include "state.h"
 #include "wmfunctions.h"
+#include "xsession.h"
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -92,14 +93,17 @@ void* runEventLoop(void* arg __attribute__((unused))){
         if(!IGNORE_SEND_EVENT)
             type &= 127;
         assert(type < NUMBER_OF_EVENT_RULES);
-        LOG(LOG_LEVEL_TRACE, "Event detected %d %s number of rules: %d\n",
+        LOG(LOG_LEVEL_VERBOSE, "Event detected %d %s number of rules: %d\n",
             event->response_type, eventTypeToString(type), getSize(getEventRules(type)));
         lock();
         setLastEvent(event);
         applyRules(getEventRules(type < 35 ? type : 35), NULL);
         unlock();
         free(event);
-        LOG(LOG_LEVEL_TRACE, "event proccesed\n");
+#ifdef DEBUG
+        XSync(dpy, 0);
+#endif
+        LOG(LOG_LEVEL_VERBOSE, "event proccesed\n");
     }
     LOG(LOG_LEVEL_DEBUG, "Exited event loop\n");
     return NULL;

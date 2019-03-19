@@ -1,13 +1,14 @@
 /**
  * @file util.c
+ * @copybrief util.h
  */
-/// \cond
+
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <sys/time.h>
-/// \endcond
+
 
 #include "util.h"
 
@@ -19,11 +20,7 @@
 void msleep(int mil){
     int sec = mil / 1000;
     mil = mil % 1000;
-    nanosleep((const struct timespec[]){
-        {
-            sec, mil * 1e6
-        }
-    }, NULL);
+    nanosleep((const struct timespec[]){{sec, mil * 1e6}}, NULL);
 }
 
 unsigned int getTime(){

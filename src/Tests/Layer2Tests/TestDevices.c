@@ -50,7 +50,7 @@ START_TEST(test_create_destroy_master){
     //re-running
     initCurrentMasters();
     assert(getSize(getAllMasters()) == 2);
-    FOR_EACH(Master*, m, getAllMasters()) destroyMasterDevice(m->id, DEFAULT_POINTER, DEFAULT_KEYBOARD);
+    destroyAllNonDefaultMasters();
     deleteList(getAllMasters());
     initCurrentMasters();
     assert(getSize(getAllMasters()) == 1);

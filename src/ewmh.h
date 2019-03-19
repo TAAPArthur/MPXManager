@@ -1,8 +1,6 @@
 /*
- * ewmh.h
- *
- *  Created on: Jul 14, 2018
- *      Author: arthur
+ * @file ewmh.h
+ * Provides macros to set various EWMH properties
  */
 
 #ifndef EWMH_H_

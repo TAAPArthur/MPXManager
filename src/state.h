@@ -1,3 +1,7 @@
+/**
+ * @file state.h
+ * Tracks state of workspaces
+ */
 #ifndef STATE_H
 #define STATE_H
 

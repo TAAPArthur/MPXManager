@@ -3,7 +3,7 @@ SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0 -DDEBUG
 RELEASE_FLAGS := -O3 -DNDEBUG
 
-IGNORED_FLAGS := -Wno-implicit-fallthrough -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-int-to-pointer-cast -Wno-cast-function-type
+IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-cast-function-type
 ERROR_FLAGS := -Werror -Wall -Wextra
 CFLAGS := -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE 
 
@@ -20,7 +20,7 @@ BASE_SRCS := settings.c args.c mpxmanager.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYE
 SRCS := ${BASE_SRCS} config.c 
 
 
-CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || true
+CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm *.gc??
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 
@@ -106,10 +106,12 @@ package:
 	+$(MAKE) -C .. $@
 doc:
 	+$(MAKE) -C .. $@
+doc-check:
+	+$(MAKE) -C .. $@
 
 .PHONY: test all clean doc format format-all install package unitTest5
 
 .DELETE_ON_ERROR:
 
 clean:
-	rm -f mywm debug unitTest* *gc?? vgcore*
+	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.so

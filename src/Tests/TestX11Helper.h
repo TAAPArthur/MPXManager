@@ -20,7 +20,7 @@
 #include "../globals.h"
 #include "../test-functions.h"
 
-#define ATOMIC(code...)lock();code;unlock();
+#define ATOMIC(code...) do {lock();code;unlock();}while(0)
 extern pthread_t pThread;
 #define START_MY_WM \
         pThread=runInNewThread(runEventLoop,NULL,0);

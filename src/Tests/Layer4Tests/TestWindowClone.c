@@ -26,10 +26,10 @@ static void setup(){
     mapWindow(window);
     scan(root);
     retile();
-    START_MY_WM
     winInfo = getHead(getAllWindows());
     assert(winInfo);
     clone = cloneWindow(winInfo);
+    START_MY_WM
 }
 START_TEST(test_clone_window){
     assert(getSize(getAllWindows()) == 2);

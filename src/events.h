@@ -66,6 +66,7 @@ void registerForEvents();
  * Declare interest in select window events
  * @param window
  * @param mask
+ * @return the error code if an error occured
  */
 int registerForWindowEvents(WindowID window, int mask);
 

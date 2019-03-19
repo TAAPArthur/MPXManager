@@ -4,13 +4,14 @@
 #================================================================
 #%Usage: ${SCRIPT_NAME} [ACTION]
 #%MPX aware window manager
-#%    
+#%
 #%
 #%Action:
 #%    --recompile                   Recompile with program. Needed for changes to config to be loaded
 #%    --restart                     Restart the program
 #%    --name                        Name of executable
 #%    --path                        Path to the config file
+#%    --send, -s                    send argument(s) to running instance
 #%    -h, --help                    Print this help
 #%    -v, --version                 Print script information
 #%
@@ -26,7 +27,7 @@
 #================================================================
 # END_OF_HEADER
 #================================================================
-#MAN generated with help2man -No mpxmanager.1 ./mpxmanager.sh 
+#MAN generated with help2man -No mpxmanager.1 ./mpxmanager.sh
 
 set -e
 
@@ -50,14 +51,14 @@ fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))
 path=$HOME/.mpxmanager
 optspec=":hs-:"
 
-getopts "$optspec" optchar || run 
+getopts "$optspec" optchar || run
     case "${optchar}" in
         -)
             case "${OPTARG}" in
                 force-restart)
                     pid=$(pgrep $fileName)
                     kill $pid;
-                    while kill -0 $pid; do 
+                    while kill -0 $pid; do
                         sleep 1
                     done
                     shift
@@ -86,7 +87,7 @@ getopts "$optspec" optchar || run
                     echo $fileName
                     ;;
                 path)
-                    echo $path 
+                    echo $path
                     ;;
                 *)
                     run $@

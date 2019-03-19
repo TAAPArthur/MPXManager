@@ -13,6 +13,7 @@
 #include "events.h"
 #include "globals.h"
 #include "logger.h"
+#include "mywm-util.h"
 #include "windows.h"
 
 /// determines how verbose logging is
@@ -177,6 +178,7 @@ void parseArgs(int argc, char* argv[], int exitOnUnknownOptions){
                     listOptions();
                     break;
                 }
+                __attribute__((fallthrough));
             case 0:        /* long options toggles */
                 setValue(index, optarg);
                 break;

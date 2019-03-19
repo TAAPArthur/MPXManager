@@ -388,6 +388,9 @@ START_TEST(test_literal_string_rule){
     else var = "A";
     Rule r = CREATE_LITERAL_RULE(var, target | CASE_SENSITIVE, NULL);
     assert(doesStringMatchRule(&r, "A"));
+    assert(doesStringMatchRule(&r, "random_text_A") == 0);
+    assert(doesStringMatchRule(&r, "A_random_text") == 0);
+    assert(doesStringMatchRule(&r, "random_text_A_random_text") == 0);
     assert(doesStringMatchRule(&r, "a") == 0);
     assert(doesStringMatchRule(&r, "b") == 0);
     Rule r2 = CREATE_LITERAL_RULE(var, target, NULL);

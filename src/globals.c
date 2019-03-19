@@ -1,11 +1,15 @@
+/**
+ * @file globals.c
+ * @copydoc globals.h
+ */
+#include <X11/extensions/XInput2.h>
+#include <xcb/xinput.h>
+
 #include "globals.h"
 #include "windows.h"
-#include <unistd.h>
 
 
 char LOAD_SAVED_STATE = 1;
-
-int SOURCE_INDICATION_MASK = 7;
 
 long KILL_TIMEOUT = 100;
 

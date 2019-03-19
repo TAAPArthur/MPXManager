@@ -1,7 +1,6 @@
 /**
  * @file wmfunctions.h
- * @brief Connect our internal structs to X
- *
+ * @brief Provides methods to help sync our internal structs to X11
  */
 
 #ifndef MYWM_FUNCTIONS_H_
@@ -9,7 +8,7 @@
 
 #include <xcb/xcb.h>
 
-#include "mywm-util.h"
+#include "mywm-structs.h"
 
 
 /**

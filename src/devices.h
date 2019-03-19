@@ -6,7 +6,7 @@
 #ifndef DEVICES_H_
 #define DEVICES_H_
 
-#include "mywm-util.h"
+#include "mywm-structs.h"
 
 /**
  * The value pointed to by the Node list returned by getSlavesOfMasterByID()

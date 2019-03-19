@@ -5,11 +5,40 @@
 #ifndef BINDINGS_H_
 #define BINDINGS_H_
 
-/// \cond
-#include <regex.h>
-/// \endcond
-#include "mywm-util.h"
 
+#include <regex.h>
+
+#include <X11/extensions/XInput2.h>
+#include <xcb/xinput.h>
+
+#include "mywm-structs.h"
+
+/// The last supported standard x event
+#define GENERIC_EVENT_OFFSET LASTEvent
+/// offset for all monitor related events
+#define MONITOR_EVENT_OFFSET GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS+1
+/// max value of supported X events (not total events)
+#define LAST_REAL_EVENT   MONITOR_EVENT_OFFSET+8
+
+//TODO consistent naming
+enum {
+    ///if all rules are passed through, then the window is added as a normal window
+    onXConnection = LAST_REAL_EVENT,
+    /// Run after properties have been loaded
+    PropertyLoad,
+    /// deterime if a newly detected window should be recorded/monitored/controlled by us
+    ProcessingWindow,
+    /// called after the newly created window has been added to a workspace
+    RegisteringWindow,
+    /// when a workspace is tiled
+    TileWorkspace,
+    /// called after a set number of events or when the connection is idle
+    Periodic,
+    /// called when the connection is idle
+    Idle,
+    /// max value of supported events
+    NUMBER_OF_EVENT_RULES
+};
 ///Default Regex flag used when creating non literal Rules
 #define DEFAULT_REGEX_FLAG REG_EXTENDED
 
@@ -93,6 +122,8 @@ typedef enum {
  *Union holding the argument to a bounded function.
  */
 typedef union {
+    /**an int*/
+    long longArg;
     /**an int*/
     int intArg;
     /**a pointer*/
@@ -190,10 +221,10 @@ typedef struct {
  * @param ... the params to the function, the 1st is the function, 2nd (if present) is
  * the argument to bind to the function
  */
-#define BIND(...) BIND_HELPER(__VA_ARGS__, _BIND, BIND2,BIND1)(__VA_ARGS__)
+#define BIND(...) _BIND_HELPER(__VA_ARGS__, _BIND, _BIND2,_BIND1)(__VA_ARGS__)
 
-///\cond
-#define BIND1(F) _BIND(F,0,\
+
+#define _BIND1(F) _BIND(F,0,\
     _Generic((F), \
             void(*)(void):0,\
             int(*)(void):0,\
@@ -202,15 +233,15 @@ typedef struct {
             default:1 \
             ))
 
-#define BIND2(F,A) _BIND(F,A,\
+#define _BIND2(F,A) _BIND(F,A,\
     _Generic((A), \
         BoundFunction*:2,\
         default:0 \
         ))
 
-#define BIND_HELPER(_1,_2,_3,NAME,...) NAME
+#define _BIND_HELPER(_1,_2,_3,NAME,...) NAME
 
-#define _BIND(F,A,D){.func=(void (*)()) F, .arg={.voidArg=(void*)A},.dynamic=D, .type=\
+#define _BIND(F,A,D){.func=(void (*)()) F, .arg={.longArg=(long)A},.dynamic=D, .type=\
    _Generic((F), \
         void (*)(void):NO_ARGS, \
         int (*)(void):NO_ARGS_RETURN_INT, \
@@ -221,13 +252,15 @@ typedef struct {
         void (*)(WindowInfo*,int): WIN_INT_ARG, \
         int (*)(WindowInfo*, int): WIN_INT_ARG_RETURN_INT, \
         void (*)(Layout*): VOID_ARG, \
+        void (*)(Rule*): VOID_ARG, \
         void (*)(char*): VOID_ARG, \
         void (*)(void*): VOID_ARG, \
         int (*)(Layout*): VOID_ARG_RETURN_INT, \
+        int (*)(Rule*): VOID_ARG_RETURN_INT, \
         int (*)(char*): VOID_ARG_RETURN_INT, \
         int (*)(void*): VOID_ARG_RETURN_INT \
 )}
-///\endcond
+
 
 
 /**

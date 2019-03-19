@@ -1,29 +1,35 @@
+/**
+ * @file mpxmanager.c
+ * Entrypoint for MPXManager
+ */
+#include <assert.h>
 #include <execinfo.h>
-#include <signal.h>
-#include <unistd.h>
-
 #include <getopt.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <unistd.h>
 
-#include "mywm-util.h"
-#include "config.h"
-#include "events.h"
-#include "default-rules.h"
 #include "args.h"
+#include "default-rules.h"
+#include "events.h"
+#include "globals.h"
+#include "logger.h"
+#include "mywm-util.h"
+#include "settings.h"
 
 static void handler(int sig){
-    void* array[32];
-    size_t size;
-    // get void*'s for all entries on the stack
-    size = backtrace(array, LEN(array));
-    // print out all the frames to stderr
     fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    printStackTrace();
     exit(1);
 }
 
+/**
+ * @param argc
+ * @param argv[]
+ *
+ * @return
+ */
 int main(int argc, char* argv[]){
     numPassedArguments = argc;
     passedArguments = argv;

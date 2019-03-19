@@ -1,7 +1,13 @@
+/**
+ * @file masters.c
+ * @copybrief masters.h
+ */
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "masters.h"
+
 Master* createMaster(MasterID id, int partnerId, char* name, int focusColor){
     Master* master = calloc(1, sizeof(Master));
     master->id = id;

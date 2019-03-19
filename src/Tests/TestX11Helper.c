@@ -187,14 +187,18 @@ Window createDock(int i, int size, int full){
 extern void requestShutdown();
 void fullCleanup(){
     setLogLevel(LOG_LEVEL_NONE + 1);
-    consumeEvents();
-    //wake up other thread
     requestShutdown();
-    xcb_ewmh_request_frame_extents(ewmh, defaultScreenNumber, root);
-    xcb_flush(dis);
+    flush();
+    consumeEvents();
+    if(pThread){
+        ATOMIC(registerForWindowEvents(root, ROOT_EVENT_MASKS));
+    }
+    //wake up other thread
+    createNormalWindow();
+    flush();
     //close(xcb_get_file_descriptor(dis));
     if(pThread)
-        pthread_join(pThread, ((void*)0));
+        pthread_join(pThread, NULL);
     destroyAllNonDefaultMasters();
     quit();
 }

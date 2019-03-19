@@ -1,8 +1,9 @@
 --style=java
 --pad-oper
---unpad-paren 
+--unpad-paren
 
 --attach-closing-while
+--keep-one-line-blocks
 
 --align-pointer=type
 --break-closing-braces

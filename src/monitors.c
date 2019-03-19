@@ -1,22 +1,22 @@
 /**
- * * @file monitors.c
+ * @file monitors.c
+ * @copybrief monitors.h
  */
-///\cond
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <xcb/xcb.h>
 #include <xcb/randr.h>
+#include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-///\endcond
 
-#include "xsession.h"
-#include "monitors.h"
-#include "workspaces.h"
 
 #include "globals.h"
 #include "logger.h"
+#include "monitors.h"
+#include "workspaces.h"
+#include "xsession.h"
 
 /**
  * List of docks.
@@ -88,6 +88,9 @@ static void resizeMonitorToAvoidAllStructs(Monitor* m){
 }
 void resizeAllMonitorsToAvoidAllStructs(void){
     FOR_EACH(Monitor*, mon, getAllMonitors()) resizeMonitorToAvoidAllStructs(mon);
+}
+void resizeAllMonitorsToAvoidStruct(WindowInfo* winInfo){
+    FOR_EACH(Monitor*, mon, getAllMonitors()) resizeMonitorToAvoidStruct(mon, winInfo);
 }
 
 int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo){

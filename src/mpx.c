@@ -1,18 +1,19 @@
+/**
+ * @file mpx.c
+ * @copydoc mpx.h
+ */
 
-/// \cond
+
 #include <assert.h>
-#include <strings.h>
 #include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-/// \endcond
-#include "mpx.h"
-#include "devices.h"
-#include "bindings.h"
-#include "masters.h"
 
+
+#include "bindings.h"
+#include "devices.h"
 #include "globals.h"
 #include "logger.h"
+#include "masters.h"
+#include "mpx.h"
 #include "xsession.h"
 
 /**
@@ -49,6 +50,12 @@ static void attachActiveSlavesToMaster(int id){
     attachSlaveToMaster(event->sourceid, masterId);
 }
 
+static char* getNameOfMaster(Master* master){
+    return master->name;
+}
+static char* getNameOfSlave(SlaveDevice* slave){
+    return slave->name;
+}
 static void autoAttachSlave(void){
     xcb_input_hierarchy_event_t* event = getLastEvent();
     if(event->flags & (XCB_INPUT_HIERARCHY_MASK_SLAVE_ADDED | XCB_INPUT_HIERARCHY_MASK_DEVICE_ENABLED))
@@ -59,12 +66,6 @@ void addAutoMPXRules(void){
     static Rule attachOnStartRule = CREATE_WILDCARD(BIND(restoreMPX));
     prependRule(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY, &autoAttachRule);
     prependRule(onXConnection, &attachOnStartRule);
-}
-char* getNameOfMaster(Master* master){
-    return master->name;
-}
-char* getNameOfSlave(SlaveDevice* slave){
-    return slave->name;
 }
 int splitMaster(void){
     endSplitMaster();

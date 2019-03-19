@@ -1,8 +1,13 @@
+/**
+ * @file workspaces.h
+ * @brief Provides methods to manage workspaces
+ */
 #ifndef WORKSPACES_H
 #define WORKSPACES_H
 
 #include "mywm-structs.h"
 
+/// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
 #define NO_WORKSPACE -2
 
 /**
@@ -11,7 +16,14 @@
  * @see createContext
  */
 int getNumberOfWorkspaces();
-ArrayList* getListOfWorkspaces(void);
+/**
+ * Deletes all workspaces
+ */
+void deleteAllWorkspaces(void);
+/**
+ * Adds new workspace
+ */
+void addNewWorkspace(void);
 /**
  *
  * @return the windows in the active workspace at the NORMAL_LAYER
@@ -25,6 +37,24 @@ ArrayList* getActiveWindowStack();
  */
 Workspace* getWorkspaceByIndex(int index);
 
+
+/**
+ * @param winInfo
+ *
+ * @return the workspace index the window is in or NO_WORKSPACE
+ */
+int getWorkspaceIndexOfWindow(WindowInfo* winInfo);
+
+/**
+ * @param winInfo a window that is in a workspace
+ * @return the workspace the window is in or NULL
+ */
+Workspace* getWorkspaceOfWindow(WindowInfo* winInfo);
+/**
+ * @param winInfo a window that is in a workspace
+ * @return the window stack of the workspace the window is in
+ */
+ArrayList* getWindowStackOfWindow(WindowInfo* winInfo);
 /**
  *
  * @param i the workspace index
@@ -75,19 +105,11 @@ Layout* getActiveLayout();
  */
 Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
 
+/**
+ * @param w
+ * @return layouts of w
+ */
 ArrayList* getLayouts(Workspace* w);
-/**
- * @return newly created workspace
- */
-Workspace* createWorkspace();
-/**
- * Does a simple seach to see if the window is in the workspace's stack
- * Does not handle advaned cases like cloning
- * @param winInfo
- * @param workspaceIndex
- * @return true if the window with the given id is the specifed workspace
- */
-ArrayList* isWindowInWorkspace(WindowInfo* winInfo, int workspaceIndex);
 /**
  *
  * @param winInfo
@@ -99,7 +121,6 @@ int isWindowNotInInvisibleWorkspace(WindowInfo* winInfo);
 /**
  * Removes a window from a workspace
  * @param winInfo
- * @param workspaceIndex
  * @return 1 iff the window was actually removed
  */
 int removeWindowFromWorkspace(WindowInfo* winInfo);

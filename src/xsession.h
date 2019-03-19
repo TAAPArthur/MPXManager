@@ -6,14 +6,10 @@
 #ifndef XSESSION_H_
 #define XSESSION_H_
 
-/// \cond
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
-#include <xcb/xinput.h>
+
 #include <X11/Xlib.h>
-/// \endcond
+#include <xcb/xcb_ewmh.h>
+
 
 ///global graphics context
 extern xcb_gcontext_t graphics_context;
@@ -71,12 +67,15 @@ void openXDisplay(void);
 
 /**
  * Closes an open XConnection
+ *
  * If is not safe to call this method on an already closed connection
  */
 void closeConnection(void);
 
 /**
  * Flush the X connection
+ *
+ * This method is just a wrapper for XFlush and xcb_flush
  */
 void flush(void);
 

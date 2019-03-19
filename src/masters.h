@@ -1,3 +1,7 @@
+/**
+ * @file masters.h
+ * Contains methods related to the Master struct
+ */
 #ifndef MASTERS_H
 #define MASTERS_H
 
