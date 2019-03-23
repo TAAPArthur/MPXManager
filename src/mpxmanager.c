@@ -29,6 +29,7 @@ int main(int argc, char* argv[]){
     passedArguments = argv;
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
+    signal(SIGPIPE, resetPipe);
     //signal(SIGINT, quit);
     parseArgs(argc, argv, 1);
     startUpMethod = loadSettings;

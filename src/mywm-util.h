@@ -40,5 +40,9 @@ void quit(void);
  */
 void restart(void);
 
+/**
+ * Resets the status pipe
+ */
+void resetPipe();
 
 #endif

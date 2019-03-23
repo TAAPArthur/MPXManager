@@ -116,10 +116,7 @@ void setClientMasterEnvVar(void){
 
 int spawnPipe(char* command){
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
-    if(statusPipeFD[0]){
-        close(statusPipeFD[0]);
-        close(statusPipeFD[1]);
-    }
+    resetPipe();
     pipe(statusPipeFD);
     int pid = fork();
     if(pid == 0){
@@ -130,7 +127,6 @@ int spawnPipe(char* command){
     }
     else if(pid < 0)
         err(1, "error forking\n");
-    dup2(statusPipeFD[1], 1);
     close(statusPipeFD[0]);
     return pid;
 }

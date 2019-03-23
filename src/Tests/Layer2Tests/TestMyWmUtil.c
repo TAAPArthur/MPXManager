@@ -65,6 +65,13 @@ START_TEST(test_init_context){
         assert(getWorkspaceByIndex(i));
 }
 END_TEST
+START_TEST(test_init_pipe){
+    pipe(statusPipeFD);
+    resetPipe();
+    pipe(statusPipeFD);
+    assert(STATUS_FD);
+}
+END_TEST
 
 
 START_TEST(test_destroy_context){
@@ -596,6 +603,10 @@ Suite* mywmUtilSuite(void){
     tcase_add_test(tc_core, test_complete_window_remove);
     tcase_add_test(tc_core, test_monitor_workspace);
     tcase_add_test(tc_core, test_window_in_visible_worspace);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("Misc");
+    tcase_add_checked_fixture(tc_core, createSimpleContext, quit);
+    tcase_add_test(tc_core, test_init_pipe);
     suite_add_tcase(s, tc_core);
     return s;
 }

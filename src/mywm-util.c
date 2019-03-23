@@ -36,9 +36,17 @@ void resetContext(void){
     for(int i = 0; i < NUMBER_OF_WORKSPACES; i++)
         addToList(getListOfWorkspaces(), createWorkspace());
 }
-
+void resetPipe(){
+    if(statusPipeFD[0]){
+        close(statusPipeFD[0]);
+        close(statusPipeFD[1]);
+        statusPipeFD[0] = statusPipeFD[1] = 0;
+    }
+}
 static void stop(void){
     LOG(LOG_LEVEL_INFO, "Shutting down\n");
+    if(STATUS_FD)
+        close(STATUS_FD);
     //shuttingDown=1;
     if(dis)
         catchError(xcb_set_selection_owner_checked(dis, XCB_NONE, WM_SELECTION_ATOM, XCB_CURRENT_TIME));
