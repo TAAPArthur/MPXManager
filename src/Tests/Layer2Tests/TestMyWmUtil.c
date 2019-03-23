@@ -401,6 +401,7 @@ START_TEST(test_empty_workspace){
     assert(isWorkspaceNotEmpty(0) == 0);
     addWindowInfo(createWindowInfo(1));
     assert(isWorkspaceNotEmpty(0) == 0);
+    assert(getWorkspaceOfWindow(getHead(getAllWindows())) == NULL);
     addWindowToWorkspace(getWindowInfo(1), 0);
     assert(isWorkspaceNotEmpty(0));
     removeWindow(1);
@@ -526,14 +527,14 @@ START_TEST(test_window_in_visible_worspace){
     addFakeMaster(1, 1);
     WindowInfo* winInfo = createWindowInfo(1);
     addWindowInfo(winInfo);
-    assert(!isWindowInVisibleWorkspace(winInfo));
+    assert(isWindowNotInInvisibleWorkspace(winInfo));
     addFakeMonitor(1);
     addWindowToWorkspace(winInfo, 0);
-    assert(isWindowInVisibleWorkspace(winInfo));
+    assert(isWindowNotInInvisibleWorkspace(winInfo));
     swapMonitors(0, 1);
-    assert(!isWindowInVisibleWorkspace(winInfo));
+    assert(!isWindowNotInInvisibleWorkspace(winInfo));
     addWindowToWorkspace(winInfo, 1);
-    assert(isWindowInVisibleWorkspace(winInfo));
+    assert(isWindowNotInInvisibleWorkspace(winInfo));
 }
 END_TEST
 START_TEST(test_complete_window_remove){

@@ -38,6 +38,7 @@ ArrayList* getAllWindows(void){
 WindowInfo* createWindowInfo(WindowID id){
     WindowInfo* wInfo = calloc(1, sizeof(WindowInfo));
     wInfo->id = id;
+    wInfo->workspaceIndex = NO_WORKSPACE;
     return wInfo;
 }
 int getMask(WindowInfo* winInfo){

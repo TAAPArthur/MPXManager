@@ -3,6 +3,8 @@
 
 #include "mywm-structs.h"
 
+#define NO_WORKSPACE -2
+
 /**
  *
  * @return the number of workspaces
@@ -92,7 +94,7 @@ ArrayList* isWindowInWorkspace(WindowInfo* winInfo, int workspaceIndex);
  * @return 1 if the window is in a visible workspace
  * @see isWindowInWorkspace
  */
-int isWindowInVisibleWorkspace(WindowInfo* winInfo);
+int isWindowNotInInvisibleWorkspace(WindowInfo* winInfo);
 
 /**
  * Removes a window from a workspace

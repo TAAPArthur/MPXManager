@@ -312,13 +312,13 @@ START_TEST(test_workspace_activation){
     assert(!isWorkspaceVisible(index2));
     WAIT_UNTIL_TRUE(isWindowMapped(info1) && !isWindowMapped(info2) && getActiveWorkspaceIndex() == index1);
     activateWindow(winInfo2);
-    assert(isWindowInVisibleWorkspace(winInfo2));
-    assert(!isWindowInVisibleWorkspace(winInfo1));
+    assert(isWindowNotInInvisibleWorkspace(winInfo2));
+    assert(!isWindowNotInInvisibleWorkspace(winInfo1));
     WAIT_UNTIL_TRUE(isWindowMapped(info2) && !isWindowMapped(info1) && getActiveWorkspaceIndex() == index2);
     assert(getHead(getActiveWindowStack()) == winInfo2);
     activateWindow(winInfo1);
-    assert(isWindowInVisibleWorkspace(winInfo1));
-    assert(!isWindowInVisibleWorkspace(winInfo2));
+    assert(isWindowNotInInvisibleWorkspace(winInfo1));
+    assert(!isWindowNotInInvisibleWorkspace(winInfo2));
     WAIT_UNTIL_TRUE(isWindowMapped(info1) && !isWindowMapped(info2) && getActiveWorkspaceIndex() == index1);
     assert(getSize(getActiveWindowStack()) == 1);
     assert(getHead(getActiveWindowStack()) == winInfo1);
@@ -328,34 +328,36 @@ END_TEST
 
 
 START_TEST(test_configure_windows){
-    WindowID win = createNormalWindow();
-    WindowInfo* winInfo = createWindowInfo(win);
+    WindowInfo* winInfo[] = {createWindowInfo(mapWindow(createNormalWindow())), createWindowInfo(mapWindow(createNormalWindow()))};
+    markAsDock(winInfo[0]);
     DEFAULT_WINDOW_MASKS = EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK;
-    processNewWindow(winInfo);
-    dumpWindowInfo(winInfo);
-    short values[] = {1, 2, 3, 4, 5};
-    int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-                   XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
-    int defaultValues[] = {10, 10, 10, 10, 10};
-    for(int i = 0; i < LEN(masks); i++){
+    for(int n = 0; n < LEN(winInfo); n++){
+        processNewWindow(winInfo[n]);
+        WindowID win = winInfo[n]->id;
+        short values[] = {1, 2, 3, 4, 5};
+        int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+                       XCB_CONFIG_WINDOW_BORDER_WIDTH;
+        int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
+        int defaultValues[] = {10, 10, 10, 10, 10};
+        for(int i = 0; i < LEN(masks); i++){
+            xcb_configure_window(dis, win, allMasks, defaultValues);
+            processConfigureRequest(win, values, 0, 0, masks[i]);
+            waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+            xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
+            for(int n = 0; n < 5; n++)
+                assert((&reply->x)[n] == (n == i ? values[0] : defaultValues[0]));
+            free(reply);
+        }
         xcb_configure_window(dis, win, allMasks, defaultValues);
-        processConfigureRequest(win, values, 0, 0, masks[i]);
-        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+        processConfigureRequest(win, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
         xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
-        for(int n = 0; n < 5; n++)
-            assert((&reply->x)[n] == (n == i ? values[0] : defaultValues[0]));
+        assert(reply->width == values[0]);
+        assert(reply->height == values[1]);
         free(reply);
+        //TODO check below
+        processConfigureRequest(win, NULL, root, XCB_STACK_MODE_ABOVE,
+                                XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
     }
-    xcb_configure_window(dis, win, allMasks, defaultValues);
-    processConfigureRequest(win, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
-    xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
-    assert(reply->width == values[0]);
-    assert(reply->height == values[1]);
-    free(reply);
-    //TODO check below
-    processConfigureRequest(win, NULL, root, XCB_STACK_MODE_ABOVE,
-                            XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
 }
 END_TEST
 
@@ -568,6 +570,38 @@ void multiWorkspaceStartup(void){
     assert(getSize(getWindowStackByMaster(getActiveMaster())) == 2);
 }
 
+START_TEST(test_workspaceless_window){
+    WindowInfo* winInfo = createWindowInfo(mapWindow(createNormalWindow()));
+    addWindowInfo(winInfo);
+    int index = getActiveWorkspaceIndex();
+    START_MY_WM;
+    int size = 6;
+    for(int i = 0; i < size; i++){
+        if(i == size / 2){
+            WAIT_UNTIL_TRUE(getSize(getActiveWindowStack()) == size / 2);
+            ATOMIC(switchToWorkspace(!index));
+        }
+        ATOMIC(createNormalWindow());
+    }
+    WAIT_UNTIL_TRUE(getSize(getActiveWindowStack()) == size / 2);
+    assert(getSize(getAllWindows()) == size + 1);
+    ATOMIC(assert(getWorkspaceIndexOfWindow(winInfo) == NO_WORKSPACE));
+    ATOMIC(assert(getWorkspaceOfWindow(winInfo) == NULL));
+    activateWindow(winInfo);
+    ATOMIC(assert(getWorkspaceIndexOfWindow(winInfo) == NO_WORKSPACE));
+    ATOMIC(assert(getWorkspaceOfWindow(winInfo) == NULL));
+    assert(getActiveWorkspaceIndex() == !index);
+    ATOMIC(activateWorkspace(index));
+    ATOMIC(activateWorkspace(!index));
+    ATOMIC(switchToWorkspace(index));
+    ATOMIC(switchToWorkspace(!index));
+    ATOMIC(switchToWorkspace(index));
+    ATOMIC(swapWorkspaces(index, !index));
+    ATOMIC(swapWorkspaces(index, index));
+    ATOMIC(swapWithWorkspace(index));
+    ATOMIC(swapWithWorkspace(!index));
+}
+END_TEST
 Suite* x11Suite(void){
     Suite* s = suite_create("Window Manager Functions");
     TCase* tc_core;
@@ -611,10 +645,11 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_withdraw_window);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("MISC");
-    tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_set_workspace_names);
     tcase_add_test(tc_core, test_unkown_window);
     tcase_add_test(tc_core, test_bad_window);
+    tcase_add_test(tc_core, test_workspaceless_window);
     suite_add_tcase(s, tc_core);
     return s;
 }

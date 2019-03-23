@@ -233,7 +233,9 @@ int activateWindow(WindowInfo* winInfo){
         return 0;
     }
     LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d\n", winInfo->id, winInfo->workspaceIndex);
-    switchToWorkspace(winInfo->workspaceIndex);
+    if(winInfo->workspaceIndex != NO_WORKSPACE){
+        switchToWorkspace(winInfo->workspaceIndex);
+    }
     return raiseWindowInfo(winInfo) && focusWindowInfo(winInfo) ? winInfo->id : 0;
 }
 
@@ -243,7 +245,7 @@ static void focusNextVisibleWindow(ArrayList* masters, WindowInfo* defaultWinInf
         ArrayList* masterWindowStack = getWindowStackByMaster(master);
         setActiveMaster(master);
         WindowInfo* winToFocus = NULL;
-        UNTIL_FIRST(winToFocus, masterWindowStack, isWorkspaceVisible(getWorkspaceOfWindow(winToFocus)->id) &&
+        UNTIL_FIRST(winToFocus, masterWindowStack, isWindowNotInInvisibleWorkspace(winToFocus) &&
                     isActivatable(winToFocus) && focusWindowInfo(winToFocus));
         if(!winToFocus && defaultWinInfo)
             focusWindowInfo(defaultWinInfo);
@@ -269,7 +271,7 @@ int deleteWindow(WindowID winToRemove){
 
 int attemptToMapWindow(int id){
     WindowInfo* winInfo = getWindowInfo(id);
-    if(!winInfo || isWindowInVisibleWorkspace(winInfo) && isMappable(winInfo))
+    if(!winInfo || isWindowNotInInvisibleWorkspace(winInfo) && isMappable(winInfo))
         return catchError(xcb_map_window_checked(dis, id));
     return 0;
 }
@@ -312,7 +314,7 @@ void activateWorkspace(int workspaceIndex){
     switchToWorkspace(workspaceIndex);
     ArrayList* masterWindowStack = getWindowStackByMaster(getActiveMaster());
     WindowInfo* winToFocus = NULL;
-    UNTIL_FIRST(winToFocus, masterWindowStack, workspaceIndex == getWorkspaceOfWindow(winToFocus)->id &&
+    UNTIL_FIRST(winToFocus, masterWindowStack, workspaceIndex == getWorkspaceIndexOfWindow(winToFocus) &&
                 isActivatable(winToFocus));
     LOG(LOG_LEVEL_DEBUG, "Activating window\n");
     if(winToFocus)

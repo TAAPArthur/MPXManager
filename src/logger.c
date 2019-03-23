@@ -136,7 +136,10 @@ void dumpWindowInfo(WindowInfo* win){
     LOG(LOG_LEVEL_INFO, "Title class %s\n", win->title);
     LOG(LOG_LEVEL_INFO, "Mask %d\n", win->mask);
     printMask(win->mask);
-    LOG(LOG_LEVEL_INFO, "Workspace %d\n", win->workspaceIndex);
+    if(win->workspaceIndex == NO_WORKSPACE)
+        LOG(LOG_LEVEL_INFO, "NO WORKPACE\n");
+    else
+        LOG(LOG_LEVEL_INFO, "Workspace %d\n", win->workspaceIndex);
     LOG(LOG_LEVEL_INFO, "\n");
 }
 

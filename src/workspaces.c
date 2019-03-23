@@ -30,7 +30,10 @@ int getWorkspaceIndexOfWindow(WindowInfo* winInfo){
     return winInfo->workspaceIndex;
 }
 Workspace* getWorkspaceOfWindow(WindowInfo* winInfo){
-    return getWorkspaceByIndex(getWorkspaceIndexOfWindow(winInfo));
+    int index = getWorkspaceIndexOfWindow(winInfo);
+    if(index == NO_WORKSPACE)
+        return NULL;
+    return getWorkspaceByIndex(index);
 }
 ArrayList* getWindowStackOfWindow(WindowInfo* winInfo){
     return getWindowStack(getWorkspaceOfWindow(winInfo));
@@ -90,11 +93,15 @@ void swapMonitors(int index1, int index2){
 }
 //Workspace methods
 
-int isWindowInVisibleWorkspace(WindowInfo* winInfo){
+int isWindowNotInInvisibleWorkspace(WindowInfo* winInfo){
+    if(getWorkspaceIndexOfWindow(winInfo) == NO_WORKSPACE)
+        return 1;
     return isWorkspaceVisible(getWorkspaceIndexOfWindow(winInfo));
 }
 int removeWindowFromWorkspace(WindowInfo* winInfo){
     assert(winInfo);
+    if(getWorkspaceIndexOfWindow(winInfo) == NO_WORKSPACE)
+        return 0;
     ArrayList* list = getWindowStackOfWindow(winInfo);
     int index = indexOf(list, winInfo, sizeof(int));
     if(index != -1)
