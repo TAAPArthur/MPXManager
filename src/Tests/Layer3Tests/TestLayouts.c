@@ -326,6 +326,9 @@ START_TEST(test_transient_windows_always_above){
 END_TEST
 START_TEST(test_tile_windows){
     setActiveLayout(NULL);
+    //retile empty workspace
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        tileWorkspace(i);
     //bottom to top stacking order;
     WindowID stackingOrder[3] = {0};
     int masks[] = {BELOW_MASK, 0, ABOVE_MASK};

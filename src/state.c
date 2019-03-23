@@ -22,10 +22,8 @@
  * don't match, we consider the workspaces to have changed
  */
 typedef struct {
-    /**a char array representing  the x,y,width, height of the last
-    * monitor for a workspace
-    */
-    long monitor;
+    ///representing  the view port of the workspaces' monitors
+    Rect monitorViewport;
     ///if this struct can be safely freed
     int noFree;
     /// the size of windowIds and windowMasks arrays
@@ -61,14 +59,14 @@ static void destroyCurrentState(){
     savedStates = NULL;
 }
 
-static long getMonitorLocationFromWorkspace(Workspace* workspace){
+static inline Rect getMonitorLocationFromWorkspace(Workspace* workspace){
     assert(workspace);
     Monitor* m = getMonitorFromWorkspace(workspace);
-    if(!m)return 0;
-    long l;
-    //copy the next 4 shorts after m->view.x into l
-    memcpy(&l, &m->view.x, sizeof(long));
-    return l;
+    if(!m)
+        return (Rect){0};
+    Rect rect;
+    memcpy(&rect, &m->view, sizeof(Rect));
+    return rect;
 }
 static WorkspaceState* computeState(){
     WorkspaceState* states = calloc(getNumberOfWorkspaces(), sizeof(WorkspaceState));
@@ -80,8 +78,7 @@ static WorkspaceState* computeState(){
             continue;
         }
         states[i].layout = getActiveLayoutOfWorkspace(i);
-        long m = getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
-        states[i].monitor = m ? m : i < numberOfRecordedWorkspaces ? savedStates[i].monitor : 0;
+        states[i].monitorViewport = getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
         ArrayList* list = getWindowStack(getWorkspaceByIndex(i));
         int size = getSize(list);
         int j = 0;
@@ -112,14 +109,13 @@ static int compareState(void(*onChange)(int)){
     assert(currentState);
     int changed = 0;
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        if(
-            i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
-            savedStates[i].monitor != currentState[i].monitor ||
-            savedStates[i].layout != currentState[i].layout ||
-            memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size)
-            || memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size)
-        ){
-            unmarkState();
+        if((savedStates || currentState[i].size) &&
+                (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
+                 memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
+                 savedStates[i].layout != currentState[i].layout ||
+                 memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size)
+                 || memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size))
+          ){
             changed = 1;
             LOG(LOG_LEVEL_TRACE, "Detected change in workspace %d. \n", i);
             if(onChange)
@@ -127,6 +123,7 @@ static int compareState(void(*onChange)(int)){
             else
                 break;
         }
+    unmarkState();
     if(savedStates)
         destroyCurrentState();
     numberOfRecordedWorkspaces = getNumberOfWorkspaces();

@@ -19,13 +19,29 @@ static void onStateChange(int i){
     calledMasks |= mask;
     visited++;
 }
-void setup(){
-    createSimpleContext();
+static WindowInfo* addVisibleWindow(int i){
+    WindowInfo* winInfo = createWindowInfo(createNormalWindow());
+    addWindowInfo(winInfo);
+    addWindowToWorkspace(winInfo, i);
+    addMask(winInfo, MAPPED_MASK);
+    return winInfo;
 }
 START_TEST(test_no_state_change){
-    assert(updateState(NULL));
     markState();
     assert(!updateState(NULL));
+}
+END_TEST
+START_TEST(test_state_change_num_windows){
+    for(int i = 1; i < 10; i++){
+        WindowInfo* winInfo = createWindowInfo(i);
+        addWindowInfo(winInfo);
+        addMask(winInfo, MAPPED_MASK);
+        assert(isWorkspaceVisible(0));
+        addWindowToWorkspace(winInfo, 0);
+        markState();
+        assert(updateState(NULL));
+        break;
+    }
 }
 END_TEST
 START_TEST(test_mask_change){
@@ -41,8 +57,9 @@ START_TEST(test_mask_change){
 }
 END_TEST
 START_TEST(test_layout_change){
+    addVisibleWindow(getActiveWorkspaceIndex());
+    updateState(NULL);
     Layout l = {0};
-    assert(updateState(NULL));
     setActiveLayout(&l);
     markState();
     assert(updateState(NULL));
@@ -54,12 +71,8 @@ END_TEST
 START_TEST(test_on_workspace_change){
     int size = getNumberOfWorkspaces();
     assert(getNumberOfWorkspaces() > 2);
-    WindowInfo* win[size];
-    for(int i = 0; i < size; i++){
-        win[i] = createWindowInfo(mapWindow(createNormalWindow()));
-        addWindowInfo(win[i]);
-        addWindowToWorkspace(win[i], i);
-    }
+    for(int i = 0; i < size; i++)
+        addVisibleWindow(i);
     assert(updateState(NULL));
     for(int i = 1; i < size; i++){
         switchToWorkspace(i);
@@ -77,11 +90,8 @@ START_TEST(test_on_invisible_workspace_window_add){
     int size = 3;
     assert(getNumberOfWorkspaces() > 2);
     WindowInfo* win[size];
-    for(int i = 0; i < size; i++){
-        win[i] = createWindowInfo(mapWindow(createNormalWindow()));
-        addWindowInfo(win[i]);
-        addWindowToWorkspace(win[i], i);
-    }
+    for(int i = 0; i < size; i++)
+        win[i] = addVisibleWindow(i);
     switchToWorkspace(0);
     assert(updateState(NULL));
     moveWindowToWorkspace(win[2], 1);
@@ -98,30 +108,13 @@ END_TEST
 START_TEST(test_on_focus_change){
     int size = 9;
     WindowInfo* win[size];
-    for(int i = 0; i < size; i++){
-        win[i] = createWindowInfo(createNormalWindow());
-        addWindowInfo(win[i]);
-        addWindowToWorkspace(win[i], getActiveWorkspaceIndex());
-    }
+    for(int i = 0; i < size; i++)
+        win[i] = addVisibleWindow(getActiveWorkspaceIndex());
     assert(updateState(NULL));
     for(int i = 0; i < size; i++){
         updateFocusState(win[i]);
         markState();
         assert(!updateState(NULL));
-    }
-}
-END_TEST
-START_TEST(test_state_change_num_windows){
-    assert(updateState(NULL));
-    for(int i = 1; i < 10; i++){
-        WindowInfo* winInfo = createWindowInfo(i);
-        addWindowInfo(winInfo);
-        addMask(winInfo, MAPPED_MASK);
-        assert(isWorkspaceVisible(0));
-        addWindowToWorkspace(winInfo, 0);
-        markState();
-        assert(updateState(NULL));
-        break;
     }
 }
 END_TEST
@@ -161,12 +154,12 @@ Suite* stateSuite(){
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);
     tcase_add_test(tc_core, test_no_state_change);
     tcase_add_test(tc_core, test_state_change_num_windows);
+    tcase_add_test(tc_core, test_mask_change);
+    tcase_add_test(tc_core, test_layout_change);
     tcase_add_test(tc_core, test_on_state_change);
     tcase_add_test(tc_core, test_on_workspace_change);
     tcase_add_test(tc_core, test_on_focus_change);
     tcase_add_test(tc_core, test_on_invisible_workspace_window_add);
-    tcase_add_test(tc_core, test_mask_change);
-    tcase_add_test(tc_core, test_layout_change);
     tcase_add_loop_test(tc_core, test_num_workspaces_grow, 0, 2);
     suite_add_tcase(s, tc_core);
     return s;
