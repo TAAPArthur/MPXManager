@@ -501,4 +501,13 @@ void removeRule(int i, Rule* rule);
  * Removes all rules from the all eventRules
  */
 void clearAllRules(void);
+
+/// @return true
+static inline int returnTrue(void){
+    return 1;
+}
+/// @return false
+static inline int returnFalse(void){
+    return 0;
+}
 #endif

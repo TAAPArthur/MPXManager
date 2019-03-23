@@ -12,12 +12,6 @@ static BoundFunction sampleChain = CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_BUTTON_REL
 {0, Button1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
 {0, Button1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .noGrab = 1},
 END_CHAIN(0, 0));
-int returnFalse(void){
-    return 0;
-}
-int returnTrue(void){
-    return 1;
-}
 
 
 START_TEST(test_init_binding){
