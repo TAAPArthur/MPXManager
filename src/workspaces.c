@@ -3,6 +3,7 @@
 #include "mywm-util.h"
 #include "workspaces.h"
 #include "masters.h"
+#include <stdio.h>
 ///list of all workspaces
 static ArrayList workspaces;
 
@@ -21,6 +22,7 @@ ArrayList* getWindowStack(Workspace* workspace){
 Workspace* createWorkspace(){
     Workspace* workspaces = calloc(1, sizeof(Workspace));
     workspaces->id = getNumberOfWorkspaces();
+    sprintf(workspaces->name, "%d", workspaces->id + 1);
     return workspaces;
 }
 int getNumberOfWorkspaces(){

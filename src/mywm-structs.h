@@ -152,7 +152,7 @@ typedef struct {
     ///workspace index
     WorkspaceID id;
     ///user facing name of the workspace
-    char* name;
+    char name[NAME_BUFFER];
     ///the monitor the workspace is on
     Monitor* monitor;
 

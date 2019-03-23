@@ -496,8 +496,10 @@ int getIndexFromName(char* name){
     return getNumberOfWorkspaces();
 }
 void setWorkspaceNames(char* names[], int numberOfNames){
-    for(int i = 0; i < numberOfNames && i < getNumberOfWorkspaces(); i++)
-        getWorkspaceByIndex(i)->name = names[i];
+    for(int i = 0; i < numberOfNames && i < getNumberOfWorkspaces(); i++){
+        strncpy(getWorkspaceByIndex(i)->name, names[i], NAME_BUFFER - 1);
+        getWorkspaceByIndex(i)->name[NAME_BUFFER - 1] = 0;
+    }
     if(ewmh)
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
 }
