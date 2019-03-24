@@ -424,6 +424,42 @@ START_TEST(test_privileged_windows_size){
 }
 END_TEST
 
+START_TEST(test_raise_lower_request){
+    WindowInfo* winInfo[5];
+    WindowID win[5];
+    WindowID finalStackingOrder[LEN(win)];
+    DEFAULT_WINDOW_MASKS = BELOW_MASK | EXTERNAL_RAISE_MASK;
+    setActiveLayout(NULL);
+    for(int i = 0; i < LEN(winInfo); i++){
+        win[i] = mapWindow(createNormalWindow());
+        winInfo[i] = createWindowInfo(win[i]);
+        finalStackingOrder[i] = win[i];
+    }
+    for(int i = LEN(winInfo) - 1; i >= 0; i--)
+        processNewWindow(winInfo[i]);
+    finalStackingOrder[0] = win[LEN(win) - 1];
+    finalStackingOrder[LEN(win) - 1] = win[0];
+    assert(checkStackingOrder(win, LEN(win)));
+    retile();
+    assert(checkStackingOrder(win, LEN(win)));
+    assert(getSize(getActiveWindowStack()) == LEN(winInfo));
+    int idle = getIdleCount();
+    if(!fork()){
+        openXDisplay();
+        raiseLowerWindowInfo(winInfo[0], 1);
+        raiseLowerWindowInfo(winInfo[LEN(win) - 1], 0);
+        flush();
+        exit(0);
+    }
+    waitForCleanExit();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(checkStackingOrder(finalStackingOrder, LEN(win)));
+    ATOMIC(retile(); flush());
+    assert(!checkStackingOrder(win, LEN(win)));
+    assert(checkStackingOrder(finalStackingOrder, LEN(win)));
+}
+END_TEST
 
 Suite* layoutSuite(){
     Suite* s = suite_create("Layouts");
@@ -453,6 +489,7 @@ Suite* layoutSuite(){
     tcase_add_test(tc_core, test_transient_windows_always_above);
     tcase_add_test(tc_core, test_empty_layout);
     tcase_add_loop_test(tc_core, test_privileged_windows_size, 0, 5);
+    tcase_add_test(tc_core, test_raise_lower_request);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Layouts");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);

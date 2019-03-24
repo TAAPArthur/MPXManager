@@ -424,6 +424,17 @@ void processConfigureRequest(WindowID win, short values[5], WindowID sibling, in
         xcb_configure_window(dis, win, mask, actualValues);
 #endif
         LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d\n", win, mask);
+        if(winInfo && mask & XCB_CONFIG_WINDOW_STACK_MODE){
+            Workspace* workspace = getWorkspaceOfWindow(winInfo);
+            if(workspace)
+                if(sibling == XCB_NONE){
+                    int i = indexOf(getWindowStack(workspace), winInfo, sizeof(WindowID));
+                    if(stackMode == XCB_STACK_MODE_ABOVE)
+                        shiftToHead(getWindowStack(workspace), i);
+                    else
+                        addToList(getWindowStack(workspace), removeFromList(getWindowStack(workspace), i));
+                }
+        }
     }
     else
         LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
