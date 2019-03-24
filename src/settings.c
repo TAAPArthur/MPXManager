@@ -35,9 +35,10 @@ static Binding DEFAULLT_BINDINGS[] = {
     WORKSPACE_OPERATION(XK_0, 9),
     STACK_OPERATION(XK_Up, XK_Down, XK_Left, XK_Right),
     STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
-    {WILDCARD_MODIFIER, Button1, BOTH(BIND(activateWorkspaceUnderMouse), BIND(activateWindow)), .noGrab = 1, .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
+    {WILDCARD_MODIFIER, Button1, AND(BIND(activateWorkspaceUnderMouse), BIND(raiseWindowInfo), BIND(focusWindowInfo)), .noGrab = 1, .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask, XK_c, BIND(killWindowInfo)},
     {Mod4Mask, Button1, BIND(floatWindow), .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
+    {Mod4Mask | ShiftMask, Button1, BIND(sinkWindow), .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask, XK_t, BIND(sinkWindow)},
 
     {0, XF86XK_AudioPlay, OR(BIND(toggleLayout, &DEFAULT_LAYOUTS[FULL]), BIND(cycleLayouts, DOWN))},
