@@ -458,8 +458,6 @@ START_TEST(test_apply_rules){
     void funcNoArg(void){
         count++;
     }
-    Rule dummy = CREATE_RULE("", LITERAL, NULL);
-    assert(applyRule(&dummy, NULL));
     static ArrayList head;
     assert(applyRules(&head, NULL));
     int size = MATCH_ANY_LITERAL;
@@ -478,17 +476,22 @@ START_TEST(test_apply_rules){
 }
 END_TEST
 START_TEST(test_passthrough_rules){
+    ArrayList list = {0};
     Rule rules[] = {
         CREATE_WILDCARD(BIND(returnTrue), .passThrough = ALWAYS_PASSTHROUGH),
         CREATE_WILDCARD(BIND(returnTrue), .passThrough = PASSTHROUGH_IF_TRUE),
         CREATE_WILDCARD(BIND(returnFalse), .passThrough = PASSTHROUGH_IF_FALSE),
     };
     for(int i = 0; i < LEN(rules); i++)
-        assert(applyRule(&rules[i], NULL));
+        addToList(&list, &rules[i]);
+    for(int i = 0; i < LEN(rules); i++)
+        assert(applyRules(&list, NULL) == 1);
     Rule noPassThrough = CREATE_WILDCARD(BIND(returnFalse), .passThrough = NO_PASSTHROUGH);
-    assert(!applyRule(&noPassThrough, NULL));
+    addToList(&list, &noPassThrough);
+    assert(!applyRules(&list, NULL));
     //here to touch 'impossible case'
     passThrough(0, -1);
+    clearList(&list);
 }
 END_TEST
 

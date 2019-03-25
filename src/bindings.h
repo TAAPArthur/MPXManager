@@ -169,6 +169,8 @@ typedef struct {
     BoundFunction onMatch;
     /**If false then subsequent rules won't be checked if this rule matches*/
     int passThrough;
+    /// When applying rules, the return value will be negated if this field is set. A return value of 0, indicates the calling method should (cleanup and) abort
+    int negateResult;
     /**Compiled regex used for matching with non-literal rules*/
     regex_t* regexExpression;
     /** boolean indicating whether the rule has been initilized or not
@@ -426,24 +428,15 @@ int doesWindowMatchRule(Rule* rules, WindowInfo* winInfo);
  * @return 1 iff the code should proceed or 0 iff it should return immediatly
  */
 int passThrough(int result, PassThrough pass);
-/**
- * Checks to see a the window matches the rule and applies the rule if it does
- * If this functions returns 0 subsequent rules via applyRules will be skipped
- * @param rule the rule to match against
- * @param winInfo the window to match
- * @return 1 iff the rule matched the window and the function return value
- * indicated a success as defined by the rule
- * @see doesWindowMatchRule
- * @see callBoundedFunction
- */
-int applyRule(Rule* rule, WindowInfo* winInfo);
 
 /**
- * Iterates over head and applies the stored rules in order stopping when a rule matches
+ * Iterates over head and applies the given rules in order stopping when a rule matches
  * and its passThrough value is false
- * @param head
+ * @param head a list of Rules
  * @param winInfo
- * @return 1 if no rule was matched that had passThrough == false
+ * @return 1 if no rule was matched that had passThrough == false or the result (perhaps negated) of the boundFunction of the last rule to match the given window
+ * @see doesWindowMatchRule
+ * @see callBoundedFunction
  */
 int applyRules(ArrayList* head, WindowInfo* winInfo);
 

@@ -281,6 +281,6 @@ int ignoreFunction(WindowInfo* winInfo){
 }
 
 void addDummyIgnoreRule(void){
-    static Rule ignoreRule = CREATE_WILDCARD(BIND(ignoreFunction), .passThrough = PASSTHROUGH_IF_FALSE);
+    static Rule ignoreRule = CREATE_WILDCARD(BIND(ignoreFunction), .passThrough = PASSTHROUGH_IF_FALSE, .negateResult = 1);
     appendRule(ProcessingWindow, &ignoreRule);
 }

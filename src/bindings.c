@@ -252,19 +252,16 @@ int passThrough(int result, PassThrough pass){
     LOG(LOG_LEVEL_WARN, "invalid pass through option %d\n", pass);
     return 0;
 }
-int applyRule(Rule* rule, WindowInfo* winInfo){
-    assert(rule);
-    if(doesWindowMatchRule(rule, winInfo))
-        return passThrough(callBoundedFunction(&rule->onMatch, winInfo), rule->passThrough);
-    return 1;
-}
 
 int applyRules(ArrayList* head, WindowInfo* winInfo){
     assert(head);
     FOR_EACH(Rule*, rule, head){
         assert(rule);
-        if(!applyRule(rule, winInfo))
-            return 0;
+        if(doesWindowMatchRule(rule, winInfo)){
+            int result = callBoundedFunction(&rule->onMatch, winInfo);
+            if(!passThrough(result, rule->passThrough))
+                return rule->negateResult ? !result : result;
+        }
     }
     return 1;
 }
