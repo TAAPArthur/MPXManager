@@ -16,7 +16,7 @@ pthread_t pThread = 0;
 void destroyWindow(WindowID win){
     assert(NULL == xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
 }
-static int createWindow(int parent, int mapped, int ignored, int userIgnored, int input){
+static int createWindow(int parent, int mapped, int ignored, int userIgnored, int input, int class){
     assert(ignored < 2);
     assert(dis);
     xcb_window_t window = xcb_generate_id(dis);
@@ -26,8 +26,8 @@ static int createWindow(int parent, int mapped, int ignored, int userIgnored, in
                           parent,                  /* parent window       */
                           0, 0,                          /* x, y                */
                           150, 150,                      /* width, height       */
-                          1,                            /* border_width        */
-                          XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class               */
+                          0,                            /* border_width        */
+                          class, /* class               */
                           screen->root_visual,           /* visual              */
                           XCB_CW_OVERRIDE_REDIRECT, &ignored);                     /* masks, not used yet */
     xcb_generic_error_t* e = xcb_request_check(dis, c);
@@ -47,23 +47,26 @@ static int createWindow(int parent, int mapped, int ignored, int userIgnored, in
         catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &ewmh->_NET_WM_WINDOW_TYPE_NORMAL));
     return window;
 }
+int  createInputOnlyWindow(void){
+    return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
+}
 int  createInputWindow(int input){
-    return createWindow(root, 1, 0, 0, input);
+    return createWindow(root, 1, 0, 0, input, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 int createUserIgnoredWindow(void){
-    return createWindow(root, 1, 0, 1, 1);
+    return createWindow(root, 1, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 int createIgnoredWindow(void){
-    return createWindow(root, 1, 1, 0, 1);
+    return createWindow(root, 1, 1, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 int createNormalWindow(void){
-    return createWindow(root, 1, 0, 0, 1);
+    return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 int createNormalSubWindow(int parent){
-    return createWindow(parent, 1, 0, 0, 1);
+    return createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 int  createUnmappedWindow(void){
-    return createWindow(root, 0, 0, 0, 1);
+    return createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 
 int mapWindow(WindowID win){

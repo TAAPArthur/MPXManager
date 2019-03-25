@@ -314,21 +314,34 @@ void registerWindow(WindowInfo* winInfo){
     if(LOAD_SAVED_STATE){
         loadSavedAtomState(winInfo);
     }
-    if(registerForWindowEvents(win, NON_ROOT_EVENT_MASKS) != BadWindow){
-        passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
-        applyRules(getEventRules(RegisteringWindow), winInfo);
-    }
-    else {
-        LOG(LOG_LEVEL_TRACE, "Registeration failed %d (%x)\n", winInfo->id, winInfo->id);
-        removeWindow(winInfo->id);
-    }
+    registerForWindowEvents(win, NON_ROOT_EVENT_MASKS);
+    passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
+    applyRules(getEventRules(RegisteringWindow), winInfo);
+}
+static int loadWindowAttributes(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr){
+    if(!attr || attr->override_redirect)
+        return 0;
+    if(attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY)
+        addMask(winInfo, INPUT_ONLY_MASK);
+    if(attr->map_state)
+        addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
+    return 1;
 }
 int processNewWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_TRACE, "processing %d (%x)\n", winInfo->id, winInfo->id);
     addMask(winInfo, DEFAULT_WINDOW_MASKS);
-    if(winInfo->cloneOrigin == 0)
+    int abort = 0;
+    // creation time is only 0 when scanning
+    // scan checks properties in bulk so we don't have to
+    if(winInfo->creationTime != 0){
+        xcb_get_window_attributes_reply_t* attr = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis,
+                winInfo->id), NULL);
+        abort = !loadWindowAttributes(winInfo, attr);
+        if(attr)free(attr);
+    }
+    if(!abort && winInfo->cloneOrigin == 0)
         loadWindowProperties(winInfo);
-    if(!applyRules(getEventRules(ProcessingWindow), winInfo)){
+    if(abort || !applyRules(getEventRules(ProcessingWindow), winInfo)){
         LOG(LOG_LEVEL_VERBOSE, "Window is to be ignored; freeing winInfo %d\n", winInfo->id);
         deleteWindowInfo(winInfo);
         return 0;
@@ -342,31 +355,31 @@ void scan(xcb_window_t baseWindow){
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, baseWindow), 0);
     assert(reply && "could not query tree");
     if(reply){
+        xcb_get_window_attributes_reply_t* attr;
         int numberOfChildren = xcb_query_tree_children_length(reply);
         LOG(LOG_LEVEL_TRACE, "detected %d kids\n", numberOfChildren);
         xcb_window_t* children = xcb_query_tree_children(reply);
-        xcb_get_window_attributes_reply_t* attr;
         xcb_get_window_attributes_cookie_t cookies[numberOfChildren];
         for(int i = 0; i < numberOfChildren; i++)
             cookies[i] = xcb_get_window_attributes(dis, children[i]);
         // iterate in top to bottom order
         for(int i = numberOfChildren - 1; i >= 0; i--){
             LOG(LOG_LEVEL_TRACE, "processing child %d\n", children[i]);
+            WindowInfo* winInfo = createWindowInfo(children[i]);
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
-            assert(attr);
-            if(attr->override_redirect || attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY){
-                LOG(LOG_LEVEL_VERBOSE, "Skipping child override redirect: %d class: %d\n", attr->override_redirect, attr->_class);
+            winInfo->parent = baseWindow;
+            //if the window is not unmapped
+            if(loadWindowAttributes(winInfo, attr)){
+                if(processNewWindow(winInfo)){
+                    xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, children[i]), NULL);
+                    setGeometry(winInfo, &reply->x);
+                    free(reply);
+                    if(!IGNORE_SUBWINDOWS)
+                        scan(children[i]);
+                }
             }
-            else {
-                WindowInfo* winInfo = createWindowInfo(children[i]);
-                winInfo->parent = baseWindow;
-                //if the window is not unmapped
-                if(attr->map_state)
-                    addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
-                if(processNewWindow(winInfo) && !IGNORE_SUBWINDOWS)
-                    scan(children[i]);
-            }
-            free(attr);
+            else free(winInfo);
+            if(attr)free(attr);
         }
         free(reply);
     }

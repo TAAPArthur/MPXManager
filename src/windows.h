@@ -79,6 +79,8 @@ typedef enum {
     SRC_ANY =                SRC_INDICATION_OTHER | SRC_INDICATION_APP | SRC_INDICATION_PAGER,
 
 
+    /**The window is an input only window (more importantly it cannot have a border)*/
+    INPUT_ONLY_MASK =           1 << 15,
     /**The window can receive input focus*/
     INPUT_MASK =           1 << 16,
     /**The WM will not forcibly set focus but request the application focus itself*/

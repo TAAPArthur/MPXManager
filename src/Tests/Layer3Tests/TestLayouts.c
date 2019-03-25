@@ -253,6 +253,19 @@ START_TEST(test_simple_transform_config){
     }
 }
 END_TEST
+START_TEST(test_tile_input_only_window){
+    CRASH_ON_ERRORS = -1;
+    WindowID win = mapWindow(createInputOnlyWindow());
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(hasMask(winInfo, INPUT_ONLY_MASK));
+    assert(isTileable(winInfo));
+    assert(getSize(getActiveWindowStack()) == 1);
+    setActiveLayout(&DEFAULT_LAYOUTS[GRID]);
+    assert(getActiveLayout()->args.noBorder == 0);
+    retile();
+}
+END_TEST
 
 
 START_TEST(test_empty_layout){
@@ -495,6 +508,7 @@ Suite* layoutSuite(){
     tcase_add_test(tc_core, test_tile_windows);
     tcase_add_test(tc_core, test_transient_windows);
     tcase_add_test(tc_core, test_transient_windows_always_above);
+    tcase_add_test(tc_core, test_tile_input_only_window);
     tcase_add_test(tc_core, test_empty_layout);
     tcase_add_loop_test(tc_core, test_privileged_windows_size, 0, 5);
     tcase_add_test(tc_core, test_raise_lower_request);

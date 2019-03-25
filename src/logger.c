@@ -56,6 +56,7 @@ void printMask(int mask){
     _PRINT_MASK(SRC_INDICATION_APP, mask);
     _PRINT_MASK(SRC_INDICATION_PAGER, mask);
     _PRINT_MASK(SRC_ANY, mask);
+    _PRINT_MASK(INPUT_ONLY_MASK, mask);
     _PRINT_MASK(INPUT_MASK, mask);
     _PRINT_MASK(WM_TAKE_FOCUS_MASK, mask);
     _PRINT_MASK(WM_DELETE_WINDOW_MASK, mask);

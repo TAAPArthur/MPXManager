@@ -150,7 +150,9 @@ void onCreateEvent(void){
     winInfo->creationTime = getTime();
     winInfo->parent = event->parent;
     LOG(LOG_LEVEL_DEBUG, "window: %d parent: %d\n", event->window, event->parent);
-    processNewWindow(winInfo);
+    if(processNewWindow(winInfo)){
+        setGeometry(winInfo, &event->x);
+    }
 }
 void onDestroyEvent(void){
     xcb_destroy_notify_event_t* event = getLastEvent();

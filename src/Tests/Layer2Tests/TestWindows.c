@@ -218,9 +218,16 @@ START_TEST(test_process_window){
     assert(winInfo->mask);
 }
 END_TEST
+START_TEST(test_process_input_only_window){
+    WindowID win = createInputOnlyWindow();
+    scan(root);
+    assert(hasMask(getWindowInfo(win), INPUT_ONLY_MASK));
+}
+END_TEST
 START_TEST(test_process_bad_window){
     WindowID win = createNormalWindow();
     WindowInfo* winInfo = createWindowInfo(win);
+    winInfo->creationTime = getTime();
     assert(!catchError(xcb_destroy_window_checked(dis, win)));
     processNewWindow(winInfo);
     assert(getSize(getAllWindows()) == 0);
@@ -343,6 +350,7 @@ Suite* windowsSuite(void){
     tcase_add_test(tc_core, test_window_input_focus_detection);
     tcase_add_test(tc_core, test_window_extra_property_loading);
     tcase_add_test(tc_core, test_process_window);
+    tcase_add_test(tc_core, test_process_input_only_window);
     tcase_add_test(tc_core, test_process_bad_window);
     tcase_add_test(tc_core, test_window_scan);
     tcase_add_test(tc_core, test_child_window_scan);

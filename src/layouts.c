@@ -106,12 +106,6 @@ void transformConfig(LayoutState* state, int config[CONFIG_LEN]){
                 config[CONFIG_Y] = MIN(-(x - midX) + midY, midY - (x + config[CONFIG_WIDTH] - midX));
                 break;
         }
-        config[CONFIG_BORDER] = state->args->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
-        config[CONFIG_STACK] = state->args->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
-        if(!state->args->noAdjustForBorders){
-            config[CONFIG_WIDTH] -= config[CONFIG_BORDER] * 2;
-            config[CONFIG_HEIGHT] -= config[CONFIG_BORDER] * 2;
-        }
     }
 }
 static void applyMasksToConfig(Monitor* m, int* values, WindowInfo* winInfo){
@@ -119,35 +113,59 @@ static void applyMasksToConfig(Monitor* m, int* values, WindowInfo* winInfo){
         values[CONFIG_X] = 0;
         values[CONFIG_Y] = 0;
         values[CONFIG_WIDTH] = getRootWidth();
-        values[CONFIG_HEIGHT] = getRootWidth();
+        values[CONFIG_HEIGHT] = getRootHeight();
     }
     else if(hasMask(winInfo, FULLSCREEN_MASK)){
         for(int i = 0; i < 4; i++)
             values[CONFIG_X + i] = (&m->base.x)[i];
     }
-    else if(hasMask(winInfo, Y_MAXIMIZED_MASK))
-        values[CONFIG_HEIGHT] = m->view.height;
-    else if(hasMask(winInfo, X_MAXIMIZED_MASK))
-        values[CONFIG_WIDTH] = m->view.width;
+    else {
+        if(hasMask(winInfo, X_MAXIMIZED_MASK))
+            values[CONFIG_WIDTH] = m->view.width;
+        if(hasMask(winInfo, Y_MAXIMIZED_MASK))
+            values[CONFIG_HEIGHT] = m->view.height;
+    }
 }
 
+static int adjustBorders(LayoutState* state, WindowInfo* winInfo, int config[CONFIG_LEN], int mask){
+    if(hasMask(winInfo, INPUT_ONLY_MASK)){
+        mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
+        for(int i = CONFIG_BORDER; i < CONFIG_LEN - 1; i++)
+            config[i] = config[i + 1];
+    }
+    else if(state->args){
+        if(winInfo->config[CONFIG_BORDER])
+            config[CONFIG_BORDER] = MAX(0, winInfo->config[CONFIG_BORDER]);
+        else {
+            config[CONFIG_BORDER] = state->args->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
+            if(!state->args->noAdjustForBorders){
+                config[CONFIG_WIDTH] -= config[CONFIG_BORDER] * 2;
+                config[CONFIG_HEIGHT] -= config[CONFIG_BORDER] * 2;
+            }
+        }
+    }
+    return mask;
+}
 void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFIG_LEN]){
     assert(winInfo);
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
                XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
                XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
-    int config[CONFIG_LEN] = {[CONFIG_BORDER] = winInfo->config[CONFIG_BORDER], [CONFIG_STACK] = XCB_STACK_MODE_ABOVE};
+    int config[CONFIG_LEN] = {0};
     assert(LEN(winInfo->config) == CONFIG_LEN - 1);
+    config[CONFIG_STACK] = state->args && state->args->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
+    for(int i = 0; i <= CONFIG_HEIGHT; i++)
+        config[i] = values[i];
+    transformConfig(state, config);
     for(int i = 0; i <= CONFIG_HEIGHT; i++){
-        int fixedValue = winInfo->config[i];
+        int fixedValue = getConfig(winInfo)[i];
         int refPoint = (&state->monitor->view.x)[i];
         int refEndPoint = refPoint + (&state->monitor->view.x)[(i + 2) % 2];
-        config[i] = fixedValue ? fixedValue < 0 ? fixedValue + refEndPoint : fixedValue : values[i];
+        if(fixedValue)
+            config[i] = fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
     }
     applyMasksToConfig(state->monitor, config, winInfo);
-    transformConfig(state, config);
-    if(winInfo->config[CONFIG_BORDER])
-        config[CONFIG_BORDER] = winInfo->config[CONFIG_BORDER];
+    mask = adjustBorders(state, winInfo, config, mask);
     assert(winInfo->id);
 #ifdef DEBUG
     LOG(LOG_LEVEL_DEBUG, "Config %d: mask %d %d\n", winInfo->id, mask, __builtin_popcount(mask));
@@ -155,7 +173,6 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFI
     catchError(xcb_configure_window_checked(dis, winInfo->id, mask, config));
 #else
     xcb_configure_window(dis, winInfo->id, mask, config);
-    //if(checkError(c, winInfo->id, "could not configure window"))assert(0);
 #endif
 }
 
@@ -277,7 +294,8 @@ void full(LayoutState* state){
     short int values[CONFIG_LEN];
     memcpy(&values, &state->monitor->view.x, sizeof(short int) * 4);
     FOR_EACH_REVERSED(WindowInfo*, winInfo, state->stack){
-        configureWindow(state, winInfo, values);
+        if(isTileable(winInfo))
+            configureWindow(state, winInfo, values);
     }
 }
 
