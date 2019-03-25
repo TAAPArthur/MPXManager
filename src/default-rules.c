@@ -219,10 +219,15 @@ void onFocusInEvent(void){
 
 void onPropertyEvent(void){
     xcb_property_notify_event_t* event = getLastEvent();
-    if(getWindowInfo(event->window))
-        loadWindowProperties(getWindowInfo(event->window));
-    else
-        processNewWindow(createWindowInfo(event->window));
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(winInfo){
+        if(event->atom == ewmh->_NET_WM_NAME || event->atom == ewmh->_NET_WM_VISIBLE_NAME)
+            loadTitleInfo(winInfo);
+        else if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL){
+            loadDockProperties(winInfo);
+            markState();
+        }
+    }
 }
 
 void onClientMessage(void){

@@ -188,17 +188,12 @@ END_TEST
 START_TEST(test_window_input_focus_detection){
     for(int i = 0; i < 4; i++){
         DEFAULT_WINDOW_MASKS = i % 2 ? 0 : INPUT_MASK;
-        WindowID win = createInputWindow(i);
+        WindowID win = createInputWindow(i < 2);
         WindowInfo* winInfo = createWindowInfo(win);
         flush();
         processNewWindow(winInfo);
-        assert(hasMask(winInfo, INPUT_MASK) == (i ? 1 : 0));
+        assert(hasMask(winInfo, INPUT_MASK) == (i < 2 ? 1 : 0));
         removeWindow(win);
-        winInfo = createWindowInfo(win);
-        if(i != 3)
-            catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
-        processNewWindow(winInfo);
-        assert(hasMask(winInfo, INPUT_MASK) == i % 2);
     }
 }
 END_TEST

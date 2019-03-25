@@ -121,6 +121,7 @@ int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo);
  */
 void resizeAllMonitorsToAvoidAllStructs(void);
 /**
+ * This method should only be used if a new dock is beeing added or an existing dock is being grown as this method can only reduce a monitor's viewport
  * @param winInfo the dock to avoid
  * @see resizeMonitorToAvoidStruct
  */

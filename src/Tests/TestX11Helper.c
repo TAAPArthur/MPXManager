@@ -35,7 +35,7 @@ static int createWindow(int parent, int mapped, int ignored, int userIgnored, in
         logError(e);
         err(1, "could not create window\n");
     }
-    if(input <= 1){
+    if(input){
         xcb_icccm_wm_hints_t hints = {.input = input, .initial_state = mapped};
         e = xcb_request_check(dis, xcb_icccm_set_wm_hints_checked(dis, window, &hints));
         if(e){
@@ -167,7 +167,9 @@ int isWindowMapped(WindowID win){
 }
 
 Window createDock(int i, int size, int full){
-    Window win = createNormalWindow();
+    return setDock(createNormalWindow(), i, size, full);
+}
+Window setDock(WindowID win, int i, int size, int full){
     assert(i >= 0);
     assert(i < 4);
     int strut[12] = {0};

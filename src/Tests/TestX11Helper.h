@@ -49,6 +49,7 @@ void consumeEvents();
 int waitForNormalEvent(int mask);
 
 int isWindowMapped(WindowID win);
+Window setDock(WindowID id, int i, int size, int full);
 Window createDock(int i, int size, int full);
 void fullCleanup();
 

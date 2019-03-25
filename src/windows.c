@@ -155,8 +155,6 @@ void loadWindowHints(WindowInfo* winInfo){
         if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
             addMask(winInfo, MAPPABLE_MASK);
     }
-    else if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_NORMAL)
-        inputFocus = 1;
     if(inputFocus)
         addMask(winInfo, INPUT_MASK);
     else

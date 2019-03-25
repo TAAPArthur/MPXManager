@@ -181,11 +181,10 @@ START_TEST(test_property_update){
     START_MY_WM
     WindowID win = createNormalWindow();
     WAIT_UNTIL_TRUE(getWindowInfo(win))
-    setProperties(win);
+    char* title = "dummy title";
+    assert(!catchError(xcb_ewmh_set_wm_name_checked(ewmh, win, strlen(title), title)));
     WAIT_UNTIL_TRUE(getWindowInfo(win)->title);
-    lock();
-    checkProperties(getWindowInfo(win));
-    unlock();
+    assert(strcmp(getWindowInfo(win)->title, title) == 0);
 }
 END_TEST
 
@@ -218,7 +217,6 @@ END_TEST
 
 START_TEST(test_dock_windows){
     WindowID win = createDock(1, 1, 1);
-    catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_DOCK));
     scan(root);
     assert(((WindowInfo*)getHead(getAllDocks()))->id == win);
     assert(hasMask(getHead(getAllDocks()), INPUT_MASK));
@@ -228,6 +226,15 @@ START_TEST(test_dock_windows){
     scan(root);
     assert(((WindowInfo*)getHead(getAllDocks()))->id == win);
     assert(!hasMask(getHead(getAllDocks()), INPUT_MASK));
+    Monitor* m = getMonitorFromWorkspace(getActiveWorkspace());
+    assert(memcmp(&m->base, &m->view, sizeof(Rect)));
+    consumeEvents();
+    setDock(win, 0, 0, 0);
+    flush();
+    int idle = getIdleCount();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(memcmp(&m->base, &m->view, sizeof(Rect)) == 0);
 }
 END_TEST
 START_TEST(test_map_windows){

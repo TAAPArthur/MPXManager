@@ -48,13 +48,11 @@ int intersects(Rect arg1, Rect arg2){
 }
 
 void setDockArea(WindowInfo* info, int numberofProperties, int* properties){
-    assert(numberofProperties);
-    for(int i = 0; i < LEN(info->properties); i++)
-        info->properties[i] = 0;
-    if(numberofProperties)
-        memcpy(info->properties, properties, numberofProperties * sizeof(int));
+    memset(info->properties, 0, sizeof(info->properties));
+    memcpy(info->properties, properties, numberofProperties * sizeof(int));
 }
 int loadDockProperties(WindowInfo* info){
+    LOG(LOG_LEVEL_TRACE, "Reloading dock properties\n");
     xcb_window_t win = info->id;
     xcb_ewmh_wm_strut_partial_t strut;
     if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
@@ -66,9 +64,12 @@ int loadDockProperties(WindowInfo* info){
                                         (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
         setDockArea(info, sizeof(xcb_ewmh_get_extents_reply_t) / sizeof(int), (int*)&strut);
     else {
-        LOG(LOG_LEVEL_WARN, "could not read struct data\n");
+        LOG(LOG_LEVEL_TRACE, "could not read struct data\n");
+        setDockArea(info, 0, NULL);
         return 0;
     }
+    if(info->dock)
+        resizeAllMonitorsToAvoidAllStructs();
     return 1;
 }
 int getRootWidth(void){
