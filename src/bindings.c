@@ -230,13 +230,14 @@ int doesStringMatchRule(Rule* rule, char* str){
     }
 }
 int doesWindowMatchRule(Rule* rules, WindowInfo* winInfo){
+    int match = !(rules->ruleTarget & NEGATE);
     if(!rules->literal)
-        return 1;
-    if(!winInfo)return 0;
-    return (rules->ruleTarget & CLASS) && doesStringMatchRule(rules, winInfo->className) ||
-           (rules->ruleTarget & RESOURCE) && doesStringMatchRule(rules, winInfo->instanceName) ||
-           (rules->ruleTarget & TITLE) && doesStringMatchRule(rules, winInfo->title) ||
-           (rules->ruleTarget & TYPE) && doesStringMatchRule(rules, winInfo->typeName);
+        return match;
+    if(!winInfo)return !match;
+    return  match == ((rules->ruleTarget & CLASS) && doesStringMatchRule(rules, winInfo->className) ||
+                      (rules->ruleTarget & RESOURCE) && doesStringMatchRule(rules, winInfo->instanceName) ||
+                      (rules->ruleTarget & TITLE) && doesStringMatchRule(rules, winInfo->title) ||
+                      (rules->ruleTarget & TYPE) && doesStringMatchRule(rules, winInfo->typeName));
 }
 int passThrough(int result, PassThrough pass){
     switch(pass){

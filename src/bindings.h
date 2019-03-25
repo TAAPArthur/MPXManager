@@ -33,6 +33,9 @@
 #define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL ^ LITERAL)
 /**Rule subsitute env variables for designated strings (strings starting with '$')*/
 #define ENV_VAR             1<<6
+/**Negates the match*/
+#define NEGATE             1<<7
+
 /**
  * Determines if and when the control flow should abort processing a series of
  * Rules/Bindings
