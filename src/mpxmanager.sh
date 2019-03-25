@@ -49,7 +49,7 @@ displayVersion(){
 
 fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))
 path=$HOME/.mpxmanager
-optspec=":hs-:"
+optspec=":vhs-:"
 
 getopts "$optspec" optchar || run
     case "${optchar}" in

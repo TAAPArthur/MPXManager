@@ -12,4 +12,4 @@ unitTest*
 *.1
 config.c*
 mpxmanager
-mpxmanager-*
+mpxmanager-*-*

@@ -44,10 +44,14 @@ install: mpxmanager.1 libmpxmanager.so libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.c
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
+	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
 
 mpxmanager.1: mpxmanager.sh
 	help2man -No mpxmanager.1 ./mpxmanager.sh
+
+mpxmanager-autocomplete.sh: args.c mpxmanager.sh
+	sed -i "s/sendOptions=.*/$$(echo $(./mpxmanager --help 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo '--'{}))/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: ${SRCS}
 	${CC} $^ -o $@  ${CFLAGS} ${LDFLAGS}
