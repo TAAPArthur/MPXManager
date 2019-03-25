@@ -1,19 +1,25 @@
 #!/bin/bash
 
+setupDummyMonitor(){
+
+    echo $1
+    xrandr --setmonitor default 640/254x480/480+0+0 $1
+    xrandr --setmonitor test2 640/254x480/480+640+0 none
+    xrandr --fb 1024x480
+    xrandr
+}
 D=:7
 echo $1
 if [ "$1" = "--no-xserver" ];then
 	shift
 else
-	Xephyr -noreset -r +extension RANDR -screen 100x100 $D 2>&1 &> /dev/null & pid="$!"
+    Xvfb -noreset -r +extension RANDR -screen 0 1024x480x24 $D &> /dev/null & pid="$!"
+
     export DISPLAY=$D
     if [ "$1" = "--fake-monitors" ];then
         shift
         sleep 1s
-        monitor=$(xrandr |grep " connected" |cut -d" " -f1)
-        xrandr --setmonitor test~1 640/254x1080/480+0+0 $monitor >&1 > /dev/null
-        xrandr --setmonitor test~2 640/254x1080/480+640+0 none >&1 > /dev/null
-        xrandr --fb 1280x480
+        setupDummyMonitor $(xrandr |grep " connected" |cut -d" " -f1) &> /dev/null
     fi
 fi
 DISPLAY=$D $@

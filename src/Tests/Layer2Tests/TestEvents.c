@@ -153,7 +153,7 @@ START_TEST(test_monitors){
     if(!fork()){
         close(1);
         close(2);
-        system("xrandr --output default --rotate left");
+        system("xrandr --output screen --primary");
         exit(0);
     }
     wait(NULL);
