@@ -26,7 +26,7 @@ extern int LOG_LEVEL;
 
 /// Specifes type of option
 typedef enum {
-    BOOL, INT, LONG, STRING, FUNC
+    BOOL, INT, LONG, STRING, FUNC, FUNC_STR, FUNC_INT
 } OptionTypes;
 /// Holds info to map string to a given operation
 typedef struct {
@@ -58,6 +58,7 @@ static Option options[] = {
     {"list", {.boundFunction = BIND(listOptions)}, FUNC},
     {"restart", {.boundFunction = BIND(restart)}, FUNC},
     {"dump", {.boundFunction = BIND(dumpAllWindowInfo, MAPPABLE_MASK)}, FUNC},
+    {"dump-filter", {.boundFunction = BIND(dumpMatch, NULL)}, FUNC_STR},
     {"dump-all", {.boundFunction = BIND(dumpAllWindowInfo, 0)}, FUNC},
     {"list", {.boundFunction = BIND(listOptions)}, FUNC},
     {"quit", {.boundFunction = BIND(exit, 0)}, FUNC},
@@ -110,7 +111,7 @@ static void printValue(int optionIndex){
 static void setValue(int optionIndex, char* value){
     if(!value)
         value = "1";
-    if(options[optionIndex].type != FUNC)
+    if(options[optionIndex].type < FUNC)
         LOG(LOG_LEVEL_DEBUG, "setting %s to %s\n", options[optionIndex].name, value);
     switch(options[optionIndex].type){
         case STRING:
@@ -124,6 +125,14 @@ static void setValue(int optionIndex, char* value){
             break;
         case LONG:
             *(long*)options[optionIndex].var.var = atoi(value);
+            break;
+        case FUNC_INT:
+            options[optionIndex].var.boundFunction.arg.intArg = atoi(value);
+            callBoundedFunction(&options[optionIndex].var.boundFunction, NULL);
+            break;
+        case FUNC_STR:
+            options[optionIndex].var.boundFunction.arg.voidArg = value;
+            callBoundedFunction(&options[optionIndex].var.boundFunction, NULL);
             break;
         case FUNC:
             callBoundedFunction(&options[optionIndex].var.boundFunction, NULL);
