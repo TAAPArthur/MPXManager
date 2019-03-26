@@ -127,7 +127,6 @@ void onConfigureNotifyEvent(void){
 }
 void onConfigureRequestEvent(void){
     xcb_configure_request_event_t* event = getLastEvent();
-    applyGravity(event->window, &event->x, 0);
     short values[5];
     int n = 0;
     for(int i = 0; i < LEN(values); i++)
@@ -259,7 +258,6 @@ void onClientMessage(void){
     }
     else if(message == ewmh->_NET_MOVERESIZE_WINDOW){
         LOG(LOG_LEVEL_DEBUG, "Move/Resize window request %d\n\n", win);
-        int gravity = data.data8[0];
         int mask = data.data8[1] & 15;
         int source = (data.data8[1] >> 4) & 15;
         short values[4];
@@ -267,7 +265,6 @@ void onClientMessage(void){
             values[i - 1] = data.data32[i];
         WindowInfo* winInfo = getWindowInfo(win);
         if(allowRequestFromSource(winInfo, source)){
-            applyGravity(win, values, gravity);
             processConfigureRequest(win, values, 0, 0, mask);
         }
     }/*

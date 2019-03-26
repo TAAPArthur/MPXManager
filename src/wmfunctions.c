@@ -515,45 +515,6 @@ void setWorkspaceNames(char* names[], int numberOfNames){
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
 }
 
-void applyGravity(WindowID win, short pos[5], int gravity){
-    if(gravity == XCB_GRAVITY_STATIC)
-        return;
-    if(!gravity){
-        xcb_size_hints_t hints;
-        int result = xcb_icccm_get_wm_normal_hints_reply(dis, xcb_icccm_get_wm_normal_hints(dis, win), &hints, NULL);
-        if(result)
-            gravity = hints.win_gravity;
-        else return;
-    }
-    switch(gravity){
-        case XCB_GRAVITY_NORTH:
-        case XCB_GRAVITY_NORTH_EAST:
-        case XCB_GRAVITY_NORTH_WEST:
-            pos[1] -= pos[4];
-            break;
-        case XCB_GRAVITY_SOUTH:
-        case XCB_GRAVITY_SOUTH_EAST:
-        case XCB_GRAVITY_SOUTH_WEST:
-            pos[1] += pos[4] + pos[3];
-            break;
-        default:
-            pos[1] += pos[3] / 2;
-    }
-    switch(gravity){
-        case XCB_GRAVITY_SOUTH_WEST:
-        case XCB_GRAVITY_NORTH_WEST:
-        case XCB_GRAVITY_WEST:
-            pos[0] -= pos[4];
-            break;
-        case XCB_GRAVITY_SOUTH_EAST:
-        case XCB_GRAVITY_NORTH_EAST:
-        case XCB_GRAVITY_EAST:
-            pos[0] += pos[2] + pos[4];
-            break;
-        default:
-            pos[0] += pos[2] / 2;
-    }
-}
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2){
     int index1 = indexOf(getWindowStackOfWindow(winInfo1), winInfo1, sizeof(int));
     int index2 = indexOf(getWindowStackOfWindow(winInfo2), winInfo2, sizeof(int));

@@ -383,18 +383,6 @@ START_TEST(test_float_sink_window){
 END_TEST
 
 
-START_TEST(test_apply_gravity){
-    WindowID win = createNormalWindow();
-    xcb_size_hints_t hints;
-    xcb_icccm_size_hints_set_win_gravity(&hints, XCB_GRAVITY_CENTER);
-    xcb_icccm_set_wm_size_hints(dis, win, XCB_ATOM_WM_NORMAL_HINTS, &hints);
-    for(int i = 0; i <= XCB_GRAVITY_STATIC; i++){
-        short values[5] = {0, 0, 10, 10, 1};
-        applyGravity(win, values, i);
-        assert(values[0] || values[1] || i == XCB_GRAVITY_STATIC || !i);
-    }
-}
-END_TEST
 START_TEST(test_auto_focus){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
     int focusHolder = mapWindow(createNormalWindow());
@@ -482,8 +470,6 @@ START_TEST(test_bad_window){
     WindowID win = -2;
     assert(!focusWindow(win));
     assert(!raiseWindow(win));
-    short arr[5];
-    applyGravity(win, arr, 0);
 }
 END_TEST
 
@@ -644,7 +630,6 @@ Suite* x11Suite(void){
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
-    tcase_add_test(tc_core, test_apply_gravity);
     tcase_add_test(tc_core, test_withdraw_window);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("MISC");

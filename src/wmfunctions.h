@@ -138,13 +138,6 @@ int deleteWindow(WindowID winToRemove);
 
 
 
-/**
- * Applies the gravity to pos
- * @param win if gravity is 0 look up the gravity from the ICCCM normal hints on this window
- * @param pos array of values x,y,w,h,border
- * @param gravity the gravity to use
- */
-void applyGravity(WindowID win, short pos[5], int gravity);
 
 /**
  * Assigns names to the first n workspaces
