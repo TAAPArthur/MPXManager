@@ -90,6 +90,7 @@ START_TEST(test_find_and_raise){
         assert(getWindowInfo(id));
         assert(strcmp(getWindowInfo(id)->title, titles[i % size]) == 0);
         if(i < size){
+            assert(id == findAndLowerLazy(&r));
             assert(id == findAndRaiseLazy(&r));
             assert(id == win[i % size]);
         }
@@ -105,6 +106,7 @@ START_TEST(test_find_and_raise){
     Rule r = CREATE_RULE(fakeTitle, LITERAL | TITLE, NULL);
     assert(!findAndRaise(&r));
     assert(!findAndRaiseLazy(&r));
+    assert(!findAndLowerLazy(&r));
 }
 END_TEST
 /*

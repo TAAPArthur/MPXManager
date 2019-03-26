@@ -101,6 +101,12 @@ int findAndRaise(Rule* rule);
  */
 int findAndRaiseLazy(Rule* rule);
 /**
+ * Checks all managed windows to see if any match the given rule; the first match is lowered
+ * @param rule
+ * @return
+ */
+int findAndLowerLazy(Rule* rule);
+/**
  * Checks to see if any window in searchList matches rule ignoring any in ignoreList
  * @param rule
  * @param searchList

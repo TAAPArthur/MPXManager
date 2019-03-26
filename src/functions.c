@@ -70,21 +70,22 @@ WindowInfo* findWindow(Rule* rule, ArrayList* searchList, ArrayList* ignoreList)
     WindowInfo* winInfo = NULL;
     UNTIL_FIRST(winInfo, searchList,
                 (!ignoreList || !find(ignoreList, winInfo, sizeof(int))) &&
-                isActivatable(winInfo) &&
+                isMappable(winInfo) &&
                 doesWindowMatchRule(rule, winInfo));
     assert(winInfo == NULL || doesWindowMatchRule(rule, winInfo));
     return winInfo;
 }
-static int processFindResult(WindowInfo* target){
-    if(target){
-        activateWindow(target);
-        updateWindowCache(target);
-        return target->id;
-    }
-    else return 0;
-}
 int findAndRaiseLazy(Rule* rule){
-    return processFindResult(findWindow(rule, getAllWindows(), NULL));
+    WindowInfo* target = findWindow(rule, getAllWindows(), NULL);
+    if(target)
+        activateWindow(target);
+    return target ? target->id : 0;
+}
+int findAndLowerLazy(Rule* rule){
+    WindowInfo* target = findWindow(rule, getAllWindows(), NULL);
+    if(target)
+        raiseLowerWindowInfo(target, 0);
+    return target ? target->id : 0;
 }
 int findAndRaise(Rule* rule){
     ArrayList* topWindow = getActiveMasterWindowStack();
@@ -99,7 +100,11 @@ int findAndRaise(Rule* rule){
             target = findWindow(rule, topWindow, NULL);
         }
     }
-    return processFindResult(target);
+    if(target){
+        activateWindow(target);
+        updateWindowCache(target);
+    }
+    return target ? target->id : 0;
 }
 
 
