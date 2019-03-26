@@ -137,7 +137,13 @@ START_TEST(test_check_bindings){
 }
 END_TEST
 
-
+START_TEST(test_bounded_function_negate_result){
+    BoundFunction resultTrue = NBIND(returnFalse);
+    BoundFunction resultFalse = NBIND(returnTrue);
+    assert(callBoundedFunction(&resultTrue, NULL));
+    assert(!callBoundedFunction(&resultFalse, NULL));
+}
+END_TEST
 ///Test to make sure callBoundedFunction() actually calls the right function
 START_TEST(test_call_bounded_function){
     int integer = 1;
@@ -240,6 +246,7 @@ START_TEST(test_call_bounded_function){
     int size = sizeof(b) / sizeof(BoundFunction);
     int sum = 0;
     for(int i = 0; i < size; i++){
+        assert(b[i].negateResult == 0);
         int result = callBoundedFunction(&b[i], voidPointer);
         assert(result);
         sum += result;
@@ -537,6 +544,7 @@ Suite* bindingsSuite(void){
     tcase_add_test(tc_core, test_binding_target_id);
     tcase_add_test(tc_core, test_binding_match);
     tcase_add_test(tc_core, test_call_bounded_function);
+    tcase_add_test(tc_core, test_bounded_function_negate_result);
     tcase_add_test(tc_core, test_and_or_short_circuit);
     tcase_add_loop_test(tc_core, test_check_bindings, 0, 2);
     suite_add_tcase(s, tc_core);

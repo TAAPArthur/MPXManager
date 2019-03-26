@@ -51,7 +51,7 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
             return 0;
         arg.voidArg = winInfo;
     }
-    int result = 0;
+    int result = 1;
     switch(boundFunction->type){
         case UNSET:
             LOG(LOG_LEVEL_WARN, "calling unset function; nothing is happening\n");
@@ -62,56 +62,69 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
             break;
         case CHAIN_AUTO:
             startChain(boundFunction);
-            return callBoundedFunction(&boundFunction->func.chainBindings->boundFunction, winInfo);
+            result = callBoundedFunction(&boundFunction->func.chainBindings->boundFunction, winInfo);
+            break;
         case FUNC_AND:
             for(int i = 0; i < boundFunction->arg.intArg; i++)
-                if(!callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo))
-                    return 0;
-            return 1;
+                if(!callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo)){
+                    result = 0;
+                    break;
+                }
+            break;
         case FUNC_BOTH:
+            result = 0;
             for(int i = 0; i < boundFunction->arg.intArg; i++)
                 if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo))
                     result = 1;
-            return result;
+            break;
         case FUNC_OR:
+            result = 0;
             for(int i = 0; i < boundFunction->arg.intArg; i++)
-                if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo))
-                    return 1;
-            return 0;
+                if(callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo)){
+                    result = 1;
+                    break;
+                }
+            break;
         case FUNC_PIPE:
             result = callBoundedFunction(&boundFunction->func.boundFunctionArr[0], winInfo);
             for(int i = 1; i < boundFunction->arg.intArg; i++){
                 boundFunction->func.boundFunctionArr[i].arg.intArg = result;
                 result = callBoundedFunction(&boundFunction->func.boundFunctionArr[i], winInfo);
             }
-            return result;
+            break;
         case NO_ARGS:
             boundFunction->func.func();
             break;
         case NO_ARGS_RETURN_INT:
-            return boundFunction->func.funcReturnInt();
+            result = boundFunction->func.funcReturnInt();
+            break;
         case INT_ARG:
             boundFunction->func.func(arg.intArg);
             break;
         case INT_ARG_RETURN_INT:
-            return boundFunction->func.funcReturnInt(arg.intArg);
+            result = boundFunction->func.funcReturnInt(arg.intArg);
+            break;
         case WIN_ARG:
             boundFunction->func.func(arg.voidArg);
             break;
         case WIN_ARG_RETURN_INT:
-            return boundFunction->func.funcReturnInt(arg.voidArg);
+            result = boundFunction->func.funcReturnInt(arg.voidArg);
+            break;
         case WIN_INT_ARG:
             boundFunction->func.func(winInfo, arg.intArg);
             break;
         case WIN_INT_ARG_RETURN_INT:
-            return boundFunction->func.funcReturnInt(winInfo, arg.intArg);
+            result = boundFunction->func.funcReturnInt(winInfo, arg.intArg);
+            break;
         case VOID_ARG:
             boundFunction->func.func(arg.voidArg);
             break;
         case VOID_ARG_RETURN_INT:
-            return boundFunction->func.funcReturnInt(arg.voidArg);
+            result = boundFunction->func.funcReturnInt(arg.voidArg);
+            break;
     }
-    return 1;
+    // preserves magnitude when negateResult is false
+    return boundFunction->negateResult ? !result : result;
 }
 
 #define _FOR_EACH_CHAIN(CODE...){ int index=0;\

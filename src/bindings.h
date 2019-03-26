@@ -169,6 +169,8 @@ typedef struct bound_function_struct {
     ///If true, then then the variable passed to callBoundedFuncion() will be pass to func
     /// instead of the arg
     char dynamic;
+    /// negate the result of func
+    char negateResult;
 } BoundFunction;
 ///used for key/mouse bindings
 typedef struct binding_struct {
@@ -227,27 +229,35 @@ typedef struct {
  * @param ... the params to the function, the 1st is the function, 2nd (if present) is
  * the argument to bind to the function
  */
-#define BIND(...) _BIND_HELPER(__VA_ARGS__, _BIND, _BIND2,_BIND1)(__VA_ARGS__)
+#define BIND(...) _BIND_HELPER(__VA_ARGS__, _BIND, _BIND2,_BIND1)(__VA_ARGS__,0)
 
+/**
+ * @copybrief BIND
+ *
+ * Macro to create a BoundFunction with its result negate
+ *
+ * @see BIND
+ * @see BoundFunction:negateResult
+ *
+ */
+#define NBIND(...) _BIND_HELPER(__VA_ARGS__, _NBIND, _BIND2,_BIND1)(__VA_ARGS__,1)
 
-#define _BIND1(F) _BIND(F,0,\
+#define _BIND_HELPER(_1,_2,_3,NAME,...) NAME
+
+#define _BIND_TYPES(F)\
     _Generic((F), \
             void(*)(void):0,\
             int(*)(void):0,\
             void(*)(int):0,\
             int(*)(int):0,\
             default:1 \
-            ))
+            )
 
-#define _BIND2(F,A) _BIND(F,A,\
-    _Generic((A), \
-        BoundFunction*:2,\
-        default:0 \
-        ))
+#define _BIND1(F,N) _BIND(F,0,_BIND_TYPES(F),N)
 
-#define _BIND_HELPER(_1,_2,_3,NAME,...) NAME
+#define _BIND2(F,A,N) _BIND(F,A,0,N)
 
-#define _BIND(F,A,D){.func=(void (*)()) F, .arg={.longArg=(long)A},.dynamic=D, .type=\
+#define _BIND(F,A,D,N){.func=(void (*)()) F, .arg={.longArg=(long)A},.dynamic=D, .negateResult=N,.type=\
    _Generic((F), \
         void (*)(void):NO_ARGS, \
         int (*)(void):NO_ARGS_RETURN_INT, \
