@@ -32,6 +32,10 @@ enum {
     RegisteringWindow,
     /// when a workspace is tiled
     TileWorkspace,
+    /**
+     * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. THe other being that the WindowInfo object will be passed in when the rule is applied.
+     */
+    onWindowMove,
     /// called after a set number of events or when the connection is idle
     Periodic,
     /// called when the connection is idle

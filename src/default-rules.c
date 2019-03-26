@@ -131,7 +131,11 @@ void onError(void){
 void onConfigureNotifyEvent(void){
     xcb_configure_notify_event_t* event = getLastEvent();
     if(event->override_redirect)return;
-    setGeometry(getWindowInfo(event->window), &event->x);
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(winInfo){
+        setGeometry(winInfo, &event->x);
+        applyRules(getEventRules(onWindowMove), winInfo);
+    }
 }
 void onConfigureRequestEvent(void){
     xcb_configure_request_event_t* event = getLastEvent();
@@ -152,6 +156,7 @@ void onCreateEvent(void){
     LOG(LOG_LEVEL_DEBUG, "window: %d parent: %d\n", event->window, event->parent);
     if(processNewWindow(winInfo)){
         setGeometry(winInfo, &event->x);
+        applyRules(getEventRules(onWindowMove), winInfo);
     }
 }
 void onDestroyEvent(void){
