@@ -229,15 +229,14 @@ int raiseWindow(WindowID win){
 
 
 int activateWindow(WindowInfo* winInfo){
-    if(!winInfo || !isActivatable(winInfo)){
-        LOG(LOG_LEVEL_TRACE, "could not activate window %d\n", winInfo ? winInfo->mask : -1);
-        return 0;
+    if(winInfo && raiseWindowInfo(winInfo) && isActivatable(winInfo)){
+        LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d\n", winInfo->id, winInfo->workspaceIndex);
+        if(winInfo->workspaceIndex != NO_WORKSPACE){
+            switchToWorkspace(winInfo->workspaceIndex);
+        }
+        return focusWindowInfo(winInfo) ? winInfo->id : 0;
     }
-    LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d\n", winInfo->id, winInfo->workspaceIndex);
-    if(winInfo->workspaceIndex != NO_WORKSPACE){
-        switchToWorkspace(winInfo->workspaceIndex);
-    }
-    return raiseWindowInfo(winInfo) && focusWindowInfo(winInfo) ? winInfo->id : 0;
+    return 0;
 }
 
 static void focusNextVisibleWindow(ArrayList* masters, WindowInfo* defaultWinInfo){
