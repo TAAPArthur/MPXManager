@@ -304,7 +304,7 @@ void unlockWindow(WindowInfo* winInfo){
     winInfo->geometrySemaphore--;
 }
 
-void registerWindow(WindowInfo* winInfo){
+int registerWindow(WindowInfo* winInfo){
     LOG(LOG_LEVEL_DEBUG, "Registering %d (%x)\n", winInfo->id, winInfo->id);
     assert(winInfo);
     assert(!find(getAllWindows(), winInfo, sizeof(int)) && "Window registered exists");
@@ -314,9 +314,13 @@ void registerWindow(WindowInfo* winInfo){
     if(LOAD_SAVED_STATE){
         loadSavedAtomState(winInfo);
     }
-    registerForWindowEvents(win, NON_ROOT_EVENT_MASKS);
-    passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
-    applyRules(getEventRules(RegisteringWindow), winInfo);
+    if(registerForWindowEvents(win, NON_ROOT_EVENT_MASKS) != BadWindow){
+        passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
+        applyRules(getEventRules(RegisteringWindow), winInfo);
+        return 1;
+    }
+    removeWindow(winInfo->id);
+    return 0;
 }
 static int loadWindowAttributes(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr){
     if(!attr || attr->override_redirect)
@@ -346,8 +350,7 @@ int processNewWindow(WindowInfo* winInfo){
         deleteWindowInfo(winInfo);
         return 0;
     }
-    registerWindow(winInfo);
-    return 1;
+    return registerWindow(winInfo);
 }
 void scan(xcb_window_t baseWindow){
     LOG(LOG_LEVEL_TRACE, "Scanning children of %d\n", baseWindow);

@@ -233,8 +233,9 @@ int processNewWindow(WindowInfo* winInfo);
  * Adds the window to our list of managed windows as a non-dock
  * and load any ewhm saved state
  * @param winInfo
+ * @return 0 if the window doesn't exists
  */
-void registerWindow(WindowInfo* winInfo);
+int registerWindow(WindowInfo* winInfo);
 
 /**
  * Returns User set geometry that will override that generated when tiling

@@ -233,6 +233,14 @@ START_TEST(test_process_bad_window){
     assert(getSize(getAllWindows()) == 0);
 }
 END_TEST
+START_TEST(test_register_bad_window){
+    processNewWindow(createWindowInfo(1));
+    assert(getSize(getAllWindows()) == 0);
+    processNewWindow(createWindowInfo(2));
+    assert(getSize(getAllWindows()) == 0);
+}
+END_TEST
+
 START_TEST(test_window_scan){
     assert(!isNotEmpty(getAllWindows()));
     addDummyIgnoreRule();
@@ -352,6 +360,7 @@ Suite* windowsSuite(void){
     tcase_add_test(tc_core, test_process_window);
     tcase_add_test(tc_core, test_process_input_only_window);
     tcase_add_test(tc_core, test_process_bad_window);
+    tcase_add_test(tc_core, test_register_bad_window);
     tcase_add_test(tc_core, test_window_scan);
     tcase_add_test(tc_core, test_child_window_scan);
     //tcase_add_test(tc_core, test_sync_state);
