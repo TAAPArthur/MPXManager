@@ -435,12 +435,18 @@ START_TEST(test_window_matching){
     (&noMatchInfo->typeName)[windowResourceIndex] = "gibberish";
     int mask = 1 << (_i + 2);
     for(int i = 0; i < MATCH_ANY_LITERAL; i++){
-        Rule r = CREATE_LITERAL_RULE(s, i, NULL);
+        Rule r = {s, i | LITERAL, NULL};
+        Rule nullRule = {NULL, i | LITERAL, NULL};
+        Rule filter = {s, i, NULL, .filterMatch = BIND(returnFalse)};
+        Rule filterNull = {NULL, i, NULL, .filterMatch = BIND(returnFalse)};
         int result = ((i & mask) ? 1 : 0);
         assert(doesWindowMatchRule(&r, info) == result);
+        assert(doesWindowMatchRule(&nullRule, info));
         assert(!doesWindowMatchRule(&r, noMatchInfo));
         assert(!doesWindowMatchRule(&r, nullInfo));
         assert(!doesWindowMatchRule(&r, NULL));
+        assert(!doesWindowMatchRule(&filter, info));
+        assert(!doesWindowMatchRule(&filterNull, info));
     }
     free(all);
 }

@@ -231,6 +231,10 @@ int doesStringMatchRule(Rule* rule, char* str){
 }
 int doesWindowMatchRule(Rule* rules, WindowInfo* winInfo){
     int match = !(rules->ruleTarget & NEGATE);
+    if(rules->filterMatch.type != UNSET){
+        if(!callBoundedFunction(&rules->filterMatch, winInfo))
+            return 0;
+    }
     if(!rules->literal)
         return match;
     if(!winInfo)return !match;

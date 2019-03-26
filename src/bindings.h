@@ -201,6 +201,8 @@ typedef struct {
     int ruleTarget;
     /**Function to be called when rule is matched*/
     BoundFunction onMatch;
+    /**match will only succeed if filterMatch is not set or returns true*/
+    BoundFunction filterMatch;
     /**If false then subsequent rules won't be checked if this rule matches*/
     int passThrough;
     /// When applying rules, the return value will be negated if this field is set. A return value of 0, indicates the calling method should (cleanup and) abort
