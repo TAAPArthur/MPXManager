@@ -37,6 +37,7 @@ static Binding DEFAULLT_BINDINGS[] = {
     STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
     {WILDCARD_MODIFIER, Button1, AND(BIND(activateWorkspaceUnderMouse), BIND(raiseWindowInfo), BIND(focusWindowInfo)), .noGrab = 1, .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask, XK_c, BIND(killWindowInfo)},
+    {Mod4Mask | ShiftMask, XK_c, BIND(killWindowInfo), .windowTarget = TARGET_WINDOW},
     {Mod4Mask, Button1, BIND(floatWindow), .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask | ShiftMask, Button1, BIND(sinkWindow), .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask, XK_t, BIND(sinkWindow)},
@@ -44,6 +45,7 @@ static Binding DEFAULLT_BINDINGS[] = {
     {0, XF86XK_AudioPlay, OR(BIND(toggleLayout, &DEFAULT_LAYOUTS[FULL]), BIND(cycleLayouts, DOWN))},
     {Mod4Mask, XK_F11, OR(BIND(toggleLayout, &DEFAULT_LAYOUTS[FULL]), BIND(cycleLayouts, DOWN))},
     {Mod4Mask, XF86XK_AudioPlay, BIND(toggleMask, FULLSCREEN_MASK) },
+    {Mod4Mask | ShiftMask, XF86XK_AudioPlay, BIND(toggleMask, ROOT_FULLSCREEN_MASK) },
 
     {Mod4Mask, XK_space, BIND(cycleLayouts, DOWN)},
 
@@ -88,19 +90,18 @@ static Binding DEFAULLT_BINDINGS[] = {
 };
 
 void defaultPrintFunction(void){
-    const char* format = "<fc=%s>%s%s:%s</fc> ";
     int activeWorkspaceIndex = getActiveWorkspaceIndex();
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         char* color;
         if(isWorkspaceVisible(i))
             color = "green";
-        else if(isWorkspaceNotEmpty(i))
+        else if(doesWorkspaceHaveWindowsWithMask(i, MAPPABLE_MASK))
             color = "yellow";
         else continue;
-        dprintf(STATUS_FD, format, color, getWorkspaceName(i), i == activeWorkspaceIndex ? "*" : "",
+        dprintf(STATUS_FD, "<fc=%s>%s%s:%s</fc> ", color, getWorkspaceName(i), i == activeWorkspaceIndex ? "*" : "",
                 getNameOfLayout(getActiveLayoutOfWorkspace(i)));
     }
-    if(getFocusedWindow())
+    if(getFocusedWindow() && isWindowNotInInvisibleWorkspace(getFocusedWindow()))
         dprintf(STATUS_FD, "<fc=%s>%s</fc>", "green", getFocusedWindow()->title);
     dprintf(STATUS_FD, "\n");
 }
