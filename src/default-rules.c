@@ -52,7 +52,7 @@ void addAutoTileRules(void){
     static Rule autoTileRule = CREATE_DEFAULT_EVENT_RULE(markState);
     static Rule clearStateRule = CREATE_DEFAULT_EVENT_RULE(unmarkState);
     static Rule tileWorkspace = CREATE_DEFAULT_EVENT_RULE(tileChangeWorkspaces);
-    int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY,
+    int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
                     XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
                     XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
                     onScreenChange,
