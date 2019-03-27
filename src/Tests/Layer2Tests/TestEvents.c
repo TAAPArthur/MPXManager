@@ -33,7 +33,7 @@ static void bindingSetup(){
 }
 //Rule genericEventRule = CREATE_DEFAULT_EVENT_RULE(onGenericEvent);
 
-static int monitorRuleApplied = 0;
+static volatile int monitorRuleApplied = 0;
 static void onMonitorDetectionTest(void){
     monitorRuleApplied++;
 }
@@ -53,8 +53,10 @@ START_TEST(test_regular_events){
     int i;
     //int lastType=-1;
     void func(void){
-        assert(i == (((xcb_generic_event_t*)getLastEvent())->response_type & 127));
         count++;
+        if(i==ExtraEvent)
+            return;
+        assert(i == (((xcb_generic_event_t*)getLastEvent())->response_type & 127));
         if(i > 2)
             assert(isSyntheticEvent());
     }
@@ -62,19 +64,14 @@ START_TEST(test_regular_events){
     POLL_COUNT = 1;
     int idleCount = -1;
     for(i = count + 1; i < XCB_GE_GENERIC; i++){
-        if(i == 1){
-            count++;
-            continue;
-        }
         xcb_generic_event_t* event = calloc(32, 1);
         event->response_type = i;
         Rule r = CREATE_DEFAULT_EVENT_RULE(func);
         assert(!isNotEmpty(getEventRules(i)));
         appendRule(i, &r);
-        xcb_void_cookie_t cookie;
         if(i){
             if(i == XCB_CLIENT_MESSAGE){
-                cookie = xcb_ewmh_send_client_message(dis, root, root, 1, 0, 0);
+                assert(!catchError(xcb_ewmh_send_client_message(dis, root, root, 1, 0, 0)));
                 //cookie=xcb_ewmh_send_client_message(dis, root, root, 0, 0, NULL);
                 //cookie=xcb_ewmh_request_change_current_desktop_checked(ewmh, defaultScreenNumber, 0, 0);
             }
@@ -83,12 +80,11 @@ START_TEST(test_regular_events){
                 registerForDeviceEvents();
                 sendButtonPress(1);
             }
-            else cookie = xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) event);
-            xcb_generic_error_t* error = xcb_request_check(dis, cookie);
-            if(error){
-                logError(error);
-                assert(0 && "Could not simulate all regular events (testing error)");
+            else if(i == ExtraEvent){
+                // will cause a 'unknown' ExtraEvent(1) as a side effect
+                system("xsane-xrandr --reset &>/dev/null");
             }
+            else assert(!catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) event)));
         }
         else {
             //generate error
@@ -149,15 +145,17 @@ END_TEST
 
 START_TEST(test_monitors){
     registerForMonitorChange();
-    xcb_flush(dis);
+    static Rule r = CREATE_DEFAULT_EVENT_RULE(onMonitorDetectionTest);
+    appendRule(onScreenChange, &r);
     if(!fork()){
         close(1);
         close(2);
         system("xrandr --output screen --primary");
         exit(0);
     }
+    START_MY_WM;
     wait(NULL);
-    free(getNextDeviceEvent());
+    WAIT_UNTIL_TRUE(monitorRuleApplied);
 }
 END_TEST
 
@@ -172,7 +170,11 @@ START_TEST(test_threads){
         pthread_join(thread, NULL);
 }
 END_TEST
-
+START_TEST(test_load_generic_events){
+    xcb_ge_generic_event_t event = {0};
+    assert(loadGenericEvent(&event) == 0);
+}
+END_TEST
 Suite* eventSuite(void){
     Suite* s = suite_create("Test Events");
     TCase* tc_core;
@@ -189,9 +191,10 @@ Suite* eventSuite(void){
     tcase_add_checked_fixture(tc_core, bindingSetup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_register_for_device_events);
     suite_add_tcase(s, tc_core);
-    tc_core = tcase_create("Monitors");
-    tcase_add_checked_fixture(tc_core, openXDisplay, closeConnection);
+    tc_core = tcase_create("OtherEvents");
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, fullCleanup);
     tcase_add_test(tc_core, test_monitors);
+    tcase_add_test(tc_core, test_load_generic_events);
     suite_add_tcase(s, tc_core);
     return s;
 }

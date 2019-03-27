@@ -79,8 +79,9 @@ int isSyntheticEvent(){
 }
 
 void* runEventLoop(void* arg __attribute__((unused))){
-    LOG(LOG_LEVEL_TRACE, "starting event loop\n");
     xcb_generic_event_t* event;
+    int xrandrFirstEvent = xcb_get_extension_data(dis, &xcb_randr_id)->first_event;
+    LOG(LOG_LEVEL_TRACE, "starting event loop; xrandr event %d\n", xrandrFirstEvent);
     while(!isShuttingDown() && dis){
         event = getNextEvent();
         if(isShuttingDown() || xcb_connection_has_error(dis) || !event){
@@ -92,13 +93,24 @@ void* runEventLoop(void* arg __attribute__((unused))){
         int type = event->response_type;
         if(!IGNORE_SEND_EVENT)
             type &= 127;
-        assert(type < NUMBER_OF_EVENT_RULES);
-        LOG(LOG_LEVEL_VERBOSE, "Event detected %d %s number of rules: %d\n",
-            event->response_type, eventTypeToString(type), getSize(getEventRules(type)));
-        lock();
-        setLastEvent(event);
-        applyRules(getEventRules(type < 35 ? type : 35), NULL);
-        unlock();
+        if(type < 127){
+            lock();
+            setLastEvent(event);
+            if(type == xrandrFirstEvent){
+                applyRules(getEventRules(onScreenChange), NULL);
+            }
+            if(type >= LASTEvent){
+                LOG(LOG_LEVEL_WARN, "unknown event %d\n", event->response_type);
+                applyRules(getEventRules(ExtraEvent), NULL);
+            }
+            else {
+                LOG(LOG_LEVEL_VERBOSE, "Event detected %d %s number of rules: %d\n",
+                    event->response_type, eventTypeToString(type), getSize(getEventRules(type)));
+                assert(type < LASTEvent);
+                applyRules(getEventRules(type), NULL);
+            }
+            unlock();
+        }
         free(event);
 #ifdef DEBUG
         XSync(dpy, 0);
@@ -108,32 +120,21 @@ void* runEventLoop(void* arg __attribute__((unused))){
     LOG(LOG_LEVEL_DEBUG, "Exited event loop\n");
     return NULL;
 }
-
 int loadGenericEvent(xcb_ge_generic_event_t* event){
-    LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
+    LOG(LOG_LEVEL_VERBOSE, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
         event->extension, event->response_type, event->event_type, event->sequence);
-    LOG(LOG_LEVEL_ALL, "Xrandr data: %d %d %d\n",
-        xcb_get_extension_data(dis, &xcb_randr_id)->major_opcode,
-        xcb_get_extension_data(dis, &xcb_randr_id)->first_event,
-        xcb_get_extension_data(dis, &xcb_randr_id)->first_error);
-    LOG(LOG_LEVEL_ALL, "Xinput data %d %d %d\n",
-        xcb_get_extension_data(dis, &xcb_input_id)->major_opcode,
-        xcb_get_extension_data(dis, &xcb_input_id)->first_event,
-        xcb_get_extension_data(dis, &xcb_input_id)->first_error);
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode){
-        LOG(LOG_LEVEL_TRACE, "generic event detected %d %d %s number of rules: %d\n",
+        LOG(LOG_LEVEL_VERBOSE, "generic event detected %d %d %s number of rules: %d\n",
             event->event_type, event->response_type,
             genericEventTypeToString(event->event_type),
             getSize(getEventRules(event->event_type + GENERIC_EVENT_OFFSET)));
         return event->event_type + GENERIC_EVENT_OFFSET;
     }
-    else { //if(event->extension == xcb_get_extension_data(dis, &xcb_randr_id)->major_opcode)
-        return XCB_RANDR_NOTIFY_OUTPUT_CHANGE + MONITOR_EVENT_OFFSET;
-    }
+    return 0;
 }
 
 void registerForMonitorChange(){
-    xcb_randr_select_input(dis, root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
+    catchError(xcb_randr_select_input_checked(dis, root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE));
 }
 void registerForDeviceEvents(){
     ArrayList* list = getDeviceBindings();

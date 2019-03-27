@@ -55,7 +55,7 @@ void addAutoTileRules(void){
     int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY,
                     XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
                     XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
-                    XCB_RANDR_NOTIFY_OUTPUT_CHANGE + MONITOR_EVENT_OFFSET,
+                    onScreenChange,
                    };
     for(int i = 0; i < LEN(events); i++)
         prependRule(events[i], &autoTileRule);
@@ -360,7 +360,9 @@ void onDeviceEvent(void){
 }
 
 void onGenericEvent(void){
-    applyRules(getEventRules(loadGenericEvent(getLastEvent())), NULL);
+    int type = loadGenericEvent(getLastEvent());
+    if(type)
+        applyRules(getEventRules(type), NULL);
 }
 
 
@@ -401,10 +403,10 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
 
     [XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
     [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
-    [XCB_RANDR_NOTIFY_OUTPUT_CHANGE + MONITOR_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
     [RegisteringWindow] = CREATE_WILDCARD(AND(BIND(autoAddToWorkspace), BIND(updateEWMHClientList))),
+    [onScreenChange] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
 };
 
 void addBasicRules(void){

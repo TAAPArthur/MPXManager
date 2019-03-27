@@ -14,14 +14,18 @@
 #include "mywm-structs.h"
 
 /// The last supported standard x event
-#define GENERIC_EVENT_OFFSET LASTEvent
-/// offset for all monitor related events
-#define MONITOR_EVENT_OFFSET GENERIC_EVENT_OFFSET+XCB_INPUT_XI_SELECT_EVENTS+1
+#define GENERIC_EVENT_OFFSET (LASTEvent-1)
 /// max value of supported X events (not total events)
-#define LAST_REAL_EVENT   MONITOR_EVENT_OFFSET+8
+#define LAST_REAL_EVENT  (GENERIC_EVENT_OFFSET+XI_LASTEVENT+1)
 
 //TODO consistent naming
 enum {
+    /**
+     * X11 events that are >= LASTEvent but not the first XRANDR event.
+     * In other words events that are unknown/unaccounted for.
+     * The value 1 is safe to use because is reserved for X11 replies
+     */
+    ExtraEvent = 1,
     ///if all rules are passed through, then the window is added as a normal window
     onXConnection = LAST_REAL_EVENT,
     /// Run after properties have been loaded
@@ -30,6 +34,8 @@ enum {
     ProcessingWindow,
     /// called after the newly created window has been added to a workspace
     RegisteringWindow,
+    /// triggered when root screen is changed
+    onScreenChange,
     /// when a workspace is tiled
     TileWorkspace,
     /**
