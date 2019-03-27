@@ -7,8 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "globals.h"
 #include "masters.h"
 #include "mywm-util.h"
+#include "workspaces.h"
 #include "workspaces.h"
 ///list of all workspaces
 static ArrayList workspaces;
@@ -16,22 +18,37 @@ static ArrayList workspaces;
 /**
  * @return newly created workspace
  */
-Workspace* createWorkspace(void){
+static Workspace* createWorkspace(void){
     Workspace* workspaces = calloc(1, sizeof(Workspace));
     workspaces->id = getNumberOfWorkspaces();
     sprintf(workspaces->name, "%d", workspaces->id + 1);
     return workspaces;
 }
-void deleteAllWorkspaces(void){
-    deleteList(&workspaces);
+static void freeWorkspace(Workspace* w){
+    clearList(getWindowStack(w));
+    clearList(getLayouts(w));
+    clearList(&w->layouts);
+    free(w);
 }
-void addNewWorkspace(void){
-    addToList(&workspaces, createWorkspace());
+void resetWorkspaces(void){
+    for(int i = -getOffset(&workspaces); i < getNumberOfWorkspaces(); i++)
+        freeWorkspace(getWorkspaceByIndex(i));
+    clearList(&workspaces);
+    setOffset(&workspaces, DEFAULT_NUMBER_OF_HIDDEN_WORKSPACES);
+    for(int i = -1; i >= -DEFAULT_NUMBER_OF_HIDDEN_WORKSPACES; i--)
+        setElement(&workspaces, i, createWorkspace());
+}
+
+void addWorkspaces(int num){
+    for(int i = 0; i < num; i++)
+        addToList(&workspaces, createWorkspace());
+}
+void removeWorkspaces(int num){
+    for(int i = 0; i < num && getNumberOfWorkspaces() > 1; i++)
+        freeWorkspace(pop(&workspaces));
 }
 
 Workspace* getWorkspaceByIndex(int index){
-    assert(index >= 0);
-    assert(index < getNumberOfWorkspaces());
     return getElement(&workspaces, index);
 }
 ArrayList* getWindowStack(Workspace* workspace){
@@ -123,10 +140,9 @@ int removeWindowFromWorkspace(WindowInfo* winInfo){
     return index != -1;
 }
 int addWindowToWorkspace(WindowInfo* winInfo, int workspaceIndex){
-    assert(workspaceIndex >= 0);
-    assert(workspaceIndex < getNumberOfWorkspaces());
     Workspace* workspace = getWorkspaceByIndex(workspaceIndex);
     assert(winInfo != NULL);
+    assert(workspace);
     if(find(getWindowStack(workspace), winInfo, sizeof(int)) == NULL){
         addToList(getWindowStack(workspace), winInfo);
         winInfo->workspaceIndex = workspaceIndex;

@@ -35,12 +35,12 @@ static void initArrayList(ArrayList* list){
     list->arr = malloc(sizeof(void*)*list->maxSize);
 }
 void* getElement(ArrayList* list, int index){
-    assert(index >= 0);
+    assert(index + list->offset >= 0);
     assert(index < getSize(list));
-    return list->arr[index];
+    return list->arr[index + list->offset];
 }
 void setElement(ArrayList* list, int index, void* value){
-    list->arr[index] = value;
+    list->arr[index + list->offset] = value;
 }
 
 int isNotEmpty(ArrayList* list){
@@ -84,8 +84,8 @@ int getNextIndex(ArrayList* list, int current, int delta){
     return (current + delta % getSize(list) + getSize(list)) % getSize(list);
 }
 static inline void autoResize(ArrayList* list){
-    if(list->size == list->maxSize){
-        list->maxSize *= 2;
+    if(list->size + list->offset >= list->maxSize){
+        list->maxSize = MAX(list->maxSize, list->size + list->offset) * 2;
         list->arr = realloc(list->arr, list->maxSize * sizeof(void*));
     }
 }
@@ -103,6 +103,15 @@ int addUnique(ArrayList* list, void* value, int size){
     else return 0;
     return 1;
 };
+int getOffset(ArrayList* list){
+    return list->offset;
+}
+void setOffset(ArrayList* list, int offset){
+    if(list->arr == NULL)
+        initArrayList(list);
+    autoResize(list);
+    list->offset = offset;
+}
 void addToList(ArrayList* list, void* value){
     if(list->arr == NULL)
         initArrayList(list);
@@ -123,6 +132,6 @@ void deleteList(ArrayList* list){
 }
 void swap(ArrayList* list, int index1, int index2){
     void* temp = getElement(list, index1);
-    list->arr[index1] = getElement(list, index2);
-    list->arr[index2] = temp;
+    setElement(list, index1, getElement(list, index2));
+    setElement(list, index2, temp);
 }

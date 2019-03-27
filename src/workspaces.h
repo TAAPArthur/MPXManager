@@ -8,7 +8,9 @@
 #include "mywm-structs.h"
 
 /// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
-#define NO_WORKSPACE -2
+#ifndef NO_WORKSPACE
+    #define NO_WORKSPACE -256
+#endif
 
 /**
  *
@@ -19,16 +21,30 @@ int getNumberOfWorkspaces();
 /**
  * Deletes all workspaces
  */
-void deleteAllWorkspaces(void);
+void resetWorkspaces(void);
 /**
- * Adds new workspace
+ * Creates and adds num workspace
+ * @param num the number of workspaces to add
  */
-void addNewWorkspace(void);
+void addWorkspaces(int num);
+/**
+ * Removes (and frees) the last num workspaces
+ *
+ * @param num number of workspace to remove
+ */
+void removeWorkspaces(int num);
+
 /**
  *
  * @return the windows in the active workspace at the NORMAL_LAYER
  */
 ArrayList* getActiveWindowStack();
+
+/**
+ * @param workspace
+ * @return the windows stack of the workspace
+ */
+ArrayList* getWindowStack(Workspace* workspace);
 
 
 /**

@@ -19,6 +19,10 @@
 typedef struct {
     ///backing arr
     void** arr;
+    /** where to starting indexing from; ie
+     * index 0 is refers to arr[offset]
+    */
+    char offset;
     ///number of elements in list
     int size;
     ///cappacity of the list. When size==maxSize, the arr is doubled
@@ -90,6 +94,22 @@ int isNotEmpty(ArrayList* list);
  * @param value the value to append
  */
 void addToList(ArrayList* list, void* value);
+/**
+ * Sets the the amount of extra space at the beging of a list
+ * Note that this should only be modified on an empty list
+ *
+ * @param list
+ * @param offset
+ */
+void setOffset(ArrayList* list, int offset);
+/**
+ * Returns the number of extra slots at the begining of the array before the first element
+ *
+ * @param list
+ *
+ * @return the offset into the array
+ */
+int getOffset(ArrayList* list);
 /**
  * Adds value to the front of the list
  * @param list the list to append to

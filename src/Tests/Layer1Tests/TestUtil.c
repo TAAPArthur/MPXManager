@@ -7,11 +7,12 @@ int* createStruct(int i){
     return t;
 }
 
-static ArrayList list = {0};
+static ArrayList list = {0, .offset = 1};
 const int size = 10;
 void populateList(void){
     for(int i = 0; i < size; i++)
         addToList(&list, createStruct(i));
+    assert(getSize(&list) == size);
 }
 void freeListMem(void){
     deleteList(&list);
@@ -174,6 +175,18 @@ START_TEST(test_for_each_reversed){
 }
 END_TEST
 
+START_TEST(test_offset){
+    freeListMem();
+    setOffset(&list, 100);
+    populateList();
+    test_for_each(0);
+    for(int i = 1; i < getOffset(&list); i++){
+        setElement(&list, -i, (void*)(long)i);
+        assert(getElement(&list, -i) == (void*)(long)i);
+    }
+    freeListMem();
+}
+END_TEST
 Suite* utilSuite(){
     Suite* s = suite_create("Util");
     TCase* tc_core;
@@ -193,6 +206,10 @@ Suite* utilSuite(){
     tcase_add_test(tc_core, test_for_each);
     tcase_add_test(tc_core, test_for_each_nested);
     tcase_add_test(tc_core, test_for_each_reversed);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("Offset");
+    tcase_add_checked_fixture(tc_core, NULL, freeListMem);
+    tcase_add_test(tc_core, test_offset);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("MISC");
     tcase_add_test(tc_core, test_get_time);

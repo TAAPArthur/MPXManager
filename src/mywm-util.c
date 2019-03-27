@@ -33,9 +33,8 @@ void resetContext(void){
         clearList(getWindowStack(getWorkspaceByIndex(i)));
         clearList(getLayouts(getWorkspaceByIndex(i)));
     }
-    deleteAllWorkspaces();
-    for(int i = 0; i < NUMBER_OF_WORKSPACES; i++)
-        addNewWorkspace();
+    resetWorkspaces();
+    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
 }
 void resetPipe(){
     if(statusPipeFD[0]){

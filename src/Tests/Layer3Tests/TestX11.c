@@ -89,6 +89,22 @@ START_TEST(test_activate_window){
     assert(!activateWindow(getWindowInfo(win2)));
 }
 END_TEST
+START_TEST(test_banish_window){
+    assert(NUMBER_OF_HIDDEN_WORKSPACES >= 1);
+    WindowID win = createNormalWindow();
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(getWorkspaceOfWindow(winInfo));
+    banishWindow(winInfo, -1);
+    assert(getWorkspaceOfWindow(winInfo));
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        assert(!find(getWindowStack(getWorkspaceByIndex(i)), winInfo, sizeof(WindowID)));
+    assert(getHead(getWindowStack(getWorkspaceOfWindow(winInfo))) == winInfo);
+    moveWindowToWorkspace(winInfo, 0);
+    assert(getWorkspaceIndexOfWindow(winInfo) == 0);
+    assert(getHead(getWindowStack(getWorkspaceOfWindow(winInfo))) == winInfo);
+}
+END_TEST
 START_TEST(test_delete_window_request){
     KILL_TIMEOUT = _i == 0 ? 0 : 100;
     int fd[2];
@@ -411,18 +427,18 @@ START_TEST(test_auto_focus){
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
 }
 END_TEST
+volatile int count = 0;
+void markAndSleep(void){
+    count = 1;
+    unlock();
+    while(!isShuttingDown())
+        msleep(50);
+    lock();
+}
 START_TEST(test_auto_focus_tiling){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
     int first = mapWindow(createNormalWindow());
-    volatile int count = 0;
-    void markAndSleep(void){
-        count = 1;
-        unlock();
-        while(!isShuttingDown())
-            msleep(50);
-        lock();
-    }
     Rule sleeperRule = {NULL, 0, BIND(markAndSleep)};
     flush();
     int idle = 0;
@@ -647,6 +663,7 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_auto_focus_tiling);
     tcase_add_loop_test(tc_core, test_delete_window_request, 0, 3);
     tcase_add_test(tc_core, test_activate_window);
+    tcase_add_test(tc_core, test_banish_window);
     tcase_add_test(tc_core, test_set_border_color);
     tcase_add_test(tc_core, test_workspace_activation);
     tcase_add_test(tc_core, test_workspace_change);

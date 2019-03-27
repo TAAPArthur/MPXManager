@@ -359,7 +359,11 @@ void switchToWorkspace(int workspaceIndex){
     setActiveWorkspaceIndex(workspaceIndex);
 }
 
-
+void banishWindow(WindowInfo* winInfo, int index){
+    assert(index < 0);
+    removeWindowFromWorkspace(winInfo);
+    addWindowToWorkspace(winInfo, index);
+}
 void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex){
     assert(destIndex == -1 || destIndex >= 0 && destIndex < getNumberOfWorkspaces());
     assert(winInfo);

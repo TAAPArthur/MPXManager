@@ -78,6 +78,8 @@ extern unsigned int CRASH_ON_ERRORS;
 
 ///Number of workspaces to create
 extern int NUMBER_OF_WORKSPACES;
+///Number of extra workspaces that will be implicitly hidden from most functions
+extern int NUMBER_OF_HIDDEN_WORKSPACES;
 
 
 ///If true ignore all events with the send_event bit

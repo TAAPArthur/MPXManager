@@ -281,15 +281,6 @@ void scan(xcb_window_t baseWindow);
 
 
 /**
- * @param workspace
- * @return the windows stack of the workspace
- */
-ArrayList* getWindowStack(Workspace* workspace);
-
-
-
-
-/**
  * Creates a pointer to a WindowInfo object and sets its id to id
  *
  * The workspaceIndex of the window is set to NO_WORKSPACE

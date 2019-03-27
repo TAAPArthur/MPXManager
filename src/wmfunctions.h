@@ -190,9 +190,16 @@ void swapWithWorkspace(int workspaceIndex);
 void swapWorkspaces(int index1, int index2);
 
 /**
- * Moves a window to the workspace given by destIndex at the NORMAL_LAYER
+ * Moves a window to the workspace given by destIndex
  */
 void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex);
+/**
+ * Moves a window to the workspace given by destIndex
+ * The method differs from moveWindowToWorkspace in that negative values have no special meaning. This method was made to send windows to "hidden" workspaces
+ * @param winInfo
+ * @param index a number in the range (-NUMBER_OF_HIDDEN_WINDOWS,0)
+ */
+void banishWindow(WindowInfo* winInfo, int index);
 
 /**
  * Filters the configure request to allowed actions then configures the window
