@@ -150,7 +150,7 @@ START_TEST(test_monitors){
     if(!fork()){
         close(1);
         close(2);
-        system("xrandr --output screen --primary");
+        system("xsane-xrandr reset");
         exit(0);
     }
     START_MY_WM;

@@ -24,6 +24,8 @@
 typedef struct {
     ///representing  the view port of the workspaces' monitors
     Rect monitorViewport;
+    /// if the workspace is known to be visible
+    int visible;
     ///if this struct can be safely freed
     int noFree;
     /// the size of windowIds and windowMasks arrays
@@ -38,7 +40,7 @@ typedef struct {
 
 static int numberOfRecordedWorkspaces;
 static WorkspaceState* savedStates;
-static char couldStateHaveChanged;
+static char couldStateHaveChanged = 1;
 
 void markState(void){
     LOG(LOG_LEVEL_TRACE, "marking state\n");
@@ -73,10 +75,12 @@ static WorkspaceState* computeState(){
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         if(!isWorkspaceVisible(i) && i < numberOfRecordedWorkspaces){
             memcpy(&states[i], &savedStates[i], sizeof(WorkspaceState));
+            states[i].visible = 0;
             savedStates[i].noFree = 1;
             states[i].noFree = 0;
             continue;
         }
+        states[i].visible = isWorkspaceVisible(i);
         states[i].layout = getActiveLayoutOfWorkspace(i);
         states[i].monitorViewport = getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
         ArrayList* list = getWindowStack(getWorkspaceByIndex(i));
@@ -104,11 +108,18 @@ static WorkspaceState* computeState(){
  * The current state is then saved
  * @return 1 iff the state has actually changed
  */
-static int compareState(void(*onChange)(int)){
+static int compareState(void(*onWorkspaceWindowChange)(int), void(*onWorkspaceMonitorChange)(int)){
     WorkspaceState* currentState = computeState();
     assert(currentState);
-    int changed = 0;
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+    int changed = NO_CHANGE;
+    for(int i = 0; i < getNumberOfWorkspaces(); i++){
+        if((savedStates || currentState[i].visible) &&
+                (i >= numberOfRecordedWorkspaces ||
+                 savedStates[i].visible != currentState[i].visible)){
+            changed |= WORKSPACE_MONITOR_CHANGE;
+            if(onWorkspaceMonitorChange)
+                onWorkspaceMonitorChange(i);
+        }
         if((savedStates || currentState[i].size) &&
                 (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
                  memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
@@ -116,23 +127,22 @@ static int compareState(void(*onChange)(int)){
                  memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size)
                  || memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size))
           ){
-            changed = 1;
-            LOG(LOG_LEVEL_TRACE, "Detected change in workspace %d. \n", i);
-            if(onChange)
-                onChange(i);
-            else
-                break;
+            changed |= WORKSPACE_WINDOW_CHANGE;
+            if(onWorkspaceWindowChange)
+                onWorkspaceWindowChange(i);
         }
+    }
     unmarkState();
     if(savedStates)
         destroyCurrentState();
     numberOfRecordedWorkspaces = getNumberOfWorkspaces();
     savedStates = currentState;
+    LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);
     return changed;
 }
 
 
 
-int updateState(void(*onChange)(int)){
-    return (!savedStates || couldStateHaveChanged) && compareState(onChange);
+StateChangeType updateState(void(*onWorkspaceWindowChange)(int), void(*onWorkspaceMonitorChange)(int)){
+    return couldStateHaveChanged ? compareState(onWorkspaceWindowChange, onWorkspaceMonitorChange) : 0;
 }

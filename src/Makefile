@@ -24,9 +24,8 @@ CHECK_TEST_COVERAGE = gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|sp
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 
-RUN_XTEST = Tests/xisolate $(call RUN_TEST, ./$@ )
-RUN_XTEST_FAKE_MONITORS = Tests/xisolate --fake-monitors $(call RUN_TEST, ./$@ )
-RUN_XTEST_NO_DISPLAY = Tests/xisolate --no-xserver $(call RUN_TEST, ./$@ --test-no-xdisplay )
+RUN_XTEST = xvfb-run $(call RUN_TEST, ./$@ )
+RUN_XTEST_NO_DISPLAY = DISPLAY=:1000 $(call RUN_TEST, ./$@ --test-no-xdisplay )
 
 ifeq ($(DEBUG),1)
   CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
@@ -78,7 +77,7 @@ unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 unitTest2: Tests/*.c Tests/Layer2Tests/*.c ${LAYER2_SRCS} ${LAYER1_SRCS}
 	${CC} ${LAYER0_SRCS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_XTEST_NO_DISPLAY)
-	$(call RUN_XTEST_FAKE_MONITORS)
+	$(call RUN_XTEST)
 	$(call CHECK_TEST_COVERAGE,${LAYER2_SRCS})
 
 unitTest3: Tests/*.c Tests/Layer3Tests/*.c ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}

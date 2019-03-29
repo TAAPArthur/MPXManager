@@ -8,6 +8,7 @@
 
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
+#include "../../state.h"
 #include "../../logger.h"
 #include "../../globals.h"
 #include "../../wmfunctions.h"
@@ -551,6 +552,25 @@ START_TEST(test_key_repeat){
     assert(getDummyCount() == 0);
 }
 END_TEST
+START_TEST(test_monitor_deletion){
+    Monitor* m = getHead(getAllMonitors());
+    assert(m);
+    START_MY_WM;
+    createNormalWindow();
+    assert(getMonitorFromWorkspace(getActiveWorkspace()) == m);
+    WAIT_UNTIL_TRUE(doesWorkspaceHaveWindowsWithMask(getActiveWorkspaceIndex(), MAPPED_MASK));
+    ATOMIC(removeMonitor(m->id); markState());
+    assert(getMonitorFromWorkspace(getActiveWorkspace()) == NULL);
+    //wake up event thread
+    createNormalWindow();
+    WAIT_UNTIL_TRUE(!doesWorkspaceHaveWindowsWithMask(getActiveWorkspaceIndex(), MAPPED_MASK));
+}
+END_TEST
+
+void fullMonitorCleanup(void){
+    clearFakeMonitors();
+    fullCleanup();
+}
 
 Suite* defaultRulesSuite(){
     Suite* s = suite_create("Default events");
@@ -615,6 +635,10 @@ Suite* defaultRulesSuite(){
     tc_core = tcase_create("Special Client Messages");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_loop_test(tc_core, test_client_close_window, 0, 2);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("RemoveMonitor");
+    tcase_add_checked_fixture(tc_core, onStartup, fullMonitorCleanup);
+    tcase_add_test(tc_core, test_monitor_deletion);
     suite_add_tcase(s, tc_core);
     return s;
 }

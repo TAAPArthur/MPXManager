@@ -34,6 +34,29 @@ typedef struct Monitor {
     Rect view;
 
 } Monitor;
+///Masks used to determine the wheter two monitors are duplicates
+typedef enum {
+    /// Monitors are the same iff they have exactly the same bounds
+    SAME_DIMS = 1,
+    /// Monitors are dups if one monitor completly fits inside the other
+    CONTAINS = 2,
+    /// Monitors are dups if one intersects with the other.
+    INTERSECTS = 4,
+} MonitorDuplicationPolicy;
+/// Masks used to dictate how we deal with duplicates monitors
+typedef enum {
+    /// Take the primary moniotr
+    TAKE_PRIMARY = 1,
+    /// Keep the larger by area (ties are broken arbitarily)
+    TAKE_LARGER = 2,
+    /// Keep the smaller by area (ties are broken arbitarily)
+    TAKE_SMALLER = 4,
+} MonitorDuplicationResolution;
+
+/// Used to determin whether two monitors are duplicates of each other
+extern MonitorDuplicationPolicy MONITOR_DUPLICATION_POLICY;
+/// Given to monitors are duplicates, how do we determine which one to keep
+extern MonitorDuplicationResolution MONITOR_DUPLICATION_RESOLUTION;
 
 ///Types of docks
 typedef enum {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} DockTypes;
@@ -49,6 +72,19 @@ ArrayList* getAllMonitors(void);
  */
 ArrayList* getAllDocks(void);
 
+/**
+ * Creates a new X11 monitor with the given bounds.
+ *
+ * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitary monitor
+ *
+ * @param bounds the position of the new monitor
+ */
+void pip(Rect bounds);
+/**
+ * Clears all fake monitors
+ * @see pip
+ */
+void clearFakeMonitors(void);
 
 /**
  * True if the monitor is marked as primary
@@ -56,14 +92,16 @@ ArrayList* getAllDocks(void);
  * @return
  */
 int isPrimary(Monitor* monitor);
+
 /**
  *
  * @param id id of monitor TODO need to convert handle long to int conversion
  * @param primary   if the monitor the primary
  * @param geometry an array containing the x,y,width,height of the monitor
+ * @param autoAssignWorkspace if true, then monitor will be given a free workspace if possible
  * @return 1 iff a new monitor was added
  */
-int updateMonitor(MonitorID id, int primary, Rect geometry);
+int updateMonitor(MonitorID id, int primary, Rect geometry, int autoAssignWorkspace);
 /**
  * Removes a monitor and frees related info
  * @param id identifier of the monitor
@@ -100,6 +138,10 @@ int loadDockProperties(WindowInfo* info);
  * Query for all monitors
  */
 void detectMonitors(void);
+/**
+ * Loops over all monitors and assigns the ones without a workspace to an arbitary empty workspace
+ */
+void assignUnusedMonitorsToWorkspaces(void);
 
 /**
  *
@@ -108,6 +150,23 @@ void detectMonitors(void);
  * @return 1 iff the 2 specified rectangles intersect
  */
 int intersects(Rect arg1, Rect arg2);
+/**
+ * Checks to see if arg1 contains arg2. For the check to pass arg2 must completly reside within all borders of arg2
+ * @param arg1
+ * @param arg2
+ *
+ * @return 1 iff arg1 completly contains arg2
+ */
+int contains(Rect arg1, Rect arg2);
+/**
+ *
+ *
+ * @param arg1
+ * @param arg2
+ *
+ * @return 1 if arg1 has a larger area than arg2
+ */
+int isLarger(Rect arg1, Rect arg2);
 
 /**
  * Resizes the monitor such that its viewport does not intersec the given dock

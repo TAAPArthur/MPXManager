@@ -4,6 +4,15 @@
  */
 #ifndef STATE_H
 #define STATE_H
+///Return type of updateState that dicates what changed
+typedef enum {
+    //nothing changed
+    NO_CHANGE = 0,
+    /// window related state changed
+    WORKSPACE_WINDOW_CHANGE = 1,
+    /// workspace-monitor pairing changed
+    WORKSPACE_MONITOR_CHANGE = 2,
+} StateChangeType;
 
 /**
  * Marks that the state may have possibility changed
@@ -22,10 +31,11 @@ void unmarkState(void);
  * <li> the stacking order of the interactable windows has changed </li>
  * <li> the user mask for any interactable window has changed </li>
  * </ul>
- * @param onChange the callback function to be trigger for every workspace
+ * @param onWorkspaceWindowChange the callback function to be trigger for every workspace when set of window state changes
+ * @param onWorkspaceMonitorChange the callback function to be trigger for every workspace when workspace-monitor pair changes
  * that has changed
  * @return 1 iff the state has actually changed
  */
-int updateState(void(*onChange)(int));
+StateChangeType updateState(void(*onWorkspaceWindowChange)(int), void(*onWorkspaceMonitorChange)(int));
 
 #endif

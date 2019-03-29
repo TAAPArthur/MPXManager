@@ -39,7 +39,7 @@ void addUnknownWindowIgnoreRule(void){
     prependRule(ProcessingWindow, &ignoreUnknownWindowRule);
 }
 static void tileChangeWorkspaces(void){
-    updateState(tileWorkspace);
+    updateState(tileWorkspace, syncMonitorMapState);
 }
 void autoAddToWorkspace(WindowInfo* winInfo){
     if(winInfo->dock)return;

@@ -163,6 +163,13 @@ typedef struct {
     ///the monitor the workspace is on
     Monitor* monitor;
 
+    /** if the workspace is mapped
+     *
+     * A work space should be mapped when it is visible, but asigning a monitor does not does not automatically cause all windows in the workspace to be mapped.
+     * This field is here to sync the two states
+     *
+     */
+    int mapped;
 
     /// is hiding all windows
     char showingDesktop;

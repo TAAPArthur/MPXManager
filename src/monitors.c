@@ -27,6 +27,10 @@ static ArrayList docks;
 
 ///list of all monitors
 static ArrayList monitors;
+
+MonitorDuplicationPolicy MONITOR_DUPLICATION_POLICY = SAME_DIMS;
+MonitorDuplicationResolution MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
+
 /**
  * Checks to if two lines intersect
  * (either both vertical or both horizontal
@@ -41,10 +45,15 @@ static int intersects1D(int P1, int D1, int P2, int D2){
 }
 
 int intersects(Rect arg1, Rect arg2){
-    if(intersects1D(arg1.x, arg1.width, arg2.x, arg2.width) &&
-            intersects1D(arg1.y, arg1.height, arg2.y, arg2.height))
-        return 1;
-    return 0;
+    return (intersects1D(arg1.x, arg1.width, arg2.x, arg2.width) &&
+            intersects1D(arg1.y, arg1.height, arg2.y, arg2.height));
+}
+int isLarger(Rect arg1, Rect arg2){
+    return arg1.width * arg1.height > arg2.width * arg2.height;
+}
+int contains(Rect arg1, Rect arg2){
+    return (arg1.x < arg2.x && arg2.x + arg2.width < arg1.x + arg1.width &&
+            arg1.y < arg2.y && arg2.y + arg2.height < arg1.y + arg1.height);
 }
 
 void setDockArea(WindowInfo* info, int numberofProperties, int* properties){
@@ -136,6 +145,67 @@ int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo){
     }
     return changed;
 }
+void clearFakeMonitors(void){
+    system("xsane-xrandr clear &>/dev/null");
+}
+void pip(Rect bounds){
+    char buffer[255];
+    sprintf(buffer, "xsane-xrandr pip %d %d %d %d  &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
+    system(buffer);
+}
+static void removeDuplicateMonitors(void){
+    if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION)
+        return;
+    for(int i = getSize(getAllMonitors()) - 1; i >= 0; i--){
+        Monitor* m1 = getElement(getAllMonitors(), i);
+        for(int n = i + 1; n < getSize(getAllMonitors()); n++){
+            Monitor* m2 = getElement(getAllMonitors(), n);
+            int dup = 0;
+            int sameBounds = (memcmp(&m1->base, &m2->base, sizeof(Rect)) == 0);
+            if(sameBounds)
+                dup = MONITOR_DUPLICATION_POLICY & SAME_DIMS ? 1 : 0;
+            else if(MONITOR_DUPLICATION_POLICY & INTERSECTS)
+                dup = intersects(m1->base, m2->base);
+            if(MONITOR_DUPLICATION_POLICY & CONTAINS)
+                dup = contains(m1->base, m2->base) || contains(m2->base, m1->base);
+            Monitor* monitorToRemove = NULL;
+            if(!dup)
+                continue;
+            LOG(LOG_LEVEL_DEBUG, "Monitors %lu and %lu are dups\n", m1->id, m2->id);
+            if(MONITOR_DUPLICATION_RESOLUTION & TAKE_SMALLER)
+                monitorToRemove = isLarger(m1->base, m2->base) ? m2 : m1;
+            if(MONITOR_DUPLICATION_RESOLUTION & TAKE_LARGER)
+                monitorToRemove = isLarger(m1->base, m2->base) ? m1 : m2;
+            if(MONITOR_DUPLICATION_RESOLUTION & TAKE_PRIMARY)
+                monitorToRemove = isPrimary(m1) ? m2 : isPrimary(m2) ? m1 : monitorToRemove;;
+            if(monitorToRemove){
+                LOG(LOG_LEVEL_DEBUG, "removing monitor %lu because it is a dup of %lu", monitorToRemove->id,
+                    ((Monitor*)((long)monitorToRemove ^ (long)m1 ^ (long)m2))->id);
+                removeMonitor(monitorToRemove->id);
+            }
+        }
+    }
+}
+
+static void assignWorkspace(Monitor* m, Workspace* workspace){
+    if(!workspace)
+        if(!isWorkspaceVisible(getActiveWorkspaceIndex()))
+            workspace = getActiveWorkspace();
+        else {
+            workspace = getNextWorkspace(1, HIDDEN | NON_EMPTY);
+            if(!workspace){
+                workspace = getNextWorkspace(1, HIDDEN);
+            }
+        }
+    if(workspace)
+        workspace->monitor = m;
+}
+void assignUnusedMonitorsToWorkspaces(void){
+    FOR_EACH_REVERSED(Monitor*, m, getAllMonitors()){
+        if(!getWorkspaceFromMonitor(m))
+            assignWorkspace(m, NULL);
+    }
+}
 void detectMonitors(void){
     LOG(LOG_LEVEL_DEBUG, "refreshing monitors\n");
     xcb_randr_get_monitors_cookie_t cookie = xcb_randr_get_monitors(dis, root, 1);
@@ -145,12 +215,12 @@ void detectMonitors(void){
     ArrayList monitorNames = {0};
     while(iter.rem){
         xcb_randr_monitor_info_t* monitorInfo = iter.data;
-        updateMonitor(monitorInfo->name, monitorInfo->primary, *(Rect*)&monitorInfo->x);
+        updateMonitor(monitorInfo->name, monitorInfo->primary, *(Rect*)&monitorInfo->x, 0);
         addToList(&monitorNames, (void*)(long)monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
     free(monitors);
-    FOR_EACH(Monitor*, m, getAllMonitors()){
+    FOR_EACH_REVERSED(Monitor*, m, getAllMonitors()){
         int i;
         for(i = getSize(&monitorNames) - 1; i >= 0; i--)
             if(m->id == (MonitorID)getElement(&monitorNames, i))
@@ -158,44 +228,45 @@ void detectMonitors(void){
         if(i == -1)
             removeMonitor(m->id);
     }
+    removeDuplicateMonitors();
     clearList(&monitorNames);
+    assignUnusedMonitorsToWorkspaces();
 }
-
 int removeMonitor(MonitorID id){
     int index = indexOf(getAllMonitors(), &id, sizeof(id));
     if(index == -1)
         return 0;
-    Workspace* w = getWorkspaceFromMonitor(getElement(getAllMonitors(), index));
-    if(w)
+    Monitor* m = getElement(getAllMonitors(), index);
+    Workspace* w = getWorkspaceFromMonitor(m);
+    LOG(LOG_LEVEL_DEBUG, "removing monitor %ld\n", id);
+    dumpMonitorInfo(m);
+    removeFromList(getAllMonitors(), index);
+    if(w){
         w->monitor = NULL;
-    free(removeFromList(getAllMonitors(), index));
+        FOR_EACH_REVERSED(Monitor*, otherMonitor, getAllMonitors()){
+            if(!getWorkspaceFromMonitor(otherMonitor) && otherMonitor->base.x == m->base.x && otherMonitor->base.y == m->base.y){
+                LOG(LOG_LEVEL_DEBUG, "giving workspace to monitior %ld\n", otherMonitor->id);
+                assignWorkspace(otherMonitor, w);
+                break;
+            }
+        }
+    }
+    free(m);
     return 1;
 }
 
 int isPrimary(Monitor* monitor){
     return monitor->primary;
 }
-static void addMonitor(Monitor* m){
-    Workspace* workspace;
-    if(!isWorkspaceVisible(getActiveWorkspaceIndex()))
-        workspace = getActiveWorkspace();
-    else {
-        workspace = getNextWorkspace(1, HIDDEN | NON_EMPTY);
-        if(!workspace){
-            workspace = getNextWorkspace(1, HIDDEN);
-        }
-    }
-    if(workspace)
-        workspace->monitor = m;
-    addToList(getAllMonitors(), m);
-}
-int updateMonitor(MonitorID id, int primary, Rect geometry){
-    Monitor* m = find(getAllMonitors(), &id, sizeof(int));
+int updateMonitor(MonitorID id, int primary, Rect geometry, int autoAssignWorkspace){
+    Monitor* m = find(getAllMonitors(), &id, sizeof(MonitorID));
     int newMonitor = !m;
     if(!m){
         m = calloc(1, sizeof(Monitor));
         m->id = id;
-        addMonitor(m);
+        addToList(getAllMonitors(), m);
+        if(autoAssignWorkspace)
+            assignWorkspace(m, NULL);
     }
     m->primary = primary ? 1 : 0;
     m->base = geometry;

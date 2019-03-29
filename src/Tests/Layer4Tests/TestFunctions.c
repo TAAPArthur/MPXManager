@@ -258,7 +258,7 @@ START_TEST(test_activate_workspace_with_mouse){
     Monitor* m = getHead(getAllMonitors());
     Rect bounds = m->base;
     bounds.x += bounds.width;
-    updateMonitor(1, 0, bounds);
+    updateMonitor(1, 0, bounds, 1);
     setLastKnowMasterPosition(bounds.x + 1, bounds.y + 1);
     activateWorkspaceUnderMouse();
     assert(m != getMonitorFromWorkspace(getActiveWorkspace()));

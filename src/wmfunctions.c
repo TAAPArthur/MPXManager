@@ -92,8 +92,11 @@ void updateEWMHClientList(){
 }
 
 
-
-
+int doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask){
+    WindowInfo* winInfo;
+    UNTIL_FIRST(winInfo, getWindowStack(getWorkspaceByIndex(index)), hasMask(winInfo, mask));
+    return winInfo != NULL;
+}
 int getSavedWorkspaceIndex(WindowID win){
     unsigned int workspaceIndex = 0;
     if((xcb_ewmh_get_wm_desktop_reply(ewmh,
@@ -298,8 +301,20 @@ static void updateWindowWorkspaceState(WindowInfo* winInfo, int workspaceIndex, 
     }
 }
 
+void syncMonitorMapState(int index){
+    Workspace* workspace = getWorkspaceByIndex(index);
+    if(workspace->mapped == isWorkspaceVisible(index))
+        return;
+    else
+        workspace->mapped = isWorkspaceVisible(index);
+    FOR_EACH_REVERSED(WindowInfo*, winInfo, getWindowStack(getWorkspaceByIndex(index))){
+        updateWindowWorkspaceState(winInfo, index, NO_WORKSPACE);
+    }
+}
 void swapWorkspaces(int index1, int index2){
     swapMonitors(index1, index2);
+    getWorkspaceByIndex(index1)->mapped = isWorkspaceVisible(index1);
+    getWorkspaceByIndex(index2)->mapped = isWorkspaceVisible(index2);
     if(isWorkspaceVisible(index1) != isWorkspaceVisible(index2)){
         ArrayList* stack = getWindowStack(getWorkspaceByIndex(index1));
         FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index1, index2);

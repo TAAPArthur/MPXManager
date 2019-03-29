@@ -3,29 +3,12 @@
 #include "../../monitors.h"
 #include "../../globals.h"
 
-START_TEST(test_detect_monitors){
-    detectMonitors();
-    int num = getSize(getAllMonitors());
-    assert(isNotEmpty(getAllMonitors()));
-    updateMonitor(0, 1, (Rect){
-        0, 0, 100, 100
-    });
-    assert(getSize(getAllMonitors()) == num + 1);
-    detectMonitors();
-    assert(getSize(getAllMonitors()) == num);
-    assert(num == 2);
-}
-END_TEST
 START_TEST(test_avoid_struct){
     int dim = 100;
     int dockSize = 10;
     int monitorIndex = 1, sideMonitorIndex = 2;
-    updateMonitor(sideMonitorIndex, 0, (Rect){
-        dim, 0, dim, dim
-    });
-    updateMonitor(monitorIndex, 1, (Rect){
-        0, 0, dim, dim
-    });
+    updateMonitor(sideMonitorIndex, 0, (Rect){dim, 0, dim, dim}, 1);
+    updateMonitor(monitorIndex, 1, (Rect){0, 0, dim, dim}, 1);
     int arrSize = _i == 0 ? 12 : 4;
     Monitor* monitor = find(getAllMonitors(), &monitorIndex, sizeof(int));
     Monitor* sideMonitor = find(getAllMonitors(), &sideMonitorIndex, sizeof(int));
@@ -146,28 +129,29 @@ START_TEST(test_avoid_docks){
 END_TEST
 
 
-
-
-
-
 START_TEST(test_monitor_init){
     int size = 5;
-    int count = 0;
+    MonitorID count = 0;
     addFakeMaster(1, 1);
     for(int x = 0; x < 2; x++)
-        for(int y = 0; y < 2; y++){
-            short dim[4] = {x, y, size* size + y, size * 2 + x};
-            assert(updateMonitor(count, !count, *(Rect*)dim));
-            Monitor* m = find(getAllMonitors(), &count, sizeof(int));
-            assert(m->id == count);
-            assert(isPrimary(m) == !count);
-            for(int i = 0; i < 4; i++){
-                assert((&m->base.x)[i] == (&m->view.x)[i]);
-                assert(dim[i] == (&m->base.x)[i]);
+        for(int y = 0; y < 2; y++)
+            for(int i = 0; i < 2; i++){
+                short dim[4] = {x, y, size* size + y, size * 2 + x};
+                assert(updateMonitor(count, !count, *(Rect*)dim, i));
+                Monitor* m = find(getAllMonitors(), &count, sizeof(MonitorID));
+                assert(m);
+                assert(m->id == count);
+                assert(isPrimary(m) == !count);
+                for(int i = 0; i < 4; i++){
+                    assert((&m->base.x)[i] == (&m->view.x)[i]);
+                    assert(dim[i] == (&m->base.x)[i]);
+                }
+                if(i){
+                    assert(getWorkspaceFromMonitor(m));
+                    assert(getWorkspaceFromMonitor(m)->id == count++);
+                }
+                else removeMonitor(m->id);
             }
-            assert(getWorkspaceFromMonitor(m));
-            assert(getWorkspaceFromMonitor(m)->id == count++);
-        }
 }
 END_TEST
 START_TEST(test_monitor_add_remove){
@@ -175,9 +159,7 @@ START_TEST(test_monitor_add_remove){
     int size = getNumberOfWorkspaces();
     for(int n = 0; n < 2; n++){
         for(int i = 1; i <= size + 1; i++){
-            updateMonitor(i, 1, (Rect){
-                0, 0, 100, 100
-            });
+            updateMonitor(i, 1, (Rect){0, 0, 100, 100}, 1);
             Workspace* w = getWorkspaceFromMonitor(find(getAllMonitors(), &i, sizeof(int)));
             if(i > size)
                 assert(!w);
@@ -195,6 +177,61 @@ START_TEST(test_monitor_add_remove){
 }
 END_TEST
 
+START_TEST(test_detect_monitors){
+    close(2);
+    system("xsane-xrandr --auto split-monitor W 3 &>/dev/null");
+    MONITOR_DUPLICATION_POLICY = 0;
+    detectMonitors();
+    int num = getSize(getAllMonitors());
+    assert(isNotEmpty(getAllMonitors()));
+    updateMonitor(0, 1, (Rect){0, 0, 100, 100}, 1);
+    assert(getSize(getAllMonitors()) == num + 1);
+    detectMonitors();
+    assert(getSize(getAllMonitors()) == num);
+    assert(num == 3);
+}
+END_TEST
+START_TEST(test_monitor_dup_resolution){
+    MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
+    int masks[] = {TAKE_PRIMARY, TAKE_LARGER, TAKE_SMALLER};
+    if(_i == 0)
+        system("xsane-xrandr --auto set-primary &>/dev/null");
+    detectMonitors();
+    Monitor* m = getHead(getAllMonitors());
+    if(_i == 0)
+        assert(isPrimary(m));
+    int result[] = {1, 0, 1};
+    pip((Rect){1, 1, 100, 100});
+    MONITOR_DUPLICATION_RESOLUTION = masks[_i];
+    detectMonitors();
+    assert((m == getHead(getAllMonitors())) == result[_i]);
+}
+END_TEST
+START_TEST(test_monitor_intersection){
+    char* cmds[] = {
+        "xsane-xrandr --auto split-monitor W 2 75 &>/dev/null",
+        "xsane-xrandr pip 1 1 100 100 &>/dev/null",
+        "xsane-xrandr pip 0 0 0 0 &>/dev/null",
+    };
+    system(cmds[_i]);
+    MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;
+    int sizes[3][3] = {
+        {2, 2, 1},
+        {2, 1, 1},
+        {1, 2, 2}
+    };
+    int masks[] = {SAME_DIMS, CONTAINS, INTERSECTS};
+    for(int i = 0; i < LEN(sizes); i++){
+        MONITOR_DUPLICATION_POLICY = masks[i];
+        detectMonitors();
+        assert(getSize(getAllMonitors()) == sizes[_i][i]);
+        FOR_EACH_REVERSED(Monitor*, m, getAllMonitors()){
+            removeMonitor(m->id);
+        }
+    }
+    clearFakeMonitors();
+}
+END_TEST
 
 Suite* monitorsSuite(){
     Suite* s = suite_create("Monitors");
@@ -205,8 +242,10 @@ Suite* monitorsSuite(){
     tcase_add_test(tc_core, test_monitor_add_remove);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Detect monitors");
-    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, clearFakeMonitors);
     tcase_add_test(tc_core, test_detect_monitors);
+    tcase_add_loop_test(tc_core, test_monitor_intersection, 0, 3);
+    tcase_add_loop_test(tc_core, test_monitor_dup_resolution, 0, 3);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Docks");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);

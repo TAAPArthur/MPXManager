@@ -248,9 +248,25 @@ void floatWindow(WindowInfo* win);
 void sinkWindow(WindowInfo* win);
 
 /**
+ * if Workspace:mapped != isVisibleWorkspace, then we either attempt to map,unmap all windows in the workspace according to isVisibleWorkspace
+ *
+ * @param index
+ */
+void syncMonitorMapState(int index);
+
+/**
  * Swaps the workspaces and positions in said workspaces between the two windows
  * @param winInfo1
  * @param winInfo2
  */
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
+/**
+ *
+ *
+ * @param index
+ * @param mask
+ *
+ * @return true if there exists at least one window  in workspace with the given mask
+ */
+int doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask);
 #endif
