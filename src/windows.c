@@ -441,8 +441,11 @@ ArrayList* getClonesOfWindow(WindowInfo* winInfo){
     return &winInfo->cloneList;
 }
 void onWindowFocus(WindowID win){
+    if(getFocusedWindow() && getFocusedWindow()->id == win)
+        return;
     int index = indexOf(getAllWindows(), &win, sizeof(int));
     if(index == -1)return;
+    LOG(LOG_LEVEL_DEBUG, "updating focus for win %d\n", win);
     WindowInfo* winInfo = getElement(getAllWindows(), index);
     int pos = indexOf(getActiveMasterWindowStack(), winInfo, sizeof(int));
     if(! isFocusStackFrozen()){

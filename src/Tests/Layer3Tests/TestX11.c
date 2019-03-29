@@ -411,7 +411,40 @@ START_TEST(test_auto_focus){
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
 }
 END_TEST
-
+START_TEST(test_auto_focus_tiling){
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
+    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
+    int first = mapWindow(createNormalWindow());
+    volatile int count = 0;
+    void markAndSleep(void){
+        count = 1;
+        unlock();
+        while(!isShuttingDown())
+            msleep(50);
+        lock();
+    }
+    Rule sleeperRule = {NULL, 0, BIND(markAndSleep)};
+    flush();
+    int idle = 0;
+    START_MY_WM;
+    //wait until first has settled in
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(getFocusedWindow()->id == first);
+    addToList(getEventRules(XCB_MAP_NOTIFY), &sleeperRule);
+    int second = mapWindow(createNormalWindow());
+    WindowID stackingOrder[] = {first, second};
+    WAIT_UNTIL_TRUE(count);
+    // there is a race between retiling and manually updating the focus state
+    // the following code and the sleeprRule resolve the race such that retiling.
+    // A layout like full will raise the focused window so if the state isn't updated,
+    // the stacking order will be messed up
+    lock();
+    retile();
+    flush();
+    assert(checkStackingOrder(stackingOrder, 2));
+    unlock();
+}
+END_TEST
 START_TEST(test_auto_focus_delete){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
@@ -611,6 +644,7 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_focus_window_request);
     tcase_add_test(tc_core, test_auto_focus);
     tcase_add_test(tc_core, test_auto_focus_delete);
+    tcase_add_test(tc_core, test_auto_focus_tiling);
     tcase_add_loop_test(tc_core, test_delete_window_request, 0, 3);
     tcase_add_test(tc_core, test_activate_window);
     tcase_add_test(tc_core, test_set_border_color);
