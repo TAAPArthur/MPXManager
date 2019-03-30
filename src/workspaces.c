@@ -164,3 +164,15 @@ Workspace* getActiveWorkspace(void){
 ArrayList* getActiveWindowStack(void){
     return getWindowStack(getActiveWorkspace());
 }
+int getWorkspaceMask(Workspace* w){
+    return w->mask;
+}
+int hasWorkspaceMask(Workspace* w, WindowMask mask){
+    return w->mask & mask;
+}
+void addWorkspaceMask(Workspace* w, WindowMask mask){
+    w->mask |= mask;
+}
+void removeWorkspaceMask(Workspace* w, WindowMask mask){
+    w->mask &= ~mask;
+}

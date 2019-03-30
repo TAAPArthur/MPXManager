@@ -649,10 +649,10 @@ START_TEST(test_toggle_show_desktop){
     }
     flush();
     WAIT_UNTIL_TRUE(getSize(getAllWindows()) == LEN(win));
+    setShowingDesktop(getActiveWorkspaceIndex(), 1);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(!isInteractable(winInfo));
     toggleShowDesktop();
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(!hasMask(winInfo, MAPPED_MASK));
-    toggleShowDesktop();
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(hasMask(winInfo, MAPPED_MASK));
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(isInteractable(winInfo));
 }
 END_TEST
 

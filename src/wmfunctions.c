@@ -548,11 +548,13 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2){
     winInfo2->workspaceIndex = temp;
 }
 int isShowingDesktop(int index){
-    return getWorkspaceByIndex(index)->showingDesktop;
+    return hasWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);
 }
 void setShowingDesktop(int index, int value){
-    getWorkspaceByIndex(index)->showingDesktop = value;
-    setWorkspaceState(getActiveWorkspaceIndex(), !value);
+    if(value)
+        addWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);
+    else
+        removeWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
 }
 void toggleShowDesktop(){

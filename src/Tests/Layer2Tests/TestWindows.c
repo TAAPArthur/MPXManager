@@ -75,6 +75,25 @@ START_TEST(test_mask_save_restore){
     xcb_ewmh_get_atoms_reply_wipe(&reply);
 }
 END_TEST
+START_TEST(test_window_workspace_masks){
+    DEFAULT_WINDOW_MASKS = 0;
+    WindowInfo* winInfo = createWindowInfo(createNormalWindow());
+    addWindowInfo(winInfo);
+    addWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
+    assert(getHead(getActiveWindowStack()) == winInfo);
+    assert(!hasMask(winInfo, HIDDEN_MASK));
+    assert(!hasMask(winInfo, FLOATING_MASK));
+    addWorkspaceMask(getActiveWorkspace(), HIDDEN_MASK);
+    assert(hasMask(winInfo, HIDDEN_MASK));
+    addWorkspaceMask(getActiveWorkspace(), FLOATING_MASK);
+    assert(hasMask(winInfo, FLOATING_MASK));
+    removeWorkspaceMask(getActiveWorkspace(), FLOATING_MASK | HIDDEN_MASK);
+    assert(!hasWorkspaceMask(getActiveWorkspace(), FLOATING_MASK));
+    assert(!hasWorkspaceMask(getActiveWorkspace(), HIDDEN_MASK));
+    assert(!hasMask(winInfo, HIDDEN_MASK));
+    assert(!hasMask(winInfo, FLOATING_MASK));
+}
+END_TEST
 
 START_TEST(test_get_set_geometry_config){
     WindowInfo* winInfo = createWindowInfo(1);
@@ -347,6 +366,7 @@ Suite* windowsSuite(void){
     tcase_add_test(tc_core, test_mask_add_remove_toggle);
     tcase_add_test(tc_core, test_mask_reset);
     tcase_add_test(tc_core, test_mask_save_restore);
+    tcase_add_test(tc_core, test_window_workspace_masks);
     tcase_add_test(tc_core, test_get_set_geometry_config);
     tcase_add_test(tc_core, test_lock_geometry_config);
     suite_add_tcase(s, tc_core);

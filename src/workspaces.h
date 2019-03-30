@@ -195,4 +195,36 @@ int getActiveWorkspaceIndex(void);
  * @param index
  */
 void setActiveWorkspaceIndex(int index);
+/**
+ * Adds a mask to the workspace
+ * @see Workspace::mask
+ *
+ * @param w
+ * @param mask
+ */
+void addWorkspaceMask(Workspace* w, WindowMask mask);
+/**
+ * Removes a mask to the workspace
+ * @see Workspace::mask
+ *
+ * @param w
+ * @param mask
+ */
+void removeWorkspaceMask(Workspace* w, WindowMask mask);
+/**
+ *
+ * @param w
+ *
+ * @return the mask of w
+ */
+int getWorkspaceMask(Workspace* w);
+/**
+ *
+ *
+ * @param w
+ * @param mask
+ *
+ * @return 1 if w fully contains mask
+ */
+int hasWorkspaceMask(Workspace* w, WindowMask mask);
 #endif

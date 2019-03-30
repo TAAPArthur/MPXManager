@@ -45,7 +45,11 @@ int getMask(WindowInfo* winInfo){
     return winInfo->mask;
 }
 int hasPartOfMask(WindowInfo* winInfo, int mask){
-    return (winInfo->mask & mask);
+    Workspace* w = getWorkspaceOfWindow(winInfo);
+    WindowMask winMask = winInfo->mask;
+    if(w)
+        winMask |= getWorkspaceMask(w);
+    return (winMask & mask);
 }
 int hasMask(WindowInfo* winInfo, int mask){
     return hasPartOfMask(winInfo, mask) == mask;

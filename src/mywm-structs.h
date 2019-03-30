@@ -170,6 +170,10 @@ typedef struct {
      *
      */
     int mapped;
+    /**
+     * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
+     */
+    WindowMask mask;
 
     /// is hiding all windows
     char showingDesktop;

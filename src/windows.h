@@ -391,7 +391,7 @@ static inline int isMappable(WindowInfo* winInfo){
 }
 /**
  * @param winInfo
- * @return true if the user can static inline interact (ie focus,type etc)  with the window
+ * @return true if the user can interact (ie focus,type etc)  with the window
  * For this to be true the window would have to be mapped and not hidden
  */
 static inline int isInteractable(WindowInfo* winInfo){
