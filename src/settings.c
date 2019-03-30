@@ -89,6 +89,7 @@ static Binding DEFAULLT_BINDINGS[] = {
     {Mod4Mask | ControlMask | ShiftMask, XK_asciitilde, BIND(dumpAllWindowInfo)},
 };
 
+
 void defaultPrintFunction(void){
     int activeWorkspaceIndex = getActiveWorkspaceIndex();
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
@@ -98,11 +99,11 @@ void defaultPrintFunction(void){
         else if(doesWorkspaceHaveWindowsWithMask(i, MAPPABLE_MASK))
             color = "yellow";
         else continue;
-        dprintf(STATUS_FD, "<fc=%s>%s%s:%s</fc> ", color, getWorkspaceName(i), i == activeWorkspaceIndex ? "*" : "",
+        dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, getWorkspaceName(i), i == activeWorkspaceIndex ? "*" : "",
                 getNameOfLayout(getActiveLayoutOfWorkspace(i)));
     }
     if(getFocusedWindow() && isWindowNotInInvisibleWorkspace(getFocusedWindow()))
-        dprintf(STATUS_FD, "<fc=%s>%s</fc>", "green", getFocusedWindow()->title);
+        dprintf(STATUS_FD, "^fg(%s)%s^fg()", "green", getFocusedWindow()->title);
     dprintf(STATUS_FD, "\n");
 }
 void loadNormalSettings(){

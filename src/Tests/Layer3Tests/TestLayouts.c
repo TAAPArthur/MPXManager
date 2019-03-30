@@ -66,6 +66,7 @@ START_TEST(test_layouts){
     setActiveLayout(&LAYOUT_FAMILIES[layoutIndex]);
     int size = 5;
     assert(!isNotEmpty(getAllWindows()));
+    retile();
     START_MY_WM
     int area;
     xcb_get_geometry_reply_t* reply1, *reply2;

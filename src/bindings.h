@@ -358,14 +358,6 @@ typedef struct {
  *
  */
 #define CREATE_WILDCARD(...){NULL,0,__VA_ARGS__}
-/**
- * Macro to create a rule
- */
-#define CREATE_RULE(expression,target,func){expression,target,func}
-/**
- * Macro to create a rule that will be interpreted literally
- */
-#define CREATE_LITERAL_RULE(E,T,...){E,(T|LITERAL),__VA_ARGS__}
 
 
 

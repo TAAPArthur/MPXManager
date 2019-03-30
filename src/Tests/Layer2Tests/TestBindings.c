@@ -368,7 +368,7 @@ START_TEST(test_env_rule_sub){
     setenv(var + 1, value, 1);
     unsetenv("_unsetVar");
     for(int i = 0; i < LEN(str); i++){
-        Rule r = CREATE_LITERAL_RULE(str[i], target, NULL);
+        Rule r = {str[i], target | LITERAL, NULL};
         initRule(&r);
         assert(strcmp(r.literal, subVar[i]) == 0);
         free(r.literal);
@@ -377,7 +377,7 @@ START_TEST(test_env_rule_sub){
     for(int i = 0; i < 255; i++)longValue[i] = 'A';
     longValue[LEN(longValue) - 1] = 0;
     setenv(var + 1, longValue, 1);
-    Rule r = CREATE_LITERAL_RULE(var, target, NULL);
+    Rule r = {var, target | LITERAL, NULL};
     initRule(&r);
     assert(strcmp(r.literal, longValue) == 0);
     free(r.literal);
@@ -393,14 +393,14 @@ START_TEST(test_literal_string_rule){
         target |= ENV_VAR;
     }
     else var = "A";
-    Rule r = CREATE_LITERAL_RULE(var, target | CASE_SENSITIVE, NULL);
+    Rule r = {var, target | CASE_SENSITIVE | LITERAL, NULL};
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "random_text_A") == 0);
     assert(doesStringMatchRule(&r, "A_random_text") == 0);
     assert(doesStringMatchRule(&r, "random_text_A_random_text") == 0);
     assert(doesStringMatchRule(&r, "a") == 0);
     assert(doesStringMatchRule(&r, "b") == 0);
-    Rule r2 = CREATE_LITERAL_RULE(var, target, NULL);
+    Rule r2 = {var, target | LITERAL, NULL};
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "b") == 0);
@@ -411,18 +411,18 @@ START_TEST(test_literal_string_rule){
 }
 END_TEST
 START_TEST(test_string_rule){
-    Rule r = CREATE_RULE(".*", MATCH_ANY_REGEX, NULL);
+    Rule r = {".*", MATCH_ANY_REGEX, NULL};
     assert(doesStringMatchRule(&r, "A"));
     assert(doesStringMatchRule(&r, "B"));
     regfree(r.regexExpression);
     free(r.regexExpression);
-    Rule r2 = CREATE_RULE("A", MATCH_ANY_REGEX, NULL);
+    Rule r2 = {"A", MATCH_ANY_REGEX, NULL};
     assert(doesStringMatchRule(&r2, "A"));
     assert(doesStringMatchRule(&r2, "a"));
     assert(doesStringMatchRule(&r2, "B") == 0);
     regfree(r2.regexExpression);
     free(r2.regexExpression);
-    Rule r3 = CREATE_RULE("A", (MATCH_ANY_REGEX | CASE_SENSITIVE), NULL);
+    Rule r3 = {"A", (MATCH_ANY_REGEX | CASE_SENSITIVE), NULL};
     assert(doesStringMatchRule(&r3, "A"));
     assert(doesStringMatchRule(&r3, "a") == 0);
     assert(doesStringMatchRule(&r3, "B") == 0);

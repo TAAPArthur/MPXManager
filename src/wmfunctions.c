@@ -331,7 +331,6 @@ void activateWorkspace(int workspaceIndex){
     WindowInfo* winToFocus = NULL;
     UNTIL_FIRST(winToFocus, masterWindowStack, workspaceIndex == getWorkspaceIndexOfWindow(winToFocus) &&
                 isActivatable(winToFocus));
-    LOG(LOG_LEVEL_DEBUG, "Activating window\n");
     if(winToFocus)
         activateWindow(winToFocus);
     else if(isNotEmpty(getActiveWindowStack()))

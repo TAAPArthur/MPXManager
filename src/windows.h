@@ -122,7 +122,7 @@ int getMask(WindowInfo* winInfo);
  * @param mask
  * @return the intersection of mask and the window mask
  */
-int hasPartOfMask(WindowInfo* winInfo, int mask);
+WindowMask hasPartOfMask(WindowInfo* winInfo, WindowMask mask);
 
 /**
  *
@@ -130,11 +130,11 @@ int hasPartOfMask(WindowInfo* winInfo, int mask);
  * @param mask
  * @return 1 iff the window containers the complete mask
  */
-int hasMask(WindowInfo* win, int mask);
+int hasMask(WindowInfo* win, WindowMask mask);
 /**
  * Returns the subset of mask that refers to user set masks
  */
-int getUserMask(WindowInfo* winInfo);
+WindowMask getUserMask(WindowInfo* winInfo);
 
 /**
  * Resets the user controlled state to the defaults
@@ -147,20 +147,20 @@ void resetUserMask(WindowInfo* winInfo);
  * @param winInfo
  * @param mask
  */
-void addMask(WindowInfo* winInfo, int mask);
+void addMask(WindowInfo* winInfo, WindowMask mask);
 /**
  * Removes the states give by mask from the window
  * @param winInfo
  * @param mask
  */
-void removeMask(WindowInfo* winInfo, int mask);
+void removeMask(WindowInfo* winInfo, WindowMask mask);
 /**
  * Adds or removes the mask depending if the window already contains
  * the complete mask
  * @param winInfo
  * @param mask
  */
-void toggleMask(WindowInfo* winInfo, int mask);
+void toggleMask(WindowInfo* winInfo, WindowMask mask);
 
 /**
  * Loads class and instance name for the given window

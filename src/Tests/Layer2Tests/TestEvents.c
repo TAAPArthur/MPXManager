@@ -54,7 +54,7 @@ START_TEST(test_regular_events){
     //int lastType=-1;
     void func(void){
         count++;
-        if(i==ExtraEvent)
+        if(i == ExtraEvent)
             return;
         assert(i == (((xcb_generic_event_t*)getLastEvent())->response_type & 127));
         if(i > 2)

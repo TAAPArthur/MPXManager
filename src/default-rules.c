@@ -80,7 +80,7 @@ void addPrintRule(void){
     appendRule(Idle, &printRule);
 }
 void addFloatRules(void){
-    static Rule dialogRule = CREATE_LITERAL_RULE("_NET_WM_WINDOW_TYPE_NORMAL", TYPE | NEGATE, BIND(floatWindow));
+    static Rule dialogRule = {"_NET_WM_WINDOW_TYPE_NORMAL", TYPE | NEGATE | LITERAL, BIND(floatWindow)};
     appendRule(RegisteringWindow, &dialogRule);
 }
 

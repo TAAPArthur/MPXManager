@@ -32,7 +32,7 @@ void testAddUnique(ArrayList* head,
 }
 void testWindowAddRemove(ArrayList* head,
                          int(*add)(WindowInfo*),
-                         int(*remove)(unsigned int)){
+                         int(*remove)(WindowID)){
     assert(head != NULL);
     assert(getSize(head) == 0);
     WindowInfo* arr[size];
@@ -133,7 +133,7 @@ START_TEST(test_master_stack_add_remove){
         onWindowFocus(winInfo->id);
         return size != getSize(getActiveMasterWindowStack());
     }
-    int fakeRemove(unsigned int i){
+    int fakeRemove(WindowID i){
         return removeWindowFromMaster(getActiveMaster(), i);
     }
     for(int i = 1; i <= size; i++){

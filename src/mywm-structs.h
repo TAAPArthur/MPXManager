@@ -13,7 +13,7 @@
 #endif
 
 /// typeof WindowInfo::mask
-typedef unsigned int WindowMask;
+typedef int WindowMask;
 /// typeof WindowInfo::id
 typedef unsigned int WindowID;
 /// typeof Master::id
@@ -26,11 +26,11 @@ typedef unsigned long MonitorID;
 ///holds data on a window
 typedef struct {
     /**Window id */
-    unsigned int id;
+    WindowID id;
     /**Window mask */
-    unsigned int mask;
+    WindowMask mask;
     /// set to 1 iff the window is a dock
-    int dock;
+    char dock: 1;
     /**xcb_atom representing the window type*/
     int type;
     /**string xcb_atom representing the window type*/
@@ -49,7 +49,7 @@ typedef struct {
      *
      * Note that his field may not contain all the workspaces an window belongs to
      */
-    int workspaceIndex;
+    WorkspaceID workspaceIndex;
 
     /// used to tell if a window has attempted to be mapped before
     char mappedBefore;
@@ -169,7 +169,7 @@ typedef struct {
      * This field is here to sync the two states
      *
      */
-    int mapped;
+    char mapped: 1;
     /**
      * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
      */

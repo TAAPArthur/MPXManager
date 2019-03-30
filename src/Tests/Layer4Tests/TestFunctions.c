@@ -85,7 +85,7 @@ START_TEST(test_find_and_raise){
         }
     }
     for(int i = 0; i < size * 2; i++){
-        Rule r = CREATE_RULE(titles[i % size], LITERAL | TITLE, NULL);
+        Rule r = {titles[i % size], LITERAL | TITLE, NULL};
         int id = findAndRaise(&r);
         assert(getWindowInfo(id));
         assert(strcmp(getWindowInfo(id)->title, titles[i % size]) == 0);
@@ -103,7 +103,7 @@ START_TEST(test_find_and_raise){
         assertWindowIsFocused(id);
         onWindowFocus(id);
     }
-    Rule r = CREATE_RULE(fakeTitle, LITERAL | TITLE, NULL);
+    Rule r = {fakeTitle, LITERAL | TITLE, NULL};
     assert(!findAndRaise(&r));
     assert(!findAndRaiseLazy(&r));
     assert(!findAndLowerLazy(&r));

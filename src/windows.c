@@ -41,42 +41,42 @@ WindowInfo* createWindowInfo(WindowID id){
     wInfo->workspaceIndex = NO_WORKSPACE;
     return wInfo;
 }
-int getMask(WindowInfo* winInfo){
+WindowMask getMask(WindowInfo* winInfo){
     return winInfo->mask;
 }
-int hasPartOfMask(WindowInfo* winInfo, int mask){
+int hasPartOfMask(WindowInfo* winInfo, WindowMask mask){
     Workspace* w = getWorkspaceOfWindow(winInfo);
     WindowMask winMask = winInfo->mask;
     if(w)
         winMask |= getWorkspaceMask(w);
     return (winMask & mask);
 }
-int hasMask(WindowInfo* winInfo, int mask){
+int hasMask(WindowInfo* winInfo, WindowMask mask){
     return hasPartOfMask(winInfo, mask) == mask;
 }
 void resetUserMask(WindowInfo* winInfo){
     winInfo->mask &= ~USER_MASKS;
 }
-int getUserMask(WindowInfo* winInfo){
+WindowMask getUserMask(WindowInfo* winInfo){
     return getMask(winInfo)&USER_MASKS;
 }
 ///return true iff mask as any USER_MASK bits set
-int isUserMask(int mask){
+int isUserMask(WindowMask mask){
     return mask & USER_MASKS ? 1 : 0;
 }
 
-void toggleMask(WindowInfo* winInfo, int mask){
+void toggleMask(WindowInfo* winInfo, WindowMask mask){
     if(hasMask(winInfo, mask))
         removeMask(winInfo, mask);
     else
         addMask(winInfo, mask);
 }
-void addMask(WindowInfo* winInfo, int mask){
+void addMask(WindowInfo* winInfo, WindowMask mask){
     winInfo->mask |= mask;
     if(SYNC_WINDOW_MASKS && isUserMask(mask))
         setXWindowStateFromMask(winInfo);
 }
-void removeMask(WindowInfo* winInfo, int mask){
+void removeMask(WindowInfo* winInfo, WindowMask mask){
     winInfo->mask &= ~mask;
     if(SYNC_WINDOW_MASKS && isUserMask(mask))
         setXWindowStateFromMask(winInfo);
@@ -248,7 +248,7 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, in
     if(!winInfo)
         return;
     LOG(LOG_LEVEL_TRACE, "Updating state of %d from %d atoms\n", winInfo->id, numberOfAtoms);
-    int mask = 0;
+    WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++){
         if(atoms[i] == ewmh->_NET_WM_STATE_STICKY)
             mask |= STICKY_MASK;

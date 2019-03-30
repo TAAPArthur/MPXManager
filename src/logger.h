@@ -32,7 +32,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
  *
  * @return
  */
-#define PRINT_ARR(label,arr,size,suffix){LOG(LOG_LEVEL_DEBUG,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_DEBUG,"%d ",(arr)[_n]);LOG(LOG_LEVEL_DEBUG,suffix);}
+#define PRINT_ARR(label,arr,size,suffix){LOG(LOG_LEVEL_INFO,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_INFO,"%d ",(arr)[_n]);LOG(LOG_LEVEL_INFO,suffix);}
 
 /**
  * Prints the element in arr space seperated. Arr is treated like a list of ints
