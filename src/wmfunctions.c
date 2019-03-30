@@ -547,3 +547,16 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2){
     winInfo1->workspaceIndex = winInfo2->workspaceIndex;
     winInfo2->workspaceIndex = temp;
 }
+int isShowingDesktop(int index){
+    return getWorkspaceByIndex(index)->showingDesktop;
+}
+void setShowingDesktop(int index, int value){
+    getWorkspaceByIndex(index)->showingDesktop = value;
+    setWorkspaceState(getActiveWorkspaceIndex(), !value);
+    xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
+}
+void toggleShowDesktop(){
+    int hideDesktop = isShowingDesktop(getActiveWorkspaceIndex());
+    setShowingDesktop(getActiveWorkspaceIndex(), !hideDesktop);
+}
+

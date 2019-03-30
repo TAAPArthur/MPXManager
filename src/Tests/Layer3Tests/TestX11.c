@@ -640,6 +640,24 @@ START_TEST(test_workspaceless_window){
     ATOMIC(swapWithWorkspace(!index));
 }
 END_TEST
+
+START_TEST(test_toggle_show_desktop){
+    LOAD_SAVED_STATE = 0;
+    int win[10];
+    for(int i = 0; i < LEN(win); i++){
+        win[i] = mapWindow(createNormalWindow());
+    }
+    flush();
+    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == LEN(win));
+    toggleShowDesktop();
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(!hasMask(winInfo, MAPPED_MASK));
+    toggleShowDesktop();
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(hasMask(winInfo, MAPPED_MASK));
+}
+END_TEST
+
+
+
 Suite* x11Suite(void){
     Suite* s = suite_create("Window Manager Functions");
     TCase* tc_core;
@@ -682,6 +700,7 @@ Suite* x11Suite(void){
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
     tcase_add_test(tc_core, test_withdraw_window);
+    tcase_add_test(tc_core, test_toggle_show_desktop);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("MISC");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);

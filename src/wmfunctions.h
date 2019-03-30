@@ -276,4 +276,23 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
  * @return true if there exists at least one window  in workspace with the given mask
  */
 int doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask);
+/**
+ * Check to see if we are showing the desktop.
+ * When showing the desktop all windows in the workspace are hidden except for windows in the Desktop Layer
+ * @param index
+ * @return 1 if we are currently showing the desktop
+ */
+int isShowingDesktop(int index);
+/**
+ * show or hide desktop depending on values
+ * @param index workpsace index
+ * @param value 1 or 0
+ */
+void setShowingDesktop(int index, int value);
+/**
+ * Toggle showing of the desktop
+ * @see isShowingDesktop()
+ */
+void toggleShowDesktop();
+
 #endif

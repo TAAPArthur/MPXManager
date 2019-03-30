@@ -55,6 +55,7 @@ void addAutoTileRules(void){
     int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
                     XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
                     XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
+                    XCB_CLIENT_MESSAGE,
                     onScreenChange,
                    };
     for(int i = 0; i < LEN(events); i++)
@@ -255,7 +256,10 @@ void onClientMessage(void){
             activateWindow(winInfo);
         }
     }
-    else if(message == ewmh->_NET_SHOWING_DESKTOP){}
+    else if(message == ewmh->_NET_SHOWING_DESKTOP){
+        LOG(LOG_LEVEL_DEBUG, "Chainign showing desktop to %d\n\n", data.data32[0]);
+        setShowingDesktop(getActiveWorkspaceIndex(), data.data32[0]);
+    }
     else if(message == ewmh->_NET_CLOSE_WINDOW){
         LOG(LOG_LEVEL_DEBUG, "Killing window %d\n\n", win);
         WindowInfo* winInfo = getWindowInfo(win);
