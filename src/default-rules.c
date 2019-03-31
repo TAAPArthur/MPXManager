@@ -406,6 +406,15 @@ void onStartup(void){
     connectToXserver();
 }
 
+static void enforceAlwaysOnTop(WindowInfo* winInfo){
+    if(!hasMask(winInfo, ALWAYS_ON_TOP)){
+        FOR_EACH(WindowInfo*, winInfo2, getAllWindows()){
+            if(hasMask(winInfo2, ALWAYS_ON_TOP))
+                raiseWindowInfo(winInfo2);
+        }
+    }
+}
+
 static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [0] = CREATE_DEFAULT_EVENT_RULE(onError),
     [XCB_VISIBILITY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onVisibilityEvent),
@@ -430,6 +439,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
     [RegisteringWindow] = CREATE_WILDCARD(AND(BIND(autoAddToWorkspace), BIND(updateEWMHClientList))),
     [onScreenChange] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
+    [onWindowMove] = CREATE_DEFAULT_EVENT_RULE(enforceAlwaysOnTop),
 };
 
 void addBasicRules(void){

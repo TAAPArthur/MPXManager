@@ -221,25 +221,7 @@ START_TEST(test_raise_window){
     assert(checkStackingOrder(stackingOrder + 1, 2));
 }
 END_TEST
-START_TEST(test_raise_window_special){
-    //windows are in same spot
-    int bottom = createNormalWindow();
-    int top = createNormalWindow();
-    registerForWindowEvents(bottom, XCB_EVENT_MASK_VISIBILITY_CHANGE);
-    registerForWindowEvents(top, XCB_EVENT_MASK_VISIBILITY_CHANGE);
-    scan(root);
-    WindowInfo* info = getWindowInfo(bottom);
-    WindowInfo* infoTop = getWindowInfo(top);
-    addMask(infoTop, ALWAYS_ON_TOP);
-    assert(info && infoTop);
-    assert(raiseWindowInfo(info));
-    flush();
-    WindowID stackingOrder[] = {bottom, top};
-    assert(checkStackingOrder(stackingOrder, 2));
-    assert(raiseWindowInfo(infoTop));
-    assert(checkStackingOrder(stackingOrder, 2));
-}
-END_TEST
+
 START_TEST(test_sticky_window_add){
     LOAD_SAVED_STATE = 0;
     mapArbitraryWindow();
@@ -673,7 +655,6 @@ Suite* x11Suite(void){
     tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_raise_window);
-    tcase_add_test(tc_core, test_raise_window_special);
     tcase_add_test(tc_core, test_focus_window);
     tcase_add_test(tc_core, test_focus_window_request);
     tcase_add_test(tc_core, test_auto_focus);

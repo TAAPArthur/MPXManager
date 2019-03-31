@@ -211,10 +211,10 @@ void raiseLowerWindowInfo(WindowInfo* winInfo, int above){
 }
 int raiseWindowInfo(WindowInfo* winInfo){
     int result = winInfo ? raiseWindow(winInfo->id) : 0;
-    if(result){
+    if(result && !hasMask(winInfo, ALWAYS_ON_TOP)){
         int id = winInfo->id;
         FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
-            if(isInteractable(winInfo) && winInfo->transientFor == id || hasMask(winInfo, ALWAYS_ON_TOP))
+            if(isInteractable(winInfo) && winInfo->transientFor == id)
                 raiseLowerWindowInfo(winInfo, 1);
         }
     }

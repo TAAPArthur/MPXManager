@@ -90,6 +90,10 @@ typedef enum {
     /**Used in conjuction with WM_DELETE_WINDOW_MASK to kill the window */
     WM_PING_MASK = 1 << 19,
 
+    /**
+     * Best effort will be made to place all windows with this mask above any other window without it
+     * This mask is implemented via a onWindowMove Rule
+     */
     ALWAYS_ON_TOP = 1 << 20,
     /// the window type was not set explicitly
     IMPLICIT_TYPE = 1 << 21,

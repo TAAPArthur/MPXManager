@@ -238,6 +238,24 @@ START_TEST(test_dock_windows){
     assert(memcmp(&m->base, &m->view, sizeof(Rect)) == 0);
 }
 END_TEST
+START_TEST(test_always_on_top){
+    //windows are in same spot
+    int bottom = createNormalWindow();
+    int top = createNormalWindow();
+    scan(root);
+    WindowInfo* info = getWindowInfo(bottom);
+    WindowInfo* infoTop = getWindowInfo(top);
+    addMask(infoTop, ALWAYS_ON_TOP);
+    assert(info && infoTop);
+    assert(raiseWindowInfo(info));
+    flush();
+    int idle = getIdleCount();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    WindowID stackingOrder[] = {bottom, top};
+    assert(checkStackingOrder(stackingOrder, 2));
+}
+END_TEST
 START_TEST(test_map_windows){
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
@@ -655,6 +673,7 @@ Suite* defaultRulesSuite(){
     tcase_add_test(tc_core, test_ignored_windows);
     tcase_add_test(tc_core, test_unknown_windows_no_workspace);
     tcase_add_test(tc_core, test_dock_windows);
+    tcase_add_test(tc_core, test_always_on_top);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Requests");
     tcase_add_checked_fixture(tc_core, clientSetup, fullCleanup);
