@@ -117,7 +117,7 @@ void* autoUpdateClones(void){
 void addCloneRules(void){
     static Rule onExposeRule = CREATE_DEFAULT_EVENT_RULE(onExpose);
     static Rule swapWithOriginalRule = CREATE_DEFAULT_EVENT_RULE(swapWithOriginal);
-    appendRule(XCB_EXPOSE, &onExposeRule);
-    //appendRule(XCB_INPUT_MOTION + GENERIC_EVENT_OFFSET, &swapWithOriginalRule);
-    appendRule(XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET, &swapWithOriginalRule);
+    addToList(getEventRules(XCB_EXPOSE), &onExposeRule);
+    //addToList(getEventRules(XCB_INPUT_MOTION + GENERIC_EVENT_OFFSET), &swapWithOriginalRule);
+    addToList(getEventRules(XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET), &swapWithOriginalRule);
 }

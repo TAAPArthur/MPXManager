@@ -9,6 +9,7 @@
 
 
 #include "bindings.h"
+#include "events.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
@@ -64,8 +65,8 @@ static void autoAttachSlave(void){
 void addAutoMPXRules(void){
     static Rule autoAttachRule = CREATE_WILDCARD(BIND(autoAttachSlave));
     static Rule attachOnStartRule = CREATE_WILDCARD(BIND(restoreMPX));
-    prependRule(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY, &autoAttachRule);
-    prependRule(onXConnection, &attachOnStartRule);
+    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY), &autoAttachRule);
+    prependToList(getEventRules(onXConnection), &attachOnStartRule);
 }
 int splitMaster(void){
     endSplitMaster();
@@ -77,15 +78,15 @@ int splitMaster(void){
     assert(strcmp(getNameOfMaster(getActiveMaster()), name) == 0);
     deviceEventRule = (Rule) CREATE_WILDCARD(BIND(attachActiveSlavesToMaster, getActiveMaster()->id),
                       .passThrough = NO_PASSTHROUGH);
-    prependRule(Idle, &cleanupRule);
-    prependRule(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS, &deviceEventRule);
-    prependRule(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS, &deviceEventRule);
+    prependToList(getEventRules(Idle), &cleanupRule);
+    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS), &deviceEventRule);
+    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS), &deviceEventRule);
     return getActiveMasterKeyboardID();
 }
 void endSplitMaster(void){
-    removeRule(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS, &deviceEventRule);
-    removeRule(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS, &deviceEventRule);
-    removeRule(Idle, &cleanupRule);
+    removeElementFromList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS), &deviceEventRule, 0);
+    removeElementFromList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS), &deviceEventRule, 0);
+    removeElementFromList(getEventRules(Idle), &cleanupRule, 0);
 }
 
 char* getMasterNameForSlave(char* slaveName){

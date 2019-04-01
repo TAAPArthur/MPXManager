@@ -8,47 +8,9 @@
 
 #include <regex.h>
 
-#include <X11/extensions/XInput2.h>
-#include <xcb/xinput.h>
 
 #include "mywm-structs.h"
 
-/// The last supported standard x event
-#define GENERIC_EVENT_OFFSET (LASTEvent-1)
-/// max value of supported X events (not total events)
-#define LAST_REAL_EVENT  (GENERIC_EVENT_OFFSET+XI_LASTEVENT+1)
-
-//TODO consistent naming
-enum {
-    /**
-     * X11 events that are >= LASTEvent but not the first XRANDR event.
-     * In other words events that are unknown/unaccounted for.
-     * The value 1 is safe to use because is reserved for X11 replies
-     */
-    ExtraEvent = 1,
-    ///if all rules are passed through, then the window is added as a normal window
-    onXConnection = LAST_REAL_EVENT,
-    /// Run after properties have been loaded
-    PropertyLoad,
-    /// deterime if a newly detected window should be recorded/monitored/controlled by us
-    ProcessingWindow,
-    /// called after the newly created window has been added to a workspace
-    RegisteringWindow,
-    /// triggered when root screen is changed
-    onScreenChange,
-    /// when a workspace is tiled
-    TileWorkspace,
-    /**
-     * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. THe other being that the WindowInfo object will be passed in when the rule is applied.
-     */
-    onWindowMove,
-    /// called after a set number of events or when the connection is idle
-    Periodic,
-    /// called when the connection is idle
-    Idle,
-    /// max value of supported events
-    NUMBER_OF_EVENT_RULES
-};
 ///Default Regex flag used when creating non literal Rules
 #define DEFAULT_REGEX_FLAG REG_EXTENDED
 
@@ -524,33 +486,7 @@ ArrayList* getDeviceBindings();
  * @param rule
  */
 void initRule(Rule* rule);
-/**
- * @param i index of eventRules
- * @return the specified event list
- */
-ArrayList* getEventRules(int i);
-/**
- * Adds rule to the end of the specified event list
- * @param i index of eventRules
- * @param rule the rule to remove
- */
-void appendRule(int i, Rule* rule);
-/**
- * Adds rule to the head of the specified event list
- * @param i index of eventRules
- * @param rule the rule to remove
- */
-void prependRule(int i, Rule* rule);
-/**
- * Removes rule from the ith list of eventRules
- * @param i index of eventRules
- * @param rule the rule to remove
- */
-void removeRule(int i, Rule* rule);
-/**
- * Removes all rules from the all eventRules
- */
-void clearAllRules(void);
+
 
 /// @return true
 static inline int returnTrue(void){

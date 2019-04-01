@@ -49,26 +49,45 @@ static void setup(){
  * @param START_TEST(test_regular_events)
  */
 START_TEST(test_regular_events){
-    int count = -1;
+    volatile int count = -1;
+    volatile int batchCount = 1;
     int i;
     //int lastType=-1;
     void func(void){
+        assert(batchCount == -count);
         count++;
         if(i == ExtraEvent)
             return;
         assert(i == (((xcb_generic_event_t*)getLastEvent())->response_type & 127));
-        if(i > 2)
+        if(i > 2 && i < XCB_GE_GENERIC)
             assert(isSyntheticEvent());
+    }
+    void batchFuncEven(void){
+        batchCount--;
+        assert(batchCount % 2 == 0);
+        assert(batchCount == -count);
+    }
+    void batchFuncOdd(void){
+        batchCount--;
+        assert(batchCount % 2 != 0);
+        assert(batchCount == -count);
     }
     IGNORE_SEND_EVENT = 0;
     POLL_COUNT = 1;
     int idleCount = -1;
-    for(i = count + 1; i < XCB_GE_GENERIC; i++){
+    for(i = count + 1; i < LASTEvent; i++){
+        if(i == 1){
+            count++;
+            batchCount--;
+            continue;
+        }
         xcb_generic_event_t* event = calloc(32, 1);
         event->response_type = i;
         Rule r = CREATE_DEFAULT_EVENT_RULE(func);
         assert(!isNotEmpty(getEventRules(i)));
-        appendRule(i, &r);
+        addToList(getEventRules(i), &r);
+        Rule batch = CREATE_DEFAULT_EVENT_RULE((i % 2 == 0 ? batchFuncEven : batchFuncOdd));
+        addToList(getBatchEventRules(i), &batch);
         if(i){
             if(i == XCB_CLIENT_MESSAGE){
                 assert(!catchError(xcb_ewmh_send_client_message(dis, root, root, 1, 0, 0)));
@@ -76,24 +95,17 @@ START_TEST(test_regular_events){
                 //cookie=xcb_ewmh_request_change_current_desktop_checked(ewmh, defaultScreenNumber, 0, 0);
             }
             else if(i == XCB_GE_GENERIC){
-                ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
+                ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
                 registerForDeviceEvents();
-                sendButtonPress(1);
-            }
-            else if(i == ExtraEvent){
-                // will cause a 'unknown' ExtraEvent(1) as a side effect
-                system("xsane-xrandr --reset &>/dev/null");
+                createMasterDevice("test");
+                flush();
             }
             else assert(!catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) event)));
         }
         else {
             //generate error
             xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) event);
-            xcb_map_window(dis, -1);
             flush();
-            WAIT_UNTIL_TRUE(count >= i);
-            consumeEvents();
-            count = i;
         }
         xcb_flush(dis);
         WAIT_UNTIL_TRUE(count == i);
@@ -101,6 +113,8 @@ START_TEST(test_regular_events){
         free(event);
         //assert(count==i);
         WAIT_UNTIL_TRUE(getIdleCount() > idleCount);
+        assert(count == -batchCount);
+        assert(count == i);
         idleCount = getIdleCount();
     }
 }
@@ -112,8 +126,8 @@ START_TEST(test_event_spam){
     Rule exitRule = CREATE_WILDCARD(BIND(requestShutdown));
     POLL_COUNT = 10;
     POLL_INTERVAL = 10;
-    appendRule(Idle, &exitRule);
-    appendRule(Periodic, &exitRule);
+    addToList(getEventRules(Idle), &exitRule);
+    addToList(getEventRules(Periodic), &exitRule);
     xcb_generic_event_t event = {.response_type = 2};
     while(!isShuttingDown()){
         sendButtonPress(1);
@@ -146,7 +160,7 @@ END_TEST
 START_TEST(test_monitors){
     registerForMonitorChange();
     static Rule r = CREATE_DEFAULT_EVENT_RULE(onMonitorDetectionTest);
-    appendRule(onScreenChange, &r);
+    addToList(getEventRules(onScreenChange), &r);
     if(!fork()){
         close(1);
         close(2);

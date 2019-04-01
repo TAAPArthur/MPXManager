@@ -8,6 +8,7 @@
 #include <xcb/randr.h>
 
 #include "bindings.h"
+#include "events.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
@@ -47,10 +48,55 @@ int getIdleCount(){
 }
 
 
+/// Holds an Arraylist of rules that will be applied in response to various conditions
+static ArrayList eventRules[NUMBER_OF_EVENT_RULES];
+
+/// Holds batch events
+typedef struct {
+    /// how many times the event has been triggerd
+    int counter;
+    /// the list of events to trigger when counter is non zero
+    ArrayList list;
+} BatchEventList;
+
+static BatchEventList batchEventRules[NUMBER_OF_EVENT_RULES];
+
+ArrayList* getEventRules(int i){
+    assert(i < NUMBER_OF_EVENT_RULES);
+    return &eventRules[i];
+}
+void clearAllRules(void){
+    for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
+        clearList(getEventRules(i));
+}
+
+ArrayList* getBatchEventRules(int i){
+    assert(i < NUMBER_OF_EVENT_RULES);
+    return &batchEventRules[i].list;
+}
+void incrementBatchEventRuleCounter(int i){
+    batchEventRules[i].counter++;
+}
+void applyBatchRules(void){
+    for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
+        if(batchEventRules[i].counter){
+            batchEventRules[i].counter = 0;
+            applyRules(getBatchEventRules(i), NULL);
+        }
+}
+int applyEventRules(int type, WindowInfo* winInfo){
+    incrementBatchEventRuleCounter(type);
+    return applyRules(getEventRules(type), winInfo);
+}
+void clearAllBatchRules(void){
+    for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
+        clearList(getBatchEventRules(i));
+}
+
 static inline xcb_generic_event_t* getNextEvent(){
     if(++periodCounter > EVENT_PERIOD){
         periodCounter = 0;
-        applyRules(getEventRules(Periodic), NULL);
+        applyEventRules(Periodic, NULL);
     }
     static xcb_generic_event_t* event;
     event = xcb_poll_for_event(dis);
@@ -62,8 +108,9 @@ static inline xcb_generic_event_t* getNextEvent(){
         }
         periodCounter = 0;
         lock();
-        applyRules(getEventRules(Periodic), NULL);
-        applyRules(getEventRules(Idle), NULL);
+        applyBatchRules();
+        applyEventRules(Periodic, NULL);
+        applyEventRules(Idle, NULL);
         idle++;
         flush();
         unlock();
@@ -77,6 +124,7 @@ int isSyntheticEvent(){
     xcb_generic_event_t* event = getLastEvent();
     return event->response_type > 127;
 }
+
 
 void* runEventLoop(void* arg __attribute__((unused))){
     xcb_generic_event_t* event;
@@ -96,19 +144,11 @@ void* runEventLoop(void* arg __attribute__((unused))){
         if(type < 127){
             lock();
             setLastEvent(event);
-            if(type == xrandrFirstEvent){
-                applyRules(getEventRules(onScreenChange), NULL);
-            }
-            if(type >= LASTEvent){
-                LOG(LOG_LEVEL_WARN, "unknown event %d\n", event->response_type);
-                applyRules(getEventRules(ExtraEvent), NULL);
-            }
-            else {
-                LOG(LOG_LEVEL_VERBOSE, "Event detected %d %s number of rules: %d\n",
-                    event->response_type, eventTypeToString(type), getSize(getEventRules(type)));
-                assert(type < LASTEvent);
-                applyRules(getEventRules(type), NULL);
-            }
+            if(type >= LASTEvent)
+                type = type == xrandrFirstEvent ? onScreenChange : ExtraEvent;
+            LOG(LOG_LEVEL_VERBOSE, "Event detected %d (%d) %s number of rules: %d\n",
+                type, event->response_type, eventTypeToString(type), getSize(getEventRules(type)));
+            applyEventRules(type, NULL);
             unlock();
         }
         free(event);
@@ -128,7 +168,9 @@ int loadGenericEvent(xcb_ge_generic_event_t* event){
             event->event_type, event->response_type,
             genericEventTypeToString(event->event_type),
             getSize(getEventRules(event->event_type + GENERIC_EVENT_OFFSET)));
-        return event->event_type + GENERIC_EVENT_OFFSET;
+        int type = event->event_type + GENERIC_EVENT_OFFSET;
+        incrementBatchEventRuleCounter(type);
+        return type;
     }
     return 0;
 }

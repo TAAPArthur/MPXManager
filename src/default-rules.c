@@ -33,10 +33,10 @@
 static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
                                       .negateResult = 1);
 void addUnknownWindowRule(void){
-    prependRule(RegisteringWindow, &ignoreUnknownWindowRule);
+    prependToList(getEventRules(RegisteringWindow), &ignoreUnknownWindowRule);
 }
 void addUnknownWindowIgnoreRule(void){
-    prependRule(ProcessingWindow, &ignoreUnknownWindowRule);
+    prependToList(getEventRules(ProcessingWindow), &ignoreUnknownWindowRule);
 }
 static void tileChangeWorkspaces(void){
     updateState(tileWorkspace, syncMonitorMapState);
@@ -59,15 +59,15 @@ void addAutoTileRules(void){
                     onScreenChange,
                    };
     for(int i = 0; i < LEN(events); i++)
-        prependRule(events[i], &autoTileRule);
-    appendRule(Periodic, &tileWorkspace);
-    appendRule(TileWorkspace, &clearStateRule);
+        prependToList(getEventRules(events[i]), &autoTileRule);
+    addToList(getEventRules(Periodic), &tileWorkspace);
+    addToList(getEventRules(TileWorkspace), &clearStateRule);
 }
 
 void addDefaultDeviceRules(void){
     static Rule deviceEventRule = CREATE_DEFAULT_EVENT_RULE(onDeviceEvent);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++){
-        appendRule(GENERIC_EVENT_OFFSET + i, &deviceEventRule);
+        addToList(getEventRules(GENERIC_EVENT_OFFSET + i), &deviceEventRule);
     }
 }
 
@@ -77,25 +77,25 @@ static void printStatus(void){
 }
 void addPrintRule(void){
     static Rule printRule = CREATE_DEFAULT_EVENT_RULE(printStatus);
-    appendRule(Idle, &printRule);
+    addToList(getEventRules(Idle), &printRule);
 }
 void addFloatRules(void){
     static Rule dialogRule = {"_NET_WM_WINDOW_TYPE_NORMAL", TYPE | NEGATE | LITERAL, BIND(floatWindow)};
-    appendRule(RegisteringWindow, &dialogRule);
+    addToList(getEventRules(RegisteringWindow), &dialogRule);
 }
 
 static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BOTH(BIND(loadDockProperties), BIND(markAsDock), BIND(addMask, EXTERNAL_CONFIGURABLE_MASK))};
 void addAvoidDocksRule(void){
-    appendRule(PropertyLoad, &avoidDocksRule);
+    addToList(getEventRules(PropertyLoad), &avoidDocksRule);
 }
 void addNoDockFocusRule(void){
     static Rule disallowDocksFocusRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BIND(removeMask, INPUT_MASK)};
-    appendRule(PropertyLoad, &disallowDocksFocusRule);
+    addToList(getEventRules(PropertyLoad), &disallowDocksFocusRule);
 }
 void addFocusFollowsMouseRule(void){
     static Rule focusFollowsMouseRule = CREATE_DEFAULT_EVENT_RULE(focusFollowMouse);
     NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_ENTER;
-    appendRule(GENERIC_EVENT_OFFSET + XCB_INPUT_ENTER, &focusFollowsMouseRule);
+    addToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_ENTER), &focusFollowsMouseRule);
 }
 
 void onXConnect(void){
@@ -135,7 +135,7 @@ void onConfigureNotifyEvent(void){
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo){
         setGeometry(winInfo, &event->x);
-        applyRules(getEventRules(onWindowMove), winInfo);
+        applyEventRules(onWindowMove, winInfo);
     }
 }
 void onConfigureRequestEvent(void){
@@ -157,7 +157,7 @@ void onCreateEvent(void){
     LOG(LOG_LEVEL_DEBUG, "window: %d parent: %d\n", event->window, event->parent);
     if(processNewWindow(winInfo)){
         setGeometry(winInfo, &event->x);
-        applyRules(getEventRules(onWindowMove), winInfo);
+        applyEventRules(onWindowMove, winInfo);
     }
 }
 void onDestroyEvent(void){
@@ -385,7 +385,7 @@ void onDeviceEvent(void){
 void onGenericEvent(void){
     int type = loadGenericEvent(getLastEvent());
     if(type)
-        applyRules(getEventRules(type), NULL);
+        applyEventRules(type, NULL);
 }
 
 
@@ -406,13 +406,17 @@ void onStartup(void){
     connectToXserver();
 }
 
-static void enforceAlwaysOnTop(WindowInfo* winInfo){
-    if(!hasMask(winInfo, ALWAYS_ON_TOP)){
-        FOR_EACH(WindowInfo*, winInfo2, getAllWindows()){
-            if(hasMask(winInfo2, ALWAYS_ON_TOP))
-                raiseWindowInfo(winInfo2);
-        }
+static int nonAlwaysOnTopWindowMoved;
+static void markAlwaysOnTop(WindowInfo* winInfo){
+    if(!hasMask(winInfo, ALWAYS_ON_TOP))
+        nonAlwaysOnTopWindowMoved = 1;
+}
+static void enforceAlwaysOnTop(void){
+    FOR_EACH(WindowInfo*, winInfo2, getAllWindows()){
+        if(hasMask(winInfo2, ALWAYS_ON_TOP))
+            raiseWindowInfo(winInfo2);
     }
+    nonAlwaysOnTopWindowMoved = 0;
 }
 
 static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
@@ -439,6 +443,9 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
     [RegisteringWindow] = CREATE_WILDCARD(AND(BIND(autoAddToWorkspace), BIND(updateEWMHClientList))),
     [onScreenChange] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
+    [onWindowMove] = CREATE_DEFAULT_EVENT_RULE(markAlwaysOnTop),
+};
+static Rule BATCH_RULES[NUMBER_OF_EVENT_RULES] = {
     [onWindowMove] = CREATE_DEFAULT_EVENT_RULE(enforceAlwaysOnTop),
 };
 
@@ -446,6 +453,9 @@ void addBasicRules(void){
     for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
         if(NORMAL_RULES[i].onMatch.type)
             addToList(getEventRules(i), &NORMAL_RULES[i]);
+    for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
+        if(BATCH_RULES[i].onMatch.type)
+            addToList(getBatchEventRules(i), &BATCH_RULES[i]);
 }
 
 

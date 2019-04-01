@@ -71,6 +71,17 @@ START_TEST(test_arraylist_remove){
         assert(*(int*)getElement(&list, i) == i * 2 + 1);
 }
 END_TEST
+START_TEST(test_arraylist_remove_value){
+    int size = getSize(&list);
+    for(int i = 0; i < size; i++){
+        void* p = removeElementFromList(&list, &i, sizeof(int));
+        assert(p);
+        free(p);
+        assert(!removeElementFromList(&list, &i, sizeof(int)));
+    }
+    assert(getSize(&list) == 0);
+}
+END_TEST
 START_TEST(test_arraylist_pop){
     for(int i = size - 1; i >= 0; i--){
         void* p = pop(&list);
@@ -197,6 +208,7 @@ Suite* utilSuite(){
     tcase_add_test(tc_core, test_swap);
     tcase_add_test(tc_core, test_get_next_index);
     tcase_add_test(tc_core, test_arraylist_remove);
+    tcase_add_test(tc_core, test_arraylist_remove_value);
     tcase_add_test(tc_core, test_arraylist_pop);
     tcase_add_test(tc_core, test_get_last);
     tcase_add_test(tc_core, test_shift_to_head);

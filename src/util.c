@@ -70,6 +70,12 @@ void* removeFromList(ArrayList* list, int index){
     list->size--;
     return value;
 }
+void* removeElementFromList(ArrayList* list, void* element, int size){
+    int index = indexOf(list, element, size);
+    if(index != -1)
+        return removeFromList(list, index);
+    return NULL;
+}
 void shiftToHead(ArrayList* list, int index){
     void* newHead = getElement(list, index);
     for(int i = index; i > 0; i--)

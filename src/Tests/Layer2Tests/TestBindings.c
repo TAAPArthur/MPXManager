@@ -478,7 +478,7 @@ START_TEST(test_apply_rules){
     for(int i = 0; i < size; i++){
         r[i] = (Rule)CREATE_WILDCARD(BIND(funcNoArg), .passThrough = i > size / 2 ? ALWAYS_PASSTHROUGH : NO_PASSTHROUGH);
         target += r[i].passThrough == ALWAYS_PASSTHROUGH;
-        prependRule(eventIndex, &r[i]);
+        prependToList(getEventRules(eventIndex), &r[i]);
     }
     applyRules(getEventRules(eventIndex), NULL);
     assert(count == target + 1);
@@ -509,21 +509,23 @@ START_TEST(test_add_remove_rule){
     static Rule rules[3];
     int size = LEN(rules);
     for(int n = 0; n < 6; n++){
+        ArrayList*(*ruleGetter)() = n % 2 ? getEventRules : getBatchEventRules;
+        void (*ruleClearer)(void) = n % 2 ? clearAllRules : clearAllBatchRules;
         for(int i = 0; i < size; i++){
             if(n % 2)
-                appendRule(n, &rules[i]);
-            else prependRule(n, &rules[i]);
-            assert(getSize(getEventRules(n)) == i + 1);
-            assert(getElement(getEventRules(n), 0) == (n % 2 ? &rules[0] : &rules[i]));
+                addToList(ruleGetter(n), &rules[i]);
+            else prependToList(ruleGetter(n), &rules[i]);
+            assert(getSize(ruleGetter(n)) == i + 1);
+            assert(getElement(ruleGetter(n), 0) == (n % 2 ? &rules[0] : &rules[i]));
         }
         if(n < 2)
             for(int i = 0; i < size; i++){
-                assert(getSize(getEventRules(n)) == size - i);
-                removeRule(n, &rules[i]);
+                assert(getSize(ruleGetter(n)) == size - i);
+                removeElementFromList(ruleGetter(n), &rules[i], sizeof(Rule));
             }
         else
-            clearAllRules();
-        assert(getSize(getEventRules(n)) == 0);
+            ruleClearer();
+        assert(getSize(ruleGetter(n)) == 0);
         if(n == 4)size = 1;
     }
 }

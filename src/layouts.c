@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "bindings.h"
+#include "events.h"
 #include "globals.h"
 #include "layouts.h"
 #include "logger.h"
@@ -201,7 +202,7 @@ void retile(void){
 }
 
 void tileWorkspace(int index){
-    applyRules(getEventRules(TileWorkspace), NULL);
+    applyEventRules(TileWorkspace, NULL);
     if(!isWorkspaceVisible(index)){
         LOG(LOG_LEVEL_DEBUG, "refusing to tile invisible workspace %d\n", index);
         return;

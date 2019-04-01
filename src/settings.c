@@ -7,6 +7,7 @@
 
 #include <X11/XF86keysym.h>
 #include <X11/keysym.h>
+#include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 
 #include "args.h"

@@ -57,7 +57,7 @@ static void deviceEventsetup(){
     createMasterDevice("device3");
     flush();
     static Rule postInitRule = CREATE_DEFAULT_EVENT_RULE(finishedInit);
-    appendRule(Idle, &postInitRule);
+    addToList(getEventRules(Idle), &postInitRule);
     START_MY_WM
     WAIT_UNTIL_TRUE(completedInit);
     winInfo = getWindowInfo(win1);
@@ -501,7 +501,7 @@ START_TEST(test_auto_tile){
     }
     void addDummyWindows(){
         static Rule rule = CREATE_DEFAULT_EVENT_RULE(createNormalWindow);
-        appendRule(onXConnection, &rule);
+        addToList(getEventRules(onXConnection), &rule);
     }
     preStartUpMethod = addDummyWindows;
     startUpMethod = addFakeLayout;
@@ -524,7 +524,7 @@ END_TEST
 
 START_TEST(test_client_request_frame_extents){
     static Rule properyChangeDummyRule = CREATE_DEFAULT_EVENT_RULE(dummy);
-    appendRule(XCB_PROPERTY_NOTIFY, &properyChangeDummyRule);
+    addToList(getEventRules(XCB_PROPERTY_NOTIFY), &properyChangeDummyRule);
     xcb_ewmh_request_frame_extents(ewmh, defaultScreenNumber, winInfo->id);
     flush();
     WAIT_UNTIL_TRUE(getDummyCount());

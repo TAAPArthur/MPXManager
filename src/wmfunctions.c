@@ -44,7 +44,7 @@ void connectToXserver(){
     setWorkspaceNames(NULL, 0);
     syncState();
     registerForEvents();
-    applyRules(getEventRules(onXConnection), NULL);
+    applyEventRules(onXConnection, NULL);
 }
 void syncState(){
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);

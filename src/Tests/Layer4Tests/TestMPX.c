@@ -49,8 +49,8 @@ START_TEST(test_split_master){
     assert(mouseId);
     Rule hackKeyboard = CREATE_WILDCARD(BIND(splitMasterHack, keyboardId), .passThrough = ALWAYS_PASSTHROUGH);
     Rule hackMouse = CREATE_WILDCARD(BIND(splitMasterHack, mouseId), .passThrough = ALWAYS_PASSTHROUGH);
-    prependRule(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS, &hackKeyboard);
-    prependRule(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS, &hackMouse);
+    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS), &hackKeyboard);
+    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS), &hackMouse);
     int idle = getIdleCount();
     unlock();
     WAIT_UNTIL_TRUE(getIdleCount() > idle)

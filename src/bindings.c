@@ -11,6 +11,7 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include <xcb/xinput.h>
 
 #include "bindings.h"
 #include "devices.h"
@@ -383,32 +384,3 @@ void initRule(Rule* rule){
     }
     rule->init = 1;
 }
-
-/// Holds a Node list of rules that will be applied in response to various conditions
-static ArrayList eventRules[NUMBER_OF_EVENT_RULES];
-
-ArrayList* getEventRules(int i){
-    assert(i < NUMBER_OF_EVENT_RULES);
-    return &eventRules[i];
-}
-void removeRule(int i, Rule* rule){
-    ArrayList* rules = getEventRules(i);
-    int index = indexOf(rules, rule, sizeof(Rule));
-    if(index != -1)
-        removeFromList(rules, index);
-}
-void prependRule(int i, Rule* rule){
-    prependToList(getEventRules(i), rule);
-}
-void appendRule(int i, Rule* rule){
-    addToList(getEventRules(i), rule);
-}
-void clearAllRules(void){
-    for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
-        clearList(getEventRules(i));
-}
-/*if(chain!=getActiveMaster()->lastBindingTriggered){
-        Master *m=getActiveMaster();
-        clearWindowCache(m);
-        getActiveMaster()->lastBindingTriggered=chain;
-    }*/

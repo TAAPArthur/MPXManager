@@ -179,6 +179,21 @@ void deleteList(ArrayList* list);
  */
 void* removeFromList(ArrayList* list, int index);
 /**
+ * Removes the element from the list
+ *
+ * @param list
+ * @param element the value of the element
+ * @param size
+ *
+ * @see indexOf() removeFromList()
+ * @return the element that has been removed or NULL
+ */
+void* removeElementFromList(ArrayList* list, void* element, int size);
+
+/**
+ * Returns the index of the element with value.
+ * If size is non zero, we check for eqaulity by comaring the first size bytes of value with every element.
+ * If size is zero, we check if the pointers are equal
  * @param list
  * @param value
  * @param size

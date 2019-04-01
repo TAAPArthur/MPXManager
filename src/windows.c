@@ -192,7 +192,7 @@ void loadWindowProperties(WindowInfo* winInfo){
     }
     loadWindowType(winInfo);
     loadWindowHints(winInfo);
-    applyRules(getEventRules(PropertyLoad), winInfo);
+    applyEventRules(PropertyLoad, winInfo);
 }
 void loadSavedAtomState(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t reply;
@@ -320,7 +320,7 @@ int registerWindow(WindowInfo* winInfo){
     }
     if(registerForWindowEvents(win, NON_ROOT_EVENT_MASKS) != BadWindow){
         passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
-        applyRules(getEventRules(RegisteringWindow), winInfo);
+        applyEventRules(RegisteringWindow, winInfo);
         return 1;
     }
     removeWindow(winInfo->id);
@@ -349,7 +349,7 @@ int processNewWindow(WindowInfo* winInfo){
     }
     if(!abort && winInfo->cloneOrigin == 0)
         loadWindowProperties(winInfo);
-    if(abort || !applyRules(getEventRules(ProcessingWindow), winInfo)){
+    if(abort || !applyEventRules(ProcessingWindow, winInfo)){
         LOG(LOG_LEVEL_VERBOSE, "Window is to be ignored; freeing winInfo %d\n", winInfo->id);
         deleteWindowInfo(winInfo);
         return 0;
