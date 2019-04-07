@@ -90,7 +90,7 @@ START_TEST(test_activate_window){
 }
 END_TEST
 START_TEST(test_banish_window){
-    assert(NUMBER_OF_HIDDEN_WORKSPACES >= 1);
+    assert(DEFAULT_NUMBER_OF_HIDDEN_WORKSPACES >= 1);
     WindowID win = createNormalWindow();
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);

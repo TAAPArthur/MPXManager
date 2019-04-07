@@ -141,7 +141,7 @@ START_TEST(test_num_workspaces_grow){
     markState();
     int num = getNumberOfWorkspaces();
     assert(num > 2);
-    NUMBER_OF_WORKSPACES = _i ? num * 2 : num / 2;
+    DEFAULT_NUMBER_OF_WORKSPACES = _i ? num * 2 : num / 2;
     resetContext();
     assert(num != getNumberOfWorkspaces());
     //detect change only when growing

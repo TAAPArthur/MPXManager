@@ -417,7 +417,7 @@ START_TEST(test_empty_workspace){
 END_TEST
 START_TEST(test_next_workspace){
     int size = 4;
-    NUMBER_OF_WORKSPACES = size;
+    DEFAULT_NUMBER_OF_WORKSPACES = size;
     resetContext();
     assert(getNumberOfWorkspaces() == size);
     addFakeMaster(1, 1);
@@ -489,6 +489,19 @@ START_TEST(test_active){
     assert(getActiveWorkspace()->id == getActiveWorkspaceIndex());
     assert(getSize(getActiveMasterWindowStack()) == 0);
     assert(isNotEmpty(getActiveMasterWindowStack()) == 0);
+}
+END_TEST
+START_TEST(test_workspace_add_remove){
+    int starting = getNumberOfWorkspaces();
+    for(int i = 1; i < 10; i++){
+        addWorkspaces(1);
+        assert(getNumberOfWorkspaces() == starting + i);
+    }
+    starting = getNumberOfWorkspaces();
+    for(int i = 1; i < 10; i++){
+        removeWorkspaces(1);
+        assert(getNumberOfWorkspaces() == starting - i);
+    }
 }
 END_TEST
 START_TEST(test_workspace_window_add_remove){
@@ -591,6 +604,7 @@ Suite* mywmUtilSuite(void){
     tc_core = tcase_create("Workspace");
     tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
     tcase_add_test(tc_core, test_active);
+    tcase_add_test(tc_core, test_workspace_add_remove);
     tcase_add_test(tc_core, test_workspace_window_add_remove);
     tcase_add_test(tc_core, test_window_workspace_add_remove);
     tcase_add_test(tc_core, test_visible_workspace);

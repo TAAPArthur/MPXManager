@@ -392,6 +392,18 @@ START_TEST(test_client_change_desktop){
     }
 }
 END_TEST
+START_TEST(test_client_change_num_desktop){
+    for(int n = 0; n < 2; n++){
+        setActiveWorkspaceIndex(1);
+        for(int i = 1; i < getNumberOfWorkspaces() * 2; i++){
+            xcb_ewmh_request_change_number_of_desktops(ewmh, defaultScreenNumber, i);
+            flush();
+            WAIT_UNTIL_TRUE(getNumberOfWorkspaces() == i);
+            assert(getActiveWorkspaceIndex() <= getNumberOfWorkspaces());
+        }
+    }
+}
+END_TEST
 
 START_TEST(test_client_close_window){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
@@ -553,6 +565,7 @@ START_TEST(test_key_repeat){
 }
 END_TEST
 START_TEST(test_monitor_deletion){
+    POLL_COUNT = 0;
     Monitor* m = getHead(getAllMonitors());
     assert(m);
     START_MY_WM;
@@ -564,6 +577,49 @@ START_TEST(test_monitor_deletion){
     //wake up event thread
     createNormalWindow();
     WAIT_UNTIL_TRUE(!doesWorkspaceHaveWindowsWithMask(getActiveWorkspaceIndex(), MAPPED_MASK));
+}
+END_TEST
+START_TEST(test_workspace_deletion){
+    assert(getNumberOfWorkspaces() > 3);
+    activateWorkspace(1);
+    for(int i = 0; i < 10; i++)
+        processNewWindow(createWindowInfo(createNormalWindow()));
+    flush();
+    activateWorkspace(0);
+    MONITOR_DUPLICATION_POLICY = 0;
+    pip((Rect){0, 0, 100, 100});
+    detectMonitors();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(getWorkspaceByIndex(1)->mapped);
+    lock();
+    activateWorkspace(1);
+    activateWorkspace(2);
+    assert(isWorkspaceVisible(2));
+    assert(!isWorkspaceVisible(1));
+    assert(isWorkspaceVisible(0));
+    xcb_ewmh_request_change_number_of_desktops(ewmh, defaultScreenNumber, 1);
+    flush();
+    unlock();
+    WAIT_UNTIL_TRUE(getNumberOfWorkspaces() == 1);
+    assert(isWorkspaceVisible(0));
+    assert(getSize(getActiveWindowStack()) == getSize(getAllWindows()));
+}
+END_TEST
+START_TEST(test_workspace_monitor_addition){
+    MONITOR_DUPLICATION_POLICY = 0;
+    removeWorkspaces(getNumberOfWorkspaces() - 1);
+    pip((Rect){0, 0, 100, 100});
+    detectMonitors();
+    assert(getNumberOfWorkspaces() < getSize(getAllMonitors()));
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        assert(isWorkspaceVisible(i));
+    consumeEvents();
+    xcb_ewmh_request_change_number_of_desktops(ewmh, defaultScreenNumber, getSize(getAllMonitors()));
+    flush();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(getNumberOfWorkspaces() == getSize(getAllMonitors()));
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        assert(isWorkspaceVisible(i));
 }
 END_TEST
 
@@ -623,6 +679,7 @@ Suite* defaultRulesSuite(){
     tcase_add_checked_fixture(tc_core, deviceEventsetup, fullCleanup);
     tcase_add_test(tc_core, test_client_activate_window);
     tcase_add_test(tc_core, test_client_change_desktop);
+    tcase_add_test(tc_core, test_client_change_num_desktop);
     tcase_add_test(tc_core, test_client_set_window_workspace);
     tcase_add_test(tc_core, test_client_set_sticky_window);
     tcase_add_test(tc_core, test_client_set_window_state);
@@ -639,6 +696,8 @@ Suite* defaultRulesSuite(){
     tc_core = tcase_create("RemoveMonitor");
     tcase_add_checked_fixture(tc_core, onStartup, fullMonitorCleanup);
     tcase_add_test(tc_core, test_monitor_deletion);
+    tcase_add_test(tc_core, test_workspace_deletion);
+    tcase_add_test(tc_core, test_workspace_monitor_addition);
     suite_add_tcase(s, tc_core);
     return s;
 }

@@ -334,9 +334,28 @@ void onClientMessage(void){
             }
         }
     }
+    else if(ewmh->_NET_NUMBER_OF_DESKTOPS){
+        if(data.data32[0] > 0){
+            int delta = data.data32[0] - getNumberOfWorkspaces();
+            if(delta > 0)
+                addWorkspaces(delta);
+            else {
+                int newLastIndex = data.data32[0] - 1;
+                if(getActiveWorkspaceIndex() > newLastIndex)
+                    setActiveWorkspaceIndex(newLastIndex);
+                for(int i = data.data32[0]; i < getNumberOfWorkspaces(); i++){
+                    FOR_EACH_REVERSED(WindowInfo*, winInfo, getWindowStack(getWorkspaceByIndex(i))){
+                        moveWindowToWorkspace(winInfo, newLastIndex);
+                    }
+                }
+                removeWorkspaces(-delta);
+            }
+            assert(data.data32[0] == getNumberOfWorkspaces());
+            assignUnusedMonitorsToWorkspaces();
+        }
+    }
     /*
     //ignored (we are allowed to)
-    case ewmh->_NET_NUMBER_OF_DESKTOPS:
     case ewmh->_NET_DESKTOP_GEOMETRY:
     case ewmh->_NET_DESKTOP_VIEWPORT:
     */
