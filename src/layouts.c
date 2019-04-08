@@ -282,11 +282,13 @@ static int splitEven(LayoutState* state, ArrayList* stack, int offset, short con
         values[dim - 2] += values[dim]; //convert width/height index to x/y
     }
     if(last){
+        state->args->lowerWindows = !state->args->lowerWindows;
         for(; i < getSize(stack); i++){
             WindowInfo* winInfo = getElement(stack, i);
             if(isTileable(winInfo))
                 configureWindow(state, winInfo, values);
         }
+        state->args->lowerWindows = !state->args->lowerWindows;
     }
     return i;
 }
