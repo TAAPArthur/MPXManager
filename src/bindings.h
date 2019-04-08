@@ -162,6 +162,8 @@ typedef struct binding_struct {
     char noEndOnPassThrough;
     /// Details which window to pass to the boundFunction
     WindowParamType windowTarget;
+    /// if true the binding won't trigger for key repeats
+    int noKeyRepeat;
 
     /**Converted detail of key bindings. Should not be set manually*/
     int detail;
@@ -356,9 +358,10 @@ int getIDOfBindingTarget(Binding* binding);
  * @param detail either a keycode or a button
  * @param mods modiers
  * @param mask
+ * @param keyRepeat if the event was a key repeat
  * @return Returns true if the binding should be triggered based on the combination of detail and mods
  */
-int doesBindingMatch(Binding* binding, int detail, int mods, int mask);
+int doesBindingMatch(Binding* binding, int detail, int mods, int mask, int keyRepeat);
 
 
 /**
@@ -376,9 +379,10 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo);
  * @param mods modifier mask
  * @param bindingType
  * @param winInfo the relevant window
+ * @param keyRepeat if the event was a key repeat
  * @return 1 if a binding was matched that had passThrough == false
  */
-int checkBindings(int detail, int mods, int bindingType, WindowInfo* winInfo);
+int checkBindings(int detail, int mods, int bindingType, WindowInfo* winInfo, int keyRepeat);
 
 
 /**

@@ -56,15 +56,15 @@ START_TEST(test_binding_match){
     int wildCardDetail = 0;
     assert(binding.mask);
     for(int i = 0; i < 4; i++){
-        assert(!doesBindingMatch(&binding, fake, fakeMod, fakeMask));
-        assert(doesBindingMatch(&binding, fake, fakeMod, mask) == (wildCardDetail & wildCardMod));
-        assert(!doesBindingMatch(&binding, fake, mod, fakeMask));
-        assert(doesBindingMatch(&binding, fake, mod, mask) == wildCardDetail);
-        assert(!doesBindingMatch(&binding, match, fakeMod, fakeMask));
-        assert(doesBindingMatch(&binding, match, fakeMod, mask) == wildCardMod);
-        assert(!doesBindingMatch(&binding, match, mod, fakeMask));
-        assert(doesBindingMatch(&binding, match, mod, mask));
-        assert(doesBindingMatch(&binding, match, mod, 0));
+        assert(!doesBindingMatch(&binding, fake, fakeMod, fakeMask, 0));
+        assert(doesBindingMatch(&binding, fake, fakeMod, mask, 0) == (wildCardDetail & wildCardMod));
+        assert(!doesBindingMatch(&binding, fake, mod, fakeMask, 0));
+        assert(doesBindingMatch(&binding, fake, mod, mask, 0) == wildCardDetail);
+        assert(!doesBindingMatch(&binding, match, fakeMod, fakeMask, 0));
+        assert(doesBindingMatch(&binding, match, fakeMod, mask, 0) == wildCardMod);
+        assert(!doesBindingMatch(&binding, match, mod, fakeMask, 0));
+        assert(doesBindingMatch(&binding, match, mod, mask, 0));
+        assert(doesBindingMatch(&binding, match, mod, 0, 0));
         if(i == 0){
             binding.mod = WILDCARD_MODIFIER;
             wildCardMod = 1;
@@ -99,8 +99,8 @@ START_TEST(test_check_bindings){
                 {effectiveMod, detail, BIND(exit, 11), .passThrough = passThrough, .detail = detail},
             };
             addBindings(arr, LEN(arr));
-            checkBindings(1, 1, mask, NULL);
-            checkBindings(1, 1 | IGNORE_MASK, mask, NULL);
+            checkBindings(1, 1, mask, NULL, 0);
+            checkBindings(1, 1 | IGNORE_MASK, mask, NULL, 0);
             if(mod != 2 && detail != 2)
                 targetCount += 2 * ((passThrough == ALWAYS_PASSTHROUGH) + 1);
             assert(count == targetCount);
@@ -130,7 +130,7 @@ START_TEST(test_check_bindings){
             b.windowTarget = TARGET_WINDOW;
         }
         addBindings(&b, 1);
-        checkBindings(1, 1, mask, dummy);
+        checkBindings(1, 1, mask, dummy, 0);
         clearList(getDeviceBindings());
     }
     assert(count == numTypes);
@@ -313,27 +313,27 @@ START_TEST(test_chain_bindings){
     addBinding(&dummy);
     assert(getActiveBinding() == NULL);
     //enter first chain
-    assert(checkBindings(1, 0, mask, NULL));
+    assert(checkBindings(1, 0, mask, NULL, 0));
     assert(getActiveBinding());
     assert(count == 0);
     //enter second chain chain
-    checkBindings(1, 0, mask, NULL);
+    checkBindings(1, 0, mask, NULL, 0);
     assert(getSize(getActiveChains()) == 2);
     assert(count == 0);
-    checkBindings(2, 0, mask, NULL);
+    checkBindings(2, 0, mask, NULL, 0);
     assert(count == 1);
-    checkBindings(2, 0, mask, NULL);
+    checkBindings(2, 0, mask, NULL, 0);
     assert(count == 2);
     //exit 2nd layer of chain
-    checkBindings(123, 0, mask, NULL);
+    checkBindings(123, 0, mask, NULL, 0);
     assert(count == 1);
     assert(getSize(getActiveChains()) == 1);
     //re-enter 2nd layer of chain
-    checkBindings(1, 0, mask, NULL);
+    checkBindings(1, 0, mask, NULL, 0);
     assert(getSize(getActiveChains()) == 2);
     assert(count == 1);
     //passthrough via inner chain
-    checkBindings(123, outerChainEndMod, mask, NULL);
+    checkBindings(123, outerChainEndMod, mask, NULL, 0);
     assert(count == 0);
     assert(getActiveBinding() == NULL);
     clearList(getDeviceBindings());

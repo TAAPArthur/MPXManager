@@ -166,9 +166,9 @@ int getIDOfBindingTarget(Binding* binding){
 
 
 
-int doesBindingMatch(Binding* binding, int detail, int mods, int mask){
+int doesBindingMatch(Binding* binding, int detail, int mods, int mask, int keyRepeat){
     return (binding->mask & mask || mask == 0) && (binding->mod == WILDCARD_MODIFIER || binding->mod == mods) &&
-           (binding->detail == 0 || binding->detail == detail);
+           (binding->detail == 0 || binding->detail == detail) && (!keyRepeat || keyRepeat == !binding->noKeyRepeat);
 }
 
 static WindowInfo* getWindowToActOn(Binding* binding, WindowInfo* target){
@@ -182,7 +182,7 @@ static WindowInfo* getWindowToActOn(Binding* binding, WindowInfo* target){
             return target;
     }
 }
-int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo){
+int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo, int keyRepeat){
     mods &= ~IGNORE_MASK;
     LOG(LOG_LEVEL_TRACE, "detail: %d mod: %d mask: %d\n", keyCode, mods, mask);
     Binding* chainBinding = getActiveBinding();
@@ -190,7 +190,7 @@ int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo){
     while(chainBinding){
         int i = 0;
         do {
-            if(doesBindingMatch(&chainBinding[i], keyCode, mods, mask)){
+            if(doesBindingMatch(&chainBinding[i], keyCode, mods, mask, keyRepeat)){
                 LOG(LOG_LEVEL_TRACE, "Calling chain binding\n");
                 int result = callBoundedFunction(&chainBinding[i].boundFunction, getWindowToActOn(&chainBinding[i], winInfo));
                 if(chainBinding[i].endChain){
@@ -216,7 +216,7 @@ int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo){
         else chainBinding = getActiveBinding();
     }
     FOR_EACH(Binding*, binding, getDeviceBindings()){
-        if(doesBindingMatch(binding, keyCode, mods, mask)){
+        if(doesBindingMatch(binding, keyCode, mods, mask, keyRepeat)){
             bindingsTriggered += 1;
             LOG(LOG_LEVEL_TRACE, "Calling non-chain binding\n");
             if(!passThrough(callBoundedFunction(&binding->boundFunction, getWindowToActOn(binding, winInfo)), binding->passThrough))
