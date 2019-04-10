@@ -92,7 +92,7 @@ typedef struct Layout {
 } Layout;
 
 /// Convience indexes into DEFAULT_LAYOUTS
-enum {FULL, GRID, TWO_COLUMN, TWO_PANE, LAST_LAYOUT};
+enum {FULL, GRID, TWO_COLUMN, TWO_PANE, TWO_HPLANE, MASTER, LAST_LAYOUT};
 
 /// Array of layout familes (layouts with different layout functions
 extern Layout LAYOUT_FAMILIES[];

@@ -41,7 +41,9 @@ run(){
     $path/$fileName $@
 }
 setVar(){
-    echo $@ >> "/tmp/mpxmanager-fifo"
+    file="/tmp/mpxmanager-fifo"
+    [ ! -e "$file" ] && mkfifo "$file"
+    echo $@ >>"$file"
 }
 displayVersion(){
     echo "0.9.2"

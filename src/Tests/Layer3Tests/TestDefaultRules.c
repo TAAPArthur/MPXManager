@@ -499,11 +499,8 @@ START_TEST(test_auto_tile){
             assert(getActiveLayoutOfWorkspace(i)->layoutFunction);
         }
     }
-    void addDummyWindows(){
-        static Rule rule = CREATE_DEFAULT_EVENT_RULE(createNormalWindow);
-        addToList(getEventRules(onXConnection), &rule);
-    }
-    preStartUpMethod = addDummyWindows;
+    static Rule rule = CREATE_DEFAULT_EVENT_RULE(createNormalWindow);
+    prependToList(getEventRules(onXConnection), &rule);
     startUpMethod = addFakeLayout;
     onStartup();
     START_MY_WM

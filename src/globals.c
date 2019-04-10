@@ -6,7 +6,6 @@
 #include <xcb/xinput.h>
 
 #include "globals.h"
-#include "windows.h"
 
 
 char LOAD_SAVED_STATE = 1;
@@ -32,7 +31,7 @@ int DEFAULT_NUMBER_OF_HIDDEN_WORKSPACES = 1;
 int IGNORE_MASK = Mod2Mask;
 
 int DEFAULT_BORDER_WIDTH = 1;
-int DEFAULT_BORDER_COLOR = 0;
+int DEFAULT_BORDER_COLOR = 0x0;
 
 int DEFAULT_FOCUS_BORDER_COLOR = 0x00FF00;
 int DEFAULT_UNFOCUS_BORDER_COLOR = 0xDDDDDD;
@@ -47,8 +46,7 @@ int CLONE_REFRESH_RATE = 15;
 
 int SYNC_WINDOW_MASKS = 0;
 
-int DEFAULT_WINDOW_MASKS = 0;
-int DEFAULT_DOCK_MASKS = EXTERNAL_MOVE_MASK | EXTERNAL_RESIZE_MASK | NO_TILE_MASK;
+int DEFAULT_WINDOW_MASKS = INPUT_MASK;
 
 int DEFAULT_BINDING_MASKS = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
 
@@ -61,9 +59,9 @@ int AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 500;
 
 int IGNORE_SUBWINDOWS = 1;
 
-int POLL_COUNT = 0;
+int POLL_COUNT = 3;
 int POLL_INTERVAL = 10;
-int EVENT_PERIOD = 10;
+int EVENT_PERIOD = 100;
 
 char* MASTER_INFO_PATH = "master-info.txt";
 char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
@@ -73,7 +71,6 @@ char* LD_PRELOAD_PATH = "/usr/lib/mpxmanager/mpx-patch.so";
 int DEFAULT_POINTER = 2;
 int DEFAULT_KEYBOARD = 3;
 
-void (*preStartUpMethod)(void);
 void (*startUpMethod)(void);
 void (*printStatusMethod)(void);
 int statusPipeFD[2];

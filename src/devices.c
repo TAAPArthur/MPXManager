@@ -317,6 +317,7 @@ void setLastKnowMasterPosition(int x, int y){
     memcpy(getActiveMaster()->prevMousePos, getActiveMaster()->currentMousePos, sizeof(getActiveMaster()->prevMousePos));
     getActiveMaster()->currentMousePos[0] = x;
     getActiveMaster()->currentMousePos[1] = y;
+    LOG(LOG_LEVEL_ALL, "saving master position at %d %d\n", x, y);
 }
 const short* getLastKnownMasterPosition(void){
     return getActiveMaster()->currentMousePos;

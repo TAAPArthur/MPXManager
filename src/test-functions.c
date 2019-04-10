@@ -18,7 +18,7 @@ void sendDeviceActionToWindow(MasterID id, int detail, int type, WindowID window
     catchError(xcb_test_fake_input_checked(dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id));
 }
 void sendDeviceAction(MasterID id, int detail, int type){
-    LOG(LOG_LEVEL_TRACE, "Sending action: id %d detail %d type %d\n", id, detail, type);
+    LOG(LOG_LEVEL_VERBOSE, "Sending action: id %d detail %d type %d\n", id, detail, type);
     sendDeviceActionToWindow(id, detail, type, XCB_NONE);
 }
 

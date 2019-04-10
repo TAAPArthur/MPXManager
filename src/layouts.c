@@ -255,7 +255,7 @@ void applyLayout(Workspace* workspace){
         LOG(LOG_LEVEL_TRACE, "there are no windows to tile\n");
     if(layout->args.raiseFocused){
         FOR_EACH_REVERSED(WindowInfo*, winInfo, getActiveMasterWindowStack()){
-            if(getWorkspaceOfWindow(winInfo) == getActiveWorkspace())
+            if(getWorkspaceOfWindow(winInfo) == workspace)
                 raiseWindowInfo(winInfo);
         }
     }

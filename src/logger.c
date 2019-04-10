@@ -12,6 +12,7 @@
 #include <xcb/xinput.h>
 
 #include "bindings.h"
+#include "events.h"
 #include "globals.h"
 #include "logger.h"
 #include "masters.h"
@@ -137,15 +138,16 @@ void dumpWindowInfo(WindowInfo* winInfo){
     if(!winInfo)return;
     LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", winInfo->id, winInfo->id,
         winInfo->groupId, winInfo->groupId, winInfo->transientFor, winInfo->transientFor);
-    LOG(LOG_LEVEL_INFO, "Labels class %s (%s)\n", winInfo->className, winInfo->instanceName);
-    LOG(LOG_LEVEL_INFO, "Parent %d,Type is %d (%s) Dock %d\n", winInfo->parent, winInfo->type, winInfo->typeName,
-        winInfo->dock);
-    LOG(LOG_LEVEL_INFO, "Title class %s\n", winInfo->title);
-    LOG(LOG_LEVEL_INFO, "Mask %d\n", winInfo->mask);
+    LOG(LOG_LEVEL_INFO, "Class %s (%s)\n", winInfo->className, winInfo->instanceName);
+    LOG(LOG_LEVEL_INFO, "Parent %d; Type is %d (%s); Dock %d; Clone origin %d\n", winInfo->parent, winInfo->type,
+        winInfo->typeName,
+        winInfo->dock, winInfo->cloneOrigin);
+    LOG(LOG_LEVEL_INFO, "Title %s\n", winInfo->title);
     PRINT_ARR("Recorded Geometry", getGeometry(winInfo), 5, "\n");
     PRINT_ARR("Setconfig", getConfig(winInfo), 5, "\n");
     if(winInfo->dock)
         PRINT_ARR("Properties", winInfo->properties, LEN(winInfo->properties), "\n");
+    LOG(LOG_LEVEL_INFO, "Mask %d\n", winInfo->mask);
     printMask(winInfo->mask);
     if(winInfo->workspaceIndex == NO_WORKSPACE)
         LOG(LOG_LEVEL_INFO, "NO WORKPACE\n");
@@ -165,22 +167,7 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
 }
 
 #define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return  #TYPE
-char* genericEventTypeToString(int type){
-    switch(type){
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_KEY_PRESS);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_KEY_RELEASE);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_BUTTON_PRESS);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_BUTTON_RELEASE);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_MOTION);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_ENTER);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_LEAVE);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_IN);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_OUT);
-            _ADD_EVENT_TYPE_CASE(XCB_INPUT_HIERARCHY);
-        default:
-            return "unkown XI event";
-    }
-}
+#define _ADD_GE_EVENT_TYPE_CASE(TYPE) case GENERIC_EVENT_OFFSET+TYPE: return  #TYPE
 
 char* eventTypeToString(int type){
     switch(type){
@@ -196,6 +183,26 @@ char* eventTypeToString(int type){
             _ADD_EVENT_TYPE_CASE(XCB_PROPERTY_NOTIFY);
             _ADD_EVENT_TYPE_CASE(XCB_CLIENT_MESSAGE);
             _ADD_EVENT_TYPE_CASE(XCB_GE_GENERIC);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_KEY_PRESS);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_KEY_RELEASE);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_BUTTON_PRESS);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_BUTTON_RELEASE);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_MOTION);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_ENTER);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_LEAVE);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_IN);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_OUT);
+            _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_HIERARCHY);
+            _ADD_EVENT_TYPE_CASE(ExtraEvent);
+            _ADD_EVENT_TYPE_CASE(onXConnection);
+            _ADD_EVENT_TYPE_CASE(PropertyLoad);
+            _ADD_EVENT_TYPE_CASE(ProcessingWindow);
+            _ADD_EVENT_TYPE_CASE(RegisteringWindow);
+            _ADD_EVENT_TYPE_CASE(onScreenChange);
+            _ADD_EVENT_TYPE_CASE(TileWorkspace);
+            _ADD_EVENT_TYPE_CASE(onWindowMove);
+            _ADD_EVENT_TYPE_CASE(Periodic);
+            _ADD_EVENT_TYPE_CASE(Idle);
         case 0:
             return "Error";
         default:

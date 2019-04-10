@@ -43,7 +43,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
  *
  * @return
  */
-#define PRINT_LIST(label,arr,suffix){LOG(LOG_LEVEL_DEBUG,label " Arr:");FOR_EACH(int*,i,arr)LOG(LOG_LEVEL_DEBUG,"%d ",*i);LOG(LOG_LEVEL_DEBUG,suffix);}
+#define PRINT_LIST(label,arr,suffix){LOG(LOG_LEVEL_INFO,label " Arr:");FOR_EACH(int*,i,arr)LOG(LOG_LEVEL_INFO,"%d ",*i);LOG(LOG_LEVEL_INFO,suffix);}
 /// the init log level
 #ifndef INIT_LOG_LEVEL
     #define INIT_LOG_LEVEL LOG_LEVEL_INFO
@@ -133,14 +133,6 @@ void dumpWindowInfo(WindowInfo* win);
  * @param numberOfAtoms
  */
 void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms);
-/**
- * Stringifes type
- *
- * @param type a xcb_input type like XCB_INPUT_KEY_PRESS
- *
- * @return the string representation of type if known
- */
-char* genericEventTypeToString(int type);
 /**
  * Stringifes type
  *

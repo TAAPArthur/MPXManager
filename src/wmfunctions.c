@@ -471,7 +471,7 @@ void broadcastEWMHCompilence(){
             WM_SELECTION_ATOM), NULL);
     if(ownerReply->owner){
         LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d\n", WM_SELECTION_ATOM, ownerReply->owner);
-        exit(1);
+        quit();
     }
     if(catchError(xcb_set_selection_owner_checked(dis, checkwin, WM_SELECTION_ATOM, XCB_CURRENT_TIME)) == 0){
         xcb_client_message_event_t ev = {0};

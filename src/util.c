@@ -35,12 +35,12 @@ static void initArrayList(ArrayList* list){
     list->arr = malloc(sizeof(void*)*list->maxSize);
 }
 void* getElement(ArrayList* list, int index){
-    assert(index + list->offset >= 0);
+    assert(index + getOffset(list) >= 0);
     assert(index < getSize(list));
-    return list->arr[index + list->offset];
+    return list->arr[index + getOffset(list)];
 }
 void setElement(ArrayList* list, int index, void* value){
-    list->arr[index + list->offset] = value;
+    list->arr[index + getOffset(list)] = value;
 }
 
 int isNotEmpty(ArrayList* list){
@@ -90,8 +90,8 @@ int getNextIndex(ArrayList* list, int current, int delta){
     return (current + delta % getSize(list) + getSize(list)) % getSize(list);
 }
 static inline void autoResize(ArrayList* list){
-    if(list->size + list->offset >= list->maxSize){
-        list->maxSize = MAX(list->maxSize, list->size + list->offset) * 2;
+    if(list->size + getOffset(list) >= list->maxSize){
+        list->maxSize = MAX(list->maxSize, getSize(list) + getOffset(list)) * 2;
         list->arr = realloc(list->arr, list->maxSize * sizeof(void*));
     }
 }

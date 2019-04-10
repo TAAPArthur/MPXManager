@@ -13,6 +13,109 @@
     #define WILDCARD_MODIFIER AnyModifier
 #endif
 
+/**
+ * Offset for SRC_INDICATION_* masks
+ * These masks specify which type of external sources are allowed to modify the window
+ * Adding [0,2] and rasing 2 to that power yeilds OTHER,APP and PAGER SRC_INDICATION_ masks respectivly
+ */
+#define SRC_INDICATION_OFFSET 12
+/**
+ * Various flags that detail how a window should be treated.
+ *
+ */
+typedef enum {
+    /// no special properties
+    NO_MASK = 0,
+    /**The window's X size will equal the size of the monitor's viewport*/
+    X_MAXIMIZED_MASK =      1 << 0,
+    /**The window's Y size will equal the size of the monitor's viewport*/
+    Y_MAXIMIZED_MASK =      1 << 1,
+    /**The window's size will equal the size of the monitor (not viewport)     */
+    FULLSCREEN_MASK =       1 << 2,
+    /**The window's size will equal the size of the screen (union of all monitors)*/
+    ROOT_FULLSCREEN_MASK =  1 << 3,
+
+    ///windows will be below normal windows unless ABOVE_MASK is set is set
+    BELOW_MASK =            1 << 4,
+    ///windows will be above other windows
+    ABOVE_MASK =            1 << 5,
+    ///Window will not be tiled
+    NO_TILE_MASK =          1 << 6,
+
+    /// or of all masks that will cause the layout function to skip a window
+    ALL_NO_TILE_MASKS = FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | BELOW_MASK | ABOVE_MASK | NO_TILE_MASK,
+
+    /**The window's size will equal the size of the monitor (not viewport)     */
+    TRUE_FULLSCREEN_MASK =       FULLSCREEN_MASK | ABOVE_MASK,
+    /**The window's size will equal the size of the screen (union of all monitors)*/
+    TRUE_ROOT_FULLSCREEN_MASK =  ROOT_FULLSCREEN_MASK | ABOVE_MASK,
+
+    ///Window is effectively associated with its monitor instead of its workspace
+    /// (it is moveded between workspaces to stay on its monitor
+    STICKY_MASK =           ABOVE_MASK | NO_TILE_MASK,
+    ///The window will be treated as unmapped until this mask is removed (iconic state)
+    HIDDEN_MASK =        1 << 7,
+
+    USER_MASKS = ((1 << 8) - 1),
+
+    /// Window can be externally resized (configure requests are allowed)
+    EXTERNAL_RESIZE_MASK =  1 << 8,
+    /// Window can be externally moved (configure requests are allowed)
+    EXTERNAL_MOVE_MASK =    1 << 9,
+    /// Window border size can be externally changed
+    EXTERNAL_BORDER_MASK =    1 << 10,
+    /// Window cannot be externally raised/lowered (configure requests are blocked)
+    EXTERNAL_RAISE_MASK =   1 << 11,
+    /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse
+    EXTERNAL_CONFIGURABLE_MASK =            EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
+    /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse) and is above other windows
+    FLOATING_MASK =            ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
+
+    ///Allow client requests from older clients who don't specify what they are
+    SRC_INDICATION_OTHER =   1 << SRC_INDICATION_OFFSET,
+    ///Allow client requests from normal applications
+    SRC_INDICATION_APP =     1 << (SRC_INDICATION_OFFSET + 1),
+    ///Allow client requests from pagers
+    SRC_INDICATION_PAGER =   1 << (SRC_INDICATION_OFFSET + 2),
+    /// allow from any source
+    SRC_ANY =                SRC_INDICATION_OTHER | SRC_INDICATION_APP | SRC_INDICATION_PAGER,
+
+    /**The window is an input only window (more importantly it cannot have a border)*/
+    INPUT_ONLY_MASK =           1 << 15,
+    /**The window can receive input focus*/
+    INPUT_MASK =           1 << 16,
+    /**The WM will not forcibly set focus but request the application focus itself*/
+    WM_TAKE_FOCUS_MASK =    1 << 17,
+    /**The WM will not forcibly set focus but request the application focus itself*/
+    WM_DELETE_WINDOW_MASK = 1 << 18,
+    /**Used in conjuction with WM_DELETE_WINDOW_MASK to kill the window */
+    WM_PING_MASK = 1 << 19,
+
+    /**
+     * Best effort will be made to place all windows with this mask above any other window without it
+     * This mask is implemented via a onWindowMove Rule
+     */
+    ALWAYS_ON_TOP = 1 << 20,
+    /// the window type was not set explicitly
+    IMPLICIT_TYPE = 1 << 21,
+
+    ///Keeps track on the visibility state of the window
+    PARTIALLY_VISIBLE =     1 << 27,
+    ///Keeps track on the visibility state of the window
+    FULLY_VISIBLE =         1 << 28 | PARTIALLY_VISIBLE,
+    ///Inidicates the window is not withdrawn
+    MAPPABLE_MASK =           1 << 29,
+    ///the window is currently mapped
+    MAPPED_MASK =           1 << 30,
+
+    /**Marks the window as urgent*/
+    URGENT_MASK =           1 << 31,
+    RETILE_MASKS =           USER_MASKS | MAPPED_MASK,
+    /// set all masks
+    ALL_MASK =              -1
+
+} WindowMasks;
+
 /// Holds env var names used to pass client pointer to children
 extern char* CLIENT[];
 /// if true, then preload LD_PRELOAD_PATH
@@ -56,8 +159,6 @@ extern int SYNC_WINDOW_MASKS;
 
 ///Defaults masks to be applied to windows
 extern int DEFAULT_WINDOW_MASKS;
-///Defaults masks to be applied to docks windows
-extern int DEFAULT_DOCK_MASKS;
 ///If unspecifed the mask of a Binding
 extern int DEFAULT_BINDING_MASKS;
 ///If unspecifed the mask, used during a chaing binding grab
@@ -135,10 +236,6 @@ void setLastEvent(void* event);
  */
 void* getLastEvent(void);
 
-/**
- * User can set preStartUpMethod to run an arbitrary function before the startup method is called
- */
-extern void (*preStartUpMethod)(void);
 /**
  * User can set preStartUpMethod to run an arbitrary function right after the startup method is called
  */

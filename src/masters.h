@@ -52,15 +52,15 @@ int removeWindowFromMaster(Master* master, WindowID winToRemove);
 /**
  * @return the id of the active master
  */
-int getActiveMasterKeyboardID();
+int getActiveMasterKeyboardID(void);
 /**
  * @return the pointer id of the active master
  */
-int getActiveMasterPointerID();
+int getActiveMasterPointerID(void);
 /**
  * @return  whether of not the master window stack will be updated on focus change
 */
-int isFocusStackFrozen();
+int isFocusStackFrozen(void);
 /**
  * If value, the master window stack will not be updated on focus change
  * Else the the focused window will be shifted to the top of the master stack,
@@ -70,14 +70,14 @@ int isFocusStackFrozen();
 void setFocusStackFrozen(int value);
 
 /**
- *
+ * @param master
  * @return Returns a list of windows that have been put in the cache
 */
-ArrayList* getWindowCache();
+ArrayList* getWindowCache(Master* master);
 /**
  * Clears the window cache for the active master
  */
-void clearWindowCache();
+void clearWindowCache(void);
 /**
  * Adds a window to the cache if not already present
  * @param winInfo  the window to add

@@ -112,10 +112,12 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
             result = boundFunction->func.funcReturnInt(arg.voidArg);
             break;
         case WIN_INT_ARG:
-            boundFunction->func.func(winInfo, arg.intArg);
+            if(winInfo)
+                boundFunction->func.func(winInfo, arg.intArg);
             break;
         case WIN_INT_ARG_RETURN_INT:
-            result = boundFunction->func.funcReturnInt(winInfo, arg.intArg);
+            if(winInfo)
+                result = boundFunction->func.funcReturnInt(winInfo, arg.intArg);
             break;
         case VOID_ARG:
             boundFunction->func.func(arg.voidArg);
@@ -184,7 +186,7 @@ static WindowInfo* getWindowToActOn(Binding* binding, WindowInfo* target){
 }
 int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo, int keyRepeat){
     mods &= ~IGNORE_MASK;
-    LOG(LOG_LEVEL_TRACE, "detail: %d mod: %d mask: %d\n", keyCode, mods, mask);
+    LOG(LOG_LEVEL_VERBOSE, "detail: %d mod: %d mask: %d\n", keyCode, mods, mask);
     Binding* chainBinding = getActiveBinding();
     int bindingsTriggered = 0;
     while(chainBinding){

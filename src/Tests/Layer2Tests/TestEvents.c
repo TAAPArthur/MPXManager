@@ -153,7 +153,7 @@ START_TEST(test_register_for_device_events){
     assert(getSize(getDeviceBindings()));
     FOR_EACH(Binding*, binding, getDeviceBindings()) assert(binding->detail);
     triggerAllBindings(ROOT_DEVICE_EVENT_MASKS);
-    waitToReceiveInput(ROOT_DEVICE_EVENT_MASKS);
+    waitToReceiveInput(ROOT_DEVICE_EVENT_MASKS, 0);
 }
 END_TEST
 
@@ -197,6 +197,7 @@ Suite* eventSuite(void){
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Events");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);
+    tcase_set_timeout(tc_core, 0);
     tcase_add_test(tc_core, test_regular_events);
     tcase_add_test(tc_core, test_event_spam);
     tcase_add_test(tc_core, test_register_events);

@@ -90,6 +90,7 @@ int removeMaster(MasterID id){
     Master* master = removeFromList(getAllMasters(), index);
     clearList(getWindowStackByMaster(master));
     clearList(&master->activeChains);
+    clearList(getWindowCache(master));
     if(getSize(getAllMasters()) == 0)
         setActiveMaster(NULL);
     else if(getActiveMaster() == master)
@@ -117,13 +118,13 @@ void setActiveMaster(Master* newMaster){
     master = newMaster;
 }
 
-ArrayList* getWindowCache(){
-    return &getActiveMaster()->windowsToIgnore;
+ArrayList* getWindowCache(Master* master){
+    return &master->windowsToIgnore;
 }
-void clearWindowCache(){
-    clearList(getWindowCache());
+void clearWindowCache(void){
+    clearList(getWindowCache(getActiveMaster()));
 }
 int updateWindowCache(WindowInfo* targetWindow){
     assert(targetWindow);
-    return addUnique(getWindowCache(), targetWindow, sizeof(int));
+    return addUnique(getWindowCache(getActiveMaster()), targetWindow, sizeof(WindowID));
 }

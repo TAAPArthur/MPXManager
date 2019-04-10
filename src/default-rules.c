@@ -310,7 +310,8 @@ void onClientMessage(void){
     }
     else if(message == ewmh->_NET_WM_STATE){
         LOG(LOG_LEVEL_DEBUG, "Settings client wm state %d\n", data.data32[3]);
-        dumpAtoms((xcb_atom_t*) &data.data32[1], 2);
+        if(isLogging(LOG_LEVEL_DEBUG))
+            dumpAtoms((xcb_atom_t*) &data.data32[1], 2);
         WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo){
             if(allowRequestFromSource(winInfo, data.data32[3]))
@@ -370,7 +371,7 @@ static WindowInfo* getTargetWindow(int root, int event, int child){
 }
 void onDeviceEvent(void){
     xcb_input_key_press_event_t* event = getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
+    LOG(LOG_LEVEL_VERBOSE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
         event->root, event->event, event->child);
     if((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && IGNORE_KEY_REPEAT)
@@ -392,8 +393,6 @@ void onGenericEvent(void){
 
 
 void onStartup(void){
-    if(preStartUpMethod)
-        preStartUpMethod();
     resetContext();
     addDefaultRules();
     if(startUpMethod)

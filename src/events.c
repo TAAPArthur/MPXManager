@@ -80,11 +80,15 @@ void incrementBatchEventRuleCounter(int i){
 void applyBatchRules(void){
     for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
         if(batchEventRules[i].counter){
+            LOG(LOG_LEVEL_TRACE, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
+                eventTypeToString(i), getSize(getBatchEventRules(i)));
             batchEventRules[i].counter = 0;
             applyRules(getBatchEventRules(i), NULL);
         }
 }
 int applyEventRules(int type, WindowInfo* winInfo){
+    LOG(LOG_LEVEL_VERBOSE, "Event detected %d %s number of rules: %d\n",
+        type, eventTypeToString(type), getSize(getEventRules(type)));
     incrementBatchEventRuleCounter(type);
     return applyRules(getEventRules(type), winInfo);
 }
@@ -146,8 +150,6 @@ void* runEventLoop(void* arg __attribute__((unused))){
             setLastEvent(event);
             if(type >= LASTEvent)
                 type = type == xrandrFirstEvent ? onScreenChange : ExtraEvent;
-            LOG(LOG_LEVEL_VERBOSE, "Event detected %d (%d) %s number of rules: %d\n",
-                type, event->response_type, eventTypeToString(type), getSize(getEventRules(type)));
             applyEventRules(type, NULL);
             unlock();
         }
@@ -161,15 +163,10 @@ void* runEventLoop(void* arg __attribute__((unused))){
     return NULL;
 }
 int loadGenericEvent(xcb_ge_generic_event_t* event){
-    LOG(LOG_LEVEL_VERBOSE, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
+    LOG(LOG_LEVEL_ALL, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
         event->extension, event->response_type, event->event_type, event->sequence);
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode){
-        LOG(LOG_LEVEL_VERBOSE, "generic event detected %d %d %s number of rules: %d\n",
-            event->event_type, event->response_type,
-            genericEventTypeToString(event->event_type),
-            getSize(getEventRules(event->event_type + GENERIC_EVENT_OFFSET)));
         int type = event->event_type + GENERIC_EVENT_OFFSET;
-        incrementBatchEventRuleCounter(type);
         return type;
     }
     return 0;

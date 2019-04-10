@@ -13,7 +13,7 @@ int keyDetail = 65;
 int mouseDetail = 1;
 
 static int checkDeviceEventMatchesType(xcb_input_key_press_event_t* event, int type){
-    int result = event->event_type == type && event->detail == keyDetail || event->detail == mouseDetail;
+    int result = event->event_type == type && (event->detail == keyDetail || event->detail == mouseDetail);
     free(event);
     return result;
 }
@@ -41,6 +41,13 @@ START_TEST(test_send_button_release){
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE))
 }
 END_TEST
+START_TEST(test_all_button){
+    mouseDetail = _i;
+    sendButtonPress(_i);
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS))
+    consumeEvents();
+}
+END_TEST
 START_TEST(test_click_button){
     clickButton(mouseDetail);
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS))
@@ -58,7 +65,7 @@ START_TEST(test_move_pointer){
     for(int i = 0; i < 10; i++){
         movePointer(getActiveMasterPointerID(), root, 10, 10);
         movePointer(getActiveMasterPointerID(), root, 100, 100);
-        waitToReceiveInput(1 << XCB_INPUT_MOTION);
+        waitToReceiveInput(1 << XCB_INPUT_MOTION, 0);
     }
 }
 END_TEST
@@ -79,6 +86,7 @@ Suite* testFunctionSuite(){
     tcase_add_test(tc_core, test_send_key_release);
     tcase_add_test(tc_core, test_send_button_press);
     tcase_add_test(tc_core, test_send_button_release);
+    tcase_add_loop_test(tc_core, test_all_button, 1, 8);
     tcase_add_test(tc_core, test_type_key);
     tcase_add_test(tc_core, test_click_button);
     tcase_add_test(tc_core, test_move_pointer);

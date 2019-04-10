@@ -11,6 +11,7 @@
 #include <xcb/xinput.h>
 
 #include "args.h"
+#include "events.h"
 #include "functions.h"
 #include "globals.h"
 #include "layouts.h"
@@ -23,7 +24,7 @@
 #include "wmfunctions.h"
 #include "workspaces.h"
 
-static Binding DEFAULLT_BINDINGS[] = {
+static Binding DEFAULT_BINDINGS[] = {
     WORKSPACE_OPERATION(XK_1, 0),
     WORKSPACE_OPERATION(XK_2, 1),
     WORKSPACE_OPERATION(XK_3, 2),
@@ -112,6 +113,7 @@ void loadNormalSettings(){
     addAutoMPXRules();
     SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;
-    addBindings(DEFAULLT_BINDINGS, LEN(DEFAULLT_BINDINGS));
-    startReadingUserInput();
+    addBindings(DEFAULT_BINDINGS, LEN(DEFAULT_BINDINGS));
+    static Rule argsRule = {NULL, 0, BIND(startReadingUserInput)};
+    addToList(getEventRules(onXConnection), &argsRule);
 }

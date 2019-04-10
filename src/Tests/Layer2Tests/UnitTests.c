@@ -23,7 +23,6 @@ int main(int argc, char** argv __attribute__((unused))){
     }
     signal(SIGSEGV, handler);   // install our handler
     signal(SIGABRT, handler);   // install our handler
-    signal(SIGUSR1, handler);
     SRunner* runner;
     runner = srunner_create(xsessionSuite());
     srunner_add_suite(runner, testFunctionSuite());

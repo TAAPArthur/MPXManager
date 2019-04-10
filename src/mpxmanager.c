@@ -21,7 +21,7 @@
 static void handler(int sig){
     fprintf(stderr, "Error: signal %d:\n", sig);
     printStackTrace();
-    exit(1);
+    quit();
 }
 
 /**
@@ -35,6 +35,7 @@ int main(int argc, char* argv[]){
     passedArguments = argv;
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
+    signal(SIGKILL, handler);
     signal(SIGPIPE, resetPipe);
     //signal(SIGINT, quit);
     parseArgs(argc, argv, 1);

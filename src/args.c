@@ -208,9 +208,9 @@ static void* readUserInput(void* arg __attribute__((unused))){
     char buffer[255];
     while(!isShuttingDown()){
         if(fgets(buffer, LEN(buffer), fp)){
-            lock();
             if(buffer[strlen(buffer) - 1] == '\n')
                 buffer[strlen(buffer) - 1] = 0;
+            lock();
             parseArgs(2, (char* []){0, buffer, 0}, 0);
             unlock();
         }

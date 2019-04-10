@@ -1,6 +1,6 @@
 CC := gcc -std=gnu11
 SHELL := /bin/bash
-DEBUGGING_FLAGS := -g -rdynamic -O0 -DDEBUG
+DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS := -O3 -DNDEBUG
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-cast-function-type
@@ -28,7 +28,9 @@ RUN_XTEST = xvfb-run $(call RUN_TEST, ./$@ )
 RUN_XTEST_NO_DISPLAY = DISPLAY=:1000 $(call RUN_TEST, ./$@ --test-no-xdisplay )
 
 ifeq ($(DEBUG),1)
-  CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG
+  CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DDEBUG
+else ifeq ($(DEBUG),2)
+  CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DNDEBUG
 else
   CFLAGS += ${RELEASE_FLAGS} 
 endif
@@ -52,8 +54,8 @@ mpxmanager.1: mpxmanager.sh
 mpxmanager-autocomplete.sh: args.c mpxmanager.sh
 	sed -i "s/sendOptions=.*/$$(echo $(./mpxmanager --help 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo '--'{}))/g"  mpxmanager-autocomplete.sh
 
-mpxmanager: ${SRCS}
-	${CC} $^ -o $@  ${CFLAGS} ${LDFLAGS}
+mpxmanager: ${BASE_SRCS}
+	${CC} $^ -o $@ $$HOME/.mpxmanager/config.c ${CFLAGS} ${LDFLAGS}
 
 recompile:
 	gcc $$HOME/.mpxmanager/config.c -o temp-Linux -lmpxmanager   ${CFLAGS} ${LDFLAGS}
@@ -67,7 +69,7 @@ libmpx-patch.so: extensions/mpx-patch.c
 config.c:
 	cp --no-clobber sample-config.c config.c
 
-test: unitTest1 unitTest2 unitTest3 unitTest4 unitTest5
+test: unitTest1 unitTest2 unitTest3 unitTest4 unitTest5 format
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
@@ -118,3 +120,4 @@ doc-check:
 
 clean:
 	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.so
+	find . -name '*.orig' -exec rm {} \;

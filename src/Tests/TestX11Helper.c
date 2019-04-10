@@ -67,7 +67,7 @@ int  createUnmappedWindow(void){
     return createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 
-int mapWindow(WindowID win){
+int mapWindow(int win){
     assert(xcb_request_check(dis, xcb_map_window_checked(dis, win)) == NULL);
     flush();
     return win;
@@ -95,8 +95,12 @@ void* getNextDeviceEvent(){
     xcb_flush(dis);
     void* event = xcb_wait_for_event(dis);
     LOG(LOG_LEVEL_DEBUG, "Event received%d\n\n", ((xcb_generic_event_t*)event)->response_type);
-    if(((xcb_generic_event_t*)event)->response_type >= XCB_GE_GENERIC)
+    if(((xcb_generic_event_t*)event)->response_type == XCB_GE_GENERIC){
         loadGenericEvent(event);
+        xcb_input_key_press_event_t* dEvent = event;
+        LOG(LOG_LEVEL_DEBUG, "Detail %d type %s\n", dEvent->detail,
+            eventTypeToString(GENERIC_EVENT_OFFSET + dEvent->event_type));
+    }
     return event;
 }
 void triggerBinding(Binding* b){
@@ -117,30 +121,38 @@ void triggerAllBindings(int mask){
     xcb_flush(dis);
 }
 
-void waitToReceiveInput(int mask){
+void waitToReceiveInput(int mask, int detailMask){
+    flush();
     LOG(LOG_LEVEL_ALL, "waiting for input %d\n\n", mask);
-    while(mask){
+    while(mask || detailMask){
         xcb_input_key_press_event_t* e = getNextDeviceEvent();
         LOG(LOG_LEVEL_ALL, "type %d\n", e->response_type);
+        if(getActiveMaster() && (mask & (1 << XCB_INPUT_MOTION)))
+            setLastKnowMasterPosition(e->root_x >> 16, e->root_y >> 16);
+        LOG(LOG_LEVEL_ALL, "type %d (%d); detail %d remaining mask:%d %d\n", e->response_type, (1 << e->event_type), e->detail,
+            mask, detailMask);
         mask &= ~(1 << e->event_type);
-        LOG(LOG_LEVEL_ALL, "type %d (%d); remaining mask:%d\n", e->response_type, (1 << e->event_type), mask);
+        detailMask &= ~(1 << e->detail);
         free(e);
-        msleep(50);
+        msleep(10);
     }
 }
-void consumeEvents(){
+int consumeEvents(){
     lock();
     xcb_generic_event_t* e;
+    int numEvents = 0;
     while(1){
         e = xcb_poll_for_event(dis);
         if(e){
-            LOG(LOG_LEVEL_ALL, "Event ignmored %d %s\n",
+            numEvents++;
+            LOG(LOG_LEVEL_ALL, "Event ignored %d %s\n",
                 e->response_type, eventTypeToString(e->response_type & 127));
             free(e);
         }
         else break;
     }
     unlock();
+    return numEvents;
 }
 
 int waitForNormalEvent(int type){
@@ -191,17 +203,14 @@ extern void requestShutdown();
 void fullCleanup(){
     setLogLevel(LOG_LEVEL_NONE + 1);
     requestShutdown();
-    flush();
-    consumeEvents();
     if(pThread){
-        ATOMIC(registerForWindowEvents(root, ROOT_EVENT_MASKS));
-    }
-    //wake up other thread
-    createNormalWindow();
-    flush();
-    //close(xcb_get_file_descriptor(dis));
-    if(pThread)
+        registerForWindowEvents(root, ROOT_EVENT_MASKS);
+        //wake up other thread
+        createNormalWindow();
+        flush();
+        //close(xcb_get_file_descriptor(dis));
         pthread_join(pThread, NULL);
+    }
     destroyAllNonDefaultMasters();
     quit();
 }

@@ -43,11 +43,11 @@ static WorkspaceState* savedStates;
 static char couldStateHaveChanged = 1;
 
 void markState(void){
-    LOG(LOG_LEVEL_TRACE, "marking state\n");
+    LOG(LOG_LEVEL_ALL, "marking state\n");
     couldStateHaveChanged = 1;
 }
 void unmarkState(void){
-    LOG(LOG_LEVEL_TRACE, "unmarking state\n");
+    LOG(LOG_LEVEL_ALL, "unmarking state\n");
     couldStateHaveChanged = 0;
 }
 
@@ -132,12 +132,12 @@ static int compareState(void(*onWorkspaceWindowChange)(int), void(*onWorkspaceMo
                 onWorkspaceWindowChange(i);
         }
     }
+    LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);
     unmarkState();
     if(savedStates)
         destroyCurrentState();
     numberOfRecordedWorkspaces = getNumberOfWorkspaces();
     savedStates = currentState;
-    LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);
     return changed;
 }
 

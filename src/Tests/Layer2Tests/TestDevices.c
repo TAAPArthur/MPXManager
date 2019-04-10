@@ -222,7 +222,7 @@ START_TEST(test_passive_grab_ungrab){
     assert(!xcb_poll_for_event(dis) && "test failure?");
     passiveGrab(root, ALL_MASKS);
     triggerAllBindings(ALL_MASKS);
-    waitToReceiveInput(ALL_MASKS);
+    waitToReceiveInput(ALL_MASKS, 0);
     consumeEvents();
     passiveUngrab(root);
     triggerAllBindings(ALL_MASKS);
@@ -242,7 +242,7 @@ START_TEST(test_grab_detail){
     // we only send events to the test events focused window
     catchError(xcb_set_input_focus_checked(dis, XCB_INPUT_FOCUS_PARENT, root, 0));
     triggerAllBindings(ALL_MASKS);
-    waitToReceiveInput(ALL_MASKS);
+    waitToReceiveInput(ALL_MASKS, 0);
 }
 END_TEST
 START_TEST(test_ungrab_detail){
@@ -278,7 +278,7 @@ START_TEST(test_active_grab){
     }
     waitForCleanExit();
     triggerAllBindings(masks);
-    waitToReceiveInput(masks);
+    waitToReceiveInput(masks, 0);
 }
 END_TEST
 
