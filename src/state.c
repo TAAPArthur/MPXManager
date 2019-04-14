@@ -26,8 +26,6 @@ typedef struct {
     Rect monitorViewport;
     /// if the workspace is known to be visible
     int visible;
-    ///if this struct can be safely freed
-    int noFree;
     /// the size of windowIds and windowMasks arrays
     int size;
     ///list of window ids in workspace stack order
@@ -53,7 +51,6 @@ void unmarkState(void){
 
 static void destroyCurrentState(){
     for(int i = 0; i < numberOfRecordedWorkspaces; i++){
-        if(savedStates[i].noFree)continue;
         free(savedStates[i].windowIds);
         free(savedStates[i].windowMasks);
     }
@@ -73,22 +70,18 @@ static inline Rect getMonitorLocationFromWorkspace(Workspace* workspace){
 static WorkspaceState* computeState(){
     WorkspaceState* states = calloc(getNumberOfWorkspaces(), sizeof(WorkspaceState));
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
-        if(!isWorkspaceVisible(i) && i < numberOfRecordedWorkspaces){
-            memcpy(&states[i], &savedStates[i], sizeof(WorkspaceState));
-            states[i].visible = 0;
-            savedStates[i].noFree = 1;
-            states[i].noFree = 0;
-            continue;
-        }
+        if(!isWorkspaceVisible(i) && i < numberOfRecordedWorkspaces)
+            states[i].monitorViewport = savedStates[i].monitorViewport;
+        else
+            states[i].monitorViewport = getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
         states[i].visible = isWorkspaceVisible(i);
         states[i].layout = getActiveLayoutOfWorkspace(i);
-        states[i].monitorViewport = getMonitorLocationFromWorkspace(getWorkspaceByIndex(i));
         ArrayList* list = getWindowStack(getWorkspaceByIndex(i));
         int size = getSize(list);
         int j = 0;
         if(size){
-            states[i].windowIds = malloc(size * sizeof(int));
-            states[i].windowMasks = malloc(size * sizeof(int));
+            states[i].windowIds = malloc(size * sizeof(WindowID));
+            states[i].windowMasks = malloc(size * sizeof(WindowMask));
             FOR_EACH(WindowInfo*, winInfo, list){
                 if(isTileable(winInfo)){
                     states[i].windowIds[j] = winInfo->id;

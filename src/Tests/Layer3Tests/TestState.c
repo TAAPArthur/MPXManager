@@ -99,12 +99,12 @@ START_TEST(test_on_invisible_workspace_window_add){
     assert(updateState(NULL, NULL));
     moveWindowToWorkspace(win[2], 1);
     markState();
-    assert(!updateState(onStateChange, NULL));
+    assert(updateState(onStateChange, NULL) == WORKSPACE_WINDOW_CHANGE);
     switchToWorkspace(1);
     markState();
-    assert(updateState(onStateChange, NULL));
-    assert(visited == 1);
-    assert(calledMasks == 2);
+    assert(updateState(onStateChange, NULL) == WORKSPACE_MONITOR_CHANGE | WORKSPACE_WINDOW_CHANGE);
+    assert(calledMasks == 6);
+    assert(visited == 3);
 }
 END_TEST
 
