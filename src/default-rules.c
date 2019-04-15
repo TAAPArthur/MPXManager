@@ -60,6 +60,7 @@ void addAutoTileRules(void){
                    };
     for(int i = 0; i < LEN(events); i++)
         prependToList(getEventRules(events[i]), &autoTileRule);
+    addToList(getEventRules(onXConnection), &tileWorkspace);
     addToList(getEventRules(Periodic), &tileWorkspace);
     addToList(getEventRules(TileWorkspace), &clearStateRule);
 }

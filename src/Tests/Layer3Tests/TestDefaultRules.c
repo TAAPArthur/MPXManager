@@ -486,7 +486,8 @@ START_TEST(test_client_set_window_state){
 END_TEST
 
 START_TEST(test_auto_tile){
-    int count = 0;
+    Rule rule = {NULL, 0, PIPE(BIND(createNormalWindow), BIND(mapWindow))};
+    volatile int count = 0;
     void fakeLayout(){
         count++;
     }
@@ -499,13 +500,15 @@ START_TEST(test_auto_tile){
             assert(getActiveLayoutOfWorkspace(i)->layoutFunction);
         }
     }
-    static Rule rule = CREATE_DEFAULT_EVENT_RULE(createNormalWindow);
     prependToList(getEventRules(onXConnection), &rule);
     startUpMethod = addFakeLayout;
     onStartup();
-    START_MY_WM
     assert(getActiveLayoutOfWorkspace(0) == &layout);
     assert(getActiveLayoutOfWorkspace(0)->layoutFunction);
+    assert(count);
+    count = 0;
+    createNormalWindow();
+    START_MY_WM
     WAIT_UNTIL_TRUE(count);
 }
 END_TEST
