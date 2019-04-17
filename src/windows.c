@@ -152,17 +152,15 @@ void loadWindowType(WindowInfo* winInfo){
 void loadWindowHints(WindowInfo* winInfo){
     assert(winInfo);
     xcb_icccm_wm_hints_t hints;
-    int inputFocus = 0;
     if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->id), &hints, NULL)){
         winInfo->groupId = hints.window_group;
-        inputFocus = hints.input;
         if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
             addMask(winInfo, MAPPABLE_MASK);
+        if(hints.input)
+            addMask(winInfo, INPUT_MASK);
+        else
+            removeMask(winInfo, INPUT_MASK);
     }
-    if(inputFocus)
-        addMask(winInfo, INPUT_MASK);
-    else
-        removeMask(winInfo, INPUT_MASK);
 }
 
 void loadProtocols(WindowInfo* winInfo){

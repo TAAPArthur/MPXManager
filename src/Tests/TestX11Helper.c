@@ -35,12 +35,10 @@ static int createWindow(int parent, int mapped, int ignored, int userIgnored, in
         logError(e);
         err(1, "could not create window\n");
     }
-    if(input){
-        xcb_icccm_wm_hints_t hints = {.input = input, .initial_state = mapped};
-        e = xcb_request_check(dis, xcb_icccm_set_wm_hints_checked(dis, window, &hints));
-        if(e){
-            err(1, "could not set hintsfor window on creation\n");
-        }
+    xcb_icccm_wm_hints_t hints = {.input = input, .initial_state = mapped};
+    e = xcb_request_check(dis, xcb_icccm_set_wm_hints_checked(dis, window, &hints));
+    if(e){
+        err(1, "could not set hintsfor window on creation\n");
     }
     flush();
     if(!userIgnored && !ignored)
