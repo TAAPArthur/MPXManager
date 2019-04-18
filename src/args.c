@@ -47,7 +47,7 @@ typedef struct {
 
 #define _OPTION(VAR,shortName...){#VAR,&VAR,\
    _Generic((VAR), \
-        char:BOOL, \
+        bool:BOOL, \
         int:INT, \
         unsigned int:INT, \
         long:LONG, \

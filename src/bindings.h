@@ -136,9 +136,9 @@ typedef struct bound_function_struct {
     BindingType type;
     ///If true, then then the variable passed to callBoundedFuncion() will be pass to func
     /// instead of the arg
-    char dynamic;
+    bool dynamic;
     /// negate the result of func
-    char negateResult;
+    bool negateResult;
 } BoundFunction;
 ///used for key/mouse bindings
 typedef struct binding_struct {
@@ -151,19 +151,19 @@ typedef struct binding_struct {
     /**Whether more bindings should be considered*/
     PassThrough passThrough;
     /**Whether a device should be grabbed or not*/
-    int noGrab;
+    bool noGrab;
     ///The mask to grab; if 0 the mask will automatically be determined
     int mask;
     /**The target of the grab;; Default: is ALL_MASTER*/
     int targetID;
     /**If in an array, this property being set to 1 signifies the end*/
-    char endChain;
+    bool endChain;
     /**If a binding is pressed that doesn't match the chain, don't end it*/
-    char noEndOnPassThrough;
+    bool noEndOnPassThrough;
     /// Details which window to pass to the boundFunction
     WindowParamType windowTarget;
     /// if true the binding won't trigger for key repeats
-    int noKeyRepeat;
+    bool noKeyRepeat;
 
     /**Converted detail of key bindings. Should not be set manually*/
     int detail;
@@ -174,21 +174,21 @@ typedef struct {
     /**Literal expression*/
     char* literal;
     /**What the rule should match*/
-    int ruleTarget;
+    unsigned int ruleTarget;
     /**Function to be called when rule is matched*/
     BoundFunction onMatch;
     /**match will only succeed if filterMatch is not set or returns true*/
     BoundFunction filterMatch;
     /**If false then subsequent rules won't be checked if this rule matches*/
-    int passThrough;
+    PassThrough passThrough;
     /// When applying rules, the return value will be negated if this field is set. A return value of 0, indicates the calling method should (cleanup and) abort
-    int negateResult;
+    bool negateResult;
     /**Compiled regex used for matching with non-literal rules*/
     regex_t* regexExpression;
     /** boolean indicating whether the rule has been initilized or not
      *  @see initRule
     */
-    char init;
+    bool init;
 } Rule;
 
 

@@ -8,7 +8,7 @@
 #include "globals.h"
 
 
-char LOAD_SAVED_STATE = 1;
+bool LOAD_SAVED_STATE = 1;
 
 long KILL_TIMEOUT = 100;
 
@@ -36,8 +36,8 @@ int DEFAULT_BORDER_COLOR = 0x0;
 int DEFAULT_FOCUS_BORDER_COLOR = 0x00FF00;
 int DEFAULT_UNFOCUS_BORDER_COLOR = 0xDDDDDD;
 
-char IGNORE_SEND_EVENT = 0;
-char IGNORE_KEY_REPEAT = 0;
+bool IGNORE_SEND_EVENT = 0;
+bool IGNORE_KEY_REPEAT = 0;
 
 
 char* SHELL = "/bin/sh";
@@ -57,7 +57,7 @@ unsigned int CRASH_ON_ERRORS = 0;
 
 int AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 500;
 
-int IGNORE_SUBWINDOWS = 1;
+bool IGNORE_SUBWINDOWS = 1;
 
 int POLL_COUNT = 3;
 int POLL_INTERVAL = 10;
@@ -65,7 +65,7 @@ int EVENT_PERIOD = 100;
 
 char* MASTER_INFO_PATH = "master-info.txt";
 char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
-char LD_PRELOAD_INJECTION = 0;
+bool LD_PRELOAD_INJECTION = 0;
 char* LD_PRELOAD_PATH = "/usr/lib/mpxmanager/mpx-patch.so";
 
 int DEFAULT_POINTER = 2;

@@ -2,6 +2,8 @@
  * @file mywm-structs.h
  * @brief contains global struct definitions
  */
+#include <stdbool.h>
+
 #include "util.h"
 
 #ifndef MYWM_STRUCTS_H
@@ -30,7 +32,7 @@ typedef struct {
     /**Window mask */
     WindowMask mask;
     /// set to 1 iff the window is a dock
-    char dock: 1;
+    bool dock;
     /**xcb_atom representing the window type*/
     int type;
     /**string xcb_atom representing the window type*/
@@ -52,13 +54,13 @@ typedef struct {
     WorkspaceID workspaceIndex;
 
     /// used to tell if a window has attempted to be mapped before
-    char mappedBefore;
+    bool mappedBefore;
     ///Time window was first detected
-    int creationTime;
+    unsigned int creationTime;
     /**The time this window was minimized*/
-    int minimizedTimeStamp;
+    unsigned int minimizedTimeStamp;
     ///time the window was last pinged
-    int pingTimeStamp;
+    unsigned int pingTimeStamp;
 
     ///counter for how many clients have requested the this window to be locked
     /// when this field is zero, the the geometry field is allowed to be updated in response to XEvents
@@ -71,7 +73,7 @@ typedef struct {
     short geometry[5];
 
     /**id of src window iff window is a clone*/
-    int cloneOrigin;
+    WindowID cloneOrigin;
     /**List of clones*/
     ArrayList cloneList;
     ///x,y offset for cloned windows; they will clone the original starting at this offset
@@ -93,7 +95,7 @@ typedef struct {
     int eventMasks;
 
     /**The dock is only applied to the primary monitor*/
-    char onlyOnPrimary;
+    bool onlyOnPrimary;
     /**
      * Special properties the window may have
      * Like the reserved space on a monitor
@@ -127,7 +129,7 @@ typedef struct {
     /**List of the active chains with the newest first*/
     ArrayList activeChains;
     /**When true, the focus stack won't be updated on focus change*/
-    int freezeFocusStack;
+    bool freezeFocusStack;
 
     /** pointer to head of node list where the values point to WindowInfo */
     ArrayList windowsToIgnore;
@@ -135,9 +137,9 @@ typedef struct {
     /**Index of active workspace; this workspace will be used for
      * all workspace operations if a workspace is not specified
      * */
-    int activeWorkspaceIndex;
+    WorkspaceID activeWorkspaceIndex;
     /// When set, device event rules will be passed this window instead of the active window or focused
-    int targetWindow;
+    WindowID targetWindow;
 
     ///Starting point for operations like resizing the window with mouse
     short prevMousePos[2];
@@ -169,14 +171,11 @@ typedef struct {
      * This field is here to sync the two states
      *
      */
-    char mapped: 1;
+    bool mapped;
     /**
      * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
      */
     WindowMask mask;
-
-    /// is hiding all windows
-    char showingDesktop;
 
     ///an windows stack
     ArrayList windows;

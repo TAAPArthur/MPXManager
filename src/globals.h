@@ -5,6 +5,8 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
+#include <stdbool.h>
+
 ///Returns the field descriptor used to commuicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
 
@@ -119,7 +121,7 @@ typedef enum {
 /// Holds env var names used to pass client pointer to children
 extern char* CLIENT[];
 /// if true, then preload LD_PRELOAD_PATH
-extern char LD_PRELOAD_INJECTION;
+extern bool LD_PRELOAD_INJECTION;
 /// the path of the lib to preload
 extern char* LD_PRELOAD_PATH;
 
@@ -127,7 +129,7 @@ extern char* LD_PRELOAD_PATH;
 extern int statusPipeFD[2];
 
 ///If true, then check used saved window properties as defaults
-extern char LOAD_SAVED_STATE;
+extern bool LOAD_SAVED_STATE;
 /// How long to wait for a window to die after sening a WM_DELETE_REQUEST
 extern long KILL_TIMEOUT;
 /**Mask of all events we listen for on the root window*/
@@ -172,7 +174,7 @@ extern int AUTO_FOCUS_NEW_WINDOW_TIMEOUT;
 
 ///Masks to ignore; Default is ModMask2 (NUM_LOCK)
 extern int IGNORE_MASK;
-///IF True we will crash if an error is received
+///IF True we will crash if an error is received and a<<(error type) |CRASH_ON_ERRORS is nonzero
 /// This should only be used for testing as errors can happen just by
 /// the async nature of X11
 extern unsigned int CRASH_ON_ERRORS;
@@ -184,9 +186,9 @@ extern int DEFAULT_NUMBER_OF_HIDDEN_WORKSPACES;
 
 
 ///If true ignore all events with the send_event bit
-extern char IGNORE_SEND_EVENT;
+extern bool IGNORE_SEND_EVENT;
 /// If true ignor all device events with the key repeat flag set
-extern char IGNORE_KEY_REPEAT;
+extern bool IGNORE_KEY_REPEAT;
 
 
 
@@ -204,7 +206,7 @@ extern int DEFAULT_UNFOCUS_BORDER_COLOR;
 extern int DEFAULT_FOCUS_BORDER_COLOR;
 
 /// if true we igore non-top level windows
-extern int IGNORE_SUBWINDOWS;
+extern bool IGNORE_SUBWINDOWS;
 
 /**
  * Indicates how long we should poll for events before switching to blocking
