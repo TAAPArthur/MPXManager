@@ -239,10 +239,6 @@ void killWindow(WindowID win);
  */
 void killWindowInfo(WindowInfo* winInfo);
 
-/**
- * Updates the root window with a list of windows we are managing
- */
-void updateEWMHClientList(void);
 
 
 /**

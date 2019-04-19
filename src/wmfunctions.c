@@ -33,6 +33,13 @@
 
 
 
+static ArrayList mappedOrder = {0};
+/**
+ * Updates the root window with a list of windows we are managing
+ */
+static void updateEWMHClientList(){
+    xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, getSize(&mappedOrder), (WindowID*)mappedOrder.arr);
+}
 
 void connectToXserver(){
     openXDisplay();
@@ -77,18 +84,6 @@ static void updateEWMHWorkspaceProperties(){
     xcb_ewmh_set_desktop_viewport(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), viewPorts);
     xcb_ewmh_set_workarea(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), workAreas);
     xcb_ewmh_set_desktop_geometry(ewmh, defaultScreenNumber, getRootWidth(), getRootHeight());
-}
-
-void updateEWMHClientList(){
-    int num = getSize(getAllWindows());
-    WindowID stackingOrder[num];
-    WindowID mappingOrder[num];
-    int i = 0;
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) stackingOrder[num - ++i] = winInfo->id;
-    i = 0;
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) mappingOrder[num - ++i] = winInfo->id;
-    xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, num, mappingOrder);
-    xcb_ewmh_set_client_list_stacking(ewmh, defaultScreenNumber, num, stackingOrder);
 }
 
 
@@ -267,8 +262,12 @@ int deleteWindow(WindowID winToRemove){
     focusNextVisibleWindow(&mastersFocusedOnWindow,
                            isNotEmpty(getActiveWindowStack()) ? getHead(getActiveWindowStack()) : NULL);
     clearList(&mastersFocusedOnWindow);
-    if(result)
+    if(result){
+        int index = indexOf(&mappedOrder, (void*)(long)winToRemove, 0);
+        if(index >= 0)
+            removeFromList(&mappedOrder, index);
         updateEWMHClientList();
+    }
     return result;
 }
 
@@ -495,6 +494,7 @@ void updateMapState(int id, int map){
             addMask(winInfo, MAPPED_MASK);
             if(winInfo->mappedBefore)return;
             else winInfo->mappedBefore = 1;
+            addToList(&mappedOrder, (void*)(long)winInfo->id);
             long delta = getTime() - winInfo->creationTime;
             if(hasMask(winInfo, INPUT_MASK)){
                 if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT){

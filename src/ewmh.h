@@ -62,7 +62,6 @@
            ewmh->_NET_WM_NAME,\
            \
            ewmh->_NET_CLIENT_LIST,\
-           ewmh->_NET_CLIENT_LIST_STACKING,\
            \
            ewmh->_NET_WM_STRUT, ewmh->_NET_WM_STRUT_PARTIAL,\
            ewmh->_NET_WM_STATE,\

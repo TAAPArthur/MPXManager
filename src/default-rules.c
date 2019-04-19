@@ -442,7 +442,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
-    [RegisteringWindow] = CREATE_WILDCARD(AND(BIND(autoAddToWorkspace), BIND(updateEWMHClientList))),
+    [RegisteringWindow] = CREATE_WILDCARD(BIND(autoAddToWorkspace)),
     [onScreenChange] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
     [onWindowMove] = CREATE_DEFAULT_EVENT_RULE(markAlwaysOnTop),
 };
