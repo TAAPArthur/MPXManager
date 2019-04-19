@@ -42,7 +42,7 @@ pthread_t runInNewThread(void* (*method)(void*), void* arg, int detached){
     return thread;
 }
 static volatile int idle;
-static int periodCounter;
+static unsigned int periodCounter;
 int getIdleCount(){
     return idle;
 }
@@ -98,7 +98,7 @@ void clearAllBatchRules(void){
 }
 
 static inline xcb_generic_event_t* getNextEvent(){
-    if(++periodCounter > EVENT_PERIOD){
+    if(EVENT_PERIOD && ++periodCounter > EVENT_PERIOD){
         periodCounter = 0;
         applyEventRules(Periodic, NULL);
     }
