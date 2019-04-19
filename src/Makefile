@@ -2,6 +2,8 @@ CC := gcc -std=gnu11
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS := -g -O3 -flto -DNDEBUG
+PROFILE_FLAGS := -g -rdynamic -pg  -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
+SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-cast-function-type
 ERROR_FLAGS := -Werror -Wall -Wextra
@@ -16,6 +18,7 @@ LAYER1_SRCS := util.c
 LAYER2_SRCS := xsession.c test-functions.c masters.c spawn.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
 LAYER3_SRCS := state.c layouts.c wmfunctions.c default-rules.c
 LAYER4_SRCS := communications.c functions.c Extensions/*.c
+PROFILE_LAYERS := settings.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 TOP_LAYER_SRCS := settings.c mpxmanager.c
 BASE_SRCS := ${TOP_LAYER_SRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.c 
@@ -33,7 +36,7 @@ ifeq ($(DEBUG),1)
 else ifeq ($(DEBUG),2)
   CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DNDEBUG
 else
-  CFLAGS += ${RELEASE_FLAGS} 
+  CFLAGS += ${RELEASE_FLAGS}
 endif
 
 pkgname := mpxmanager
@@ -76,6 +79,7 @@ config.c:
 
 test: unitTest1 unitTest2 unitTest3 unitTest4 unitTest5 preinstall format
 		
+
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_TEST, ./$@ )
@@ -91,7 +95,7 @@ unitTest3: Tests/*.c Tests/Layer3Tests/*.c ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER
 	${CC} $^ -o $@ ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_XTEST, ./$@ )
 	$(call CHECK_TEST_COVERAGE,${LAYER3_SRCS})
-		
+
 unitTest4: Tests/*.c Tests/Layer4Tests/*.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 	${CC} $^ -o $@ ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 	$(call RUN_XTEST, ./$@ )
@@ -113,6 +117,7 @@ format:
 format-all:
 	find . \( -name '*.c' -o -name '*.h' \) -exec bash -c 'file="$$0"; $(FORMATTER);' {} \;
 
+
 package:
 	+$(MAKE) -C .. $@
 doc:
@@ -120,10 +125,31 @@ doc:
 doc-check:
 	+$(MAKE) -C .. $@
 
-.PHONY: test all clean doc format format-all install package unitTest5
+mpxmanager-profile: Tests/prof/profile.c Tests/*.c ${PROFILE_LAYERS}
+	${CC} $^ -o $@  ${CFLAGS} ${PROFILE_FLAGS} ${LDFLAGS}
+mpxmanager-speed-test: Tests/prof/profile.c Tests/*.c ${PROFILE_LAYERS}
+	${CC} $^ -o $@  ${CFLAGS} ${SPEED_TEST_FLAGS} ${LDFLAGS}
+
+benchmark.txt: mpxmanager-profile
+
+speed-test-save:
+	cp benchmark.txt benchmark-ref.txt
+speed-test: QUICK=1
+speed-test: mpxmanager-speed-test
+	$(call RUN_XTEST, ./$^ 10) > benchmark.txt
+	$(call RUN_XTEST, ./$^ 100) >> benchmark.txt
+	$(call RUN_XTEST, ./$^ 1000) >> benchmark.txt
+	cat benchmark.txt | Tests/prof/diff.py | sort
+
+prof: QUICK=1
+prof: mpxmanager-profile
+	$(call RUN_XTEST, ./$^ 256 )
+	gprof -p ./$^
+
+.PHONY: test all clean doc format format-all install package unitTest5 prof
 
 .DELETE_ON_ERROR:
 
 clean:
-	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.so
+	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.so mpxmanager-profile mpxmanager-speed-test
 	find . -name '*.orig' -exec rm {} \;
