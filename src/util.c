@@ -47,9 +47,15 @@ int isNotEmpty(ArrayList* list){
     return getSize(list) ? 1 : 0;
 }
 int indexOf(ArrayList* list, void* value, int size){
-    for(int n = 0; n < getSize(list); n++)
-        if(memcmp(getElement(list, n), value, size) == 0)
-            return n;
+    if(size == 0){
+        for(int n = 0; n < getSize(list); n++)
+            if(getElement(list, n) == value)
+                return n;
+    }
+    else
+        for(int n = 0; n < getSize(list); n++)
+            if(memcmp(getElement(list, n), value, size) == 0)
+                return n;
     return -1;
 }
 void* find(ArrayList* list, void* value, int size){

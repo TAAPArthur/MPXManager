@@ -107,6 +107,15 @@ START_TEST(test_indexof){
     assert(find(&list, &outOfRange, sizeof(int)) == NULL);
 }
 END_TEST
+START_TEST(test_indexof_ptr){
+    freeListMem();
+    for(int i = 0; i < size; i++)
+        addToList(&list, (void*)(long)i);
+    for(int i = 0; i < getSize(&list); i++)
+        assert(indexOf(&list, (void*)(long)i, 0) == i);
+    clearList(&list);
+}
+END_TEST
 
 START_TEST(test_swap){
     int maxIndex = getSize(&list) - 1;
@@ -205,6 +214,7 @@ Suite* utilSuite(){
     tcase_add_checked_fixture(tc_core, populateList, freeListMem);
     tcase_add_test(tc_core, test_arraylist);
     tcase_add_test(tc_core, test_indexof);
+    tcase_add_test(tc_core, test_indexof_ptr);
     tcase_add_test(tc_core, test_swap);
     tcase_add_test(tc_core, test_get_next_index);
     tcase_add_test(tc_core, test_arraylist_remove);
