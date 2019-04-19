@@ -68,6 +68,22 @@ void assertWindowIsFocused(WindowID win){
     assert(reply->focus == win);
     free(reply);
 }
+START_TEST(test_find_and_raise_toggle){
+    for(int i = 0; i < 8; i++)
+        processNewWindow(createWindowInfo(mapWindow(createNormalWindow())));
+    Rule r = {NULL, 0, NULL};
+    WindowInfo* head = getHead(getAllWindows());
+    focusWindowInfo(head);
+    updateFocusState(head);
+    assert(getFocusedWindow() == head);
+    for(int i = 0; i < 2; i++){
+        for(int n = 1; n < getSize(getAllWindows()) + 1; n++){
+            WindowInfo* winInfo = getElement(getAllWindows(), n % getSize(getAllWindows()));
+            assert(winInfo->id == findAndRaise(&r));
+        }
+    }
+}
+END_TEST
 
 START_TEST(test_find_and_raise){
     char* titles[] = {"a", "c", "d", "e"};
@@ -103,6 +119,10 @@ START_TEST(test_find_and_raise){
         assertWindowIsFocused(id);
         onWindowFocus(id);
     }
+    Rule temp = {titles[0], LITERAL | TITLE, NULL};
+    assert(findAndRaise(&temp) == win[0]);
+    onWindowFocus(win[1]);
+    assert(findAndRaise(&temp) == win[0]);
     Rule r = {fakeTitle, LITERAL | TITLE, NULL};
     assert(!findAndRaise(&r));
     assert(!findAndRaiseLazy(&r));
@@ -351,6 +371,7 @@ Suite* functionsSuite(){
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_cycle_window);
     tcase_add_test(tc_core, test_find_and_raise);
+    tcase_add_test(tc_core, test_find_and_raise_toggle);
     tcase_add_test(tc_core, test_spawn);
     tcase_add_test(tc_core, test_spawn_wait);
     tcase_add_test(tc_core, test_spawn_env_vars);

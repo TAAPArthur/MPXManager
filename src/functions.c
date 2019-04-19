@@ -88,16 +88,18 @@ int findAndLowerLazy(Rule* rule){
     return target ? target->id : 0;
 }
 int findAndRaise(Rule* rule){
-    ArrayList* topWindow = getActiveMasterWindowStack();
     if(getFocusedWindow())
-        updateWindowCache(getFocusedWindow());
+        if(updateWindowCache(getFocusedWindow())){
+            clearWindowCache();
+            updateWindowCache(getFocusedWindow());
+        }
     ArrayList* windowsToIgnore = getWindowCache(getActiveMaster());
-    WindowInfo* target = findWindow(rule, topWindow, windowsToIgnore);
+    WindowInfo* target = findWindow(rule, getActiveMasterWindowStack(), windowsToIgnore);
     if(!target){
         target = findWindow(rule, getAllWindows(), windowsToIgnore);
         if(!target && isNotEmpty(windowsToIgnore)){
+            target = findWindow(rule, windowsToIgnore, NULL);
             clearWindowCache();
-            target = findWindow(rule, topWindow, NULL);
         }
     }
     if(target){
