@@ -43,6 +43,7 @@ install: mpxmanager.1 libmpxmanager.so libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
+	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/Extensions" Extensions/*.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.c
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"

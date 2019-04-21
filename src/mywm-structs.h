@@ -19,7 +19,7 @@ typedef int WindowMask;
 /// typeof WindowInfo::id
 typedef unsigned int WindowID;
 /// typeof Master::id
-typedef unsigned int MasterID;
+typedef int MasterID;
 /// typeof Workspace::id
 typedef unsigned int WorkspaceID;
 /// typeof Monitor::id

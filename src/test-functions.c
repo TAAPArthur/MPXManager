@@ -6,6 +6,7 @@
 
 #include <xcb/xinput.h>
 #include <xcb/xtest.h>
+#include <X11/extensions/XInput2.h>
 
 
 #include "logger.h"
@@ -45,5 +46,7 @@ void typeKey(int keycode){
 }
 
 void movePointer(MasterID id, WindowID relativeWindow, int x, int y){
+    // TODO remove below hacks; both lines should do the same thing, but behavious is much different without either one
+    XIWarpPointer(dpy, id, None, relativeWindow, 0, 0, 0, 0, x, y);
     xcb_input_xi_warp_pointer(dis, None, relativeWindow, 0, 0, 0, 0, x, y, id);
 }

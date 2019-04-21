@@ -62,10 +62,15 @@ START_TEST(test_type_key){
 END_TEST
 
 START_TEST(test_move_pointer){
-    for(int i = 0; i < 10; i++){
-        movePointer(getActiveMasterPointerID(), root, 10, 10);
-        movePointer(getActiveMasterPointerID(), root, 100, 100);
+    unsigned short pos[][2] = {{10, 11}, {100, 101}};
+    consumeEvents();
+    for(int i = 0; i < LEN(pos); i++){
+        movePointer(getActiveMasterPointerID(), root, pos[i][0], pos[i][1]);
         waitToReceiveInput(1 << XCB_INPUT_MOTION, 0);
+        assert(getLastKnownMasterPosition()[0] == pos[i][0]);
+        assert(getLastKnownMasterPosition()[1] == pos[i][1]);
+        consumeEvents();
+        msleep(100);
     }
 }
 END_TEST
