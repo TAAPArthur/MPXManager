@@ -52,9 +52,7 @@ static xcb_gcontext_t create_graphics_context(void){
     return graphics_context;
 }
 void openXDisplay(void){
-#ifdef MPX_TESTING
     XInitThreads();
-#endif
     LOG(LOG_LEVEL_DEBUG, " connecting to XServe \n");
     for(int i = 0; i < 30; i++){
         dpy = XOpenDisplay(NULL);
