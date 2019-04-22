@@ -550,6 +550,32 @@ START_TEST(test_swap_workspace){
     assert(getActiveWorkspaceIndex() == index);
 }
 END_TEST
+START_TEST(test_top_focused_window_synced){
+    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
+    int idle;
+    lock();
+    activateWorkspace(0);
+    WindowInfo* winInfo = getHead(getActiveWindowStack());
+    WindowInfo* last = getLast(getActiveWindowStack());
+    addMask(winInfo, STICKY_MASK);
+    activateWindow(winInfo);
+    raiseWindowInfo(last);
+    activateWorkspace(getNumberOfWorkspaces() - 1);
+    assert(getSize(getActiveWindowStack()) == 1);
+    idle = getIdleCount();
+    unlock();
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(getFocusedWindow() == winInfo);
+    lock();
+    activateWindow(last);
+    assert(getSize(getActiveWindowStack()) == 2);
+    retile();
+    flush();
+    WindowID stackingOrder[] = {last->id, winInfo->id, last->id};
+    assert(checkStackingOrder(stackingOrder + (last->id == getActiveFocus(getActiveMasterKeyboardID())), 2));
+    unlock();
+}
+END_TEST
 
 void multiWorkspaceStartup(void){
     CRASH_ON_ERRORS = -1;
@@ -661,6 +687,7 @@ Suite* x11Suite(void){
     tcase_add_checked_fixture(tc_core, multiWorkspaceStartup, fullCleanup);
     tcase_add_test(tc_core, test_activate_workspace);
     tcase_add_test(tc_core, test_swap_workspace);
+    tcase_add_test(tc_core, test_top_focused_window_synced);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Window Managment Operations");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);

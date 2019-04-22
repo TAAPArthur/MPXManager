@@ -192,6 +192,11 @@ extern bool IGNORE_SEND_EVENT;
 /// If true ignor all device events with the key repeat flag set
 extern bool IGNORE_KEY_REPEAT;
 
+/**
+ * If true then when we manually set focus, we will update our state
+ * immediatly instead of waiting for the asyn focus notification event.
+*/
+extern bool SYNC_FOCUS;
 
 
 /// Used for select xcb functions

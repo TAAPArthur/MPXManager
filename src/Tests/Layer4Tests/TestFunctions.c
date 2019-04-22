@@ -81,6 +81,10 @@ START_TEST(test_find_and_raise_toggle){
             WindowInfo* winInfo = getElement(getAllWindows(), n % getSize(getAllWindows()));
             assert(winInfo->id == findAndRaise(&r));
         }
+        for(int n = getSize(getAllWindows()) - 1; n >= 0; n--){
+            WindowInfo* winInfo = getElement(getAllWindows(), n % getSize(getAllWindows()));
+            assert(winInfo->id == findAndRaise(&r));
+        }
     }
 }
 END_TEST

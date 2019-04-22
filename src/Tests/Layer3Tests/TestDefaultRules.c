@@ -179,9 +179,10 @@ START_TEST(test_visibility_update){
 END_TEST
 
 START_TEST(test_property_update){
+    int idle = 0;
     START_MY_WM;
-    WindowID win = createNormalWindow();
-    WAIT_UNTIL_TRUE(getWindowInfo(win));
+    WindowID win = mapWindow(createNormalWindow());
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
     char* title = "dummy title";
     assert(!catchError(xcb_ewmh_set_wm_name_checked(ewmh, win, strlen(title), title)));
     WAIT_UNTIL_TRUE(getWindowInfo(win)->title);

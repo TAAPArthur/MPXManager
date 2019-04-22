@@ -189,7 +189,8 @@ int focusWindow(WindowID win){
     if(catchError(cookie)){
         return 0;
     }
-    //onWindowFocus(win);
+    if(SYNC_FOCUS)
+        onWindowFocus(win);
     return 1;
 }
 void raiseLowerWindowInfo(WindowInfo* winInfo, int above){

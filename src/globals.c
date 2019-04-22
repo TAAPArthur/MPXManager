@@ -40,6 +40,7 @@ int DEFAULT_UNFOCUS_BORDER_COLOR = 0xDDDDDD;
 bool IGNORE_SEND_EVENT = 0;
 bool IGNORE_KEY_REPEAT = 0;
 
+bool SYNC_FOCUS = 1;
 
 char* SHELL = "/bin/sh";
 
