@@ -311,8 +311,6 @@ void onClientMessage(void){
     }
     else if(message == ewmh->_NET_WM_STATE){
         LOG(LOG_LEVEL_DEBUG, "Settings client wm state %d\n", data.data32[3]);
-        if(isLogging(LOG_LEVEL_DEBUG))
-            dumpAtoms((xcb_atom_t*) &data.data32[1], 2);
         WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo){
             if(allowRequestFromSource(winInfo, data.data32[3]))

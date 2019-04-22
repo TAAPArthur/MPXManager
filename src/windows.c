@@ -38,6 +38,7 @@ ArrayList* getAllWindows(void){
 WindowInfo* createWindowInfo(WindowID id){
     WindowInfo* wInfo = calloc(1, sizeof(WindowInfo));
     wInfo->id = id;
+    wInfo->effectiveId = id;
     wInfo->workspaceIndex = NO_WORKSPACE;
     return wInfo;
 }
@@ -316,7 +317,7 @@ int registerWindow(WindowInfo* winInfo){
     if(LOAD_SAVED_STATE){
         loadSavedAtomState(winInfo);
     }
-    if(registerForWindowEvents(win, NON_ROOT_EVENT_MASKS) != BadWindow){
+    if(registerForWindowEvents(win, winInfo->eventMasks | NON_ROOT_EVENT_MASKS) != BadWindow){
         passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
         applyEventRules(RegisteringWindow, winInfo);
         return 1;
@@ -345,7 +346,7 @@ int processNewWindow(WindowInfo* winInfo){
         abort = !loadWindowAttributes(winInfo, attr);
         if(attr)free(attr);
     }
-    if(!abort && winInfo->cloneOrigin == 0)
+    if(!abort)
         loadWindowProperties(winInfo);
     if(abort || !applyEventRules(ProcessingWindow, winInfo)){
         LOG(LOG_LEVEL_VERBOSE, "Window is to be ignored; freeing winInfo %d\n", winInfo->id);
@@ -410,7 +411,6 @@ int addWindowInfo(WindowInfo* winInfo){
     return 0;
 }
 void deleteWindowInfo(WindowInfo* winInfo){
-    clearList(getClonesOfWindow(winInfo));
     char** fields = &winInfo->typeName;
     for(int i = 0; i < 4; i++)
         if(fields[i])
@@ -438,9 +438,6 @@ int removeWindow(WindowID winToRemove){
 WindowInfo* getWindowInfo(WindowID win){
     int index = indexOf(getAllWindows(), &win, sizeof(int));
     return index == -1 ? NULL : getElement(getAllWindows(), index);
-}
-ArrayList* getClonesOfWindow(WindowInfo* winInfo){
-    return &winInfo->cloneList;
 }
 void onWindowFocus(WindowID win){
     if(getFocusedWindow() && getFocusedWindow()->id == win)

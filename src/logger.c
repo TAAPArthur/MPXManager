@@ -139,9 +139,9 @@ void dumpWindowInfo(WindowInfo* winInfo){
     LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", winInfo->id, winInfo->id,
         winInfo->groupId, winInfo->groupId, winInfo->transientFor, winInfo->transientFor);
     LOG(LOG_LEVEL_INFO, "Class %s (%s)\n", winInfo->className, winInfo->instanceName);
-    LOG(LOG_LEVEL_INFO, "Parent %d; Type is %d (%s); Dock %d; Clone origin %d\n", winInfo->parent, winInfo->type,
+    LOG(LOG_LEVEL_INFO, "Parent %d; Type is %d (%s); Dock %d\n", winInfo->parent, winInfo->type,
         winInfo->typeName,
-        winInfo->dock, winInfo->cloneOrigin);
+        winInfo->dock);
     LOG(LOG_LEVEL_INFO, "Title %s\n", winInfo->title);
     PRINT_ARR("Recorded Geometry", getGeometry(winInfo), 5, "\n");
     PRINT_ARR("Setconfig", getConfig(winInfo), 5, "\n");
@@ -213,6 +213,8 @@ char* opcodeToString(int opcode){
     switch(opcode){
             _ADD_EVENT_TYPE_CASE(XCB_CREATE_WINDOW);
             _ADD_EVENT_TYPE_CASE(XCB_CHANGE_WINDOW_ATTRIBUTES);
+            _ADD_EVENT_TYPE_CASE(XCB_GET_WINDOW_ATTRIBUTES);
+            _ADD_EVENT_TYPE_CASE(XCB_DESTROY_WINDOW);
             _ADD_EVENT_TYPE_CASE(XCB_MAP_WINDOW);
             _ADD_EVENT_TYPE_CASE(XCB_CONFIGURE_WINDOW);
             _ADD_EVENT_TYPE_CASE(XCB_CHANGE_PROPERTY);

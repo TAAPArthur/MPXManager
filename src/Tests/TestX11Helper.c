@@ -248,8 +248,8 @@ void loadSampleProperties(WindowInfo* winInfo){
 }
 void setProperties(WindowID win){
     if(!atom){
-        atom = &ewmh->_NET_WM_WINDOW_TYPE_DIALOG;
-        typeName = "_NET_WM_WINDOW_TYPE_DIALOG";
+        atom = &ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
+        typeName = "_NET_WM_WINDOW_TYPE_NORMAL";
     }
     atomTypes = atom;
     int size = strlen(classInstance) + 1;

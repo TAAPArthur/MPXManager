@@ -84,7 +84,7 @@ static WorkspaceState* computeState(){
             states[i].windowMasks = malloc(size * sizeof(WindowMask));
             FOR_EACH(WindowInfo*, winInfo, list){
                 if(isTileable(winInfo)){
-                    states[i].windowIds[j] = winInfo->id;
+                    states[i].windowIds[j] = winInfo->effectiveId;
                     states[i].windowMasks[j] = hasPartOfMask(winInfo, RETILE_MASKS);
                     j++;
                 }

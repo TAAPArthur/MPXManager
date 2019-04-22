@@ -266,12 +266,6 @@ static inline int isDock(WindowInfo* winInfo){
  */
 void markAsDock(WindowInfo* winInfo);
 
-/**
- * Returns a list of clone windows for the given window
- * @param winInfo
- * @return
- */
-ArrayList* getClonesOfWindow(WindowInfo* winInfo);
 
 
 /**

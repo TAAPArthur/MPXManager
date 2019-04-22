@@ -29,6 +29,8 @@ typedef unsigned long MonitorID;
 typedef struct {
     /**Window id */
     WindowID id;
+    /**Window id */
+    WindowID effectiveId;
     /**Window mask */
     WindowMask mask;
     /// set to 1 iff the window is a dock
@@ -72,12 +74,6 @@ typedef struct {
     /** The last know size of the window */
     short geometry[5];
 
-    /**id of src window iff window is a clone*/
-    WindowID cloneOrigin;
-    /**List of clones*/
-    ArrayList cloneList;
-    ///x,y offset for cloned windows; they will clone the original starting at this offset
-    int cloneOffset[2];
     /**
      * The window this window is a transient for
      */

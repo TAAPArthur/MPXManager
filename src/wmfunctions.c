@@ -278,25 +278,27 @@ int attemptToMapWindow(int id){
     return 0;
 }
 
-static void updateWindowWorkspaceState(WindowInfo* winInfo, int workspaceIndex, int swappedWith){
+static void updateWindowWorkspaceState(WindowInfo* winInfo, int workspaceIndex, int swappedWith, int updateFocus){
     if(isWorkspaceVisible(workspaceIndex)){
         attemptToMapWindow(winInfo->id);
     }
     else {
         if(hasMask(winInfo, STICKY_MASK)){
             LOG(LOG_LEVEL_DEBUG, "Moving sticky window %d to workspace %d\n", winInfo->id, swappedWith);
-            if(swappedWith != -1)
+            if(swappedWith != NO_WORKSPACE)
                 moveWindowToWorkspace(winInfo, swappedWith);
             return;
         }
         catchError(xcb_unmap_window_checked(dis, winInfo->id));
-        ArrayList masters = {0};
-        FOR_EACH(Master*, master, getAllMasters()){
-            if(getFocusedWindowByMaster(master) == winInfo)
-                addToList(&masters, master);
+        if(updateFocus){
+            ArrayList masters = {0};
+            FOR_EACH(Master*, master, getAllMasters()){
+                if(getFocusedWindowByMaster(master) == winInfo)
+                    addToList(&masters, master);
+            }
+            focusNextVisibleWindow(&masters, NULL);
+            clearList(&masters);
         }
-        focusNextVisibleWindow(&masters, NULL);
-        clearList(&masters);
     }
 }
 
@@ -307,7 +309,7 @@ void syncMonitorMapState(int index){
     else
         workspace->mapped = isWorkspaceVisible(index);
     FOR_EACH_REVERSED(WindowInfo*, winInfo, getWindowStack(getWorkspaceByIndex(index))){
-        updateWindowWorkspaceState(winInfo, index, NO_WORKSPACE);
+        updateWindowWorkspaceState(winInfo, index, NO_WORKSPACE, 1);
     }
 }
 void swapWorkspaces(int index1, int index2){
@@ -316,9 +318,9 @@ void swapWorkspaces(int index1, int index2){
     getWorkspaceByIndex(index2)->mapped = isWorkspaceVisible(index2);
     if(isWorkspaceVisible(index1) != isWorkspaceVisible(index2)){
         ArrayList* stack = getWindowStack(getWorkspaceByIndex(index1));
-        FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index1, index2);
+        FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index1, index2, 1);
         stack = getWindowStack(getWorkspaceByIndex(index2));
-        FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index2, index1);
+        FOR_EACH_REVERSED(WindowInfo*, winInfo, stack) updateWindowWorkspaceState(winInfo, index2, index1, 1);
     }
 }
 void swapWithWorkspace(int workspaceIndex){
@@ -371,7 +373,7 @@ void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex){
     }
     removeWindowFromWorkspace(winInfo);
     addWindowToWorkspace(winInfo, destIndex);
-    updateWindowWorkspaceState(winInfo, destIndex, -1);
+    updateWindowWorkspaceState(winInfo, destIndex, NO_WORKSPACE, 1);
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, destIndex);
     LOG(LOG_LEVEL_TRACE, "window %d added to workspace %d visible %d\n", winInfo->id, destIndex,
         isWorkspaceVisible(destIndex));
@@ -538,13 +540,27 @@ void setWorkspaceNames(char* names[], int numberOfNames){
 }
 
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2){
+    LOG(LOG_LEVEL_TRACE, "swapping windows %d %d\n", winInfo1->id, winInfo2->id);
     int index1 = indexOf(getWindowStackOfWindow(winInfo1), winInfo1, sizeof(int));
     int index2 = indexOf(getWindowStackOfWindow(winInfo2), winInfo2, sizeof(int));
     setElement(getWindowStackOfWindow(winInfo1), index1, winInfo2);
     setElement(getWindowStackOfWindow(winInfo2), index2, winInfo1);
-    int temp = winInfo1->workspaceIndex;
-    winInfo1->workspaceIndex = winInfo2->workspaceIndex;
-    winInfo2->workspaceIndex = temp;
+    if(winInfo1->workspaceIndex != winInfo2->workspaceIndex){
+        int temp = winInfo1->workspaceIndex;
+        winInfo1->workspaceIndex = winInfo2->workspaceIndex;
+        winInfo2->workspaceIndex = temp;
+        updateWindowWorkspaceState(winInfo1, getWorkspaceIndexOfWindow(winInfo1), NO_WORKSPACE, 0);
+        updateWindowWorkspaceState(winInfo2, getWorkspaceIndexOfWindow(winInfo2), NO_WORKSPACE, 0);
+    }
+    int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
+               XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
+    int values[5];
+    for(int i = 0; i < LEN(values); i++)
+        values[i] = getGeometry(winInfo1)[i];
+    xcb_configure_window(dis, winInfo2->id, mask, values);
+    for(int i = 0; i < LEN(values); i++)
+        values[i] = getGeometry(winInfo2)[i];
+    xcb_configure_window(dis, winInfo1->id, mask, values);
 }
 int isShowingDesktop(int index){
     return hasWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);

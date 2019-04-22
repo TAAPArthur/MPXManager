@@ -222,7 +222,6 @@ END_TEST
 START_TEST(test_create_window_info){
     WindowInfo* winInfo = createWindowInfo(1);
     assert(winInfo->id == 1);
-    assert(!isNotEmpty(getClonesOfWindow(winInfo)));
     addWindowInfo(winInfo);
 }
 END_TEST
