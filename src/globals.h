@@ -52,9 +52,6 @@ typedef enum {
     /**The window's size will equal the size of the screen (union of all monitors)*/
     TRUE_ROOT_FULLSCREEN_MASK =  ROOT_FULLSCREEN_MASK | ABOVE_MASK,
 
-    ///Window is effectively associated with its monitor instead of its workspace
-    /// (it is moveded between workspaces to stay on its monitor
-    STICKY_MASK =           ABOVE_MASK | NO_TILE_MASK,
     ///The window will be treated as unmapped until this mask is removed (iconic state)
     HIDDEN_MASK =        1 << 7,
 
@@ -98,20 +95,23 @@ typedef enum {
      * This mask is implemented via a onWindowMove Rule
      */
     ALWAYS_ON_TOP = 1 << 20,
+    ///Window is effectively associated with its monitor instead of its workspace
+    /// (it is moveded between workspaces to stay on its monitor
+    STICKY_MASK =   1 << 21,
     /// the window type was not set explicitly
-    IMPLICIT_TYPE = 1 << 21,
-
-    ///Keeps track on the visibility state of the window
-    PARTIALLY_VISIBLE =     1 << 27,
-    ///Keeps track on the visibility state of the window
-    FULLY_VISIBLE =         1 << 28 | PARTIALLY_VISIBLE,
-    ///Inidicates the window is not withdrawn
-    MAPPABLE_MASK =           1 << 29,
-    ///the window is currently mapped
-    MAPPED_MASK =           1 << 30,
-
+    IMPLICIT_TYPE = 1 << 22,
     /**Marks the window as urgent*/
-    URGENT_MASK =           1 << 31,
+    URGENT_MASK =           1 << 23,
+
+    ///Keeps track on the visibility state of the window
+    PARTIALLY_VISIBLE =     1 << 28,
+    ///Keeps track on the visibility state of the window
+    FULLY_VISIBLE =         1 << 29 | PARTIALLY_VISIBLE,
+    ///Inidicates the window is not withdrawn
+    MAPPABLE_MASK =           1 << 30,
+    ///the window is currently mapped
+    MAPPED_MASK =           1 << 31,
+
     RETILE_MASKS =           USER_MASKS | MAPPED_MASK,
     /// set all masks
     ALL_MASK =              -1

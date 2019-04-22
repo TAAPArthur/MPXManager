@@ -43,6 +43,7 @@ static Binding DEFAULT_BINDINGS[] = {
     {Mod4Mask | ShiftMask, Button1, BIND(sinkWindow), .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask, XK_t, BIND(sinkWindow)},
     {Mod4Mask | ControlMask, XK_t, BIND(toggleMask, ALWAYS_ON_TOP)},
+    {Mod4Mask | Mod1Mask, XK_t, BIND(toggleMask, STICKY_MASK)},
 
     {0, XF86XK_AudioPlay, OR(BIND(toggleLayout, &DEFAULT_LAYOUTS[FULL]), BIND(cycleLayouts, DOWN))},
     {Mod4Mask, XK_F11, OR(BIND(toggleLayout, &DEFAULT_LAYOUTS[FULL]), BIND(cycleLayouts, DOWN))},
