@@ -68,9 +68,13 @@ void onUnmapEvent(void);
  */
 void focusFollowMouse(void);
 /**
- * Updates the border color of the previously focused window and the new window
+ * Updates the border color of the new window
  */
 void onFocusInEvent(void);
+/**
+ * Updates the border color of the (old) focused window to not reflect the current master
+ */
+void onFocusOutEvent(void);
 /**
  * Updates properties of the given window
  */

@@ -383,24 +383,30 @@ void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex){
 
 //window methods
 
-int setBorderColor(WindowID win, unsigned int color){
-    xcb_void_cookie_t c;
+void setBorderColor(WindowID win, unsigned int color){
     if(color > 0xFFFFFF){
         LOG(LOG_LEVEL_WARN, "Color %d is out f range\n", color);
-        return 0;
+        return;
     }
-    c = xcb_change_window_attributes_checked(dis, win, XCB_CW_BORDER_PIXEL, &color);
-    LOG(LOG_LEVEL_TRACE, "setting border for window %d to %d\n", win, color);
-    return !catchError(c);
+    xcb_change_window_attributes(dis, win, XCB_CW_BORDER_PIXEL, &color);
+    LOG(LOG_LEVEL_TRACE, "setting border for window %d to %#08x\n", win, color);
 }
-int setBorder(WindowInfo* winInfo){
-    return setBorderColor(winInfo->id, getActiveMaster()->focusColor);
+void setBorder(WindowID win){
+    setBorderColor(win, getActiveMaster()->focusColor);
 }
-int resetBorder(WindowInfo* winInfo){
-    Master* master = getLastMasterToFocusWindow(winInfo->id);
+void resetBorder(WindowID win){
+    int maxValue = 0;
+    Master* master = NULL;
+    FOR_EACH(Master*, m, getAllMasters()){
+        if(m != getActiveMaster() && getFocusedWindowByMaster(m) && getFocusedWindowByMaster(m)->id == win)
+            if(getFocusedTime(m) >= maxValue){
+                master = m;
+                maxValue = getFocusedTime(m);
+            }
+    }
     if(master)
-        return setBorderColor(winInfo->id, master->focusColor);
-    return setBorderColor(winInfo->id, DEFAULT_UNFOCUS_BORDER_COLOR);
+        setBorderColor(win, master->focusColor);
+    setBorderColor(win, DEFAULT_UNFOCUS_BORDER_COLOR);
 }
 
 

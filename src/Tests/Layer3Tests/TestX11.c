@@ -170,12 +170,12 @@ START_TEST(test_set_border_color){
     WindowInfo* winInfo = isInList(getAllWindows(), win);
     unsigned int colors[] = {0, 255, 255 * 255, 255 * 255 * 255};
     for(int i = 0; i < LEN(colors); i++){
-        assert(setBorderColor(win, colors[i]));
+        setBorderColor(win, colors[i]);
         flush();
     }
     setBorderColor(win, -1);
-    assert(setBorder(winInfo));
-    resetBorder(winInfo);
+    setBorder(winInfo->id);
+    resetBorder(winInfo->id);
     //TODO check to see if border was set correctly
 }
 END_TEST
@@ -444,6 +444,8 @@ START_TEST(test_auto_focus_tiling){
 }
 END_TEST
 START_TEST(test_auto_focus_delete){
+    setLogLevel(LOG_LEVEL_NONE);
+    CRASH_ON_ERRORS = 0;
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
     START_MY_WM;

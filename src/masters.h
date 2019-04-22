@@ -143,12 +143,4 @@ void setActiveMaster(Master* master);
  * @return the master device with the give node
  */
 Master* getMasterById(int keyboardID);
-/**
- * Get the master who most recently focused window.
- * Should be called to reset border focus after the active master's
- * focused has changed
- * @param win
- * @return
- */
-Master* getLastMasterToFocusWindow(WindowID win);
 #endif

@@ -57,18 +57,6 @@ WindowInfo* getFocusedWindowByMaster(Master* master){
 WindowInfo* getFocusedWindow(){
     return getFocusedWindowByMaster(getActiveMaster());
 }
-Master* getLastMasterToFocusWindow(WindowID win){
-    int maxValue = 0;
-    Master* maxMaster = NULL;
-    FOR_EACH(Master*, m, getAllMasters()){
-        if(getFocusedWindowByMaster(m) && getFocusedWindowByMaster(m)->id == win)
-            if(getFocusedTime(m) >= maxValue){
-                maxMaster = m;
-                maxValue = getFocusedTime(m);
-            }
-    }
-    return maxMaster;
-}
 unsigned int getFocusedTime(Master* m){
     return m->focusedTimeStamp;
 }

@@ -215,15 +215,19 @@ void onFocusInEvent(void){
     xcb_input_focus_in_event_t* event = getLastEvent();
     setActiveMasterByDeviceId(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
-    WindowInfo* oldFocus = getFocusedWindow();
     if(winInfo){
         updateFocusState(winInfo);
-        setBorder(winInfo);
+        setBorder(winInfo->id);
     }
-    if(oldFocus && oldFocus != winInfo)
-        resetBorder(oldFocus);
     setActiveWindowProperty(event->event);
-    //setBorder(event->child);
+}
+
+void onFocusOutEvent(void){
+    xcb_input_focus_out_event_t* event = getLastEvent();
+    setActiveMasterByDeviceId(event->deviceid);
+    WindowInfo* winInfo = getWindowInfo(event->event);
+    if(winInfo)
+        resetBorder(winInfo->id);
 }
 
 void onPropertyEvent(void){
@@ -437,6 +441,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
 
     [XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusInEvent),
+    [XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onFocusOutEvent),
     [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),

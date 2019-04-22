@@ -70,22 +70,20 @@ void updateFocusState(WindowInfo* winInfo);
  * Sets the border color for the given window
  * @param win   the window in question
  * @param color the new window border color
- * @return 1 iff no error was deteced
  */
-int setBorderColor(WindowID win, unsigned int color);
+void setBorderColor(WindowID win, unsigned int color);
 
 /**
  * Sets the border color of the window to match the active master
- * @param winInfo
- * @return 1 iff no error was deteced
+ * @param win
  */
-int setBorder(WindowInfo* winInfo);
+void setBorder(WindowID win);
 /**
- * Sets the border color of the window to match the master that last focused this window or to the default color
- * @param winInfo
- * @return 1 iff no error was deteced
+ * Sets the border color of the window to match the master that last focused this window
+ * (not counting the current active master) or to the default color
+ * @param win
  */
-int resetBorder(WindowInfo* winInfo);
+void resetBorder(WindowID win);
 
 /**
  * Switch to window's worksspace, raise and focus the window
