@@ -15,12 +15,12 @@ LAYER0_SRCS := logger.c globals.c
 LAYER1_SRCS := util.c 
 LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
 LAYER3_SRCS := layouts.c wmfunctions.c default-rules.c state.c
-LAYER4_SRCS := mpx.c window-clone.c functions.c
+LAYER4_SRCS := functions.c mpx.c Extensions/*.c
 BASE_SRCS := settings.c args.c mpxmanager.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.c 
 
 
-CHECK_TEST_COVERAGE = [ -z "$$CK_RUN_CASE$$CK_RUN_SUITE" ] && (gcov -f $(1) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm *.gc??)
+CHECK_TEST_COVERAGE = [ -z "$$CK_RUN_CASE$$CK_RUN_SUITE" ] && (gcov -f $$(basename -a $(1)) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm *.gc??)
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 
