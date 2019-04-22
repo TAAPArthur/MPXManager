@@ -18,6 +18,11 @@
 #include "mywm-util.h"
 #include "settings.h"
 
+#ifdef DOXYGEN
+#undef assert
+#define assert(x)
+#endif
+
 static void handler(int sig){
     fprintf(stderr, "Error: signal %d:\n", sig);
     printStackTrace();
