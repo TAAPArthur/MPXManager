@@ -143,7 +143,7 @@ START_TEST(test_master_stack_add_remove){
         testAddUnique(getActiveMasterWindowStack(),
                       fakeOnWindowFocus);
     }
-    FOR_EACH(Master*, m, getAllMasters()) assert(getSize(getWindowStackByMaster(m)) == size);;
+    FOR_EACH(Master*, m, getAllMasters()) assert(getSize(getWindowStackByMaster(m)) == size);
 }
 END_TEST
 START_TEST(test_focus_time){
@@ -466,7 +466,7 @@ START_TEST(test_complete_window_remove){
     }
     addWindowToWorkspace(getWindowInfo(1), 0);
     assert(removeWindow(1));
-    FOR_EACH(Master*, m, getAllMasters()) assert(getSize(getWindowStackByMaster(m)) == 0);;
+    FOR_EACH(Master*, m, getAllMasters()) assert(getSize(getWindowStackByMaster(m)) == 0);
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         assert(getSize(getWindowStack(getWorkspaceByIndex(i))) == 0);
     }

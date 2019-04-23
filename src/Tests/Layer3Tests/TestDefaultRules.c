@@ -58,7 +58,7 @@ static void deviceEventsetup(){
     flush();
     static Rule postInitRule = CREATE_DEFAULT_EVENT_RULE(finishedInit);
     addToList(getEventRules(Idle), &postInitRule);
-    START_MY_WM
+    START_MY_WM;
     WAIT_UNTIL_TRUE(completedInit);
     winInfo = getWindowInfo(win1);
     winInfo2 = getWindowInfo(win2);
@@ -119,7 +119,7 @@ END_TEST
 START_TEST(test_detect_new_windows){
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
-    START_MY_WM
+    START_MY_WM;
     WindowID win3 = createUnmappedWindow();
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) &&
                     isInList(getAllWindows(), win2) &&
@@ -138,34 +138,34 @@ START_TEST(test_delete_windows){
     mapWindow(win2);
     assert(getSize(getAllWindows()) == 0);
     addUnknownWindowIgnoreRule();
-    START_MY_WM
+    START_MY_WM;
     WindowID win4 = createUnmappedWindow();
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win4) &&
                     isInList(getAllWindows(), win2) &&
-                    isInList(getAllWindows(), win3))
-    WAIT_UNTIL_FALSE(isInList(getAllWindows(), win));
+                    isInList(getAllWindows(), win3));
+    WAIT_UNTIL_TRUE(!isInList(getAllWindows(), win));
     destroyWindow(win2);
     destroyWindow(win3);
     destroyWindow(win4);
-    WAIT_UNTIL_FALSE(isInList(getAllWindows(), win2) ||
-                     isInList(getAllWindows(), win3) ||
-                     isInList(getAllWindows(), win4));
+    WAIT_UNTIL_TRUE(!(isInList(getAllWindows(), win2) ||
+                      isInList(getAllWindows(), win3) ||
+                      isInList(getAllWindows(), win4)));
     assert(getSize(getAllWindows()) == 0);
 }
 END_TEST
 
 START_TEST(test_visibility_update){
     clearLayoutsOfWorkspace(getActiveWorkspaceIndex());
-    START_MY_WM
+    START_MY_WM;
     lock();
     WindowID win = createNormalWindow();
     unlock();
-    WAIT_UNTIL_TRUE(getWindowInfo(win))
+    WAIT_UNTIL_TRUE(getWindowInfo(win));
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win)));
     lock();
     WindowID win2 = createNormalWindow();
     unlock();
-    WAIT_UNTIL_TRUE(getWindowInfo(win2))
+    WAIT_UNTIL_TRUE(getWindowInfo(win2));
     WAIT_UNTIL_TRUE(isWindowVisible(getWindowInfo(win2)));
     assert(!isWindowVisible(getWindowInfo(win)));
     int workspace = getActiveWorkspaceIndex();
@@ -179,9 +179,9 @@ START_TEST(test_visibility_update){
 END_TEST
 
 START_TEST(test_property_update){
-    START_MY_WM
+    START_MY_WM;
     WindowID win = createNormalWindow();
-    WAIT_UNTIL_TRUE(getWindowInfo(win))
+    WAIT_UNTIL_TRUE(getWindowInfo(win));
     char* title = "dummy title";
     assert(!catchError(xcb_ewmh_set_wm_name_checked(ewmh, win, strlen(title), title)));
     WAIT_UNTIL_TRUE(getWindowInfo(win)->title);
@@ -197,7 +197,7 @@ START_TEST(test_ignored_windows){
     assert(getSize(getAllWindows()) == 0);
     consumeEvents();
     int idle = getIdleCount();
-    START_MY_WM
+    START_MY_WM;
     WAIT_UNTIL_TRUE(idle != getIdleCount());
     createUserIgnoredWindow();
     mapWindow(createUserIgnoredWindow());
@@ -259,14 +259,14 @@ END_TEST
 START_TEST(test_map_windows){
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
-    START_MY_WM
+    START_MY_WM;
     WindowID win3 = createUnmappedWindow();
     mapWindow(win3);
     mapWindow(win2);
     //wait for all to be in list
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) &&
                     isInList(getAllWindows(), win2) &&
-                    isInList(getAllWindows(), win3))
+                    isInList(getAllWindows(), win3));
     //WAIT_UNTIL_TRUE(!isWindowMapped(win)&&isWindowMapped(win2)&&isWindowMapped(win3));
     mapWindow(win);
     //wait for all to be mapped
@@ -335,7 +335,7 @@ static void clientSetup(){
     }
     else {
         DEFAULT_WINDOW_MASKS |= EXTERNAL_MOVE_MASK;
-        START_MY_WM
+        START_MY_WM;
         waitForCleanExit();
         fullCleanup();
         exit(0);
@@ -441,7 +441,7 @@ START_TEST(test_client_close_window){
         exit(0);
     }
     else {
-        START_MY_WM
+        START_MY_WM;
         assert(getExitStatusOfFork() == 1);
     }
 }
@@ -476,9 +476,9 @@ START_TEST(test_client_set_window_state){
         flush();
         WindowInfo fakeWinInfo = {.mask = 0, .id = ignoredWindow};
         if(i % 2 == 0)
-            WAIT_UNTIL_TRUE(hasMask(winInfo, X_MAXIMIZED_MASK) && hasMask(winInfo, Y_MAXIMIZED_MASK))
-            else
-                WAIT_UNTIL_FALSE(hasMask(winInfo, X_MAXIMIZED_MASK) && hasMask(winInfo, Y_MAXIMIZED_MASK));
+            WAIT_UNTIL_TRUE(hasMask(winInfo, X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
+        else
+            WAIT_UNTIL_TRUE(!(hasMask(winInfo, X_MAXIMIZED_MASK) || hasMask(winInfo, Y_MAXIMIZED_MASK)));
         loadSavedAtomState(&fakeWinInfo);
         assert((hasMask(&fakeWinInfo, X_MAXIMIZED_MASK) && hasMask(&fakeWinInfo, Y_MAXIMIZED_MASK)) == (i % 2 == 0));
     }
@@ -508,7 +508,7 @@ START_TEST(test_auto_tile){
     assert(count);
     count = 0;
     createNormalWindow();
-    START_MY_WM
+    START_MY_WM;
     WAIT_UNTIL_TRUE(count);
 }
 END_TEST
@@ -518,7 +518,7 @@ START_TEST(test_client_show_desktop){
     WAIT_UNTIL_TRUE(isShowingDesktop(getActiveWorkspaceIndex()));
     xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 0);
     flush();
-    WAIT_UNTIL_FALSE(isShowingDesktop(getActiveWorkspaceIndex()));
+    WAIT_UNTIL_TRUE(!isShowingDesktop(getActiveWorkspaceIndex()));
 }
 END_TEST
 
@@ -561,7 +561,7 @@ START_TEST(test_client_request_move_resize){
     xcb_ewmh_request_moveresize_window(ewmh, defaultScreenNumber, winInfo->id,
                                        0, 2, flags, values[0], values[1], values[2], values[3]);
     flush();
-    WAIT_UNTIL_TRUE(memcmp(values, winInfo->geometry, sizeof(short)*LEN(values)) == 0)
+    WAIT_UNTIL_TRUE(memcmp(values, winInfo->geometry, sizeof(short)*LEN(values)) == 0);
 }
 END_TEST
 START_TEST(test_client_ping){
@@ -570,7 +570,7 @@ START_TEST(test_client_ping){
     addMask(rootInfo, WM_PING_MASK);
     xcb_ewmh_send_wm_ping(ewmh, root, 0);
     flush();
-    WAIT_UNTIL_TRUE(rootInfo->pingTimeStamp)
+    WAIT_UNTIL_TRUE(rootInfo->pingTimeStamp);
 }
 END_TEST
 

@@ -26,7 +26,7 @@ END_TEST
 START_TEST(test_send_key_release){
     sendKeyPress(keyDetail);
     sendKeyRelease(keyDetail);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_RELEASE))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_RELEASE));
 }
 END_TEST
 
@@ -38,26 +38,26 @@ END_TEST
 START_TEST(test_send_button_release){
     sendButtonPress(mouseDetail);
     sendButtonRelease(mouseDetail);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE));
 }
 END_TEST
 START_TEST(test_all_button){
     mouseDetail = _i;
     sendButtonPress(_i);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS));
     consumeEvents();
 }
 END_TEST
 START_TEST(test_click_button){
     clickButton(mouseDetail);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS))
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS));
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE));
 }
 END_TEST
 START_TEST(test_type_key){
     typeKey(keyDetail);
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_PRESS))
-    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_RELEASE))
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_PRESS));
+    WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_RELEASE));
 }
 END_TEST
 

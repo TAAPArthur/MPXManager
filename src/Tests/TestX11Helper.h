@@ -22,8 +22,7 @@
 
 extern pthread_t pThread;
 #define START_MY_WM \
-        pThread=runInNewThread(runEventLoop,NULL,0);
-#define KILL_MY_WM  requestEventLoopShutdown();pthread_join(pThread,NULL);
+        pThread=runInNewThread(runEventLoop,NULL,0)
 
 void destroyWindow(WindowID win);
 int  createInputOnlyWindow(void);

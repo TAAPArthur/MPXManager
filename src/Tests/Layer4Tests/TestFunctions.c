@@ -23,7 +23,7 @@ void functionSetup(){
 START_TEST(test_cycle_window){
     IGNORE_KEY_REPEAT = 1;
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
-    START_MY_WM
+    START_MY_WM;
     int size = 4;
     WindowID win[size];
     for(int i = 0; i < size; i++)
@@ -92,7 +92,7 @@ START_TEST(test_find_and_raise){
     Window win[size];
     for(int n = 0; n < 2; n++){
         for(int i = 0; i < size; i++){
-            int temp = mapWindow(createNormalWindow());;
+            int temp = mapWindow(createNormalWindow());
             if(n == 0)win[i] = temp;
             assert(xcb_request_check(dis,
                                      xcb_ewmh_set_wm_name_checked(ewmh,
@@ -132,7 +132,7 @@ END_TEST
 /*
  *     setLayout(&DEFAULT_LAYOUTS[FULL]);
 
-    START_MY_WM
+    START_MY_WM;
     WAIT_UNTIL_TRUE(getSize(getAllWindows())==size);
 
     Rule fail={NULL,0,BIND(exit,127)};
@@ -246,7 +246,7 @@ START_TEST(test_mouse_lock){
         if(winInfo == dummy)count++;
     }
     Binding binding = {0, Button1, BIND(test), .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
-    START_MY_WM
+    START_MY_WM;
     lock();
     dummy = createWindowInfo(1);
     addWindowInfo(dummy);

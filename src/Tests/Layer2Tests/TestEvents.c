@@ -40,7 +40,7 @@ static void onMonitorDetectionTest(void){
 static void setup(){
     createContextAndSimpleConnection();
     registerForEvents();
-    START_MY_WM
+    START_MY_WM;
 }
 
 

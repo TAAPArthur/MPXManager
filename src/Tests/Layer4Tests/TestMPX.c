@@ -22,7 +22,7 @@ static void splitMasterHack(int i){
 START_TEST(test_split_master){
     POLL_COUNT = 10;
     POLL_INTERVAL = 10;
-    START_MY_WM
+    START_MY_WM;
     int size = getSize(getAllMasters());
     int id = splitMaster();
     assert(id);
@@ -53,14 +53,20 @@ START_TEST(test_split_master){
     prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS), &hackMouse);
     int idle = getIdleCount();
     unlock();
-    WAIT_UNTIL_TRUE(getIdleCount() > idle)
+    WAIT_UNTIL_TRUE(getIdleCount() > idle);
     ArrayList* newSlaves = getSlavesOfMaster(newMaster);
     assert(listsEqual(newSlaves, slaves));
     deleteList(newSlaves);
     free(newSlaves);
     endSplitMaster();
+    consumeEvents();
+    msleep(50);
     lock();
-    FOR_EACH(SlaveDevice*, slave, slaves) dummySlaveInput(slave);
+    FOR_EACH(SlaveDevice*, slave, slaves){
+        if(slave->id != DEFAULT_KEYBOARD && slave->id != DEFAULT_POINTER)
+            dummySlaveInput(slave);
+    }
+    flush();
     assert(!xcb_poll_for_event(dis));
     unlock();
     deleteList(slaves);
@@ -91,7 +97,7 @@ START_TEST(test_save_load_mpx_bad){
 }
 END_TEST
 START_TEST(test_save_load_mpx){
-    START_MY_WM
+    START_MY_WM;
     createMasterDevice("test1");
     WAIT_UNTIL_TRUE(getSize(getAllMasters()) == 2);
     Master* master = getElement(getAllMasters(), !indexOf(getAllMasters(), getActiveMaster(), sizeof(int)));
@@ -161,7 +167,7 @@ START_TEST(test_auto_mpx){
     flush();
     int idle = getIdleCount();
     unlock();
-    WAIT_UNTIL_TRUE(idle != getIdleCount())
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
     lock();
     stopMPX();
     unlock();

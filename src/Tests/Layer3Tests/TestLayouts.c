@@ -67,7 +67,7 @@ START_TEST(test_layouts){
     int size = 5;
     assert(!isNotEmpty(getAllWindows()));
     retile();
-    START_MY_WM
+    START_MY_WM;
     int area;
     xcb_get_geometry_reply_t* reply1, *reply2;
     ArrayList* list = getActiveWindowStack();
@@ -79,6 +79,7 @@ START_TEST(test_layouts){
         unlock();
         WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) >= i);
         WAIT_UNTIL_TRUE(idle != getIdleCount());
+        msleep(50);
         lock();
         retile();
         assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == i);
@@ -141,13 +142,13 @@ START_TEST(test_layouts_transition){
     int i = 0;
     int idle;
     FOR_EACH(Master*, master, masters) masterList[i++] = master;
-    START_MY_WM
+    START_MY_WM;
     lock();
     for(int i = 0; i < size; i++)
         createNormalWindow();
     flush();
     unlock();
-    WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == size)
+    WAIT_UNTIL_TRUE(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == size);
     lock();
     ArrayList* stack = getActiveWindowStack();
     i = 0;

@@ -143,7 +143,7 @@ START_TEST(test_delete_window_request){
     WindowInfo* winInfo = getWindowInfo(win);
     assert(hasMask(winInfo, WM_DELETE_WINDOW_MASK));
     consumeEvents();
-    START_MY_WM
+    START_MY_WM;
     lock();
     if(_i != 1){
         if(_i == 2){
@@ -194,13 +194,13 @@ END_TEST
 
 START_TEST(test_withdraw_window){
     WindowID win = createNormalWindow();
-    WAIT_UNTIL_TRUE(getWindowInfo(win))
+    WAIT_UNTIL_TRUE(getWindowInfo(win));
     WindowInfo* winInfo = getWindowInfo(win);
     IGNORE_SEND_EVENT = 0;
     WAIT_UNTIL_TRUE(hasMask(winInfo, MAPPABLE_MASK));
     xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .event = root, .window = win};
     catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
-    WAIT_UNTIL_FALSE(hasMask(winInfo, MAPPABLE_MASK));
+    WAIT_UNTIL_TRUE(!hasMask(winInfo, MAPPABLE_MASK));
 }
 END_TEST
 START_TEST(test_raise_window){
@@ -364,8 +364,8 @@ END_TEST
 START_TEST(test_float_sink_window){
     WindowID win = mapWindow(createNormalWindow());
     WindowInfo* winInfo;
-    START_MY_WM
-    WAIT_UNTIL_TRUE(winInfo = getWindowInfo(win))
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(winInfo = getWindowInfo(win));
     WAIT_UNTIL_TRUE(isTileable(winInfo));
     lock();
     floatWindow(winInfo);
@@ -446,7 +446,7 @@ END_TEST
 START_TEST(test_auto_focus_delete){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
-    START_MY_WM
+    START_MY_WM;
     for(int i = 0; i < 3; i++)
         mapWindow(createNormalWindow());
     WAIT_UNTIL_TRUE(getSize(getActiveMasterWindowStack()) == 3);
@@ -463,7 +463,7 @@ START_TEST(test_auto_focus_delete){
     int idle = getIdleCount();
     assert(catchError(xcb_destroy_window_checked(dis, lastFocused->id)) == 0);
     unlock();
-    WAIT_UNTIL_TRUE(idle != getIdleCount())
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
     assert(getSize(getAllWindows()) == 2);
     assert(checkStackingOrder(stackingOrder, 2));
     assert(middle->id == getActiveFocus(getActiveMasterKeyboardID()));
@@ -519,7 +519,7 @@ END_TEST
 
 static void setup(){
     onStartup();
-    START_MY_WM
+    START_MY_WM;
 }
 
 START_TEST(test_activate_workspace){
@@ -559,20 +559,20 @@ void multiWorkspaceStartup(void){
     START_MY_WM;
     createNormalWindow();
     createNormalWindow();
-    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 2)
+    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 2);
     lock();
     focusWindowInfo(getLast(getActiveWindowStack()));
     switchToWorkspace(1);
     createNormalWindow();
     createNormalWindow();
     unlock();
-    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 4)
+    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 4);
     lock();
     focusWindowInfo(getHead(getActiveWindowStack()));
     switchToWorkspace(2);
     createNormalWindow();
     unlock();
-    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 5)
+    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == 5);
     assert(getSize(getWindowStackByMaster(getActiveMaster())) == 2);
 }
 
