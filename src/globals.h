@@ -7,6 +7,9 @@
 
 #include <stdbool.h>
 
+/// Sets of masks that only a WM should have
+#define WM_MASKS (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_STRUCTURE_NOTIFY)
+
 ///Returns the field descriptor used to commuicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
 
@@ -117,6 +120,17 @@ typedef enum {
     ALL_MASK =              -1
 
 } WindowMasks;
+
+
+/**
+ * If true (default), then this program is functioning as a WM.
+ * Else, WM specific operations, like grabing any of WM_MASKS on the root window or trying to grab the WM_SELECTION will not happen (by default)
+ */
+extern bool RUN_AS_WM;
+/**
+ * If the WM_SELECTION is owned by another client, take it anyways
+ */
+extern bool STEAL_WM_SELECTION;
 
 /// Holds env var names used to pass client pointer to children
 extern char* CLIENT[];

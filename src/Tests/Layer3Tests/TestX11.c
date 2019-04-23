@@ -669,10 +669,84 @@ START_TEST(test_toggle_show_desktop){
 END_TEST
 
 
+START_TEST(test_triple_start){
+    setLogLevel(LOG_LEVEL_NONE);
+    xcb_get_selection_owner_reply_t* ownerReply;
+    ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
+                 WM_SELECTION_ATOM), NULL);
+    assert(ownerReply->owner);
+    free(ownerReply);
+    if(!fork())
+        onStartup();
+    wait(NULL);
+    ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
+                 WM_SELECTION_ATOM), NULL);
+    assert(ownerReply->owner);
+    free(ownerReply);
+    onStartup();
+    exit(10);
+}
+END_TEST
+START_TEST(test_restart){
+    closeConnection();
+    int errSignal = 83;
+    if(!fork()){
+        onStartup();
+        exit(errSignal);
+    }
+    waitForExit(errSignal);
+    onStartup();
+}
+END_TEST
+START_TEST(test_lose_wm_selection){
+    int errSignal = 83;
+    if(!fork()){
+        STEAL_WM_SELECTION = 1;
+        onStartup();
+        flush();
+        exit(errSignal);
+    }
+    waitForExit(errSignal);
+    runEventLoop(NULL);
+}
+END_TEST
+START_TEST(test_lose_fake_selection){
+    catchError(xcb_set_selection_owner_checked(dis, compliantWindowManagerIndicatorWindow, ewmh->_NET_WM_CM_Sn[0], 0));
+    int errSignal = 83;
+    if(!fork()){
+        openXDisplay();
+        catchError(xcb_set_selection_owner_checked(dis, createNormalWindow(), ewmh->_NET_WM_CM_Sn[0], 0));
+        flush();
+        exit(errSignal);
+    }
+    waitForExit(errSignal);
+    int idle = getIdleCount();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+}
+END_TEST
+START_TEST(test_no_run_as_wm){
+    RUN_AS_WM = 0;
+    int errSignal = 83;
+    if(!fork()){
+        onStartup();
+        exit(errSignal);
+    }
+    waitForExit(errSignal);
+}
+END_TEST
 
 Suite* x11Suite(void){
     Suite* s = suite_create("Window Manager Functions");
     TCase* tc_core;
+    tc_core = tcase_create("MultipleWM");
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
+    tcase_add_test(tc_core, test_triple_start);
+    tcase_add_test(tc_core, test_restart);
+    tcase_add_test(tc_core, test_lose_wm_selection);
+    tcase_add_test(tc_core, test_lose_fake_selection);
+    tcase_add_test(tc_core, test_no_run_as_wm);
+    suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Sync_State");
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_sync_state);

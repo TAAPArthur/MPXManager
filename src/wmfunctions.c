@@ -32,6 +32,7 @@
 #include "xsession.h"
 
 
+WindowID compliantWindowManagerIndicatorWindow;
 
 static ArrayList mappedOrder = {0};
 /**
@@ -46,10 +47,14 @@ void connectToXserver(){
     initCurrentMasters();
     assert(getActiveMaster() != NULL);
     detectMonitors();
-    broadcastEWMHCompilence();
-    //update workspace names
-    setWorkspaceNames(NULL, 0);
-    syncState();
+    if(RUN_AS_WM){
+        broadcastEWMHCompilence();
+        //update workspace names
+        setWorkspaceNames(NULL, 0);
+        syncState();
+    }
+    else
+        ROOT_EVENT_MASKS &= ~WM_MASKS;
     registerForEvents();
     applyEventRules(onXConnection, NULL);
 }
@@ -466,33 +471,30 @@ void processConfigureRequest(WindowID win, short values[5], WindowID sibling, in
 }
 void broadcastEWMHCompilence(){
     LOG(LOG_LEVEL_TRACE, "Compliying with EWMH\n");
-    SET_SUPPORTED_OPERATIONS(ewmh);
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else  ignore it)
     int overrideRedirect = 1;
-    xcb_window_t checkwin = xcb_generate_id(dis);
-    xcb_create_window(dis, 0, checkwin, root, 0, 0, 1, 1, 0,
+    compliantWindowManagerIndicatorWindow = xcb_generate_id(dis);
+    xcb_create_window(dis, 0, compliantWindowManagerIndicatorWindow, root, 0, 0, 1, 1, 0,
                       XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
-    xcb_ewmh_set_supporting_wm_check(ewmh, root, checkwin);
-    xcb_ewmh_set_wm_name(ewmh, checkwin, strlen(WM_NAME), WM_NAME);
-    xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
-            WM_SELECTION_ATOM), NULL);
-    if(ownerReply->owner){
-        LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d\n", WM_SELECTION_ATOM, ownerReply->owner);
-        quit();
+    if(!STEAL_WM_SELECTION){
+        xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
+                WM_SELECTION_ATOM), NULL);
+        if(ownerReply->owner){
+            LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d\n", WM_SELECTION_ATOM, ownerReply->owner);
+            quit();
+        }
+        free(ownerReply);
     }
-    if(catchError(xcb_set_selection_owner_checked(dis, checkwin, WM_SELECTION_ATOM, XCB_CURRENT_TIME)) == 0){
-        xcb_client_message_event_t ev = {0};
-        ev.response_type = XCB_CLIENT_MESSAGE;
-        ev.format = 32;
-        ev.window = checkwin;
-        ev.type = ewmh->WM_PROTOCOLS;
-        ev.data.data32[0] = getTime();
-        ev.data.data32[1] = WM_SELECTION_ATOM;
-        ev.data.data32[2] = checkwin;
-        xcb_send_event(dis, 0, root, XCB_EVENT_MASK_STRUCTURE_NOTIFY, (char*)&ev);
+    LOG(LOG_LEVEL_TRACE, "Setting selection owner\n");
+    if(catchError(xcb_set_selection_owner_checked(dis, compliantWindowManagerIndicatorWindow, WM_SELECTION_ATOM,
+                  XCB_CURRENT_TIME)) == 0){
+        unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, compliantWindowManagerIndicatorWindow};
+        xcb_ewmh_send_client_message(dis, root, root, ewmh->MANAGER, 5, data);
     }
-    free(ownerReply);
+    SET_SUPPORTED_OPERATIONS(ewmh);
+    xcb_ewmh_set_supporting_wm_check(ewmh, root, compliantWindowManagerIndicatorWindow);
+    xcb_ewmh_set_wm_name(ewmh, compliantWindowManagerIndicatorWindow, strlen(WM_NAME), WM_NAME);
     LOG(LOG_LEVEL_TRACE, "ewmh initilized\n");
 }
 
@@ -543,7 +545,7 @@ void setWorkspaceNames(char* names[], int numberOfNames){
         strncpy(getWorkspaceByIndex(i)->name, names[i], NAME_BUFFER - 1);
         getWorkspaceByIndex(i)->name[NAME_BUFFER - 1] = 0;
     }
-    if(ewmh)
+    if(ewmh && RUN_AS_WM)
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, numberOfNames, (char*)names);
 }
 

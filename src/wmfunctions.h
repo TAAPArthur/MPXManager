@@ -16,6 +16,10 @@
  */
 #define WM_NAME "MPX Manger"
 
+/**
+ * Window created by us to show to the world that an EWMH complicant WM is active
+ */
+extern WindowID compliantWindowManagerIndicatorWindow;
 
 
 /**

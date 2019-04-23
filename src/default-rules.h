@@ -76,6 +76,10 @@ void onFocusInEvent(void);
  */
 void onFocusOutEvent(void);
 /**
+ * Quits if we have lost the WM_SELECTION
+ */
+void onSelectionClearEvent(void);
+/**
  * Updates properties of the given window
  */
 void onPropertyEvent(void);

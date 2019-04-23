@@ -393,6 +393,13 @@ void onGenericEvent(void){
         applyEventRules(type, NULL);
 }
 
+void onSelectionClearEvent(void){
+    xcb_selection_clear_event_t* event = getLastEvent();
+    if(event->owner == compliantWindowManagerIndicatorWindow  && event->selection == WM_SELECTION_ATOM){
+        LOG(LOG_LEVEL_INFO, "We lost the WM_SELECTION; another window manager is taking over (%d)", event->owner);
+        quit();
+    }
+}
 
 
 void onStartup(void){
@@ -436,6 +443,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
 
 
     [XCB_PROPERTY_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onPropertyEvent),
+    [XCB_SELECTION_CLEAR] = CREATE_DEFAULT_EVENT_RULE(onSelectionClearEvent),
     [XCB_CLIENT_MESSAGE] = CREATE_DEFAULT_EVENT_RULE(onClientMessage),
 
     [XCB_GE_GENERIC] = CREATE_DEFAULT_EVENT_RULE(onGenericEvent),
