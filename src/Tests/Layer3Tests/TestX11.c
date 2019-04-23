@@ -360,7 +360,21 @@ START_TEST(test_configure_windows){
     }
 }
 END_TEST
-
+START_TEST(test_load_properties){
+    DEFAULT_WINDOW_MASKS |= INPUT_MASK;
+    WindowID win = createUnmappedWindow();
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    xcb_icccm_wm_hints_t hints = {.input = 0, .initial_state = 1};
+    catchError(xcb_icccm_set_wm_hints_checked(dis, win, &hints));
+    int idle = getIdleCount();
+    mapWindow(win);
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(!hasMask(winInfo, INPUT_MASK));
+    assert(hasMask(winInfo, MAPPED_MASK));
+}
+END_TEST
 START_TEST(test_float_sink_window){
     WindowID win = mapWindow(createNormalWindow());
     WindowInfo* winInfo;
@@ -683,6 +697,7 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_window_swap);
     tcase_add_test(tc_core, test_kill_window);
     tcase_add_test(tc_core, test_configure_windows);
+    tcase_add_test(tc_core, test_load_properties);
     tcase_add_test(tc_core, test_float_sink_window);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("WorkspaceOperations");

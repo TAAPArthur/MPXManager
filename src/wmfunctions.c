@@ -503,6 +503,7 @@ void updateMapState(int id, int map){
             addMask(winInfo, MAPPED_MASK);
             if(winInfo->mappedBefore)return;
             else winInfo->mappedBefore = 1;
+            loadWindowProperties(winInfo);
             addToList(&mappedOrder, (void*)(long)winInfo->id);
             long delta = getTime() - winInfo->creationTime;
             if(hasMask(winInfo, INPUT_MASK)){
