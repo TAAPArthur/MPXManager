@@ -221,10 +221,14 @@ int getExitStatusOfFork(){
         return WEXITSTATUS(status);
     else return -1;
 }
-void waitForCleanExit(){
+
+void waitForExit(int signal){
     int status = getExitStatusOfFork();
     LOG(LOG_LEVEL_DEBUG, "exit status %d\n", status);
-    assert(status == EXIT_SUCCESS);
+    assert(status == signal);
+}
+void waitForCleanExit(){
+    waitForExit(EXIT_SUCCESS);
 }
 
 

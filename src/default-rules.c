@@ -336,7 +336,7 @@ void onClientMessage(void){
             }
         }
     }
-    else if(ewmh->_NET_NUMBER_OF_DESKTOPS){
+    else if(message == ewmh->_NET_NUMBER_OF_DESKTOPS){
         if(data.data32[0] > 0){
             int delta = data.data32[0] - getNumberOfWorkspaces();
             if(delta > 0)

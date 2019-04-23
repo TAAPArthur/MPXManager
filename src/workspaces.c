@@ -11,7 +11,6 @@
 #include "masters.h"
 #include "mywm-util.h"
 #include "workspaces.h"
-#include "workspaces.h"
 ///list of all workspaces
 static ArrayList workspaces;
 

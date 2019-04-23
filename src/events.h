@@ -50,6 +50,12 @@ enum {
     /// max value of supported events
     NUMBER_OF_EVENT_RULES
 };
+
+/**
+ * execute code in an atomic manner
+ * @param code
+ */
+#define ATOMIC(code...) do {lock();code;unlock();}while(0)
 /**
  * Locks/unlocks the global mutex
  *

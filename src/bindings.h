@@ -100,6 +100,8 @@ typedef union {
     int intArg;
     /**a pointer*/
     void* voidArg;
+    /**a pointer*/
+    char* charArg;
 } BoundFunctionArg;
 
 /**

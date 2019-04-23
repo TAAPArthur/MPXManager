@@ -147,7 +147,7 @@ void dumpWindowInfo(WindowInfo* winInfo){
     PRINT_ARR("Setconfig", getConfig(winInfo), 5, "\n");
     if(winInfo->dock)
         PRINT_ARR("Properties", winInfo->properties, LEN(winInfo->properties), "\n");
-    LOG(LOG_LEVEL_INFO, "Mask %d\n", winInfo->mask);
+    LOG(LOG_LEVEL_INFO, "Mask %ud\n", winInfo->mask);
     printMask(winInfo->mask);
     if(winInfo->workspaceIndex == NO_WORKSPACE)
         LOG(LOG_LEVEL_INFO, "NO WORKPACE\n");

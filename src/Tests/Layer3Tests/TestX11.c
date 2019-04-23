@@ -521,18 +521,6 @@ static void setup(){
     onStartup();
     START_MY_WM
 }
-START_TEST(test_connect_to_xserver){
-    connectToXserver();
-    assert(getActiveMaster() != NULL);
-    assert(getActiveWorkspace() != NULL);
-    assert(getSize(getActiveMasterWindowStack()) == 0);
-    assert(getSize(getAllWindows()) == 0);
-    assert(getActiveMaster());
-    Monitor* m = getHead(getAllMonitors());
-    assert(m != NULL);
-    assert(getMonitorFromWorkspace(getActiveWorkspace()));
-}
-END_TEST
 
 START_TEST(test_activate_workspace){
     int masterStackSize = getSize(getWindowStackByMaster(getActiveMaster()));
@@ -643,10 +631,6 @@ END_TEST
 Suite* x11Suite(void){
     Suite* s = suite_create("Window Manager Functions");
     TCase* tc_core;
-    tc_core = tcase_create("X Server");
-    tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
-    tcase_add_test(tc_core, test_connect_to_xserver);
-    suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Sync_State");
     tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
     tcase_add_test(tc_core, test_sync_state);

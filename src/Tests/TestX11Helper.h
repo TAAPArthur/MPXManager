@@ -20,7 +20,6 @@
 #include "../globals.h"
 #include "../test-functions.h"
 
-#define ATOMIC(code...) do {lock();code;unlock();}while(0)
 extern pthread_t pThread;
 #define START_MY_WM \
         pThread=runInNewThread(runEventLoop,NULL,0);
@@ -56,6 +55,7 @@ void fullCleanup();
 
 void loadSampleProperties(WindowInfo* winInfo);
 int getExitStatusOfFork();
+void waitForExit(int signal);
 void waitForCleanExit();
 void setProperties(WindowID win);
 void checkProperties(WindowInfo* winInfo);

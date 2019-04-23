@@ -34,7 +34,7 @@ typedef struct {
     /// set to 1 iff the window is a dock
     bool dock;
     /**xcb_atom representing the window type*/
-    int type;
+    unsigned int type;
     /**string xcb_atom representing the window type*/
     char* typeName;
     /**class name of window*/
