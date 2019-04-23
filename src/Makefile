@@ -15,7 +15,7 @@ LAYER0_SRCS := logger.c globals.c
 LAYER1_SRCS := util.c 
 LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
 LAYER3_SRCS := layouts.c wmfunctions.c default-rules.c state.c
-LAYER4_SRCS := functions.c mpx.c Extensions/*.c
+LAYER4_SRCS := functions.c Extensions/*.c
 BASE_SRCS := settings.c args.c mpxmanager.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.c 
 

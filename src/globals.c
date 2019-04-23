@@ -64,7 +64,8 @@ int POLL_COUNT = 3;
 int POLL_INTERVAL = 10;
 int EVENT_PERIOD = 100;
 
-char* MASTER_INFO_PATH = "master-info.txt";
+
+char* MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
 char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
 bool LD_PRELOAD_INJECTION = 0;
 char* LD_PRELOAD_PATH = "/usr/lib/mpxmanager/mpx-patch.so";

@@ -4,18 +4,22 @@
  */
 
 
+
 #include <assert.h>
 #include <string.h>
 
 
-#include "bindings.h"
-#include "events.h"
-#include "devices.h"
-#include "globals.h"
-#include "logger.h"
-#include "masters.h"
+#include "../bindings.h"
+#include "../devices.h"
+#include "../events.h"
+#include "../globals.h"
+#include "../logger.h"
+#include "../masters.h"
+#include "../xsession.h"
 #include "mpx.h"
-#include "xsession.h"
+
+#if MPX_EXT_ENABLED
+
 
 /**
  * Holds info to match a master devices with a set of slaves
@@ -63,6 +67,7 @@ static void autoAttachSlave(void){
         restoreMPX();
 }
 void addAutoMPXRules(void){
+    ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
     static Rule autoAttachRule = CREATE_WILDCARD(BIND(autoAttachSlave));
     static Rule attachOnStartRule = CREATE_WILDCARD(BIND(restoreMPX));
     prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY), &autoAttachRule);
@@ -129,6 +134,8 @@ void attachSlaveToPropperMaster(SlaveDevice* slaveDevice){
         attachSlaveToMaster(slaveDevice->id, id);
 }
 void restoreMPX(void){
+    if(!isNotEmpty(&masterInfoList))
+        loadMasterInfo();
     FOR_EACH(Master*, m, getAllMasters()) restoreFocusColor(m);
     int num;
     ArrayList* slaves = getSlavesOfMasterByID(NULL, 0, &num);
@@ -152,7 +159,6 @@ void startMPX(void){
 }
 void stopMPX(void){
     mpxEnabled = 0;
-    //destroyAllNonDefaultMasters();
     FOR_EACH_REVERSED(Master*, master, getAllMasters()){
         if(master->id != DEFAULT_KEYBOARD){
             destroyMasterDevice(master->id, DEFAULT_POINTER, DEFAULT_KEYBOARD);
@@ -163,9 +169,19 @@ void stopMPX(void){
     assert(getActiveMaster()->id == DEFAULT_KEYBOARD);
     flush();
 }
+void restartMPX(void){
+    stopMPX();
+    startMPX();
+}
+static FILE* openMasterInfoFile(char* mode){
+    char* file = expandVar(MASTER_INFO_PATH);
+    FILE* fp = fopen(file, mode);
+    free(file);
+    return fp;
+}
 
 int saveMasterInfo(void){
-    FILE* fp = fopen(MASTER_INFO_PATH, "w");
+    FILE* fp = openMasterInfoFile("w");
     if(!fp)
         return 0;
     FOR_EACH(Master*, master, getAllMasters()){
@@ -187,7 +203,7 @@ int loadMasterInfo(void){
     char* line = NULL;
     size_t bSize = 0;
     ssize_t len;
-    fp = fopen(MASTER_INFO_PATH, "r");
+    fp = openMasterInfoFile("r");
     if(fp == NULL)
         return 0;
     LOG(LOG_LEVEL_INFO, "Loading saved MPX state\n");
@@ -227,3 +243,4 @@ int loadMasterInfo(void){
     fclose(fp);
     return 1;
 }
+#endif

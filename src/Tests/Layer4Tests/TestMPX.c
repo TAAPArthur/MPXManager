@@ -13,7 +13,7 @@
 #include "../../wmfunctions.h"
 #include "../../functions.h"
 #include "../../devices.h"
-#include "../../mpx.h"
+#include "../../Extensions/mpx.h"
 
 static void splitMasterHack(int i){
     xcb_input_key_press_event_t* event = getLastEvent();
@@ -167,6 +167,16 @@ START_TEST(test_auto_mpx){
     unlock();
 }
 END_TEST
+START_TEST(test_restart){
+    createMasterDevice("test1");
+    createMasterDevice("test1");
+    createMasterDevice("test1");
+    initCurrentMasters();
+    assert(getSize(getAllMasters()) > 1);
+    restartMPX();
+    assert(getSize(getAllMasters()) == 1);
+}
+END_TEST
 static void mpxStartup(void){
     MASTER_INFO_PATH = "dummy.txt";
     onStartup();
@@ -178,6 +188,7 @@ Suite* mpxSuite(){
     tcase_add_checked_fixture(tc_core, mpxStartup, fullCleanup);
     tcase_add_test(tc_core, test_split_master);
     tcase_add_test(tc_core, test_start_mpx_empty);
+    tcase_add_test(tc_core, test_restart);
     tcase_add_test(tc_core, test_save_load_mpx_bad);
     tcase_add_loop_test(tc_core, test_save_load_mpx, 0, 2);
     suite_add_tcase(s, tc_core);

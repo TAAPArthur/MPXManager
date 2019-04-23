@@ -5,9 +5,13 @@
 #ifndef MPX_H
 #define MPX_H
 
-#include "mywm-structs.h"
-#include "devices.h"
+#include "../devices.h"
+#include "../mywm-structs.h"
 
+#ifndef MPX_EXT_ENABLED
+    /// Enables the extension
+    #define MPX_EXT_ENABLED 1
+#endif
 /**
  * Adds hiearchy rules that will detect master/slave addition/removal and make the correct pairings
  */
@@ -26,6 +30,10 @@ void startMPX(void);
  * Removes all masters devices except the default
  */
 void stopMPX(void);
+/**
+ * Calls stopMPX() and startMPX()
+ */
+void restartMPX(void);
 /**
  * Saves the current master/slave configurations for later use
  */

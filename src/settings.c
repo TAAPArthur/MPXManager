@@ -17,7 +17,6 @@
 #include "layouts.h"
 #include "logger.h"
 #include "masters.h"
-#include "mpx.h"
 #include "mywm-util.h"
 #include "settings.h"
 #include "windows.h"
@@ -110,7 +109,6 @@ void defaultPrintFunction(void){
     dprintf(STATUS_FD, "\n");
 }
 void loadNormalSettings(){
-    addAutoMPXRules();
     for(int i = 0; i < LEN(DEFAULT_BINDINGS); i++){
         if(DEFAULT_BINDINGS[i].mod & Mod4Mask){
             DEFAULT_BINDINGS[i].mod &= ~Mod4Mask;
