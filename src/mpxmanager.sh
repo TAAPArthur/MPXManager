@@ -11,13 +11,25 @@
 #%    --restart                     Restart the program
 #%    --name                        Name of executable
 #%    --path                        Path to the config file
-#%    --send, -s                    send argument(s) to running instance
+#%    --send=<name=value>, -s       send argument(s) to running instance (can be called multiple times)
+#%    --set=<name=value>            set argument(s) for new instances (can be called multiple times)
+#%    --mode, -m                    run with a predefined settings. Valid options are: xmousecontrol
 #%    -h, --help                    Print this help
 #%    -v, --version                 Print script information
 #%
+#%Modes:
+#%Each mode is a non-WM feature
+#%      xmousecontrol enables control of the mouse with the keyboard
+#%      mpx-start   loads mpx config file, creates masters and attaches slaves to the appropiate masters
+#%      mpx-stop    removes all non-default masters
+#%      mpx-restart mpx-stop and mpx-start
+#%      mpx-resstore   Like mpx-start but does not create any new masters
+#%      mpx-split   takes all slaves that are sending events and add them to a newly created master. To make the timeout longer, change the value of POLL_COUNT/POLL_INTERVAL via --set
+#%
 #%Examples:
 #%    ${SCRIPT_NAME}              #start the window manager
-#%    ${SCRIPT_NAME} VAR=VALUE             #set VAR to VALUE
+#%    ${SCRIPT_NAME} --set="VAR=VALUE"             #start the window manager and set VAR to VALUE
+#%    ${SCRIPT_NAME} --send="VAR=VALUE"             #set VAR to VALUE for a running instance
 #%
 #================================================================
 #- IMPLEMENTATION
@@ -40,13 +52,8 @@ displayHelp(){
 run(){
     $path/$fileName $@
 }
-setVar(){
-    file="/tmp/mpxmanager-fifo"
-    [ ! -e "$file" ] && mkfifo "$file"
-    echo $@ >>"$file"
-}
 displayVersion(){
-    echo "0.9.2"
+    echo "0.9.6"
 }
 
 fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))
@@ -67,11 +74,7 @@ getopts "$optspec" optchar || run
                     run $@
                     ;;
                 restart)
-                    setVar $@
-                    ;;
-                send)
-                    shift
-                    setVar $@
+                    run "--send restart"
                     ;;
                 recompile)
                     mkdir -p $path
@@ -95,10 +98,6 @@ getopts "$optspec" optchar || run
                     run $@
                     ;;
             esac;;
-
-        s)
-            setVar $@
-            ;;
         v)
             displayVersion
             ;;

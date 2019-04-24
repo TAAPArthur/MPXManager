@@ -273,9 +273,13 @@ void setLastEvent(void* event);
 void* getLastEvent(void);
 
 /**
- * User can set preStartUpMethod to run an arbitrary function right after the startup method is called
+ * User can set startUpMethod to run an arbitrary function when starting up
  */
 extern void (*startUpMethod)(void);
+/**
+ * User can set postStartUpMethod to run an arbitrary function after starting up (right after the xsession has been initialized)
+ */
+extern void (*postStartUpMethod)(void);
 
 /**
  * The user can set this method which would be called to write out the WM status to an external program

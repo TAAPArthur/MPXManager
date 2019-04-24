@@ -79,6 +79,7 @@ int DEFAULT_POINTER = 2;
 int DEFAULT_KEYBOARD = 3;
 
 void (*startUpMethod)(void);
+void (*postStartUpMethod)(void);
 void (*printStatusMethod)(void);
 int statusPipeFD[2];
 

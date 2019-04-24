@@ -42,6 +42,12 @@ extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
  */
 extern xcb_atom_t WM_SELECTION_ATOM;
 
+/**
+ * Atom used to differenciate custom client messages
+ * Atoms with the flag are used to remotly interact with the WM
+ */
+extern xcb_atom_t WM_INTERPROCESS_COM;
+
 /**XDisplay instance (only used for events/device commands)*/
 extern Display* dpy;
 /**XCB display instance*/

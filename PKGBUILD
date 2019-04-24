@@ -2,7 +2,7 @@
 
 
 pkgname='mpxmanager'
-pkgver='0.9.4'
+pkgver='0.9.6'
 _language='en-US'
 pkgrel=1
 pkgdesc='My Personal XWindow Manager'

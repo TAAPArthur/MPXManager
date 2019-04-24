@@ -14,9 +14,10 @@ LDFLAGS := -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -l
 LAYER0_SRCS := logger.c globals.c 
 LAYER1_SRCS := util.c 
 LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
-LAYER3_SRCS := layouts.c wmfunctions.c default-rules.c state.c
-LAYER4_SRCS := functions.c Extensions/*.c
-BASE_SRCS := settings.c args.c mpxmanager.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
+LAYER3_SRCS := state.c layouts.c wmfunctions.c default-rules.c
+LAYER4_SRCS := communications.c functions.c Extensions/*.c
+TOP_LAYER_SRCS := settings.c mpxmanager.c
+BASE_SRCS := ${TOP_LAYER_SRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.c 
 
 
@@ -49,11 +50,14 @@ install: mpxmanager.1 libmpxmanager.so libmpx-patch.so
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
 
+preinstall: mpxmanager.1 mpxmanager-autocomplete.sh
+	sed -i "s/pkgver=.*/pkgver='$$(./mpxmanager.sh -v)'/g" ../PKGBUILD
+
 mpxmanager.1: mpxmanager.sh
 	help2man -No mpxmanager.1 ./mpxmanager.sh
 
-mpxmanager-autocomplete.sh: args.c mpxmanager.sh
-	sed -i "s/sendOptions=.*/$$(echo $(./mpxmanager --help 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo '--'{}))/g"  mpxmanager-autocomplete.sh
+mpxmanager-autocomplete.sh: mpxmanager.c mpxmanager.sh
+	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo '--'{} | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: ${BASE_SRCS}
 	${CC} $^ -o $@ $$HOME/.mpxmanager/config.c ${CFLAGS} ${LDFLAGS}
@@ -70,7 +74,7 @@ libmpx-patch.so: extensions/mpx-patch.c
 config.c:
 	cp --no-clobber sample-config.c config.c
 
-test: unitTest1 unitTest2 unitTest3 unitTest4 unitTest5 format
+test: unitTest1 unitTest2 unitTest3 unitTest4 unitTest5 preinstall format
 		
 unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}

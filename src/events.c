@@ -183,7 +183,8 @@ void registerForDeviceEvents(){
         grabBinding(binding);
     }
     LOG(LOG_LEVEL_DEBUG, "listening for device event;  masks: %d\n", ROOT_DEVICE_EVENT_MASKS);
-    passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
+    if(ROOT_DEVICE_EVENT_MASKS)
+        passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
 }
 int registerForWindowEvents(WindowID window, int mask){
     xcb_void_cookie_t cookie;
@@ -191,7 +192,8 @@ int registerForWindowEvents(WindowID window, int mask){
     return catchErrorSilent(cookie);
 }
 void registerForEvents(){
-    registerForWindowEvents(root, ROOT_EVENT_MASKS);
+    if(ROOT_EVENT_MASKS)
+        registerForWindowEvents(root, ROOT_EVENT_MASKS);
     registerForDeviceEvents();
     registerForMonitorChange();
 }

@@ -157,4 +157,15 @@ void onStartup(void);
  * The majority are wrappers to map X11 event to the corrosponding function
  */
 void addBasicRules(void);
+/**
+ * for i in arr, add basic rule i for both normal and batch events
+ *
+ * @param arr
+ * @param len
+ */
+void addSomeBasicRules(int* arr, int len);
+/**
+ * Adds a rule that will cause the WM to exit when it next becomes idle
+ */
+void addDieOnIdleRule(void);
 #endif /* DEFAULT_RULES_H_ */

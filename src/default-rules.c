@@ -94,8 +94,8 @@ void addNoDockFocusRule(void){
     addToList(getEventRules(PropertyLoad), &disallowDocksFocusRule);
 }
 void addFocusFollowsMouseRule(void){
-    static Rule focusFollowsMouseRule = CREATE_DEFAULT_EVENT_RULE(focusFollowMouse);
     NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_ENTER;
+    static Rule focusFollowsMouseRule = CREATE_DEFAULT_EVENT_RULE(focusFollowMouse);
     addToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_ENTER), &focusFollowsMouseRule);
 }
 
@@ -404,7 +404,8 @@ void onSelectionClearEvent(void){
 
 void onStartup(void){
     resetContext();
-    addDefaultRules();
+    if(RUN_AS_WM)
+        addDefaultRules();
     if(startUpMethod)
         startUpMethod();
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
@@ -414,6 +415,8 @@ void onStartup(void){
         FOR_EACH(Rule*, rule, getEventRules(i)) initRule(rule);
     }
     connectToXserver();
+    if(postStartUpMethod)
+        postStartUpMethod();
 }
 
 static int nonAlwaysOnTopWindowMoved;
@@ -461,7 +464,16 @@ static Rule BATCH_RULES[NUMBER_OF_EVENT_RULES] = {
     [onWindowMove] = CREATE_DEFAULT_EVENT_RULE(enforceAlwaysOnTop),
 };
 
+void addSomeBasicRules(int* arr, int len){
+    for(unsigned int i = 0; i < len; i++)
+        if(NORMAL_RULES[arr[i]].onMatch.type)
+            addToList(getEventRules(arr[i]), &NORMAL_RULES[arr[i]]);
+    for(unsigned int i = 0; i < len; i++)
+        if(BATCH_RULES[arr[i]].onMatch.type)
+            addToList(getEventRules(arr[i]), &BATCH_RULES[arr[i]]);
+}
 void addBasicRules(void){
+    NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_FOCUS_OUT | XCB_INPUT_XI_EVENT_MASK_FOCUS_IN;
     for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
         if(NORMAL_RULES[i].onMatch.type)
             addToList(getEventRules(i), &NORMAL_RULES[i]);
@@ -470,6 +482,10 @@ void addBasicRules(void){
             addToList(getBatchEventRules(i), &BATCH_RULES[i]);
 }
 
+void addDieOnIdleRule(void){
+    static Rule dieOnIdleRule = CREATE_WILDCARD(BIND(exit, 0));
+    addToList(getEventRules(Idle), &dieOnIdleRule);
+}
 
 void addDefaultRules(void){
     addBasicRules();

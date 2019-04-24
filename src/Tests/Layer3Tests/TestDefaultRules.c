@@ -79,13 +79,33 @@ int pid;
 static void clientTeardown(){
     fullCleanup();
 }
+START_TEST(test_run_as_non_wm){
+    RUN_AS_WM = 0;
+    addSomeBasicRules((int[]){onXConnection, onWindowMove}, 2);
+    onStartup();
+    for(unsigned int i = 0; i < NUMBER_OF_EVENT_RULES; i++)
+        if(i == onXConnection || i == onWindowMove)
+            assert(isNotEmpty(getEventRules(i)));
+        else
+            assert(!isNotEmpty(getEventRules(i)));
+}
+END_TEST
 
 START_TEST(test_on_startup){
+    startUpMethod = dummy;
+    onStartup();
+    assert(count);
     assert(isNotEmpty(getAllMonitors()));
     assert(isNotEmpty(getAllMasters()));
     assert(dis);
     assert(!xcb_connection_has_error(dis));
     assert(isWorkspaceVisible(getActiveWorkspaceIndex()));
+}
+END_TEST
+START_TEST(test_post_startup){
+    postStartUpMethod = dummy;
+    onStartup();
+    assert(count);
 }
 END_TEST
 
@@ -104,6 +124,14 @@ START_TEST(test_detect_wm){
         onStartup();
     }
     wait(NULL);
+}
+END_TEST
+
+START_TEST(test_die_on_idle){
+    addDieOnIdleRule();
+    createNormalWindow();
+    flush();
+    runEventLoop(NULL);
 }
 END_TEST
 
@@ -653,13 +681,16 @@ Suite* defaultRulesSuite(){
     tc_core = tcase_create("Startup Events");
     tcase_add_checked_fixture(tc_core, NULL, fullCleanup);
     tcase_add_test(tc_core, test_auto_tile);
+    tcase_add_test(tc_core, test_run_as_non_wm);
+    tcase_add_test(tc_core, test_on_startup);
+    tcase_add_test(tc_core, test_post_startup);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Special Events");
     tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
-    tcase_add_test(tc_core, test_on_startup);
     tcase_add_test(tc_core, test_print_method);
     tcase_add_test(tc_core, test_handle_error);
     tcase_add_test(tc_core, test_detect_wm);
+    tcase_add_test(tc_core, test_die_on_idle);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Normal Events");
     tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);

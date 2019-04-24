@@ -10,7 +10,7 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 
-#include "args.h"
+#include "communications.h"
 #include "events.h"
 #include "functions.h"
 #include "globals.h"
@@ -128,6 +128,5 @@ void loadNormalSettings(){
     SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;
     addBindings(DEFAULT_BINDINGS, LEN(DEFAULT_BINDINGS));
-    static Rule argsRule = {NULL, 0, BIND(startReadingUserInput)};
-    addToList(getEventRules(onXConnection), &argsRule);
+    enableInterClientCommunication();
 }
