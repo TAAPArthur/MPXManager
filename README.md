@@ -1,7 +1,12 @@
 # My Personal XWindow Manager (MPX Manager)
 
-# What
-X11 window manager with [MPX (multiple pointer x)](https://wiki.archlinux.org/index.php/Multi-pointer_X) support.
+
+# Install & Run
+`make install`
+
+`mpxmanager`
+# Intro
+MPX Manager is a X11, tiling window manager with [MPX (multiple pointer x)](https://wiki.archlinux.org/index.php/Multi-pointer_X) support.
 
 ## Motivation
 MPX Manager started off as a project to fill void of MPX aware window managers. Before its creation I tried to hack MPX support into existing window managers namely Xmonad. Due to the limitations of hacked support and inconvenience of maintaining, I ended up leaving Xmonad and exploring other WMs. I wanted to compile all the MPX hacks into an independent project that could run in conduction with any EWMH/ICCCM compliant window manager. One of the hacks was setting the  border color of the active window depending on which master device had focus. This involved telling the WM to not set the border color itself. This was a ~1 line change, but the thought occurred to me: why should I have to dig through the source code to make a simple one line change in these supposed customizable WMs? Clearly the level of customization the developers planned did not meet my expectation. So I decided to create MPX Manager.
@@ -11,7 +16,7 @@ MPX Manager started off as a project to fill void of MPX aware window managers. 
 MPX Manager was designed from the ground up to support a variable number of master devices. By default master devices operate independently and do not interfere with each other whenever possible.
 
 ## Configurable
-We strived to make as few assumptions as possible while still be compliant with the EWMH/ICCCM spec. The assumptions we made fo user convenience can be toggled a variable in the configuration file and/or from the command line . For the changes we did account, the code base is well documented to make hacks as painless as possible
+We strived to make as few assumptions as possible while still be compliant with the EWMH/ICCCM spec. The assumptions we made fo user convenience can be toggled in the configuration file and/or from the command line. For the changes we did account, the code base is well documented to make hacks as painless as possible. And hacks, no matter how pointless are encouraged. The goal is for users to be able to do whatever they want.
 
 ## Multi monitor support
 We support having multiple monitors that each will hold one workspace.
@@ -46,13 +51,13 @@ All structs/vars/methods/files have Doxygen documentation. But there is no tutor
 # Code Overview
 
 ## BoundFunction
-Stores a function ptr and arguments to pass into the function. This is used to trigger an arbitary function on a given set of conditions. There is a `BIND` macro to easily create a BoundFunction
+Stores a function ptr and arguments to pass into the function. This is used to trigger an arbitary function on a given set of conditions. There is a `BIND` macro to easily create a BoundFunction.
 
 ## Rule
-Used to select a window given a string. The string can be interpreted as a class, title, type, etc  of the window and be matched case sensitive and/or via regex. When there is a match, a [BoundFunction](BoundFunction) is called
+Used to select a window given a string. The string can be interpreted as a class, title, type, etc  of the window and be matched case sensitive and/or via regex. When there is a match, a [BoundFunction](BoundFunction) is called.
 
 ## Binding
-Takes a modifier mask, a key/mouse button and a [BoundFunction](BoundFunction). When a key/button is pressed/release we scan through a list of bindings and if the mask and key/button match, we call the BoundFunction. There are options to customize on which device events will cause the button to be triggered
+Takes a modifier mask, a key/mouse button and a [BoundFunction](BoundFunction). When a key/button is pressed/release we scan through a list of bindings and if the mask and key/button match, we call the BoundFunction. There are options to customize on which device events will cause the button to be triggered.
 ## Master
 This struct holds info related to a [master device pair][1] device.
 ## Window
@@ -87,14 +92,16 @@ static Rule targetWindowRule={C,CLASS|RESOURCE};
 will use to raise our target. The function searches for the first window to match
  a given rule and raises it. We pass in the targetWindowRule to match out desired
 window
+
 static Rule alwaysOnTopRuleRule={NULL,0, BIND(findAndRaiseLazy,&targetWindowRule)};
+
 // We want this Rule to be applied everytime a window is raised. Any time a window's
  size, position or stacking order change (or when it is first detected), all onWindowMove
-rules are triggered, so lets add our rule there
+rules are triggered, so lets add our rule there.
+
 appendRule(onWindowMove,&targetWindowRule);
 ```
 For more examples see settings.c for all the defaults
-# Install
-`make install`
-#  Run
-mpxmanager
+
+# License
+MIT

@@ -164,6 +164,18 @@ START_TEST(test_min_max){
     assert(MIN(big, small) == small);
 }
 END_TEST
+START_TEST(test_wrap){
+    for(int i = 0; i < 2; i++){
+        int len = 7;
+        int offset = len * i;
+        assert(WRAP(8 + offset, len) == 1);
+        assert(WRAP(len + offset, len) == 0);
+        assert(WRAP(0, len) == 0);
+        assert(WRAP(-1 + offset, len) == 6);
+        assert(WRAP(-len + offset, len) == 0);
+    }
+}
+END_TEST
 
 START_TEST(test_for_each){
     int i = 0;
@@ -236,6 +248,7 @@ Suite* utilSuite(){
     tc_core = tcase_create("MISC");
     tcase_add_test(tc_core, test_get_time);
     tcase_add_test(tc_core, test_min_max);
+    tcase_add_test(tc_core, test_wrap);
     suite_add_tcase(s, tc_core);
     return s;
 }

@@ -1,5 +1,6 @@
 #include "../UnitTests.h"
 #include "../../xsession.h"
+#include "../../logger.h"
 
 extern Suite* bindingsSuite();
 extern Suite* devicesSuite();
@@ -15,6 +16,7 @@ CREATE_HANDLER
 
 int main(int argc, char** argv __attribute__((unused))){
     if(argc > 1){
+        setLogLevel(LOG_LEVEL_NONE);
         if(!fork())
             openXDisplay();
         else

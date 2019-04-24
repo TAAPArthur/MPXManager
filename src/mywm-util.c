@@ -45,8 +45,7 @@ void resetPipe(){
 }
 static void stop(void){
     LOG(LOG_LEVEL_INFO, "Shutting down\n");
-    if(STATUS_FD)
-        close(STATUS_FD);
+    resetPipe();
     closeConnection();
     LOG(LOG_LEVEL_INFO, "destroying context\n");
     resetContext();

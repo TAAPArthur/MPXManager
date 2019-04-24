@@ -8,8 +8,6 @@
 #include <ctype.h>
 #include <regex.h>
 #include <string.h>
-#include <strings.h>
-#include <unistd.h>
 
 #include <xcb/xinput.h>
 
@@ -43,9 +41,10 @@ static BoundFunction* popActiveBinding(){
 Binding* getActiveBinding(){
     return isNotEmpty(getActiveChains()) ? ((BoundFunction*)getLast(getActiveChains()))->func.chainBindings : NULL;
 }
+
 int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
     assert(boundFunction);
-    LOG(LOG_LEVEL_ALL, "calling function %d\n", boundFunction->type);
+    LOG_RUN(LOG_LEVEL_VERBOSE, dumpBoundFunction(boundFunction));
     BoundFunctionArg arg = boundFunction->arg;
     if(boundFunction->dynamic == 1){
         if(winInfo == NULL)
@@ -104,6 +103,12 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
             break;
         case INT_ARG_RETURN_INT:
             result = boundFunction->func.funcReturnInt(arg.intArg);
+            break;
+        case INT_INT_ARG:
+            boundFunction->func.func(arg.intArr[0], arg.intArr[1]);
+            break;
+        case INT_INT_ARG_RETURN_INT:
+            result = boundFunction->func.funcReturnInt(arg.intArr[0], arg.intArr[1]);
             break;
         case WIN_ARG:
             boundFunction->func.func(arg.voidArg);

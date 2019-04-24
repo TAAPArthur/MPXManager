@@ -20,10 +20,6 @@
 WindowInfo* winInfo;
 WindowInfo* winInfo2;
 Master* defaultMaster;
-static int completedInit = 0;
-static void finishedInit(void){
-    completedInit++;
-}
 static int count = 0;
 static void dummy(void){
     count++;
@@ -42,7 +38,6 @@ static void deviceEventsetup(){
     LOAD_SAVED_STATE = 0;
     CRASH_ON_ERRORS = -1;
     DEFAULT_WINDOW_MASKS = SRC_ANY;
-    POLL_COUNT = 10;
     if(!startUpMethod)
         startUpMethod = sampleStartupMethod;
     NUMBER_OF_DEFAULT_LAYOUTS = 0;
@@ -51,19 +46,18 @@ static void deviceEventsetup(){
     defaultMaster = getActiveMaster();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
+    scan(root);
     xcb_icccm_set_wm_protocols(dis, win2, ewmh->WM_PROTOCOLS, 1, &ewmh->_NET_WM_PING);
     flush();
     createMasterDevice("device2");
     createMasterDevice("device3");
     flush();
-    static Rule postInitRule = CREATE_DEFAULT_EVENT_RULE(finishedInit);
-    addToList(getEventRules(Idle), &postInitRule);
+    retile();
+    int idle = getIdleCount();
     START_MY_WM;
-    WAIT_UNTIL_TRUE(completedInit);
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
     winInfo = getWindowInfo(win1);
     winInfo2 = getWindowInfo(win2);
-    assert(winInfo);
-    assert(winInfo2);
 }
 
 static void nonDefaultDeviceEventsetup(){
@@ -71,14 +65,7 @@ static void nonDefaultDeviceEventsetup(){
     startUpMethod = addFocusFollowsMouseRule;
     deviceEventsetup();
 }
-static void regularEventsetup(){
-    onStartup();
-}
-int pid;
 
-static void clientTeardown(){
-    fullCleanup();
-}
 START_TEST(test_run_as_non_wm){
     RUN_AS_WM = 0;
     addSomeBasicRules((int[]){onXConnection, onWindowMove}, 2);
@@ -686,14 +673,14 @@ Suite* defaultRulesSuite(){
     tcase_add_test(tc_core, test_post_startup);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Special Events");
-    tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_print_method);
     tcase_add_test(tc_core, test_handle_error);
     tcase_add_test(tc_core, test_detect_wm);
     tcase_add_test(tc_core, test_die_on_idle);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Normal Events");
-    tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_detect_new_windows);
     tcase_add_test(tc_core, test_map_windows);
     tcase_add_test(tc_core, test_delete_windows);
@@ -701,7 +688,7 @@ Suite* defaultRulesSuite(){
     tcase_add_test(tc_core, test_property_update);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("WindowCategories");
-    tcase_add_checked_fixture(tc_core, regularEventsetup, fullCleanup);
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_ignored_windows);
     tcase_add_test(tc_core, test_unknown_windows_no_workspace);
     tcase_add_test(tc_core, test_dock_windows);

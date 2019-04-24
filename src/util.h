@@ -12,6 +12,8 @@
 #define MIN(a,b) (a<b?a:b)
 /// Returns the max of a,b
 #define MAX(a,b) (a>b?a:b)
+/// returns the V %D such that the result is always non negative
+#define WRAP(V,D) ((V%D)+D)%D
 
 /**
  * Simple ArrayList struct

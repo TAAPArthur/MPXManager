@@ -5,7 +5,7 @@ RELEASE_FLAGS := -g -O3 -DNDEBUG
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-cast-function-type
 ERROR_FLAGS := -Werror -Wall -Wextra
-CFLAGS := -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE 
+CFLAGS := -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE ${INJECT}
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING  --coverage -Wno-unused-function
 TESTLIBS := -lcheck
@@ -21,12 +21,12 @@ BASE_SRCS := ${TOP_LAYER_SRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LA
 SRCS := ${BASE_SRCS} config.c 
 
 
-CHECK_TEST_COVERAGE = [ -z "$$CK_RUN_CASE$$CK_RUN_SUITE" ] && (gcov -f $$(basename -a $(1)) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm *.gc??)
+CHECK_TEST_COVERAGE = [ -z "$$CK_RUN_CASE$$CK_RUN_SUITE" ] && (gcov -f $$(basename -a $(1)) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm -f *.gc??)
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 
-RUN_XTEST = xvfb-run $(call RUN_TEST, ./$@ )
-RUN_XTEST_NO_DISPLAY = DISPLAY=:1000 $(call RUN_TEST, ./$@ --test-no-xdisplay )
+RUN_XTEST = xvfb-run -a $(call RUN_TEST, $(1) )
+RUN_XTEST_NO_DISPLAY = DISPLAY=:1000 $(call RUN_TEST, $(1) --test-no-xdisplay )
 
 ifeq ($(DEBUG),1)
   CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DDEBUG
@@ -68,7 +68,7 @@ recompile:
 libmpxmanager.so: ${BASE_SRCS}
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
 
-libmpx-patch.so: extensions/mpx-patch.c
+libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} -fPIC -shared -o $@ $^ ${CFLAGS} ${LDFLAGS}
 
 config.c:
@@ -83,23 +83,24 @@ unitTest1: Tests/Layer1Tests/*.c ${LAYER1_SRCS}
 
 unitTest2: Tests/*.c Tests/Layer2Tests/*.c ${LAYER2_SRCS} ${LAYER1_SRCS}
 	${CC} ${LAYER0_SRCS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
-	$(call RUN_XTEST_NO_DISPLAY)
-	$(call RUN_XTEST)
+	$(call RUN_XTEST_NO_DISPLAY, ./$@)
+	$(call RUN_XTEST, ./$@ )
 	$(call CHECK_TEST_COVERAGE,${LAYER2_SRCS})
 
 unitTest3: Tests/*.c Tests/Layer3Tests/*.c ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 	${CC} $^ -o $@ ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
-	$(call RUN_XTEST)
+	$(call RUN_XTEST, ./$@ )
 	$(call CHECK_TEST_COVERAGE,${LAYER3_SRCS})
 		
 unitTest4: Tests/*.c Tests/Layer4Tests/*.c ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LAYER1_SRCS} ${LAYER0_SRCS}
 	${CC} $^ -o $@ ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
-	$(call RUN_XTEST)
-	$(call CHECK_TEST_COVERAGE,${LAYER4_SRCS})
+	$(call RUN_XTEST, ./$@ )
+	$(call CHECK_TEST_COVERAGE, ${LAYER4_SRCS})
 
 unitTest5: QUICK=1
 unitTest5: mpxmanager Tests/arg-tests.sh
-	$(call RUN_TEST, Tests/arg-tests.sh )
+	$(call RUN_XTEST, Tests/arg-tests.sh )
+	$(call CHECK_TEST_COVERAGE,${TOP_LAYER_SRCS})
 
 
 FORMATTER := t=$$(stat -c %y "$$file"); hash="$$(md5sum $$file)";astyle --project "$$file" >/dev/null && sed -ri "s/\)\s+\{/){/g" "$$file"; [ "$$(md5sum $$file)" == "$$hash" ] && (touch -d "$$t" "$$file" && rm -f "$$file.orig") || true

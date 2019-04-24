@@ -27,7 +27,7 @@
     #define INIT_LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
-int LOG_LEVEL = INIT_LOG_LEVEL;
+static int LOG_LEVEL = INIT_LOG_LEVEL;
 
 int getLogLevel(){
     return LOG_LEVEL;
@@ -147,7 +147,7 @@ void dumpWindowInfo(WindowInfo* winInfo){
     PRINT_ARR("Setconfig", getConfig(winInfo), 5, "\n");
     if(winInfo->dock)
         PRINT_ARR("Properties", winInfo->properties, LEN(winInfo->properties), "\n");
-    LOG(LOG_LEVEL_INFO, "Mask %ud\n", winInfo->mask);
+    LOG(LOG_LEVEL_INFO, "Mask %u\n", winInfo->mask);
     printMask(winInfo->mask);
     if(winInfo->workspaceIndex == NO_WORKSPACE)
         LOG(LOG_LEVEL_INFO, "NO WORKPACE\n");
@@ -164,6 +164,12 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
         LOG(LOG_LEVEL_INFO, "atom: %.*s\n", reply->name_len, xcb_get_atom_name_name(reply));
         free(reply);
     }
+}
+
+void dumpBoundFunction(BoundFunction* boundFunction){
+    LOG(LOG_LEVEL_INFO, "calling function %d\n", boundFunction->type);
+    void*    funptr = &boundFunction->func.func;
+    backtrace_symbols_fd(funptr, 1, STDERR_FILENO);
 }
 
 #define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return  #TYPE
@@ -251,17 +257,15 @@ void logError(xcb_generic_error_t* e){
     if(e->error_code != BadWindow)
         dumpWindowInfo(getWindowInfo(e->resource_id));
     LOG(LOG_LEVEL_ERROR, "Error code %d %s \n", e->error_code, buff) ;
-    printStackTrace();
+    LOG_RUN(LOG_LEVEL_DEBUG, printStackTrace());
     if((1 << e->error_code) & CRASH_ON_ERRORS)
         assert(0 && "Unexpected error");
 }
 void printStackTrace(void){
-    if(isLogging(LOG_LEVEL_DEBUG)){
-        void* array[32];
-        size_t size;
-        // get void*'s for all entries on the stack
-        size = backtrace(array, LEN(array));
-        // print out all the frames to stderr
-        backtrace_symbols_fd(array, size, STDERR_FILENO);
-    }
+    void* array[32];
+    size_t size;
+    // get void*'s for all entries on the stack
+    size = backtrace(array, LEN(array));
+    // print out all the frames to stderr
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
 }

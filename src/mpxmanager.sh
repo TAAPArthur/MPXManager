@@ -50,7 +50,7 @@ displayHelp(){
 }
 
 run(){
-    $path/$fileName $@
+    exec $path/$fileName $@
 }
 displayVersion(){
     echo "0.9.6"
@@ -74,7 +74,7 @@ getopts "$optspec" optchar || run
                     run $@
                     ;;
                 restart)
-                    run "--send restart"
+                    run "--send=restart"
                     ;;
                 recompile)
                     mkdir -p $path

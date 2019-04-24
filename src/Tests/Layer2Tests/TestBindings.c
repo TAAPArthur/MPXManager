@@ -159,6 +159,7 @@ END_TEST
 ///Test to make sure callBoundedFunction() actually calls the right function
 START_TEST(test_call_bounded_function){
     int integer = 1;
+    int integer2 = -1;
     void* voidPointer = "c";
     int count = 0;
     int targetCounts[] = {6, 6, 6};
@@ -212,6 +213,17 @@ START_TEST(test_call_bounded_function){
         assert(integer == i);
         individualCounts[2]++;
     }
+    void funcIntInt(int i, int j){
+        count++;
+        assert(integer == i);
+        assert(integer2 == j);
+    }
+    int funcIntIntReturnInt(int i, int j){
+        count++;
+        assert(integer == i);
+        assert(integer2 == j);
+        return 1;
+    }
     int funcEcho(int i){
         count++;
         assert(integer == i);
@@ -241,6 +253,8 @@ START_TEST(test_call_bounded_function){
         BIND(funcVoidArg, voidPointer),
         BIND(funcVoidArgReturn, voidPointer),
         BIND(funcWinArg),
+        BIND(funcIntInt, integer, integer2),
+        BIND(funcIntIntReturnInt, integer, integer2),
         BIND(funcWinArgReturn),
         BIND(funcWinIntArg, integer),
         BIND(funcWinIntArgReturn, integer),

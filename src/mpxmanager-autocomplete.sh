@@ -14,7 +14,7 @@ _mpxmanagerAutocomplete ()   #  By convention, the function name
         COMPREPLY=( $( compgen -W "$sendOptions --" -- $cur ) )
         return 0;
     else
-        COMPREPLY=( $( compgen -W "-h --help -v --version -s --set --send --recompile --name --path --" -- $cur ) )
+        COMPREPLY=( $( compgen -W "-h --help -v --version -s --set --send --recompile --name --path " -- $cur ) )
     fi
     return 0
 }

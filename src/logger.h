@@ -11,6 +11,7 @@
 #include <xcb/xcb.h>
 
 #include "mywm-structs.h"
+#include "bindings.h"
 
 /**
  * Prints the stack trace
@@ -55,15 +56,24 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
 
 
 /**
- * If i >= log level, the print ...
+ * If i >= getLogLevel(), the print str
  *
  * @param i
- * @param ...
+ * @param str
  *
  */
-#define LOG(i,...) \
-do{if(isLogging(i)) fprintf(stderr, __VA_ARGS__);}while(0)
+#define LOG(i,str...) \
+    do{if(isLogging(i)) fprintf(stderr, str);}while(0)
 
+/**
+ * if i>= getLogLevel(), run code
+ *
+ * @param i
+ * @param code
+ *
+ */
+#define LOG_RUN(i,code...) \
+    do{if(isLogging(i)) code;}while(0)
 
 /**
  * @return the current log level
@@ -125,6 +135,13 @@ void dumpMatch(char* match);
  * @param win
  */
 void dumpWindowInfo(WindowInfo* win);
+
+/**
+ * Prints info on boundFunction
+ *
+ * @param boundFunction
+ */
+void dumpBoundFunction(BoundFunction* boundFunction);
 
 /**
  * Prints the name of each element of atoms

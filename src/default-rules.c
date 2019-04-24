@@ -6,13 +6,6 @@
 
 #include <assert.h>
 
-#include <X11/keysym.h>
-#include <xcb/randr.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <xcb/xinput.h>
-#include <xcb/xproto.h>
 
 #include "bindings.h"
 #include "default-rules.h"

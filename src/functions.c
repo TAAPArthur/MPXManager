@@ -142,6 +142,7 @@ int spawn(char* command){
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
     int pid = fork();
     if(pid == 0){
+        resetPipe();
         setClientMasterEnvVar();
         setsid();
         execl(SHELL, SHELL, "-c", command, (char*)0);

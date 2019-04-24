@@ -29,7 +29,7 @@
 #endif
 
 static void handler(int sig){
-    fprintf(stderr, "Error: signal %d:\n", sig);
+    LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
     printStackTrace();
     quit();
 }
@@ -200,7 +200,6 @@ int main(int argc, char* argv[]){
     passedArguments = argv;
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
-    signal(SIGKILL, handler);
     signal(SIGPIPE, resetPipe);
     loadDefaultOptions();
     startUpMethod = loadSettings;

@@ -14,8 +14,8 @@ optdepends=('xorg-server-xvfb' 'xorg-xinput' 'xsane-xrandr')
 makedepends=('git')
 md5sums=('SKIP')
 
-source=("git://github.com/TAAPArthur/MyPersonalXWindowManager.git")
-_srcDir="MyPersonalXWindowManager"
+source=("git+https://github.com/TAAPArthur/MPXManager.git")
+_srcDir="MPXManager"
 
 package() {
   cd "$_srcDir"

@@ -76,6 +76,10 @@ typedef enum {
     INT_ARG,
     /**Call a function that takes a single int argument*/
     INT_ARG_RETURN_INT,
+    /**Call a function that takes a 2 int arguments*/
+    INT_INT_ARG,
+    /**Call a function that takes a 2 int arguments*/
+    INT_INT_ARG_RETURN_INT,
     /**Call a function that takes a WindowInfo as an object */
     WIN_ARG,
     /**Call a function that takes a WindowInfo as an object */
@@ -98,6 +102,8 @@ typedef union {
     long longArg;
     /**an int*/
     int intArg;
+    /**2 ints*/
+    int intArr[2];
     /**a pointer*/
     void* voidArg;
     /**a pointer*/
@@ -204,7 +210,7 @@ typedef struct {
  * @param ... the params to the function, the 1st is the function, 2nd (if present) is
  * the argument to bind to the function
  */
-#define BIND(...) _BIND_HELPER(__VA_ARGS__, _BIND, _BIND2,_BIND1)(__VA_ARGS__,0)
+#define BIND(...) _BIND_HELPER(__VA_ARGS__, _BIND3, _BIND2,_BIND1)(__VA_ARGS__,0)
 
 /**
  * @copybrief BIND
@@ -215,7 +221,7 @@ typedef struct {
  * @see BoundFunction:negateResult
  *
  */
-#define NBIND(...) _BIND_HELPER(__VA_ARGS__, _NBIND, _BIND2,_BIND1)(__VA_ARGS__,1)
+#define NBIND(...) _BIND_HELPER(__VA_ARGS__, _BIND3, _BIND2,_BIND1)(__VA_ARGS__,1)
 
 #define _BIND_HELPER(_1,_2,_3,NAME,...) NAME
 
@@ -231,6 +237,8 @@ typedef struct {
 #define _BIND1(F,N) _BIND(F,0,_BIND_TYPES(F),N)
 
 #define _BIND2(F,A,N) _BIND(F,A,0,N)
+
+#define _BIND3(F,A1,A2,N) _BIND(F,((((unsigned long)A2)<<32)|((unsigned int)A1)),0,N)
 
 #define _BIND(F,A,D,N){.func=(void (*)()) F, .arg={.longArg=(long)A},.dynamic=D, .negateResult=N,.type=\
    _Generic((F), \
@@ -253,7 +261,9 @@ typedef struct {
         int (*)(Layout*): VOID_ARG_RETURN_INT, \
         int (*)(Rule*): VOID_ARG_RETURN_INT, \
         int (*)(char*): VOID_ARG_RETURN_INT, \
-        int (*)(void*): VOID_ARG_RETURN_INT \
+        int (*)(void*): VOID_ARG_RETURN_INT, \
+        void (*)(int,int): INT_INT_ARG, \
+        int (*)(int,int): INT_INT_ARG_RETURN_INT\
 )}
 
 
