@@ -29,45 +29,6 @@
  */
 #define RUN_OR_RAISE(TYPE,args...) _RUN_OR_RAISE_HELPER(args,_RUN_OR_RAISE,_RUN_OR_RAISE_IMPLICIT)(TYPE,args)
 
-/**
- * Creates a set of bindings related to switching workspacse
- * @param K the key to bind; various modiers will be used for the diffrent functions
- * @param N the workspace to switch to/act on
- */
-#define WORKSPACE_OPERATION(K,N) \
-    {  Mod4Mask,             K, AND(BIND(switchToWorkspace,N),BIND(activateWorkspace,N))}, \
-    {  Mod4Mask|ShiftMask,   K, BIND(moveWindowToWorkspace,N)}, \
-    {  Mod4Mask|ControlMask,   K, AND(BIND(swapWithWorkspace,N),BIND(activateWorkspace,N))}
-
-/**
- * Creates a set of bindings related to the windowStack
- * @param KEY_UP
- * @param KEY_DOWN
- * @param KEY_LEFT
- * @param KEY_RIGHT
- */
-#define STACK_OPERATION(KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT) \
-    {  Mod4Mask,             KEY_UP, BIND(swapPosition,UP)}, \
-    {  Mod4Mask,             KEY_DOWN, BIND(swapPosition,DOWN)}, \
-    {  Mod4Mask,             KEY_LEFT, BIND(shiftFocus,UP)}, \
-    {  Mod4Mask,             KEY_RIGHT, BIND(shiftFocus,DOWN)}/*, \
-    {  Mod4Mask|ShiftMask,             UP, BIND_TO_INT_FUNC(popMin,1)}, \
-    {  Mod4Mask|ShiftMask,             DOWN, BIND_TO_INT_FUNC(pushMin,1)}, \
-    {  Mod4Mask|ShiftMask,             LEFT, BIND_TO_INT_FUNC(sendToNextWorkNonEmptySpace,1)}, \
-    {  Mod4Mask|ShiftMask,             RIGHT, BIND_TO_INT_FUNC(sendToNextWorkNonEmptySpace,-1)}, \
-    {  Mod4Mask|ControlMask,             UP, BIND_TO_INT_FUNC(swapWithNextMonitor,1)}, \
-    {  Mod4Mask|ControlMask,             DOWN, BIND_TO_INT_FUNC(swapWithNextMonitor,-1)}, \
-    {  Mod4Mask|ControlMask,             LEFT, BIND_TO_INT_FUNC(sendToNextMonitor,1)}, \
-    {  Mod4Mask|ControlMask,             RIGHT, BIND_TO_INT_FUNC(sendToNextMonitor,-1)}, \
-    {  Mod4Mask|Mod1Mask,             UP, BIND_TO_FUNC(focusTop)}, \
-    {  Mod4Mask|Mod1Mask,             DOWN, BIND_TO_FUNC(focusBottom)}, \
-    {  Mod4Mask|Mod1Mask,             LEFT, BIND_TO_INT_FUNC(sendtoBottom,1)}, \
-    {  Mod4Mask|Mod1Mask,             RIGHT, BIND_TO_FUNC(sendFromBottomToTop)}*/
-
-
-
-
-
 
 /**
  * Call to stop cycling windows

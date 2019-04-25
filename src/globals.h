@@ -172,8 +172,10 @@ extern int DEFAULT_WORKSPACE_INDEX;
 /// time (in seconds) between when windows is detected and mapped, that it will be auto focused (local state is updated immediatly); set to -1 to disable
 extern int AUTO_FOCUS_NEW_WINDOW_TIMEOUT;
 
-///Masks to ignore; Default is ModMask2 (NUM_LOCK)
+///Masks to ignore; Default is Mod2Mask (NUM_LOCK)
 extern int IGNORE_MASK;
+///Default modifer for default bindings; Default is Mod4Mask (HYPER)
+extern int DEFAULT_MOD_MASK ;
 ///IF True we will crash if an error is received and a<<(error type) |CRASH_ON_ERRORS is nonzero
 /// This should only be used for testing as errors can happen just by
 /// the async nature of X11

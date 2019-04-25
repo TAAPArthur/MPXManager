@@ -8,6 +8,29 @@
 #define SETTINGS_H_
 
 /**
+ * Creates a set of bindings related to switching workspacse
+ * @param K the key to bind; various modiers will be used for the diffrent functions
+ * @param N the workspace to switch to/act on
+ */
+#define WORKSPACE_OPERATION(K,N) \
+    {Mod4Mask,             K, AND(BIND(switchToWorkspace,N),BIND(activateWorkspace,N))}, \
+    {Mod4Mask|ShiftMask,   K, BIND(moveWindowToWorkspace,N)}, \
+    {Mod4Mask|ControlMask,   K, AND(BIND(swapWithWorkspace,N),BIND(activateWorkspace,N))}
+
+/**
+ * Creates a set of bindings related to the windowStack
+ * @param KEY_UP
+ * @param KEY_DOWN
+ * @param KEY_LEFT
+ * @param KEY_RIGHT
+ */
+#define STACK_OPERATION(KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT) \
+    {Mod4Mask,             KEY_UP, BIND(swapPosition,UP)}, \
+    {Mod4Mask,             KEY_DOWN, BIND(swapPosition,DOWN)}, \
+    {Mod4Mask,             KEY_LEFT, BIND(shiftFocus,UP)}, \
+    {Mod4Mask,             KEY_RIGHT, BIND(shiftFocus,DOWN)}
+
+/**
  * Load default settings
  */
 void loadNormalSettings(void);

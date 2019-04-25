@@ -111,6 +111,12 @@ void defaultPrintFunction(void){
 }
 void loadNormalSettings(){
     addAutoMPXRules();
+    for(int i = 0; i < LEN(DEFAULT_BINDINGS); i++){
+        if(DEFAULT_BINDINGS[i].mod & Mod4Mask){
+            DEFAULT_BINDINGS[i].mod &= ~Mod4Mask;
+            DEFAULT_BINDINGS[i].mod |= DEFAULT_MOD_MASK;
+        }
+    }
     SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;
     addBindings(DEFAULT_BINDINGS, LEN(DEFAULT_BINDINGS));
