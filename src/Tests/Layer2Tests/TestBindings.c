@@ -43,6 +43,18 @@ START_TEST(test_binding_target_id){
 END_TEST
 
 
+START_TEST(test_binding_mode_match){
+    setCurrentMode(NORMAL_MODE);
+    Binding binding = {WILDCARD_MODIFIER, 0, .detail = 0, .mask = -1};
+    assert(!doesBindingMatch(&binding, 0, 0, 0, 0));
+    binding.mode = NORMAL_MODE;
+    assert(doesBindingMatch(&binding, 0, 0, 0, 0));
+    binding.mode = 0;
+    assert(!doesBindingMatch(&binding, 0, 0, 0, 0));
+    setCurrentMode(ALL_MODES);
+    assert(doesBindingMatch(&binding, 0, 0, 0, 0));
+}
+END_TEST
 ///does to make sure a binding will match only the correct detail/mod pair(s)
 START_TEST(test_binding_match){
     int mod = 1;
@@ -538,6 +550,7 @@ END_TEST
 static void setup(){
     DEFAULT_BINDING_MASKS = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
     createContextAndSimpleConnection();
+    setCurrentMode(ALL_MODES);
 }
 Suite* bindingsSuite(void){
     Suite* s = suite_create("Bindings");
@@ -548,6 +561,7 @@ Suite* bindingsSuite(void){
     tcase_add_test(tc_core, test_binding_add);
     tcase_add_test(tc_core, test_binding_target_id);
     tcase_add_test(tc_core, test_binding_match);
+    tcase_add_test(tc_core, test_binding_mode_match);
     tcase_add_test(tc_core, test_call_bounded_function);
     tcase_add_test(tc_core, test_bounded_function_negate_result);
     tcase_add_test(tc_core, test_and_or_short_circuit);

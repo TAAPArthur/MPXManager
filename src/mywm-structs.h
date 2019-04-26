@@ -120,6 +120,8 @@ typedef struct {
 
     /**Time the focused window changed*/
     unsigned int focusedTimeStamp;
+    /// The current binding mode
+    int bindingMode;
     /**Pointer to last binding triggered by this master device*/
     struct binding_struct* lastBindingTriggered;
     /**List of the active chains with the newest first*/

@@ -169,7 +169,8 @@ int getIDOfBindingTarget(Binding* binding){
 
 
 int doesBindingMatch(Binding* binding, int detail, int mods, int mask, int keyRepeat){
-    return (binding->mask & mask || mask == 0) && (binding->mod == WILDCARD_MODIFIER || binding->mod == mods) &&
+    return (getCurrentMode() == ALL_MODES || getCurrentMode()& binding->mode) && (binding->mask & mask || mask == 0) &&
+           (binding->mod == WILDCARD_MODIFIER || binding->mod == mods) &&
            (binding->detail == 0 || binding->detail == detail) && (!keyRepeat || keyRepeat == !binding->noKeyRepeat);
 }
 
@@ -329,6 +330,8 @@ void initBinding(Binding* binding){
         binding->targetID = XCB_INPUT_DEVICE_ALL;
     if(!binding->mask)
         binding->mask = DEFAULT_BINDING_MASKS;
+    if(!binding->mode)
+        binding->mode = DEFAULT_MODE;
     if(binding->buttonOrKey && isKeyboardMask(binding->mask))
         binding->detail = getKeyCode(binding->buttonOrKey);
     else binding->detail = binding->buttonOrKey;

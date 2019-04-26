@@ -143,4 +143,17 @@ void setActiveMaster(Master* master);
  * @return the master device with the give node
  */
 Master* getMasterById(int keyboardID);
+
+/**
+ * Only bindings whose mode & mode will be triggered by this master
+ *
+ * @param mode
+ */
+void setCurrentMode(int mode);
+/**
+ * Returns the current binding mode for the active master
+ *
+ * @return
+ */
+int getCurrentMode(void);
 #endif

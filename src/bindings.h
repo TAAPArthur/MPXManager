@@ -167,6 +167,9 @@ typedef struct binding_struct {
     /// if true the binding won't trigger for key repeats
     bool noKeyRepeat;
 
+    /// Binding will be triggered in the active master is in a compatible mode
+    unsigned int mode;
+
     /**Converted detail of key bindings. Should not be set manually*/
     int detail;
 } Binding;

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "globals.h"
 #include "masters.h"
 
 Master* createMaster(MasterID id, int partnerId, char* name, int focusColor){
@@ -13,6 +14,7 @@ Master* createMaster(MasterID id, int partnerId, char* name, int focusColor){
     master->id = id;
     master->pointerId = partnerId;
     master->focusColor = focusColor;
+    master->bindingMode = NORMAL_MODE;
     strncpy(master->name, name, sizeof(master->name));
     master->name[NAME_BUFFER - 1] = 0;
     return master;
@@ -115,4 +117,10 @@ void clearWindowCache(void){
 int updateWindowCache(WindowInfo* targetWindow){
     assert(targetWindow);
     return addUnique(getWindowCache(getActiveMaster()), targetWindow, sizeof(WindowID));
+}
+void setCurrentMode(int mode){
+    getActiveMaster()->bindingMode = mode;
+}
+int getCurrentMode(void){
+    return getActiveMaster()->bindingMode;
 }

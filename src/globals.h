@@ -240,6 +240,19 @@ extern int POLL_INTERVAL;
 /// after this number of events (or when the connection is idle) Period events with will be triggered
 extern int EVENT_PERIOD;
 
+
+/// Enables all bindings
+#define ALL_MODES 0
+/// Enables this bindings to be triggered in any mode
+#define ANY_MODE (-1)
+/// Default binding mode all bindings
+#define NORMAL_MODE 1<<0
+/// Custom binding mode used for layouts
+#define LAYOUT_MODE 1<<1
+/// Default binding mode all bindings that all bindings will have if unspecified
+extern int DEFAULT_MODE;
+
+
 ///  File path of config file dictating ideal master(s)/slaves configuration
 extern char* MASTER_INFO_PATH;
 

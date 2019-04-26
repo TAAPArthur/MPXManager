@@ -36,6 +36,14 @@ static Binding DEFAULT_BINDINGS[] = {
     WORKSPACE_OPERATION(XK_0, 9),
     STACK_OPERATION(XK_Up, XK_Down, XK_Left, XK_Right),
     STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
+
+    {Mod4Mask, XK_F1, BIND(setCurrentMode, 1), .mode = ANY_MODE},
+    {Mod4Mask, XK_F2, BIND(setCurrentMode, 2), .mode = ANY_MODE},
+    {Mod4Mask, XK_F3, BIND(setCurrentMode, 4), .mode = ANY_MODE},
+    {Mod4Mask, XK_F4, BIND(setCurrentMode, 8), .mode = ANY_MODE},
+    {Mod4Mask, XK_F10, BIND(setCurrentMode, 0), .mode = ANY_MODE},
+
+
     {WILDCARD_MODIFIER, Button1, AND(BIND(activateWorkspaceUnderMouse), BIND(raiseWindowInfo), BIND(focusWindowInfo)), .noGrab = 1, .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
     {Mod4Mask, XK_c, BIND(killWindowInfo), .noKeyRepeat = 1},
     {Mod4Mask | ShiftMask, XK_c, BIND(killWindowInfo), .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1},
@@ -94,6 +102,7 @@ static Binding DEFAULT_BINDINGS[] = {
 
 
 void defaultPrintFunction(void){
+    dprintf(STATUS_FD, "%d ", getCurrentMode());
     int activeWorkspaceIndex = getActiveWorkspaceIndex();
     for(int i = 0; i < getNumberOfWorkspaces(); i++){
         char* color;
