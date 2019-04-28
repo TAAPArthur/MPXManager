@@ -34,9 +34,91 @@ Layout DEFAULT_LAYOUTS[] = {
     {.name = "2 Row", .layoutFunction = column, .args = {.dim = 1, .arg = {2}}},
     {.name = "2 Pane", .layoutFunction = column, .args = {.raiseFocused = 1, .dim = 0, .arg = {2}, .limit = 2}},
     {.name = "2 HPane", .layoutFunction = column, .args = {.raiseFocused = 1, .dim = 1, .arg = {2}, .limit = 2}},
-    {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}}},
+    {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}, .argStep = {.1}}},
 
 };
+static ArrayList registeredLayouts;
+
+
+void setActiveLayoutByName(char* name){
+    setActiveLayout(findLayoutByName(name));
+}
+Layout* findLayoutByName(char* name){
+    Layout* layout;
+    UNTIL_FIRST(layout, &registeredLayouts, name == getNameOfLayout(layout) || name && getNameOfLayout(layout) &&
+                strcmp(name, getNameOfLayout(layout)) == 0);
+    return layout;
+}
+void registerLayouts(Layout* layouts, int num){
+    for(int i = 0; i < num; i++)
+        if(!find(&registeredLayouts, &layouts[i], 0)){
+            saveLayoutArgs(&layouts[i]);
+            addToList(&registeredLayouts, &layouts[i]);
+        }
+}
+
+void saveLayoutArgs(Layout* layout){
+    memcpy(&layout->refArgs, &layout->args, sizeof(LayoutArgs));
+}
+void restoreActiveLayout(void){
+    Layout* l = getActiveLayout();
+    if(l){
+        memcpy(&l->args, &l->refArgs, sizeof(LayoutArgs));
+        retile();
+    }
+}
+
+void increaseActiveLayoutArg(int index, int step){
+    Layout* l = getActiveLayout();
+    if(l){
+        switch(index){
+            case LAYOUT_LIMIT:
+                l->args.limit += step;
+                break;
+            case LAYOUT_PADDING:
+                l->args.leftPadding += step;
+                l->args.topPadding += step;
+                l->args.rightPadding += step;
+                l->args.bottomPadding += step;
+                break;
+            case LAYOUT_LEFT_PADDING:
+                l->args.leftPadding += step;
+                break;
+            case LAYOUT_TOP_PADDING:
+                l->args.topPadding += step;
+                break;
+            case LAYOUT_RIGHT_PADDING:
+                l->args.rightPadding += step;
+                break;
+            case LAYOUT_BOTTOM_PADDING:
+                l->args.bottomPadding += step;
+                break;
+            case LAYOUT_NO_BORDER:
+                l->args.noBorder = !l->args.noBorder;
+                break;
+            case LAYOUT_NO_ADJUST_FOR_BORDERS:
+                l->args.noAdjustForBorders = !l->args.noAdjustForBorders;
+                break;
+            case LAYOUT_DIM:
+                l->args.dim = !l->args.dim;
+                break;
+            case LAYOUT_RAISE_FOCUSED:
+                l->args.raiseFocused = !l->args.raiseFocused;
+                break;
+            case LAYOUT_LOWER_WINDOWS:
+                l->args.lowerWindows = !l->args.lowerWindows;
+                break;
+            case LAYOUT_TRANSFORM:
+                l->args.transform = WRAP(l->args.transform + step, TRANSFORM_LEN) ;
+                break;
+            case LAYOUT_ARG:
+                l->args.arg[0] += l->args.argStep[0] * step;
+                break;
+        }
+        retile();
+    }
+}
+
 int NUMBER_OF_DEFAULT_LAYOUTS = LEN(DEFAULT_LAYOUTS);
 
 
@@ -80,11 +162,8 @@ int getNumberOfWindowsToTile(ArrayList* windowStack, LayoutArgs* args){
 void transformConfig(LayoutState* state, int config[CONFIG_LEN]){
     Monitor* m = state->monitor;
     if(state->args){
-        int midX = m->view.x + m->view.width / 2;
-        int midY = m->view.y + m->view.height / 2;
         int endX = m->view.x * 2 + m->view.width;
         int endY = m->view.y * 2 + m->view.height;
-        const int x = config[CONFIG_X], y = config[CONFIG_Y];
         switch(state->args->transform){
             case NONE:
                 break;
@@ -97,14 +176,6 @@ void transformConfig(LayoutState* state, int config[CONFIG_LEN]){
             case ROT_180:
                 config[CONFIG_X] = endX - (config[CONFIG_X] + config[CONFIG_WIDTH]);
                 config[CONFIG_Y] = endY - (config[CONFIG_Y] + config[CONFIG_HEIGHT]);
-                break;
-            case ROT_90:
-                config[CONFIG_X] = MIN(-(y - midY) + midX, midX - (y + config[CONFIG_HEIGHT] - midY));
-                config[CONFIG_Y] = MIN(x - midX + midY, midY + x + config[CONFIG_WIDTH] - midX);
-                break;
-            case ROT_270:
-                config[CONFIG_X] = MIN(y - midY + midX, midX + (y + config[CONFIG_HEIGHT] - midY));
-                config[CONFIG_Y] = MIN(-(x - midX) + midY, midY - (x + config[CONFIG_WIDTH] - midX));
                 break;
         }
     }
@@ -158,15 +229,23 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFI
     for(int i = 0; i <= CONFIG_HEIGHT; i++)
         config[i] = values[i];
     transformConfig(state, config);
+    applyMasksToConfig(state->monitor, config, winInfo);
+    mask = adjustBorders(state, winInfo, config, mask);
     for(int i = 0; i <= CONFIG_HEIGHT; i++){
         int fixedValue = getConfig(winInfo)[i];
         int refPoint = (&state->monitor->view.x)[i];
         int refEndPoint = refPoint + (&state->monitor->view.x)[(i + 2) % 2];
         if(fixedValue)
             config[i] = fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
+        if(state->args){
+            if(i < CONFIG_WIDTH)
+                config[i] += (&state->args->leftPadding)[i];
+            else
+                config[i] -= (&state->args->rightPadding)[i % 2] + (&state->args->leftPadding)[i % 2];
+        }
     }
-    applyMasksToConfig(state->monitor, config, winInfo);
-    mask = adjustBorders(state, winInfo, config, mask);
+    config[CONFIG_WIDTH] = MAX(1, config[CONFIG_WIDTH]);
+    config[CONFIG_HEIGHT] = MAX(1, config[CONFIG_HEIGHT]);
     assert(winInfo->id);
 #ifdef DEBUG
     LOG(LOG_LEVEL_DEBUG, "Config %d: mask %d %d\n", winInfo->id, mask, __builtin_popcount(mask));

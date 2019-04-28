@@ -97,8 +97,15 @@ static Binding DEFAULT_BINDINGS[] = {
     {Mod4Mask | ShiftMask, XK_q, BIND(quit)},
     {Mod4Mask, XK_q, AND(PIPE(BIND(spawn, "mpxmanager --recompile"), BIND(waitForChild)), BIND(restart))},
 
-    {Mod4Mask | ShiftMask, XK_asciitilde, BIND(printSummary)},
-    {Mod4Mask | ControlMask | ShiftMask, XK_asciitilde, BIND(dumpAllWindowInfo)},
+    {Mod4Mask, XK_r, BIND(restoreActiveLayout), .mode = LAYOUT_MODE},
+    {Mod4Mask, XK_p, BIND(increaseActiveLayoutArg, LAYOUT_PADDING, 10), .mode = LAYOUT_MODE},
+    {Mod4Mask | ShiftMask, XK_p, BIND(increaseActiveLayoutArg, LAYOUT_PADDING, -10), .mode = LAYOUT_MODE},
+    {Mod4Mask, XK_b, BIND(increaseActiveLayoutArg, LAYOUT_NO_BORDER, 1), .mode = LAYOUT_MODE},
+    {Mod4Mask, XK_d, BIND(increaseActiveLayoutArg, LAYOUT_DIM, 1), .mode = LAYOUT_MODE},
+    {Mod4Mask, XK_t, BIND(increaseActiveLayoutArg, LAYOUT_TRANSFORM, 1), .mode = LAYOUT_MODE},
+    {Mod4Mask | ShiftMask, XK_t, BIND(increaseActiveLayoutArg, LAYOUT_TRANSFORM, -1), .mode = LAYOUT_MODE},
+    {Mod4Mask, XK_a, BIND(increaseActiveLayoutArg, LAYOUT_ARG, 1), .mode = LAYOUT_MODE},
+    {Mod4Mask | ShiftMask, XK_a, BIND(increaseActiveLayoutArg, LAYOUT_ARG, -1), .mode = LAYOUT_MODE},
 };
 
 

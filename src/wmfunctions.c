@@ -56,6 +56,7 @@ void connectToXserver(){
     else
         ROOT_EVENT_MASKS &= ~WM_MASKS;
     registerForEvents();
+    registerLayouts(DEFAULT_LAYOUTS, NUMBER_OF_DEFAULT_LAYOUTS);
     applyEventRules(onXConnection, NULL);
 }
 void syncState(){

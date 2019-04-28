@@ -13,7 +13,7 @@
 #define CONFIG_LEN 6
 
 /// Number of transformations
-#define TRANSFORM_LEN 6
+#define TRANSFORM_LEN (REFLECT_VERT+1)
 
 /**
  * Transformations that can be applied to layouts.
@@ -22,37 +22,57 @@
 typedef enum {
     /// Apply no transformation
     NONE = 0,
-    /// Rotate everything by 90 deg
-    ROT_90 = 1,
     /// Rotate by 180 deg
     ROT_180,
-    /// Rotate by 270 deg
-    ROT_270,
     /// Reflect across x axis
     REFLECT_HOR,
     /// Reflect across the y axis
     REFLECT_VERT
 } Transform;
 enum {CONFIG_X = 0, CONFIG_Y = 1, CONFIG_WIDTH, CONFIG_HEIGHT, CONFIG_BORDER, CONFIG_STACK};
-
+/// Represents a field(s) in Layout Args
+typedef enum {
+    LAYOUT_LIMIT = 0,
+    /// represents all padding fields
+    LAYOUT_PADDING,
+    LAYOUT_LEFT_PADDING,
+    LAYOUT_TOP_PADDING,
+    LAYOUT_RIGHT_PADDING,
+    LAYOUT_BOTTOM_PADDING,
+    LAYOUT_NO_BORDER,
+    LAYOUT_NO_ADJUST_FOR_BORDERS,
+    LAYOUT_DIM,
+    LAYOUT_RAISE_FOCUSED,
+    LAYOUT_LOWER_WINDOWS,
+    LAYOUT_TRANSFORM,
+    LAYOUT_ARG,
+} LayoutArgIndex;
 /**
  * Options used to customize layouts
  */
 typedef struct {
     /// at most limit windows will be tiled
     unsigned char limit;
+    /// @{ padding between the tiled size and the actual size of the window
+    int leftPadding;
+    int topPadding;
+    int rightPadding;
+    int bottomPadding;
+    /// #}
     /// if set windows won't have a border
-    unsigned int noBorder: 1;
-    /// if set windows won't have a border
-    unsigned int noAdjustForBorders: 1;
+    bool noBorder;
+    /// if we set the sie of the window with/without borders
+    bool noAdjustForBorders;
+    /// if set layouts based on X/WIDTH will use Y/HEIGHT instead
+    bool dim;
+    /// will raise the focused window
+    bool raiseFocused;
+    /// whether to raise or lower windows when tiling
+    bool lowerWindows;
     /// the transformation (about the center of the monitor) to apply to all window positions
     Transform transform;
-    /// if set layouts based on X/WIDTH will use Y/HEIGHT instead
-    int dim: 1;
-    /// will raise the focused window
-    int raiseFocused: 1;
-    /// whether to raise or lower windows when tiling
-    int lowerWindows: 1;
+    /// generic argument
+    float argStep[1];
     /// generic argument
     float arg[1];
 } LayoutArgs;
@@ -76,11 +96,13 @@ typedef struct {
 ///holds meta data to to determine what tiling function to call and and when/how to call it
 typedef struct Layout {
     /**
-     * Arguments to pass into layout functions.
-     * These vary with the function but the first arguments are
-     * limit and border
+     * Arguments to pass into layout functions that change how windows are tiled.
      */
     LayoutArgs args;
+    /**
+     * Used to restore args after they have been modified
+     */
+    LayoutArgs refArgs;
     /**
      * The name of the layout. Used solely for user
      */
@@ -102,6 +124,45 @@ extern Layout DEFAULT_LAYOUTS[];
 extern int NUMBER_OF_DEFAULT_LAYOUTS;
 /// number of LAYOUT_FAMILIES
 extern int NUMBER_OF_LAYOUT_FAMILIES;
+
+/**
+ * Increases the corrosponding field for the layour by step
+ *
+ * @param index a LayoutArgIndex
+ * @param step
+ */
+void increaseActiveLayoutArg(int index, int step);
+/**
+ * Searches for the set of registered layouts for a layout with the name, and if a match is found, sets the active layout this layoutyy
+ *
+ * @param name
+ */
+void setActiveLayoutByName(char* name);
+/**
+ * Searches for the set of registered layouts for a layout with the given name and returns it
+ *
+ * @param name
+ *
+ * @return
+ */
+Layout* findLayoutByName(char* name);
+/**
+ * Saves the current args for layout so they can be restored later
+ *
+ * @param layout
+ */
+void saveLayoutArgs(Layout* layout);
+/**
+ * Restores saved args for the active layout
+ */
+void restoreActiveLayout(void);
+/**
+ * Registers num layouts so they can searched for later
+ *
+ * @param layouts
+ * @param num
+ */
+void registerLayouts(Layout* layouts, int num);
 
 /**
 * Returns the name of the given layout

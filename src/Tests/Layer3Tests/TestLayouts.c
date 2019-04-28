@@ -245,8 +245,6 @@ START_TEST(test_simple_transform_config){
             [REFLECT_HOR] = {-config[0], config[1]},
             [REFLECT_VERT] = {config[0], -config[1]},
             [ROT_180] = {-config[0], -config[1]},
-            [ROT_90] = {-config[1], config[0]},
-            [ROT_270] = {config[1], -config[0]},
         };
         LayoutArgs prop = {.transform = _i};
         LayoutState state = {.args = &prop, .monitor = m};
@@ -413,6 +411,24 @@ START_TEST(test_retile){
     assert(count == 1);
 }
 END_TEST
+START_TEST(test_get_layout_by_name){
+    Layout* l = findLayoutByName(getNameOfLayout(&DEFAULT_LAYOUTS[FULL]));
+    assert(l == &DEFAULT_LAYOUTS[FULL]);
+    assert(findLayoutByName(NULL) == NULL);
+    assert(findLayoutByName("__bad__layout__name") == NULL);
+    Layout c = {0};
+    registerLayouts(&c, 1);
+    assert(findLayoutByName(NULL));
+    assert(findLayoutByName("__bad__layout__name") == NULL);
+}
+END_TEST
+START_TEST(test_set_layout_by_name){
+    setActiveLayoutByName(getNameOfLayout(&DEFAULT_LAYOUTS[FULL]));
+    assert(getActiveLayout() == &DEFAULT_LAYOUTS[FULL]);
+    setActiveLayoutByName(NULL);
+    setActiveLayoutByName("__bad__layout__name");
+}
+END_TEST
 
 START_TEST(test_privileged_windows_size){
     Monitor* m = getHead(getAllMonitors());
@@ -484,6 +500,27 @@ START_TEST(test_raise_lower_request){
 }
 END_TEST
 
+START_TEST(test_layout_arg_change){
+    Layout c = {0};
+    Layout zeroLayout = {0};
+    setActiveLayout(&c);
+    increaseActiveLayoutArg(_i, 1);
+    assert(memcmp(&zeroLayout, getActiveLayout(), sizeof(Layout)));
+}
+END_TEST
+START_TEST(test_register_restore_layout){
+    Layout c = {0};
+    Layout zeroLayout = {0};
+    registerLayouts(&c, 1);
+    setActiveLayout(&c);
+    for(int i = 0; i <= LAYOUT_ARG; i++)
+        increaseActiveLayoutArg(i, i * i);
+    assert(memcmp(&zeroLayout, getActiveLayout(), sizeof(Layout)));
+    restoreActiveLayout();
+    assert(memcmp(&zeroLayout, getActiveLayout(), sizeof(Layout)) == 0);
+}
+END_TEST
+
 Suite* layoutSuite(){
     Suite* s = suite_create("Layouts");
     TCase* tc_core;
@@ -494,9 +531,14 @@ Suite* layoutSuite(){
     tcase_add_test(tc_core, test_active_layout);
     tcase_add_test(tc_core, test_layout_name);
     suite_add_tcase(s, tc_core);
-    tc_core = tcase_create("Layout Args");
+    tc_core = tcase_create("Layout Transform");
     tcase_add_loop_test(tc_core, test_identity_transform_config, 0, TRANSFORM_LEN * 2);
     tcase_add_loop_test(tc_core, test_simple_transform_config, 0, TRANSFORM_LEN);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("Layout Args");
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
+    tcase_add_loop_test(tc_core, test_layout_arg_change, 0, LAYOUT_ARG);
+    tcase_add_test(tc_core, test_register_restore_layout);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Layout_Functions");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
@@ -504,6 +546,8 @@ Suite* layoutSuite(){
     tcase_add_test(tc_core, test_layout_cycle);
     tcase_add_test(tc_core, test_layout_cycle_reverse);
     tcase_add_test(tc_core, test_retile);
+    tcase_add_test(tc_core, test_get_layout_by_name);
+    tcase_add_test(tc_core, test_set_layout_by_name);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Tiling");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
