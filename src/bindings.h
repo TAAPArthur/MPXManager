@@ -492,6 +492,14 @@ ArrayList* getActiveChains();
 ArrayList* getDeviceBindings();
 
 /**
+ * mallocs a string and that has all the ENV var in str expanded
+ *
+ * @param str
+ *
+ * @return a string with ENV var expanded
+ */
+char* expandVar(char* str);
+/**
  * Initilize a rule
  * @param rule
  */

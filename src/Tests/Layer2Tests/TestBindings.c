@@ -362,10 +362,13 @@ END_TEST
 START_TEST(test_env_rule_sub){
     int target = LITERAL | ENV_VAR;
     char* var = "$_var";
-    char* str[] = {"echo '$_var'", "$_var", "\\$var", "$_unsetVar"};
-    char* subVar[] = {"echo 'A'", "A", "$var", ""};
-    const char* value = "A";
+    char* var2 = "$_var2";
+    char* value = "A";
+    char* value2 = "ABCDEFGHI";
+    char* str[] = {"echo '$_var'", "$_var", "$_var text $_var", "\\$var", "$_var2 long long text", "$_unsetVar"};
+    char* subVar[] = {"echo 'A'", "A", "A text A", "$var", "ABCDEFGHI long long text", ""};
     setenv(var + 1, value, 1);
+    setenv(var2 + 1, value2, 1);
     unsetenv("_unsetVar");
     for(int i = 0; i < LEN(str); i++){
         Rule r = {str[i], target | LITERAL, NULL};

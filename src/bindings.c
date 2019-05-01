@@ -334,50 +334,57 @@ void initBinding(Binding* binding){
     else binding->detail = binding->buttonOrKey;
     assert(binding->detail || !binding->buttonOrKey);
 }
+char* expandVar(char* str){
+    int bSize = strlen(str) + 1;
+    char* buffer = malloc(bSize);
+    char* tempBuffer = malloc(bSize);
+    int foundVar = 0;
+    int bCount = 0;
+    int varStart;
+    for(int i = 0;; i++){
+        if(str[i] == '$'){
+            foundVar = 1;
+            varStart = i + 1;
+        }
+        else if(foundVar){
+            if(!str[i] || !(isalnum(str[i]) || str[i] == '_')){
+                foundVar = 0;
+                int varSize = i - varStart;
+                tempBuffer = realloc(tempBuffer, varSize + 1);
+                strncpy(tempBuffer, &str[varStart], varSize);
+                tempBuffer[varSize] = 0;
+                char* var = getenv(tempBuffer);
+                if(!var)
+                    LOG(LOG_LEVEL_WARN, "Env var %s is not set\n", tempBuffer);
+                else {
+                    LOG(LOG_LEVEL_VERBOSE, "replacing %.*s with %s\n", varSize, &str[varStart], var);
+                    int newSize = bCount + strlen(var);
+                    if(newSize >= bSize){
+                        bSize = newSize * 2;
+                        buffer = realloc(buffer, bSize);
+                    }
+                    strcpy(&buffer[bCount], var);
+                    bCount = newSize;
+                }
+            }
+        }
+        if(!foundVar){
+            if(str[i] == '\\')i++;
+            if(bCount >= bSize){
+                bSize *= 2;
+                buffer = realloc(buffer, bSize);
+            }
+            buffer[bCount++] = str[i];
+        }
+        if(!str[i])
+            break;
+    }
+    free(tempBuffer);
+    return buffer;
+}
 void initRule(Rule* rule){
     if(rule->ruleTarget & ENV_VAR){
-        int bSize = strlen(rule->literal) + 1;
-        char* buffer = malloc(bSize);
-        char* tempBuffer = malloc(bSize);
-        int foundVar = 0;
-        int bCount = 0;
-        int varStart;
-        for(int i = 0;; i++){
-            if(rule->literal[i] == '$'){
-                if(i == 0 || rule->literal[i - 1] != '\\'){
-                    foundVar = 1;
-                    varStart = i + 1;
-                }
-            }
-            else if(foundVar){
-                if(!rule->literal[i] || !(isalnum(rule->literal[i]) || rule->literal[i] == '_')){
-                    foundVar = 0;
-                    int varSize = i - varStart;
-                    tempBuffer = realloc(tempBuffer, varSize + 1);
-                    strncpy(tempBuffer, &rule->literal[varStart], varSize);
-                    tempBuffer[varSize] = 0;
-                    char* var = getenv(tempBuffer);
-                    if(!var)
-                        LOG(LOG_LEVEL_WARN, "Env var %s is not set\n", tempBuffer);
-                    else {
-                        int newSize = bCount + strlen(var);
-                        if(newSize >= bSize){
-                            bSize = newSize * 2;
-                            buffer = realloc(buffer, bSize);
-                        }
-                        strcpy(&buffer[bCount], var);
-                        bCount = newSize;
-                    }
-                }
-            }
-            if(!foundVar){
-                if(rule->literal[i] == '\\')i++;
-                buffer[bCount++] = rule->literal[i];
-            }
-            if(!rule->literal[i])break;
-        }
-        free(tempBuffer);
-        rule->literal = buffer;
+        rule->literal = expandVar(rule->literal);
     }
     if(rule->literal && (rule->ruleTarget & LITERAL) == 0){
         rule->regexExpression = malloc(sizeof(regex_t));
