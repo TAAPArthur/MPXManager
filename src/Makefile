@@ -1,7 +1,7 @@
 CC := gcc -std=gnu11
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0
-RELEASE_FLAGS := -g -O3 -DNDEBUG
+RELEASE_FLAGS := -g -O3 -flto -DNDEBUG
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-cast-function-type
 ERROR_FLAGS := -Werror -Wall -Wextra
