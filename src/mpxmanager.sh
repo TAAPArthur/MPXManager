@@ -60,6 +60,8 @@ fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))
 path=$HOME/.mpxmanager
 optspec=":vhs-:"
 
+LIBS="-lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb"
+
 getopts "$optspec" optchar || run
     case "${optchar}" in
         -)
@@ -80,7 +82,7 @@ getopts "$optspec" optchar || run
                     mkdir -p $path
                     [ -f $path/config.c ] || cp /usr/share/mpxmanager/sample-config.c $path/config.c
                     shift
-                    gcc $path/config.c -o $path/$fileName -lmpxmanager "$@"
+                    gcc $path/config.c -o $path/$fileName -lmpxmanager $LIBS "$@"
                     ;;
                 help)
                     displayHelp

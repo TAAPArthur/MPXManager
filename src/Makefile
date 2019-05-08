@@ -43,8 +43,8 @@ pkgname := mpxmanager
 
 all: mpxmanager
 
-install: mpxmanager.1 libmpxmanager.so libmpx-patch.so
-	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.so
+install: mpxmanager.1 libmpxmanager.a libmpx-patch.so
+	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/Extensions" Extensions/*.h
@@ -70,6 +70,10 @@ recompile:
 
 libmpxmanager.so: ${BASE_SRCS}
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
+libmpxmanager.a: ${BASE_SRCS}
+	gcc $^ -c -fpic ${CFLAGS} ${LDFLAGS}
+	ar rcs libmpxmanager.a *.o
+
 
 libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} -fPIC -shared -o $@ $^ ${CFLAGS} ${LDFLAGS}
@@ -151,5 +155,5 @@ prof: mpxmanager-profile
 .DELETE_ON_ERROR:
 
 clean:
-	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.so mpxmanager-profile mpxmanager-speed-test
+	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.a *.o libmpxmanager*.so mpxmanager-profile mpxmanager-speed-test
 	find . -name '*.orig' -exec rm {} \;
