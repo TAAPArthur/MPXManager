@@ -15,6 +15,7 @@
 #include "globals.h"
 #include "logger.h"
 #include "monitors.h"
+#include "spawn.h"
 #include "workspaces.h"
 #include "xsession.h"
 
@@ -146,12 +147,12 @@ int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo){
     return changed;
 }
 void clearFakeMonitors(void){
-    system("xsane-xrandr clear &>/dev/null");
+    waitForChild(spawn("xsane-xrandr clear &>/dev/null"));
 }
 void pip(Rect bounds){
     char buffer[255];
-    sprintf(buffer, "xsane-xrandr pip %d %d %d %d  &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
-    system(buffer);
+    sprintf(buffer, "xsane-xrandr add-monitor %d %d %d %d  &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
+    waitForChild(spawn(buffer));
 }
 static void removeDuplicateMonitors(void){
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION)

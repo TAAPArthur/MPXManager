@@ -11,9 +11,9 @@ TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MP
 TESTLIBS := -lcheck
 LDFLAGS := -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
-LAYER0_SRCS := logger.c globals.c 
-LAYER1_SRCS := util.c 
-LAYER2_SRCS := xsession.c test-functions.c masters.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
+LAYER0_SRCS := logger.c globals.c
+LAYER1_SRCS := util.c
+LAYER2_SRCS := xsession.c test-functions.c masters.c spawn.c monitors.c workspaces.c devices.c bindings.c mywm-util.c events.c windows.c
 LAYER3_SRCS := state.c layouts.c wmfunctions.c default-rules.c
 LAYER4_SRCS := communications.c functions.c Extensions/*.c
 TOP_LAYER_SRCS := settings.c mpxmanager.c

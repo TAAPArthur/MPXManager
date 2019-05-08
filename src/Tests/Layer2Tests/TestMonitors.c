@@ -2,6 +2,7 @@
 #include "../TestX11Helper.h"
 #include "../../monitors.h"
 #include "../../globals.h"
+#include "../../spawn.h"
 
 START_TEST(test_avoid_struct){
     int dim = 100;
@@ -179,7 +180,7 @@ END_TEST
 
 START_TEST(test_detect_monitors){
     close(2);
-    system("xsane-xrandr --auto split-monitor W 3 &>/dev/null");
+    waitForChild(spawn("xsane-xrandr --auto split-monitor W 3 &>/dev/null"));
     MONITOR_DUPLICATION_POLICY = 0;
     detectMonitors();
     int num = getSize(getAllMonitors());
@@ -195,7 +196,7 @@ START_TEST(test_monitor_dup_resolution){
     MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
     int masks[] = {TAKE_PRIMARY, TAKE_LARGER, TAKE_SMALLER};
     if(_i == 0)
-        system("xsane-xrandr --auto set-primary &>/dev/null");
+        waitForChild(spawn("xsane-xrandr --auto set-primary &>/dev/null"));
     detectMonitors();
     Monitor* m = getHead(getAllMonitors());
     if(_i == 0)
@@ -213,7 +214,7 @@ START_TEST(test_monitor_intersection){
         "xsane-xrandr pip 1 1 100 100 &>/dev/null",
         "xsane-xrandr pip 0 0 0 0 &>/dev/null",
     };
-    system(cmds[_i]);
+    waitForChild(spawn(cmds[_i]));
     MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;
     int sizes[3][3] = {
         {2, 2, 1},

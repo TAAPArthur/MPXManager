@@ -30,17 +30,14 @@ void resetContext();
 
 /**
  * exits the application
+ * @param exitCode exit status of the program
  */
-void quit(void);
+void quit(int exitCode);
 
 /**
  * restart the application
  */
 void restart(void);
 
-/**
- * Resets the status pipe
- */
-void resetPipe();
 
 #endif

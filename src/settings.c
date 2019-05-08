@@ -19,6 +19,7 @@
 #include "masters.h"
 #include "mywm-util.h"
 #include "settings.h"
+#include "spawn.h"
 #include "windows.h"
 #include "wmfunctions.h"
 #include "workspaces.h"

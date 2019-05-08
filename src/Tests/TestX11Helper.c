@@ -212,7 +212,7 @@ void fullCleanup(){
         pthread_join(pThread, NULL);
     }
     destroyAllNonDefaultMasters();
-    quit();
+    quit(0);
 }
 int getExitStatusOfFork(){
     int status = 0;

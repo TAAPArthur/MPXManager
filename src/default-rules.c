@@ -390,7 +390,7 @@ void onSelectionClearEvent(void){
     xcb_selection_clear_event_t* event = getLastEvent();
     if(event->owner == compliantWindowManagerIndicatorWindow  && event->selection == WM_SELECTION_ATOM){
         LOG(LOG_LEVEL_INFO, "We lost the WM_SELECTION; another window manager is taking over (%d)", event->owner);
-        quit();
+        quit(0);
     }
 }
 

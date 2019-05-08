@@ -5,7 +5,6 @@
  */
 
 
-#include <assert.h>
 #include <execinfo.h>
 #include <unistd.h>
 
@@ -258,8 +257,10 @@ void logError(xcb_generic_error_t* e){
         dumpWindowInfo(getWindowInfo(e->resource_id));
     LOG(LOG_LEVEL_ERROR, "Error code %d %s \n", e->error_code, buff) ;
     LOG_RUN(LOG_LEVEL_DEBUG, printStackTrace());
-    if((1 << e->error_code) & CRASH_ON_ERRORS)
-        assert(0 && "Unexpected error");
+    if((1 << e->error_code) & CRASH_ON_ERRORS){
+        LOG(LOG_LEVEL_ERROR, "Crashing on error\n");
+        quit(1);
+    }
 }
 void printStackTrace(void){
     void* array[32];

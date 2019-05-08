@@ -1,6 +1,7 @@
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
 #include "../../mywm-util.h"
+#include "../../spawn.h"
 
 static int size = 10;
 
@@ -519,7 +520,7 @@ Suite* mywmUtilSuite(void){
     tcase_add_test(tc_core, test_window_in_visible_worspace);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Misc");
-    tcase_add_checked_fixture(tc_core, createSimpleContext, quit);
+    tcase_add_checked_fixture(tc_core, createSimpleContext, resetPipe);
     tcase_add_test(tc_core, test_init_pipe);
     suite_add_tcase(s, tc_core);
     return s;

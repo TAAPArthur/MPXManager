@@ -15,6 +15,7 @@
 #include "masters.h"
 #include "monitors.h"
 #include "mywm-util.h"
+#include "spawn.h"
 #include "windows.h"
 #include "workspaces.h"
 #include "xsession.h"
@@ -36,13 +37,6 @@ void resetContext(void){
     resetWorkspaces();
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
 }
-void resetPipe(){
-    if(statusPipeFD[0]){
-        close(statusPipeFD[0]);
-        close(statusPipeFD[1]);
-        statusPipeFD[0] = statusPipeFD[1] = 0;
-    }
-}
 static void stop(void){
     LOG(LOG_LEVEL_INFO, "Shutting down\n");
     resetPipe();
@@ -55,8 +49,8 @@ void restart(void){
     stop();
     execv(passedArguments[0], passedArguments);
 }
-void quit(void){
+void quit(int exitCode){
     stop();
-    exit(0);
+    exit(exitCode);
 }
 

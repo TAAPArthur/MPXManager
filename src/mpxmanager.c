@@ -18,6 +18,7 @@
 #include "globals.h"
 #include "logger.h"
 #include "mywm-util.h"
+#include "spawn.h"
 #include "settings.h"
 #include "Extensions/xmousecontrol.h"
 #include "Extensions/mpx.h"
@@ -31,7 +32,7 @@
 static void handler(int sig){
     LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
     printStackTrace();
-    quit();
+    quit(1);
 }
 static bool RUN_EVENT_LOOP = 1;
 

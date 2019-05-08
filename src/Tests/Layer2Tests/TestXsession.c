@@ -7,7 +7,7 @@
 
 void openXDisplay();
 START_TEST(test_quit){
-    quit();
+    quit(0);
     assert(0);
 }
 END_TEST
