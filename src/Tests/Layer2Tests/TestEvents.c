@@ -12,7 +12,7 @@
 #include "../../default-rules.h"
 #include "../../events.h"
 #include "../../globals.h"
-
+#include "../../spawn.h"
 #include "../../util.h"
 
 #include "../UnitTests.h"
@@ -164,7 +164,7 @@ START_TEST(test_monitors){
     if(!fork()){
         close(1);
         close(2);
-        system("xsane-xrandr reset");
+        waitForChild(spawn("xsane-xrandr reset"));
         exit(0);
     }
     START_MY_WM;
@@ -208,7 +208,9 @@ Suite* eventSuite(void){
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("OtherEvents");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, fullCleanup);
+#ifndef NO_XRANDR
     tcase_add_test(tc_core, test_monitors);
+#endif
     tcase_add_test(tc_core, test_load_generic_events);
     suite_add_tcase(s, tc_core);
     return s;

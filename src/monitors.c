@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef NO_XRANDR
 #include <xcb/randr.h>
+#endif
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 
@@ -147,12 +149,22 @@ int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo){
     return changed;
 }
 void clearFakeMonitors(void){
+#ifdef NO_XRANDR
+    detectMonitors();
+#else
     waitForChild(spawn("xsane-xrandr clear &>/dev/null"));
+#endif
 }
-void pip(Rect bounds){
+void createMonitor(Rect bounds){
+#ifdef NO_XRANDR
+    static int fakeMonitorIDCounter;
+    if(!fakeMonitorIDCounter)fakeMonitorIDCounter = 2;
+    updateMonitor(fakeMonitorIDCounter++, bounds, 1);
+#else
     char buffer[255];
     sprintf(buffer, "xsane-xrandr add-monitor %d %d %d %d  &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
     waitForChild(spawn(buffer));
+#endif
 }
 static void removeDuplicateMonitors(void){
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION)
@@ -172,7 +184,7 @@ static void removeDuplicateMonitors(void){
             Monitor* monitorToRemove = NULL;
             if(!dup)
                 continue;
-            LOG(LOG_LEVEL_DEBUG, "Monitors %lu and %lu are dups\n", m1->id, m2->id);
+            LOG(LOG_LEVEL_DEBUG, "Monitors %u and %u are dups\n", m1->id, m2->id);
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_SMALLER)
                 monitorToRemove = isLarger(m1->base, m2->base) ? m2 : m1;
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_LARGER)
@@ -180,7 +192,7 @@ static void removeDuplicateMonitors(void){
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_PRIMARY)
                 monitorToRemove = isPrimary(m1) ? m2 : isPrimary(m2) ? m1 : monitorToRemove;;
             if(monitorToRemove){
-                LOG(LOG_LEVEL_DEBUG, "removing monitor %lu because it is a dup of %lu", monitorToRemove->id,
+                LOG(LOG_LEVEL_DEBUG, "removing monitor %u because it is a dup of %u", monitorToRemove->id,
                     ((Monitor*)((long)monitorToRemove ^ (long)m1 ^ (long)m2))->id);
                 removeMonitor(monitorToRemove->id);
             }
@@ -208,6 +220,11 @@ void assignUnusedMonitorsToWorkspaces(void){
     }
 }
 void detectMonitors(void){
+#ifdef NO_XRANDR
+    Rect size = {0, 0, getRootWidth(), getRootHeight()};
+    updateMonitor(1, size, 0);
+    removeDuplicateMonitors();
+#else
     LOG(LOG_LEVEL_DEBUG, "refreshing monitors\n");
     xcb_randr_get_monitors_cookie_t cookie = xcb_randr_get_monitors(dis, root, 1);
     xcb_randr_get_monitors_reply_t* monitors = xcb_randr_get_monitors_reply(dis, cookie, NULL);
@@ -216,7 +233,10 @@ void detectMonitors(void){
     ArrayList monitorNames = {0};
     while(iter.rem){
         xcb_randr_monitor_info_t* monitorInfo = iter.data;
-        updateMonitor(monitorInfo->name, monitorInfo->primary, *(Rect*)&monitorInfo->x, 0);
+        updateMonitor(monitorInfo->name,  *(Rect*)&monitorInfo->x, 0);
+        Monitor* m = find(getAllMonitors(), &monitorInfo->name, sizeof(MonitorID));
+        assert(m);
+        setPrimary(m, monitorInfo->primary, 0);
         addToList(&monitorNames, (void*)(long)monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
@@ -224,14 +244,16 @@ void detectMonitors(void){
     FOR_EACH_REVERSED(Monitor*, m, getAllMonitors()){
         int i;
         for(i = getSize(&monitorNames) - 1; i >= 0; i--)
-            if(m->id == (MonitorID)getElement(&monitorNames, i))
+            if(m->id == (MonitorID)(long)getElement(&monitorNames, i))
                 break;
         if(i == -1)
             removeMonitor(m->id);
     }
-    removeDuplicateMonitors();
     clearList(&monitorNames);
+#endif
+    removeDuplicateMonitors();
     assignUnusedMonitorsToWorkspaces();
+    assert(getSize(getAllMonitors()) > 0);
 }
 int removeMonitor(MonitorID id){
     int index = indexOf(getAllMonitors(), &id, sizeof(id));
@@ -239,14 +261,14 @@ int removeMonitor(MonitorID id){
         return 0;
     Monitor* m = getElement(getAllMonitors(), index);
     Workspace* w = getWorkspaceFromMonitor(m);
-    LOG(LOG_LEVEL_DEBUG, "removing monitor %ld\n", id);
+    LOG(LOG_LEVEL_DEBUG, "removing monitor %d\n", id);
     dumpMonitorInfo(m);
     removeFromList(getAllMonitors(), index);
     if(w){
         w->monitor = NULL;
         FOR_EACH_REVERSED(Monitor*, otherMonitor, getAllMonitors()){
             if(!getWorkspaceFromMonitor(otherMonitor) && otherMonitor->base.x == m->base.x && otherMonitor->base.y == m->base.y){
-                LOG(LOG_LEVEL_DEBUG, "giving workspace to monitior %ld\n", otherMonitor->id);
+                LOG(LOG_LEVEL_DEBUG, "giving workspace to monitior %d\n", otherMonitor->id);
                 assignWorkspace(otherMonitor, w);
                 break;
             }
@@ -256,10 +278,20 @@ int removeMonitor(MonitorID id){
     return 1;
 }
 
-int isPrimary(Monitor* monitor){
+int setPrimary(Monitor* monitor, bool primary, bool sync __attribute__((unused))){
+    FOR_EACH(Monitor*, m, getAllMonitors())m->primary = 0;
+    if(monitor)
+        monitor->primary = primary;
+#ifdef NO_XRANDR
+    return 0;
+#else
+    return sync ? catchError(xcb_randr_set_output_primary_checked(dis, root, monitor ? monitor->id : XCB_NONE)) : 0;
+#endif
+}
+bool isPrimary(Monitor* monitor){
     return monitor->primary;
 }
-int updateMonitor(MonitorID id, int primary, Rect geometry, int autoAssignWorkspace){
+bool updateMonitor(MonitorID id, Rect geometry, bool autoAssignWorkspace){
     Monitor* m = find(getAllMonitors(), &id, sizeof(MonitorID));
     int newMonitor = !m;
     if(!m){
@@ -269,7 +301,6 @@ int updateMonitor(MonitorID id, int primary, Rect geometry, int autoAssignWorksp
         if(autoAssignWorkspace)
             assignWorkspace(m, NULL);
     }
-    m->primary = primary ? 1 : 0;
     m->base = geometry;
     resizeMonitorToAvoidAllStructs(m);
     return newMonitor;

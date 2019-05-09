@@ -31,6 +31,12 @@ RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=1
 RUN_XTEST = xvfb-run -a $(call RUN_TEST, $(1) )
 RUN_XTEST_NO_DISPLAY = DISPLAY=:1000 $(call RUN_TEST, $(1) --test-no-xdisplay )
 
+NO_XRANDR ?= 0
+ifeq ($(NO_XRANDR),1)
+	CFLAGS += -DNO_XRANDR=1
+	TESTFLAGS += -DNO_XRANDR=1
+endif
+
 ifeq ($(DEBUG),1)
   CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DDEBUG
 else ifeq ($(DEBUG),2)

@@ -23,7 +23,7 @@ typedef int MasterID;
 /// typeof Workspace::id
 typedef unsigned int WorkspaceID;
 /// typeof Monitor::id
-typedef unsigned long MonitorID;
+typedef unsigned int MonitorID;
 
 ///holds data on a window
 typedef struct {

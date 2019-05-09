@@ -621,7 +621,7 @@ START_TEST(test_workspace_deletion){
     flush();
     activateWorkspace(0);
     MONITOR_DUPLICATION_POLICY = 0;
-    pip((Rect){0, 0, 100, 100});
+    createMonitor((Rect){0, 0, 100, 100});
     detectMonitors();
     START_MY_WM;
     WAIT_UNTIL_TRUE(getWorkspaceByIndex(1)->mapped);
@@ -642,7 +642,7 @@ END_TEST
 START_TEST(test_workspace_monitor_addition){
     MONITOR_DUPLICATION_POLICY = 0;
     removeWorkspaces(getNumberOfWorkspaces() - 1);
-    pip((Rect){0, 0, 100, 100});
+    createMonitor((Rect){0, 0, 100, 100});
     detectMonitors();
     assert(getNumberOfWorkspaces() < getSize(getAllMonitors()));
     for(int i = 0; i < getNumberOfWorkspaces(); i++)

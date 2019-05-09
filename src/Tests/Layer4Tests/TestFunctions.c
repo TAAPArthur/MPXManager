@@ -150,31 +150,6 @@ END_TEST
     }
  */
 
-START_TEST(test_spawn_env_vars){
-    char* vars[2] = {getenv(CLIENT[0]), getenv(CLIENT[1])};
-    spawn("exit 0");
-    assert(getExitStatusOfFork() == 0);
-    char* newVars[2] = {getenv(CLIENT[0]), getenv(CLIENT[1])};
-    assert(memcmp(vars, newVars, sizeof(vars)) == 0);
-    for(int i = 0; i < LEN(vars); i++){
-        char buffer[64] = "exit $";
-        strcat(buffer, CLIENT[i]);
-        spawn(buffer);
-        assert(getExitStatusOfFork() == (i == 0 ? getActiveMasterKeyboardID() : getActiveMasterPointerID()));
-    }
-}
-END_TEST
-START_TEST(test_spawn){
-    spawn("exit 122");
-    assert(getExitStatusOfFork() == 122);
-}
-END_TEST
-
-START_TEST(test_spawn_wait){
-    assert(waitForChild(spawn("exit 0")));
-    assert(waitForChild(spawn("exit 122")));
-}
-END_TEST
 
 START_TEST(test_get_next_window_in_stack_fail){
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) addMask(winInfo, HIDDEN_MASK);
@@ -282,7 +257,7 @@ START_TEST(test_activate_workspace_with_mouse){
     Monitor* m = getHead(getAllMonitors());
     Rect bounds = m->base;
     bounds.x += bounds.width;
-    updateMonitor(1, 0, bounds, 1);
+    updateMonitor(-1, bounds, 1);
     setLastKnowMasterPosition(bounds.x + 1, bounds.y + 1);
     activateWorkspaceUnderMouse();
     assert(m != getMonitorFromWorkspace(getActiveWorkspace()));
@@ -364,9 +339,6 @@ Suite* functionsSuite(){
     tcase_add_test(tc_core, test_cycle_window);
     tcase_add_test(tc_core, test_find_and_raise);
     tcase_add_test(tc_core, test_find_and_raise_toggle);
-    tcase_add_test(tc_core, test_spawn);
-    tcase_add_test(tc_core, test_spawn_wait);
-    tcase_add_test(tc_core, test_spawn_env_vars);
     suite_add_tcase(s, tc_core);
     return s;
 }

@@ -8,10 +8,11 @@ START_TEST(test_avoid_struct){
     int dim = 100;
     int dockSize = 10;
     int monitorIndex = 1, sideMonitorIndex = 2;
-    updateMonitor(sideMonitorIndex, 0, (Rect){dim, 0, dim, dim}, 1);
-    updateMonitor(monitorIndex, 1, (Rect){0, 0, dim, dim}, 1);
+    updateMonitor(sideMonitorIndex, (Rect){dim, 0, dim, dim}, 1);
+    updateMonitor(monitorIndex, (Rect){0, 0, dim, dim}, 1);
     int arrSize = _i == 0 ? 12 : 4;
     Monitor* monitor = find(getAllMonitors(), &monitorIndex, sizeof(int));
+    setPrimary(monitor, 1, 0);
     Monitor* sideMonitor = find(getAllMonitors(), &sideMonitorIndex, sizeof(int));
     assert(monitor != NULL);
     assert(sideMonitor != NULL);
@@ -138,11 +139,10 @@ START_TEST(test_monitor_init){
         for(int y = 0; y < 2; y++)
             for(int i = 0; i < 2; i++){
                 short dim[4] = {x, y, size* size + y, size * 2 + x};
-                assert(updateMonitor(count, !count, *(Rect*)dim, i));
+                assert(updateMonitor(count, *(Rect*)dim, i));
                 Monitor* m = find(getAllMonitors(), &count, sizeof(MonitorID));
                 assert(m);
                 assert(m->id == count);
-                assert(isPrimary(m) == !count);
                 for(int i = 0; i < 4; i++){
                     assert((&m->base.x)[i] == (&m->view.x)[i]);
                     assert(dim[i] == (&m->base.x)[i]);
@@ -160,7 +160,7 @@ START_TEST(test_monitor_add_remove){
     int size = getNumberOfWorkspaces();
     for(int n = 0; n < 2; n++){
         for(int i = 1; i <= size + 1; i++){
-            updateMonitor(i, 1, (Rect){0, 0, 100, 100}, 1);
+            updateMonitor(i, (Rect){0, 0, 100, 100}, 1);
             Workspace* w = getWorkspaceFromMonitor(find(getAllMonitors(), &i, sizeof(int)));
             if(i > size)
                 assert(!w);
@@ -177,7 +177,20 @@ START_TEST(test_monitor_add_remove){
     assert(!removeMonitor(0));
 }
 END_TEST
+START_TEST(test_monitor_primary){
+    assert(isPrimary(getHead(getAllMonitors())) == 0);
+    assert(setPrimary(getHead(getAllMonitors()), 1, 1) == 0);
+    assert(isPrimary(getHead(getAllMonitors())) == 1);
+    detectMonitors();
+    assert(isPrimary(getHead(getAllMonitors())) == 1);
+}
+END_TEST
 
+START_TEST(test_detect_at_least_one_monitor){
+    detectMonitors();
+    assert(getSize(getAllMonitors()) == 1);
+}
+END_TEST
 START_TEST(test_detect_monitors){
     close(2);
     waitForChild(spawn("xsane-xrandr --auto split-monitor W 3 &>/dev/null"));
@@ -185,52 +198,78 @@ START_TEST(test_detect_monitors){
     detectMonitors();
     int num = getSize(getAllMonitors());
     assert(isNotEmpty(getAllMonitors()));
-    updateMonitor(0, 1, (Rect){0, 0, 100, 100}, 1);
+    updateMonitor(0, (Rect){0, 0, 100, 100}, 1);
     assert(getSize(getAllMonitors()) == num + 1);
     detectMonitors();
     assert(getSize(getAllMonitors()) == num);
     assert(num == 3);
 }
 END_TEST
+START_TEST(test_create_monitor){
+    MONITOR_DUPLICATION_POLICY = 0;
+    detectMonitors();
+    Monitor* m = getHead(getAllMonitors());
+    assert(getSize(getAllMonitors()) == 1);
+    Rect bounds = {1, 1, 100, 100};
+    createMonitor(bounds);
+    detectMonitors();
+    assert(getSize(getAllMonitors()) == 2);
+    Monitor* newMonitor = NULL;
+    UNTIL_FIRST(newMonitor, getAllMonitors(), m != newMonitor);
+    assert(memcmp(&bounds, &newMonitor->base, sizeof(Rect)) == 0);
+}
+END_TEST
 START_TEST(test_monitor_dup_resolution){
     MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
     int masks[] = {TAKE_PRIMARY, TAKE_LARGER, TAKE_SMALLER};
-    if(_i == 0)
-        waitForChild(spawn("xsane-xrandr --auto set-primary &>/dev/null"));
     detectMonitors();
+    if(_i == 0)
+        setPrimary(getHead(getAllMonitors()), 1, 1);
     Monitor* m = getHead(getAllMonitors());
     if(_i == 0)
         assert(isPrimary(m));
     int result[] = {1, 0, 1};
-    pip((Rect){1, 1, 100, 100});
+    createMonitor((Rect){1, 1, 100, 100});
     MONITOR_DUPLICATION_RESOLUTION = masks[_i];
     detectMonitors();
     assert((m == getHead(getAllMonitors())) == result[_i]);
 }
 END_TEST
 START_TEST(test_monitor_intersection){
-    char* cmds[] = {
-        "xsane-xrandr --auto split-monitor W 2 75 &>/dev/null",
-        "xsane-xrandr pip 1 1 100 100 &>/dev/null",
-        "xsane-xrandr pip 0 0 0 0 &>/dev/null",
-    };
-    waitForChild(spawn(cmds[_i]));
+    Monitor* m = getHead(getAllMonitors());
+    Rect base = m->base;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;
     int sizes[3][3] = {
-        {2, 2, 1},
+        {3, 3, 1},
         {2, 1, 1},
         {1, 2, 2}
     };
     int masks[] = {SAME_DIMS, CONTAINS, INTERSECTS};
     for(int i = 0; i < LEN(sizes); i++){
+        switch(_i){
+            case 0:
+                for(int n = 0; n < 2; n++){
+                    Rect temp = base;
+                    temp.x += n * temp.width * .25;
+                    temp.width *= .75;
+                    createMonitor(temp);
+                }
+                break;
+            case 1:
+                createMonitor((Rect){1, 1, 100, 100});
+                break;
+            case 2:
+                createMonitor(base);
+                break;
+        }
         MONITOR_DUPLICATION_POLICY = masks[i];
         detectMonitors();
         assert(getSize(getAllMonitors()) == sizes[_i][i]);
         FOR_EACH_REVERSED(Monitor*, m, getAllMonitors()){
             removeMonitor(m->id);
         }
+        clearFakeMonitors();
     }
-    clearFakeMonitors();
 }
 END_TEST
 
@@ -244,7 +283,12 @@ Suite* monitorsSuite(){
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Detect monitors");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, clearFakeMonitors);
+    tcase_add_test(tc_core, test_detect_at_least_one_monitor);
+    tcase_add_test(tc_core, test_monitor_primary);
+#ifndef NO_XRANDR
     tcase_add_test(tc_core, test_detect_monitors);
+#endif
+    tcase_add_test(tc_core, test_create_monitor);
     tcase_add_loop_test(tc_core, test_monitor_intersection, 0, 3);
     tcase_add_loop_test(tc_core, test_monitor_dup_resolution, 0, 3);
     suite_add_tcase(s, tc_core);

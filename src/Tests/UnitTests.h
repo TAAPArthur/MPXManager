@@ -39,7 +39,7 @@ static inline int addFakeMaster(int pointerId, int keyboardID){
 }
 static inline void addFakeMonitor(int id){
     Rect arr = {0};
-    updateMonitor(id, 0, arr, 1);
+    updateMonitor(id, arr, 1);
 }
 
 static inline int listsEqual(ArrayList* n, ArrayList* n2){

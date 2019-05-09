@@ -425,23 +425,25 @@ END_TEST
 
 START_TEST(test_monitor_workspace){
     addFakeMaster(1, 1);
-    addFakeMonitor(1);
-    addFakeMonitor(2);
-    FOR_EACH(Monitor*, monitor, getAllMonitors()) assert(getWorkspaceFromMonitor(monitor) != NULL);
-    assert(getWorkspaceFromMonitor((void*) -1) == NULL);
-    int count = 0;
-    for(int i = 0; i < size; i++){
-        if(isWorkspaceVisible(i)){
-            count++;
-            Monitor* m;
-            m = getMonitorFromWorkspace(getWorkspaceByIndex(i));
-            assert(m);
-            Workspace* w = getWorkspaceFromMonitor(m);
-            assert(w);
-            assert(w->id == i);
+    for(int i=0;i<size+2;i++)
+        addFakeMonitor(i);
+    while(1){
+        int count = 0;
+        for(int i = 0; i < getNumberOfWorkspaces(); i++){
+            if(isWorkspaceVisible(i)){
+                count++;
+                Monitor* m = getMonitorFromWorkspace(getWorkspaceByIndex(i));
+                assert(m);
+                Workspace* w = getWorkspaceFromMonitor(m);
+                assert(w);
+                assert(w->id == i);
+            }
         }
+        assert(count == MIN(getNumberOfWorkspaces(),getSize(getAllMonitors())));
+        if(getSize(getAllMonitors()) > 1)
+            assert(removeMonitor(((Monitor*)getElement(getAllMonitors(),getSize(getAllMonitors())/2))->id));
+        else break;
     }
-    assert(count == 2);
 }
 END_TEST
 
@@ -475,6 +477,31 @@ START_TEST(test_complete_window_remove){
 END_TEST
 
 
+START_TEST(test_spawn_env_vars){
+    char* vars[2] = {getenv(CLIENT[0]), getenv(CLIENT[1])};
+    spawn("exit 0");
+    assert(getExitStatusOfFork() == 0);
+    char* newVars[2] = {getenv(CLIENT[0]), getenv(CLIENT[1])};
+    assert(memcmp(vars, newVars, sizeof(vars)) == 0);
+    for(int i = 0; i < LEN(vars); i++){
+        char buffer[64] = "exit $";
+        strcat(buffer, CLIENT[i]);
+        spawn(buffer);
+        assert(getExitStatusOfFork() == (i == 0 ? getActiveMasterKeyboardID() : getActiveMasterPointerID()));
+    }
+}
+END_TEST
+START_TEST(test_spawn){
+    spawn("exit 122");
+    assert(getExitStatusOfFork() == 122);
+}
+END_TEST
+
+START_TEST(test_spawn_wait){
+    assert(waitForChild(spawn("exit 0")));
+    assert(waitForChild(spawn("exit 122")));
+}
+END_TEST
 
 Suite* mywmUtilSuite(void){
     Suite* s = suite_create("Context");
@@ -518,6 +545,12 @@ Suite* mywmUtilSuite(void){
     tcase_add_test(tc_core, test_complete_window_remove);
     tcase_add_test(tc_core, test_monitor_workspace);
     tcase_add_test(tc_core, test_window_in_visible_worspace);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("Spawn_Functions");
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, fullCleanup);
+    tcase_add_test(tc_core, test_spawn);
+    tcase_add_test(tc_core, test_spawn_wait);
+    tcase_add_test(tc_core, test_spawn_env_vars);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Misc");
     tcase_add_checked_fixture(tc_core, createSimpleContext, resetPipe);

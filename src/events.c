@@ -5,7 +5,9 @@
 #include <assert.h>
 #include <pthread.h>
 
-#include <xcb/randr.h>
+#ifndef NO_XRANDR
+    #include <xcb/randr.h>
+#endif
 
 #include "bindings.h"
 #include "events.h"
@@ -132,7 +134,10 @@ int isSyntheticEvent(){
 
 void* runEventLoop(void* arg __attribute__((unused))){
     xcb_generic_event_t* event;
-    int xrandrFirstEvent = xcb_get_extension_data(dis, &xcb_randr_id)->first_event;
+    int xrandrFirstEvent = -1;
+#ifndef NO_XRANDR
+    xrandrFirstEvent = xcb_get_extension_data(dis, &xcb_randr_id)->first_event;
+#endif
     LOG(LOG_LEVEL_TRACE, "starting event loop; xrandr event %d\n", xrandrFirstEvent);
     while(!isShuttingDown() && dis){
         event = getNextEvent();
@@ -148,8 +153,7 @@ void* runEventLoop(void* arg __attribute__((unused))){
         if(type < 127){
             lock();
             setLastEvent(event);
-            if(type >= LASTEvent)
-                type = type == xrandrFirstEvent ? onScreenChange : ExtraEvent;
+            type = type < LASTEvent ? type : type == xrandrFirstEvent ? onScreenChange : ExtraEvent;
             applyEventRules(type, NULL);
             unlock();
         }
@@ -173,7 +177,9 @@ int loadGenericEvent(xcb_ge_generic_event_t* event){
 }
 
 void registerForMonitorChange(){
+#ifndef NO_XRANDR
     catchError(xcb_randr_select_input_checked(dis, root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE));
+#endif
 }
 void registerForDeviceEvents(){
     ArrayList* list = getDeviceBindings();

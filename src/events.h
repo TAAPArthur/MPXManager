@@ -169,6 +169,7 @@ int loadGenericEvent(xcb_ge_generic_event_t* event);
 void registerForDeviceEvents();
 /**
  * Request to be notifed when info related to the monitor/screen changes
+ * This method does nothing if compiled without XRANDR support
  */
 void registerForMonitorChange();
 

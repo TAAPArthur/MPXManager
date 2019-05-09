@@ -79,7 +79,7 @@ ArrayList* getAllDocks(void);
  *
  * @param bounds the position of the new monitor
  */
-void pip(Rect bounds);
+void createMonitor(Rect bounds);
 /**
  * Clears all fake monitors
  * @see pip
@@ -91,17 +91,25 @@ void clearFakeMonitors(void);
  * @param monitor
  * @return
  */
-int isPrimary(Monitor* monitor);
+bool isPrimary(Monitor* monitor);
+/**
+ * Marks this monitor as the primary. There can only be 1 primary monitor, so the current primary monitor will lose its status
+ *
+ * @param monitor
+ * @param primary the value of primary
+ * @param sync if true we update the Xserver in addition to our local structs. If there is no XRANDR support this parameter will be treated as 0
+ * @return 0 if no error
+ */
+int setPrimary(Monitor* monitor, bool primary, bool sync);
 
 /**
  *
- * @param id id of monitor TODO need to convert handle long to int conversion
- * @param primary   if the monitor the primary
+ * @param id id of monitor
  * @param geometry an array containing the x,y,width,height of the monitor
  * @param autoAssignWorkspace if true, then monitor will be given a free workspace if possible
  * @return 1 iff a new monitor was added
  */
-int updateMonitor(MonitorID id, int primary, Rect geometry, int autoAssignWorkspace);
+bool updateMonitor(MonitorID id, Rect geometry, bool autoAssignWorkspace);
 /**
  * Removes a monitor and frees related info
  * @param id identifier of the monitor
