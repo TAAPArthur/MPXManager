@@ -330,8 +330,6 @@ static int loadWindowAttributes(WindowInfo* winInfo, xcb_get_window_attributes_r
         return 0;
     if(attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY)
         addMask(winInfo, INPUT_ONLY_MASK);
-    if(attr->map_state)
-        addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
     return 1;
 }
 int processNewWindow(WindowInfo* winInfo){
@@ -373,6 +371,8 @@ void scan(xcb_window_t baseWindow){
             LOG(LOG_LEVEL_TRACE, "processing child %d\n", children[i]);
             WindowInfo* winInfo = createWindowInfo(children[i]);
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
+            if(attr->map_state)
+                addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
             winInfo->parent = baseWindow;
             //if the window is not unmapped
             if(loadWindowAttributes(winInfo, attr)){
