@@ -141,18 +141,21 @@ void onConfigureRequestEvent(void){
             values[n++] = (&event->x)[i];
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
+static void onWindowDetection(WindowID id, WindowID parent, short* geo){
+    WindowInfo* winInfo = createWindowInfo(id);
+    winInfo->creationTime = getTime();
+    winInfo->parent = parent;
+    if(processNewWindow(winInfo)){
+        if(geo)
+            setGeometry(winInfo, geo);
+        applyEventRules(onWindowMove, winInfo);
+    }
+}
 void onCreateEvent(void){
     xcb_create_notify_event_t* event = getLastEvent();
     if(event->override_redirect || getWindowInfo(event->window))return;
     if(IGNORE_SUBWINDOWS && event->parent != root)return;
-    WindowInfo* winInfo = createWindowInfo(event->window);
-    winInfo->creationTime = getTime();
-    winInfo->parent = event->parent;
-    LOG(LOG_LEVEL_DEBUG, "window: %d parent: %d\n", event->window, event->parent);
-    if(processNewWindow(winInfo)){
-        setGeometry(winInfo, &event->x);
-        applyEventRules(onWindowMove, winInfo);
-    }
+    onWindowDetection(event->window, event->parent, &event->x);
 }
 void onDestroyEvent(void){
     xcb_destroy_notify_event_t* event = getLastEvent();
@@ -192,6 +195,15 @@ void onUnmapEvent(void){
         removeMask(winInfo, FULLY_VISIBLE);
         if(isSyntheticEvent())
             removeMask(winInfo, MAPPABLE_MASK);
+    }
+}
+void onReparentEvent(void){
+    xcb_reparent_notify_event_t* event = getLastEvent();
+    if(IGNORE_SUBWINDOWS && !event->override_redirect){
+        if(event->parent == root)
+            onWindowDetection(event->window, event->parent, NULL);
+        else
+            deleteWindow(event->window);
     }
 }
 
@@ -434,6 +446,8 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [XCB_UNMAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onUnmapEvent),
     [XCB_MAP_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onMapEvent),
     [XCB_MAP_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onMapRequestEvent),
+    [XCB_REPARENT_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onReparentEvent),
+
     [XCB_CONFIGURE_REQUEST] = CREATE_DEFAULT_EVENT_RULE(onConfigureRequestEvent),
     [XCB_CONFIGURE_NOTIFY] = CREATE_DEFAULT_EVENT_RULE(onConfigureNotifyEvent),
 

@@ -142,6 +142,25 @@ START_TEST(test_detect_new_windows){
     assert(getSize(getActiveWindowStack()) == 3);
 }
 END_TEST
+START_TEST(test_reparent_windows){
+    IGNORE_SUBWINDOWS = 1;
+    WindowID win = createNormalWindow();
+    WindowID parent = createNormalWindow();
+    int idle = getIdleCount();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(isInList(getAllWindows(), win) && isInList(getAllWindows(), parent));
+    xcb_reparent_window_checked(dis, win, parent, 0, 0);
+    idle = getIdleCount();
+    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    assert(!isInList(getAllWindows(), win) && isInList(getAllWindows(), parent));
+    assert(getSize(getActiveWindowStack()) == 1);
+    xcb_reparent_window_checked(dis, win, root, 0, 0);
+    WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) &&
+                    isInList(getAllWindows(), parent));
+    assert(getSize(getActiveWindowStack()) == 2);
+}
+END_TEST
 
 START_TEST(test_delete_windows){
     CRASH_ON_ERRORS = 0;
@@ -679,9 +698,10 @@ Suite* defaultRulesSuite(){
     tcase_add_test(tc_core, test_detect_wm);
     tcase_add_test(tc_core, test_die_on_idle);
     suite_add_tcase(s, tc_core);
-    tc_core = tcase_create("Normal Events");
+    tc_core = tcase_create("NormalEvents");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_detect_new_windows);
+    tcase_add_test(tc_core, test_reparent_windows);
     tcase_add_test(tc_core, test_map_windows);
     tcase_add_test(tc_core, test_delete_windows);
     tcase_add_test(tc_core, test_visibility_update);

@@ -43,7 +43,6 @@ static void setup(){
     START_MY_WM;
 }
 
-
 /**
  * Tests to see if events received actually make it to call back function
  * @param START_TEST(test_regular_events)

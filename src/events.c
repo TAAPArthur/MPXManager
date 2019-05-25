@@ -89,7 +89,7 @@ void applyBatchRules(void){
         }
 }
 int applyEventRules(int type, WindowInfo* winInfo){
-    LOG(LOG_LEVEL_VERBOSE, "Event detected %d %s number of rules: %d\n",
+    LOG(LOG_LEVEL_TRACE, "Event detected %d %s number of rules: %d\n",
         type, eventTypeToString(type), getSize(getEventRules(type)));
     incrementBatchEventRuleCounter(type);
     return applyRules(getEventRules(type), winInfo);

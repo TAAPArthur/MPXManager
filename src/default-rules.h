@@ -58,6 +58,10 @@ void onMapRequestEvent(void);
  */
 void onMapEvent(void);
 /**
+ * Removes/adds windows from our list of managed windows when it is reparented
+ */
+void onReparentEvent(void);
+/**
  * Keeps mapped masks in sync with XServer state
  */
 void onUnmapEvent(void);
