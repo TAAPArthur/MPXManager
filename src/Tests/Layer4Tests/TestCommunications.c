@@ -58,6 +58,8 @@ START_TEST(test_send_receive_func){
     POLL_COUNT = 100;
     send("list-options", "0");
     send("dump", "0");
+    send("dump-win", NULL);
+    send("dump-win", "0");
     send("dump-all", NULL);
     send("dump-filter", "test");
     send("log-level", "10");

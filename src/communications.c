@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "logger.h"
 #include "mywm-util.h"
+#include "windows.h"
 #include "xsession.h"
 
 static void listOptions(void);
@@ -27,6 +28,7 @@ static Option default_options[] = {
     {"dump", {.boundFunction = BIND(dumpAllWindowInfo, MAPPABLE_MASK)}, FUNC},
     {"dump-all", {.boundFunction = BIND(dumpAllWindowInfo, 0)}, FUNC},
     {"dump-filter", {.boundFunction = BIND(dumpMatch, NULL)}, FUNC_STR},
+    {"dump-win", {.boundFunction = BIND(dumpWindowInfo)}, FUNC_WIN_INFO},
     {"list-options", {.boundFunction = BIND(listOptions)}, FUNC},
     {"log-level", {.boundFunction = BIND(setLogLevel)}, FUNC_INT},
     {"quit", {.boundFunction = BIND(quit, 0)}, FUNC},
@@ -129,6 +131,11 @@ void callOption(Option* option, char* value){
             option->var.boundFunction.arg.intArg = atoi(value);
             callBoundedFunction(&option->var.boundFunction, NULL);
             break;
+        case FUNC_WIN_INFO: {
+            WindowInfo* winInfo = getWindowInfo(atoi(value));
+            callBoundedFunction(&option->var.boundFunction, winInfo);
+        }
+        break;
         case FUNC_STR:
             option->var.boundFunction.arg.voidArg = value;
             callBoundedFunction(&option->var.boundFunction, (void*)value);
