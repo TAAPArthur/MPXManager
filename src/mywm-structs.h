@@ -15,11 +15,11 @@
 #endif
 
 /// typeof WindowInfo::mask
-typedef int WindowMask;
+typedef unsigned int WindowMask;
 /// typeof WindowInfo::id
 typedef unsigned int WindowID;
 /// typeof Master::id
-typedef int MasterID;
+typedef unsigned int MasterID;
 /// typeof Workspace::id
 typedef unsigned int WorkspaceID;
 /// typeof Monitor::id

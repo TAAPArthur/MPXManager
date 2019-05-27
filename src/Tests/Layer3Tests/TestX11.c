@@ -119,8 +119,6 @@ START_TEST(test_delete_window_request){
         close(fd[1]);
         close(fd[0]);
         flush();
-        close(1);
-        close(2);
         if(_i){
             msleep(KILL_TIMEOUT * 10);
         }
@@ -435,7 +433,7 @@ START_TEST(test_auto_focus_tiling){
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
     setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
     int first = mapWindow(createNormalWindow());
-    Rule sleeperRule = {NULL, 0, BIND(markAndSleep)};
+    static Rule sleeperRule = {NULL, 0, BIND(markAndSleep)};
     flush();
     int idle = 0;
     START_MY_WM;
@@ -496,27 +494,6 @@ START_TEST(test_set_workspace_names){
     setWorkspaceNames(name, 2);
     assert(getIndexFromName(name[1]) == 1);
     assert(strcmp(name[1], getWorkspaceName(1)) == 0);
-}
-END_TEST
-START_TEST(test_unkown_window){
-    WindowID win = createNormalWindow();
-    WindowInfo* winInfo = createWindowInfo(win);
-    mapWindow(win);
-    assert(focusWindow(win));
-    assert(raiseWindow(win));
-    setWindowStateFromAtomInfo(winInfo, NULL, 0, 0);
-    registerWindow(winInfo);
-    updateMapState(win, 0);
-    updateMapState(win, 1);
-    updateMapState(win, 0);
-}
-END_TEST
-START_TEST(test_bad_window){
-    setLogLevel(LOG_LEVEL_NONE);
-    CRASH_ON_ERRORS = 0;
-    WindowID win = -2;
-    assert(!focusWindow(win));
-    assert(!raiseWindow(win));
 }
 END_TEST
 
@@ -788,8 +765,6 @@ Suite* x11Suite(void){
     tc_core = tcase_create("MISC");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_set_workspace_names);
-    tcase_add_test(tc_core, test_unkown_window);
-    tcase_add_test(tc_core, test_bad_window);
     tcase_add_test(tc_core, test_workspaceless_window);
     suite_add_tcase(s, tc_core);
     return s;

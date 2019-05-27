@@ -274,7 +274,7 @@ int checkStackingOrder(WindowID* stackingOrder, int num){
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
     if(!reply){
-        LOG(LOG_LEVEL_NONE, "could not query tree");
+        LOG(LOG_LEVEL_WARN, "could not query tree\n");
         return 0;
     }
     int numberOfChildren = xcb_query_tree_children_length(reply);

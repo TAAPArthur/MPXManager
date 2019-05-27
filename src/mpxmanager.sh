@@ -54,7 +54,7 @@ run(){
     exec $path/$fileName $@
 }
 displayVersion(){
-    echo "0.9.6"
+    echo "0.9.7"
 }
 
 fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))

@@ -246,10 +246,14 @@ typedef struct {
         int (*)(void):NO_ARGS_RETURN_INT, \
         void (*)(int): INT_ARG, \
         int (*)(int): INT_ARG_RETURN_INT, \
+        void (*)(unsigned int): INT_ARG, \
+        int (*)(unsigned int): INT_ARG_RETURN_INT, \
         void (*)(WindowInfo*): WIN_ARG, \
         int (*)(WindowInfo*): WIN_ARG_RETURN_INT, \
         void (*)(WindowInfo*,int): WIN_INT_ARG, \
         int (*)(WindowInfo*, int): WIN_INT_ARG_RETURN_INT, \
+        void (*)(WindowInfo*, unsigned int): WIN_INT_ARG, \
+        int (*)(WindowInfo*, unsigned int): WIN_INT_ARG_RETURN_INT, \
         void (*)(long): VOID_ARG, \
         void (*)(double): VOID_ARG, \
         void (*)(Layout*): VOID_ARG, \

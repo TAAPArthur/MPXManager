@@ -6,8 +6,8 @@ PROFILE_FLAGS := -g -rdynamic -pg  -Wno-unused-function -Wno-unused-parameter -W
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-braces -Wno-missing-field-initializers -Wno-cast-function-type
-ERROR_FLAGS := -Werror -Wall -Wextra
-CFLAGS := -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE ${INJECT}
+ERROR_FLAGS := -Werror -Wincompatible-pointer-types -Wall -Wextra
+CFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} -D_DEFAULT_SOURCE ${INJECT}
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING  --coverage -Wno-unused-function
 TESTLIBS := -lcheck
@@ -46,6 +46,7 @@ endif
 
 ifeq ($(DEBUG),1)
   CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DDEBUG
+  TESTFLAGS += -DDEBUG
 else ifeq ($(DEBUG),2)
   CFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DNDEBUG
 else
@@ -83,9 +84,11 @@ recompile:
 
 libmpxmanager.so: ${BASE_SRCS}
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
+
 libmpxmanager.a: ${BASE_SRCS}
 	gcc $^ -c -fpic ${CFLAGS} ${LDFLAGS}
 	ar rcs libmpxmanager.a *.o
+	rm *.o
 
 
 libmpx-patch.so: Hacks/mpx-patch.c

@@ -45,7 +45,7 @@ WindowInfo* createWindowInfo(WindowID id){
 WindowMask getMask(WindowInfo* winInfo){
     return winInfo->mask;
 }
-int hasPartOfMask(WindowInfo* winInfo, WindowMask mask){
+WindowMask hasPartOfMask(WindowInfo* winInfo, WindowMask mask){
     Workspace* w = getWorkspaceOfWindow(winInfo);
     WindowMask winMask = winInfo->mask;
     if(w)

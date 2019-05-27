@@ -20,7 +20,7 @@ void setClientMasterEnvVar(void){
 }
 void resetPipe(){
     if(statusPipeFD[0]){
-        close(statusPipeFD[0]);
+        // statusPipeFD[0]) is closed right after a call to pipe;
         close(statusPipeFD[1]);
         statusPipeFD[0] = statusPipeFD[1] = 0;
     }

@@ -56,7 +56,8 @@ WindowInfo* getFocusedWindowByMaster(Master* master){
     if(!isNotEmpty(list))return NULL;
     return getElement(list, master->focusedWindowIndex);
 }
-WindowInfo* getFocusedWindow(){
+WindowInfo* getFocusedWindow(void){
+    assert(getActiveMaster());
     return getFocusedWindowByMaster(getActiveMaster());
 }
 unsigned int getFocusedTime(Master* m){

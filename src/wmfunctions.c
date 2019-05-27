@@ -145,15 +145,8 @@ static void* waitForWindowToDie(int id){
 
 void killWindowInfo(WindowInfo* winInfo){
     if(hasMask(winInfo, WM_DELETE_WINDOW_MASK)){
-        xcb_client_message_event_t ev;
-        ev.response_type = XCB_CLIENT_MESSAGE;
-        ev.sequence = 0;
-        ev.format = 32;
-        ev.window = winInfo->id;
-        ev.type = ewmh->WM_PROTOCOLS;
-        ev.data.data32[0] = WM_DELETE_WINDOW;
-        ev.data.data32[1] = getTime();
-        xcb_send_event(dis, 0, winInfo->id, XCB_EVENT_MASK_NO_EVENT, (char*)&ev);
+        unsigned int data[5] = {WM_DELETE_WINDOW, getTime()};
+        xcb_ewmh_send_client_message(dis, root, winInfo->id, ewmh->WM_PROTOCOLS, 5, data);
         LOG(LOG_LEVEL_INFO, "Sending request to delete window\n");
         runInNewThread((void* (*)(void*))waitForWindowToDie, (void*)(long)winInfo->id, "wait for window to die");
     }
@@ -489,7 +482,7 @@ void broadcastEWMHCompilence(){
     if(catchError(xcb_set_selection_owner_checked(dis, compliantWindowManagerIndicatorWindow, WM_SELECTION_ATOM,
                   XCB_CURRENT_TIME)) == 0){
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, compliantWindowManagerIndicatorWindow};
-        xcb_ewmh_send_client_message(dis, root, root, ewmh->MANAGER, 5, data);
+        xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
     SET_SUPPORTED_OPERATIONS(ewmh);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, compliantWindowManagerIndicatorWindow);

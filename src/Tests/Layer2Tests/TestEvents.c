@@ -48,10 +48,15 @@ static void setup(){
  * @param START_TEST(test_regular_events)
  */
 START_TEST(test_regular_events){
-    volatile int count = -1;
-    volatile int batchCount = 1;
+    volatile int count = 0;
+    volatile int batchCount = 0;
+    POLL_COUNT = 1;
+    IGNORE_SEND_EVENT = 0;
+    int idleCount = getIdleCount();
+    xcb_generic_event_t event = {0};
     int i;
-    //int lastType=-1;
+    ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
+    registerForDeviceEvents();
     void func(void){
         assert(batchCount == -count);
         count++;
@@ -62,59 +67,45 @@ START_TEST(test_regular_events){
             assert(isSyntheticEvent());
     }
     void batchFuncEven(void){
-        batchCount--;
         assert(batchCount % 2 == 0);
+        batchCount--;
         assert(batchCount == -count);
     }
     void batchFuncOdd(void){
-        batchCount--;
         assert(batchCount % 2 != 0);
+        batchCount--;
         assert(batchCount == -count);
     }
-    IGNORE_SEND_EVENT = 0;
-    POLL_COUNT = 1;
-    int idleCount = -1;
-    for(i = count + 1; i < LASTEvent; i++){
-        if(i == 1){
-            count++;
-            batchCount--;
-            continue;
-        }
-        xcb_generic_event_t* event = calloc(32, 1);
-        event->response_type = i;
+    for(i = count; i < LASTEvent; i++){
+        event.response_type = i;
         Rule r = CREATE_DEFAULT_EVENT_RULE(func);
         assert(!isNotEmpty(getEventRules(i)));
         addToList(getEventRules(i), &r);
         Rule batch = CREATE_DEFAULT_EVENT_RULE((i % 2 == 0 ? batchFuncEven : batchFuncOdd));
         addToList(getBatchEventRules(i), &batch);
-        if(i){
-            if(i == XCB_CLIENT_MESSAGE){
+        switch(i){
+            case ExtraEvent:
+            case 0:
+                //generate error
+                xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
+                break;
+            case XCB_CLIENT_MESSAGE:
                 assert(!catchError(xcb_ewmh_send_client_message(dis, root, root, 1, 0, 0)));
-                //cookie=xcb_ewmh_send_client_message(dis, root, root, 0, 0, NULL);
-                //cookie=xcb_ewmh_request_change_current_desktop_checked(ewmh, defaultScreenNumber, 0, 0);
-            }
-            else if(i == XCB_GE_GENERIC){
-                ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
-                registerForDeviceEvents();
+                break;
+            case XCB_GE_GENERIC:
                 createMasterDevice("test");
-                flush();
-            }
-            else assert(!catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) event)));
+                break;
+            default:
+                assert(!catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event)));
+                break;
         }
-        else {
-            //generate error
-            xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) event);
-            flush();
-        }
-        xcb_flush(dis);
-        WAIT_UNTIL_TRUE(count == i);
-        //assert(lastType==i);
-        free(event);
-        //assert(count==i);
+        flush();
         WAIT_UNTIL_TRUE(getIdleCount() > idleCount);
+        assert(getIdleCount() == count);
+        assert(count == i + 1);
         assert(count == -batchCount);
-        assert(count == i);
         idleCount = getIdleCount();
+        POLL_COUNT = 1;
     }
 }
 END_TEST

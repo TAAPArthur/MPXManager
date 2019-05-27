@@ -92,7 +92,6 @@ void openXDisplay(void){
     free(reply);
     create_graphics_context();
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
-    xcb_set_close_down_mode(dis, XCB_CLOSE_DOWN_DESTROY_ALL);
 }
 
 void closeConnection(void){

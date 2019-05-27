@@ -95,7 +95,7 @@ static Binding DEFAULT_BINDINGS[] = {
     {Mod4Mask | ShiftMask, XK_Return, BIND(focusTop)},
 
     {Mod4Mask | ShiftMask, XK_q, BIND(quit)},
-    {Mod4Mask, XK_q, AND(PIPE(BIND(spawn, "mpxmanager --recompile"), BIND(waitForChild)), BIND(restart))},
+    {Mod4Mask, XK_q, OR(PIPE(BIND(spawn, "mpxmanager --recompile -g"), BIND(waitForChild)), BIND(restart))},
 
     {Mod4Mask, XK_r, BIND(restoreActiveLayout), .mode = LAYOUT_MODE},
     {Mod4Mask, XK_p, BIND(increaseActiveLayoutArg, LAYOUT_PADDING, 10), .mode = LAYOUT_MODE},

@@ -16,7 +16,7 @@
  * @param winInfo
  * @returns the full mask of the given window
  */
-int getMask(WindowInfo* winInfo);
+WindowMask getMask(WindowInfo* winInfo);
 /**
  *
  * @param winInfo

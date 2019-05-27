@@ -2,7 +2,7 @@
 
 
 pkgname='mpxmanager'
-pkgver='0.9.6'
+pkgver='0.9.8'
 _language='en-US'
 pkgrel=1
 pkgdesc='My Personal XWindow Manager'
@@ -10,7 +10,7 @@ pkgdesc='My Personal XWindow Manager'
 arch=('any')
 license=('MIT')
 depends=('xorg-server' 'libx11' 'libxcb')
-optdepends=('xorg-server-xvfb' 'xorg-xinput' 'xsane-xrandr')
+optdepends=('xorg-server-xvfb' 'xorg-xinput' 'xsane-xrandr' 'check')
 makedepends=('git')
 md5sums=('SKIP')
 

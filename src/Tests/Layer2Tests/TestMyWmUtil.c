@@ -38,10 +38,6 @@ void testWindowAddRemove(ArrayList* head,
     assert(getSize(head) == 0);
     WindowInfo* arr[size];
     loadArr(head != getAllWindows(), arr);
-    int count = 0;
-    void dummyCount(){
-        count++;
-    }
     for(int i = 1; i <= size; i++){
         add(arr[i - 1]);
         assert(getSize(head) == i);
@@ -362,25 +358,6 @@ START_TEST(test_next_workspace){
 }
 END_TEST
 
-START_TEST(test_window_cycle){
-    addFakeMaster(1, 1);
-    for(int i = 1; i <= size; i++){
-        WindowInfo* winInfo = createWindowInfo(i);
-        assert(addWindowInfo(winInfo));
-        addWindowToWorkspace(winInfo, 0);
-    }
-    ArrayList* node = getWindowStack(getWorkspaceByIndex(0));
-    int currentFocusedWindow = ((WindowInfo*)getHead(node))->id;
-    onWindowFocus(currentFocusedWindow);
-    assert(getFocusedWindow());
-    FOR_EACH(WindowInfo*, winInfo, node){
-        int size = getSize(node);
-        onWindowFocus(winInfo->id);
-        assert(getFocusedWindow() == winInfo);
-        assert(size == getSize(node));
-    }
-}
-END_TEST
 START_TEST(test_active){
     addFakeMaster(1, 1);
     assert(getActiveWorkspaceIndex() == 0);
@@ -425,7 +402,7 @@ END_TEST
 
 START_TEST(test_monitor_workspace){
     addFakeMaster(1, 1);
-    for(int i=0;i<size+2;i++)
+    for(int i = 0; i < size + 2; i++)
         addFakeMonitor(i);
     while(1){
         int count = 0;
@@ -439,9 +416,9 @@ START_TEST(test_monitor_workspace){
                 assert(w->id == i);
             }
         }
-        assert(count == MIN(getNumberOfWorkspaces(),getSize(getAllMonitors())));
+        assert(count == MIN(getNumberOfWorkspaces(), getSize(getAllMonitors())));
         if(getSize(getAllMonitors()) > 1)
-            assert(removeMonitor(((Monitor*)getElement(getAllMonitors(),getSize(getAllMonitors())/2))->id));
+            assert(removeMonitor(((Monitor*)getElement(getAllMonitors(), getSize(getAllMonitors()) / 2))->id));
         else break;
     }
 }
@@ -538,7 +515,6 @@ Suite* mywmUtilSuite(void){
     tcase_add_test(tc_core, test_visible_workspace);
     tcase_add_test(tc_core, test_empty_workspace);
     tcase_add_test(tc_core, test_next_workspace);
-    //tcase_add_test(tc_core, test_window_cycle);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Combinations");
     tcase_add_checked_fixture(tc_core, createSimpleContext, resetContext);
