@@ -18,7 +18,7 @@
 void setup(void){
     CRASH_ON_ERRORS = -1;
     XMOUSE_CONTROL_UPDATER_INTERVAL = 10;
-    runInNewThread(runXMouseControl, NULL, 1);
+    runInNewThread(runXMouseControl, NULL, "xmousecontrol");
     ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_MOTION;
     enableXMouseControl();
     onStartup();

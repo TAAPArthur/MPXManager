@@ -11,7 +11,7 @@ CFLAGS := -Werror -Wincompatible-pointer-types ${ERROR_FLAGS} ${IGNORED_FLAGS} -
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_ERROR -D MPX_TESTING  --coverage -Wno-unused-function
 TESTLIBS := -lcheck
-LDFLAGS := -lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
+LDFLAGS :=  -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
 LAYER0_SRCS := logger.c globals.c
 LAYER1_SRCS := util.c
@@ -31,6 +31,13 @@ RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=1
 RUN_XTEST = xvfb-run -a $(call RUN_TEST, $(1) )
 RUN_XTEST_NO_DISPLAY = DISPLAY=:1000 $(call RUN_TEST, $(1) --test-no-xdisplay )
 
+NO_PTHREADS ?= 0
+ifeq ($(NO_PTHREADS),1)
+	CFLAGS += -DNO_PTHREADS=1
+	TESTFLAGS += -DNO_PTHREADS=1
+else
+	LDFLAGS += -lpthread
+endif
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
 	CFLAGS += -DNO_XRANDR=1

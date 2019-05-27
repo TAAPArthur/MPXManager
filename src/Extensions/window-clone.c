@@ -16,6 +16,7 @@
 #include "../events.h"
 #include "../globals.h"
 #include "../logger.h"
+#include "../mywm-util.h"
 #include "../state.h"
 #include "../windows.h"
 #include "../wmfunctions.h"
@@ -138,7 +139,7 @@ void updateAllClonesOfWindow(WindowID win){
 void updateAllClones(void){
     FOR_EACH_REVERSED(CloneInfo*, cloneInfo, &clones){
         if(!getWindowInfo(cloneInfo->parent) || !getWindowInfo(cloneInfo->clone))
-            ATOMIC(free(removeElementFromList(&clones, cloneInfo, sizeof(cloneInfo))));
+            free(removeElementFromList(&clones, cloneInfo, sizeof(cloneInfo)));
         else
             updateClone(cloneInfo);
     }
@@ -146,13 +147,13 @@ void updateAllClones(void){
 void* autoUpdateClones(void* arg __attribute__((unused))){
     assert(CLONE_REFRESH_RATE);
     while(!isShuttingDown()){
-        updateAllClones();
+        ATOMIC(updateAllClones());
         msleep(CLONE_REFRESH_RATE);
     }
     return NULL;
 }
 void startAutoUpdatingClones(void){
-    runInNewThread(autoUpdateClones, NULL, 1);
+    runInNewThread(autoUpdateClones, NULL, "Auto update window clone");
 }
 
 void swapWithOriginalOnEnter(void){

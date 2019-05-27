@@ -172,15 +172,17 @@ START_TEST(test_monitors){
 }
 END_TEST
 
-static void* testFunction(void* p  __attribute__((unused))){
-    return NULL;
-}
 START_TEST(test_threads){
-    char c;
-    pthread_t thread = runInNewThread(testFunction, &c, _i);
-    assert(thread);
-    if(_i == 0)
-        pthread_join(thread, NULL);
+    volatile long counter;
+    char c = 1;
+    void* testFunction(void* p){
+        counter += (long)p;
+        return NULL;
+    }
+    int size = 10;
+    for(int i = 0; i < size; i++);
+    runInNewThread(testFunction, &c, "test");
+    WAIT_UNTIL_TRUE(counter = c * size);
 }
 END_TEST
 START_TEST(test_load_generic_events){
@@ -192,7 +194,8 @@ Suite* eventSuite(void){
     Suite* s = suite_create("Test Events");
     TCase* tc_core;
     tc_core = tcase_create("Threads");
-    tcase_add_loop_test(tc_core, test_threads, 0, 2);
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, fullCleanup);
+    tcase_add_test(tc_core, test_threads);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Events");
     tcase_add_checked_fixture(tc_core, setup, fullCleanup);

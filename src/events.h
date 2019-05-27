@@ -7,7 +7,6 @@
 #ifndef EVENTS_H_
 #define EVENTS_H_
 
-#include <pthread.h>
 #include <xcb/xcb.h>
 
 #include <X11/extensions/XInput2.h>
@@ -51,43 +50,12 @@ enum {
     NUMBER_OF_EVENT_RULES
 };
 
-/**
- * execute code in an atomic manner
- * @param code
- */
-#define ATOMIC(code...) do {lock();code;unlock();}while(0)
-/**
- * Locks/unlocks the global mutex
- *
- * It is not safe to modify most structs from multiple threads so the main event loop lock/unlocks a
- * global mutex. Any addition thread that runs alongside the main thread of if in general, there
- * is a race, lock/unlock should be used
- */
-void lock(void);
-///cpoydoc lock(void)
-void unlock(void);
 
-/**
- * Requests all threads to terminate
- */
-void requestShutdown(void);
-/**
- * Indicate to threads that the system is shutting down;
- */
-int isShuttingDown(void);
 
 /**
  *Returns a monotonically increasing counter indicating the number of times the event loop has been idel. Being idle means event loop has nothing to do at the moment which means it has responded to all prior events
 */
 int getIdleCount(void);
-/**
- * Runs method in a new thread
- * @param method the method to run
- * @param arg the argument to pass into method
- * @param detached creates a detached thread; When a detached thread terminates, its resources are automatically released back to the system without the need for another thread to join with the terminated thread.
- * @return a pthread identifier
- */
-pthread_t runInNewThread(void* (*method)(void*), void* arg, int detached);
 /**
  * @param i index of eventRules
  * @return the specified event list

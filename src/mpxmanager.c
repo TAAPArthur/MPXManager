@@ -119,6 +119,7 @@ static Option options[] = {
     {"mode", {.boundFunction = BIND(setMode)}, FUNC_STR, .shortName = 'm'},
     {"clear-startup-method", {.boundFunction = BIND(clearStartupMethod)}, FUNC},
     {"enable-inter-client-communication", {.boundFunction = BIND(enableInterClientCommunication)}, FUNC},
+    {"replace", {.boundFunction = BIND(setOption, "STEAL_WM_SELECTION=1")}, FUNC},
     {"set", {.boundFunction = BIND(setOption)}, FUNC_STR},
     {"send", {.boundFunction = BIND(sendOption)}, FUNC_STR, .shortName = 's'},
     {"list-options", {.boundFunction = AND(BIND(setOption, "list-options"), BIND(exit, 0))}, FUNC},

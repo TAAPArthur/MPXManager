@@ -32,7 +32,7 @@ static void setup(){
     checkProperties(winInfo);
     assert(winInfo);
     clone = cloneWindow(winInfo);
-    assert(hasMask(clone,MAPPED_MASK));
+    assert(hasMask(clone, MAPPED_MASK));
     retile();
     int idle = getIdleCount();
     flush();
@@ -145,11 +145,11 @@ START_TEST(test_kill_clone_different_workspace){
 END_TEST
 
 START_TEST(test_auto_update_clones){
-    pthread_t thread = runInNewThread(autoUpdateClones, NULL, 0);
-    msleep(100);
-    requestShutdown();
-    pthread_join(thread, ((void*)0));
     startAutoUpdatingClones();
+    startAutoUpdatingClones();
+    startAutoUpdatingClones();
+    requestShutdown();
+    waitForAllThreadsToExit();
 }
 END_TEST
 

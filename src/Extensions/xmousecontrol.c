@@ -7,6 +7,7 @@
 #include "../events.h"
 #include "../globals.h"
 #include "../masters.h"
+#include "../mywm-util.h"
 #include "../test-functions.h"
 #include "xmousecontrol.h"
 

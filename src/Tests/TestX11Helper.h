@@ -20,9 +20,8 @@
 #include "../globals.h"
 #include "../test-functions.h"
 
-extern pthread_t pThread;
 #define START_MY_WM \
-        pThread=runInNewThread(runEventLoop,NULL,0)
+        runInNewThread(runEventLoop,NULL,"WM")
 
 void destroyWindow(WindowID win);
 int  createInputOnlyWindow(void);

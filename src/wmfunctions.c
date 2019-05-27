@@ -133,10 +133,8 @@ static void* waitForWindowToDie(int id){
             break;
         }
         else if(timeout){
-            LOG(LOG_LEVEL_DEBUG, "Window %d is not responsive; force killing\n", id);
-            lock();
+            LOG(LOG_LEVEL_INFO, "Window %d is not responsive; force killing\n", id);
             killWindow(id);
-            unlock();
             break;
         }
         msleep(KILL_TIMEOUT);
@@ -157,7 +155,7 @@ void killWindowInfo(WindowInfo* winInfo){
         ev.data.data32[1] = getTime();
         xcb_send_event(dis, 0, winInfo->id, XCB_EVENT_MASK_NO_EVENT, (char*)&ev);
         LOG(LOG_LEVEL_INFO, "Sending request to delete window\n");
-        runInNewThread((void* (*)(void*))waitForWindowToDie, (void*)(long)winInfo->id, 1);
+        runInNewThread((void* (*)(void*))waitForWindowToDie, (void*)(long)winInfo->id, "wait for window to die");
     }
     else {
         killWindow(winInfo->id);

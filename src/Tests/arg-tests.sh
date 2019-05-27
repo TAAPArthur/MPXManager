@@ -14,3 +14,6 @@ if  ./mpxmanager --set="BAD_OPTION" --set="quit" &>/dev/null; then exit 1;fi
 sleep 3s
 ./mpxmanager --send="quit" --set="quit" &>/dev/null
 wait
+./mpxmanager --clear-startup-method --enable-inter-client-communication --set=log-level=3 &>/dev/null &
+./mpxmanager --send=restart
+./mpxmanager --send="quit" --set="quit" &>/dev/null

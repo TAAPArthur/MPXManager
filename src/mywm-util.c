@@ -20,6 +20,22 @@
 #include "workspaces.h"
 #include "xsession.h"
 
+#ifndef NO_PTHREADS
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static int trylock(void){
+    return pthread_mutex_trylock(&mutex);
+}
+void lock(void){
+    pthread_mutex_lock(&mutex);
+}
+void unlock(void){
+    pthread_mutex_unlock(&mutex);
+}
+#else
+void lock(void){}
+void unlock(void){}
+#endif
 
 int numPassedArguments;
 char** passedArguments;
@@ -37,7 +53,60 @@ void resetContext(void){
     resetWorkspaces();
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
 }
+static volatile int shuttingDown = 0;
+void requestShutdown(void){
+    shuttingDown = 1;
+}
+int isShuttingDown(void){
+    return shuttingDown;
+}
+static ArrayList threads __attribute__((unused)) ;
+/// holds thread metadata
+typedef struct {
+#ifndef NO_PTHREADS
+    /// pthread id
+    pthread_t thread;
+#endif
+    /// user specified name of thread
+    char* name;
+} Thread;
+void runInNewThread(void* (*method)(void*)__attribute__((unused)), void* arg __attribute__((unused)), char* name){
+    if(isShuttingDown())return;
+#ifndef NO_PTHREADS
+    pthread_t thread;
+    int result __attribute__((unused)) = pthread_create(&thread, NULL, method, arg) == 0;
+    assert(result);
+    assert(sizeof(thread) <= sizeof(void*));
+    Thread* t = malloc(sizeof(Thread));
+    t->thread = thread;
+    t->name = name;
+    addToList(&threads, t);
+#endif
+}
+void waitForAllThreadsToExit(void){
+#ifndef NO_PTHREADS
+    pthread_t self = pthread_self();
+    bool relock = 0;
+    if(trylock() == 0){
+        relock = 1;
+        unlock();
+    }
+    unlock();
+    while(getSize(&threads)){
+        Thread* thread = pop(&threads);
+        LOG(LOG_LEVEL_INFO, "Waiting for thread '%s' and %d more threads\n", thread->name, getSize(&threads));
+        if(thread->thread != self)
+            pthread_join(thread->thread, NULL);
+        free(thread);
+    }
+    clearList(&threads);
+    if(relock)
+        lock();
+#endif
+}
 static void stop(void){
+    requestShutdown();
+    waitForAllThreadsToExit();
     LOG(LOG_LEVEL_INFO, "Shutting down\n");
     resetPipe();
     closeConnection();
@@ -46,7 +115,9 @@ static void stop(void){
 }
 
 void restart(void){
+    LOG(LOG_LEVEL_INFO, "restarting\n");
     stop();
+    LOG(LOG_LEVEL_INFO, "calling execv\n");
     execv(passedArguments[0], passedArguments);
 }
 void quit(int exitCode){

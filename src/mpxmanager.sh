@@ -15,6 +15,7 @@
 #%    --set=<name=value>            set argument(s) for new instances (can be called multiple times)
 #%    --mode, -m                    run with a predefined settings. Valid options are: xmousecontrol
 #%    -h, --help                    Print this help
+#%    --quit                        Exists a running instance
 #%    -v, --version                 Print script information
 #%
 #%Modes:
@@ -95,6 +96,9 @@ getopts "$optspec" optchar || run
                     ;;
                 path)
                     echo $path
+                    ;;
+                quit)
+                    run "--send=quit"
                     ;;
                 *)
                     run $@

@@ -3,7 +3,6 @@
  * @copybrief events.h
  */
 #include <assert.h>
-#include <pthread.h>
 
 #ifndef NO_XRANDR
     #include <xcb/randr.h>
@@ -19,30 +18,6 @@
 #include "wmfunctions.h"
 #include "xsession.h"
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void lock(void){
-    pthread_mutex_lock(&mutex);
-}
-void unlock(void){
-    pthread_mutex_unlock(&mutex);
-}
-
-static volatile int shuttingDown = 0;
-void requestShutdown(void){
-    shuttingDown = 1;
-}
-int isShuttingDown(void){
-    return shuttingDown;
-}
-pthread_t runInNewThread(void* (*method)(void*), void* arg, int detached){
-    pthread_t thread;
-    int result __attribute__((unused)) = pthread_create(&thread, NULL, method, arg) == 0;
-    assert(result);
-    if(detached)
-        pthread_detach(thread);
-    return thread;
-}
 static volatile int idle;
 static unsigned int periodCounter;
 int getIdleCount(){

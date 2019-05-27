@@ -11,7 +11,6 @@
 #include "../devices.h"
 #include "../events.h"
 
-pthread_t pThread = 0;
 
 void destroyWindow(WindowID win){
     assert(NULL == xcb_request_check(dis, xcb_destroy_window_checked(dis, win)));
@@ -203,14 +202,11 @@ extern void requestShutdown();
 void fullCleanup(){
     setLogLevel(LOG_LEVEL_NONE + 1);
     requestShutdown();
-    if(pThread){
-        registerForWindowEvents(root, ROOT_EVENT_MASKS);
-        //wake up other thread
-        createNormalWindow();
-        flush();
-        //close(xcb_get_file_descriptor(dis));
-        pthread_join(pThread, NULL);
-    }
+    registerForWindowEvents(root, ROOT_EVENT_MASKS);
+    //wake up other thread
+    createNormalWindow();
+    flush();
+    waitForAllThreadsToExit();
     destroyAllNonDefaultMasters();
     quit(0);
 }
