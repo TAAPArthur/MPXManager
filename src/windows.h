@@ -139,17 +139,49 @@ int processNewWindow(WindowInfo* winInfo);
 int registerWindow(WindowInfo* winInfo);
 
 /**
+ * Enables tiling to be overriden at the indexes corrosponding to mask
+ *
+ * @param winInfo
+ * @param mask
+ */
+void enableTilingOverride(WindowInfo* winInfo, unsigned int mask);
+/**
+ * Disables tiling to be overriden at the indexes corrosponding to mask
+ *
+ * @param winInfo
+ * @param mask
+ */
+void disableTilingOverride(WindowInfo* winInfo, unsigned int mask);
+/**
+ * @see enableTilingOverride
+ * @see disableTilingOverride
+ *
+ * @param winInfo
+ * @param mask
+ * @param value whether to enable or disable tiling
+ */
+void setTilingOverrideEnabled(WindowInfo* winInfo, unsigned int mask, bool value);
+/**
+ * Checks to see if tilling has been overridded at the given index
+ *
+ * @param winInfo
+ * @param index
+ *
+ * @return true iff tiling override is enabled
+ */
+bool isTilingOverrideEnabledAtIndex(WindowInfo* winInfo, int index);
+/**
  * Returns User set geometry that will override that generated when tiling
  * @param winInfo
  * @see WindowInfo->config
  */
-short* getConfig(WindowInfo* winInfo);
+short* getTilingOverride(WindowInfo* winInfo);
 /**
  * Sets window geometry that will replace that which is generated when tiling
  * @param winInfo
  * @param geometry
  */
-void setConfig(WindowInfo* winInfo, short* geometry);
+void setTilingOverride(WindowInfo* winInfo, short* geometry);
 /**
  * Get the last recorded geometry of the window
  * @param winInfo

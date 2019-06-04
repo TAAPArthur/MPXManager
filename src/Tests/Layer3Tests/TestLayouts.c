@@ -210,8 +210,9 @@ START_TEST(test_fixed_position_windows){
     scan(root);
     short config[] = {1, 2, 3, 4, 5};
     WindowInfo* winInfo = getHead(getAllWindows());
-    assert(LEN(config) == LEN(winInfo->config));
-    setConfig(winInfo, config);
+    assert(LEN(config) == LEN(winInfo->tilingOverride));
+    setTilingOverrideEnabled(winInfo,  -1, 1);
+    setTilingOverride(winInfo, config);
     setActiveLayout(&LAYOUT_FAMILIES[_i]);
     tileWorkspace(getActiveWorkspaceIndex());
     xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);

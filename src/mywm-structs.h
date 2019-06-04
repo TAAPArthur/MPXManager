@@ -69,8 +69,10 @@ typedef struct {
     char geometrySemaphore;
     ///Window gravity
     char gravity;
+    /// 5 bits each to enable 1 element of config
+    unsigned char tilingOverrideEnabled;
     /** Set to override tiling */
-    short config[5];
+    short tilingOverride[5];
     /** The last know size of the window */
     short geometry[5];
 

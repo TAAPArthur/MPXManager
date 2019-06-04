@@ -95,23 +95,42 @@ START_TEST(test_window_workspace_masks){
 }
 END_TEST
 
-START_TEST(test_get_set_geometry_config){
+START_TEST(test_enable_tilingoverride){
+    WindowInfo* winInfo = createWindowInfo(1);
+    for(int i = 0; i < LEN(winInfo->tilingOverride); i++){
+        assert(!isTilingOverrideEnabledAtIndex(winInfo,  i));
+        setTilingOverrideEnabled(winInfo,  1 << i, 1);
+        assert(isTilingOverrideEnabledAtIndex(winInfo,  i));
+        for(int n = 0; n < LEN(winInfo->tilingOverride); n++)
+            if(n != i)
+                assert(!isTilingOverrideEnabledAtIndex(winInfo,  n));
+        setTilingOverrideEnabled(winInfo,  1 << i, 0);
+    }
+    for(int i = 0; i < LEN(winInfo->tilingOverride); i++){
+        assert(!isTilingOverrideEnabledAtIndex(winInfo,  i));
+        setTilingOverrideEnabled(winInfo,  1 << i, 1);
+        assert(isTilingOverrideEnabledAtIndex(winInfo,  i));
+    }
+    addWindowInfo(winInfo);
+}
+END_TEST
+START_TEST(test_get_set_geometry_tilingoverride){
     WindowInfo* winInfo = createWindowInfo(1);
     addWindowInfo(winInfo);
     short arr[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    assert(LEN(arr) == LEN(winInfo->geometry) + LEN(winInfo->config) && "array size needs to be increased");
+    assert(LEN(arr) == LEN(winInfo->geometry) + LEN(winInfo->tilingOverride) && "array size needs to be increased");
     int offset = LEN(winInfo->geometry);
     setGeometry(winInfo, arr);
     short* geo = getGeometry(winInfo);
-    setConfig(winInfo, &arr[offset]);
-    short* config = getConfig(winInfo);
+    setTilingOverride(winInfo, &arr[offset]);
+    short* config = getTilingOverride(winInfo);
     for(int i = 0; i < LEN(arr); i++)
         assert(arr[i] == (i < offset ? geo[i] : config[i - offset]));
 }
 END_TEST
 
 
-START_TEST(test_lock_geometry_config){
+START_TEST(test_lock_geometry_tilingoverride){
     WindowInfo* winInfo = createWindowInfo(1);
     addWindowInfo(winInfo);
     int offset = LEN(winInfo->geometry);
@@ -128,9 +147,9 @@ START_TEST(test_lock_geometry_config){
             assert(arr[offset] != config[0]);
         }
         setGeometry(winInfo, arr);
-        setConfig(winInfo, &arr[offset]);
+        setTilingOverride(winInfo, &arr[offset]);
         geo = getGeometry(winInfo);
-        config = getConfig(winInfo);
+        config = getTilingOverride(winInfo);
         for(int i = 0; i < LEN(arr); i++)
             if(i < offset)
                 assert((arr[i] == geo[i]) == (winInfo->geometrySemaphore == 0 ? 1 : 0));
@@ -367,8 +386,9 @@ Suite* windowsSuite(void){
     tcase_add_test(tc_core, test_mask_reset);
     tcase_add_test(tc_core, test_mask_save_restore);
     tcase_add_test(tc_core, test_window_workspace_masks);
-    tcase_add_test(tc_core, test_get_set_geometry_config);
-    tcase_add_test(tc_core, test_lock_geometry_config);
+    tcase_add_test(tc_core, test_enable_tilingoverride);
+    tcase_add_test(tc_core, test_get_set_geometry_tilingoverride);
+    tcase_add_test(tc_core, test_lock_geometry_tilingoverride);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Window_Detection");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);

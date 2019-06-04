@@ -287,11 +287,26 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, in
     else
         addMask(winInfo, mask);
 }
-short* getConfig(WindowInfo* winInfo){
-    return winInfo->config;
+void enableTilingOverride(WindowInfo* winInfo, unsigned int mask){
+    winInfo->tilingOverrideEnabled |= mask;
 }
-void setConfig(WindowInfo* winInfo, short* config){
-    memcpy(winInfo->config, config, sizeof(winInfo->config));
+void disableTilingOverride(WindowInfo* winInfo, unsigned int mask){
+    winInfo->tilingOverrideEnabled &= ~mask;
+}
+void setTilingOverrideEnabled(WindowInfo* winInfo, unsigned int mask, bool value){
+    if(value)
+        enableTilingOverride(winInfo, mask);
+    else
+        disableTilingOverride(winInfo, mask);
+}
+bool isTilingOverrideEnabledAtIndex(WindowInfo* winInfo, int index){
+    return winInfo->tilingOverrideEnabled & (1 << index);
+}
+short* getTilingOverride(WindowInfo* winInfo){
+    return winInfo->tilingOverride;
+}
+void setTilingOverride(WindowInfo* winInfo, short* override){
+    memcpy(winInfo->tilingOverride, override, sizeof(winInfo->tilingOverride));
 }
 short* getGeometry(WindowInfo* winInfo){
     return winInfo->geometry;

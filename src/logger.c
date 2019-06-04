@@ -143,7 +143,8 @@ void dumpWindowInfo(WindowInfo* winInfo){
         winInfo->dock);
     LOG(LOG_LEVEL_INFO, "Title %s\n", winInfo->title);
     PRINT_ARR("Recorded Geometry", getGeometry(winInfo), 5, "\n");
-    PRINT_ARR("Setconfig", getConfig(winInfo), 5, "\n");
+    LOG(LOG_LEVEL_INFO, "Tiling override %d", winInfo->tilingOverrideEnabled);
+    PRINT_ARR(" ", getTilingOverride(winInfo), 5, "\n");
     if(winInfo->dock)
         PRINT_ARR("Properties", winInfo->properties, LEN(winInfo->properties), "\n");
     LOG(LOG_LEVEL_INFO, "Mask %u\n", winInfo->mask);

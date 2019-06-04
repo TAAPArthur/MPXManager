@@ -206,17 +206,21 @@ static int adjustBorders(LayoutState* state, WindowInfo* winInfo, int config[CON
             config[i] = config[i + 1];
     }
     else if(state->args){
-        if(winInfo->config[CONFIG_BORDER])
-            config[CONFIG_BORDER] = MAX(0, winInfo->config[CONFIG_BORDER]);
-        else {
-            config[CONFIG_BORDER] = state->args->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
-            if(!state->args->noAdjustForBorders){
-                config[CONFIG_WIDTH] -= config[CONFIG_BORDER] * 2;
-                config[CONFIG_HEIGHT] -= config[CONFIG_BORDER] * 2;
-            }
+        config[CONFIG_BORDER] = state->args->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
+        if(!state->args->noAdjustForBorders){
+            config[CONFIG_WIDTH] -= config[CONFIG_BORDER] * 2;
+            config[CONFIG_HEIGHT] -= config[CONFIG_BORDER] * 2;
         }
     }
     return mask;
+}
+static Rect getMonitorBoundsForWindow(WindowInfo* winInfo, Monitor* m){
+    if(hasMask(winInfo, ROOT_FULLSCREEN_MASK))
+        return (Rect){0, 0, getRootWidth(), getRootHeight()};
+    else if(hasMask(winInfo, FULLSCREEN_MASK))
+        return m->base;
+    else
+        return m->view;
 }
 void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFIG_LEN]){
     assert(winInfo);
@@ -224,19 +228,22 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFI
                XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
                XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     int config[CONFIG_LEN] = {0};
-    assert(LEN(winInfo->config) == CONFIG_LEN - 1);
     config[CONFIG_STACK] = state->args && state->args->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
     for(int i = 0; i <= CONFIG_HEIGHT; i++)
         config[i] = values[i];
     transformConfig(state, config);
     applyMasksToConfig(state->monitor, config, winInfo);
     mask = adjustBorders(state, winInfo, config, mask);
+    Rect bounds = getMonitorBoundsForWindow(winInfo, state->monitor);
     for(int i = 0; i <= CONFIG_HEIGHT; i++){
-        int fixedValue = getConfig(winInfo)[i];
-        int refPoint = (&state->monitor->view.x)[i];
-        int refEndPoint = refPoint + (&state->monitor->view.x)[(i + 2) % 2];
-        if(fixedValue)
+        if(isTilingOverrideEnabledAtIndex(winInfo, i)){
+            int fixedValue = getTilingOverride(winInfo)[i];
+            int refPoint = (&bounds.x)[i];
+            int refEndPoint = refPoint + (&bounds.x)[i % 2 + 2];
             config[i] = fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
+            if(i < CONFIG_WIDTH)
+                config[i] += (&bounds.x)[i];
+        }
         if(state->args){
             if(i < CONFIG_WIDTH)
                 config[i] += (&state->args->leftPadding)[i];
@@ -244,6 +251,8 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFI
                 config[i] -= (&state->args->rightPadding)[i % 2] + (&state->args->leftPadding)[i % 2];
         }
     }
+    if(isTilingOverrideEnabledAtIndex(winInfo, CONFIG_BORDER))
+        config[CONFIG_BORDER] = MAX(0, getTilingOverride(winInfo)[CONFIG_BORDER]);
     config[CONFIG_WIDTH] = MAX(1, config[CONFIG_WIDTH]);
     config[CONFIG_HEIGHT] = MAX(1, config[CONFIG_HEIGHT]);
     assert(winInfo->id);
