@@ -127,6 +127,11 @@ void addDefaultRules(void);
  * (non-default)
  */
 void addFocusFollowsMouseRule(void);
+/**
+ * Adds rules to the make Desktop windows behave like desktop window.
+ * Adds STICKY, MAXIMIZED NO_TILE and BELOW masks and fixes the position at view port 0,0
+ */
+void addDesktopRule(void);
 
 /**
  * winInfo will be automatically added to workspace

@@ -48,7 +48,7 @@ WindowMask getMask(WindowInfo* winInfo){
 WindowMask hasPartOfMask(WindowInfo* winInfo, WindowMask mask){
     Workspace* w = getWorkspaceOfWindow(winInfo);
     WindowMask winMask = winInfo->mask;
-    if(w)
+    if(w && !(winMask & IGNORE_WORKSPACE_MASKS_MASK))
         winMask |= getWorkspaceMask(w);
     return (winMask & mask);
 }

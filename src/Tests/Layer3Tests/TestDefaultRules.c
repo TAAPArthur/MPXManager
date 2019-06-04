@@ -251,7 +251,7 @@ START_TEST(test_unknown_windows_no_workspace){
 }
 END_TEST
 
-START_TEST(test_dock_windows){
+START_TEST(test_dock_rules){
     WindowID win = createDock(1, 1, 1);
     scan(root);
     assert(((WindowInfo*)getHead(getAllDocks()))->id == win);
@@ -273,6 +273,38 @@ START_TEST(test_dock_windows){
     assert(memcmp(&m->base, &m->view, sizeof(Rect)) == 0);
 }
 END_TEST
+
+START_TEST(test_desktop_rule){
+    Monitor* m = getMonitorFromWorkspace(getActiveWorkspace());
+    m->view.x = 10;
+    m->view.y = 20;
+    WindowID win = mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    setActiveLayout(&DEFAULT_LAYOUTS[GRID]);
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    retile();
+    flush();
+    xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
+    assert(memcmp(&m->view.x, &m->base, sizeof(m->view)) != 0);
+    assert(memcmp(&m->view.x, &reply->x, sizeof(m->view)) == 0);
+    assert(hasMask(winInfo, STICKY_MASK | NO_TILE_MASK | BELOW_MASK));
+    assert(!hasMask(winInfo, ABOVE_MASK));
+    free(reply);
+    setShowingDesktop(getActiveWorkspaceIndex(), 1);
+    assert(!hasMask(winInfo, HIDDEN_MASK));
+}
+END_TEST
+START_TEST(test_float_rule){
+    WindowID win = createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG);
+    for(int i = 0; i < 10; i++)
+        createNormalWindow();
+    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(hasMask(winInfo, FLOATING_MASK));
+}
+END_TEST
+
 START_TEST(test_always_on_top){
     //windows are in same spot
     int bottom = createNormalWindow();
@@ -707,12 +739,17 @@ Suite* defaultRulesSuite(){
     tcase_add_test(tc_core, test_visibility_update);
     tcase_add_test(tc_core, test_property_update);
     suite_add_tcase(s, tc_core);
-    tc_core = tcase_create("WindowCategories");
+    tc_core = tcase_create("DefaultRules");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_ignored_windows);
     tcase_add_test(tc_core, test_unknown_windows_no_workspace);
-    tcase_add_test(tc_core, test_dock_windows);
     tcase_add_test(tc_core, test_always_on_top);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("ConvienceRules");
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
+    tcase_add_test(tc_core, test_dock_rules);
+    tcase_add_test(tc_core, test_desktop_rule);
+    tcase_add_test(tc_core, test_float_rule);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Requests");
     tcase_add_checked_fixture(tc_core, clientSetup, fullCleanup);

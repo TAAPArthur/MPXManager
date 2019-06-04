@@ -73,6 +73,10 @@ void addPrintRule(void){
     static Rule printRule = CREATE_DEFAULT_EVENT_RULE(printStatus);
     addToList(getEventRules(Idle), &printRule);
 }
+static Rule desktopRule = {"_NET_WM_WINDOW_TYPE_DESKTOP", TYPE | LITERAL, BOTH(BIND(addMask, NO_ACTIVATE_MASK | NO_RECORD_FOCUS | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK | BELOW_MASK | STICKY_MASK), BIND(enableTilingOverride, 3)), .passThrough = NO_PASSTHROUGH};
+void addDesktopRule(void){
+    addToList(getEventRules(RegisteringWindow), &desktopRule);
+}
 void addFloatRules(void){
     static Rule dialogRule = {"_NET_WM_WINDOW_TYPE_NORMAL", TYPE | NEGATE | LITERAL, BIND(floatWindow)};
     addToList(getEventRules(RegisteringWindow), &dialogRule);
@@ -221,7 +225,8 @@ void onFocusInEvent(void){
     setActiveMasterByDeviceId(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
     if(winInfo){
-        updateFocusState(winInfo);
+        if(!hasMask(winInfo, NO_RECORD_FOCUS))
+            updateFocusState(winInfo);
         setBorder(winInfo->id);
     }
     setActiveWindowProperty(event->event);
@@ -496,9 +501,10 @@ void addDieOnIdleRule(void){
 
 void addDefaultRules(void){
     addBasicRules();
-    addDefaultDeviceRules();
-    addAvoidDocksRule();
     addAutoTileRules();
     addPrintRule();
+    addDefaultDeviceRules();
+    addAvoidDocksRule();
+    addDesktopRule();
     addFloatRules();
 }

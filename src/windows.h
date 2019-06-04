@@ -333,12 +333,13 @@ static inline int isTileable(WindowInfo* winInfo){
     return isInteractable(winInfo) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
 }
 /**
- *A window is actiable if it is MAPPABLE and not HIDDEN
+ * A window is actiable if it is MAPPABLE and not HIDDEN  and does not have the NO_ACTIVATE_MASK set
  * @param winInfo
  * @return true if the window can receive focus
  */
 static inline int isActivatable(WindowInfo* winInfo){
-    return !winInfo || (hasMask(winInfo, MAPPABLE_MASK | INPUT_MASK) && !(winInfo->mask & HIDDEN_MASK));
+    return !winInfo || hasMask(winInfo, MAPPABLE_MASK | INPUT_MASK) &&
+           !hasPartOfMask(winInfo, HIDDEN_MASK | NO_ACTIVATE_MASK);
 }
 
 

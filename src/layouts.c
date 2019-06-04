@@ -300,7 +300,7 @@ void tileWorkspace(int index){
     ArrayList* list = getWindowStack(workspace);
     LayoutState dummyState = {.monitor = getMonitorFromWorkspace(workspace)};
     FOR_EACH(WindowInfo*, winInfo, list){
-        if(hasPartOfMask(winInfo, FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)){
+        if(!isTileable(winInfo) && hasPartOfMask(winInfo, MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)){
             short config[CONFIG_LEN] = {0};
             configureWindow(&dummyState, winInfo, config);
         }

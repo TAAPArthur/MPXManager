@@ -59,6 +59,11 @@ int createIgnoredWindow(void){
 int createNormalWindow(void){
     return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
+int createNormalWindowWithType(xcb_atom_t type){
+    Window win = createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    assert(!catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &type)));
+    return win;
+}
 int createNormalSubWindow(int parent){
     return createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }

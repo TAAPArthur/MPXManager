@@ -35,6 +35,8 @@ typedef enum {
     X_MAXIMIZED_MASK =      1 << 0,
     /**The window's Y size will equal the size of the monitor's viewport*/
     Y_MAXIMIZED_MASK =      1 << 1,
+    /// X & Y MAXIMIZED MASK
+    MAXIMIZED_MASK =     Y_MAXIMIZED_MASK | X_MAXIMIZED_MASK,
     /**The window's size will equal the size of the monitor (not viewport)     */
     FULLSCREEN_MASK =       1 << 2,
     /**The window's size will equal the size of the screen (union of all monitors)*/
@@ -55,7 +57,7 @@ typedef enum {
     /**The window's size will equal the size of the screen (union of all monitors)*/
     TRUE_ROOT_FULLSCREEN_MASK =  ROOT_FULLSCREEN_MASK | ABOVE_MASK,
 
-    ///The window will be treated as unmapped until this mask is removed (iconic state)
+    ///The window will be treated as unmapped until this mask is removed
     HIDDEN_MASK =        1 << 7,
 
     USER_MASKS = ((1 << 8) - 1),
@@ -82,29 +84,42 @@ typedef enum {
     /// allow from any source
     SRC_ANY =                SRC_INDICATION_OTHER | SRC_INDICATION_APP | SRC_INDICATION_PAGER,
 
+    IGNORE_WORKSPACE_MASKS_MASK = 1 << 15,
+
     /**The window is an input only window (more importantly it cannot have a border)*/
-    INPUT_ONLY_MASK =           1 << 15,
+    INPUT_ONLY_MASK =           1 << 16,
     /**The window can receive input focus*/
-    INPUT_MASK =           1 << 16,
+    INPUT_MASK =           1 << 17,
+    /// Will not update our internal focus representation when a window with this mask is focused
+    NO_RECORD_FOCUS =      1 << 18,
+    /// Windows with this mask will not be activateable
+    NO_ACTIVATE_MASK =      1 << 19,
+
     /**The WM will not forcibly set focus but request the application focus itself*/
-    WM_TAKE_FOCUS_MASK =    1 << 17,
-    /**The WM will not forcibly set focus but request the application focus itself*/
-    WM_DELETE_WINDOW_MASK = 1 << 18,
+    WM_TAKE_FOCUS_MASK =    1 << 20,
+
+    /**The WM will not forcibly delete windows immediatly but request the application dies*/
+    WM_DELETE_WINDOW_MASK = 1 << 21,
     /**Used in conjuction with WM_DELETE_WINDOW_MASK to kill the window */
-    WM_PING_MASK = 1 << 19,
+    WM_PING_MASK =          1 << 22,
+    /// the window type was not set explicitly
+    IMPLICIT_TYPE =         1 << 23,
 
     /**
-     * Best effort will be made to place all windows with this mask above any other window without it
+     * Best effort will be made to place all windows with this mask above any other window without it.
+     * One particular flaw the implementation is that if a window with this mask is lowered, it will not automitically be re-raised
      * This mask is implemented via a onWindowMove Rule
      */
-    ALWAYS_ON_TOP = 1 << 20,
+    ALWAYS_ON_TOP = 1 << 24,
+
     ///Window is effectively associated with its monitor instead of its workspace
     /// (it is moveded between workspaces to stay on its monitor
-    STICKY_MASK =   1 << 21,
-    /// the window type was not set explicitly
-    IMPLICIT_TYPE = 1 << 22,
+    STICKY_MASK =   1 << 26,
+
+
     /**Marks the window as urgent*/
-    URGENT_MASK =           1 << 23,
+    URGENT_MASK =           1 << 27,
+
 
     ///Keeps track on the visibility state of the window
     PARTIALLY_VISIBLE =     1 << 28,
