@@ -308,19 +308,37 @@ END_TEST
 START_TEST(test_always_on_top){
     //windows are in same spot
     int bottom = createNormalWindow();
+    int bottom2 = createNormalWindow();
+    int normal = createNormalWindow();
     int top = createNormalWindow();
+    int top2 = createNormalWindow();
     scan(root);
-    WindowInfo* info = getWindowInfo(bottom);
-    WindowInfo* infoTop = getWindowInfo(top);
-    addMask(infoTop, ALWAYS_ON_TOP);
-    assert(info && infoTop);
-    assert(raiseWindowInfo(info));
+    addMask(getWindowInfo(bottom), ALWAYS_ON_BOTTOM);
+    addMask(getWindowInfo(bottom2), ALWAYS_ON_BOTTOM);
+    addMask(getWindowInfo(top), ALWAYS_ON_TOP);
+    addMask(getWindowInfo(top2), ALWAYS_ON_TOP);
+    assert(raiseWindowInfo(getWindowInfo(normal)));
+    assert(raiseWindowInfo(getWindowInfo(bottom)));
+    assert(lowerWindowInfo(getWindowInfo(top)));
+    setActiveLayout(NULL);
     flush();
     int idle = getIdleCount();
     START_MY_WM;
+    //window creation
     WAIT_UNTIL_TRUE(idle != getIdleCount());
-    WindowID stackingOrder[] = {bottom, top};
-    assert(checkStackingOrder(stackingOrder, 2));
+    // rules triggered and window raised
+    WAIT_UNTIL_TRUE(idle + 1 != getIdleCount());
+    WindowID stackingOrder[][3] = {
+        {bottom, normal, top},
+        {bottom2, normal, top2},
+        {bottom, normal, top2},
+        {bottom2, normal, top},
+    };
+    for(int i = 0; i < LEN(stackingOrder); i++)
+        assert(checkStackingOrder(stackingOrder[i], 2));
+    idle = getIdleCount();
+    msleep(POLL_COUNT * POLL_INTERVAL * 2);
+    assert(idle == getIdleCount());
 }
 END_TEST
 START_TEST(test_map_windows){
@@ -603,7 +621,7 @@ START_TEST(test_client_request_restack){
     int idle;
     lock();
     idle = getIdleCount();
-    assert(raiseWindow(winInfo2->id));
+    assert(raiseWindowInfo(winInfo2));
     unlock();
     WAIT_UNTIL_TRUE(idle != getIdleCount());
     assert(checkStackingOrder(stackingOrder, 2));

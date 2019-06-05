@@ -359,8 +359,8 @@ START_TEST(test_tile_windows){
         moveWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
         addMask(winInfo, masks[i]);
         stackingOrder[i] = win;
+        lowerWindowInfo(winInfo);
     }
-    raiseWindow(stackingOrder[0]);
     retile();
     flush();
     assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));

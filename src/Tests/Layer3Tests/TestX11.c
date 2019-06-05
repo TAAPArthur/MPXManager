@@ -208,10 +208,9 @@ START_TEST(test_raise_window){
     registerForWindowEvents(bottom, XCB_EVENT_MASK_VISIBILITY_CHANGE);
     registerForWindowEvents(top, XCB_EVENT_MASK_VISIBILITY_CHANGE);
     scan(root);
-    WindowInfo* info = getWindowInfo(bottom);
+    WindowInfo* infoBottom = getWindowInfo(bottom);
     WindowInfo* infoTop = getWindowInfo(top);
-    assert(info && infoTop);
-    assert(raiseWindow(bottom));
+    assert(raiseWindowInfo(infoBottom));
     flush();
     WindowID stackingOrder[] = {top, bottom, top};
     assert(checkStackingOrder(stackingOrder, 2));

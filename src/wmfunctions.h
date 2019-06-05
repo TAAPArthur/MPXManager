@@ -108,15 +108,17 @@ int focusWindow(WindowID win);
  */
 int focusWindowInfo(WindowInfo* winInfo);
 /**
- * Raises the given window
- * @param win   the window to raise
- * @return 1 iff no error was detected
- */
-int raiseWindow(WindowID win);
-/**
- * Raise the given window within its onw layer
+ * Raise the given window and any window that is is transient for it
+ * @param winInfo
+ * @return true on success
  */
 int raiseWindowInfo(WindowInfo* winInfo);
+/**
+ * Lower the given window
+ * @param winInfo
+ * @return true on success
+ */
+int lowerWindowInfo(WindowInfo* winInfo);
 
 /**
  * Raises or lowers the winInfo depening on raise.
@@ -124,7 +126,7 @@ int raiseWindowInfo(WindowInfo* winInfo);
  * @param winInfo
  * @param raise
  */
-void raiseLowerWindowInfo(WindowInfo* winInfo, int raise);
+int raiseLowerWindowInfo(WindowInfo* winInfo, int raise);
 
 /**
  * Maps the window specified by id

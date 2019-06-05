@@ -190,7 +190,7 @@ int focusWindow(WindowID win){
         onWindowFocus(win);
     return 1;
 }
-void raiseLowerWindowInfo(WindowInfo* winInfo, int above){
+int raiseLowerWindowInfo(WindowInfo* winInfo, int above){
     assert(winInfo);
     int* values = (int[]){
         winInfo->transientFor, above ? XCB_STACK_MODE_ABOVE : XCB_STACK_MODE_BELOW
@@ -200,10 +200,13 @@ void raiseLowerWindowInfo(WindowInfo* winInfo, int above){
         mask |= XCB_CONFIG_WINDOW_SIBLING;
     else
         values++;
-    xcb_configure_window(dis, winInfo->id, mask, values);
+    return !catchError(xcb_configure_window(dis, winInfo->id, mask, values));
+}
+int lowerWindowInfo(WindowInfo* winInfo){
+    return raiseLowerWindowInfo(winInfo, 0);
 }
 int raiseWindowInfo(WindowInfo* winInfo){
-    int result = winInfo ? raiseWindow(winInfo->id) : 0;
+    int result = winInfo ? raiseLowerWindowInfo(winInfo, 1) : 0;
     if(result && !hasMask(winInfo, ALWAYS_ON_TOP)){
         int id = winInfo->id;
         FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
@@ -212,15 +215,6 @@ int raiseWindowInfo(WindowInfo* winInfo){
         }
     }
     return result;
-}
-int raiseWindow(WindowID win){
-    assert(dis);
-    assert(win);
-    LOG(LOG_LEVEL_TRACE, "Trying to raise window %d\n", win);
-    int values[] = {XCB_STACK_MODE_ABOVE};
-    if(catchError(xcb_configure_window_checked(dis, win, XCB_CONFIG_WINDOW_STACK_MODE, values)))
-        return 0;
-    return 1;
 }
 
 

@@ -111,6 +111,12 @@ typedef enum {
      * This mask is implemented via a onWindowMove Rule
      */
     ALWAYS_ON_TOP = 1 << 24,
+    /**
+     * Best effort will be made to place all windows with this mask below any other window without it.
+     * One particular flaw the implementation is that if a window with this mask is raised, it will not automitically be re-lowered
+     * This mask is implemented via a onWindowMove Rule
+     */
+    ALWAYS_ON_BOTTOM = 1 << 25,
 
     ///Window is effectively associated with its monitor instead of its workspace
     /// (it is moveded between workspaces to stay on its monitor

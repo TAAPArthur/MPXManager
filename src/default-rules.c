@@ -429,17 +429,23 @@ void onStartup(void){
         postStartUpMethod();
 }
 
-static int nonAlwaysOnTopWindowMoved;
+static int nonAlwaysOnTopOrBottomWindowMoved;
 static void markAlwaysOnTop(WindowInfo* winInfo){
-    if(!hasMask(winInfo, ALWAYS_ON_TOP))
-        nonAlwaysOnTopWindowMoved = 1;
+    if(!hasPartOfMask(winInfo, ALWAYS_ON_TOP | ALWAYS_ON_BOTTOM))
+        nonAlwaysOnTopOrBottomWindowMoved = 1;
 }
 static void enforceAlwaysOnTop(void){
-    FOR_EACH(WindowInfo*, winInfo2, getAllWindows()){
-        if(hasMask(winInfo2, ALWAYS_ON_TOP))
-            raiseWindowInfo(winInfo2);
+    if(nonAlwaysOnTopOrBottomWindowMoved){
+        FOR_EACH(WindowInfo*, winInfo2, getAllWindows()){
+            if(hasMask(winInfo2, ALWAYS_ON_BOTTOM))
+                lowerWindowInfo(winInfo2);
+        }
+        FOR_EACH(WindowInfo*, winInfo2, getAllWindows()){
+            if(hasMask(winInfo2, ALWAYS_ON_TOP))
+                raiseWindowInfo(winInfo2);
+        }
+        nonAlwaysOnTopOrBottomWindowMoved = 0;
     }
-    nonAlwaysOnTopWindowMoved = 0;
 }
 
 static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
