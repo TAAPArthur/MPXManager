@@ -61,7 +61,7 @@ typedef struct {
     /// #}
     /// if set windows won't have a border
     bool noBorder;
-    /// if we set the sie of the window with/without borders
+    /// if we set the size of the window with/without borders
     bool noAdjustForBorders;
     /// if set layouts based on X/WIDTH will use Y/HEIGHT instead
     bool dim;
@@ -78,14 +78,14 @@ typedef struct {
 } LayoutArgs;
 
 /**
- * Contains info provided to layout functions (and helper methods) that detail how the windows should be layed out
+ * Contains info provided to layout functions (and helper methods) that detail how the windows should be tiled
  */
 typedef struct {
     /// Customized to the layout family
     LayoutArgs* args;
     /// the monitor used to layout the window
     Monitor* monitor;
-    /// number of windows that should be layed out
+    /// number of windows that should be tiled
     int numWindows;
     /// the stack of windows
     ArrayList* stack;
@@ -93,7 +93,7 @@ typedef struct {
     ArrayList* last;
 } LayoutState;
 
-///holds meta data to to determine what tiling function to call and and when/how to call it
+///holds meta data to to determine what tiling function to call and when/how to call it
 typedef struct Layout {
     /**
      * Arguments to pass into layout functions that change how windows are tiled.
@@ -113,10 +113,10 @@ typedef struct Layout {
     void (*layoutFunction)(LayoutState*);
 } Layout;
 
-/// Convience indexes into DEFAULT_LAYOUTS
+/// Convince indexes into DEFAULT_LAYOUTS
 enum {FULL, GRID, TWO_COLUMN, TWO_PANE, TWO_HPLANE, MASTER, LAST_LAYOUT};
 
-/// Array of layout familes (layouts with different layout functions
+/// Array of layout families (layouts with different layout functions
 extern Layout LAYOUT_FAMILIES[];
 /// Array of different layout
 extern Layout DEFAULT_LAYOUTS[];
@@ -126,14 +126,14 @@ extern int NUMBER_OF_DEFAULT_LAYOUTS;
 extern int NUMBER_OF_LAYOUT_FAMILIES;
 
 /**
- * Increases the corrosponding field for the layour by step
+ * Increases the corresponding field for the layout by step
  *
  * @param index a LayoutArgIndex
  * @param step
  */
 void increaseActiveLayoutArg(int index, int step);
 /**
- * Searches for the set of registered layouts for a layout with the name, and if a match is found, sets the active layout this layoutyy
+ * Searches for the set of registered layouts for a layout with the name, and if a match is found, sets the active layout this layout
  *
  * @param name
  */
@@ -171,14 +171,14 @@ void registerLayouts(Layout* layouts, int num);
 */
 char* getNameOfLayout(Layout* layout);
 /**
- * Addes an array of layouts to the specified workspace
+ * Adds an array of layouts to the specified workspace
  * @param workspaceIndex
  * @param layout - layouts to add
  * @param num - number of layouts to add
  */
 void addLayoutsToWorkspace(int workspaceIndex, Layout* layout, int num);
 /**
- * Clears all layouts assosiated with the give workspace.
+ * Clears all layouts associated with the give workspace.
  * The layouts themselves are not freeded
  * @param workspaceIndex the workspace to clear
  */
@@ -240,7 +240,7 @@ int getNumberOfWindowsToTile(ArrayList* windowStack, LayoutArgs* args);
  */
 void transformConfig(LayoutState* state, int config[CONFIG_LEN]);
 /**
- * Configures the winInfo using values as refrence points and apply various properties of winInfo's mask and set configuration which will override values
+ * Configures the winInfo using values as reference points and apply various properties of winInfo's mask and set configuration which will override values
  * @param state
  * @param winInfo the window to tile
  * @param values where the layout wants to position the window

@@ -145,7 +145,7 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
 void startChain(BoundFunction* boundFunction){
     Binding* chain = boundFunction->func.chainBindings;
     int mask = boundFunction->arg.intArg;
-    LOG(LOG_LEVEL_DEBUG, "starting chain. mask:%d\n", mask);
+    LOG(LOG_LEVEL_DEBUG, "starting chain; mask:%d\n", mask);
     if(mask)
         grabDevice(getDeviceIDByMask(mask), mask);
     _FOR_EACH_CHAIN(
@@ -304,7 +304,7 @@ void addBinding(Binding* binding){
     addToList(getDeviceBindings(), binding);
 }
 /**
- * Convience method for grabBinding() and ungrabBinding()
+ * Convince method for grabBinding() and ungrabBinding()
  * @param binding
  * @param ungrab
  * @return

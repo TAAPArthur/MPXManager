@@ -113,10 +113,10 @@ void loadSavedAtomState(WindowInfo* winInfo);
 
 /**
  * Sets the window state based on a list of atoms
- * @param winInfo the window whose mask will be modifed
+ * @param winInfo the window whose mask will be modified
  * @param atoms the list of atoms to add,remove or toggle depending on ACTION
  * @param numberOfAtoms the number of atoms
- * @param action wether to add,remove or toggle atoms. For toggle, if all of the corrosponding masks for the list of atoms is set, then they all will be removed else they all will be added
+ * @param action whether to add,remove or toggle atoms. For toggle, if all of the corresponding masks for the list of atoms is set, then they all will be removed else they all will be added
  * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
  */
 void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action);
@@ -132,21 +132,21 @@ int processNewWindow(WindowInfo* winInfo);
 
 /**
  * Adds the window to our list of managed windows as a non-dock
- * and load any ewhm saved state
+ * and load any EWMH saved state
  * @param winInfo
  * @return 0 if the window doesn't exists
  */
 int registerWindow(WindowInfo* winInfo);
 
 /**
- * Enables tiling to be overriden at the indexes corrosponding to mask
+ * Enables tiling to be overridden at the indexes corresponding to mask
  *
  * @param winInfo
  * @param mask
  */
 void enableTilingOverride(WindowInfo* winInfo, unsigned int mask);
 /**
- * Disables tiling to be overriden at the indexes corrosponding to mask
+ * Disables tiling to be overridden at the indexes corresponding to mask
  *
  * @param winInfo
  * @param mask
@@ -162,7 +162,7 @@ void disableTilingOverride(WindowInfo* winInfo, unsigned int mask);
  */
 void setTilingOverrideEnabled(WindowInfo* winInfo, unsigned int mask, bool value);
 /**
- * Checks to see if tilling has been overridded at the given index
+ * Checks to see if tilling has been overridden at the given index
  *
  * @param winInfo
  * @param index
@@ -267,7 +267,7 @@ void onWindowFocus(WindowID win);
  */
 int removeWindow(WindowID winToRemove);
 /**
- * Frees winInfo and interal structs
+ * Frees winInfo and internal structs
  * @param winInfo
  * @see removeWindow()
  */
@@ -277,7 +277,7 @@ void deleteWindowInfo(WindowInfo* winInfo);
 /**
  * Adds a window to the list of windows in context iff it
  * isn't already in the list
- * Note that the creted window is not added to a master window list or
+ * Note that the created window is not added to a master window list or
  * a workspace
  * @param wInfo    instance to add
  * @return 1 iff this pointer was added
@@ -318,7 +318,7 @@ static inline int isMappable(WindowInfo* winInfo){
 }
 /**
  * @param winInfo
- * @return true if the user can interact (ie focus,type etc)  with the window
+ * @return true if the user can interact (focus,type etc)  with the window
  * For this to be true the window would have to be mapped and not hidden
  */
 static inline int isInteractable(WindowInfo* winInfo){
@@ -333,7 +333,7 @@ static inline int isTileable(WindowInfo* winInfo){
     return isInteractable(winInfo) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
 }
 /**
- * A window is actiable if it is MAPPABLE and not HIDDEN  and does not have the NO_ACTIVATE_MASK set
+ * A window is activatable if it is MAPPABLE and not HIDDEN  and does not have the NO_ACTIVATE_MASK set
  * @param winInfo
  * @return true if the window can receive focus
  */

@@ -139,7 +139,7 @@ static void* waitForWindowToDie(int id){
         }
         msleep(KILL_TIMEOUT);
     }
-    LOG(LOG_LEVEL_DEBUG, "Finshed waiting for window %d\n", id);
+    LOG(LOG_LEVEL_DEBUG, "Finished waiting for window %d\n", id);
     return NULL;
 }
 
@@ -336,12 +336,12 @@ void switchToWorkspace(int workspaceIndex){
         /*
          * Each master can have independent active workspaces. While an active workspace is generally visible when it is set,
          * it can become invisible due to another master switching workspaces. So when the master in the invisible workspaces
-         * wants its workspace to become visbile it must first find a visible workspace to swap with
+         * wants its workspace to become visible it must first find a visible workspace to swap with
          */
         if(!isWorkspaceVisible(currentIndex)){
             currentIndex = getNextWorkspace(1, VISIBLE)->id;
         }
-        LOG(LOG_LEVEL_DEBUG, "Swaping visible workspace %d with %d\n", currentIndex, workspaceIndex);
+        LOG(LOG_LEVEL_DEBUG, "Swapping visible workspace %d with %d\n", currentIndex, workspaceIndex);
         //we need to map new windows
         swapWorkspaces(workspaceIndex, currentIndex);
         updateEWMHWorkspaceProperties();
@@ -456,7 +456,7 @@ void processConfigureRequest(WindowID win, short values[5], WindowID sibling, in
         LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
 }
 void broadcastEWMHCompilence(){
-    LOG(LOG_LEVEL_TRACE, "Compliying with EWMH\n");
+    LOG(LOG_LEVEL_TRACE, "Complying with EWMH\n");
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else  ignore it)
     int overrideRedirect = 1;
@@ -481,7 +481,7 @@ void broadcastEWMHCompilence(){
     SET_SUPPORTED_OPERATIONS(ewmh);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, compliantWindowManagerIndicatorWindow);
     xcb_ewmh_set_wm_name(ewmh, compliantWindowManagerIndicatorWindow, strlen(WM_NAME), WM_NAME);
-    LOG(LOG_LEVEL_TRACE, "ewmh initilized\n");
+    LOG(LOG_LEVEL_TRACE, "Complied with EWMH/ICCCM specs\n");
 }
 
 void updateMapState(int id, int map){

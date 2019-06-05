@@ -9,7 +9,7 @@
 
 #include "mywm-structs.h"
 /**
- * Default method called on hiearchy change events which refer to modifications of master/slave device(s)
+ * Default method called on hierarchy change events which refer to modifications of master/slave device(s)
  * The event right before this method should be a xcb_input_hierarchy_event_t event
  * This method keeps our state synced with the X Sever state for master addition/removal
  */
@@ -36,7 +36,7 @@ void onConfigureNotifyEvent(void);
  */
 void onVisibilityEvent(void);
 /**
- * Proccess a window to see if we should keep track of it
+ * Processes a window to see if we should keep track of it
  */
 void onCreateEvent(void);
 /**
@@ -50,7 +50,7 @@ void onDestroyEvent(void);
 void onError(void);
 
 /**
- * Called when the a client application changes the window's state from unmapped to mapped.
+ * Called when a client application changes the window's state from unmapped to mapped.
  */
 void onMapRequestEvent(void);
 /**
@@ -88,7 +88,7 @@ void onSelectionClearEvent(void);
  */
 void onPropertyEvent(void);
 /**
- * Responds to client messages accoring the the ICCCM/EWMH spec
+ * Responds to client messages according the ICCCM/EWMH spec
  */
 void onClientMessage(void);
 
@@ -98,7 +98,8 @@ void onClientMessage(void);
  */
 void addUnknownWindowIgnoreRule(void);
 /**
- * Add RegisteringWindow rule that will cause the WM to not add the window to any workspace. This is like permentatnly setting FLOATING_MASK and STICKY_MASK
+ * Add RegisteringWindow rule that will cause the WM to not add the window to any workspace.
+ * This is (kinda) like permanently setting FLOATING_MASK and STICKY_MASK
  * (non-default)
  * @see isUnknown
  */
@@ -158,12 +159,12 @@ void addPrintRule(void);
  */
 void addFloatRules(void);
 /**
- * Handles initilizing the WindowManager and proccessing user settings from the config file
+ * Handles initializing the WindowManager and processing user settings from the config file
  */
 void onStartup(void);
 /**
  * Adds a bunch of rules needed for the WM to function as expected
- * The majority are wrappers to map X11 event to the corrosponding function
+ * The majority are wrappers to map X11 event to the corresponding function
  */
 void addBasicRules(void);
 /**

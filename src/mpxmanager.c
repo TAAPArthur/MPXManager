@@ -1,6 +1,6 @@
 /**
  * @file mpxmanager.c
- * Entrypoint for MPXManager
+ * Entry point for MPXManager
  */
 #include <assert.h>
 #include <execinfo.h>
@@ -156,10 +156,10 @@ static inline void initParsing(){
     }
 }
 /**
- * Parse command line arguments starting the the (i=1)th index
+ * Parse command line arguments starting the 1st index
  * @param argc the number of args to parse
  * @param argv the list of args. An element by be like "-s", "--long", --long=V", etc
- * @param exitOnUnknownOptions if true will exit(1) if encounter an unkown option
+ * @param exitOnUnknownOptions if true will exit(1) if encounter an unknown option
  */
 static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions){
     initParsing();

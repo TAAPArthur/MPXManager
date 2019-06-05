@@ -86,7 +86,7 @@ WindowInfo* findWindow(Rule* rule, ArrayList* searchList, ArrayList* ignoreList)
 void sendWindowToWorkspaceByName(WindowInfo* winInfo, char* name);
 
 /**
- * Swapped the active window with the dir-th window from its current position
+ * Swap the active window with the window dir windows away from its current position in the worked space stack. The stack wraps around if needed
  * @param dir
  */
 void swapPosition(int dir);

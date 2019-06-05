@@ -8,8 +8,8 @@
 #define SETTINGS_H_
 
 /**
- * Creates a set of bindings related to switching workspacse
- * @param K the key to bind; various modiers will be used for the diffrent functions
+ * Creates a set of bindings related to switching workspaces
+ * @param K the key to bind; various modifiers will be used for the different functions
  * @param N the workspace to switch to/act on
  */
 #define WORKSPACE_OPERATION(K,N) \
@@ -43,8 +43,8 @@ void loadNormalSettings(void);
 void defaultPrintFunction(void);
 
 /**
- * Will be called on startup before the XServer is initilized so the user can set global vars, run
- * arbitary commands and most commonly add device bindings and event rules
+ * Will be called on startup before the XServer is initialized so the user can set global vars, run
+ * arbitrary commands and most commonly add device bindings and event rules
  */
 void loadSettings(void);
 #endif

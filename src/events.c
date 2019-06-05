@@ -30,7 +30,7 @@ static ArrayList eventRules[NUMBER_OF_EVENT_RULES];
 
 /// Holds batch events
 typedef struct {
-    /// how many times the event has been triggerd
+    /// how many times the event has been trigged
     int counter;
     /// the list of events to trigger when counter is non zero
     ArrayList list;
@@ -136,7 +136,7 @@ void* runEventLoop(void* arg __attribute__((unused))){
 #ifdef DEBUG
         XSync(dpy, 0);
 #endif
-        LOG(LOG_LEVEL_VERBOSE, "event proccesed\n");
+        LOG(LOG_LEVEL_VERBOSE, "event processed\n");
     }
     LOG(LOG_LEVEL_DEBUG, "Exited event loop\n");
     return NULL;

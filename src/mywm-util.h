@@ -35,12 +35,12 @@ extern char** passedArguments;
  * is a race, lock/unlock should be used
  */
 void lock(void);
-///cpoydoc lock(void)
+///copydoc lock(void)
 void unlock(void);
 
 /**
  * Destroys the resources related to our internal representation.
- * It does nothing if resources have already been cleared or never initally created
+ * It does nothing if resources have already been cleared or never initially created
  */
 void resetContext();
 

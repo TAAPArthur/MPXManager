@@ -17,7 +17,7 @@
 #define WM_NAME "MPX Manger"
 
 /**
- * Window created by us to show to the world that an EWMH complicant WM is active
+ * Window created by us to show to the world that an EWMH compliant WM is active
  */
 extern WindowID compliantWindowManagerIndicatorWindow;
 
@@ -26,7 +26,7 @@ extern WindowID compliantWindowManagerIndicatorWindow;
  * Establishes a connection with the X server.
  * Creates and Xlib and xcb display and set global vars like ewmh, root and screen
  *
- * This method creates at least 1 master and monitor such that other mywm functions
+ * This method creates at least 1 master and monitor which is a prerequisite to use most other functions
  * can be safely used
  */
 void connectToXserver();
@@ -58,7 +58,7 @@ int getSavedWorkspaceIndex(WindowID win);
  * Sets the mapped state to UNMAPPED(0) or MAPPED(1)
  * @param id the window whose state is being modified
  * @param state the new state
- * @return  true if the state actuall changed
+ * @return  true if the state actually changed
  */
 void updateMapState(int id, int state);
 
@@ -90,7 +90,7 @@ void setBorder(WindowID win);
 void resetBorder(WindowID win);
 
 /**
- * Switch to window's worksspace, raise and focus the window
+ * Switch to window's workspace, raise and focus the window
  * @param winInfo
  * @return the id of the activated window or 0 if no window was activated
  */
@@ -103,7 +103,7 @@ int activateWindow(WindowInfo* winInfo);
 int focusWindow(WindowID win);
 /**
  * Focus the given window
- * This method is diffrent from focusWindow in that it allows diffrent protocals for
+ * This method is different from focusWindow in that it allows different protocols for
  * focusing the window based on window masks
  */
 int focusWindowInfo(WindowInfo* winInfo);
@@ -121,8 +121,8 @@ int raiseWindowInfo(WindowInfo* winInfo);
 int lowerWindowInfo(WindowInfo* winInfo);
 
 /**
- * Raises or lowers the winInfo depening on raise.
- * If the transientFor property is set, then the window is raised lowered releative to is tansientFor window
+ * Raises or lowers the winInfo depending on raise.
+ * If the transientFor property is set, then the window is raised lowered relative to is tansientFor window
  * @param winInfo
  * @param raise
  */
@@ -158,7 +158,7 @@ void setWorkspaceNames(char* names[], int numberOfNames);
 int getIndexFromName(char* name);
 
 /**
-* Returns the name of the workspace at the specifed index
+* Returns the name of the workspace at the specified index
 * @param index
 *
 * @return the name of the workspace
@@ -174,7 +174,7 @@ char* getWorkspaceName(int index);
 void switchToWorkspace(int workspaceIndex);
 
 /**
- * Switch to workspace and activate the last focused window of the actie master
+ * Switch to workspace and activate the last focused window of the active master
  * @param workspaceIndex
  */
 void activateWorkspace(int workspaceIndex);
@@ -219,12 +219,12 @@ void processConfigureRequest(WindowID win, short values[5], WindowID sibling, in
 /**
  * Do everything needed to comply when EWMH.
  * Creates a functionless window with set all the Atoms we support, clear any
- * unsporrted values from the root window
+ * unsupported values from the root window
  */
 void broadcastEWMHCompilence();
 
 /**
- * Moves a window to the specifed layer in the same workspace
+ * Moves a window to the specified layer in the same workspace
  * @param win
  * @param layer
  */
@@ -255,7 +255,7 @@ void floatWindow(WindowInfo* win);
 void sinkWindow(WindowInfo* win);
 
 /**
- * if Workspace:mapped != isVisibleWorkspace, then we either attempt to map,unmap all windows in the workspace according to isVisibleWorkspace
+ * if Workspace:mapped != isVisibleWorkspace, then we either attempt to map, unmap all windows in the workspace according to isVisibleWorkspace
  *
  * @param index
  */
@@ -285,7 +285,7 @@ int doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask);
 int isShowingDesktop(int index);
 /**
  * show or hide desktop depending on values
- * @param index workpsace index
+ * @param index workspace index
  * @param value 1 or 0
  */
 void setShowingDesktop(int index, int value);

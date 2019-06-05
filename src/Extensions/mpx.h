@@ -13,11 +13,11 @@
     #define MPX_EXT_ENABLED 1
 #endif
 /**
- * Adds hiearchy rules that will detect master/slave addition/removal and make the correct pairings
+ * Adds hierarchy rules that will detect master/slave addition/removal and make the correct pairings
  */
 void addAutoMPXRules(void);
 /**
- * Attaches all slaves to their propper masters
+ * Attaches all slaves to their proper masters
  */
 void restoreMPX(void);
 /**
@@ -45,7 +45,7 @@ int loadMasterInfo(void);
 /**
  * Creates a new master and moves all active slaves (slaves that are firing events) to the newly
  * created master
- * This method adds a Idle event that will serve as a callback to stop moving active slavse
+ * This method adds a Idle event that will serve as a callback to stop moving active slaves
  * @return the id of the newly created master
  */
 int splitMaster(void);

@@ -1,6 +1,12 @@
+/**
+ * @file spawn.h
+ * Helper methods to spawn external programs
+ */
+#ifndef MPX_SPAWN_H
+#define MPX_SPAWN_H
 
 /**
- * Set env vars such to help old clients know which master device to use
+ * Set environment vars such to help old clients know which master device to use
  */
 void setClientMasterEnvVar(void);
 /**
@@ -26,3 +32,5 @@ int waitForChild(int pid);
  * Resets the status pipe
  */
 void resetPipe();
+
+#endif

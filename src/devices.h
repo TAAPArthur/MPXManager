@@ -20,12 +20,12 @@ typedef struct {
     char name[NAME_BUFFER];
     /// Whether this is a keyboard(1) or a pointer device(0)
     char keyboard;
-    ///Convience field: the index of attachment in the list passed to getSlavesOfMasterByID()
+    ///Convince field: the index of attachment in the list passed to getSlavesOfMasterByID()
     unsigned char offset;
 } SlaveDevice;
 
 /**
- * Attaches the specifed slave to the specified master
+ * Attaches the specified slave to the specified master
  * @param slaveId
  * @param masterId
  */
@@ -110,7 +110,7 @@ int getMousePosition(MasterID id, int relativeWindow, int result[2]);
 /**
  * Swap the ids of master devices backed by master1 and master2
  * There is no easy way in X to accomplish this task so every other aspect of the
- * master devices (ie pointer position, focus, slaves) are switched and we update our
+ * master devices (pointer position, window focus, slaves devices etc) are switched and we update our
  * internal state as if just the ids switched
  * @param master1
  * @param master2
@@ -173,7 +173,7 @@ int grabActiveKeyboard(void);
 /**
  *
  * @param id
- * @return 1 iff the grab succeded
+ * @return 1 iff the grab succeeded
  */
 int grabKeyboard(MasterID id);
 
@@ -181,7 +181,7 @@ int grabKeyboard(MasterID id);
 /**
  *
  * @param id
- * @return 1 iff the grab succeded
+ * @return 1 iff the grab succeeded
  * @see grabActivePointer()
  */
 int grabPointer(MasterID id);
@@ -243,9 +243,9 @@ void getMouseDelta(Master* master, short result[2]);
 
 /**
  * Queries the X Server and returns the focused window.
- * Note this method is different thatn getFocusedWindow() in that we are not looking our view of focus but the Xservers
+ * Note this method is different than getFocusedWindow() in that we are not looking our view of focus but the Xserver's
  * @param id a keyboard master device
- * @return the the current window focused by the given keyboard device
+ * @return the current window focused by the given keyboard device
  */
 WindowID getActiveFocus(MasterID id);
 

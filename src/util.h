@@ -21,20 +21,20 @@
 typedef struct {
     ///backing arr
     void** arr;
-    /** where to starting indexing from; ie
+    /** where to starting indexing from;
      * index 0 is refers to arr[offset]
     */
     char offset;
     ///number of elements in list
     int size;
-    ///cappacity of the list. When size==maxSize, the arr is doubled
+    ///capacity of the list. When size==maxSize, the arr is doubled
     int maxSize;
 } ArrayList;
 
 
 
 /**
- * Returns a monotonically increasing number that servers a the time in ms.
+ * Returns a monotonically increasing number that servers the time in ms.
  * @return the current time (ms)
  */
 unsigned int getTime();
@@ -63,7 +63,7 @@ void msleep(int mil);
 /**
  * @brief Iterates backwards over list and runs arbitrary command(s).
  * The value of var will be updated upon every iteration.
- * Note that behavior is undefined if the list is modified while iterating unless the element is modified at the current posistion or later
+ * Note that behavior is undefined if the list is modified while iterating unless the element is modified at the current position or later
  * @param type - type of var
  * @param var the value represents the ith value of list
  * @param list the list to iterate over
@@ -74,7 +74,7 @@ void msleep(int mil);
 
 /**
  * Iterates over head until EXPR is true
- * var will either be set to the first element of head that satifies EXPR or NULL if no such element exists
+ * var will either be set to the first element of head that satisfies EXPR or NULL if no such element exists
  * @param var
  * @param head the list to iterate over
  * @param EXPR the expression to evaluate
@@ -97,7 +97,7 @@ int isNotEmpty(ArrayList* list);
  */
 void addToList(ArrayList* list, void* value);
 /**
- * Sets the the amount of extra space at the beging of a list
+ * Sets the amount of extra space at the beginning of a list
  * Note that this should only be modified on an empty list
  *
  * @param list
@@ -105,7 +105,7 @@ void addToList(ArrayList* list, void* value);
  */
 void setOffset(ArrayList* list, int offset);
 /**
- * Returns the number of extra slots at the begining of the array before the first element
+ * Returns the number of extra slots at the beginning of the array before the first element
  *
  * @param list
  *
@@ -132,7 +132,7 @@ void* pop(ArrayList* list);
  */
 void shiftToHead(ArrayList* list, int index);
 /**
- * Adds value to the list iff there exists no element whose value is equal to value (wrt the first size bytes)
+ * Adds value to the list iff there exists no element whose value is equal to value (w.r.t the first size bytes)
  * @param list
  * @param value
  * @param size
@@ -141,25 +141,25 @@ void shiftToHead(ArrayList* list, int index);
 int addUnique(ArrayList* list, void* value, int size);
 /**
  * Frees all internal memory of list and resets size
- * The list does not need to be initilized again before it can be used
+ * The list does not need to be initialized again before it can be used
  * @param list
  */
 void clearList(ArrayList* list);
 /**
- * This method is safe to call on uninitlized lists and cleared lists
+ * This method is safe to call on uninitialized lists and cleared lists
  * @param list
  * @return the number of elements in the list
  */
 int getSize(ArrayList* list);
 /**
- * Note this method does not perform anys bounds checking
+ * Note this method does not perform any bounds checking
  * @param list
  * @param index
  * @return the element at the index-th position in list
  */
 void* getElement(ArrayList* list, int index);
 /**
- * Note this method does not perform anys bounds checking
+ * Note this method does not perform any bounds checking
  * @param list
  * @param index
  * @param value the new value of the index-th element
@@ -194,19 +194,19 @@ void* removeElementFromList(ArrayList* list, void* element, int size);
 
 /**
  * Returns the index of the element with value.
- * If size is non zero, we check for eqaulity by comaring the first size bytes of value with every element.
+ * If size is non zero, we check for equality by comparing the first size bytes of value with every element.
  * If size is zero, we check if the pointers are equal
  * @param list
  * @param value
  * @param size
- * @return the index of the element whose mem address starts with the first size byte of value
+ * @return the index of the element whose memory address starts with the first size byte of value
  */
 int indexOf(ArrayList* list, void* value, int size);
 /**
  * @param list
  * @param value
  * @param size
- * @return the element whose mem address starts with the first size byte of value
+ * @return the element whose memory address starts with the first size byte of value
  */
 void* find(ArrayList* list, void* value, int size);
 /**

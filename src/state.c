@@ -18,7 +18,7 @@
 
 /**
  * Holds metadata about all the workspaces
- * This metada will be compared to the current workspaces and if they
+ * This metadata will be compared to the current workspaces and if they
  * don't match, we consider the workspaces to have changed
  */
 typedef struct {

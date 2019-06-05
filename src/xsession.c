@@ -16,7 +16,7 @@
 #include "xsession.h"
 
 /**
- * Shorthand marco to init a X11 atom
+ * Shorthand macro to init a X11 atom
  * @param name the name of the atom to init
  */
 #define _CREATE_ATOM(name){\

@@ -7,7 +7,7 @@
 
 #include "bindings.h"
 
-/// Specifes type of option
+/// Specifies type of option
 typedef enum {
     BOOL_VAR, INT_VAR, LONG_VAR, STRING_VAR, FUNC, FUNC_STR, FUNC_INT, FUNC_WIN_INFO
 } OptionTypes;

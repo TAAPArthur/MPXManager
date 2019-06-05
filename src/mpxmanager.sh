@@ -21,10 +21,10 @@
 #%Modes:
 #%Each mode is a non-WM feature
 #%      xmousecontrol enables control of the mouse with the keyboard
-#%      mpx-start   loads mpx config file, creates masters and attaches slaves to the appropiate masters
+#%      mpx-start   loads mpx config file, creates masters and attaches slaves to the appropriate masters
 #%      mpx-stop    removes all non-default masters
 #%      mpx-restart mpx-stop and mpx-start
-#%      mpx-resstore   Like mpx-start but does not create any new masters
+#%      mpx-restore   Like mpx-start but does not create any new masters
 #%      mpx-split   takes all slaves that are sending events and add them to a newly created master. To make the timeout longer, change the value of POLL_COUNT/POLL_INTERVAL via --set
 #%
 #%Examples:

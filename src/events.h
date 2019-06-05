@@ -30,7 +30,7 @@ enum {
     onXConnection = LAST_REAL_EVENT,
     /// Run after properties have been loaded
     PropertyLoad,
-    /// deterime if a newly detected window should be recorded/monitored/controlled by us
+    /// determines if a newly detected window should be recorded/monitored/controlled by us
     ProcessingWindow,
     /// called after the newly created window has been added to a workspace
     RegisteringWindow,
@@ -53,7 +53,7 @@ enum {
 
 
 /**
- *Returns a monotonically increasing counter indicating the number of times the event loop has been idel. Being idle means event loop has nothing to do at the moment which means it has responded to all prior events
+ * Returns a monotonically increasing counter indicating the number of times the event loop has been idle. Being idle means event loop has nothing to do at the moment which means it has responded to all prior events
 */
 int getIdleCount(void);
 /**
@@ -73,7 +73,7 @@ void clearAllRules(void);
 ArrayList* getBatchEventRules(int i);
 /**
  * Increment the counter for a batch rules.
- * All batch rules with a non zero counter will be triggerd
+ * All batch rules with a non zero counter will be trigged
  * on the next call to incrementBatchEventRuleCounter()
  *
  * @param i the event type
@@ -81,7 +81,7 @@ ArrayList* getBatchEventRules(int i);
 void incrementBatchEventRuleCounter(int i);
 /**
  * For every event rule that has been triggered since the last call
- * incrementBatchEventRuleCounter(), trigger the corrosponding batch rules
+ * incrementBatchEventRuleCounter(), trigger the corresponding batch rules
  *
  */
 void applyBatchRules(void);
@@ -98,7 +98,7 @@ void clearAllBatchRules(void);
  */
 void* runEventLoop(void* arg);
 /**
- * Attemps to translate the generic event receive into an extension event and applyies corresponding Rules.
+ * Attempts to translate the generic event receive into an extension event and applies corresponding Rules.
  */
 void onGenericEvent(void);
 /**
@@ -112,7 +112,7 @@ void registerForEvents();
  * Declare interest in select window events
  * @param window
  * @param mask
- * @return the error code if an error occured
+ * @return the error code if an error occurred
  */
 int registerForWindowEvents(WindowID window, int mask);
 
@@ -127,7 +127,7 @@ int applyEventRules(int type, WindowInfo* winInfo);
 
 /**
  * To be called when a generic event is received
- * loads info related to the generic event which can be accesed by getLastEvent()
+ * loads info related to the generic event which can be accessed by getLastEvent()
  */
 int loadGenericEvent(xcb_ge_generic_event_t* event);
 
@@ -136,7 +136,7 @@ int loadGenericEvent(xcb_ge_generic_event_t* event);
  */
 void registerForDeviceEvents();
 /**
- * Request to be notifed when info related to the monitor/screen changes
+ * Request to be notified when info related to the monitor/screen changes
  * This method does nothing if compiled without XRANDR support
  */
 void registerForMonitorChange();

@@ -12,9 +12,9 @@
 #include "../mywm-structs.h"
 
 /**
- * Creates a new window and immediates processes.
+ * Creates a new window and immediate processes.
  *
- * This method sets everything up for the returned window to be treated as a clone and also grabs the needed events incase any auto updated in needed
+ * This method sets everything up for the returned window to be treated as a clone and also grabs the needed events in case any auto updated in needed
  *
  * @param winInfo
  *
@@ -46,7 +46,7 @@ void* autoUpdateClones(void* arg __attribute__((unused)));
  */
 void startAutoUpdatingClones(void);
 /**
- * Add rules for seemless interaction with cloned windows
+ * Add rules for seamless interaction with cloned windows
  *
  * Cloned windows will now swap with the original, when the mouse enters
  * Clones will be repainted when original is exposed

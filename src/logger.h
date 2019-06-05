@@ -24,7 +24,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
 
 
 /**
- * Pritns the element in arr space seperated. Arr is treated like an array of ints
+ * Prints the element in arr space separated. Arr is treated like an array of ints
  *
  * @param label some prefix
  * @param arr
@@ -36,7 +36,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
 #define PRINT_ARR(label,arr,size,suffix){LOG(LOG_LEVEL_INFO,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_INFO,"%ld ",(long)(arr)[_n]);LOG(LOG_LEVEL_INFO,suffix);}
 
 /**
- * Prints the element in arr space seperated. Arr is treated like a list of ints
+ * Prints the element in arr space separated. Arr is treated like a list of ints
  *
  * @param label some prefix
  * @param arr
@@ -151,7 +151,7 @@ void dumpBoundFunction(BoundFunction* boundFunction);
  */
 void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms);
 /**
- * Stringifes type
+ * Stringifies type
  *
  * @param type a regular event type like XCB_CREATE_NOTIFY
  *

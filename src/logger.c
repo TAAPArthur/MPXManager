@@ -250,7 +250,7 @@ int catchErrorSilent(xcb_void_cookie_t cookie){
     return errorCode;
 }
 void logError(xcb_generic_error_t* e){
-    LOG(LOG_LEVEL_ERROR, "error occured with resource %d. Error code: %d %s (%d %d)\n", e->resource_id, e->error_code,
+    LOG(LOG_LEVEL_ERROR, "error occurred with resource %d. Error code: %d %s (%d %d)\n", e->resource_id, e->error_code,
         opcodeToString(e->major_code), e->major_code, e->minor_code);
     int size = 256;
     char buff[size];

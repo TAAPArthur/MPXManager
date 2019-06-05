@@ -11,7 +11,7 @@
     #define XMOUSE_CONTROL_EXT_ENABLED 1
 #endif
 #if XMOUSE_CONTROL_EXT_ENABLED
-/// default modifer for xmouse control extensions
+/// default modifier for this extension
 extern int XMOUSE_CONTROL_DEFAULT_MASK;
 enum {
     SCROLL_UP = 4,
@@ -54,7 +54,7 @@ extern unsigned int BASE_SCROLL_SPEED;
  */
 void* runXMouseControl(void* c __attribute__((unused)));
 /**
- * Add rules/bindings to get the XMousecontrol exerience
+ * Add rules/bindings to get the XMousecontrol experience
  */
 void enableXMouseControl(void);
 /**

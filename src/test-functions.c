@@ -46,7 +46,7 @@ void typeKey(int keycode){
 }
 
 void movePointer(MasterID id, WindowID relativeWindow, int x, int y){
-    // TODO remove below hacks; both lines should do the same thing, but behavious is much different without either one
+    // TODO remove below hacks; both lines should do the same thing, but behaviour is much different without either one
     XIWarpPointer(dpy, id, None, relativeWindow, 0, 0, 0, 0, x, y);
     xcb_input_xi_warp_pointer(dis, None, relativeWindow, 0, 0, 0, 0, x, y, id);
 }

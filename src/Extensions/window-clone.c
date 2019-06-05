@@ -162,7 +162,7 @@ void swapWithOriginalOnEnter(void){
     if(winInfo && getParent(winInfo->id)){
         WindowInfo* origin = getWindowInfo(getParent(winInfo->id));
         if(origin && hasMask(origin, MAPPED_MASK) && hasMask(winInfo, MAPPED_MASK)){
-            LOG(LOG_LEVEL_DEBUG, "swaping clone %d with %d\n", winInfo->id, origin ? origin->id : 0);
+            LOG(LOG_LEVEL_DEBUG, "swapping clone %d with %d\n", winInfo->id, origin ? origin->id : 0);
             swapWindows(origin, winInfo);
             markState();
         }
@@ -195,7 +195,7 @@ void swapOnMapEvent(void){
     if(winInfo){
         WindowInfo* parent = getWindowInfo(getParent(winInfo->id));
         if(parent && !hasMask(parent, MAPPED_MASK)){
-            LOG(LOG_LEVEL_DEBUG, "swaping mapped clone with unmapped parent %d with %d\n", winInfo->id, parent->id);
+            LOG(LOG_LEVEL_DEBUG, "swapping mapped clone with unmapped parent %d with %d\n", winInfo->id, parent->id);
             swapWindows(parent, winInfo);
         }
     }
@@ -208,7 +208,7 @@ void swapOnUnmapEvent(void){
         UNTIL_FIRST(cloneInfo, &clones, cloneInfo->parent == winInfo->id && getWindowInfo(cloneInfo->clone) &&
                     hasMask(getWindowInfo(cloneInfo->clone), MAPPED_MASK));
         if(cloneInfo){
-            LOG(LOG_LEVEL_DEBUG, "swaping parent with mapped clone %d with %d\n", winInfo->id, cloneInfo->clone);
+            LOG(LOG_LEVEL_DEBUG, "swapping parent with mapped clone %d with %d\n", winInfo->id, cloneInfo->clone);
             swapWindows(winInfo, getWindowInfo(cloneInfo->clone));
         }
     }

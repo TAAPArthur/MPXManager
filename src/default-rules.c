@@ -38,8 +38,6 @@ void autoAddToWorkspace(WindowInfo* winInfo){
     if(winInfo->dock)return;
     int index = LOAD_SAVED_STATE ? getSavedWorkspaceIndex(winInfo->id) : getActiveWorkspaceIndex();
     moveWindowToWorkspace(winInfo, index);
-    //char state=XCB_ICCCM_WM_STATE_WITHDRAWN;
-    //xcb_change_property(dis,XCB_PROP_MODE_REPLACE,win,ewmh->_NET_WM_STATE,ewmh->_NET_WM_STATE,32,0,&state);
 }
 void addAutoTileRules(void){
     static Rule autoTileRule = CREATE_DEFAULT_EVENT_RULE(markState);
@@ -272,7 +270,7 @@ void onClientMessage(void){
         }
     }
     else if(message == ewmh->_NET_SHOWING_DESKTOP){
-        LOG(LOG_LEVEL_DEBUG, "Chainign showing desktop to %d\n\n", data.data32[0]);
+        LOG(LOG_LEVEL_DEBUG, "Chaining showing desktop to %d\n\n", data.data32[0]);
         setShowingDesktop(getActiveWorkspaceIndex(), data.data32[0]);
     }
     else if(message == ewmh->_NET_CLOSE_WINDOW){
@@ -324,7 +322,7 @@ void onClientMessage(void){
                 moveWindowToWorkspace(getWindowInfo(win), destIndex);
     }
     else if(message == ewmh->_NET_WM_STATE){
-        LOG(LOG_LEVEL_DEBUG, "Settings client wm state %d\n", data.data32[3]);
+        LOG(LOG_LEVEL_DEBUG, "Settings client window manager state %d\n", data.data32[3]);
         WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo){
             if(allowRequestFromSource(winInfo, data.data32[3]))

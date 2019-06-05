@@ -8,7 +8,7 @@
 #include "mywm-structs.h"
 
 /**
- * holds topleft coordinates and width/height of the bounding box
+ * holds top-left coordinates and width/height of the bounding box
  */
 typedef struct {
     /// top left coordinate of the bounding box
@@ -34,26 +34,26 @@ typedef struct Monitor {
     Rect view;
 
 } Monitor;
-///Masks used to determine the wheter two monitors are duplicates
+///Masks used to determine the whether two monitors are duplicates
 typedef enum {
     /// Monitors are the same iff they have exactly the same bounds
     SAME_DIMS = 1,
-    /// Monitors are dups if one monitor completly fits inside the other
+    /// Monitors are duplicates if one monitor completely fits inside the other
     CONTAINS = 2,
-    /// Monitors are dups if one intersects with the other.
+    /// Monitors are duplicates if one intersects with the other.
     INTERSECTS = 4,
 } MonitorDuplicationPolicy;
 /// Masks used to dictate how we deal with duplicates monitors
 typedef enum {
-    /// Take the primary moniotr
+    /// Take the primary monitors
     TAKE_PRIMARY = 1,
-    /// Keep the larger by area (ties are broken arbitarily)
+    /// Keep the larger by area (ties are broken arbitrary)
     TAKE_LARGER = 2,
-    /// Keep the smaller by area (ties are broken arbitarily)
+    /// Keep the smaller by area (ties are broken arbitrary)
     TAKE_SMALLER = 4,
 } MonitorDuplicationResolution;
 
-/// Used to determin whether two monitors are duplicates of each other
+/// Used to determine whether two monitors are duplicates of each other
 extern MonitorDuplicationPolicy MONITOR_DUPLICATION_POLICY;
 /// Given to monitors are duplicates, how do we determine which one to keep
 extern MonitorDuplicationResolution MONITOR_DUPLICATION_RESOLUTION;
@@ -75,7 +75,7 @@ ArrayList* getAllDocks(void);
 /**
  * Creates a new X11 monitor with the given bounds.
  *
- * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitary monitor
+ * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitrary monitor
  *
  * @param bounds the position of the new monitor
  */
@@ -113,7 +113,7 @@ bool updateMonitor(MonitorID id, Rect geometry, bool autoAssignWorkspace);
 /**
  * Removes a monitor and frees related info
  * @param id identifier of the monitor
- * @return 1 iff the montior was removed
+ * @return 1 iff the monitor was removed
  */
 int removeMonitor(MonitorID id);
 /**
@@ -147,7 +147,7 @@ int loadDockProperties(WindowInfo* info);
  */
 void detectMonitors(void);
 /**
- * Loops over all monitors and assigns the ones without a workspace to an arbitary empty workspace
+ * Loops over all monitors and assigns the ones without a workspace to an arbitrary empty workspace
  */
 void assignUnusedMonitorsToWorkspaces(void);
 
@@ -159,11 +159,11 @@ void assignUnusedMonitorsToWorkspaces(void);
  */
 int intersects(Rect arg1, Rect arg2);
 /**
- * Checks to see if arg1 contains arg2. For the check to pass arg2 must completly reside within all borders of arg2
+ * Checks to see if arg1 contains arg2. For the check to pass arg2 must completely reside within all borders of arg2
  * @param arg1
  * @param arg2
  *
- * @return 1 iff arg1 completly contains arg2
+ * @return 1 iff arg1 completely contains arg2
  */
 int contains(Rect arg1, Rect arg2);
 /**
@@ -177,7 +177,7 @@ int contains(Rect arg1, Rect arg2);
 int isLarger(Rect arg1, Rect arg2);
 
 /**
- * Resizes the monitor such that its viewport does not intersec the given dock
+ * Resizes the monitor such that its viewport does not intersect the given dock
  * @param m
  * @param winInfo the dock to avoid
  * @return if the size was changed
@@ -188,13 +188,13 @@ int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo);
  */
 void resizeAllMonitorsToAvoidAllStructs(void);
 /**
- * This method should only be used if a new dock is beeing added or an existing dock is being grown as this method can only reduce a monitor's viewport
+ * This method should only be used if a new dock is being added or an existing dock is being grown as this method can only reduce a monitor's viewport
  * @param winInfo the dock to avoid
  * @see resizeMonitorToAvoidStruct
  */
 void resizeAllMonitorsToAvoidStruct(WindowInfo* winInfo);
 /**
- * Resizes all monitors such that its viewport does not intersec the given dock
+ * Resizes all monitors such that its viewport does not intersect the given dock
  *
  * @param winInfo
  */

@@ -1,4 +1,4 @@
-#include <mpxmanager/config.h>
+#include <mpxmanager/settings.h>
 
 
 void loadSettings(void){

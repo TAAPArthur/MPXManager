@@ -9,7 +9,7 @@
 #ifndef MYWM_STRUCTS_H
 #define MYWM_STRUCTS_H
 
-/// Fixed size of all struct fields the keep an array of arbitary sized names
+/// Fixed size of all struct fields the keep an array of arbitrary sized names
 #ifndef NAME_BUFFER
     #define NAME_BUFFER 32
 #endif
@@ -65,7 +65,7 @@ typedef struct {
     unsigned int pingTimeStamp;
 
     ///counter for how many clients have requested the this window to be locked
-    /// when this field is zero, the the geometry field is allowed to be updated in response to XEvents
+    /// when this field is zero, the geometry field is allowed to be updated in response to XEvents
     char geometrySemaphore;
     ///Window gravity
     char gravity;
@@ -167,7 +167,7 @@ typedef struct {
 
     /** if the workspace is mapped
      *
-     * A work space should be mapped when it is visible, but asigning a monitor does not does not automatically cause all windows in the workspace to be mapped.
+     * A work space should be mapped when it is visible, but assigning a monitor does not does not automatically cause all windows in the workspace to be mapped.
      * This field is here to sync the two states
      *
      */

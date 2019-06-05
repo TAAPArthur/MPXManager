@@ -22,7 +22,7 @@ typedef struct {
     MasterID id;
     /// the id of the pointer of said master device
     MasterID pointerId;
-    /// The masks that are currently appied
+    /// The masks that are currently applied
     int mask;
     /// how many times the scroll button is pressed when scrolling
     int scrollScale;

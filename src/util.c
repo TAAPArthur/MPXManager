@@ -12,7 +12,7 @@
 
 #include "util.h"
 
-///init number of elemenets an arraylist can hold
+///init number of elements an arraylist can hold
 #ifndef INITIAL_ARRAY_LIST_CAP
     #define INITIAL_ARRAY_LIST_CAP 8
 #endif

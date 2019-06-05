@@ -157,7 +157,7 @@ ArrayList* getSlavesOfMasterByID(MasterID* ids, int num, int* numberOfSlaves){
             slaveDevice->attachment = device->attachment;
             strncpy(slaveDevice->name, device->name, sizeof(slaveDevice->name));
             slaveDevice->name[NAME_BUFFER - 1] = 0;
-            //force NULL terminate the string it were to overfil the buffer
+            //force NULL terminate the string it were to overfill the buffer
             slaveDevice->name[sizeof(slaveDevice->name) - 1] = 0;
             slaveDevice->keyboard = device->use == XISlaveKeyboard;
             slaveDevice->offset = n;

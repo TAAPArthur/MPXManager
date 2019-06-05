@@ -36,7 +36,7 @@ ArrayList* getAllMasters();
 int addMaster(MasterID keyboardMasterId, MasterID pointerMasterId, char* name, int focusColor);
 
 /**
- * Removes the master with the specifed id
+ * Removes the master with the specified id
  * @param id    the id to remove
  * @return 1 iff a node was removed 0 o.w.
  */
@@ -63,7 +63,7 @@ int getActiveMasterPointerID(void);
 int isFocusStackFrozen(void);
 /**
  * If value, the master window stack will not be updated on focus change
- * Else the the focused window will be shifted to the top of the master stack,
+ * Else the focused window will be shifted to the top of the master stack,
  * the master stack and the focused will remain in sync after all focus changes
  * @param value whether the focus stack is frozen or not
 */
@@ -127,13 +127,13 @@ ArrayList* getFocusedWindowNode();
 unsigned getFocusedTime(Master* m);
 /**
  *
- * @return The master device currently interacting with the wm
+ * @return The master device currently interacting with the window manager
  * @see setActiveMasterNodeById
  */
 Master* getActiveMaster(void);
 /**
  * The active master should be set whenever the user interacts with the
- * wm (key/mouse  binding, mouse press etc)
+ * window manager (key/mouse  binding, mouse press etc)
  * @param master the new active master
  */
 void setActiveMaster(Master* master);

@@ -59,9 +59,9 @@ void* profile(void* v __attribute__((unused))){
     requestShutdown();
     return NULL;
 }
-int main(int argc, char**argv){
-    if(argc >1)
-        NUM=atoi(argv[1]);
+int main(int argc, char** argv){
+    if(argc > 1)
+        NUM = atoi(argv[1]);
     runInNewThread(profile, NULL, 1);
     WAIT_UNTIL_TRUE(startEventLoop);
     TIME("Profile", runEventLoop(NULL));

@@ -32,7 +32,7 @@
 #define MATCH_ANY_LITERAL   (TITLE|RESOURCE|CLASS|TYPE|LITERAL)
 /**Rule will match on above property of window not literally */
 #define MATCH_ANY_REGEX     (MATCH_ANY_LITERAL ^ LITERAL)
-/**Rule subsitute env variables for designated strings (strings starting with '$')*/
+/**Rule substitute environment variables for designated strings (strings starting with '$')*/
 #define ENV_VAR             1<<6
 /**Negates the match*/
 #define NEGATE             1<<7
@@ -123,7 +123,7 @@ typedef enum {
 } WindowParamType;
 /**
  * Used to bind a function with arguments to a Rule or Binding
- * such that when the latter is triggered the the bound function
+ * such that when the latter is triggered the bound function
  * is called with arguments
  */
 typedef struct bound_function_struct {
@@ -150,7 +150,7 @@ typedef struct bound_function_struct {
 } BoundFunction;
 ///used for key/mouse bindings
 typedef struct binding_struct {
-    /**Modifer to match on*/
+    /**Modifier to match on*/
     unsigned int mod;
     /**Either Button or KeySym to match**/
     int buttonOrKey;
@@ -196,7 +196,7 @@ typedef struct {
     bool negateResult;
     /**Compiled regex used for matching with non-literal rules*/
     regex_t* regexExpression;
-    /** boolean indicating whether the rule has been initilized or not
+    /** boolean indicating whether the rule has been initialized or not
      *  @see initRule
     */
     bool init;
@@ -204,10 +204,10 @@ typedef struct {
 
 
 /**
- * Takes 1 or 2 args and creates a BoundFunction
+ * Takes function and 0, 1 or 2 more args and creates a BoundFunction
  *
  *
- * @param ... the params to the function, the 1st is the function, 2nd (if present) is
+ * @param ... - function name and args
  * the argument to bind to the function
  */
 #define BIND(...) _BIND_HELPER(__VA_ARGS__, _BIND3, _BIND2,_BIND1)(__VA_ARGS__,0)
@@ -286,14 +286,14 @@ typedef struct {
  * Used to Create a BoundedFuntion that when triggered will start a chain binding.
  * When the chain is started, the active pointer/keyboard will be grabbed
  * @param GRAB whether or not to grab the active pointer/keyboard when the chain starts
- * @param ... list of Bindings that will make up the chain
+ * @param ... List of Bindings that will make up the chain
  * @see BoundedFuntion
  */
 #define CHAIN_GRAB(GRAB, ...) AUTO_CHAIN_GRAB(GRAB,0,__VA_ARGS__)
 /**
  *
- * @param GRAB wheter to grab the chain or not
- * @param AUTO when the chain is actiated, auto trigger the first binding
+ * @param GRAB whether to grab the chain or not
+ * @param AUTO when the chain is activated, auto trigger the first binding
  * @param ... the members of the chain
  */
 #define AUTO_CHAIN_GRAB(GRAB,AUTO,...){.func={.chainBindings=(Binding*)(Binding[]){__VA_ARGS__}},.arg={.intArg=GRAB},.type=AUTO?CHAIN_AUTO:CHAIN}
@@ -374,12 +374,12 @@ int getKeyCode(int keysym);
 int getIDOfBindingTarget(Binding* binding);
 
 /**
- * Comapres Bindings with detail and mods to see if it should be triggered.
- * If bindings->mod ==anyModier, then it will match any modiers.
+ * Compares Bindings with detail and mods to see if it should be triggered.
+ * If bindings->mod ==anyModier, then it will match any modifiers.
  * If bindings->detail or keycode is 0 it will match any detail
  * @param binding
  * @param detail either a keycode or a button
- * @param mods modiers
+ * @param mods modifiers
  * @param mask
  * @param keyRepeat if the event was a key repeat
  * @return Returns true if the binding should be triggered based on the combination of detail and mods
@@ -410,9 +410,9 @@ int checkBindings(int detail, int mods, int bindingType, WindowInfo* winInfo, in
 
 /**
  * Starts a chain binding
- * The chain binding indicated by the boundFunction is add the the stack
+ * The chain binding indicated by the boundFunction is add the stack
  * of active bindings for the active master.
- * The device is grabbed corrosponding to the int arg in the boundFunction
+ * The device is grabbed corresponding to the int arg in the boundFunction
  * All members of the chain are grabbed unless noGrab is true
  * @param boundFunction
  */
@@ -445,7 +445,7 @@ int ungrabBinding(Binding* binding);
 Binding* getEndOfChain(Binding* chain);
 
 /**
- * Returns 1 iff the str matches the regex/literal expression.
+ * Returns 1 iff str matches the regex/literal expression.
  * The only aspect of type that is compared is the literal bit. The other masks
  * have to be checked separately
  * @param rule the rule to match against
@@ -464,7 +464,7 @@ int doesWindowMatchRule(Rule* rules, WindowInfo* winInfo);
  *
  * @param result the result of callBoundFunction
  * @param pass the pass through value of the rule or binding
- * @return 1 iff the code should proceed or 0 iff it should return immediatly
+ * @return 1 iff the code should proceed or 0 iff it should return immediately
  */
 int passThrough(int result, PassThrough pass);
 
@@ -502,7 +502,7 @@ Binding* getActiveBinding();
 ArrayList* getActiveChains();
 
 /**
- * Returns a Node list of all regisitered bidings
+ * Returns a Node list of all registered biddings
  * @see deviceBindings;
 */
 
@@ -517,7 +517,7 @@ ArrayList* getDeviceBindings();
  */
 char* expandVar(char* str);
 /**
- * Initilize a rule
+ * Initialize a rule
  * @param rule
  */
 void initRule(Rule* rule);

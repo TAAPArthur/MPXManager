@@ -8,7 +8,7 @@
 #include <string.h>
 
 #ifndef NO_XRANDR
-#include <xcb/randr.h>
+    #include <xcb/randr.h>
 #endif
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
@@ -41,7 +41,7 @@ MonitorDuplicationResolution MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAK
  * @param D1 displacement 1
  * @param P2 staring point 2
  * @param D2 displacement 2
- * @return 1 iff the line interect
+ * @return 1 iff the line intersect
  */
 static int intersects1D(int P1, int D1, int P2, int D2){
     return P1 < P2 + D2 && P1 + D1 > P2;
@@ -184,7 +184,7 @@ static void removeDuplicateMonitors(void){
             Monitor* monitorToRemove = NULL;
             if(!dup)
                 continue;
-            LOG(LOG_LEVEL_DEBUG, "Monitors %u and %u are dups\n", m1->id, m2->id);
+            LOG(LOG_LEVEL_DEBUG, "Monitors %u and %u are duplicates\n", m1->id, m2->id);
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_SMALLER)
                 monitorToRemove = isLarger(m1->base, m2->base) ? m2 : m1;
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_LARGER)
@@ -192,7 +192,7 @@ static void removeDuplicateMonitors(void){
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_PRIMARY)
                 monitorToRemove = isPrimary(m1) ? m2 : isPrimary(m2) ? m1 : monitorToRemove;;
             if(monitorToRemove){
-                LOG(LOG_LEVEL_DEBUG, "removing monitor %u because it is a dup of %u", monitorToRemove->id,
+                LOG(LOG_LEVEL_DEBUG, "removing monitor %u because it is a duplicates of %u", monitorToRemove->id,
                     ((Monitor*)((long)monitorToRemove ^ (long)m1 ^ (long)m2))->id);
                 removeMonitor(monitorToRemove->id);
             }
@@ -268,7 +268,7 @@ int removeMonitor(MonitorID id){
         w->monitor = NULL;
         FOR_EACH_REVERSED(Monitor*, otherMonitor, getAllMonitors()){
             if(!getWorkspaceFromMonitor(otherMonitor) && otherMonitor->base.x == m->base.x && otherMonitor->base.y == m->base.y){
-                LOG(LOG_LEVEL_DEBUG, "giving workspace to monitior %d\n", otherMonitor->id);
+                LOG(LOG_LEVEL_DEBUG, "giving workspace to monitor %d\n", otherMonitor->id);
                 assignWorkspace(otherMonitor, w);
                 break;
             }

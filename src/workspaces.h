@@ -98,12 +98,12 @@ typedef enum {
 /**
  * Get the next workspace in the given direction according to the filters
  * @param dir the interval of workspaces to check
- * @param mask species a filter for workpspaces @see WorkSpaceFilter
+ * @param mask species a filter for workspaces @see WorkSpaceFilter
  * @return the next workspace in the given direction that matches the criteria
  */
 Workspace* getNextWorkspace(int dir, int mask);
 /**
- * The the currently used layout for the active workspace.
+ * The currently used layout for the active workspace.
  * Note that this layout does not have to be in the list of layout for the active workspace
  * @param layout the new active layout
  */
@@ -158,12 +158,12 @@ Workspace* getWorkspaceFromMonitor(Monitor* monitor);
 
 /**
  * @param workspace
- * @return the monitor assoicated with the given workspace if any
+ * @return the monitor associate with the given workspace if any
  */
 Monitor* getMonitorFromWorkspace(Workspace* workspace);
 
 /**
- * Swaps the monitors assosiated with the given workspaces
+ * Swaps the monitors associated with the given workspaces
  * @param index1
  * @param index2
  */
@@ -172,7 +172,7 @@ void swapMonitors(int index1, int index2);
 
 
 /**
- * Assgins a workspace to a monitor. The workspace is now considered visible
+ * Assigns a workspace to a monitor. The workspace is now considered visible
  * @param w
  * @param m
  */

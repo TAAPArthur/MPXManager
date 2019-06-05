@@ -27,12 +27,12 @@ extern xcb_atom_t WM_TAKE_FOCUS;
 extern xcb_atom_t WM_DELETE_WINDOW;
 
 /**
- *Custom atom store in window's state to indicate that it should not be tield
+ * Custom atom store in window's state to indicate that it should not be tiled
  */
 extern xcb_atom_t WM_STATE_NO_TILE;
 
 /**
- *Custom atom store in window's state to indicate that this window should
+ * Custom atom store in window's state to indicate that this window should
  * have the ROOT_FULLSCREEN mask
  */
 extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
@@ -43,8 +43,8 @@ extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 extern xcb_atom_t WM_SELECTION_ATOM;
 
 /**
- * Atom used to differenciate custom client messages
- * Atoms with the flag are used to remotly interact with the WM
+ * Atom used to differentiate custom client messages
+ * Atoms with the flag are used to remotely interact with the WM
  */
 extern xcb_atom_t WM_INTERPROCESS_COM;
 

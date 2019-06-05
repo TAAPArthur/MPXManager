@@ -1,6 +1,6 @@
 /**
  * @file globals.h
- * Provides global variable declerations
+ * Provides global variable declarations
  */
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
@@ -10,7 +10,7 @@
 /// Sets of masks that only a WM should have
 #define WM_MASKS (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_STRUCTURE_NOTIFY)
 
-///Returns the field descriptor used to commuicate WM status to an external program
+///Returns the field descriptor used to communicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
 
 ///The modifier that will match any other modifier
@@ -21,7 +21,7 @@
 /**
  * Offset for SRC_INDICATION_* masks
  * These masks specify which type of external sources are allowed to modify the window
- * Adding [0,2] and rasing 2 to that power yeilds OTHER,APP and PAGER SRC_INDICATION_ masks respectivly
+ * Adding [0,2] and raising 2 to that power yields OTHER,APP and PAGER SRC_INDICATION_ masks respectively
  */
 #define SRC_INDICATION_OFFSET 12
 /**
@@ -70,10 +70,10 @@ typedef enum {
     EXTERNAL_BORDER_MASK =    1 << 10,
     /// Window cannot be externally raised/lowered (configure requests are blocked)
     EXTERNAL_RAISE_MASK =   1 << 11,
-    /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse
+    /// Window won't be tiled and can be freely moved like by external programs/mouse
     EXTERNAL_CONFIGURABLE_MASK =            EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
-    /// Window is floating (ie is not tiled and can be freely moved like by external programs/mouse) and is above other windows
-    FLOATING_MASK =            ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
+    /// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
+    FLOATING_MASK =            NO_TILE_MASK| ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
 
     ///Allow client requests from older clients who don't specify what they are
     SRC_INDICATION_OTHER =   1 << SRC_INDICATION_OFFSET,
@@ -92,34 +92,34 @@ typedef enum {
     INPUT_MASK =           1 << 17,
     /// Will not update our internal focus representation when a window with this mask is focused
     NO_RECORD_FOCUS =      1 << 18,
-    /// Windows with this mask will not be activateable
+    /// Windows with this mask will not be activatable
     NO_ACTIVATE_MASK =      1 << 19,
 
     /**The WM will not forcibly set focus but request the application focus itself*/
     WM_TAKE_FOCUS_MASK =    1 << 20,
 
-    /**The WM will not forcibly delete windows immediatly but request the application dies*/
+    /**The WM will not forcibly delete windows immediately but request the application dies*/
     WM_DELETE_WINDOW_MASK = 1 << 21,
-    /**Used in conjuction with WM_DELETE_WINDOW_MASK to kill the window */
+    /**Used in conjunction with WM_DELETE_WINDOW_MASK to kill the window */
     WM_PING_MASK =          1 << 22,
     /// the window type was not set explicitly
     IMPLICIT_TYPE =         1 << 23,
 
     /**
      * Best effort will be made to place all windows with this mask above any other window without it.
-     * One particular flaw the implementation is that if a window with this mask is lowered, it will not automitically be re-raised
+     * One particular flaw the implementation is that if a window with this mask is lowered, it will not automatically be re-raised
      * This mask is implemented via a onWindowMove Rule
      */
     ALWAYS_ON_TOP = 1 << 24,
     /**
      * Best effort will be made to place all windows with this mask below any other window without it.
-     * One particular flaw the implementation is that if a window with this mask is raised, it will not automitically be re-lowered
+     * One particular flaw the implementation is that if a window with this mask is raised, it will not automatically be re-lowered
      * This mask is implemented via a onWindowMove Rule
      */
     ALWAYS_ON_BOTTOM = 1 << 25,
 
     ///Window is effectively associated with its monitor instead of its workspace
-    /// (it is moveded between workspaces to stay on its monitor
+    /// (it is move dded between workspaces to stay on its monitor)
     STICKY_MASK =   1 << 26,
 
 
@@ -131,7 +131,7 @@ typedef enum {
     PARTIALLY_VISIBLE =     1 << 28,
     ///Keeps track on the visibility state of the window
     FULLY_VISIBLE =         1 << 29 | PARTIALLY_VISIBLE,
-    ///Inidicates the window is not withdrawn
+    ///Indicates the window is not withdrawn
     MAPPABLE_MASK =           1 << 30,
     ///the window is currently mapped
     MAPPED_MASK =           1 << 31,
@@ -145,7 +145,7 @@ typedef enum {
 
 /**
  * If true (default), then this program is functioning as a WM.
- * Else, WM specific operations, like grabing any of WM_MASKS on the root window or trying to grab the WM_SELECTION will not happen (by default)
+ * Else, WM specific operations, like grabbing any of WM_MASKS on the root window or trying to grab the WM_SELECTION will not happen (by default)
  */
 extern bool RUN_AS_WM;
 /**
@@ -153,36 +153,36 @@ extern bool RUN_AS_WM;
  */
 extern bool STEAL_WM_SELECTION;
 
-/// Holds env var names used to pass client pointer to children
+/// Holds environmental var names used to pass client pointer to children
 extern char* CLIENT[];
 /// if true, then preload LD_PRELOAD_PATH
 extern bool LD_PRELOAD_INJECTION;
 /// the path of the lib to preload
 extern char* LD_PRELOAD_PATH;
 
-///Returns the field descriptors used to commuicate WM status to an external program
+///Returns the field descriptors used to communicate WM status to an external program
 extern int statusPipeFD[2];
 
 ///If true, then check used saved window properties as defaults
 extern bool LOAD_SAVED_STATE;
-/// How long to wait for a window to die after sening a WM_DELETE_REQUEST
+/// How long to wait for a window to die after sending a WM_DELETE_REQUEST
 extern long KILL_TIMEOUT;
 /**Mask of all events we listen for on the root window*/
 extern int ROOT_EVENT_MASKS;
 /**Mask of all events we listen for on non-root windows*/
 extern int NON_ROOT_EVENT_MASKS;
-/**Mask of all events we listen for on relateding to Master devices
+/**Mask of all events we listen for on relating to Master devices
  * and the root window.
  */
 extern int ROOT_DEVICE_EVENT_MASKS;
-/**Mask of all events we listen for on relateding to Master devices
+/**Mask of all events we listen for on relating to Master devices
  * and non-root window.
  */
 extern int NON_ROOT_DEVICE_EVENT_MASKS;
 
-/// All masks refering to keyboard events
+/// All masks referring to keyboard events
 extern int KEYBOARD_MASKS;
-/// all masks refering to pointer/mouse events
+/// all masks referring to pointer/mouse events
 extern int POINTER_MASKS;
 
 /// The default SHELL; This defaults to the SHELL environment var
@@ -196,20 +196,20 @@ extern int SYNC_WINDOW_MASKS;
 
 ///Defaults masks to be applied to windows
 extern int DEFAULT_WINDOW_MASKS;
-///If unspecifed the mask of a Binding
+///If unspecified the mask of a Binding
 extern int DEFAULT_BINDING_MASKS;
-///If unspecifed the mask, used during a chaing binding grab
+///If unspecified the mask, used during a chain binding grab
 #define DEFAULT_CHAIN_BINDING_GRAB_MASK XCB_INPUT_XI_EVENT_MASK_KEY_PRESS
 
 ///The started workspace if !LOAD_STATE or the root CURRENT_DESKTOP property is not set
 extern int DEFAULT_WORKSPACE_INDEX;
 
-/// time (in seconds) between when windows is detected and mapped, that it will be auto focused (local state is updated immediatly); set to -1 to disable
+/// time (in seconds) between when windows is detected and mapped, that it will be auto focused (local state is updated immediately); set to -1 to disable
 extern int AUTO_FOCUS_NEW_WINDOW_TIMEOUT;
 
 ///Masks to ignore; Default is Mod2Mask (NUM_LOCK)
 extern int IGNORE_MASK;
-///Default modifer for default bindings; Default is Mod4Mask (HYPER)
+///Default modifier for default bindings; Default is Mod4Mask (HYPER)
 extern int DEFAULT_MOD_MASK ;
 ///IF True we will crash if an error is received and a<<(error type) |CRASH_ON_ERRORS is nonzero
 /// This should only be used for testing as errors can happen just by
@@ -224,12 +224,12 @@ extern int DEFAULT_NUMBER_OF_HIDDEN_WORKSPACES;
 
 ///If true ignore all events with the send_event bit
 extern bool IGNORE_SEND_EVENT;
-/// If true ignor all device events with the key repeat flag set
+/// If true ignore all device events with the key repeat flag set
 extern bool IGNORE_KEY_REPEAT;
 
 /**
  * If true then when we manually set focus, we will update our state
- * immediatly instead of waiting for the asyn focus notification event.
+ * immediately instead of waiting for the async focus notification event.
 */
 extern bool SYNC_FOCUS;
 
@@ -247,12 +247,12 @@ extern int DEFAULT_UNFOCUS_BORDER_COLOR;
 /**Default Border color for focused windows*/
 extern int DEFAULT_FOCUS_BORDER_COLOR;
 
-/// if true we igore non-top level windows
+/// if true we ignore non-top level windows
 extern bool IGNORE_SUBWINDOWS;
 
 /**
  * Indicates how long we should poll for events before switching to blocking
- * We will wait POLL_INTERVAL ms OLL_COUNT times (for aa total of POLL_COUNT*POLL_INTERVAL ms)
+ * We will wait POLL_INTERVAL ms OLL_COUNT times (for a total of POLL_COUNT*POLL_INTERVAL ms)
  * before deciding that a event connection is idle
  */
 extern int POLL_COUNT;
@@ -279,7 +279,7 @@ extern char* MASTER_INFO_PATH;
 
 /// the X pointer that exists by default
 extern int DEFAULT_POINTER;
-/// the X keboard that exists by default
+/// the X keyboard that exists by default
 extern int DEFAULT_KEYBOARD;
 /**
  *Set the last event received.

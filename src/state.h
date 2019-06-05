@@ -4,7 +4,7 @@
  */
 #ifndef STATE_H
 #define STATE_H
-///Return type of updateState that dicates what changed
+///Return type of updateState that dictates what changed
 typedef enum {
     //nothing changed
     NO_CHANGE = 0,
