@@ -45,7 +45,7 @@ void setActiveLayoutByName(char* name){
 }
 Layout* findLayoutByName(char* name){
     Layout* layout;
-    UNTIL_FIRST(layout, &registeredLayouts, name == getNameOfLayout(layout) || name && getNameOfLayout(layout) &&
+    UNTIL_FIRST(layout, &registeredLayouts, !name && !getNameOfLayout(layout) || name && getNameOfLayout(layout) &&
                 strcmp(name, getNameOfLayout(layout)) == 0);
     return layout;
 }
@@ -299,20 +299,21 @@ void tileWorkspace(int index){
     applyLayout(workspace);
     ArrayList* list = getWindowStack(workspace);
     LayoutState dummyState = {.monitor = getMonitorFromWorkspace(workspace)};
-    FOR_EACH(WindowInfo*, winInfo, list){
-        if(!isTileable(winInfo) && hasPartOfMask(winInfo, MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)){
-            short config[CONFIG_LEN] = {0};
-            configureWindow(&dummyState, winInfo, config);
-        }
-    }
     for(int i = 0; i < getSize(list); i++){
         WindowInfo* winInfo;
         winInfo = getElement(list, i);
+        if(isInteractable(winInfo) && !isTileable(winInfo))
+            if(hasPartOfMask(winInfo, MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)){
+                short config[CONFIG_LEN] = {0};
+                configureWindow(&dummyState, winInfo, config);
+            }
+            else if(!hasMask(winInfo, INPUT_ONLY_MASK))
+                xcb_configure_window(dis, winInfo->id, XCB_CONFIG_WINDOW_BORDER_WIDTH, &DEFAULT_BORDER_WIDTH);
         if(hasMask(winInfo, BELOW_MASK))
-            raiseLowerWindowInfo(winInfo, 0);
+            lowerWindowInfo(winInfo);
         winInfo = getElement(list, getSize(list) - i - 1);
         if(hasMask(winInfo, ABOVE_MASK))
-            raiseLowerWindowInfo(winInfo, 1);
+            raiseWindowInfo(winInfo);
     }
 }
 

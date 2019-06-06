@@ -97,6 +97,16 @@ int isNotEmpty(ArrayList* list);
  */
 void addToList(ArrayList* list, void* value);
 /**
+ * Adds a array of values to the end of the list
+ *
+ * @param list the list to add to
+ * @param value array of values
+ * @param num number of values to add
+ * @param size the size of each element
+ */
+void addManyToList(ArrayList* list, void* value, int num, int size);
+
+/**
  * Sets the amount of extra space at the beginning of a list
  * Note that this should only be modified on an empty list
  *
@@ -166,7 +176,8 @@ void* getElement(ArrayList* list, int index);
  */
 void setElement(ArrayList* list, int index, void* value);
 /**
- * Returns the first element in the list
+ * Returns the first element in the list or NULL if the list is empty
+ *
  */
 void* getHead(ArrayList* list);
 /**
@@ -211,7 +222,7 @@ int indexOf(ArrayList* list, void* value, int size);
 void* find(ArrayList* list, void* value, int size);
 /**
  * @param list
- * @return the last element in list
+ * @return the last element in list or NULL if the list is empty
  */
 void* getLast(ArrayList* list);
 /**

@@ -29,8 +29,9 @@ START_TEST(test_binding_add){
     Binding arr[5] = {0};
     addBindings(arr, LEN(arr));
     assert(getSize(getDeviceBindings()) == LEN(arr));
-    Binding single;
-    addBinding(&single);
+    Binding single = {0};
+    addBindings(&single, 1);
+    assert(getSize(getDeviceBindings()) == LEN(arr) + 1);
     assert(getLast(getDeviceBindings()) == &single);
 }
 END_TEST
@@ -335,8 +336,8 @@ START_TEST(test_chain_bindings){
                                          ), .passThrough = ALWAYS_PASSTHROUGH, .detail = 1, .noGrab = 1
     };
     Binding dummy = {0, 2, BIND(exit, 10), .detail = 2, .noGrab = 1, .passThrough = NO_PASSTHROUGH};
-    addBinding(&chain);
-    addBinding(&dummy);
+    addBindings(&chain, 1);
+    addBindings(&dummy, 1);
     assert(getActiveBinding() == NULL);
     //enter first chain
     assert(checkBindings(1, 0, mask, NULL, 0));
@@ -367,8 +368,7 @@ START_TEST(test_chain_bindings){
 END_TEST
 
 START_TEST(test_chain_grab){
-    addBinding(sampleChain.func.chainBindings);
-    addBinding(&sampleChain.func.chainBindings[1]);
+    addBindings(sampleChain.func.chainBindings, 2);
     startChain(&sampleChain);
     int mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE;
     if(_i){

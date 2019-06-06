@@ -63,7 +63,7 @@ void* find(ArrayList* list, void* value, int size){
     return index == -1 ? NULL : getElement(list, index);
 }
 void* getHead(ArrayList* list){
-    return getElement(list, 0);
+    return isNotEmpty(list) ? getElement(list, 0) : NULL;
 }
 void* pop(ArrayList* list){
     return removeFromList(list, getSize(list) - 1);
@@ -95,14 +95,14 @@ int getNextIndex(ArrayList* list, int current, int delta){
     assert(isNotEmpty(list));
     return (current + delta % getSize(list) + getSize(list)) % getSize(list);
 }
-static inline void autoResize(ArrayList* list){
-    if(list->size + getOffset(list) >= list->maxSize){
-        list->maxSize = MAX(list->maxSize, getSize(list) + getOffset(list)) * 2;
+static inline void autoResize(ArrayList* list, int minDelta){
+    if(list->size + getOffset(list) + minDelta >= list->maxSize){
+        list->maxSize = MAX(list->maxSize, getSize(list) + getOffset(list) + minDelta) * 2;
         list->arr = realloc(list->arr, list->maxSize * sizeof(void*));
     }
 }
 void* getLast(ArrayList* list){
-    return getElement(list, getSize(list) - 1);
+    return isNotEmpty(list) ? getElement(list, getSize(list) - 1) : NULL;
 }
 void prependToList(ArrayList* list, void* value){
     addToList(list, value);
@@ -121,13 +121,17 @@ int getOffset(ArrayList* list){
 void setOffset(ArrayList* list, int offset){
     if(list->arr == NULL)
         initArrayList(list);
-    autoResize(list);
+    autoResize(list, 1);
     list->offset = offset;
+}
+void addManyToList(ArrayList* list, void* value, int num, int size){
+    for(int i = 0; i < num; i++)
+        addToList(list, value + i * size);
 }
 void addToList(ArrayList* list, void* value){
     if(list->arr == NULL)
         initArrayList(list);
-    autoResize(list);
+    autoResize(list, 1);
     setElement(list, list->size++, value);
 }
 void clearList(ArrayList* list){

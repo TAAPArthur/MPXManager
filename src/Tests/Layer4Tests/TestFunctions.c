@@ -232,7 +232,7 @@ START_TEST(test_mouse_lock){
     clearList(getDeviceBindings());
     initBinding(&binding);
     grabBinding(&binding);
-    addBinding(&binding);
+    addBindings(&binding, 1);
     startMouseOperation(dummy);
     triggerBinding(&binding);
     flush();

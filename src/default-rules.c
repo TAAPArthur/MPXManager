@@ -35,7 +35,6 @@ static void tileChangeWorkspaces(void){
     updateState(tileWorkspace, syncMonitorMapState);
 }
 void autoAddToWorkspace(WindowInfo* winInfo){
-    if(winInfo->dock)return;
     int index = LOAD_SAVED_STATE ? getSavedWorkspaceIndex(winInfo->id) : getActiveWorkspaceIndex();
     moveWindowToWorkspace(winInfo, index);
 }
@@ -324,14 +323,15 @@ void onClientMessage(void){
     else if(message == ewmh->_NET_WM_STATE){
         LOG(LOG_LEVEL_DEBUG, "Settings client window manager state %d\n", data.data32[3]);
         WindowInfo* winInfo = getWindowInfo(win);
+        int num = data.data32[2] == 0 ? 1 : 2;
         if(winInfo){
             if(allowRequestFromSource(winInfo, data.data32[3]))
-                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], 2, data.data32[0]);
+                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
         }
         else {
             WindowInfo fakeWinInfo = {.mask = 0, .id = win};
             loadSavedAtomState(&fakeWinInfo);
-            setWindowStateFromAtomInfo(&fakeWinInfo, (xcb_atom_t*) &data.data32[1], 2, data.data32[0]);
+            setWindowStateFromAtomInfo(&fakeWinInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
         }
     }
     else if(message == ewmh->WM_PROTOCOLS){
@@ -472,7 +472,7 @@ static Rule NORMAL_RULES[NUMBER_OF_EVENT_RULES] = {
     [XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET] = CREATE_DEFAULT_EVENT_RULE(onHiearchyChangeEvent),
 
     [onXConnection] = CREATE_DEFAULT_EVENT_RULE(onXConnect),
-    [RegisteringWindow] = CREATE_WILDCARD(BIND(autoAddToWorkspace)),
+    [RegisteringWindow] = CREATE_WILDCARD(OR(BIND(isDock), BIND(autoAddToWorkspace))),
     [onScreenChange] = CREATE_DEFAULT_EVENT_RULE(detectMonitors),
     [onWindowMove] = CREATE_DEFAULT_EVENT_RULE(markAlwaysOnTop),
 };

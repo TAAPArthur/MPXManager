@@ -480,11 +480,6 @@ int passThrough(int result, PassThrough pass);
 int applyRules(ArrayList* head, WindowInfo* winInfo);
 
 /**
- * Adds a binding to the head of deviceBindings
- * @param binding
- */
-void addBinding(Binding* binding);
-/**
  * Adds num bindings to the head of deviceBindings
  * @param bindings array of bindings to add
  * @param num number of bindings to add

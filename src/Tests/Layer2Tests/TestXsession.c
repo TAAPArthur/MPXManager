@@ -11,6 +11,24 @@ START_TEST(test_quit){
     assert(0);
 }
 END_TEST
+START_TEST(test_get_set_atom){
+    openXDisplay();
+    xcb_atom_t test = getAtom("TEST");
+    assert(test == getAtom("TEST"));
+    char* str;
+    getAtomValue(test, &str);
+    assert(strcmp(str, "TEST") == 0);
+    free(str);
+}
+END_TEST
+START_TEST(test_get_set_atom_bad){
+    openXDisplay();
+    assert(getAtom(NULL) == XCB_ATOM_NONE);
+    char* str;
+    getAtomValue(-1, &str);
+    assert(!str);
+}
+END_TEST
 START_TEST(test_open_xdisplay){
     openXDisplay();
     assert(dis);
@@ -41,6 +59,8 @@ Suite* xsessionSuite(){
     TCase* tc_core = tcase_create("X");
     tcase_add_checked_fixture(tc_core, NULL, closeConnection);
     tcase_add_test(tc_core, test_open_xdisplay);
+    tcase_add_test(tc_core, test_get_set_atom);
+    tcase_add_test(tc_core, test_get_set_atom_bad);
     tcase_add_test(tc_core, test_close_xdisplay);
     tcase_add_test(tc_core, test_quit);
     suite_add_tcase(s, tc_core);

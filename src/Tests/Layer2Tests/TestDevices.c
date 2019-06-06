@@ -30,7 +30,7 @@ static void setup(){
     for(int i = 0; i < LEN(input); i++){
         assert(input[i].noGrab == 0);
         initBinding(&input[i]);
-        addBinding(&input[i]);
+        addBindings(&input[i], 1);
     }
     triggerAllBindings(ALL_MASKS);
     consumeEvents();
@@ -54,6 +54,14 @@ START_TEST(test_create_destroy_master){
     deleteList(getAllMasters());
     initCurrentMasters();
     assert(getSize(getAllMasters()) == 1);
+}
+END_TEST
+START_TEST(test_get_master_by_name){
+    assert(!getMasterByName("test"));
+    createMasterDevice("test");
+    initCurrentMasters();
+    assert(getMasterByName("test"));
+    destroyAllNonDefaultMasters();
 }
 END_TEST
 
@@ -286,9 +294,9 @@ END_TEST
 START_TEST(test_ungrab_device){
     if(_i){
         assert(!grabActivePointer());
+        assert(!ungrabDevice(getActiveMasterPointerID()));
         assert(!grabActiveKeyboard());
         assert(!ungrabDevice(getActiveMasterKeyboardID()));
-        assert(!ungrabDevice(getActiveMasterPointerID()));
     }
     else {
         assert(!grabAllMasterDevices());
@@ -351,6 +359,7 @@ Suite* devicesSuite(){
     tc_core = tcase_create("Master detection");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, destroyContextAndConnection);
     tcase_add_test(tc_core, test_create_destroy_master);
+    tcase_add_test(tc_core, test_get_master_by_name);
     tcase_add_test(tc_core, test_get_associated_device);
     tcase_add_test(tc_core, test_set_active_master_by_id);
     tcase_add_test(tc_core, test_set_client_pointer);

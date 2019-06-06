@@ -60,6 +60,7 @@ static Option default_options[] = {
     _OPTION(RUN_AS_WM),
     _OPTION(RUN_AS_WM),
     _OPTION(SHELL),
+    _OPTION(SPAWN_ENV),
     _OPTION(STEAL_WM_SELECTION),
     _OPTION(SYNC_FOCUS),
     _OPTION(SYNC_FOCUS),
@@ -100,14 +101,6 @@ static void listOptions(void){
 }
 
 
-xcb_atom_t getAtom(char* name){
-    if(!name)return XCB_ATOM_NONE;
-    xcb_intern_atom_reply_t* reply;
-    reply = xcb_intern_atom_reply(dis, xcb_intern_atom(dis, 0, 32, name), NULL);
-    xcb_atom_t atom = reply->atom;
-    free(reply);
-    return atom;
-}
 void send(char* name, char* value){
     LOG(LOG_LEVEL_DEBUG, "sending %s %s\n", name, value);
     unsigned int data[2] = {getAtom(name), getAtom(value)};

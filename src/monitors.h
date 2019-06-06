@@ -210,4 +210,11 @@ int getRootWidth(void);
  * @return the height of the root window
  */
 int getRootHeight(void);
+/**
+ * Returns the bounding box of the entire screen.
+ * Note the top left coordinate is 0,0 by design.
+ *
+ * @return the bounds of the root window
+ */
+const short* getRootBounds();
 #endif

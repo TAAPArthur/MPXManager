@@ -436,6 +436,8 @@ START_TEST(test_window_in_visible_worspace){
     assert(!isWindowNotInInvisibleWorkspace(winInfo));
     addWindowToWorkspace(winInfo, 1);
     assert(isWindowNotInInvisibleWorkspace(winInfo));
+    //adding window to workspace should not set masks
+    assert(!doesWorkspaceHaveWindowsWithMask(1,MAPPABLE_MASK));
 }
 END_TEST
 START_TEST(test_complete_window_remove){
@@ -455,6 +457,8 @@ END_TEST
 
 
 START_TEST(test_spawn_env_vars){
+    LD_PRELOAD_INJECTION = 1;
+    LD_PRELOAD_PATH = "";
     char* vars[2] = {getenv(CLIENT[0]), getenv(CLIENT[1])};
     spawn("exit 0");
     assert(getExitStatusOfFork() == 0);
@@ -466,17 +470,21 @@ START_TEST(test_spawn_env_vars){
         spawn(buffer);
         assert(getExitStatusOfFork() == (i == 0 ? getActiveMasterKeyboardID() : getActiveMasterPointerID()));
     }
-}
-END_TEST
-START_TEST(test_spawn){
-    spawn("exit 122");
-    assert(getExitStatusOfFork() == 122);
+    addWindowInfo(createWindowInfo(101));
+    onWindowFocus(101);
+    assert(getFocusedWindow());
+    char* buffer = "exit $_WIN_ID";
+    spawn(buffer);
+    assert(getExitStatusOfFork() == 101);
+    resetContext();
+    assert(waitForChild(spawn("exit 99")) == 99);
 }
 END_TEST
 
 START_TEST(test_spawn_wait){
-    assert(waitForChild(spawn("exit 0")));
-    assert(waitForChild(spawn("exit 122")));
+    assert(waitForChild(spawn("exit 0")) == 0);
+    assert(waitForChild(spawn("exit 1")) == 1);
+    assert(waitForChild(spawn("exit 122")) == 122);
 }
 END_TEST
 
@@ -524,7 +532,6 @@ Suite* mywmUtilSuite(void){
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Spawn_Functions");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, fullCleanup);
-    tcase_add_test(tc_core, test_spawn);
     tcase_add_test(tc_core, test_spawn_wait);
     tcase_add_test(tc_core, test_spawn_env_vars);
     suite_add_tcase(s, tc_core);

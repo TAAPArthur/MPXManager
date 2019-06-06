@@ -6,12 +6,15 @@
 #define GLOBALS_H_
 
 #include <stdbool.h>
+#include <X11/X.h>
 
 /// Sets of masks that only a WM should have
 #define WM_MASKS (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_STRUCTURE_NOTIFY)
 
 ///Returns the field descriptor used to communicate WM status to an external program
 #define STATUS_FD statusPipeFD[1]
+///Returns the field descriptor used to communicate WM status to an external program
+#define STATUS_FD_READ statusPipeFD[2]
 
 ///The modifier that will match any other modifier
 #ifndef WILDCARD_MODIFIER
@@ -155,13 +158,15 @@ extern bool STEAL_WM_SELECTION;
 
 /// Holds environmental var names used to pass client pointer to children
 extern char* CLIENT[];
+/// if true, then set special ENV when spawning commands
+extern bool SPAWN_ENV;
 /// if true, then preload LD_PRELOAD_PATH
 extern bool LD_PRELOAD_INJECTION;
 /// the path of the lib to preload
 extern char* LD_PRELOAD_PATH;
 
 ///Returns the field descriptors used to communicate WM status to an external program
-extern int statusPipeFD[2];
+extern int statusPipeFD[4];
 
 ///If true, then check used saved window properties as defaults
 extern bool LOAD_SAVED_STATE;

@@ -143,6 +143,20 @@ void setActiveMaster(Master* master);
  * @return the master device with the give node
  */
 Master* getMasterById(int keyboardID);
+/**
+ * @param name
+ *
+ * @return the first master whose name is name or NULL
+ */
+Master* getMasterByName(const char* name);
+/**
+ *
+ *
+ * @param master
+ *
+ * @return the name of the master device
+ */
+char* getNameOfMaster(Master* master);
 
 /**
  * Only bindings whose mode & mode will be triggered by this master

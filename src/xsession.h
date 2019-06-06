@@ -85,4 +85,23 @@ void closeConnection(void);
  */
 void flush(void);
 
+/**
+ * Returns the atom value for the given name.
+ *
+ * If the name is unmapped, then a new atom is created and assigned to the name
+ *
+ * @param name
+ *
+ * @return
+ */
+xcb_atom_t getAtom(char* name);
+/**
+ * Returns a name for the given atom and stores the pointer in value
+ *
+ * Note that an atom can have multiple names and this method just returns one of them
+ *
+ * @param atom the atom whose name is wanted
+ * @param value pointer to a str
+ */
+void getAtomValue(xcb_atom_t atom, char** value);
 #endif /* XSESSION_H_ */

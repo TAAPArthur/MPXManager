@@ -90,10 +90,12 @@ int getRootWidth(void){
 int getRootHeight(void){
     return screen->height_in_pixels;
 }
-
-static unsigned short getScreenDim(int i){
-    return i == 0 ? getRootWidth() : getRootHeight();
+static Rect ROOT_BOUNDS;
+const short* getRootBounds(){
+    ROOT_BOUNDS = (Rect){0, 0, getRootWidth(), getRootHeight()};
+    return &ROOT_BOUNDS.x;
 }
+
 
 static void resizeMonitorToAvoidAllStructs(Monitor* m){
     resetMonitor(m);
@@ -126,11 +128,11 @@ int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo){
                 continue;
         }
         if(end == 0)
-            end = getScreenDim((offset + 1) % 2);
+            end = getRootBounds()[2 + ((offset + 1) % 2)];
         short int values[] = {0, 0, 0, 0};
         values[offset] = fromPositiveSide ? 0 :
                          (winInfo->onlyOnPrimary ?
-                          (&m->base.width)[offset] : getScreenDim(offset))
+                          (&m->base.width)[offset] : getRootBounds()[2 + offset])
                          - dim;
         values[(offset + 1) % 2] = start;
         values[offset + 2] = dim;
@@ -221,8 +223,7 @@ void assignUnusedMonitorsToWorkspaces(void){
 }
 void detectMonitors(void){
 #ifdef NO_XRANDR
-    Rect size = {0, 0, getRootWidth(), getRootHeight()};
-    updateMonitor(1, size, 0);
+    updateMonitor(1, *(Rect*)getRootBounds(), 0);
     removeDuplicateMonitors();
 #else
     LOG(LOG_LEVEL_DEBUG, "refreshing monitors\n");

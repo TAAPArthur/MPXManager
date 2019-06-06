@@ -25,11 +25,12 @@ typedef unsigned int WorkspaceID;
 /// typeof Monitor::id
 typedef unsigned int MonitorID;
 
+
 ///holds data on a window
 typedef struct {
     /**Window id */
     WindowID id;
-    /**Window id */
+    /**Window id used to determine changes in window layouts */
     WindowID effectiveId;
     /**Window mask */
     WindowMask mask;
@@ -79,13 +80,13 @@ typedef struct {
     /**
      * The window this window is a transient for
      */
-    unsigned int transientFor;
+    WindowID transientFor;
     /**
      * Window id of related window
      */
-    unsigned int groupId;
+    WindowID groupId;
     /// the parent of this window
-    unsigned int parent;
+    WindowID parent;
     /**
      * Indicator of the masks an event has. This will be bitwise added
      * to the NON_ROOT_DEFAULT_WINDOW_MASKS when processing a new window

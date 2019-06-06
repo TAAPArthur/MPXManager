@@ -55,9 +55,6 @@ static void attachActiveSlavesToMaster(int id){
     attachSlaveToMaster(event->sourceid, masterId);
 }
 
-static char* getNameOfMaster(Master* master){
-    return master->name;
-}
 static char* getNameOfSlave(SlaveDevice* slave){
     return slave->name;
 }
@@ -94,7 +91,7 @@ void endSplitMaster(void){
     removeElementFromList(getEventRules(Idle), &cleanupRule, 0);
 }
 
-char* getMasterNameForSlave(char* slaveName){
+char* getMasterNameForSlave(const char* slaveName){
     for(int i = 0; i < getSize(&masterInfoList); i++){
         ArrayList* slaves = &((MasterInfo*)getElement(&masterInfoList, i))->slaves;
         for(int n = 0; n < getSize(slaves); n++)
@@ -103,13 +100,7 @@ char* getMasterNameForSlave(char* slaveName){
     }
     return NULL;
 }
-Master* getMasterByName(char* name){
-    Master* master;
-    UNTIL_FIRST(master, getAllMasters(),
-                strcmp(getNameOfMaster(master), name) == 0);
-    return master;
-}
-Master* getMasterForSlave(char* slaveName){
+Master* getMasterForSlave(const char* slaveName){
     char* masterName = getMasterNameForSlave(slaveName);
     if(!masterName)return NULL;
     return getMasterByName(masterName);

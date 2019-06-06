@@ -235,6 +235,15 @@ WindowInfo* getWindowInfo(WindowID win);
  */
 ArrayList* getAllWindows();
 
+/**
+ *
+ *
+ * @param index
+ * @param mask
+ *
+ * @return true if there exists at least one window  in workspace with the given mask
+ */
+bool doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask);
 
 
 

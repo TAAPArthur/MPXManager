@@ -60,7 +60,7 @@ int DEFAULT_WORKSPACE_INDEX = 0;
 
 unsigned int CRASH_ON_ERRORS = 0;
 
-int AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 500;
+int AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 5000;
 
 bool IGNORE_SUBWINDOWS = 1;
 
@@ -72,8 +72,9 @@ int DEFAULT_MODE = NORMAL_MODE;
 
 char* MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
 char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
+bool SPAWN_ENV = 1;
 bool LD_PRELOAD_INJECTION = 0;
-char* LD_PRELOAD_PATH = "/usr/lib/mpxmanager/mpx-patch.so";
+char* LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
 
 int DEFAULT_POINTER = 2;
 int DEFAULT_KEYBOARD = 3;
@@ -81,7 +82,7 @@ int DEFAULT_KEYBOARD = 3;
 void (*startUpMethod)(void);
 void (*postStartUpMethod)(void);
 void (*printStatusMethod)(void);
-int statusPipeFD[2];
+int statusPipeFD[4];
 
 ///Last registered event
 static void* lastEvent;

@@ -170,7 +170,7 @@ char* opcodeToString(int opcode);
  *
  * @param mask
  */
-void printMask(int mask);
+void printMask(WindowMask mask);
 /**
  * Catches an error but does not nothing
  *

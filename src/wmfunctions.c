@@ -93,11 +93,6 @@ static void updateEWMHWorkspaceProperties(){
 }
 
 
-int doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask){
-    WindowInfo* winInfo;
-    UNTIL_FIRST(winInfo, getWindowStack(getWorkspaceByIndex(index)), hasMask(winInfo, mask));
-    return winInfo != NULL;
-}
 int getSavedWorkspaceIndex(WindowID win){
     unsigned int workspaceIndex = 0;
     if((xcb_ewmh_get_wm_desktop_reply(ewmh,

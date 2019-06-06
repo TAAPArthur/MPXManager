@@ -62,14 +62,8 @@ void endSplitMaster(void);
  *
  * @return the name of the master or NULL
  */
-char* getMasterNameForSlave(char* slaveName);
+char* getMasterNameForSlave(const char* slaveName);
 
-/**
- * @param name
- *
- * @return the first master whose name is name or NULL
- */
-Master* getMasterByName(char* name);
 /**
  * @copybrief getMasterNameForSlave
  *
@@ -77,7 +71,7 @@ Master* getMasterByName(char* name);
  *
  * @return the master or NULL
  */
-Master* getMasterForSlave(char* slaveName);
+Master* getMasterForSlave(const char* slaveName);
 
 /**
  * Give a slaveDevice, find which master device it belongs to

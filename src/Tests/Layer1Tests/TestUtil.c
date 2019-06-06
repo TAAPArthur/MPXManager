@@ -51,19 +51,6 @@ START_TEST(test_arraylist){
 }
 END_TEST
 
-START_TEST(test_clearlist){
-    clearList(&list);
-    assert(getSize(&list) == 0);
-    clearList(&list);
-    assert(getSize(&list) == 0);
-    populateList();
-    clearList(&list);
-    assert(getSize(&list) == 0);
-}
-END_TEST
-
-
-
 START_TEST(test_arraylist_remove){
     for(int i = 0; i < getSize(&list); i++)
         free(removeFromList(&list, i));
@@ -219,6 +206,21 @@ START_TEST(test_offset){
     freeListMem();
 }
 END_TEST
+
+START_TEST(test_add_many_to_list){
+    ArrayList temp = {0};
+    int data[size];
+    for(int i = 0; i < LEN(data); i++)
+        data[i] = (i);
+    addManyToList(&temp, data, LEN(data), sizeof(data[0]));
+    for(int i = 0; i < LEN(data); i++)
+        assert(*(int*)getElement(&temp, i) == data[i]);
+    addManyToList(&temp, &list.arr[getOffset(&list)], getSize(&list), sizeof(void*));
+    assert(getSize(&temp) == 2 * getSize(&list));
+    clearList(&temp);
+}
+END_TEST
+
 Suite* utilSuite(){
     Suite* s = suite_create("Util");
     TCase* tc_core;
@@ -234,6 +236,7 @@ Suite* utilSuite(){
     tcase_add_test(tc_core, test_arraylist_pop);
     tcase_add_test(tc_core, test_get_last);
     tcase_add_test(tc_core, test_shift_to_head);
+    tcase_add_test(tc_core, test_add_many_to_list);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("Iter");
     tcase_add_checked_fixture(tc_core, populateList, freeListMem);

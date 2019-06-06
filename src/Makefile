@@ -80,13 +80,13 @@ mpxmanager: ${BASE_SRCS}
 	${CC} $^ -o $@ $$HOME/.mpxmanager/config.c ${CFLAGS} ${LDFLAGS}
 
 recompile:
-	gcc $$HOME/.mpxmanager/config.c -o temp-Linux -lmpxmanager   ${CFLAGS} ${LDFLAGS}
+	${CC} $$HOME/.mpxmanager/config.c -o temp-Linux -lmpxmanager   ${CFLAGS} ${LDFLAGS}
 
 libmpxmanager.so: ${BASE_SRCS}
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
 
 libmpxmanager.a: ${BASE_SRCS}
-	gcc $^ -c -fpic ${CFLAGS} ${LDFLAGS}
+	${CC} $^ -c -fpic ${CFLAGS} ${LDFLAGS}
 	ar rcs libmpxmanager.a *.o
 	rm *.o
 

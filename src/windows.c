@@ -61,10 +61,6 @@ void resetUserMask(WindowInfo* winInfo){
 WindowMask getUserMask(WindowInfo* winInfo){
     return getMask(winInfo)&USER_MASKS;
 }
-///return true iff mask as any USER_MASK bits set
-int isUserMask(WindowMask mask){
-    return mask & USER_MASKS ? 1 : 0;
-}
 
 void toggleMask(WindowInfo* winInfo, WindowMask mask){
     if(hasMask(winInfo, mask))
@@ -74,12 +70,12 @@ void toggleMask(WindowInfo* winInfo, WindowMask mask){
 }
 void addMask(WindowInfo* winInfo, WindowMask mask){
     winInfo->mask |= mask;
-    if(SYNC_WINDOW_MASKS && isUserMask(mask))
+    if(SYNC_WINDOW_MASKS && mask & USER_MASKS)
         setXWindowStateFromMask(winInfo);
 }
 void removeMask(WindowInfo* winInfo, WindowMask mask){
     winInfo->mask &= ~mask;
-    if(SYNC_WINDOW_MASKS && isUserMask(mask))
+    if(SYNC_WINDOW_MASKS && mask & USER_MASKS)
         setXWindowStateFromMask(winInfo);
 }
 
@@ -87,18 +83,18 @@ void loadClassInfo(WindowInfo* info){
     WindowID win = info->id;
     xcb_icccm_get_wm_class_reply_t prop;
     xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_class(dis, win);
-    if(!xcb_icccm_get_wm_class_reply(dis, cookie, &prop, NULL))
-        return;
-    if(info->className)
-        free(info->className);
-    if(info->instanceName)
-        free(info->instanceName);
-    info->className = calloc(1 + (strlen(prop.class_name)), sizeof(char));
-    info->instanceName = calloc(1 + (strlen(prop.instance_name)), sizeof(char));
-    strcpy(info->className, prop.class_name);
-    strcpy(info->instanceName, prop.instance_name);
-    xcb_icccm_get_wm_class_reply_wipe(&prop);
-    LOG(LOG_LEVEL_VERBOSE, "class name %s instance name: %s \n", info->className, info->instanceName);
+    if(xcb_icccm_get_wm_class_reply(dis, cookie, &prop, NULL)){
+        if(info->className)
+            free(info->className);
+        if(info->instanceName)
+            free(info->instanceName);
+        info->className = calloc(1 + (strlen(prop.class_name)), sizeof(char));
+        info->instanceName = calloc(1 + (strlen(prop.instance_name)), sizeof(char));
+        strcpy(info->className, prop.class_name);
+        strcpy(info->instanceName, prop.instance_name);
+        xcb_icccm_get_wm_class_reply_wipe(&prop);
+        LOG(LOG_LEVEL_VERBOSE, "class name %s instance name: %s \n", info->className, info->instanceName);
+    }
 }
 void loadTitleInfo(WindowInfo* winInfo){
     xcb_ewmh_get_utf8_strings_reply_t wtitle;
@@ -126,17 +122,12 @@ void loadTitleInfo(WindowInfo* winInfo){
 }
 void loadWindowType(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t name;
-    int foundType = 0;
-    for(int i = 0; i < 10; i++)
-        if(xcb_ewmh_get_wm_window_type_reply(ewmh,
-                                             xcb_ewmh_get_wm_window_type(ewmh, winInfo->id), &name, NULL)){
-            winInfo->type = name.atoms[0];
-            xcb_ewmh_get_atoms_reply_wipe(&name);
-            foundType = 1;
-            break;
-        }
-        else msleep(10);
-    if(!foundType){
+    if(xcb_ewmh_get_wm_window_type_reply(ewmh,
+                                         xcb_ewmh_get_wm_window_type(ewmh, winInfo->id), &name, NULL)){
+        winInfo->type = name.atoms[0];
+        xcb_ewmh_get_atoms_reply_wipe(&name);
+    }
+    else {
         addMask(winInfo, IMPLICIT_TYPE);
         winInfo->type = winInfo->transientFor ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
     }
@@ -275,13 +266,11 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, in
             mask |= WM_DELETE_WINDOW_MASK;
     }
     if(action == XCB_EWMH_WM_STATE_TOGGLE){
-        //if has masks and (atoms don't affect layer it causes it to be places in the same layer)
         if(hasMask(winInfo, mask))
             action = XCB_EWMH_WM_STATE_REMOVE;
         else
             action = XCB_EWMH_WM_STATE_ADD;
     }
-    LOG(LOG_LEVEL_DEBUG, "Add %d mask %d\n", action == XCB_EWMH_WM_STATE_ADD, mask);
     if(action == XCB_EWMH_WM_STATE_REMOVE)
         removeMask(winInfo, mask);
     else
@@ -473,4 +462,9 @@ void onWindowFocus(WindowID win){
         getActiveMaster()->focusedWindowIndex = pos;
     }
     getActiveMaster()->focusedTimeStamp = getTime();
+}
+bool doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask){
+    WindowInfo* winInfo;
+    UNTIL_FIRST(winInfo, getWindowStack(getWorkspaceByIndex(index)), hasMask(winInfo, mask));
+    return winInfo != NULL;
 }

@@ -3,13 +3,9 @@
  * Entry point for MPXManager
  */
 #include <assert.h>
-#include <execinfo.h>
 #include <getopt.h>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 
 #include "communications.h"

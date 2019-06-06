@@ -14,6 +14,7 @@
 #include "events.h"
 #include "globals.h"
 #include "logger.h"
+#include "devices.h"
 #include "masters.h"
 #include "monitors.h"
 #include "mywm-util.h"
@@ -36,7 +37,7 @@ void setLogLevel(int level){
 }
 
 #define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))LOG(LOG_LEVEL_INFO,#str " ");
-void printMask(int mask){
+void printMask(WindowMask mask){
     _PRINT_MASK(NO_MASK, mask);
     _PRINT_MASK(X_MAXIMIZED_MASK, mask);
     _PRINT_MASK(Y_MAXIMIZED_MASK, mask);
@@ -72,8 +73,9 @@ void printMask(int mask){
 void printMasterSummary(void){
     LOG(LOG_LEVEL_INFO, "Active Master %d\n", getActiveMaster()->id);
     FOR_EACH(Master*, master, getAllMasters()){
-        LOG(LOG_LEVEL_INFO, "(%d, %d: %s %06x) ", master->id, master->pointerId,
-            master->name, master->focusColor);
+        LOG(LOG_LEVEL_INFO, "Master %s (%d, %d); Active Focus: %d; Recorded Focus: %d; Focus Color: %06x\n) Focus",
+            master->name, master->id, master->pointerId,
+            getActiveFocus(master->id), getFocusedWindow() ? getFocusedWindow()->id : 0, master->focusColor);
     }
     LOG(LOG_LEVEL_INFO, "\n");
 }

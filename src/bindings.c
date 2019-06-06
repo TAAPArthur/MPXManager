@@ -296,13 +296,11 @@ ArrayList* getDeviceBindings(){
     static ArrayList deviceBindings;
     return &deviceBindings;
 }
+
 void addBindings(Binding* bindings, int num){
-    for(int i = 0; i < num; i++)
-        addBinding(&bindings[i]);
+    addManyToList(getDeviceBindings(), bindings, num, sizeof(Binding));
 }
-void addBinding(Binding* binding){
-    addToList(getDeviceBindings(), binding);
-}
+
 /**
  * Convince method for grabBinding() and ungrabBinding()
  * @param binding

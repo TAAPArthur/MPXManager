@@ -104,6 +104,15 @@ Master* getActiveMaster(void){
 Master* getMasterById(int keyboardID){
     return find(getAllMasters(), &keyboardID, sizeof(int));
 }
+char* getNameOfMaster(Master* master){
+    return master->name;
+}
+Master* getMasterByName(const char* name){
+    Master* master;
+    UNTIL_FIRST(master, getAllMasters(),
+                strcmp(getNameOfMaster(master), name) == 0);
+    return master;
+}
 void setActiveMaster(Master* newMaster){
     assert(!isNotEmpty(getAllMasters()) || newMaster);
     master = newMaster;

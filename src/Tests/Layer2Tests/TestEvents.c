@@ -28,8 +28,7 @@ static Binding BINDINGS[] = {
 };
 static void bindingSetup(){
     createContextAndSimpleConnection();
-    for(int i = 0; i < LEN(BINDINGS); i++)
-        addBinding(&BINDINGS[i]);
+    addBindings(BINDINGS, LEN(BINDINGS));
 }
 //Rule genericEventRule = CREATE_DEFAULT_EVENT_RULE(onGenericEvent);
 

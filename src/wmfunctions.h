@@ -268,15 +268,6 @@ void syncMonitorMapState(int index);
  */
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
 /**
- *
- *
- * @param index
- * @param mask
- *
- * @return true if there exists at least one window  in workspace with the given mask
- */
-int doesWorkspaceHaveWindowsWithMask(int index, WindowMask mask);
-/**
  * Check to see if we are showing the desktop.
  * When showing the desktop all windows in the workspace are hidden except for windows in the Desktop Layer
  * @param index

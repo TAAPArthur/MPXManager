@@ -30,8 +30,8 @@ static int getDummyCount(){
 static Binding testBinding = {0, 1, BIND(dummy), .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
 static Binding testKeyPressBinding = {0, XK_A, BIND(dummy), .mask = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS};
 static void sampleStartupMethod(){
-    addBinding(&testBinding);
-    addBinding(&testKeyPressBinding);
+    addBindings(&testBinding, 1);
+    addBindings(&testKeyPressBinding, 1);
 }
 static Layout* startingLayout = &DEFAULT_LAYOUTS[FULL];
 static void deviceEventsetup(){
@@ -563,9 +563,9 @@ START_TEST(test_client_set_window_state){
         if(i % 2 == 0)
             WAIT_UNTIL_TRUE(hasMask(winInfo, X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
         else
-            WAIT_UNTIL_TRUE(!(hasMask(winInfo, X_MAXIMIZED_MASK) || hasMask(winInfo, Y_MAXIMIZED_MASK)));
+            WAIT_UNTIL_TRUE(!hasPartOfMask(winInfo, X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
         loadSavedAtomState(&fakeWinInfo);
-        assert((hasMask(&fakeWinInfo, X_MAXIMIZED_MASK) && hasMask(&fakeWinInfo, Y_MAXIMIZED_MASK)) == (i % 2 == 0));
+        assert(hasMask(&fakeWinInfo, X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK) == (i % 2 == 0));
     }
 }
 END_TEST

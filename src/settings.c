@@ -122,8 +122,11 @@ void defaultPrintFunction(void){
         dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, getWorkspaceName(i), i == activeWorkspaceIndex ? "*" : "",
                 getNameOfLayout(getActiveLayoutOfWorkspace(i)));
     }
-    if(getFocusedWindow() && isWindowNotInInvisibleWorkspace(getFocusedWindow()))
+    if(getFocusedWindow() && isWindowNotInInvisibleWorkspace(getFocusedWindow())){
+        if(isLogging(LOG_LEVEL_DEBUG))
+            dprintf(STATUS_FD, "%0xd ", getFocusedWindow()->id);
         dprintf(STATUS_FD, "^fg(%s)%s^fg()", "green", getFocusedWindow()->title);
+    }
     dprintf(STATUS_FD, "\n");
 }
 void loadNormalSettings(){

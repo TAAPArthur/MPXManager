@@ -281,9 +281,6 @@ START_TEST(test_empty_layout){
     setActiveLayout(&l);
     tileWorkspace(getActiveWorkspaceIndex());
     assert(!xcb_poll_for_event(dis));
-    void dummy(){
-        exit(1);
-    }
     l.layoutFunction = NULL;
     setActiveLayout(&l);
     tileWorkspace(getActiveWorkspaceIndex());
