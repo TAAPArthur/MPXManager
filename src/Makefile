@@ -76,11 +76,8 @@ mpxmanager.1: mpxmanager.sh
 mpxmanager-autocomplete.sh: mpxmanager.c mpxmanager.sh
 	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo {} | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
-mpxmanager: ${BASE_SRCS}
-	${CC} $^ -o $@ $$HOME/.mpxmanager/config.c ${CFLAGS} ${LDFLAGS}
-
-recompile:
-	${CC} $$HOME/.mpxmanager/config.c -o temp-Linux -lmpxmanager   ${CFLAGS} ${LDFLAGS}
+mpxmanager: ${BASE_SRCS} config.c
+	${CC} $^ -o $@ ${CFLAGS} ${LDFLAGS}
 
 libmpxmanager.so: ${BASE_SRCS}
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}

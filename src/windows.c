@@ -96,27 +96,31 @@ void loadClassInfo(WindowInfo* info){
         LOG(LOG_LEVEL_VERBOSE, "class name %s instance name: %s \n", info->className, info->instanceName);
     }
 }
-void loadTitleInfo(WindowInfo* winInfo){
+char* getWindowTitle(WindowID win){
     xcb_ewmh_get_utf8_strings_reply_t wtitle;
-    xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name(ewmh, winInfo->id);
-    if(winInfo->title){
-        free(winInfo->title);
-        winInfo->title = NULL;
-    }
+    char* title = NULL;
+    xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name(ewmh, win);
     if(xcb_ewmh_get_wm_name_reply(ewmh, cookie, &wtitle, NULL)){
-        winInfo->title = calloc(1 + wtitle.strings_len, sizeof(char));
-        memcpy(winInfo->title, wtitle.strings, wtitle.strings_len * sizeof(char));
+        title = calloc(1 + wtitle.strings_len, sizeof(char));
+        memcpy(title, wtitle.strings, wtitle.strings_len * sizeof(char));
         xcb_ewmh_get_utf8_strings_reply_wipe(&wtitle);
     }
     else {
         xcb_icccm_get_text_property_reply_t icccmName;
-        cookie = xcb_icccm_get_wm_name(dis, winInfo->id);
+        cookie = xcb_icccm_get_wm_name(dis, win);
         if(xcb_icccm_get_wm_name_reply(dis, cookie, &icccmName, NULL)){
-            winInfo->title = calloc(1 + icccmName.name_len, sizeof(char));
-            memcpy(winInfo->title, icccmName.name, icccmName.name_len * sizeof(char));
+            title = calloc(1 + icccmName.name_len, sizeof(char));
+            memcpy(title, icccmName.name, icccmName.name_len * sizeof(char));
             xcb_icccm_get_text_property_reply_wipe(&icccmName);
         }
     }
+    return title;
+}
+void loadTitleInfo(WindowInfo* winInfo){
+    if(winInfo->title){
+        free(winInfo->title);
+    }
+    winInfo->title = getWindowTitle(winInfo->id);
     if(winInfo->title)
         LOG(LOG_LEVEL_VERBOSE, "window title %s\n", winInfo->title);
 }

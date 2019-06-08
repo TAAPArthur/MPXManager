@@ -26,7 +26,14 @@ typedef struct {
     OptionTypes type;
     /// character that may also be used to trigger binding
     char shortName;
+    /// if true and the command was sent, program will fork before executing this command and attempt redirect output to the caller's stdout
+    bool forkOnReceive;
 } Option;
+/// Flags to be used when communicating with a remote instance
+typedef enum OPTION_FLAGS {
+    NO_FORK_ON_SEND = 1,
+    REMOTE = 2,
+} OPTION_FLAGS;
 
 /**
  * Finds a option by name
@@ -57,6 +64,7 @@ void receiveClientMessage(void);
 /**
  * Sends a message to the running WM to set name = value or call name(value) depending if name is an variable or a method
  *
+ *
  * @param name
  * @param value
  */
@@ -82,4 +90,8 @@ void addOption(Option* option, int len);
  * Loads the default list of options
  */
 void loadDefaultOptions(void);
+/**
+ * @return 1 iff there are send messages whose receipt has not been confirmed
+ */
+bool hasOutStandingMessages(void);
 #endif

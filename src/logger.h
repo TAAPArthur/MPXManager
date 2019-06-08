@@ -8,6 +8,7 @@
 
 
 #include <stdio.h>
+#include <unistd.h>
 #include <xcb/xcb.h>
 
 #include "mywm-structs.h"
@@ -54,6 +55,8 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
     #define LOGGING 1
 #endif
 
+/// The FD to log to
+#define LOG_FD STDOUT_FILENO
 
 /**
  * If i >= getLogLevel(), the print str
@@ -63,7 +66,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
  *
  */
 #define LOG(i,str...) \
-    do{if(isLogging(i)) fprintf(stderr, str);}while(0)
+    do{if(isLogging(i)) dprintf(LOG_FD, str);}while(0)
 
 /**
  * if i>= getLogLevel(), run code

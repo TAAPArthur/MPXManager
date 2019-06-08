@@ -81,6 +81,14 @@ void toggleMask(WindowInfo* winInfo, WindowMask mask);
  */
 void loadClassInfo(WindowInfo* info);
 /**
+ * Returns the name of the window in a str that needs to be freeded
+ *
+ * @param win
+ *
+ * @return
+ */
+char* getWindowTitle(WindowID win);
+/**
  * Loads title for a given window
  * @param winInfo
  */

@@ -1,11 +1,12 @@
-#include "../UnitTests.h"
-
-#include "../../xsession.h"
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-#include "../../globals.h"
 
-void openXDisplay();
+#include "../UnitTests.h"
+#include "../TestX11Helper.h"
+
+#include "../../globals.h"
+#include "../../xsession.h"
+
 START_TEST(test_quit){
     quit(0);
     assert(0);
@@ -53,16 +54,33 @@ START_TEST(test_close_xdisplay){
     openXDisplay();
 }
 END_TEST
+START_TEST(test_private_window){
+    WindowID win = getPrivateWindow();
+    assert(win == getPrivateWindow());
+    if(!fork()){
+        openXDisplay();
+        assert(win != getPrivateWindow());
+        quit(0);
+    }
+    waitForCleanExit(0);
+    assert(win == getPrivateWindow());
+}
+END_TEST
 
 Suite* xsessionSuite(){
     Suite* s = suite_create("XSession");
-    TCase* tc_core = tcase_create("X");
+    TCase* tc_core;
+    tc_core   = tcase_create("X");
     tcase_add_checked_fixture(tc_core, NULL, closeConnection);
     tcase_add_test(tc_core, test_open_xdisplay);
     tcase_add_test(tc_core, test_get_set_atom);
     tcase_add_test(tc_core, test_get_set_atom_bad);
     tcase_add_test(tc_core, test_close_xdisplay);
     tcase_add_test(tc_core, test_quit);
+    suite_add_tcase(s, tc_core);
+    tc_core = tcase_create("PrivateWindow");
+    tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, closeConnection);
+    tcase_add_test(tc_core, test_private_window);
     suite_add_tcase(s, tc_core);
     return s;
 }

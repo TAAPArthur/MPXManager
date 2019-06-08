@@ -422,7 +422,7 @@ void onGenericEvent(void){
 
 void onSelectionClearEvent(void){
     xcb_selection_clear_event_t* event = getLastEvent();
-    if(event->owner == compliantWindowManagerIndicatorWindow  && event->selection == WM_SELECTION_ATOM){
+    if(event->owner == getPrivateWindow() && event->selection == WM_SELECTION_ATOM){
         LOG(LOG_LEVEL_INFO, "We lost the WM_SELECTION; another window manager is taking over (%d)", event->owner);
         quit(0);
     }
@@ -518,8 +518,8 @@ void addBasicRules(void){
 }
 
 void addDieOnIdleRule(void){
-    static Rule dieOnIdleRule = CREATE_WILDCARD(BIND(exit, 0));
-    addToList(getEventRules(Idle), &dieOnIdleRule);
+    static Rule dieOnIdleRule = CREATE_WILDCARD(BIND(quit, 0));
+    addToList(getBatchEventRules(Idle), &dieOnIdleRule);
 }
 
 void addDefaultRules(void){

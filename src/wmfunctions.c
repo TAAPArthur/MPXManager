@@ -32,7 +32,6 @@
 #include "xsession.h"
 
 
-WindowID compliantWindowManagerIndicatorWindow;
 
 static ArrayList mappedOrder = {0};
 /**
@@ -442,14 +441,24 @@ void processConfigureRequest(WindowID win, short values[5], WindowID sibling, in
     else
         LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
 }
+bool isMPXManagerRunning(void){
+    xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
+            WM_SELECTION_ATOM), NULL);
+    bool result = 0;
+    if(ownerReply && ownerReply->owner){
+        char* title = getWindowTitle(ownerReply->owner);
+        if(title){
+            result = strcmp(title, WM_NAME) == 0;
+            free(title);
+        }
+    }
+    free(ownerReply);
+    return result;
+}
 void broadcastEWMHCompilence(){
     LOG(LOG_LEVEL_TRACE, "Complying with EWMH\n");
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else  ignore it)
-    int overrideRedirect = 1;
-    compliantWindowManagerIndicatorWindow = xcb_generate_id(dis);
-    xcb_create_window(dis, 0, compliantWindowManagerIndicatorWindow, root, 0, 0, 1, 1, 0,
-                      XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
     if(!STEAL_WM_SELECTION){
         xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
                 WM_SELECTION_ATOM), NULL);
@@ -460,14 +469,15 @@ void broadcastEWMHCompilence(){
         free(ownerReply);
     }
     LOG(LOG_LEVEL_TRACE, "Setting selection owner\n");
-    if(catchError(xcb_set_selection_owner_checked(dis, compliantWindowManagerIndicatorWindow, WM_SELECTION_ATOM,
+    if(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), WM_SELECTION_ATOM,
                   XCB_CURRENT_TIME)) == 0){
-        unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, compliantWindowManagerIndicatorWindow};
+        unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
     SET_SUPPORTED_OPERATIONS(ewmh);
-    xcb_ewmh_set_supporting_wm_check(ewmh, root, compliantWindowManagerIndicatorWindow);
-    xcb_ewmh_set_wm_name(ewmh, compliantWindowManagerIndicatorWindow, strlen(WM_NAME), WM_NAME);
+    xcb_ewmh_set_wm_pid(ewmh, root, getpid());
+    xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
+    xcb_ewmh_set_wm_name(ewmh, getPrivateWindow(), strlen(WM_NAME), WM_NAME);
     LOG(LOG_LEVEL_TRACE, "Complied with EWMH/ICCCM specs\n");
 }
 

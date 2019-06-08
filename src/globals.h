@@ -76,7 +76,7 @@ typedef enum {
     /// Window won't be tiled and can be freely moved like by external programs/mouse
     EXTERNAL_CONFIGURABLE_MASK =            EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
     /// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
-    FLOATING_MASK =            NO_TILE_MASK| ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
+    FLOATING_MASK =            NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
 
     ///Allow client requests from older clients who don't specify what they are
     SRC_INDICATION_OTHER =   1 << SRC_INDICATION_OFFSET,
@@ -173,6 +173,8 @@ extern char* LD_PRELOAD_PATH;
 
 ///Returns the field descriptors used to communicate WM status to an external program
 extern int statusPipeFD[4];
+/// When receiving certain external communications, fork and print to the sender's stdout
+extern bool ENABLE_FORK_ON_RECEIVE;
 
 ///If true, then check used saved window properties as defaults
 extern bool LOAD_SAVED_STATE;

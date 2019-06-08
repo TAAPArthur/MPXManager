@@ -16,11 +16,13 @@
  */
 #define WM_NAME "MPX Manger"
 
-/**
- * Window created by us to show to the world that an EWMH compliant WM is active
- */
-extern WindowID compliantWindowManagerIndicatorWindow;
 
+/**
+ *
+ *
+ * @return 1 iff there is a running instance of MPXManager and it is acting like a window manger (RUN_AS_WM==1)
+ */
+bool isMPXManagerRunning(void);
 
 /**
  * Establishes a connection with the X server.

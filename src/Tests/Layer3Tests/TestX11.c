@@ -654,7 +654,7 @@ START_TEST(test_lose_wm_selection){
 }
 END_TEST
 START_TEST(test_lose_fake_selection){
-    catchError(xcb_set_selection_owner_checked(dis, compliantWindowManagerIndicatorWindow, ewmh->_NET_WM_CM_Sn[0], 0));
+    catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), ewmh->_NET_WM_CM_Sn[0], 0));
     int errSignal = 83;
     if(!fork()){
         openXDisplay();
@@ -673,9 +673,17 @@ START_TEST(test_no_run_as_wm){
     int errSignal = 83;
     if(!fork()){
         onStartup();
+        assert(isMPXManagerRunning());
         exit(errSignal);
     }
     waitForExit(errSignal);
+}
+END_TEST
+START_TEST(test_detect_running_instance){
+    assert(isMPXManagerRunning());
+    closeConnection();
+    openXDisplay();
+    assert(!isMPXManagerRunning());
 }
 END_TEST
 
@@ -690,6 +698,7 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_lose_wm_selection);
     tcase_add_test(tc_core, test_lose_fake_selection);
     tcase_add_test(tc_core, test_no_run_as_wm);
+    tcase_add_test(tc_core, test_detect_running_instance);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);

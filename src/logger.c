@@ -160,18 +160,23 @@ void dumpWindowInfo(WindowInfo* winInfo){
 void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
     xcb_get_atom_name_reply_t* reply;
     for(int i = 0; i < numberOfAtoms; i++){
+        if(i)
+            LOG(LOG_LEVEL_INFO, ", ");
         reply = xcb_get_atom_name_reply(dis, xcb_get_atom_name(dis, atoms[i]), NULL);
-        if(!reply)continue;
-        LOG(LOG_LEVEL_INFO, "atom: %.*s\n", reply->name_len, xcb_get_atom_name_name(reply));
-        free(reply);
+        LOG(LOG_LEVEL_INFO, "%d", atoms[i]);
+        if(reply){
+            LOG(LOG_LEVEL_INFO, " (%.*s)", reply->name_len, xcb_get_atom_name_name(reply));
+            free(reply);
+        }
     }
+    LOG(LOG_LEVEL_INFO, "\n");
 }
 
 void dumpBoundFunction(BoundFunction* boundFunction){
     LOG(LOG_LEVEL_INFO, "calling function %d\n", boundFunction->type);
     LOG(LOG_LEVEL_INFO, "Arg %d (%p)\n", boundFunction->arg.intArg, boundFunction->arg.voidArg);
     void*    funptr = &boundFunction->func.func;
-    backtrace_symbols_fd(funptr, 1, STDERR_FILENO);
+    backtrace_symbols_fd(funptr, 1, LOG_FD);
 }
 
 #define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return  #TYPE
@@ -272,5 +277,5 @@ void printStackTrace(void){
     // get void*'s for all entries on the stack
     size = backtrace(array, LEN(array));
     // print out all the frames to stderr
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    backtrace_symbols_fd(array, size, LOG_FD);
 }

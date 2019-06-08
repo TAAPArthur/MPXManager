@@ -10,6 +10,8 @@
 #include <X11/Xlib.h>
 #include <xcb/xcb_ewmh.h>
 
+#include "mywm-structs.h"
+
 
 ///global graphics context
 extern xcb_gcontext_t graphics_context;
@@ -119,4 +121,13 @@ xcb_atom_t getAtom(char* name);
  * @param value pointer to a str
  */
 void getAtomValue(xcb_atom_t atom, char** value);
+/**
+ * If it does not already exist creates a window to be used as proof-of-life.
+ * If it already exists, previously return the previously returned window
+ *
+ * The value will change on every new XConnection
+ *
+ * @return
+ */
+WindowID getPrivateWindow(void);
 #endif /* XSESSION_H_ */

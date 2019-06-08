@@ -7,6 +7,7 @@
 #include <string.h>
 
 
+#include "wmfunctions.h"
 #include "communications.h"
 #include "default-rules.h"
 #include "events.h"
@@ -85,6 +86,7 @@ static int setOption(char* c){
     }
     return option ? 1 : 0;
 }
+static int sendOptionToWaitFor = 0;
 static int sendOption(char* c){
     if(!dpy){
         openXDisplay();
@@ -94,8 +96,10 @@ static int sendOption(char* c){
     char* value = strchr(c, '=');
     int len = value ? value - c : strlen(c);
     Option* option = findOption(c, len);
-    if(option)
+    if(option){
+        sendOptionToWaitFor += option->forkOnReceive;
         send(option->name, value ? value + 1 : NULL);
+    }
     else {
         LOG(LOG_LEVEL_ERROR, "cannot find option to send %.*s\n", len, value ? value : c);
         exit(1);
@@ -193,7 +197,16 @@ int main(int argc, char* argv[]){
     loadDefaultOptions();
     startUpMethod = loadSettings;
     parseArgs(argc, argv, 1);
-    onStartup();
+    if(!dpy)
+        onStartup();
     if(RUN_EVENT_LOOP)
         runEventLoop(NULL);
+    else if(ENABLE_FORK_ON_RECEIVE){
+        if(hasOutStandingMessages()){
+            while(isMPXManagerRunning() && hasOutStandingMessages())
+                msleep(100);
+        }
+    }
+    quit(0);
+    return 0;
 }

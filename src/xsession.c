@@ -31,6 +31,21 @@ xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 
 xcb_gcontext_t graphics_context;
 
+/**
+ * Window created by us to show to the world that an EWMH compliant WM is active
+ */
+static WindowID compliantWindowManagerIndicatorWindow;
+
+WindowID getPrivateWindow(void){
+    if(!compliantWindowManagerIndicatorWindow){
+        int overrideRedirect = 1;
+        compliantWindowManagerIndicatorWindow = xcb_generate_id(dis);
+        xcb_create_window(dis, 0, compliantWindowManagerIndicatorWindow, root, 0, 0, 1, 1, 0,
+                          XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
+    }
+    return compliantWindowManagerIndicatorWindow;
+}
+
 xcb_atom_t getAtom(char* name){
     if(!name)return XCB_ATOM_NONE;
     xcb_intern_atom_reply_t* reply;
@@ -117,6 +132,7 @@ void openXDisplay(void){
     free(reply);
     create_graphics_context();
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
+    compliantWindowManagerIndicatorWindow = 0;
 }
 
 void closeConnection(void){

@@ -96,7 +96,8 @@ static inline xcb_generic_event_t* getNextEvent(){
         flush();
         unlock();
         LOG(LOG_LEVEL_VERBOSE, "Idle %d\n", idle);
-        event = xcb_wait_for_event(dis);
+        if(!isShuttingDown())
+            event = xcb_wait_for_event(dis);
     }
     return event;
 }
