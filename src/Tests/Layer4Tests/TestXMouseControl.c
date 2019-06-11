@@ -101,6 +101,10 @@ START_TEST(test_scroll_scale){
     xmousecontrolUpdate();
     int num2 = consumeEvents();
     assert(num2 >= num * scaleFactor / 2);
+    adjustScrollSpeed(-scaleFactor);
+    xmousecontrolUpdate();
+    int num3 = consumeEvents();
+    assert(num3 <= num * scaleFactor / 2);
 }
 END_TEST
 START_TEST(test_move_scale){

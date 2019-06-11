@@ -75,13 +75,13 @@ void addXMouseControlMask(int mask);
  *
  * @param multiplier
  */
-void adjustSpeed(double multiplier);
+void adjustSpeed(int multiplier);
 /**
  * Increases how many times the scroll button is pressed every update
  *
  * @param multiplier
  */
-void adjustScrollSpeed(double multiplier);
+void adjustScrollSpeed(int multiplier);
 /**
  * Applies a single update
  */

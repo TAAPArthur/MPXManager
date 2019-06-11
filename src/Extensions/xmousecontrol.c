@@ -55,6 +55,19 @@ void removeXMouseControlMask(int mask){
     MasterInfo* info = getMasterInfo();
     info->mask &= ~mask;
 }
+void adjustScrollSpeed(int multiplier){
+    MasterInfo* info = getMasterInfo();
+    info->scrollScale *=multiplier >= 0?multiplier: -1.0 / multiplier;
+    if(info->scrollScale < 1e-6)
+        info->scrollScale = 1;
+}
+
+void adjustSpeed(int multiplier){
+    MasterInfo* info = getMasterInfo();
+    info->vScale *=multiplier >= 0?multiplier: -1.0 / multiplier;
+    if(info->vScale < 1e-6)
+        info->vScale = 1;
+}
 
 static void clickButtonN(int btn, int N){
     for(int i = 0; i < N; i++)
@@ -79,9 +92,8 @@ void xmousecontrolUpdate(void){
             deltaX = info->mask & MOVE_RIGHT_MASK ? info->vScale : -info->vScale;
         if(_IS_SET(info, MOVE_UP_MASK, MOVE_DOWN_MASK))
             deltaY = info->mask & MOVE_DOWN_MASK ? info->vScale : -info->vScale;
-        if(deltaX || deltaY){
+        if(deltaX || deltaY)
             movePointer(info->pointerId, None, deltaX, deltaY);
-        }
     }
 }
 void* runXMouseControl(void* c __attribute__((unused))){
@@ -92,22 +104,9 @@ void* runXMouseControl(void* c __attribute__((unused))){
     return NULL;
 }
 
-void adjustScrollSpeed(double multiplier){
-    MasterInfo* info = getMasterInfo();
-    info->scrollScale *= multiplier;
-    if(info->scrollScale < 1)
-        info->scrollScale = 1;
-}
-
-void adjustSpeed(double multiplier){
-    MasterInfo* info = getMasterInfo();
-    info->vScale *= multiplier;
-    if(info->vScale < 1)
-        info->vScale = 1;
-}
 #define PAIR(MASK,KEY,KP,KR)\
-    {MASK,KEY,KP,.noKeyRepeat=1,.mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS},\
-    {MASK,KEY,KR,.mask=XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE,.noKeyRepeat=1}
+    {MASK,KEY,KP,.mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS},\
+    {MASK,KEY,KR,.mask=XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}
 
 static Binding bindings[] = {
 // modifier  key	opts	press func	 press arg	release func	release arg
@@ -129,10 +128,14 @@ static Binding bindings[] = {
     PAIR(0,	XK_KP_Down, BIND(addXMouseControlMask, MOVE_DOWN_MASK), BIND(removeXMouseControlMask, MOVE_DOWN_MASK)),
     PAIR(0,	XK_KP_Right, BIND(addXMouseControlMask, MOVE_RIGHT_MASK), BIND(removeXMouseControlMask, MOVE_RIGHT_MASK)),
 
+    {0, XK_Hyper_L, BIND(removeXMouseControlMask, -1), .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE},
+
     {0,	XK_e, BIND(adjustScrollSpeed, 2)},
-    {0 | ShiftMask,	XK_e, BIND(adjustScrollSpeed, .5)},
-    {0 | Mod1Mask,	XK_e, BIND(adjustSpeed, 2)},
-    {0 | Mod1Mask | ShiftMask,	XK_e, BIND(adjustSpeed, .5)},
+    {0 | ShiftMask,	XK_e, BIND(adjustScrollSpeed, -2)},
+    {0 | Mod1Mask,	XK_e, BIND(adjustSpeed, 0)},
+    {0,	XK_r, BIND(adjustScrollSpeed, 2)},
+    {0 | ShiftMask,	XK_r, BIND(adjustScrollSpeed, -2)},
+    {0 | Mod1Mask,	XK_r, BIND(adjustSpeed, 0)},
     {0,	XK_q, PIPE(BIND(getActiveMasterKeyboardID), BIND(removeXmouseControlMasterInfo))},
 
     {0, XK_c, BIND(clickButton, Button2)},
