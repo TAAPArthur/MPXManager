@@ -9,6 +9,7 @@ pkgdesc='My Personal XWindow Manager'
 
 arch=('any')
 license=('MIT')
+options=(staticlibs !strip)
 depends=('xorg-server' 'libx11' 'libxcb')
 optdepends=('xorg-server-xvfb' 'xorg-xinput' 'xsane-xrandr' 'check')
 makedepends=('git')
