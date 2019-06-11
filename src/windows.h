@@ -11,7 +11,19 @@
 #include "globals.h"
 #include "mywm-structs.h"
 
-
+/**
+ *
+ * @param winInfo
+ *
+ * @return true iff this window has the override_redirect bit set
+ */
+bool isOverrideRedirectWindow(WindowInfo* winInfo);
+/**
+ * Indicates that this window has the override_redirect bit set
+ *
+ * @param winInfo
+ */
+void markAsOverrideRedirect(WindowInfo* winInfo);
 /**
  * @param winInfo
  * @returns the full mask of the given window

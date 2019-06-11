@@ -36,6 +36,8 @@ typedef struct {
     WindowMask mask;
     /// set to 1 iff the window is a dock
     bool dock;
+    /// 1 iff override_redirect flag set
+    bool overrideRedirect;
     /**xcb_atom representing the window type*/
     unsigned int type;
     /**string xcb_atom representing the window type*/

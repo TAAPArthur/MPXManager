@@ -132,33 +132,62 @@ START_TEST(test_handle_error){
 END_TEST
 
 START_TEST(test_detect_new_windows){
+    NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
+    MANAGE_OVERRIDE_REDIRECT_WINDOWS = 0;
+    IGNORE_SUBWINDOWS = 1;
     WindowID win = createUnmappedWindow();
+    scan(root);
+    WindowID child = createNormalSubWindow(win);
     WindowID win2 = createUnmappedWindow();
     START_MY_WM;
+    WAIT_UNTIL_TRUE(getSize(getActiveWindowStack()) == 2);
+    createIgnoredWindow();
     WindowID win3 = createUnmappedWindow();
+    waitUntilIdle();
+    assert(isInList(getAllWindows(), win) &&
+           isInList(getAllWindows(), win2) &&
+           isInList(getAllWindows(), win3));
+    assert(!isInList(getAllWindows(), child));
+    assert(getSize(getActiveWindowStack()) == 3);
+}
+END_TEST
+START_TEST(test_detect_sub_windows){
+    IGNORE_SUBWINDOWS = 0;
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createNormalSubWindow(win);
+    START_MY_WM;
+    WindowID win3 = createNormalSubWindow(win2);
     WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) &&
                     isInList(getAllWindows(), win2) &&
                     isInList(getAllWindows(), win3));
     assert(getSize(getActiveWindowStack()) == 3);
 }
 END_TEST
+START_TEST(test_detect_new_override_redirect_windows){
+    MANAGE_OVERRIDE_REDIRECT_WINDOWS = 1;
+    createIgnoredWindow();
+    createIgnoredWindow();
+    createIgnoredWindow();
+    START_MY_WM;
+    WAIT_UNTIL_TRUE(getSize(getActiveWindowStack()) == 3);
+}
+END_TEST
 START_TEST(test_reparent_windows){
     IGNORE_SUBWINDOWS = 1;
     WindowID win = createNormalWindow();
+    WindowID child = createNormalSubWindow(win);
     WindowID parent = createNormalWindow();
-    int idle = getIdleCount();
     START_MY_WM;
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
-    assert(isInList(getAllWindows(), win) && isInList(getAllWindows(), parent));
+    WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) && isInList(getAllWindows(), parent));
+    assert(!isInList(getAllWindows(), child));
+    xcb_reparent_window_checked(dis, child, root, 0, 0);
     xcb_reparent_window_checked(dis, win, parent, 0, 0);
-    idle = getIdleCount();
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
-    assert(!isInList(getAllWindows(), win) && isInList(getAllWindows(), parent));
-    assert(getSize(getActiveWindowStack()) == 1);
-    xcb_reparent_window_checked(dis, win, root, 0, 0);
-    WAIT_UNTIL_TRUE(isInList(getAllWindows(), win) &&
-                    isInList(getAllWindows(), parent));
+    WAIT_UNTIL_TRUE(isInList(getAllWindows(), child) && isInList(getAllWindows(), parent));
+    assert(!isInList(getAllWindows(), win));
     assert(getSize(getActiveWindowStack()) == 2);
+    xcb_reparent_window_checked(dis, win, root, 0, 0);
+    WAIT_UNTIL_TRUE(isInList(getAllWindows(), win));
+    assert(getSize(getActiveWindowStack()) == 3);
 }
 END_TEST
 
@@ -752,6 +781,8 @@ Suite* defaultRulesSuite(){
     tc_core = tcase_create("NormalEvents");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_detect_new_windows);
+    tcase_add_test(tc_core, test_detect_sub_windows);
+    tcase_add_test(tc_core, test_detect_new_override_redirect_windows);
     tcase_add_test(tc_core, test_reparent_windows);
     tcase_add_test(tc_core, test_map_windows);
     tcase_add_test(tc_core, test_delete_windows);

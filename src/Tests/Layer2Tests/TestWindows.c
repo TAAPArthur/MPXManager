@@ -280,6 +280,7 @@ START_TEST(test_register_bad_window){
 END_TEST
 
 START_TEST(test_window_scan){
+    MANAGE_OVERRIDE_REDIRECT_WINDOWS = 0;
     assert(!isNotEmpty(getAllWindows()));
     scan(root);
     assert(!isNotEmpty(getAllWindows()));
@@ -299,6 +300,21 @@ START_TEST(test_window_scan){
     assert(getSize(getAllWindows()) == 3);
 }
 END_TEST
+START_TEST(test_manager_override_redirect){
+    MANAGE_OVERRIDE_REDIRECT_WINDOWS = 1;
+    assert(!isNotEmpty(getAllWindows()));
+    scan(root);
+    createIgnoredWindow();
+    mapWindow(createIgnoredWindow());
+    xcb_flush(dis);
+    scan(root);
+    assert(getSize(getAllWindows()) == 2);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
+        assert(isOverrideRedirectWindow(winInfo));
+    }
+}
+END_TEST
+
 START_TEST(test_child_window_scan){
     IGNORE_SUBWINDOWS = 1;
     assert(!isNotEmpty(getAllWindows()));
@@ -401,6 +417,7 @@ Suite* windowsSuite(void){
     tcase_add_test(tc_core, test_register_bad_window);
     tcase_add_test(tc_core, test_window_scan);
     tcase_add_test(tc_core, test_child_window_scan);
+    tcase_add_test(tc_core, test_manager_override_redirect);
     //tcase_add_test(tc_core, test_sync_state);
     tcase_add_test(tc_core, test_window_state);
     tcase_add_test(tc_core, test_window_state_sync);

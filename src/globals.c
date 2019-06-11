@@ -70,6 +70,8 @@ int EVENT_PERIOD = 100;
 
 int DEFAULT_MODE = NORMAL_MODE;
 
+bool MANAGE_OVERRIDE_REDIRECT_WINDOWS;
+
 char* MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
 char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
 bool SPAWN_ENV = 1;

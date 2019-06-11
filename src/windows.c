@@ -311,9 +311,21 @@ void unlockWindow(WindowInfo* winInfo){
     winInfo->geometrySemaphore--;
 }
 
+bool isOverrideRedirectWindow(WindowInfo* winInfo){
+    return winInfo->overrideRedirect;
+};
+void markAsOverrideRedirect(WindowInfo* winInfo){
+    addMask(winInfo, FLOATING_MASK | STICKY_MASK);
+    winInfo->overrideRedirect = 1;
+}
 static int loadWindowAttributes(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr){
-    if(!attr || attr->override_redirect)
+    if(!attr)
         return 0;
+    if(attr->override_redirect)
+        if(MANAGE_OVERRIDE_REDIRECT_WINDOWS)
+            markAsOverrideRedirect(winInfo);
+        else
+            return 0;
     if(attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY)
         addMask(winInfo, INPUT_ONLY_MASK);
     return 1;

@@ -156,6 +156,12 @@ extern bool RUN_AS_WM;
  */
 extern bool STEAL_WM_SELECTION;
 
+/**
+ * If true, then we won't automatically ignore windows with the override redirect flag set.
+ * Even so we cannot properly manage then; Effectively the flags STICKY and FLOATING would be set (we set them by default too)
+ */
+extern bool MANAGE_OVERRIDE_REDIRECT_WINDOWS;
+
 /// Holds environmental var names used to pass client pointer to children
 extern char* CLIENT[];
 /// if true, then set special ENV when spawning commands

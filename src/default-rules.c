@@ -144,24 +144,41 @@ void onConfigureRequestEvent(void){
             values[n++] = (&event->x)[i];
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
-static void onWindowDetection(WindowID id, WindowID parent, short* geo){
+static void onWindowDetection(WindowID id, WindowID parent, short* geo, bool override_redirect){
+    if(override_redirect && !MANAGE_OVERRIDE_REDIRECT_WINDOWS){
+        LOG(LOG_LEVEL_VERBOSE, "Window %d has overide_redirect set; Ignoring\n", id);
+        return;
+    }
     WindowInfo* winInfo = createWindowInfo(id);
     winInfo->creationTime = getTime();
     winInfo->parent = parent;
+    if(override_redirect && MANAGE_OVERRIDE_REDIRECT_WINDOWS)
+        markAsOverrideRedirect(winInfo);
     if(registerWindow(winInfo)){
         if(geo)
             setGeometry(winInfo, geo);
+        if(!IGNORE_SUBWINDOWS)
+            scan(id);
         applyEventRules(onWindowMove, winInfo);
     }
 }
 void onCreateEvent(void){
     xcb_create_notify_event_t* event = getLastEvent();
-    if(event->override_redirect || getWindowInfo(event->window))return;
-    if(IGNORE_SUBWINDOWS && event->parent != root)return;
-    onWindowDetection(event->window, event->parent, &event->x);
+    LOG(LOG_LEVEL_VERBOSE, "Detected create event for Window %d\n", event->window);
+    if(getWindowInfo(event->window)){
+        LOG(LOG_LEVEL_VERBOSE, "Window %d is already in our records; Ignoring create event\n", event->window);
+        return;
+    }
+    LOG(LOG_LEVEL_WARN, "%d %d\n", IGNORE_SUBWINDOWS, event->parent != root);
+    if(IGNORE_SUBWINDOWS && event->parent != root){
+        LOG(LOG_LEVEL_VERBOSE, "Window %d's parent is not root but %d; Ignoring\n", event->window, event->parent);
+        return;
+    }
+    onWindowDetection(event->window, event->parent, &event->x, event->override_redirect);
 }
 void onDestroyEvent(void){
     xcb_destroy_notify_event_t* event = getLastEvent();
+    LOG(LOG_LEVEL_VERBOSE, "Detected destroy event for Window %d\n", event->window);
     unregisterWindow(getWindowInfo(event->window));
 }
 void onVisibilityEvent(void){
@@ -179,6 +196,7 @@ void onVisibilityEvent(void){
 }
 void onMapEvent(void){
     xcb_map_notify_event_t* event = getLastEvent();
+    LOG(LOG_LEVEL_VERBOSE, "Detected map event for Window %d\n", event->window);
     updateMapState(event->window, 1);
 }
 void onMapRequestEvent(void){
@@ -192,6 +210,7 @@ void onMapRequestEvent(void){
 }
 void onUnmapEvent(void){
     xcb_unmap_notify_event_t* event = getLastEvent();
+    LOG(LOG_LEVEL_VERBOSE, "Detected unmap event for Window %d\n", event->window);
     updateMapState(event->window, 0);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo){
@@ -202,9 +221,9 @@ void onUnmapEvent(void){
 }
 void onReparentEvent(void){
     xcb_reparent_notify_event_t* event = getLastEvent();
-    if(IGNORE_SUBWINDOWS && !event->override_redirect){
+    if(IGNORE_SUBWINDOWS){
         if(event->parent == root)
-            onWindowDetection(event->window, event->parent, NULL);
+            onWindowDetection(event->window, event->parent, NULL, event->override_redirect);
         else
             unregisterWindow(getWindowInfo(event->window));
     }

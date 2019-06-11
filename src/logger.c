@@ -140,9 +140,8 @@ void dumpWindowInfo(WindowInfo* winInfo){
     LOG(LOG_LEVEL_INFO, "Dumping window info %d(%#x) group: %d(%#x) Transient for %d(%#x)\n", winInfo->id, winInfo->id,
         winInfo->groupId, winInfo->groupId, winInfo->transientFor, winInfo->transientFor);
     LOG(LOG_LEVEL_INFO, "Class %s (%s)\n", winInfo->className, winInfo->instanceName);
-    LOG(LOG_LEVEL_INFO, "Parent %d; Type is %d (%s); Dock %d\n", winInfo->parent, winInfo->type,
-        winInfo->typeName,
-        winInfo->dock);
+    LOG(LOG_LEVEL_INFO, "Parent %d; Type is %d (%s); Dock: %d; OverrideRedirect: %d\n", winInfo->parent, winInfo->type,
+        winInfo->typeName, isDock(winInfo), isOverrideRedirectWindow(winInfo));
     LOG(LOG_LEVEL_INFO, "Title %s\n", winInfo->title);
     PRINT_ARR("Recorded Geometry", getGeometry(winInfo), 5, "\n");
     LOG(LOG_LEVEL_INFO, "Tiling override %d", winInfo->tilingOverrideEnabled);
