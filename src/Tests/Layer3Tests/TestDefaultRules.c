@@ -290,8 +290,6 @@ START_TEST(test_desktop_rule){
     assert(hasMask(winInfo, STICKY_MASK | NO_TILE_MASK | BELOW_MASK));
     assert(!hasMask(winInfo, ABOVE_MASK));
     free(reply);
-    setShowingDesktop(getActiveWorkspaceIndex(), 1);
-    assert(!hasMask(winInfo, HIDDEN_MASK));
 }
 END_TEST
 START_TEST(test_float_rule){
@@ -600,10 +598,10 @@ END_TEST
 START_TEST(test_client_show_desktop){
     xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 1);
     flush();
-    WAIT_UNTIL_TRUE(isShowingDesktop(getActiveWorkspaceIndex()));
+    WAIT_UNTIL_TRUE(isShowingDesktop());
     xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 0);
     flush();
-    WAIT_UNTIL_TRUE(!isShowingDesktop(getActiveWorkspaceIndex()));
+    WAIT_UNTIL_TRUE(!isShowingDesktop());
 }
 END_TEST
 

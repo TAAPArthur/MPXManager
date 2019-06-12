@@ -44,7 +44,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
  *
  * @return
  */
-#define PRINT_LIST(label,arr,suffix){LOG(LOG_LEVEL_INFO,label " Arr:");FOR_EACH(int*,i,arr)LOG(LOG_LEVEL_INFO,"%d ",*i);LOG(LOG_LEVEL_INFO,suffix);}
+#define PRINT_LIST(label,arr,suffix){LOG(LOG_LEVEL_INFO,label " Arr:");FOR_EACH(int*,i,arr)LOG(LOG_LEVEL_INFO,"%ld ",(long)i);LOG(LOG_LEVEL_INFO,suffix);}
 /// the init log level
 #ifndef INIT_LOG_LEVEL
     #define INIT_LOG_LEVEL LOG_LEVEL_INFO

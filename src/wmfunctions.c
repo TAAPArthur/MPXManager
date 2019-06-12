@@ -51,27 +51,12 @@ void connectToXserver(){
         broadcastEWMHCompilence();
         //update workspace names
         setWorkspaceNames(NULL, 0);
-        syncState();
     }
     else
         ROOT_EVENT_MASKS &= ~WM_MASKS;
     registerForEvents();
     registerLayouts(DEFAULT_LAYOUTS, NUMBER_OF_DEFAULT_LAYOUTS);
     applyEventRules(onXConnection, NULL);
-}
-void syncState(){
-    xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, 0);
-    WorkspaceID currentWorkspace = DEFAULT_WORKSPACE_INDEX;
-    if(!LOAD_SAVED_STATE || !xcb_ewmh_get_current_desktop_reply(ewmh,
-            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
-            &currentWorkspace, NULL)){
-        currentWorkspace = DEFAULT_WORKSPACE_INDEX;
-    }
-    if(currentWorkspace >= getNumberOfWorkspaces())
-        currentWorkspace = getNumberOfWorkspaces() - 1;
-    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
-    LOG(LOG_LEVEL_INFO, "Current workspace is %d; default %d\n\n", currentWorkspace, DEFAULT_WORKSPACE_INDEX);
-    switchToWorkspace(currentWorkspace);
 }
 
 void setActiveWindowProperty(WindowID win){
@@ -553,18 +538,16 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2){
         values[i] = getGeometry(winInfo2)[i];
     xcb_configure_window(dis, winInfo1->id, mask, values);
 }
-int isShowingDesktop(int index){
-    return hasWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);
-}
-void setShowingDesktop(int index, int value){
-    if(value)
-        addWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);
-    else
-        removeWorkspaceMask(getWorkspaceByIndex(index), HIDDEN_MASK);
+void setShowingDesktop(int value){
+    LOG(LOG_LEVEL_INFO, "setting showing desktop %d\n", value);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows())
+    if(isInteractable(winInfo) && winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
+        raiseLowerWindowInfo(winInfo, value);
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
 }
-void toggleShowDesktop(){
-    int hideDesktop = isShowingDesktop(getActiveWorkspaceIndex());
-    setShowingDesktop(getActiveWorkspaceIndex(), !hideDesktop);
-}
 
+bool isShowingDesktop(void){
+    unsigned int value = 0;
+    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
+    return value;
+}

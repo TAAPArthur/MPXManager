@@ -22,6 +22,7 @@
 #include "../../ewmh.h"
 #include "../../globals.h"
 #include "../../layouts.h"
+#include "../../spawn.h"
 
 #include "../UnitTests.h"
 #include "../TestX11Helper.h"
@@ -29,31 +30,6 @@
 
 
 
-START_TEST(test_sync_state){
-    WindowID win = mapArbitraryWindow();
-    int activeWorkspace = 1;
-    WindowID windowWorkspace = 3;
-    LOAD_SAVED_STATE = 0;
-    DEFAULT_WORKSPACE_INDEX = 2;
-    syncState();
-    assert(getActiveWorkspaceIndex() == DEFAULT_WORKSPACE_INDEX);
-    unsigned int currentWorkspace = DEFAULT_WORKSPACE_INDEX;
-    assert(xcb_ewmh_get_current_desktop_reply(ewmh,
-            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
-            &currentWorkspace, NULL));
-    assert(getActiveWorkspaceIndex() == currentWorkspace);
-    assert(xcb_request_check(dis, xcb_ewmh_set_current_desktop_checked(ewmh, defaultScreenNumber,
-                             activeWorkspace)) == NULL);
-    assert(xcb_request_check(dis, xcb_ewmh_set_wm_desktop(ewmh, win, windowWorkspace)) == NULL);
-    LOAD_SAVED_STATE = 1;
-    syncState();
-    scan(root);
-    assert(isInList(getAllWindows(), win));
-    assert(getActiveWorkspaceIndex() == activeWorkspace);
-    assert(!isInList(getActiveWindowStack(), win));
-    assert(getSize(getWindowStack(getWorkspaceByIndex(windowWorkspace))) == 1);
-}
-END_TEST
 
 
 START_TEST(test_focus_window){
@@ -178,19 +154,9 @@ START_TEST(test_set_border_color){
 }
 END_TEST
 
-START_TEST(test_invalid_state){
-    WindowID win = mapArbitraryWindow();
-    xcb_ewmh_set_wm_desktop(ewmh, win, getNumberOfWorkspaces() + 1);
-    xcb_ewmh_set_current_desktop(ewmh, defaultScreenNumber, getNumberOfWorkspaces() + 1);
-    flush();
-    scan(root);
-    syncState();
-    assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
-    assert(getWindowInfo(win)->workspaceIndex < getNumberOfWorkspaces());
-}
-END_TEST
 
 START_TEST(test_withdraw_window){
+    START_MY_WM;
     WindowID win = createNormalWindow();
     WAIT_UNTIL_TRUE(getWindowInfo(win));
     WindowInfo* winInfo = getWindowInfo(win);
@@ -509,10 +475,6 @@ START_TEST(test_kill_window){
 }
 END_TEST
 
-static void setup(){
-    onStartup();
-    START_MY_WM;
-}
 
 START_TEST(test_activate_workspace){
     int masterStackSize = getSize(getWindowStackByMaster(getActiveMaster()));
@@ -631,16 +593,21 @@ END_TEST
 
 START_TEST(test_toggle_show_desktop){
     LOAD_SAVED_STATE = 0;
-    int win[10];
-    for(int i = 0; i < LEN(win); i++){
-        win[i] = mapWindow(createNormalWindow());
-    }
+    WindowID win = mapWindow(createNormalWindow());
+    WindowID desktop = mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    WindowID stackingOrder[] = {desktop, win, desktop};
     flush();
-    WAIT_UNTIL_TRUE(getSize(getAllWindows()) == LEN(win));
-    setShowingDesktop(getActiveWorkspaceIndex(), 1);
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(!isInteractable(winInfo));
-    toggleShowDesktop();
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())WAIT_UNTIL_TRUE(isInteractable(winInfo));
+    scan(root);
+    retile();
+    assert(checkStackingOrder(stackingOrder, 2));
+    setShowingDesktop(1);
+    flush();
+    assert(isShowingDesktop());
+    assert(checkStackingOrder(stackingOrder + 1, 2));
+    setShowingDesktop(0);
+    flush();
+    assert(!isShowingDesktop());
+    assert(checkStackingOrder(stackingOrder, 2));
 }
 END_TEST
 
@@ -712,6 +679,7 @@ START_TEST(test_no_run_as_wm){
 }
 END_TEST
 
+
 Suite* x11Suite(void){
     Suite* s = suite_create("Window Manager Functions");
     TCase* tc_core;
@@ -722,11 +690,6 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_lose_wm_selection);
     tcase_add_test(tc_core, test_lose_fake_selection);
     tcase_add_test(tc_core, test_no_run_as_wm);
-    suite_add_tcase(s, tc_core);
-    tc_core = tcase_create("Sync_State");
-    tcase_add_checked_fixture(tc_core, onStartup, destroyContextAndConnection);
-    tcase_add_test(tc_core, test_sync_state);
-    tcase_add_test(tc_core, test_invalid_state);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("WindowOperations");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
@@ -756,8 +719,8 @@ Suite* x11Suite(void){
     tcase_add_test(tc_core, test_swap_workspace);
     tcase_add_test(tc_core, test_top_focused_window_synced);
     suite_add_tcase(s, tc_core);
-    tc_core = tcase_create("Window Managment Operations");
-    tcase_add_checked_fixture(tc_core, setup, fullCleanup);
+    tc_core = tcase_create("Window Management Operations");
+    tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);
     tcase_add_test(tc_core, test_withdraw_window);
     tcase_add_test(tc_core, test_toggle_show_desktop);
     suite_add_tcase(s, tc_core);

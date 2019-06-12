@@ -40,8 +40,11 @@ Layout DEFAULT_LAYOUTS[] = {
 static ArrayList registeredLayouts;
 
 
+void setActiveLayoutOfWorkspaceByName(char* name, Workspace* w){
+    setActiveLayoutOfWorkspace(name ? findLayoutByName(name) : NULL, w);
+}
 void setActiveLayoutByName(char* name){
-    setActiveLayout(findLayoutByName(name));
+    setActiveLayout(name ? findLayoutByName(name) : NULL);
 }
 Layout* findLayoutByName(char* name){
     Layout* layout;

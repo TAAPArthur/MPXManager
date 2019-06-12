@@ -21,6 +21,7 @@
 #include "windows.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
+#include "session.h"
 #include "xsession.h"
 
 static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
@@ -35,8 +36,7 @@ static void tileChangeWorkspaces(void){
     updateState(tileWorkspace, syncMonitorMapState);
 }
 void autoAddToWorkspace(WindowInfo* winInfo){
-    int index = LOAD_SAVED_STATE ? getSavedWorkspaceIndex(winInfo->id) : getActiveWorkspaceIndex();
-    moveWindowToWorkspace(winInfo, index);
+    moveWindowToWorkspace(winInfo, getSavedWorkspaceIndex(winInfo->id));
 }
 void addAutoTileRules(void){
     static Rule autoTileRule = CREATE_DEFAULT_EVENT_RULE(markState);
@@ -94,12 +94,11 @@ void addFocusFollowsMouseRule(void){
 }
 
 void onXConnect(void){
+    if(RUN_AS_WM)
+        syncState();
     scan(root);
     //for each master try to make set the focused window to the currently focused window (or closet one by id)
-    FOR_EACH(Master*, master, getAllMasters()){
-        setActiveMaster(master);
-        onWindowFocus(getActiveFocus(master->id));
-    }
+    loadCustomState();
 }
 
 void onHiearchyChangeEvent(void){
@@ -271,8 +270,8 @@ void onClientMessage(void){
         }
     }
     else if(message == ewmh->_NET_SHOWING_DESKTOP){
-        LOG(LOG_LEVEL_DEBUG, "Chaining showing desktop to %d\n\n", data.data32[0]);
-        setShowingDesktop(getActiveWorkspaceIndex(), data.data32[0]);
+        LOG(LOG_LEVEL_DEBUG, "Changing showing desktop to %d\n\n", data.data32[0]);
+        setShowingDesktop(data.data32[0]);
     }
     else if(message == ewmh->_NET_CLOSE_WINDOW){
         LOG(LOG_LEVEL_DEBUG, "Killing window %d\n\n", win);

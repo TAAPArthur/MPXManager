@@ -139,6 +139,13 @@ void increaseActiveLayoutArg(int index, int step);
  */
 void setActiveLayoutByName(char* name);
 /**
+ * Finds the registered layout with a matching name and sets it as the active layout of Workspace w
+ *
+ * @param name the registered workspace name. NULL matches any layout with a specified name.
+ * @param w
+ */
+void setActiveLayoutOfWorkspaceByName(char* name, Workspace* w);
+/**
  * Searches for the set of registered layouts for a layout with the given name and returns it
  *
  * @param name

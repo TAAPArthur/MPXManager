@@ -31,10 +31,6 @@ extern WindowID compliantWindowManagerIndicatorWindow;
  */
 void connectToXserver();
 
-/**
- * Sync EWMH global properties with our internal state
- */
-void syncState();
 
 
 /**
@@ -269,21 +265,13 @@ void syncMonitorMapState(int index);
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
 /**
  * Check to see if we are showing the desktop.
- * When showing the desktop all windows in the workspace are hidden except for windows in the Desktop Layer
- * @param index
  * @return 1 if we are currently showing the desktop
  */
-int isShowingDesktop(int index);
+bool isShowingDesktop(void);
 /**
  * show or hide desktop depending on values
- * @param index workspace index
  * @param value 1 or 0
  */
-void setShowingDesktop(int index, int value);
-/**
- * Toggle showing of the desktop
- * @see isShowingDesktop()
- */
-void toggleShowDesktop();
+void setShowingDesktop(int value);
 
 #endif

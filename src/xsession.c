@@ -22,6 +22,12 @@ xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 xcb_atom_t WM_SELECTION_ATOM;
 xcb_atom_t WM_INTERPROCESS_COM;
+xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
+xcb_atom_t WM_WORKSPACE_MONITORS;
+xcb_atom_t WM_WORKSPACE_WINDOWS;
+xcb_atom_t WM_MASTER_WINDOWS;
+xcb_atom_t WM_ACTIVE_MASTER;
+xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 
 xcb_gcontext_t graphics_context;
 
@@ -97,6 +103,12 @@ void openXDisplay(void){
     _CREATE_ATOM(WM_STATE_NO_TILE);
     _CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
     _CREATE_ATOM(WM_INTERPROCESS_COM);
+    _CREATE_ATOM(WM_WORKSPACE_LAYOUT_NAMES);
+    _CREATE_ATOM(WM_WORKSPACE_MONITORS);
+    _CREATE_ATOM(WM_WORKSPACE_LAYOUT_INDEXES);
+    _CREATE_ATOM(WM_WORKSPACE_WINDOWS);
+    _CREATE_ATOM(WM_MASTER_WINDOWS);
+    _CREATE_ATOM(WM_ACTIVE_MASTER);
     char selectionName[] = {'W', 'M', '_', 'S', '0' + defaultScreenNumber, '\0'};
     xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(dis,
                                      xcb_intern_atom(dis, 0, strlen(selectionName), selectionName), NULL);

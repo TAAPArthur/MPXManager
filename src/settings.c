@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "masters.h"
 #include "mywm-util.h"
+#include "session.h"
 #include "settings.h"
 #include "spawn.h"
 #include "windows.h"
@@ -90,6 +91,7 @@ static Binding DEFAULT_BINDINGS[] = {
     {Mod4Mask | ShiftMask, XK_Return, BIND(focusTop)},
 
     {Mod4Mask | ShiftMask, XK_q, BIND(quit)},
+    {Mod4Mask, XK_q, BIND(saveCustomState), .passThrough = ALWAYS_PASSTHROUGH},
     {Mod4Mask, XK_q, OR(PIPE(BIND(spawn, "mpxmanager --recompile -g"), BIND(waitForChild)), BIND(restart))},
 
     {Mod4Mask, XK_r, BIND(restoreActiveLayout), .mode = LAYOUT_MODE},

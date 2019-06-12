@@ -68,8 +68,11 @@ Workspace* getWorkspaceOfWindow(WindowInfo* winInfo){
 ArrayList* getWindowStackOfWindow(WindowInfo* winInfo){
     return getWindowStack(getWorkspaceOfWindow(winInfo));
 }
+void setActiveLayoutOfWorkspace(Layout* layout, Workspace* workspace){
+    workspace->activeLayout = layout;
+}
 void setActiveLayout(Layout* layout){
-    getActiveWorkspace()->activeLayout = layout;
+    setActiveLayoutOfWorkspace(layout, getActiveWorkspace());
 }
 
 Layout* getActiveLayout(){

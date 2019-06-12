@@ -256,6 +256,7 @@ void detectMonitors(void){
     }
     clearList(&monitorNames);
 #endif
+    assert(getSize(getAllMonitors()) > 0);
     removeDuplicateMonitors();
     assignUnusedMonitorsToWorkspaces();
     assert(getSize(getAllMonitors()) > 0);

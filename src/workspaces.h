@@ -111,6 +111,14 @@ void setActiveLayout(Layout* layout);
 
 /**
  *
+ *
+ * @param layout
+ * @param workspace
+ */
+void setActiveLayoutOfWorkspace(Layout* layout, Workspace* workspace);
+
+/**
+ *
  * @return the active layout for the active workspace
  */
 Layout* getActiveLayout();

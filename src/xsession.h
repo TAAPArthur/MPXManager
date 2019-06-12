@@ -48,6 +48,21 @@ extern xcb_atom_t WM_SELECTION_ATOM;
  */
 extern xcb_atom_t WM_INTERPROCESS_COM;
 
+/// Atom to store an array of the active layout's for each workspace so the state can be restored
+extern xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
+/// Atom to store an array of the paired monitor for each workspace so the state can be restored
+extern xcb_atom_t WM_WORKSPACE_MONITORS;
+/// Atom to store an array of the layout offset for each workspace so the state can be restored
+extern xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
+/// Atom to store an array of each window for every workspace so the state can be restored
+/// There is a '0' to separate each workspace's window stack
+extern xcb_atom_t WM_WORKSPACE_WINDOWS;
+/// Atom to store an array of each window for every master so the state can be restored
+/// There is a '0' to separate each master's window stack and each stack is preceded with the master id 
+extern xcb_atom_t WM_MASTER_WINDOWS;
+/// Stores the active master so the state can be restored
+extern xcb_atom_t WM_ACTIVE_MASTER;
+
 /**XDisplay instance (only used for events/device commands)*/
 extern Display* dpy;
 /**XCB display instance*/
