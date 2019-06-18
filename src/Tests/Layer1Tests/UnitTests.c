@@ -1,13 +1,7 @@
 #include "../UnitTests.h"
 
-
-//int getLogLevel(){return 0;}
-
 extern Suite* utilSuite();
-CREATE_HANDLER
 int main(void){
-    signal(SIGSEGV, handler);   // install our handler
-    signal(SIGABRT, handler);   // install our handler
     SRunner* runner;
     runner = srunner_create(utilSuite());
     srunner_run_all(runner, CK_NORMAL);

@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 
 
@@ -125,3 +126,14 @@ void quit(int exitCode){
     exit(exitCode);
 }
 
+static void handler(int sig){
+    LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
+    printStackTrace();
+    quit(1);
+}
+
+__attribute__((constructor)) static void set_handlers(){
+    signal(SIGSEGV, handler);
+    signal(SIGABRT, handler);
+    signal(SIGPIPE, resetPipe);
+}

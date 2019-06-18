@@ -12,7 +12,6 @@ extern Suite* eventSuite();
 extern Suite* windowsSuite();
 extern Suite* mywmUtilSuite();
 
-CREATE_HANDLER
 
 int main(int argc, char** argv __attribute__((unused))){
     if(argc > 1){
@@ -23,8 +22,6 @@ int main(int argc, char** argv __attribute__((unused))){
             wait(NULL);
         exit(0);
     }
-    signal(SIGSEGV, handler);   // install our handler
-    signal(SIGABRT, handler);   // install our handler
     SRunner* runner;
     runner = srunner_create(xsessionSuite());
     srunner_add_suite(runner, testFunctionSuite());

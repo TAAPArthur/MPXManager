@@ -24,7 +24,7 @@ BASE_SRCS := ${TOP_LAYER_SRCS} ${LAYER4_SRCS} ${LAYER3_SRCS} ${LAYER2_SRCS} ${LA
 SRCS := ${BASE_SRCS} config.c 
 
 
-CHECK_TEST_COVERAGE = [ -z "$$CK_RUN_CASE$$CK_RUN_SUITE" ] && (gcov -f $$(basename -a $(1)) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm -f *.gc??)
+CHECK_TEST_COVERAGE = [ -z "$$CK_RUN_CASE$$CK_RUN_SUITE" ] && (gcov -f $$(basename -a $(1)) 2> /dev/null |grep -v -P "Function '(spawn|spawnPipe|restart|handler)'" |grep -A 1 "Function" | grep -v '100' |grep -B 1 "Lines e" && echo "test coverage is not high enough" && exit 2 || rm -f *.gc??)
 RUN_TEST = $(if $(QUICK) ,$(1), valgrind -q --leak-check=full --error-exitcode=123 $(1))
 
 

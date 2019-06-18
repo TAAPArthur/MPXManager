@@ -5,12 +5,9 @@ extern Suite* x11Suite();
 extern Suite* layoutSuite();
 extern Suite* defaultRulesSuite();
 
-CREATE_HANDLER
 
 
 int main(void){
-    signal(SIGSEGV, handler);   // install our handler
-    signal(SIGABRT, handler);   // install our handler
     SRunner* runner;
     runner = srunner_create(stateSuite());
     srunner_add_suite(runner, x11Suite());

@@ -8,10 +8,7 @@ extern Suite* mpxSuite();
 extern Suite* functionsSuite();
 extern Suite* xmousecontrolSuite();
 extern Suite* communicationsSuite();
-CREATE_HANDLER
 int main(void){
-    signal(SIGSEGV, handler);   // install our handler
-    signal(SIGABRT, handler);   // install our handler
     SRunner* runner;
     runner = srunner_create(functionsSuite());
     srunner_add_suite(runner, windowCloneSuite());

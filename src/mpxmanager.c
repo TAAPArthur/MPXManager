@@ -4,7 +4,6 @@
  */
 #include <assert.h>
 #include <getopt.h>
-#include <signal.h>
 #include <string.h>
 
 
@@ -25,11 +24,6 @@
     #define assert(x)
 #endif
 
-static void handler(int sig){
-    LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
-    printStackTrace();
-    quit(1);
-}
 static bool RUN_EVENT_LOOP = 1;
 
 static void clearWMSettings(void){
@@ -196,9 +190,6 @@ static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions){
 int main(int argc, char* argv[]){
     numPassedArguments = argc;
     passedArguments = argv;
-    signal(SIGSEGV, handler);
-    signal(SIGABRT, handler);
-    signal(SIGPIPE, resetPipe);
     loadDefaultOptions();
     startUpMethod = loadSettings;
     parseArgs(argc, argv, 1);
