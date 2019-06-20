@@ -12,6 +12,7 @@
 #include <xcb/xinput.h>
 
 #include "bindings.h"
+#include "windows.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
@@ -47,8 +48,10 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
     LOG_RUN(LOG_LEVEL_VERBOSE, dumpBoundFunction(boundFunction));
     BoundFunctionArg arg = boundFunction->arg;
     if(boundFunction->dynamic == 1){
-        if(winInfo == NULL)
+        if(winInfo == NULL){
+            LOG(LOG_LEVEL_DEBUG, "Passed window is null and boundFunction is dynamic\n");
             return 0;
+        }
         arg.voidArg = winInfo;
     }
     int result = 1;
@@ -180,14 +183,14 @@ int doesBindingMatch(Binding* binding, int detail, int mods, int mask, int keyRe
 }
 
 static WindowInfo* getWindowToActOn(Binding* binding, WindowInfo* target){
-    switch(binding->windowTarget){
+    switch(getActiveMaster()->targetWindow?TARGET_WINDOW:binding->windowTarget){
         default:
         case DEFAULT:
             return isKeyboardMask(binding->mask) ? getFocusedWindow() : target;
         case FOCUSED_WINDOW:
             return getFocusedWindow();
         case TARGET_WINDOW:
-            return target;
+            return getActiveMaster()->targetWindow?getWindowInfo(getActiveMaster()->targetWindow):target;
     }
 }
 int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo, int keyRepeat){

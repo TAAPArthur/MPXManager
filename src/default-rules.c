@@ -374,9 +374,8 @@ void onClientMessage(void){
 }
 
 static WindowInfo* getTargetWindow(int root, int event, int child){
-    Master* master = getActiveMaster();
     int i;
-    int list[] = {0, root, event, child, master->targetWindow};
+    int list[] = {0, root, event, child};
     for(i = LEN(list) - 1; i >= 1 && !list[i]; i--);
     return getWindowInfo(list[i]);
 }
