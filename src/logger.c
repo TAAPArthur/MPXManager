@@ -170,6 +170,7 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms){
 
 void dumpBoundFunction(BoundFunction* boundFunction){
     LOG(LOG_LEVEL_INFO, "calling function %d\n", boundFunction->type);
+    LOG(LOG_LEVEL_INFO, "Arg %d (%p)\n", boundFunction->arg.intArg, boundFunction->arg.voidArg);
     void*    funptr = &boundFunction->func.func;
     backtrace_symbols_fd(funptr, 1, STDERR_FILENO);
 }

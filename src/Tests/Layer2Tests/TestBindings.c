@@ -10,8 +10,7 @@
 
 static BoundFunction sampleChain = CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE,
 {0, Button1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
-{0, Button1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .noGrab = 1},
-END_CHAIN(0, 0));
+{0, Button1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .noGrab = 1});
 
 
 START_TEST(test_init_binding){
@@ -113,7 +112,7 @@ START_TEST(test_check_bindings){
             };
             addBindings(arr, LEN(arr));
             checkBindings(1, 1, mask, NULL, 0);
-            checkBindings(1, 1 | IGNORE_MASK, mask, NULL, 0);
+            checkBindings(1 | IGNORE_MASK, 1, mask, NULL, 0);
             if(mod != 2 && detail != 2)
                 targetCount += 2 * ((passThrough == ALWAYS_PASSTHROUGH) + 1);
             assert(count == targetCount);
@@ -159,8 +158,9 @@ START_TEST(test_bounded_function_negate_result){
 END_TEST
 ///Test to make sure callBoundedFunction() actually calls the right function
 START_TEST(test_call_bounded_function){
-    int integer = 1;
-    int integer2 = -1;
+    int integer = 256;
+    int integer2 = -2;
+    long longNumber = 1L << 32 + 2;
     void* voidPointer = "c";
     int count = 0;
     int targetCounts[] = {6, 6, 6};
@@ -173,6 +173,11 @@ START_TEST(test_call_bounded_function){
         count++;
         individualCounts[0]++;
         return 2;
+    }
+    void funcLongArg(long l){
+        count++;
+        assert(longNumber == l);
+        individualCounts[0]++;
     }
     void funcVoidArg(void* v){
         count++;
@@ -237,7 +242,7 @@ START_TEST(test_call_bounded_function){
         individualCounts[2]++;
         return 5;
     }
-    assert(getActiveBinding() == NULL);
+    assert(getActiveChain() == NULL);
     BoundFunction unset = BIND(exit, 110);
     unset.type = UNSET;
     BoundFunction b[] = {
@@ -245,12 +250,13 @@ START_TEST(test_call_bounded_function){
         CHAIN_GRAB(0,
         {0, Button1, BIND(exit, 1), .noGrab = 1},
         {0, Button1, BIND(exit, 1), .noGrab = 1},
-        END_CHAIN(0, Button1, BIND(exit, 1), .noGrab = 1)
+        {0, Button1, BIND(exit, 1), .noGrab = 1}
                   ),
         BIND(funcNoArg),
         BIND(funcNoArgReturn),
         BIND(funcInt, integer),
         BIND(funcIntReturn, integer),
+        BIND(funcLongArg, longNumber),
         BIND(funcVoidArg, voidPointer),
         BIND(funcVoidArgReturn, voidPointer),
         BIND(funcWinArg),
@@ -263,11 +269,7 @@ START_TEST(test_call_bounded_function){
         OR(BIND(funcNoArg), BIND(funcNoArgReturn)),
         BOTH(BIND(funcNoArg), BIND(funcNoArgReturn)),
         PIPE(BIND(funcEcho, integer), BIND(funcInt)),
-        AUTO_CHAIN_GRAB(0, 1,
-        {0, Button1, OR(BIND(funcNoArg), BIND(funcNoArgReturn)), .noGrab = 1},
-        {0, Button1, BIND(exit, 1), .noGrab = 1},
-        END_CHAIN(0, Button1, BIND(exit, 1), .noGrab = 1)
-                       ),
+        CHAIN_GRAB(0, {0, Button1, BIND(exit, 1), .noGrab = 1}),
     };
     //{ _Generic(funcNoArg,default: .func) =funcNoArg,.type=NO_ARGS}
     int size = sizeof(b) / sizeof(BoundFunction);
@@ -284,7 +286,7 @@ START_TEST(test_call_bounded_function){
     for(int i = 0; i < LEN(targetCounts); i++){
         assert(targetCounts[i] == individualCounts[i]);
     }
-    assert(getActiveBinding() == b[LEN(b) - 1].func.chainBindings);
+    assert(getActiveChain() == &b[LEN(b) - 1]);
     assert(sum == 13 + LEN(b));
 }
 END_TEST
@@ -309,60 +311,61 @@ START_TEST(test_init_chain_binding){
 END_TEST
 START_TEST(test_start_end_chain){
     startChain(&sampleChain);
-    assert(getActiveBinding() == sampleChain.func.chainBindings);
+    assert(getActiveChain() == &sampleChain);
     endChain();
-    assert(getActiveBinding() == NULL);
+    assert(getActiveChain() == NULL);
 }
 END_TEST
 START_TEST(test_chain_bindings){
     int count = 0;
     int outerChainEndMod = 1;
-    void funcNoArg(void){
+    void add(void){
         count++;
     }
-    void funcNoArg2(void){
+    void subtract(void){
         count--;
     }
     int mask = 0;
+    int dangerDetail = 2;
+    int exitDetail = 3;
     Binding chain = {0, 1, CHAIN_GRAB(0,
         {
             0, 1, CHAIN_GRAB(0,
-            {0, 2, BIND(funcNoArg), .passThrough = NO_PASSTHROUGH, .detail = 2, .noGrab = 1},
-            END_CHAIN(0, 0, BIND(funcNoArg2), .passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1)
-                            ), .passThrough = NO_PASSTHROUGH, .detail = 1, .noGrab = 1
+            {0, 1, BIND(add), .passThrough = ALWAYS_PASSTHROUGH},
+            {0, 1, CHAIN_GRAB(0, {0, 0, .endChain = 1, .passThrough = NO_PASSTHROUGH})},
+            {0, dangerDetail, BIND(add), .passThrough = NO_PASSTHROUGH, .noGrab = 1},
+            {0, exitDetail, BIND(subtract), .passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}
+                            ), .passThrough = NO_PASSTHROUGH, .noGrab = 1
         },
-        {0, 2, BIND(exit, 11), .detail = 2, .noGrab = 1, .passThrough = NO_PASSTHROUGH},
-        END_CHAIN(outerChainEndMod, 0, BIND(funcNoArg2), .noEndOnPassThrough = 1, .noGrab = 1)
-                                         ), .passThrough = ALWAYS_PASSTHROUGH, .detail = 1, .noGrab = 1
+        {0, dangerDetail, BIND(exit, 11), .noGrab = 1, .passThrough = NO_PASSTHROUGH},
+        {outerChainEndMod, 0, BIND(subtract),  .noGrab = 1, .endChain = 1, .passThrough = ALWAYS_PASSTHROUGH,},
+        {WILDCARD_MODIFIER, 0, BIND(subtract), .passThrough = NO_PASSTHROUGH},
+                                         ), .passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1
     };
-    Binding dummy = {0, 2, BIND(exit, 10), .detail = 2, .noGrab = 1, .passThrough = NO_PASSTHROUGH};
+    Binding dummy = {0, dangerDetail, BIND(exit, 10), .noGrab = 1, .passThrough = NO_PASSTHROUGH};
+    addBindings(&dummy, 1);
     addBindings(&chain, 1);
     addBindings(&dummy, 1);
-    assert(getActiveBinding() == NULL);
-    //enter first chain
-    assert(checkBindings(1, 0, mask, NULL, 0));
-    assert(getActiveBinding());
-    assert(count == 0);
-    //enter second chain chain
-    checkBindings(1, 0, mask, NULL, 0);
+    FOR_EACH(Binding*, binding, getDeviceBindings())initBinding(binding);
+    assert(getActiveChain() == NULL);
+    //enter first chain & second chain
+    checkBindings(0, 1, mask, NULL, 0);
     assert(getSize(getActiveChains()) == 2);
-    assert(count == 0);
-    checkBindings(2, 0, mask, NULL, 0);
+    assert(getActiveChain());
     assert(count == 1);
-    checkBindings(2, 0, mask, NULL, 0);
+    checkBindings(0, dangerDetail, mask, NULL, 0);
     assert(count == 2);
-    //exit 2nd layer of chain
-    checkBindings(123, 0, mask, NULL, 0);
-    assert(count == 1);
+    checkBindings(0, dangerDetail, mask, NULL, 0);
+    assert(count == 3);
+    //exit second chain
+    checkBindings(0, exitDetail, mask, NULL, 0);
     assert(getSize(getActiveChains()) == 1);
-    //re-enter 2nd layer of chain
-    checkBindings(1, 0, mask, NULL, 0);
-    assert(getSize(getActiveChains()) == 2);
+    assert(getActiveChain());
     assert(count == 1);
-    //passthrough via inner chain
-    checkBindings(123, outerChainEndMod, mask, NULL, 0);
+    //exit fist chain
+    checkBindings(outerChainEndMod, 0, mask, NULL, 0);
     assert(count == 0);
-    assert(getActiveBinding() == NULL);
+    assert(getActiveChain() == NULL);
     clearList(getDeviceBindings());
 }
 END_TEST
@@ -528,8 +531,6 @@ START_TEST(test_passthrough_rules){
     Rule noPassThrough = CREATE_WILDCARD(BIND(returnFalse), .passThrough = NO_PASSTHROUGH);
     addToList(&list, &noPassThrough);
     assert(!applyRules(&list, NULL));
-    //here to touch 'impossible case'
-    passThrough(0, -1);
     clearList(&list);
 }
 END_TEST

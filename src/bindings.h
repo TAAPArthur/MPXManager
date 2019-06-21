@@ -57,9 +57,6 @@ typedef enum {
     UNSET = 0,
     /**Start a chain binding*/
     CHAIN,
-    /**Start a auto chain binding*/
-    CHAIN_AUTO,
-
     /// & for bindings
     FUNC_BOTH,
     /// && for bindings
@@ -95,7 +92,7 @@ typedef enum {
 } BindingType;
 
 /**
- *Union holding the argument to a bounded function.
+ * Union holding the argument to a bounded function.
  */
 typedef union {
     /**an int*/
@@ -104,6 +101,13 @@ typedef union {
     int intArg;
     /**2 ints*/
     int intArr[2];
+    /// args for chain binding
+    struct {
+        /// len of chain binding
+        int len;
+        /// grab mask
+        int mask;
+    } chain;
     /**a pointer*/
     void* voidArg;
     /**a pointer*/
@@ -126,16 +130,16 @@ typedef enum {
  * such that when the latter is triggered the bound function
  * is called with arguments
  */
-typedef struct bound_function_struct {
+typedef struct BoundFunction {
     /**Union of supported functions*/
     union {
         /**Function*/
         void (*func)();
         int (*funcReturnInt)();
         /**An array of Bindings terminated with a by the last member having .endChain==1*/
-        struct binding_struct* chainBindings;
+        struct Binding* chainBindings;
         ///Used with and/or bindings
-        struct bound_function_struct* boundFunctionArr;
+        struct BoundFunction* boundFunctionArr;
 
     } func;
     /**Arguments to pass into the bound function*/
@@ -149,7 +153,7 @@ typedef struct bound_function_struct {
     bool negateResult;
 } BoundFunction;
 ///used for key/mouse bindings
-typedef struct binding_struct {
+typedef struct Binding {
     /**Modifier to match on*/
     unsigned int mod;
     /**Either Button or KeySym to match**/
@@ -164,10 +168,8 @@ typedef struct binding_struct {
     int mask;
     /**The target of the grab;; Default: is ALL_MASTER*/
     int targetID;
-    /**If in an array, this property being set to 1 signifies the end*/
+    /**If in an array, if this binding is triggered, the chain will end*/
     bool endChain;
-    /**If a binding is pressed that doesn't match the chain, don't end it*/
-    bool noEndOnPassThrough;
     /// Details which window to pass to the boundFunction
     WindowParamType windowTarget;
     /// if true the binding won't trigger for key repeats
@@ -175,6 +177,8 @@ typedef struct binding_struct {
 
     /// Binding will be triggered in the active master is in a compatible mode
     unsigned int mode;
+    /// user specified name to be used for debugging
+    char* name;
 
     /**Converted detail of key bindings. Should not be set manually*/
     int detail;
@@ -255,13 +259,11 @@ typedef struct {
         void (*)(WindowInfo*, unsigned int): WIN_INT_ARG, \
         int (*)(WindowInfo*, unsigned int): WIN_INT_ARG_RETURN_INT, \
         void (*)(long): VOID_ARG, \
-        void (*)(double): VOID_ARG, \
         void (*)(Layout*): VOID_ARG, \
         void (*)(Rule*): VOID_ARG, \
         void (*)(char*): VOID_ARG, \
         void (*)(void*): VOID_ARG, \
         int (*)(long): VOID_ARG, \
-        int (*)(double): VOID_ARG, \
         int (*)(Layout*): VOID_ARG_RETURN_INT, \
         int (*)(Rule*): VOID_ARG_RETURN_INT, \
         int (*)(char*): VOID_ARG_RETURN_INT, \
@@ -272,36 +274,6 @@ typedef struct {
 
 
 
-/**
- * Used to Create a BoundedFuntion that when triggered will start a chain binding.
- * @param bindings list of Bindings that will make up the chain
- * @see BoundedFuntion
- */
-#define CHAIN(bindings...) AUTO_CHAIN_GRAB(DEFAULT_CHAIN_BINDING_GRAB_MASK,0,bindings)
-/**
- * when the chain starts, the first bound function will be automatically called
- */
-#define AUTO_CHAIN(bindings...) AUTO_CHAIN_GRAB(DEFAULT_CHAIN_BINDING_GRAB_MASK,1,bindings)
-/**
- * Used to Create a BoundedFuntion that when triggered will start a chain binding.
- * When the chain is started, the active pointer/keyboard will be grabbed
- * @param GRAB whether or not to grab the active pointer/keyboard when the chain starts
- * @param ... List of Bindings that will make up the chain
- * @see BoundedFuntion
- */
-#define CHAIN_GRAB(GRAB, ...) AUTO_CHAIN_GRAB(GRAB,0,__VA_ARGS__)
-/**
- *
- * @param GRAB whether to grab the chain or not
- * @param AUTO when the chain is activated, auto trigger the first binding
- * @param ... the members of the chain
- */
-#define AUTO_CHAIN_GRAB(GRAB,AUTO,...){.func={.chainBindings=(Binding*)(Binding[]){__VA_ARGS__}},.arg={.intArg=GRAB},.type=AUTO?CHAIN_AUTO:CHAIN}
-/**
- * Used to create a Keybinding that will server as the terminator for the chain.
- * When this binding is triggered the chain will end
- */
-#define END_CHAIN(...){__VA_ARGS__,.endChain=1}
 
 /**
  * When called, call the BoundFunctions will be triggered until one of them returns false
@@ -330,6 +302,13 @@ typedef struct {
 /// Helper macro for AND, OR and BOTH
 #define _UNION(TYPE,B...){.func={.boundFunctionArr=(BoundFunction*)(BoundFunction[]){B}},.arg={.intArg=LEN(((BoundFunction[]){B}))},.type=TYPE}
 
+/**
+ * Used to Create a BoundedFuntion that when triggered will start a chain binding.
+ *
+ * @param GRAB whether to grab the chain or not
+ * @param B the members of the chain
+ */
+#define CHAIN_GRAB(GRAB,B...){.func={.chainBindings=(Binding*)(Binding[]){B}},.arg={.intArr={LEN(((Binding[]){B})),GRAB}},.type=CHAIN}
 
 
 /**
@@ -398,14 +377,14 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo);
 
 /**
  * Check all bindings of a given type to see if they match the params
- * @param detail either a KeyCode or a mouse button
  * @param mods modifier mask
+ * @param detail either a KeyCode or a mouse button
  * @param bindingType
  * @param winInfo the relevant window
  * @param keyRepeat if the event was a key repeat
  * @return 1 if a binding was matched that had passThrough == false
  */
-int checkBindings(int detail, int mods, int bindingType, WindowInfo* winInfo, int keyRepeat);
+int checkBindings(int mods, int detail, int bindingType, WindowInfo* winInfo, int keyRepeat);
 
 
 /**
@@ -490,7 +469,7 @@ void addBindings(Binding* bindings, int num);
 /**
  * @return the last Chain added the active chain stack
  */
-Binding* getActiveBinding();
+BoundFunction* getActiveChain();
 /**
  * Returns the list of chains the active master is currently triggering
  */

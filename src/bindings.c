@@ -39,8 +39,84 @@ static void pushBinding(BoundFunction* chain){
 static BoundFunction* popActiveBinding(){
     return pop(getActiveChains());
 }
-Binding* getActiveBinding(){
-    return isNotEmpty(getActiveChains()) ? ((BoundFunction*)getLast(getActiveChains()))->func.chainBindings : NULL;
+BoundFunction* getActiveChain(){
+    return getLast(getActiveChains());
+}
+
+void startChain(BoundFunction* boundFunction){
+    Binding* chain = boundFunction->func.chainBindings;
+    int mask = boundFunction->arg.chain.mask;
+    LOG(LOG_LEVEL_DEBUG, "starting chain; mask:%d\n", mask);
+    if(mask)
+        grabDevice(getDeviceIDByMask(mask), mask);
+    for(int i = 0; i < boundFunction->arg.chain.len; i++){
+        if(!chain[i].detail)
+            initBinding(&chain[i]);
+        grabBinding(&chain[i]);
+    }
+    pushBinding(boundFunction);
+}
+void endChain(){
+    BoundFunction* boundFunction = popActiveBinding();
+    assert(boundFunction);
+    Binding* chain = boundFunction->func.chainBindings;
+    int mask = boundFunction->arg.chain.mask;
+    if(mask)
+        ungrabDevice(getDeviceIDByMask(mask));
+    for(int i = 0; i < boundFunction->arg.chain.len; i++)
+        ungrabBinding(&chain[i]);
+    LOG(LOG_LEVEL_DEBUG, "ending chain\n");
+}
+int getIDOfBindingTarget(Binding* binding){
+    return binding->targetID == -1 ?
+           isKeyboardMask(binding->mask) ?
+           getActiveMasterKeyboardID() : getActiveMasterPointerID() :
+           binding->targetID;
+}
+
+static WindowInfo* getWindowToActOn(Binding* binding, WindowInfo* target){
+    switch(getActiveMaster()->targetWindow ? TARGET_WINDOW : binding->windowTarget){
+        default:
+        case DEFAULT:
+            return isKeyboardMask(binding->mask) ? getFocusedWindow() : target;
+        case FOCUSED_WINDOW:
+            return getFocusedWindow();
+        case TARGET_WINDOW:
+            return getActiveMaster()->targetWindow ? getWindowInfo(getActiveMaster()->targetWindow) : target;
+    }
+}
+static bool hasChainExtended(BoundFunction* ref){
+    return getActiveChain() != ref && (ref == NULL || find(getActiveChains(), ref, 0));
+}
+static int triggerActiveChain(int keyCode, int mods, int mask, WindowInfo* winInfo, int keyRepeat,
+                              int* bindingsTriggered){
+    bool ended = 0;
+    PassThrough passThroughResult = 0;
+    BoundFunction* activeChain = getActiveChain();
+    for(int i = 0; !ended && i < getActiveChain()->arg.chain.len; i++){
+        Binding* chainBinding = &getActiveChain()->func.chainBindings[i];
+        if(doesBindingMatch(chainBinding, keyCode, mods, mask, keyRepeat)){
+            LOG(LOG_LEVEL_TRACE, "Calling chain binding %d\n", i);
+            getActiveMaster()->lastBindingTriggered = chainBinding;
+            int result = callBoundedFunction(&chainBinding->boundFunction, getWindowToActOn(chainBinding, winInfo));
+            if(hasChainExtended(activeChain)){
+                LOG(LOG_LEVEL_DEBUG, "Nested chain detected\n");
+                if(!triggerActiveChain(keyCode, mods, mask, winInfo, keyRepeat, bindingsTriggered))
+                    return 0;
+            }
+            if(chainBinding->endChain){
+                LOG(LOG_LEVEL_DEBUG, "chain is ending because exit key was pressed\n");
+                //chain has ended
+                endChain();
+                ended = 1;
+            }
+            if(!(passThroughResult = passThrough(result, chainBinding->passThrough)))
+                return 0;
+            if(bindingsTriggered)
+                *bindingsTriggered += 1;
+        }
+    }
+    return passThroughResult;
 }
 
 int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
@@ -60,12 +136,7 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
             LOG(LOG_LEVEL_WARN, "calling unset function; nothing is happening\n");
             break;
         case CHAIN:
-            assert(!boundFunction->func.chainBindings->endChain);
             startChain(boundFunction);
-            break;
-        case CHAIN_AUTO:
-            startChain(boundFunction);
-            result = callBoundedFunction(&boundFunction->func.chainBindings->boundFunction, winInfo);
             break;
         case FUNC_AND:
             for(int i = 0; i < boundFunction->arg.intArg; i++)
@@ -138,42 +209,6 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
     return boundFunction->negateResult ? !result : result;
 }
 
-#define _FOR_EACH_CHAIN(CODE...){ int index=0;\
-    while(1){CODE;\
-            if(chain[index++].endChain) \
-                break; \
-        } \
-    }
-
-void startChain(BoundFunction* boundFunction){
-    Binding* chain = boundFunction->func.chainBindings;
-    int mask = boundFunction->arg.intArg;
-    LOG(LOG_LEVEL_DEBUG, "starting chain; mask:%d\n", mask);
-    if(mask)
-        grabDevice(getDeviceIDByMask(mask), mask);
-    _FOR_EACH_CHAIN(
-        if(!chain[index].detail)
-        initBinding(&chain[index]);
-        grabBinding(&chain[index])
-    );
-    pushBinding(boundFunction);
-}
-void endChain(){
-    BoundFunction* boundFunction = popActiveBinding();
-    Binding* chain = boundFunction->func.chainBindings;
-    int mask = boundFunction->arg.intArg;
-    if(mask)
-        ungrabDevice(getDeviceIDByMask(mask));
-    _FOR_EACH_CHAIN(ungrabBinding(&chain[index]));
-    LOG(LOG_LEVEL_DEBUG, "ending chain");
-}
-int getIDOfBindingTarget(Binding* binding){
-    return binding->targetID == -1 ?
-           isKeyboardMask(binding->mask) ?
-           getActiveMasterKeyboardID() : getActiveMasterPointerID() :
-           binding->targetID;
-}
-
 
 
 int doesBindingMatch(Binding* binding, int detail, int mods, int mask, int keyRepeat){
@@ -182,55 +217,27 @@ int doesBindingMatch(Binding* binding, int detail, int mods, int mask, int keyRe
            (binding->detail == 0 || binding->detail == detail) && (!keyRepeat || keyRepeat == !binding->noKeyRepeat);
 }
 
-static WindowInfo* getWindowToActOn(Binding* binding, WindowInfo* target){
-    switch(getActiveMaster()->targetWindow?TARGET_WINDOW:binding->windowTarget){
-        default:
-        case DEFAULT:
-            return isKeyboardMask(binding->mask) ? getFocusedWindow() : target;
-        case FOCUSED_WINDOW:
-            return getFocusedWindow();
-        case TARGET_WINDOW:
-            return getActiveMaster()->targetWindow?getWindowInfo(getActiveMaster()->targetWindow):target;
-    }
-}
-int checkBindings(int keyCode, int mods, int mask, WindowInfo* winInfo, int keyRepeat){
+int checkBindings(int mods, int keyCode,  int mask, WindowInfo* winInfo, int keyRepeat){
     mods &= ~IGNORE_MASK;
     LOG(LOG_LEVEL_VERBOSE, "detail: %d mod: %d mask: %d\n", keyCode, mods, mask);
-    Binding* chainBinding = getActiveBinding();
     int bindingsTriggered = 0;
-    while(chainBinding){
-        int i = 0;
-        do {
-            if(doesBindingMatch(&chainBinding[i], keyCode, mods, mask, keyRepeat)){
-                LOG(LOG_LEVEL_TRACE, "Calling chain binding\n");
-                int result = callBoundedFunction(&chainBinding[i].boundFunction, getWindowToActOn(&chainBinding[i], winInfo));
-                if(chainBinding[i].endChain){
-                    LOG(LOG_LEVEL_DEBUG, "chain is ending because exit key was pressed\n");
-                    //chain has ended
-                    endChain();
-                }
-                if(!passThrough(result, chainBinding[i].passThrough))
-                    return 0;
-                bindingsTriggered += 1;
-            }
-            else if(chainBinding[i].endChain)
-                if(!chainBinding[i].noEndOnPassThrough){
-                    LOG(LOG_LEVEL_TRACE, "chain is ending because external key was pressed\n");
-                    endChain();
-                }
-                else {
-                    LOG(LOG_LEVEL_TRACE, "chain is not ending despite external key was pressed\n");
-                }
-        } while(!chainBinding[i++].endChain);
-        if(chainBinding == getActiveBinding())
-            break;
-        else chainBinding = getActiveBinding();
+    BoundFunction* activeChain;
+    while(activeChain = getActiveChain()){
+        if(!triggerActiveChain(keyCode, mods, mask, winInfo, keyRepeat, &bindingsTriggered))
+            return 0;
+        if(activeChain == getActiveChain())
+            endChain();
     }
     FOR_EACH(Binding*, binding, getDeviceBindings()){
         if(doesBindingMatch(binding, keyCode, mods, mask, keyRepeat)){
             bindingsTriggered += 1;
             LOG(LOG_LEVEL_TRACE, "Calling non-chain binding\n");
-            if(!passThrough(callBoundedFunction(&binding->boundFunction, getWindowToActOn(binding, winInfo)), binding->passThrough))
+            getActiveMaster()->lastBindingTriggered = binding;
+            int result = callBoundedFunction(&binding->boundFunction, getWindowToActOn(binding, winInfo));
+            if(hasChainExtended(activeChain))
+                if(!triggerActiveChain(keyCode, mods, mask, winInfo, keyRepeat, &bindingsTriggered))
+                    return 0;
+            if(!passThrough(result, binding->passThrough))
                 return 0;
         }
     }
@@ -270,7 +277,9 @@ int doesWindowMatchRule(Rule* rules, WindowInfo* winInfo){
 }
 int passThrough(int result, PassThrough pass){
     switch(pass){
+        default:
         case NO_PASSTHROUGH:
+            assert(pass == NO_PASSTHROUGH && "invalid pass through option");
             return 0;
         case ALWAYS_PASSTHROUGH:
             return 1;
@@ -279,8 +288,6 @@ int passThrough(int result, PassThrough pass){
         case PASSTHROUGH_IF_FALSE:
             return !result;
     }
-    LOG(LOG_LEVEL_WARN, "invalid pass through option %d\n", pass);
-    return 0;
 }
 
 int applyRules(ArrayList* head, WindowInfo* winInfo){
@@ -311,7 +318,7 @@ void addBindings(Binding* bindings, int num){
  * @return
  */
 int _grabUngrabBinding(Binding* binding, int ungrab){
-    if(!binding->noGrab){
+    if(!binding->noGrab && binding->detail){
         if(!ungrab)
             return grabDetail(getIDOfBindingTarget(binding), binding->detail, binding->mod, binding->mask);
         else

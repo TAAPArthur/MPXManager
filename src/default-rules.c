@@ -390,8 +390,7 @@ void onDeviceEvent(void){
         return;
     setActiveMasterByDeviceId(event->deviceid);
     setLastKnowMasterPosition(event->root_x >> 16, event->root_y >> 16);
-    checkBindings(event->detail, event->mods.effective,
-                  1 << event->event_type,
+    checkBindings(event->mods.effective, event->detail, 1 << event->event_type,
                   getTargetWindow(event->root, event->event, event->child),
                   (event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0);
 }

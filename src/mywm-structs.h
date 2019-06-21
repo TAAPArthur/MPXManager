@@ -102,7 +102,7 @@ typedef struct {
     int properties[12];
 } WindowInfo;
 
-struct binding_struct;
+struct Binding;
 ///holds data on a master device pair like the ids and focus history
 typedef struct {
     /**keyboard master id;*/
@@ -126,7 +126,7 @@ typedef struct {
     /// The current binding mode
     int bindingMode;
     /**Pointer to last binding triggered by this master device*/
-    struct binding_struct* lastBindingTriggered;
+    struct Binding* lastBindingTriggered;
     /**List of the active chains with the newest first*/
     ArrayList activeChains;
     /**When true, the focus stack won't be updated on focus change*/
