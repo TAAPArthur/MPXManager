@@ -30,9 +30,7 @@ enum {
     onXConnection = LAST_REAL_EVENT,
     /// Run after properties have been loaded
     PropertyLoad,
-    /// determines if a newly detected window should be recorded/monitored/controlled by us
-    ProcessingWindow,
-    /// called after the newly created window has been added to a workspace
+    /// Called after the newly created window has been added to our internal lists
     RegisteringWindow,
     /// triggered when root screen is changed
     onScreenChange,

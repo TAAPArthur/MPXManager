@@ -207,7 +207,6 @@ char* eventTypeToString(int type){
             _ADD_EVENT_TYPE_CASE(ExtraEvent);
             _ADD_EVENT_TYPE_CASE(onXConnection);
             _ADD_EVENT_TYPE_CASE(PropertyLoad);
-            _ADD_EVENT_TYPE_CASE(ProcessingWindow);
             _ADD_EVENT_TYPE_CASE(RegisteringWindow);
             _ADD_EVENT_TYPE_CASE(onScreenChange);
             _ADD_EVENT_TYPE_CASE(TileWorkspace);

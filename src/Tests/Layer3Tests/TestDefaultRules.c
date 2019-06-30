@@ -229,14 +229,11 @@ START_TEST(test_ignored_windows){
     createUserIgnoredWindow();
     mapWindow(createUserIgnoredWindow());
     scan(root);
-    assert(getSize(getAllWindows()) == 0);
     consumeEvents();
     int idle = getIdleCount();
     START_MY_WM;
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
     createUserIgnoredWindow();
     mapWindow(createUserIgnoredWindow());
-    idle = getIdleCount();
     WAIT_UNTIL_TRUE(idle != getIdleCount());
     assert(getSize(getAllWindows()) == 0);
 }
@@ -690,7 +687,7 @@ START_TEST(test_workspace_deletion){
     assert(getNumberOfWorkspaces() > 3);
     activateWorkspace(1);
     for(int i = 0; i < 10; i++)
-        processNewWindow(createWindowInfo(createNormalWindow()));
+        registerWindow(createWindowInfo(createNormalWindow()));
     flush();
     activateWorkspace(0);
     MONITOR_DUPLICATION_POLICY = 0;

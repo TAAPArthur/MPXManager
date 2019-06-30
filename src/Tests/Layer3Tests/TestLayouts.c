@@ -323,10 +323,10 @@ END_TEST
 START_TEST(test_transient_windows_always_above){
     DEFAULT_WINDOW_MASKS = MAPPABLE_MASK | MAPPED_MASK;
     WindowInfo* winInfo = createWindowInfo(mapWindow(createNormalWindow()));
-    processNewWindow(winInfo);
+    registerWindow(winInfo);
     moveWindowToWorkspace(winInfo, getActiveWorkspaceIndex());
     WindowInfo* winInfo2 = createWindowInfo(mapWindow(createNormalWindow()));
-    processNewWindow(winInfo2);
+    registerWindow(winInfo2);
     xcb_icccm_set_wm_transient_for(dis, winInfo2->id, winInfo->id);
     loadWindowProperties(winInfo2);
     assert(winInfo2->transientFor == winInfo->id);
@@ -473,7 +473,7 @@ START_TEST(test_raise_lower_request){
         finalStackingOrder[i] = win[i];
     }
     for(int i = LEN(winInfo) - 1; i >= 0; i--)
-        processNewWindow(winInfo[i]);
+        registerWindow(winInfo[i]);
     finalStackingOrder[0] = win[LEN(win) - 1];
     finalStackingOrder[LEN(win) - 1] = win[0];
     assert(checkStackingOrder(win, LEN(win)));

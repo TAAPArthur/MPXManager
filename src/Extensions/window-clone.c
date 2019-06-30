@@ -90,7 +90,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo){
     assert(clone->title == NULL);
     syncPropertiesWithParent(clone, winInfo);
     clone->eventMasks |= XCB_EVENT_MASK_EXPOSURE;
-    processNewWindow(clone);
+    registerWindow(clone);
     passiveGrab(clone->id, NON_ROOT_DEVICE_EVENT_MASKS | XCB_INPUT_XI_EVENT_MASK_ENTER);
     CloneInfo* cloneInfo = calloc(1, sizeof(CloneInfo));
     cloneInfo->parent = winInfo->id;

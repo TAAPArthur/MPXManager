@@ -298,8 +298,3 @@ int checkStackingOrder(WindowID* stackingOrder, int num){
     return counter == num;
 }
 
-void addDummyIgnoreRule(void){
-    static Rule ignoreRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
-                             .negateResult = 1);
-    addToList(getEventRules(ProcessingWindow), &ignoreRule);
-}

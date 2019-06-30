@@ -295,7 +295,7 @@ START_TEST(test_configure_windows){
     markAsDock(winInfo[0]);
     DEFAULT_WINDOW_MASKS = EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK;
     for(int n = 0; n < LEN(winInfo); n++){
-        processNewWindow(winInfo[n]);
+        registerWindow(winInfo[n]);
         WindowID win = winInfo[n]->id;
         short values[] = {1, 2, 3, 4, 5};
         int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
@@ -368,20 +368,20 @@ START_TEST(test_auto_focus){
     winInfo->creationTime = getTime();
     winInfo2->creationTime = getTime();
     winInfo3->creationTime = getTime();
-    processNewWindow(winInfo);
+    registerWindow(winInfo);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     updateMapState(winInfo->id, 1);
     assert(winInfo->id == getActiveFocus(getActiveMasterKeyboardID()));
     focusWindow(focusHolder);
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
-    processNewWindow(winInfo2);
+    registerWindow(winInfo2);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     updateMapState(winInfo2->id, 1);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     int delay = 25;
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = delay;
     msleep(delay * 2);
-    processNewWindow(winInfo3);
+    registerWindow(winInfo3);
     updateMapState(winInfo3->id, 1);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
 }

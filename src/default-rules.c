@@ -24,13 +24,16 @@
 #include "session.h"
 #include "xsession.h"
 
-static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
-                                      .negateResult = 1);
 void addUnknownWindowRule(void){
+    static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(BIND(hasMask, IMPLICIT_TYPE), .passThrough = PASSTHROUGH_IF_FALSE,
+                                          .negateResult = 1);
     prependToList(getEventRules(RegisteringWindow), &ignoreUnknownWindowRule);
 }
+static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(AND(BIND(hasMask, IMPLICIT_TYPE), BIND(unregisterWindow)),
+                                      .passThrough = PASSTHROUGH_IF_FALSE,
+                                      .negateResult = 1);
 void addUnknownWindowIgnoreRule(void){
-    prependToList(getEventRules(ProcessingWindow), &ignoreUnknownWindowRule);
+    prependToList(getEventRules(PropertyLoad), &ignoreUnknownWindowRule);
 }
 static void tileChangeWorkspaces(void){
     updateState(tileWorkspace, syncMonitorMapState);
@@ -145,7 +148,7 @@ static void onWindowDetection(WindowID id, WindowID parent, short* geo){
     WindowInfo* winInfo = createWindowInfo(id);
     winInfo->creationTime = getTime();
     winInfo->parent = parent;
-    if(processNewWindow(winInfo)){
+    if(registerWindow(winInfo)){
         if(geo)
             setGeometry(winInfo, geo);
         applyEventRules(onWindowMove, winInfo);
@@ -159,7 +162,7 @@ void onCreateEvent(void){
 }
 void onDestroyEvent(void){
     xcb_destroy_notify_event_t* event = getLastEvent();
-    deleteWindow(event->window);
+    unregisterWindow(getWindowInfo(event->window));
 }
 void onVisibilityEvent(void){
     xcb_visibility_notify_event_t* event = getLastEvent();
@@ -203,7 +206,7 @@ void onReparentEvent(void){
         if(event->parent == root)
             onWindowDetection(event->window, event->parent, NULL);
         else
-            deleteWindow(event->window);
+            unregisterWindow(getWindowInfo(event->window));
     }
 }
 

@@ -62,14 +62,14 @@ START_TEST(test_mask_save_restore){
     SYNC_WINDOW_MASKS = 1;
     WindowInfo* winInfo = createWindowInfo(createNormalWindow());
     WindowInfo* winInfo2 = createWindowInfo(createNormalWindow());
-    assert(processNewWindow(winInfo));
+    assert(registerWindow(winInfo));
     //add a USER_MASK
     addMask(winInfo, NO_TILE_MASK);
     xcb_ewmh_get_atoms_reply_t reply;
     int hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
     assert(hasState);
     catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo2->id, reply.atoms_len, reply.atoms));
-    assert(processNewWindow(winInfo2));
+    assert(registerWindow(winInfo2));
     assert(getSize(getAllWindows()) == 2);
     assert(getMask(winInfo) == getMask(winInfo2));
     xcb_ewmh_get_atoms_reply_wipe(&reply);
@@ -229,7 +229,7 @@ START_TEST(test_window_input_focus_detection){
         WindowID win = createInputWindow(i < 2);
         WindowInfo* winInfo = createWindowInfo(win);
         flush();
-        processNewWindow(winInfo);
+        registerWindow(winInfo);
         assert(hasMask(winInfo, INPUT_MASK) == (i < 2 ? 1 : 0));
         removeWindow(win);
     }
@@ -245,7 +245,7 @@ START_TEST(test_process_window){
     flush();
     assert(!isNotEmpty(getAllWindows()));
     WindowInfo* winInfo = createWindowInfo(win);
-    processNewWindow(winInfo);
+    registerWindow(winInfo);
     assert(isNotEmpty(getAllWindows()));
     assert(getSize(getAllWindows()) == 1);
     checkProperties(getHead(getAllWindows()));
@@ -267,28 +267,26 @@ START_TEST(test_process_bad_window){
     WindowInfo* winInfo = createWindowInfo(win);
     winInfo->creationTime = getTime();
     assert(!catchError(xcb_destroy_window_checked(dis, win)));
-    processNewWindow(winInfo);
+    registerWindow(winInfo);
     assert(getSize(getAllWindows()) == 0);
 }
 END_TEST
 START_TEST(test_register_bad_window){
-    processNewWindow(createWindowInfo(1));
+    registerWindow(createWindowInfo(1));
     assert(getSize(getAllWindows()) == 0);
-    processNewWindow(createWindowInfo(2));
+    registerWindow(createWindowInfo(2));
     assert(getSize(getAllWindows()) == 0);
 }
 END_TEST
 
 START_TEST(test_window_scan){
     assert(!isNotEmpty(getAllWindows()));
-    addDummyIgnoreRule();
     scan(root);
     assert(!isNotEmpty(getAllWindows()));
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
     WindowID win3 = createUnmappedWindow();
     createIgnoredWindow();
-    createUserIgnoredWindow();
     assert(!isWindowMapped(win));
     assert(!isWindowMapped(win2));
     assert(!isWindowMapped(win3));

@@ -132,9 +132,10 @@ int raiseLowerWindowInfo(WindowInfo* winInfo, int raise);
 int attemptToMapWindow(int id);
 /**
  * Removes a window from our records and updates EWMH client list if the window was present
+ * @param winInfo
  * @return 1 iff the window was already in our records
  */
-int deleteWindow(WindowID winToRemove);
+int unregisterWindow(WindowInfo* winInfo);
 
 
 

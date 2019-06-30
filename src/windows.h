@@ -95,9 +95,10 @@ void loadProtocols(WindowInfo* winInfo);
 /**
  * Load various window properties
  * @param winInfo
+ * @return the result of applying PropertyLoad rules after reloading window properties
  * @see loadClassInfo(),loadTitleInfo(),loadWindowType(),loadWindowHints()
  */
-void loadWindowProperties(WindowInfo* winInfo);
+int loadWindowProperties(WindowInfo* winInfo);
 
 
 /**
@@ -123,18 +124,10 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, in
 
 /**
  * Determines if and how a given window should be managed
+ *
+ *
  * @param winInfo
  * @return 1 iff the window wasn't ignored
- */
-int processNewWindow(WindowInfo* winInfo);
-
-
-
-/**
- * Adds the window to our list of managed windows as a non-dock
- * and load any EWMH saved state
- * @param winInfo
- * @return 0 if the window doesn't exists
  */
 int registerWindow(WindowInfo* winInfo);
 

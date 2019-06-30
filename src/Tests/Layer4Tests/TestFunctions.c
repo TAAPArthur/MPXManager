@@ -70,7 +70,7 @@ void assertWindowIsFocused(WindowID win){
 }
 START_TEST(test_find_and_raise_toggle){
     for(int i = 0; i < 8; i++)
-        processNewWindow(createWindowInfo(mapWindow(createNormalWindow())));
+        registerWindow(createWindowInfo(mapWindow(createNormalWindow())));
     Rule r = {NULL, 0, NULL};
     WindowInfo* head = getHead(getAllWindows());
     focusWindowInfo(head);
@@ -101,7 +101,7 @@ START_TEST(test_find_and_raise){
             assert(xcb_request_check(dis,
                                      xcb_ewmh_set_wm_name_checked(ewmh,
                                              win[i], 1, titles[i])) == NULL);
-            processNewWindow(createWindowInfo(temp));
+            registerWindow(createWindowInfo(temp));
         }
     }
     for(int i = 0; i < size * 2; i++){

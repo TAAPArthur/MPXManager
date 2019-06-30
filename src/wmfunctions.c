@@ -223,7 +223,10 @@ static void focusNextVisibleWindow(ArrayList* masters, WindowInfo* defaultWinInf
     setActiveMaster(active);
 }
 
-int deleteWindow(WindowID winToRemove){
+int unregisterWindow(WindowInfo* winInfo){
+    if(!winInfo)
+        return 0;
+    WindowID winToRemove = winInfo->id;
     LOG(LOG_LEVEL_DEBUG, "window %d has been removed\n", winToRemove);
     ArrayList mastersFocusedOnWindow = {0};
     FOR_EACH(Master*, master, getAllMasters()){
@@ -471,19 +474,20 @@ void updateMapState(int id, int map){
             addMask(winInfo, MAPPED_MASK);
             if(winInfo->mappedBefore)return;
             else winInfo->mappedBefore = 1;
-            loadWindowProperties(winInfo);
             addToList(&mappedOrder, (void*)(long)winInfo->id);
-            long delta = getTime() - winInfo->creationTime;
-            if(hasMask(winInfo, INPUT_MASK)){
-                if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT){
-                    if(focusWindowInfo(winInfo)){
-                        LOG(LOG_LEVEL_DEBUG, "auto focused window %d (Detected %ldms ago)\n", winInfo->id, delta);
-                        raiseWindowInfo(winInfo);
-                        updateFocusState(winInfo);
+            if(loadWindowProperties(winInfo)){
+                long delta = getTime() - winInfo->creationTime;
+                if(hasMask(winInfo, INPUT_MASK)){
+                    if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT){
+                        if(focusWindowInfo(winInfo)){
+                            LOG(LOG_LEVEL_DEBUG, "auto focused window %d (Detected %ldms ago)\n", winInfo->id, delta);
+                            raiseWindowInfo(winInfo);
+                            updateFocusState(winInfo);
+                        }
                     }
+                    else
+                        LOG(LOG_LEVEL_TRACE, "did not auto focus window %d (Detected %ldms ago)\n", winInfo->id, delta);
                 }
-                else
-                    LOG(LOG_LEVEL_TRACE, "did not auto focus window %d (Detected %ldms ago)\n", winInfo->id, delta);
             }
         }
         else

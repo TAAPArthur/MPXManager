@@ -170,7 +170,7 @@ void loadProtocols(WindowInfo* winInfo){
         xcb_icccm_get_wm_protocols_reply_wipe(&reply);
     }
 }
-void loadWindowProperties(WindowInfo* winInfo){
+int loadWindowProperties(WindowInfo* winInfo){
     LOG(LOG_LEVEL_VERBOSE, "loading window properties %d\n", winInfo->id);
     loadClassInfo(winInfo);
     loadTitleInfo(winInfo);
@@ -182,7 +182,7 @@ void loadWindowProperties(WindowInfo* winInfo){
     }
     loadWindowType(winInfo);
     loadWindowHints(winInfo);
-    applyEventRules(PropertyLoad, winInfo);
+    return applyEventRules(PropertyLoad, winInfo);
 }
 void loadSavedAtomState(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t reply;
@@ -311,24 +311,6 @@ void unlockWindow(WindowInfo* winInfo){
     winInfo->geometrySemaphore--;
 }
 
-int registerWindow(WindowInfo* winInfo){
-    LOG(LOG_LEVEL_DEBUG, "Registering %d (%x)\n", winInfo->id, winInfo->id);
-    assert(winInfo);
-    assert(!find(getAllWindows(), winInfo, sizeof(int)) && "Window registered exists");
-    addWindowInfo(winInfo);
-    Window win = winInfo->id;
-    assert(win);
-    if(LOAD_SAVED_STATE){
-        loadSavedAtomState(winInfo);
-    }
-    if(registerForWindowEvents(win, winInfo->eventMasks | NON_ROOT_EVENT_MASKS) != BadWindow){
-        passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
-        applyEventRules(RegisteringWindow, winInfo);
-        return 1;
-    }
-    removeWindow(winInfo->id);
-    return 0;
-}
 static int loadWindowAttributes(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr){
     if(!attr || attr->override_redirect)
         return 0;
@@ -336,7 +318,9 @@ static int loadWindowAttributes(WindowInfo* winInfo, xcb_get_window_attributes_r
         addMask(winInfo, INPUT_ONLY_MASK);
     return 1;
 }
-int processNewWindow(WindowInfo* winInfo){
+int registerWindow(WindowInfo* winInfo){
+    assert(winInfo);
+    assert(!find(getAllWindows(), winInfo, sizeof(int)) && "Window registered exists");
     LOG(LOG_LEVEL_TRACE, "processing %d (%x)\n", winInfo->id, winInfo->id);
     addMask(winInfo, DEFAULT_WINDOW_MASKS);
     int abort = 0;
@@ -348,14 +332,26 @@ int processNewWindow(WindowInfo* winInfo){
         abort = !loadWindowAttributes(winInfo, attr);
         if(attr)free(attr);
     }
-    if(!abort)
-        loadWindowProperties(winInfo);
-    if(abort || !applyEventRules(ProcessingWindow, winInfo)){
-        LOG(LOG_LEVEL_VERBOSE, "Window is to be ignored; freeing winInfo %d\n", winInfo->id);
-        deleteWindowInfo(winInfo);
+    LOG(LOG_LEVEL_DEBUG, "Registering %d (%x)\n", winInfo->id, winInfo->id);
+    WindowID win = winInfo->id;
+    addWindowInfo(winInfo);
+    if(abort){
+        LOG(LOG_LEVEL_VERBOSE, "Window is to be ignored; freeing winInfo %d\n", win);
+        removeWindow(win);
         return 0;
     }
-    return registerWindow(winInfo);
+    if(LOAD_SAVED_STATE)
+        loadSavedAtomState(winInfo);
+    if(loadWindowProperties(winInfo)){
+        if(registerForWindowEvents(win, winInfo->eventMasks | NON_ROOT_EVENT_MASKS) != BadWindow){
+            passiveGrab(win, NON_ROOT_DEVICE_EVENT_MASKS);
+            applyEventRules(RegisteringWindow, winInfo);
+            return 1;
+        }
+        LOG(LOG_LEVEL_DEBUG, "Could not register for events %d\n", win);
+        removeWindow(winInfo->id);
+    }
+    return 0;
 }
 void scan(xcb_window_t baseWindow){
     LOG(LOG_LEVEL_TRACE, "Scanning children of %d\n", baseWindow);
@@ -377,10 +373,11 @@ void scan(xcb_window_t baseWindow){
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
             if(attr->map_state)
                 addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
+     
             winInfo->parent = baseWindow;
             //if the window is not unmapped
             if(loadWindowAttributes(winInfo, attr)){
-                if(processNewWindow(winInfo)){
+                if(registerWindow(winInfo)){
                     xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, children[i]), NULL);
                     setGeometry(winInfo, &reply->x);
                     free(reply);

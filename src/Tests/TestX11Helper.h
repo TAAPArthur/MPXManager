@@ -28,7 +28,6 @@ int  createInputOnlyWindow(void);
 int createUserIgnoredWindow(void);
 int createNormalWindowWithType(xcb_atom_t type);
 int  createUnmappedWindow(void);
-void addDummyIgnoreRule(void);
 int createIgnoredWindow(void);
 int createNormalWindow(void);
 int createInputWindow(int input);
