@@ -74,7 +74,7 @@ mpxmanager.1: mpxmanager.sh
 	help2man -No mpxmanager.1 ./mpxmanager.sh
 
 mpxmanager-autocomplete.sh: mpxmanager.c mpxmanager.sh
-	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo '--'{} | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
+	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo {} | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: ${BASE_SRCS}
 	${CC} $^ -o $@ $$HOME/.mpxmanager/config.c ${CFLAGS} ${LDFLAGS}
