@@ -69,10 +69,6 @@ void adjustSpeed(int multiplier){
         info->vScale = 1;
 }
 
-static void clickButtonN(int btn, int N){
-    for(int i = 0; i < N; i++)
-        clickButton(btn);
-}
 #define _IS_SET(info,A,B)\
        (info->mask & (A|B)) && (((info->mask & A)?1:0) ^ ((info->mask&B)?1:0))
 void xmousecontrolUpdate(void){

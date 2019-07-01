@@ -54,6 +54,15 @@ START_TEST(test_click_button){
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE));
 }
 END_TEST
+START_TEST(test_click_buttonN){
+    int N = 10;
+    clickButtonN(mouseDetail, N);
+    for(int i = 0; i < N; i++){
+        WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS));
+        WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE));
+    }
+}
+END_TEST
 START_TEST(test_type_key){
     typeKey(keyDetail);
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_KEY_PRESS));
@@ -94,6 +103,7 @@ Suite* testFunctionSuite(){
     tcase_add_loop_test(tc_core, test_all_button, 1, 8);
     tcase_add_test(tc_core, test_type_key);
     tcase_add_test(tc_core, test_click_button);
+    tcase_add_test(tc_core, test_click_buttonN);
     tcase_add_test(tc_core, test_move_pointer);
     suite_add_tcase(s, tc_core);
     return s;

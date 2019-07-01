@@ -33,6 +33,10 @@ void clickButton(int button){
     sendButtonPress(button);
     sendButtonRelease(button);
 }
+void clickButtonN(int btn, int N){
+    for(int i = 0; i < N; i++)
+        clickButton(btn);
+}
 
 void sendKeyPress(int keycode){
     sendDeviceAction(getActiveMasterKeyboardID(), keycode, XCB_INPUT_KEY_PRESS);

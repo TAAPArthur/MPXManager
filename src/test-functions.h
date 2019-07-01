@@ -56,6 +56,13 @@ void typeKey(int keycode);
  * @param button
  */
 void clickButton(int button);
+/**
+ * Calls clickButton N times
+ *
+ * @param btn
+ * @param N
+ */
+void clickButtonN(int btn, int N);
 
 
 /**
