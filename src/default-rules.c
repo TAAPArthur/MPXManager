@@ -247,6 +247,8 @@ void onPropertyEvent(void){
             loadDockProperties(winInfo);
             markState();
         }
+        else if(event->atom == ewmh->_NET_WM_USER_TIME);
+        else loadWindowProperties(winInfo);
     }
 }
 
