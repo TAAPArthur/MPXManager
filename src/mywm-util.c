@@ -137,4 +137,5 @@ __attribute__((constructor)) static void set_handlers(){
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
     signal(SIGPIPE, resetPipe);
+    signal(SIGUSR1, (void(*)(int))restart);
 }
