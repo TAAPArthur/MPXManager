@@ -26,6 +26,8 @@ typedef struct {
 typedef struct Monitor {
     /**id for monitor*/
     MonitorID id;
+    /// human readable name given by the XServer
+    char* name;
     /**1 iff the monitor is the primary*/
     char primary;
     /**The unmodified size of the monitor*/
@@ -97,10 +99,8 @@ bool isPrimary(Monitor* monitor);
  *
  * @param monitor
  * @param primary the value of primary
- * @param sync if true we update the Xserver in addition to our local structs. If there is no XRANDR support this parameter will be treated as 0
- * @return 0 if no error
  */
-int setPrimary(Monitor* monitor, bool primary, bool sync);
+void setPrimary(Monitor* monitor, bool primary);
 
 /**
  *
@@ -141,6 +141,12 @@ void setDockArea(WindowInfo* winInfo, int numberofProperties, int* properties);
  * @return true if properties were successfully loaded
  */
 int loadDockProperties(WindowInfo* info);
+
+/**
+ * Removes monitors that are duplicates according to MONITOR_DUPLICATION_POLICY
+ * and MONITOR_DUPLICATION_RESOLUTION
+ */
+void removeDuplicateMonitors(void);
 
 /**
  * Query for all monitors
@@ -217,4 +223,12 @@ int getRootHeight(void);
  * @return the bounds of the root window
  */
 const short* getRootBounds();
+/**
+ *
+ *
+ * @param m
+ *
+ * @return a human readable name of the monitor
+ */
+char* getNameOfMonitor(Monitor* m);
 #endif

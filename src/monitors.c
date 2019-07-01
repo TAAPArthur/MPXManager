@@ -168,7 +168,7 @@ void createMonitor(Rect bounds){
     waitForChild(spawn(buffer));
 #endif
 }
-static void removeDuplicateMonitors(void){
+void removeDuplicateMonitors(void){
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION)
         return;
     for(int i = getSize(getAllMonitors()) - 1; i >= 0; i--){
@@ -237,7 +237,11 @@ void detectMonitors(void){
         updateMonitor(monitorInfo->name,  *(Rect*)&monitorInfo->x, 0);
         Monitor* m = find(getAllMonitors(), &monitorInfo->name, sizeof(MonitorID));
         assert(m);
-        setPrimary(m, monitorInfo->primary, 0);
+        if(m->name)
+            free(m->name);
+        m->name = NULL;
+        getAtomValue(m->id, &m->name);
+        setPrimary(m, monitorInfo->primary);
         addToList(&monitorNames, (void*)(long)monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
@@ -275,19 +279,16 @@ int removeMonitor(MonitorID id){
             }
         }
     }
+    if(m->name)
+        free(m->name);
     free(m);
     return 1;
 }
 
-int setPrimary(Monitor* monitor, bool primary, bool sync __attribute__((unused))){
-    FOR_EACH(Monitor*, m, getAllMonitors())m->primary = 0;
-    if(monitor)
+void setPrimary(Monitor* monitor, bool primary){
+    if(monitor){
         monitor->primary = primary;
-#ifdef NO_XRANDR
-    return 0;
-#else
-    return sync ? catchError(xcb_randr_set_output_primary_checked(dis, root, monitor ? monitor->id : XCB_NONE)) : 0;
-#endif
+    }
 }
 bool isPrimary(Monitor* monitor){
     return monitor->primary;
@@ -313,6 +314,9 @@ void resetMonitor(Monitor* m){
 }
 ArrayList* getAllDocks(){
     return &docks;
+}
+char* getNameOfMonitor(Monitor* m){
+    return m->name;
 }
 ArrayList* getAllMonitors(void){
     return &monitors;

@@ -80,7 +80,7 @@ void printMasterSummary(void){
     LOG(LOG_LEVEL_INFO, "\n");
 }
 void dumpMonitorInfo(Monitor* m){
-    LOG(LOG_LEVEL_INFO, "Monitor %d primary %d ", m->id, m->primary);
+    LOG(LOG_LEVEL_INFO, "Monitor %d(%s) primary %d ", m->id, getNameOfMonitor(m), m->primary);
     Workspace* w = getWorkspaceFromMonitor(m);
     if(w)
         LOG(LOG_LEVEL_INFO, "Workspace %d", w->id);

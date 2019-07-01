@@ -42,7 +42,8 @@ int numPassedArguments;
 char** passedArguments;
 
 void resetContext(void){
-    deleteList(getAllMonitors());
+    while(isNotEmpty(getAllMonitors()))
+        removeMonitor(((Monitor*)getHead(getAllMonitors()))->id);
     while(isNotEmpty(getAllMasters()))
         removeMaster(((Master*)getLast(getAllMasters()))->id);
     while(isNotEmpty(getAllWindows()))

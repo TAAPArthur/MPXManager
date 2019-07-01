@@ -153,7 +153,9 @@ START_TEST(test_monitors){
     if(!fork()){
         close(1);
         close(2);
-        waitForChild(spawn("xsane-xrandr reset"));
+        Rect bounds={0};
+        createMonitor(bounds);
+        clearFakeMonitors();
         exit(0);
     }
     START_MY_WM;

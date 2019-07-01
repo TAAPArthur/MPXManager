@@ -669,17 +669,23 @@ START_TEST(test_key_repeat){
 END_TEST
 START_TEST(test_monitor_deletion){
     POLL_COUNT = 0;
+    MONITOR_DUPLICATION_POLICY = 0;
     Monitor* m = getHead(getAllMonitors());
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        createMonitor(m->base);
+    detectMonitors();
+    assert(getNumberOfWorkspaces() + 1 == getSize(getAllMonitors()));
     assert(m);
+    assert(getWorkspaceFromMonitor(m));
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        assert(isWorkspaceVisible(i));
+    removeMonitor(m->id);
+    markState();
     START_MY_WM;
-    createNormalWindow();
-    assert(getMonitorFromWorkspace(getActiveWorkspace()) == m);
-    WAIT_UNTIL_TRUE(doesWorkspaceHaveWindowsWithMask(getActiveWorkspaceIndex(), MAPPED_MASK));
-    ATOMIC(removeMonitor(m->id); markState());
-    assert(getMonitorFromWorkspace(getActiveWorkspace()) == NULL);
-    //wake up event thread
-    createNormalWindow();
-    WAIT_UNTIL_TRUE(!doesWorkspaceHaveWindowsWithMask(getActiveWorkspaceIndex(), MAPPED_MASK));
+    waitUntilIdle();
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        assert(isWorkspaceVisible(i));
+    consumeEvents();
 }
 END_TEST
 START_TEST(test_workspace_deletion){
@@ -727,7 +733,7 @@ START_TEST(test_workspace_monitor_addition){
 END_TEST
 
 void fullMonitorCleanup(void){
-    clearFakeMonitors();
+    ATOMIC(clearFakeMonitors());
     fullCleanup();
 }
 

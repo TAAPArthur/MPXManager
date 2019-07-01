@@ -12,7 +12,7 @@ START_TEST(test_avoid_struct){
     updateMonitor(monitorIndex, (Rect){0, 0, dim, dim}, 1);
     int arrSize = _i == 0 ? 12 : 4;
     Monitor* monitor = find(getAllMonitors(), &monitorIndex, sizeof(int));
-    setPrimary(monitor, 1, 0);
+    setPrimary(monitor, 1);
     Monitor* sideMonitor = find(getAllMonitors(), &sideMonitorIndex, sizeof(int));
     assert(monitor != NULL);
     assert(sideMonitor != NULL);
@@ -177,14 +177,6 @@ START_TEST(test_monitor_add_remove){
     assert(!removeMonitor(0));
 }
 END_TEST
-START_TEST(test_monitor_primary){
-    assert(isPrimary(getHead(getAllMonitors())) == 0);
-    assert(setPrimary(getHead(getAllMonitors()), 1, 1) == 0);
-    assert(isPrimary(getHead(getAllMonitors())) == 1);
-    detectMonitors();
-    assert(isPrimary(getHead(getAllMonitors())) == 1);
-}
-END_TEST
 
 START_TEST(test_detect_at_least_one_monitor){
     detectMonitors();
@@ -203,6 +195,7 @@ START_TEST(test_detect_monitors){
     detectMonitors();
     assert(getSize(getAllMonitors()) == num);
     assert(num == 3);
+    FOR_EACH(Monitor*,m,getAllMonitors())assert(getNameOfMonitor(m));
 }
 END_TEST
 START_TEST(test_create_monitor){
@@ -220,19 +213,22 @@ START_TEST(test_create_monitor){
 }
 END_TEST
 START_TEST(test_monitor_dup_resolution){
-    MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
     int masks[] = {TAKE_PRIMARY, TAKE_LARGER, TAKE_SMALLER};
-    detectMonitors();
     if(_i == 0)
-        setPrimary(getHead(getAllMonitors()), 1, 1);
+        setPrimary(getHead(getAllMonitors()), 1);
     Monitor* m = getHead(getAllMonitors());
     if(_i == 0)
         assert(isPrimary(m));
     int result[] = {1, 0, 1};
     createMonitor((Rect){1, 1, 100, 100});
-    MONITOR_DUPLICATION_RESOLUTION = masks[_i];
+    MONITOR_DUPLICATION_POLICY = 0;
     detectMonitors();
+    assert(getSize(getAllMonitors()) == 2);
+    MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
+    MONITOR_DUPLICATION_RESOLUTION = masks[_i];
+    removeDuplicateMonitors();
     assert((m == getHead(getAllMonitors())) == result[_i]);
+    clearFakeMonitors();
 }
 END_TEST
 START_TEST(test_monitor_intersection){
@@ -284,7 +280,6 @@ Suite* monitorsSuite(){
     tc_core = tcase_create("Detect monitors");
     tcase_add_checked_fixture(tc_core, createContextAndSimpleConnection, clearFakeMonitors);
     tcase_add_test(tc_core, test_detect_at_least_one_monitor);
-    tcase_add_test(tc_core, test_monitor_primary);
 #ifndef NO_XRANDR
     tcase_add_test(tc_core, test_detect_monitors);
 #endif
