@@ -75,11 +75,11 @@ void addPrintRule(void){
 }
 static Rule desktopRule = {"_NET_WM_WINDOW_TYPE_DESKTOP", TYPE | LITERAL, BOTH(BIND(addMask, NO_ACTIVATE_MASK | NO_RECORD_FOCUS | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK | BELOW_MASK | STICKY_MASK), BIND(enableTilingOverride, 3)), .passThrough = NO_PASSTHROUGH};
 void addDesktopRule(void){
-    addToList(getEventRules(RegisteringWindow), &desktopRule);
+    addToList(getEventRules(PropertyLoad), &desktopRule);
 }
 void addFloatRules(void){
     static Rule dialogRule = {"_NET_WM_WINDOW_TYPE_NORMAL", TYPE | NEGATE | LITERAL, BIND(floatWindow)};
-    addToList(getEventRules(RegisteringWindow), &dialogRule);
+    addToList(getEventRules(PropertyLoad), &dialogRule);
 }
 
 static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BOTH(BIND(loadDockProperties), BIND(markAsDock), BIND(addMask, EXTERNAL_CONFIGURABLE_MASK), BIND(removeWindowFromWorkspace))};
