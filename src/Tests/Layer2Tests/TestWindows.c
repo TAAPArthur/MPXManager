@@ -188,6 +188,8 @@ START_TEST(test_window_property_loading){
         loadWindowProperties(winInfo);
         checkProperties(winInfo);
     }
+    assert(!catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &ewmh->_NET_WM_WINDOW_TYPE_POPUP_MENU)));
+    loadWindowProperties(winInfo);
 }
 END_TEST
 START_TEST(test_window_property_reloading){

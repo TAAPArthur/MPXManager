@@ -252,6 +252,15 @@ START_TEST(test_property_update){
     assert(strcmp(getWindowInfo(win)->title, title) == 0);
 }
 END_TEST
+START_TEST(test_on_type_change){
+    createNormalWindow();
+    static Rule die = CREATE_WILDCARD(BIND(dummy, 0));
+    addToList(getEventRules(TypeChange), &die);
+    START_MY_WM;
+    waitUntilIdle();
+    assert(count);
+}
+END_TEST
 
 START_TEST(test_ignored_windows){
     addUnknownWindowIgnoreRule();
@@ -308,13 +317,13 @@ START_TEST(test_desktop_rule){
     setActiveLayout(&DEFAULT_LAYOUTS[GRID]);
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
+    assert(hasMask(winInfo, STICKY_MASK | NO_TILE_MASK | BELOW_MASK));
+    assert(!hasMask(winInfo, ABOVE_MASK));
     retile();
     flush();
     xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
     assert(memcmp(&m->view.x, &m->base, sizeof(m->view)) != 0);
     assert(memcmp(&m->view.x, &reply->x, sizeof(m->view)) == 0);
-    assert(hasMask(winInfo, STICKY_MASK | NO_TILE_MASK | BELOW_MASK));
-    assert(!hasMask(winInfo, ABOVE_MASK));
     free(reply);
 }
 END_TEST
@@ -788,6 +797,7 @@ Suite* defaultRulesSuite(){
     tcase_add_test(tc_core, test_delete_windows);
     tcase_add_test(tc_core, test_visibility_update);
     tcase_add_test(tc_core, test_property_update);
+    tcase_add_test(tc_core, test_on_type_change);
     suite_add_tcase(s, tc_core);
     tc_core = tcase_create("DefaultRules");
     tcase_add_checked_fixture(tc_core, onStartup, fullCleanup);

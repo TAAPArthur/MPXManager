@@ -205,6 +205,7 @@ char* eventTypeToString(int type){
             _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_HIERARCHY);
             _ADD_EVENT_TYPE_CASE(ExtraEvent);
             _ADD_EVENT_TYPE_CASE(onXConnection);
+            _ADD_EVENT_TYPE_CASE(TypeChange);
             _ADD_EVENT_TYPE_CASE(PropertyLoad);
             _ADD_EVENT_TYPE_CASE(RegisteringWindow);
             _ADD_EVENT_TYPE_CASE(onScreenChange);

@@ -28,6 +28,8 @@ enum {
     ExtraEvent = 1,
     ///if all rules are passed through, then the window is added as a normal window
     onXConnection = LAST_REAL_EVENT,
+    /// Run when the window type changes which is true when the window is first loaded
+    TypeChange,
     /// Run after properties have been loaded
     PropertyLoad,
     /// Called after the newly created window has been added to our internal lists
@@ -42,7 +44,8 @@ enum {
     onWindowMove,
     /// called after a set number of events or when the connection is idle
     Periodic,
-    /// called when the connection is idle
+    ///
+    //called when the connection is idle
     Idle,
     /// max value of supported events
     NUMBER_OF_EVENT_RULES

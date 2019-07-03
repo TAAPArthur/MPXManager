@@ -33,7 +33,7 @@ static Rule ignoreUnknownWindowRule = CREATE_WILDCARD(AND(BIND(hasMask, IMPLICIT
                                       .passThrough = PASSTHROUGH_IF_FALSE,
                                       .negateResult = 1);
 void addUnknownWindowIgnoreRule(void){
-    prependToList(getEventRules(PropertyLoad), &ignoreUnknownWindowRule);
+    prependToList(getEventRules(TypeChange), &ignoreUnknownWindowRule);
 }
 static void tileChangeWorkspaces(void){
     updateState(tileWorkspace, syncMonitorMapState);
@@ -75,20 +75,20 @@ void addPrintRule(void){
 }
 static Rule desktopRule = {"_NET_WM_WINDOW_TYPE_DESKTOP", TYPE | LITERAL, BOTH(BIND(addMask, NO_ACTIVATE_MASK | NO_RECORD_FOCUS | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK | BELOW_MASK | STICKY_MASK), BIND(enableTilingOverride, 3)), .passThrough = NO_PASSTHROUGH};
 void addDesktopRule(void){
-    addToList(getEventRules(PropertyLoad), &desktopRule);
+    addToList(getEventRules(TypeChange), &desktopRule);
 }
 void addFloatRules(void){
     static Rule dialogRule = {"_NET_WM_WINDOW_TYPE_NORMAL", TYPE | NEGATE | LITERAL, BIND(floatWindow)};
-    addToList(getEventRules(PropertyLoad), &dialogRule);
+    addToList(getEventRules(TypeChange), &dialogRule);
 }
 
 static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BOTH(BIND(loadDockProperties), BIND(markAsDock), BIND(addMask, EXTERNAL_CONFIGURABLE_MASK), BIND(removeWindowFromWorkspace), BIND(removeBorder))};
 void addAvoidDocksRule(void){
-    addToList(getEventRules(PropertyLoad), &avoidDocksRule);
+    addToList(getEventRules(TypeChange), &avoidDocksRule);
 }
 void addNoDockFocusRule(void){
     static Rule disallowDocksFocusRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BIND(removeMask, INPUT_MASK)};
-    addToList(getEventRules(PropertyLoad), &disallowDocksFocusRule);
+    addToList(getEventRules(TypeChange), &disallowDocksFocusRule);
 }
 void addFocusFollowsMouseRule(void){
     NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_ENTER;
@@ -262,9 +262,7 @@ void onPropertyEvent(void){
     xcb_property_notify_event_t* event = getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo){
-        if(event->atom == ewmh->_NET_WM_NAME || event->atom == ewmh->_NET_WM_VISIBLE_NAME)
-            loadTitleInfo(winInfo);
-        else if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL){
+        if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL){
             loadDockProperties(winInfo);
             markState();
         }

@@ -89,8 +89,9 @@ void loadTitleInfo(WindowInfo* winInfo);
 /**
  * Loads type name and atom value for a given window
  * @param winInfo
+ * @return 1 if the caller should continue as normal
  */
-void loadWindowType(WindowInfo* winInfo);
+int loadWindowType(WindowInfo* winInfo);
 
 /**
  * Loads grouptId, input and window state for a given window

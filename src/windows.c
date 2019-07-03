@@ -120,26 +120,31 @@ void loadTitleInfo(WindowInfo* winInfo){
     if(winInfo->title)
         LOG(LOG_LEVEL_VERBOSE, "window title %s\n", winInfo->title);
 }
-void loadWindowType(WindowInfo* winInfo){
+int loadWindowType(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t name;
+    int type;
     if(xcb_ewmh_get_wm_window_type_reply(ewmh,
                                          xcb_ewmh_get_wm_window_type(ewmh, winInfo->id), &name, NULL)){
-        winInfo->type = name.atoms[0];
+        type = name.atoms[0];
         xcb_ewmh_get_atoms_reply_wipe(&name);
     }
     else {
         addMask(winInfo, IMPLICIT_TYPE);
-        winInfo->type = winInfo->transientFor ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
+        type = winInfo->transientFor ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
     }
+    if(winInfo->type == type)
+        return 1;
+    winInfo->type = type;
     xcb_get_atom_name_reply_t* reply = xcb_get_atom_name_reply(
                                            dis, xcb_get_atom_name(dis, winInfo->type), NULL);
-    if(!reply)return;
+    if(!reply)return 1;
     if(winInfo->typeName)
         free(winInfo->typeName);
     winInfo->typeName = calloc(reply->name_len + 1, sizeof(char));
     memcpy(winInfo->typeName, xcb_get_atom_name_name(reply), reply->name_len * sizeof(char));
     LOG(LOG_LEVEL_VERBOSE, "window type %s\n", winInfo->typeName);
     free(reply);
+    return applyEventRules(TypeChange, winInfo);
 }
 void loadWindowHints(WindowInfo* winInfo){
     assert(winInfo);
@@ -174,15 +179,12 @@ int loadWindowProperties(WindowInfo* winInfo){
     LOG(LOG_LEVEL_VERBOSE, "loading window properties %d\n", winInfo->id);
     loadClassInfo(winInfo);
     loadTitleInfo(winInfo);
-    loadProtocols(winInfo);
     xcb_window_t prop;
-    if(xcb_icccm_get_wm_transient_for_reply(dis,
-                                            xcb_icccm_get_wm_transient_for(dis, winInfo->id), &prop, NULL)){
+    if(xcb_icccm_get_wm_transient_for_reply(dis, xcb_icccm_get_wm_transient_for(dis, winInfo->id), &prop, NULL))
         winInfo->transientFor = prop;
-    }
-    loadWindowType(winInfo);
+    loadProtocols(winInfo);
     loadWindowHints(winInfo);
-    return applyEventRules(PropertyLoad, winInfo);
+    return loadWindowType(winInfo) && applyEventRules(PropertyLoad, winInfo);
 }
 void loadSavedAtomState(WindowInfo* winInfo){
     xcb_ewmh_get_atoms_reply_t reply;
@@ -385,7 +387,6 @@ void scan(xcb_window_t baseWindow){
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
             if(attr->map_state)
                 addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
-     
             winInfo->parent = baseWindow;
             //if the window is not unmapped
             if(loadWindowAttributes(winInfo, attr)){
