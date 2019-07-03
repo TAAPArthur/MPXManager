@@ -124,6 +124,7 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
     LOG_RUN(LOG_LEVEL_VERBOSE, dumpBoundFunction(boundFunction));
     BoundFunctionArg arg = boundFunction->arg;
     if(boundFunction->dynamic == 1){
+        assert(boundFunction->type == WIN_ARG_RETURN_INT || boundFunction->type == WIN_ARG);
         if(winInfo == NULL){
             LOG(LOG_LEVEL_DEBUG, "Passed window is null and boundFunction is dynamic\n");
             return 0;
@@ -191,12 +192,10 @@ int callBoundedFunction(BoundFunction* boundFunction, WindowInfo* winInfo){
             result = boundFunction->func.funcReturnInt(arg.voidArg);
             break;
         case WIN_INT_ARG:
-            if(winInfo)
-                boundFunction->func.func(winInfo, arg.intArg);
+            boundFunction->func.func(winInfo, arg.intArg);
             break;
         case WIN_INT_ARG_RETURN_INT:
-            if(winInfo)
-                result = boundFunction->func.funcReturnInt(winInfo, arg.intArg);
+            result = boundFunction->func.funcReturnInt(winInfo, arg.intArg);
             break;
         case VOID_ARG:
             boundFunction->func.func(arg.voidArg);

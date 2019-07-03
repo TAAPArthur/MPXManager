@@ -88,7 +88,7 @@ typedef enum {
     /// Call a function that takes a non-function pointer as an argument
     VOID_ARG,
     /// Call a function that takes a non-function pointer as an argument
-    VOID_ARG_RETURN_INT
+    VOID_ARG_RETURN_INT,
 } BindingType;
 
 /**
@@ -231,11 +231,9 @@ typedef struct {
 
 #define _BIND_TYPES(F)\
     _Generic((F), \
-            void(*)(void):0,\
-            int(*)(void):0,\
-            void(*)(int):0,\
-            int(*)(int):0,\
-            default:1 \
+            void (*)(WindowInfo*): 1, \
+            int (*)(WindowInfo*): 1, \
+            default:0 \
             )
 
 #define _BIND1(F,N) _BIND(F,0,_BIND_TYPES(F),N)
