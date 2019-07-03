@@ -15,6 +15,7 @@
 #include "functions.h"
 #include "globals.h"
 #include "layouts.h"
+#include "session.h"
 #include "logger.h"
 #include "masters.h"
 #include "mywm-util.h"
