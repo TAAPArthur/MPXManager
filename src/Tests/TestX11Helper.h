@@ -65,4 +65,9 @@ int checkStackingOrder(WindowID* stackingOrder, int num);
 static inline void* isInList(ArrayList* list, int value){
     return find(list, &value, sizeof(int));
 }
+static inline void waitUntilIdle(void){
+    static int idleCount;
+    WAIT_UNTIL_TRUE(idleCount != getIdleCount());
+    idleCount = getIdleCount();
+}
 #endif /* TESTS_UNITTESTS_H_ */
