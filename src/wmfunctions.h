@@ -84,6 +84,12 @@ void setBorder(WindowID win);
  * @param win
  */
 void resetBorder(WindowID win);
+/**
+ * Sets the border width to 0
+ *
+ * @param winInfo
+ */
+void removeBorder(WindowInfo* winInfo);
 
 /**
  * Switch to window's workspace, raise and focus the window

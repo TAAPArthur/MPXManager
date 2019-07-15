@@ -382,6 +382,10 @@ void resetBorder(WindowID win){
         setBorderColor(win, master->focusColor);
     setBorderColor(win, DEFAULT_UNFOCUS_BORDER_COLOR);
 }
+void removeBorder(WindowInfo* winInfo){
+    short i = 0;
+    xcb_configure_window(dis, winInfo->id, XCB_CONFIG_WINDOW_BORDER_WIDTH, &i);
+}
 
 
 static int filterConfigValues(int* filteredArr, WindowInfo* winInfo, short values[5], WindowID sibling,

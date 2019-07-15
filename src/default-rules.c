@@ -82,7 +82,7 @@ void addFloatRules(void){
     addToList(getEventRules(PropertyLoad), &dialogRule);
 }
 
-static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BOTH(BIND(loadDockProperties), BIND(markAsDock), BIND(addMask, EXTERNAL_CONFIGURABLE_MASK), BIND(removeWindowFromWorkspace))};
+static Rule avoidDocksRule = {"_NET_WM_WINDOW_TYPE_DOCK", TYPE | LITERAL, BOTH(BIND(loadDockProperties), BIND(markAsDock), BIND(addMask, EXTERNAL_CONFIGURABLE_MASK), BIND(removeWindowFromWorkspace), BIND(removeBorder))};
 void addAvoidDocksRule(void){
     addToList(getEventRules(PropertyLoad), &avoidDocksRule);
 }
