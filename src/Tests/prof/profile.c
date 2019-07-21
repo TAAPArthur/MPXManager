@@ -25,7 +25,7 @@ void createManyWindows(void){
     flush();
 }
 void removeAll(void){
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows()){
+    for(WindowInfo* winInfo: getAllWindows()){
         xcb_destroy_window(dis, winInfo->id);
     }
     flush();

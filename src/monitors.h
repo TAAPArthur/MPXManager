@@ -6,44 +6,82 @@
 #define MONITORS_H_
 
 #include "mywm-structs.h"
+#include "masters.h"
+#include <string>
+#include "rect.h"
 
 /**
- * holds top-left coordinates and width/height of the bounding box
+ *
+ * @return list of all monitors
  */
-typedef struct {
-    /// top left coordinate of the bounding box
-    short x;
-    /// top left coordinate of the bounding box
-    short y;
-    /// width of the bounding box
-    short width;
-    /// height of the bounding box
-    short height;
-} Rect;
+ArrayList<Monitor*>& getAllMonitors(void);
 /**
  * Represents a rectangular region where workspaces will be tiled
  */
-typedef struct Monitor {
-    /**id for monitor*/
-    MonitorID id;
-    /// human readable name given by the XServer
-    char* name;
-    /**1 iff the monitor is the primary*/
-    char primary;
+struct Monitor : WMStruct {
+private:
     /**The unmodified size of the monitor*/
     Rect base;
     /** The modified size of the monitor after docks are avoided */
     Rect view;
+    /**1 iff the monitor is the primary*/
+    bool primary;
+    /// human readable name given by the XServer
+    std::string name;
+    TimeStamp lastDetected = 0;
+public:
+    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = ""): WMStruct(id), base(base), view(base),
+        primary(primary),
+        name(name) {}
 
-} Monitor;
+    ~Monitor();
+    /**
+     * Returns the workspace currently displayed by the monitor or null
+
+     * @param monitor
+     * @return
+     */
+    Workspace* getWorkspace(void);
+    const std::string& getName() const {return name;}
+    void setName(std::string c) {name = std::string(c);}
+    TimeStamp getTimeStamp() {return lastDetected;}
+    void setTimeStamp(TimeStamp t) {lastDetected = t;}
+    const Rect& getBase() const {return base;}
+    void setBase(Rect rect);
+    const Rect& getViewport()const {return view;}
+    void setViewport(Rect rect) {view = rect;}
+    void assignWorkspace(Workspace* workspace = NULL);
+    /**
+     * True if the monitor is marked as primary
+     * @param monitor
+     * @return
+     */
+    bool isPrimary();
+    /**
+     * Marks this monitor as the primary. There can only be 1 primary monitor, so the current primary monitor will lose its status
+     *
+     * @param monitor
+     * @param primary the value of primary
+     */
+    void setPrimary(bool primary = true);
+    /**
+     * Resets the viewport to be the size of the rectangle
+     * @param m
+     */
+    void reset();
+    bool resizeToAvoidAllDocks();
+    bool resizeToAvoidDock(WindowInfo*);
+};
 ///Masks used to determine the whether two monitors are duplicates
 typedef enum {
-    /// Monitors are the same iff they have exactly the same bounds
+    /// Monitors are duplicates if they have exactly the same base
     SAME_DIMS = 1,
     /// Monitors are duplicates if one monitor completely fits inside the other
     CONTAINS = 2,
+    /// Monitors are duplicates if one monitor completely fits inside the other and is not touching any edges
+    CONTAINS_PROPER = 4,
     /// Monitors are duplicates if one intersects with the other.
-    INTERSECTS = 4,
+    INTERSECTS = 8,
 } MonitorDuplicationPolicy;
 /// Masks used to dictate how we deal with duplicates monitors
 typedef enum {
@@ -56,83 +94,16 @@ typedef enum {
 } MonitorDuplicationResolution;
 
 /// Used to determine whether two monitors are duplicates of each other
-extern MonitorDuplicationPolicy MONITOR_DUPLICATION_POLICY;
+extern uint32_t MONITOR_DUPLICATION_POLICY;
 /// Given to monitors are duplicates, how do we determine which one to keep
-extern MonitorDuplicationResolution MONITOR_DUPLICATION_RESOLUTION;
+extern uint32_t MONITOR_DUPLICATION_RESOLUTION;
 
 ///Types of docks
 typedef enum {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} DockTypes;
 
-/**
- *
- * @return list of all monitors
- */
-ArrayList* getAllMonitors(void);
-/**
- *
- * @return list of docks
- */
-ArrayList* getAllDocks(void);
-
-/**
- * Creates a new X11 monitor with the given bounds.
- *
- * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitrary monitor
- *
- * @param bounds the position of the new monitor
- */
-void createMonitor(Rect bounds);
-/**
- * Clears all fake monitors
- * @see pip
- */
-void clearFakeMonitors(void);
-
-/**
- * True if the monitor is marked as primary
- * @param monitor
- * @return
- */
-bool isPrimary(Monitor* monitor);
-/**
- * Marks this monitor as the primary. There can only be 1 primary monitor, so the current primary monitor will lose its status
- *
- * @param monitor
- * @param primary the value of primary
- */
-void setPrimary(Monitor* monitor, bool primary);
-
-/**
- *
- * @param id id of monitor
- * @param geometry an array containing the x,y,width,height of the monitor
- * @param autoAssignWorkspace if true, then monitor will be given a free workspace if possible
- * @return 1 iff a new monitor was added
- */
-bool updateMonitor(MonitorID id, Rect geometry, bool autoAssignWorkspace);
-/**
- * Removes a monitor and frees related info
- * @param id identifier of the monitor
- * @return 1 iff the monitor was removed
- */
-int removeMonitor(MonitorID id);
-/**
- * Resets the viewport to be the size of the rectangle
- * @param m
- */
-void resetMonitor(Monitor* m);
 
 
-/**
- * Add properties to winInfo that will be used to avoid docks
- * @param winInfo the window in question
- * @param numberofProperties number of properties
- * @param properties list of properties
- * @see xcb_ewmh_wm_strut_partial_t
- * @see xcb_ewmh_get_extents_reply_t
- * @see avoidStruct
- */
-void setDockArea(WindowInfo* winInfo, int numberofProperties, int* properties);
+
 
 /**
  * Reads (one of) the struct property to loads the info into properties and
@@ -157,48 +128,17 @@ void detectMonitors(void);
  */
 void assignUnusedMonitorsToWorkspaces(void);
 
-/**
- *
- * @param arg1 x,y,width,height
- * @param arg2 x,y,width,height
- * @return 1 iff the 2 specified rectangles intersect
- */
-int intersects(Rect arg1, Rect arg2);
-/**
- * Checks to see if arg1 contains arg2. For the check to pass arg2 must completely reside within all borders of arg2
- * @param arg1
- * @param arg2
- *
- * @return 1 iff arg1 completely contains arg2
- */
-int contains(Rect arg1, Rect arg2);
-/**
- *
- *
- * @param arg1
- * @param arg2
- *
- * @return 1 if arg1 has a larger area than arg2
- */
-int isLarger(Rect arg1, Rect arg2);
 
-/**
- * Resizes the monitor such that its viewport does not intersect the given dock
- * @param m
- * @param winInfo the dock to avoid
- * @return if the size was changed
- */
-int resizeMonitorToAvoidStruct(Monitor* m, WindowInfo* winInfo);
 /**
  * @see resizeMonitorToAvoidStruct
  */
-void resizeAllMonitorsToAvoidAllStructs(void);
+void resizeAllMonitorsToAvoidAllDocks(void);
 /**
  * This method should only be used if a new dock is being added or an existing dock is being grown as this method can only reduce a monitor's viewport
  * @param winInfo the dock to avoid
  * @see resizeMonitorToAvoidStruct
  */
-void resizeAllMonitorsToAvoidStruct(WindowInfo* winInfo);
+void resizeAllMonitorsToAvoidDock(WindowInfo* winInfo);
 /**
  * Resizes all monitors such that its viewport does not intersect the given dock
  *
@@ -206,29 +146,22 @@ void resizeAllMonitorsToAvoidStruct(WindowInfo* winInfo);
  */
 void resizeAllMonitorsToAvoidStructs(WindowInfo* winInfo);
 
+void addRootMonitor();
+void setRootDims(uint16_t* s);
 /**
  *
  * @return the width of the root window
  */
-int getRootWidth(void);
+uint16_t getRootWidth(void);
 /**
  *
  * @return the height of the root window
  */
-int getRootHeight(void);
+uint16_t getRootHeight(void);
 /**
- * Returns the bounding box of the entire screen.
- * Note the top left coordinate is 0,0 by design.
- *
- * @return the bounds of the root window
+ * Swaps the monitors associated with the given workspaces
+ * @param index1
+ * @param index2
  */
-const short* getRootBounds();
-/**
- *
- *
- * @param m
- *
- * @return a human readable name of the monitor
- */
-char* getNameOfMonitor(Monitor* m);
+void swapMonitors(WorkspaceID index1, WorkspaceID index2 = getActiveMaster()->getWorkspaceIndex());
 #endif

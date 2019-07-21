@@ -54,16 +54,6 @@ int splitMaster(void);
  */
 void endSplitMaster(void);
 
-
-/**
- * Given a slaveName, scans the config to find which master the slave should be belong to
- *
- * @param slaveName
- *
- * @return the name of the master or NULL
- */
-char* getMasterNameForSlave(const char* slaveName);
-
 /**
  * @copybrief getMasterNameForSlave
  *
@@ -73,25 +63,4 @@ char* getMasterNameForSlave(const char* slaveName);
  */
 Master* getMasterForSlave(const char* slaveName);
 
-/**
- * Give a slaveDevice, find which master device it belongs to
- *
- * @param slaveDevice
- *
- * @return the master keyboard/pointer or 0 if not found
- */
-int getMasterIdForSlave(SlaveDevice* slaveDevice);
-
-/**
- * Looks at the config to determine which master device slaveDevice should be attached to and attaches it
- *
- * @param slaveDevice
- */
-void attachSlaveToPropperMaster(SlaveDevice* slaveDevice);
-/**
- * Sets the focusColor for master based on the config file
- *
- * @param master
- */
-void restoreFocusColor(Master* master);
 #endif
