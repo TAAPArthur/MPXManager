@@ -162,6 +162,9 @@ void loadWindowHints(WindowInfo* winInfo){
         else
             removeMask(winInfo, INPUT_MASK);
     }
+    if(xcb_icccm_get_wm_size_hints_reply(dis,xcb_icccm_get_wm_size_hints(dis,winInfo->id,XCB_ATOM_WM_NORMAL_HINTS),&winInfo->sizeHints,NULL)){
+    }
+    else winInfo->sizeHints=(xcb_size_hints_t){0};
 }
 
 void loadProtocols(WindowInfo* winInfo){

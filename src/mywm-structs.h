@@ -4,6 +4,8 @@
  */
 #include <stdbool.h>
 
+#include <xcb/xcb_icccm.h>
+
 #include "util.h"
 
 #ifndef MYWM_STRUCTS_H
@@ -95,6 +97,7 @@ typedef struct {
      */
     int eventMasks;
 
+    xcb_size_hints_t sizeHints;
     /**The dock is only applied to the primary monitor*/
     bool onlyOnPrimary;
     /**
