@@ -23,7 +23,7 @@ void restoreMPX(void);
 /**
  * Creates master devices according to saved masterInfo.
  * Note that a master device won't be created if one with the same name already exists
- * loadMasterInfo should be called prior.
+ * loadMPXMasterInfo should be called prior.
  */
 void startMPX(void);
 /**
@@ -37,11 +37,11 @@ void restartMPX(void);
 /**
  * Saves the current master/slave configurations for later use
  */
-int saveMasterInfo(void);
+int saveMPXMasterInfo(void);
 /**
  * loads saved master/slave configuration
  */
-int loadMasterInfo(void);
+int loadMPXMasterInfo(void);
 /**
  * Creates a new master and moves all active slaves (slaves that are firing events) to the newly
  * created master
@@ -54,16 +54,6 @@ int splitMaster(void);
  */
 void endSplitMaster(void);
 
-
-/**
- * Given a slaveName, scans the config to find which master the slave should be belong to
- *
- * @param slaveName
- *
- * @return the name of the master or NULL
- */
-char* getMasterNameForSlave(const char* slaveName);
-
 /**
  * @copybrief getMasterNameForSlave
  *
@@ -73,25 +63,4 @@ char* getMasterNameForSlave(const char* slaveName);
  */
 Master* getMasterForSlave(const char* slaveName);
 
-/**
- * Give a slaveDevice, find which master device it belongs to
- *
- * @param slaveDevice
- *
- * @return the master keyboard/pointer or 0 if not found
- */
-int getMasterIdForSlave(SlaveDevice* slaveDevice);
-
-/**
- * Looks at the config to determine which master device slaveDevice should be attached to and attaches it
- *
- * @param slaveDevice
- */
-void attachSlaveToPropperMaster(SlaveDevice* slaveDevice);
-/**
- * Sets the focusColor for master based on the config file
- *
- * @param master
- */
-void restoreFocusColor(Master* master);
 #endif

@@ -29,7 +29,7 @@ enum {
     SCROLL_DOWN_MASK = 1 << 5,
     SCROLL_LEFT_MASK = 1 << 6,
     SCROLL_RIGHT_MASK = 1 << 7,
-} XMouseControlMasks;
+} ;
 
 /**
  * How frequently move/scroll masks are applied
@@ -44,6 +44,7 @@ extern unsigned int BASE_MOUSE_SPEED;
  * How many times the 'scroll button' is pressed ever update
  */
 extern unsigned int BASE_SCROLL_SPEED;
+void addStartXMouseControlRule();
 
 /**
  * Will apply an update every XMOUSE_CONTROL_UPDATER_INTERVAL
@@ -56,7 +57,8 @@ void* runXMouseControl(void* c __attribute__((unused)));
 /**
  * Add rules/bindings to get the XMousecontrol experience
  */
-void enableXMouseControl(void);
+void addDefaultXMouseControlBindings(void);
+void resetXMouseControl();
 /**
  * Removes a masks
  *

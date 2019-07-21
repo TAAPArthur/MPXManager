@@ -1,32 +1,16 @@
-
-#define _GNU_SOURCE
-#include <dlfcn.h>
-
-#include <stdlib.h>
-#include <X11/Xlib.h>
+#include "../ld-preload.h"
 #include <xcb/xinput.h>
 #include <X11/extensions/XInput2.h>
-
-#define BASE_NAME(SymbolName) base_ ## SymbolName
-#define TYPE_NAME(SymbolName) SymbolName ## _t
-#define INTERCEPT(ReturnType, SymbolName, ...)  \
-	typedef ReturnType (*TYPE_NAME(SymbolName))(__VA_ARGS__); \
-	ReturnType SymbolName(__VA_ARGS__){ \
-	void * const BASE_NAME(SymbolName) = dlsym(RTLD_NEXT, # SymbolName); \
-
-#define END_INTERCEPT }
-#define BASE(SymbolName) ((TYPE_NAME(SymbolName))BASE_NAME(SymbolName))
 
 static int KEYBOARD_MASKS = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE;
 static int POINTER_MASKS = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE |
                            XCB_INPUT_XI_EVENT_MASK_MOTION;
 
-static char* CLIENT[] = {"CLIENT_KEYBOARD", "CLIENT_POINTER"};
 
 static int KEYBOARD = 0;
 static int POINTER = 1;
 static int getDeviceID(int type){
-    char* var = getenv(CLIENT[type]);
+    char* var = getenv(type ? "CLIENT_POINTER" : "CLIENT_KEYBOARD");
     if(var && var[0])
         return atoi(var);
     return 0;

@@ -8,12 +8,13 @@
 #define LAYOUTS_H_
 
 #include "mywm-structs.h"
+#include "wmfunctions.h"
+#include "masters.h"
+#include "workspaces.h"
 
-/// size of config parameters
-#define CONFIG_LEN 6
 
 /// Number of transformations
-#define TRANSFORM_LEN (REFLECT_VERT+1)
+#define TRANSFORM_LEN (4)
 
 /**
  * Transformations that can be applied to layouts.
@@ -29,7 +30,6 @@ typedef enum {
     /// Reflect across the y axis
     REFLECT_VERT
 } Transform;
-enum {CONFIG_X = 0, CONFIG_Y = 1, CONFIG_WIDTH, CONFIG_HEIGHT, CONFIG_BORDER, CONFIG_STACK};
 /// Represents a field(s) in Layout Args
 typedef enum {
     LAYOUT_LIMIT = 0,
@@ -52,12 +52,12 @@ typedef enum {
  */
 typedef struct {
     /// at most limit windows will be tiled
-    unsigned char limit;
+    unsigned short limit;
     /// @{ padding between the tiled size and the actual size of the window
-    int leftPadding;
-    int topPadding;
-    int rightPadding;
-    int bottomPadding;
+    short leftPadding;
+    short topPadding;
+    short rightPadding;
+    short bottomPadding;
     /// #}
     /// if set windows won't have a border
     bool noBorder;
@@ -72,9 +72,15 @@ typedef struct {
     /// the transformation (about the center of the monitor) to apply to all window positions
     Transform transform;
     /// generic argument
-    float argStep[1];
+    float arg;
     /// generic argument
-    float arg[1];
+    float argStep;
+    int getDimIndex()const {
+        return dim == 0 ? CONFIG_WIDTH : CONFIG_HEIGHT;
+    }
+    int getOtherDimIndex()const {
+        return dim == 0 ? CONFIG_HEIGHT : CONFIG_WIDTH;
+    }
 } LayoutArgs;
 
 /**
@@ -84,67 +90,68 @@ typedef struct {
     /// Customized to the layout family
     LayoutArgs* args;
     /// the monitor used to layout the window
-    Monitor* monitor;
+    const Monitor* monitor;
     /// number of windows that should be tiled
-    int numWindows;
+    const int numWindows;
     /// the stack of windows
-    ArrayList* stack;
-    /// the last window in the stack to be tiled
-    ArrayList* last;
+    const ArrayList<WindowInfo*>& stack;
+    LayoutArgs* getArgs() {return args;}
 } LayoutState;
 
 ///holds meta data to to determine what tiling function to call and when/how to call it
 typedef struct Layout {
+private:
+    /**
+     * The name of the layout. Used solely for user
+     */
+    const std::string name = "";
+    /**
+     * The function to call to tile the windows
+     */
+    void (*layoutFunction)(LayoutState*) = NULL;
     /**
      * Arguments to pass into layout functions that change how windows are tiled.
      */
-    LayoutArgs args;
+    LayoutArgs args = {0};
     /**
      * Used to restore args after they have been modified
      */
     LayoutArgs refArgs;
+public:
+    Layout(std::string name,  void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}): name(name),
+        layoutFunction(layoutFunction), args(args), refArgs(args) {
+    }
+    Layout(void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}):
+        layoutFunction(layoutFunction), args(args), refArgs(args) {
+    }
+
+    std::string getName() {
+        return name;
+    }
+    bool operator==(Layout& l) {return name == l.name;};
+    auto getFunc() {return layoutFunction;}
+    void apply(LayoutState* state) {layoutFunction(state);}
+    LayoutArgs& getArgs() {return args;}
     /**
-     * The name of the layout. Used solely for user
+     * Saves the current args for layout so they can be restored later
+     *
      */
-    char* name;
+    void saveArgs() {
+        refArgs = args;
+    }
     /**
-     * The function to call to tile the windows
+     * Restores saved args for the active layout
      */
-    void (*layoutFunction)(LayoutState*);
+    void restoreArgs() {
+        args = refArgs;
+    }
 } Layout;
 
 /// Convince indexes into DEFAULT_LAYOUTS
-enum {FULL, GRID, TWO_COLUMN, TWO_PANE, TWO_HPLANE, MASTER, LAST_LAYOUT};
+enum {FULL, GRID, TWO_COLUMN, TWO_ROW, TWO_PANE, TWO_HPLANE, MASTER, LAST_LAYOUT};
+/// ArrayList of default layouts
+const ArrayList<Layout*>& getDefaultLayouts();
 
-/// Array of layout families (layouts with different layout functions
-extern Layout LAYOUT_FAMILIES[];
-/// Array of different layout
-extern Layout DEFAULT_LAYOUTS[];
-/// number of DEFAULT_LAYOUTS
-extern int NUMBER_OF_DEFAULT_LAYOUTS;
-/// number of LAYOUT_FAMILIES
-extern int NUMBER_OF_LAYOUT_FAMILIES;
-
-/**
- * Increases the corresponding field for the layout by step
- *
- * @param index a LayoutArgIndex
- * @param step
- */
-void increaseActiveLayoutArg(int index, int step);
-/**
- * Searches for the set of registered layouts for a layout with the name, and if a match is found, sets the active layout this layout
- *
- * @param name
- */
-void setActiveLayoutByName(char* name);
-/**
- * Finds the registered layout with a matching name and sets it as the active layout of Workspace w
- *
- * @param name the registered workspace name. NULL matches any layout with a specified name.
- * @param w
- */
-void setActiveLayoutOfWorkspaceByName(char* name, Workspace* w);
 /**
  * Searches for the set of registered layouts for a layout with the given name and returns it
  *
@@ -152,70 +159,71 @@ void setActiveLayoutOfWorkspaceByName(char* name, Workspace* w);
  *
  * @return
  */
-Layout* findLayoutByName(char* name);
+Layout* findLayoutByName(std::string name);
+
 /**
- * Saves the current args for layout so they can be restored later
- *
+ * Cycle through the layouts of the active workspace
+ * @param dir
+ */
+static inline void cycleLayouts(int dir) {getActiveWorkspace()->cycleLayouts(dir);}
+
+/**
+ * Apply this external layout to the workspace if it is not already the active layout
  * @param layout
  */
-void saveLayoutArgs(Layout* layout);
-/**
- * Restores saved args for the active layout
- */
-void restoreActiveLayout(void);
+static inline int toggleLayout(Layout* layout) { return getActiveWorkspace()->toggleLayout(layout);}
+static inline int toggleLayout(std::string name) { return getActiveWorkspace()->toggleLayout(findLayoutByName(name));}
+
+static inline void setActiveLayout(std::string name) {getActiveMaster()->getWorkspace()->setActiveLayout(findLayoutByName(name));}
+static inline void setActiveLayout(Layout* l) {getActiveMaster()->getWorkspace()->setActiveLayout(l);}
+static inline Layout* getActiveLayout() {return getActiveWorkspace()->getActiveLayout();}
 /**
  * Registers num layouts so they can searched for later
  *
  * @param layouts
  * @param num
  */
-void registerLayouts(Layout* layouts, int num);
+void registerLayouts(Layout* layout);
 
 /**
-* Returns the name of the given layout
-* @param layout
-* @return
-*/
-char* getNameOfLayout(Layout* layout);
-/**
- * Adds an array of layouts to the specified workspace
- * @param workspaceIndex
- * @param layout - layouts to add
- * @param num - number of layouts to add
+ * Increases the corresponding field for the layout by step
+ *
+ * @param index a LayoutArgIndex
+ * @param step
  */
-void addLayoutsToWorkspace(int workspaceIndex, Layout* layout, int num);
-/**
- * Clears all layouts associated with the give workspace.
- * The layouts themselves are not freeded
- * @param workspaceIndex the workspace to clear
- */
-void clearLayoutsOfWorkspace(int workspaceIndex);
-
-/**
- * Cycle through the layouts of the active workspace
- * @param dir
- */
-void cycleLayouts(int dir);
-
-/**
- * Apply this external layout to the workspace if it is not already the active layout
- * @param layout
- */
-int toggleLayout(Layout* layout);
+void increaseLayoutArg(int index, int step, Layout* l = getActiveWorkspace()->getActiveLayout());
 
 /**
  * Manually retile the active workspace
  */
 void retile(void);
 
+
 /**
- * Tile the windows with BELOW_MASK to be under all normal windows
+ *
+ * @param windowStack the list of nodes that could possibly be tiled
+ * @param args can control the max number of windows tiled (args->limit)
+ * @return the number of windows that will be tiled
  */
-void tileLowerLayers(Workspace* workspace);
+int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, LayoutArgs* args);
+static inline int getNumberOfWindowsToTile(Workspace* w) {
+    return getNumberOfWindowsToTile(w->getWindowStack(), w->getActiveLayout() ? &w->getActiveLayout()->getArgs() : NULL);
+}
+
 /**
- * Tile the windows with ABOVE_MASK to be under all normal windows
+ * Provides a transformation of config
+ * @param state holds info related to the layout like the monitor
+ * @param config the config that will be modified
  */
-void tileUpperLayers(Workspace* workspace);
+void transformConfig(LayoutArgs* args, const Monitor* m, int config[CONFIG_LEN]);
+/**
+ * Configures the winInfo using values as reference points and apply various properties of winInfo's mask and set configuration which will override values
+ * @param state
+ * @param winInfo the window to tile
+ * @param values where the layout wants to position the window
+ */
+void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values[CONFIG_LEN]);
+
 /**
  * Tiles the specified workspace.
  * First the windows in the NORMAL_LAYER are tiled according to the active layout's layoutFunction
@@ -224,46 +232,13 @@ void tileUpperLayers(Workspace* workspace);
  * @param index the index of the workspace to tile
  * @see tileLowerLayers, tileUpperLayers
  */
-void tileWorkspace(int index);
+void tileWorkspace(WorkspaceID index);
 
 /**
  * Apply the workspace's active layout on the given workspace
  * @param workspace
  */
 void applyLayout(Workspace* workspace);
-
-/**
- *
- * @param windowStack the list of nodes that could possibly be tiled
- * @param args can control the max number of windows tiled (args->limit)
- * @return the number of windows that will be tiled
- */
-int getNumberOfWindowsToTile(ArrayList* windowStack, LayoutArgs* args);
-
-/**
- * Provides a transformation of config
- * @param state holds info related to the layout like the monitor
- * @param config the config that will be modified
- */
-void transformConfig(LayoutState* state, int config[CONFIG_LEN]);
-/**
- * Configures the winInfo using values as reference points and apply various properties of winInfo's mask and set configuration which will override values
- * @param state
- * @param winInfo the window to tile
- * @param values where the layout wants to position the window
- */
-void configureWindow(LayoutState* state, WindowInfo* winInfo, short values[CONFIG_LEN]);
-/**
- *
- * @return the active layout for the active workspace
- */
-Layout* getActiveLayout(void);
-
-/**
- * @param workspaceIndex
- * @return the active layout for the specified workspace
- */
-Layout* getActiveLayoutOfWorkspace(int workspaceIndex);
 
 /**
  * Windows will be the size of the monitor view port

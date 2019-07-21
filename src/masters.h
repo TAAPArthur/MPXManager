@@ -5,169 +5,204 @@
 #ifndef MASTERS_H
 #define MASTERS_H
 
+#include "arraylist.h"
 #include "mywm-structs.h"
+#include "workspaces.h"
+#include "slaves.h"
+#include "globals.h"
+#include <string.h>
+#include <string>
 
-/**
- * Creates a pointer to a Master instance and sets its id to id.
- * @param id keyboard id
- * @param pointerId pointer id
- * @param name the name of the master keyboard
- * @param focusColor
- * @return pointer to object
- */
-Master* createMaster(MasterID id, int pointerId, char* name, int focusColor);
 /**
  *
  * @return a list of all master devices
  */
-ArrayList* getAllMasters();
-/**
- * Creates and adds a given master with id = keyboardMasterId
- * if a master with this id does not already exist to the head of the
- * master list.
- * Note the new master does not replace the active master unless there
- * the master list is empty
- * @param keyboardMasterId  the id of the master device.
- * @param pointerMasterId  the id of the associated master pointer
- * @param name the name of the master keyboard
- * @param focusColor
- * @return 1 iff a new master was inserted; 0 o.w.
- */
-int addMaster(MasterID keyboardMasterId, MasterID pointerMasterId, char* name, int focusColor);
-
-/**
- * Removes the master with the specified id
- * @param id    the id to remove
- * @return 1 iff a node was removed 0 o.w.
- */
-int removeMaster(MasterID id);
-/**
- * Removes a window from the master stack
- * @param master
- * @param winToRemove
- * @return 1 iff the window was actually removed
- */
-int removeWindowFromMaster(Master* master, WindowID winToRemove);
-
-/**
- * @return the id of the active master
- */
-int getActiveMasterKeyboardID(void);
-/**
- * @return the pointer id of the active master
- */
-int getActiveMasterPointerID(void);
-/**
- * @return  whether of not the master window stack will be updated on focus change
-*/
-int isFocusStackFrozen(void);
-/**
- * If value, the master window stack will not be updated on focus change
- * Else the focused window will be shifted to the top of the master stack,
- * the master stack and the focused will remain in sync after all focus changes
- * @param value whether the focus stack is frozen or not
-*/
-void setFocusStackFrozen(int value);
-
-/**
- * @param master
- * @return Returns a list of windows that have been put in the cache
-*/
-ArrayList* getWindowCache(Master* master);
-/**
- * Clears the window cache for the active master
- */
-void clearWindowCache(void);
-/**
- * Adds a window to the cache if not already present
- * @param winInfo  the window to add
- */
-int updateWindowCache(WindowInfo* winInfo);
-
-/**
- * Returns the top window in the stack relative to given master.
- * @return
- */
-ArrayList* getActiveMasterWindowStack(void);
-
-
-/**
- * Returns the top window in the stack relative to given master.
- * @return
- */
-ArrayList* getWindowStackByMaster(Master* master);
-
-
-/**
- * Get the node containing the window master is
- * currently focused on. This should never be null
- * @param master
- * @return the currently focused window for master
- */
-WindowInfo* getFocusedWindowByMaster(Master* master);
-/**
- * Get the WindowInfo representing the window the master is
- * currently focused on.
- * This value will be should be updated whenever the focus for the active
- * master changes. If the focused window is deleted, then the this value is
- * set the next window if the master focus stack
- * @return the currently focused window for the active master
- */
-WindowInfo* getFocusedWindow();
+ArrayList<Master*>& getAllMasters();
 /**
  *
- * @return the node in the master window list representing the focused window
- */
-ArrayList* getFocusedWindowNode();
-/**
- *
- * @param m
- * @return the time the master focused the window
- */
-unsigned getFocusedTime(Master* m);
-/**
- *
- * @return The master device currently interacting with the window manager
+ * @return The master device currently interacting with the wm
  * @see setActiveMasterNodeById
  */
 Master* getActiveMaster(void);
 /**
  * The active master should be set whenever the user interacts with the
- * window manager (key/mouse  binding, mouse press etc)
+ * wm (key/mouse  binding, mouse press etc)
  * @param master the new active master
  */
 void setActiveMaster(Master* master);
+
+///holds data on a master device pair like the ids and focus history
+struct Master : WMStruct {
+private:
+    /**pointer master id associated with id;*/
+    const MasterID pointerID;
+    /// the name of the master keyboard
+    std::string name;
+    /// the color windows when this device has the most recent focus
+    uint32_t focusColor;
+    /**Stack of windows in order of most recently focused*/
+    ArrayList<Slave*>slaves;
+
+    /**Stack of windows in order of most recently focused*/
+    ReverseArrayList<WindowInfo*>windowStack;
+    /**
+     * Contains the window with current focus,
+     * will be same as top of window stack if freezeFocusStack==0
+     *
+     */
+    uint32_t focusedWindowIndex = 0;
+
+    /**Time the focused window changed*/
+    TimeStamp focusedTimeStamp = 0;
+    /// The current binding mode
+    char bindingMode = 0;
+    char bindingFamily = 0;
+    /**When true, the focus stack won't be updated on focus change*/
+    bool freezeFocusStack = 0;
+    /// If true ignore all events with the send_event bit
+    bool ignoreSendEvents;
+    /// If true ignore all device events with the key repeat flag set
+    bool ignoreKeyRepeat;
+
+    /**Index of active workspace;
+     * */
+    WorkspaceID activeWorkspaceIndex = 0;
+    /// When set, device event rules will be passed this window instead of the active window or focused
+    WindowID targetWindow = 0;
+
+public:
+    /**
+     * @param keyboardID  the id of the master device.
+     * @param pointerID  the id of the associated master pointer
+     * @param name the name of the master keyboard
+     * @param focusColor
+     */
+    Master(MasterID keyboardID, MasterID pointerID, std::string n,
+           int focusColor = 0x00FF00): WMStruct(keyboardID),
+        pointerID(pointerID), name(n),        focusColor(focusColor) {
+        assert(keyboardID > 1 && pointerID > 1);
+    }
+    ~Master();
+    ReverseArrayList<WindowInfo*>& getWindowStack(void) {
+        return windowStack;
+    }
+    friend void Slave::setMasterID(MasterID id);
+    const ArrayList<Slave*>& getSlaves(void)const {
+        return slaves;
+    }
+    MasterID getKeyboardID(void)const {return id;}
+    MasterID getPointerID(void)const {return pointerID;}
+    std::string getName(void)const {return name;}
+    /**
+     * @return  whether of not the master window stack will be updated on focus change
+    */
+    int isFocusStackFrozen(void)const {
+        return freezeFocusStack;
+    }
+
+    /**
+     * If value, the master window stack will not be updated on focus change
+     * Else the focused window will be shifted to the top of the master stack,
+     * the master stack and the focused will remain in sync after all focus changes
+     * @param value whether the focus stack is frozen or not
+    */
+    void setFocusStackFrozen(int value);
+    /**
+     * Get the WindowInfo representing the window the master is
+     * currently focused on.
+     * This value will be should be updated whenever the focus for the active
+     * master changes. If the focused window is deleted, then the this value is
+     * set the next window if the master focus stack
+     * @return the currently focused window for the active master
+     */
+    WindowInfo* getFocusedWindow(void);
+    /**
+     *
+     * @return the time the master focused the window
+     */
+    unsigned int getFocusedTime(void)const {
+        return focusedTimeStamp;
+    }
+    unsigned int getFocusColor(void)const {
+        return focusColor;
+    }
+    void setFocusColor(uint32_t color) {
+        focusColor = color;
+    }
+    bool isIgnoreKeyRepeat() {return ignoreKeyRepeat;}
+    void setIgnoreKeyRepeat(bool b = 1) {ignoreKeyRepeat = b;}
+    bool isIgnoreSendEvents() {return ignoreSendEvents;}
+    /**
+     * Only bindings whose mode & mode will be triggered by this master
+     *
+     * @param mode
+     */
+    void setCurrentMode(int mode) {bindingMode = mode;}
+    bool allowsMode(int mode) {
+        return bindingMode == mode || (bindingFamily & (1 << mode));
+    }
+    /**
+     * Returns the current binding mode for the active master
+     *
+     * @return
+     */
+    int getCurrentMode(void) {
+        return bindingMode;
+    }
+    WindowID getTargetWindow(void)const {return targetWindow;}
+    void setTargetWindow(WindowID target) {targetWindow = target;}
+    /**
+     * To be called when a master focuses a given window.
+     *
+     * If the window is not in the window list, nothing is done
+     * Else if the window is not in the master's window stack, it is added to the end.
+     * Else if the master is not frozen, the window is shifted to the end of the stack
+     *
+     * In all but the first case, a call to getFocusedWindow() will return the window represented by win
+     *
+     * @param win
+     */
+    void onWindowFocus(WindowID win);
+
+    /**
+     *
+     * @return the active workspace index
+     */
+    int getWorkspaceIndex(void)const {
+        return activeWorkspaceIndex;
+    }
+    /**
+     * Sets the active workspace index
+     * @param index
+     */
+    void setWorkspaceIndex(int index) {
+        activeWorkspaceIndex = index;
+    }
+    Workspace* getWorkspace(void) {
+        return ::getWorkspace(getWorkspaceIndex());
+    }
+    WindowInfo* getMostRecentlyFocusedWindow(bool(*filter)(WindowInfo*));
+};
+
+
+
+void addDefaultMaster();
+/**
+ * @return the id of the active master
+ */
+static inline MasterID getActiveMasterKeyboardID(void) {return getActiveMaster()->getKeyboardID();}
+static inline MasterID getActiveMasterPointerID(void) {return getActiveMaster()->getPointerID();}
+static inline WorkspaceID getActiveWorkspaceIndex(void) {return getActiveMaster()->getWorkspaceIndex();}
+static inline Workspace* getActiveWorkspace(void) {return getActiveMaster()->getWorkspace();}
+
+
+static inline WindowInfo* getFocusedWindow() {return getActiveMaster()->getFocusedWindow();}
+
+Master* getMasterByName(std::string name) ;
 /**
  * @brief returns the master node with id == keyboardId
- * @param keyboardID id of the master device
+ * @param id id of the master device
  * @return the master device with the give node
  */
-Master* getMasterById(int keyboardID);
-/**
- * @param name
- *
- * @return the first master whose name is name or NULL
- */
-Master* getMasterByName(const char* name);
-/**
- *
- *
- * @param master
- *
- * @return the name of the master device
- */
-char* getNameOfMaster(Master* master);
-
-/**
- * Only bindings whose mode & mode will be triggered by this master
- *
- * @param mode
- */
-void setCurrentMode(int mode);
-/**
- * Returns the current binding mode for the active master
- *
- * @return
- */
-int getCurrentMode(void);
+Master* getMasterById(MasterID id, bool keyboard = 1);
 #endif

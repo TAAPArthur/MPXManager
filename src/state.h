@@ -4,6 +4,7 @@
  */
 #ifndef STATE_H
 #define STATE_H
+#include <cstdint>
 ///Return type of updateState that dictates what changed
 typedef enum {
     //nothing changed
@@ -12,8 +13,10 @@ typedef enum {
     WORKSPACE_WINDOW_CHANGE = 1,
     /// workspace-monitor pairing changed
     WORKSPACE_MONITOR_CHANGE = 2,
+    WINDOW_CHANGE = 4,
 } StateChangeType;
 
+bool isStateMarked(void);
 /**
  * Marks that the state may have possibility changed
  */
@@ -36,6 +39,7 @@ void unmarkState(void);
  * that has changed
  * @return 1 iff the state has actually changed
  */
-StateChangeType updateState(void(*onWorkspaceWindowChange)(int), void(*onWorkspaceMonitorChange)(int));
+int updateState();
+void addAutoTileRules(void);
 
 #endif

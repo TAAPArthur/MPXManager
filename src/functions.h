@@ -10,6 +10,8 @@
 
 
 #include "bindings.h"
+#include "masters.h"
+#include "wmfunctions.h"
 
 /// Direction towards the head of the list
 #define UP -1
@@ -29,44 +31,36 @@
  */
 #define RUN_OR_RAISE(TYPE,args...) _RUN_OR_RAISE_HELPER(args,_RUN_OR_RAISE,_RUN_OR_RAISE_IMPLICIT)(TYPE,args)
 
+enum WindowAction {
+    ACTION_RAISE, ACTION_FOCUS, ACTION_ACTIVATE, ACTION_LOWER
+} ;
+/**
+ * Attempts to find a that rule matches a managed window.
+ * First the active Master's window& stack is checked ignoring the master's window cache.
+ * Then all windows are checked
+ * and finally the master's window complete window& stack is checked
+ * @param rule
+ * @return 1 if a matching window was found
+ */
+WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_RAISE, bool checkLocalFirst = 1,
+                         bool cache = 1, Master* master = getActiveMaster());
 
 /**
  * Call to stop cycling windows
  *
- * Unfreezes the master window stack
+ * Unfreezes the master window& stack
  */
-void endCycleWindows(void);
+void endCycleWindows(Master* m = getActiveMaster());
 /**
- * Freezes and cycle through windows in the active master's stack
+ * Freezes and cycle through windows in the active master's& stack
  * @param delta
  */
-void cycleWindows(int delta);
+void cycleWindows(int delta, Master* m = getActiveMaster());
 
 
 
 //////Run or Raise code
 
-/**
- * Attempts to find a that rule matches a managed window.
- * First the active Master's window stack is checked ignoring the master's window cache.
- * Then all windows are checked
- * and finally the master's window complete window stack is checked
- * @param rule
- * @return 1 if a matching window was found
- */
-int findAndRaise(Rule* rule);
-/**
- * Checks all managed windows to see if any match the given rule; the first match is raised
- * @param rule
- * @return
- */
-int findAndRaiseLazy(Rule* rule);
-/**
- * Checks all managed windows to see if any match the given rule; the first match is lowered
- * @param rule
- * @return
- */
-int findAndLowerLazy(Rule* rule);
 /**
  * Checks to see if any window in searchList matches rule ignoring any in ignoreList
  * @param rule
@@ -74,8 +68,8 @@ int findAndLowerLazy(Rule* rule);
  * @param ignoreList can be NULL
  * @return the first window that matches rule or NULL
  */
-WindowInfo* findWindow(Rule* rule, ArrayList* searchList, ArrayList* ignoreList);
-
+WindowInfo* findWindow(const BoundFunction& rule, ArrayList<WindowInfo*>& searchList,
+                       ArrayList<WindowID>* ignoreList = NULL);
 
 
 /**
@@ -83,74 +77,54 @@ WindowInfo* findWindow(Rule* rule, ArrayList* searchList, ArrayList* ignoreList)
  * @param winInfo
  * @param name
  */
-void sendWindowToWorkspaceByName(WindowInfo* winInfo, char* name);
+void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name);
 
 /**
- * Swap the active window with the window dir windows away from its current position in the worked space stack. The stack wraps around if needed
+ * Swap the active window with the window dir windows away from its current position in the worked space& stack. The stack wraps around if needed
  * @param dir
  */
-void swapPosition(int dir);
+void swapPosition(int dir, ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 /**
- * Shifts the focus up or down the window stack
+ * Shifts the focus up or down the window& stack
  * @param index
  * @return
  */
-int shiftFocus(int index);
+int shiftFocus(int index, ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 
 
 /**
- * Shifts the focused window to the top of the window stack
+ * Shifts the focused window to the top of the window& stack
  */
-void shiftTop(void);
+void shiftTop(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 /**
- * Swaps the focused window with the top of the window stack
+ * Swaps the focused window with the top of the window& stack
  */
-void swapWithTop(void);
+void swapWithTop(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
+
 
 
 /**
- * Get the next window in the stacking order in the given direction
+ * Get the next window in the& stacking order in the given direction
  * @param dir
  * @return
  */
-WindowInfo* getNextWindowInStack(int dir);
-
+WindowInfo* getNextWindowInStack(int dir, const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 /**
- * Activates the window at the bottom of the Workspace stack
+ * Activates the window at the bottom of the Workspace& stack
  * @return 1 if successful
  */
-int focusBottom(void);
+int focusBottom(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 /**
- * Activates the window at the top of the workspace stack
+ * Activates the window at the top of the workspace& stack
  * @return 1 if successful
  */
-int focusTop(void);
+int focusTop(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 
 
-/**
- * Will shift the position of the window in response the change in mouse movements
- * @param winInfo
- */
-void moveWindowWithMouse(WindowInfo* winInfo);
-/**
- * Will change the size of the window in response the change in mouse movements
- * @param winInfo
- */
-void resizeWindowWithMouse(WindowInfo* winInfo);
-
-/**
- * Prepares for operations on a fixed window. Multiple operations can be performed on a given window at once.
- *
- * Window geometry won't be updated until all operations finish
- * @param winInfo
- */
-void startMouseOperation(WindowInfo* winInfo);
-/// @copydoc startMouseOperation
-void stopMouseOperation(WindowInfo* winInfo);
 
 /**
  * activates the workspace that contains the mouse pointer
  * @see getLastKnownMasterPosition()
  */
-void activateWorkspaceUnderMouse(void);
+bool activateWorkspaceUnderMouse(void);
 #endif

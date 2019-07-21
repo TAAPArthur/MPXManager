@@ -8,32 +8,67 @@
 #include "bindings.h"
 
 /// Specifies type of option
-typedef enum {
-    BOOL_VAR, INT_VAR, LONG_VAR, STRING_VAR, FUNC, FUNC_STR, FUNC_INT, FUNC_WIN_INFO
-} OptionTypes;
-/// Holds info to map string to a given operation
-typedef struct {
-    /// option name; --$name will trigger option
-    char* name;
-    /// detail how we should respond to the option
+enum OptionType {
+    VAR_BOOL, VAR_INT, VAR_STRING, FUNC_VOID, FUNC_INT, FUNC_STRING
+};
+struct VarFunc {
     union {
-        /// set the var
         void* var;
-        /// call a function
-        BoundFunction boundFunction;
+        void(*func)();
     } var;
-    /// the type of var.var
-    OptionTypes type;
-    /// character that may also be used to trigger binding
-    char shortName;
+    OptionType type;
+    VarFunc(unsigned int* i): type(VAR_INT) {
+        var.var = i;
+    }
+    VarFunc(bool* i): type(VAR_BOOL) {
+        var.var = i;
+    }
+    VarFunc(std::string* s): type(VAR_STRING) {
+        var.var = s;
+    }
+    VarFunc(void(*f)()): type(FUNC_VOID) {
+        var.func = f;
+    }
+    VarFunc& operator=(void(*f)()) {
+        var.func = f;
+        return *this;
+    }
+    VarFunc(void (*f)(WindowMask)): type(FUNC_INT) {
+        var.func = (void(*)())f;
+    }
+    VarFunc(void (*f)(std::string)): type(FUNC_STRING) {
+        var.func = (void(*)())f;
+    }
+};
+typedef enum OptionFlags {
     /// if true and the command was sent, program will fork before executing this command and attempt redirect output to the caller's stdout
-    bool forkOnReceive;
-} Option;
-/// Flags to be used when communicating with a remote instance
-typedef enum OPTION_FLAGS {
-    NO_FORK_ON_SEND = 1,
+    FORK_ON_RECEIVE = 1,
     REMOTE = 2,
+    CONFIRM_EARLY = 4,
 } OPTION_FLAGS;
+/// Holds info to map string to a given operation
+struct Option {
+
+    /// option name; --$name will trigger option
+    std::string name;
+    /// detail how we should respond to the option
+    struct VarFunc varFunc;
+    int flags = 0;
+    void call(std::string value) {(*this)(value);}
+
+    OptionType getType()const {return varFunc.type;}
+    void* getVar()const {return varFunc.var.var;}
+
+    bool matches(std::string, bool);
+    /**
+     * If option holds a function, calls the function bound to option with argument value.
+     * Else sets name to value
+     *
+     * @param value the value to set/pass. If NULL, a value of '1' is used
+     */
+    void operator()(std::string value);
+};
+
 
 /**
  * Finds a option by name
@@ -43,14 +78,9 @@ typedef enum OPTION_FLAGS {
  *
  * @return the first option matching name or NULL
  */
-Option* findOption(char* name, int len);
-/**
- * Prints info for option
- *
- * @param option
- */
-void printOption(Option* option);
+Option* findOption(std::string name, std::string value) ;
 
+std::ostream& operator<<(std::ostream& strm, const Option& option) ;
 /**
  * Sets up the system to receive messages from an external client
  */
@@ -68,28 +98,10 @@ void receiveClientMessage(void);
  * @param name
  * @param value
  */
-void send(char* name, char* value);
-/**
- * If option holds a function, calls the function bound to option with argument value.
- * Else sets name to value
- *
- * @param option
- * @param value the value to set/pass. If NULL, a value of '1' is used
- */
-void callOption(Option* option, char* value);
+void send(std::string name, std::string value);
 
+ArrayList<Option*>& getOptions();
 
-/**
- * Adds to the list of options that can be triggered from external commands
- *
- * @param option
- * @param len
- */
-void addOption(Option* option, int len);
-/**
- * Loads the default list of options
- */
-void loadDefaultOptions(void);
 /**
  * @return 1 iff there are send messages whose receipt has not been confirmed
  */

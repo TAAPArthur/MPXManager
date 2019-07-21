@@ -81,9 +81,9 @@ getopts "$optspec" optchar || run
                     ;;
                 recompile)
                     mkdir -p $path
-                    [ -f $path/config.c ] || cp /usr/share/mpxmanager/sample-config.c $path/config.c
+                    [ -f $path/config.cpp ] || cp /usr/share/mpxmanager/sample-config.cpp $path/config.cpp
                     shift
-                    gcc $path/config.c -o $path/$fileName -lmpxmanager $LIBS "$@"
+                    gcc $path/config.cpp -o $path/$fileName -lmpxmanager $LIBS "$@"
                     ;;
                 help)
                     displayHelp
