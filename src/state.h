@@ -40,6 +40,5 @@ void unmarkState(void);
  * @return 1 iff the state has actually changed
  */
 int updateState();
-void addAutoTileRules(void);
 
 #endif

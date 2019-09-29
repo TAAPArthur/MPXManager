@@ -8,6 +8,11 @@
 #include "masters.h"
 #include "windows.h"
 #include "mywm-structs.h"
+
+#define DEFAULT_EVENT(F){F,PASSTHROUGH_IF_TRUE, #F}
+#define PASSTHROUGH_EVENT(F){F,ALWAYS_PASSTHROUGH, #F}
+#define FUNC_NAME (std::string("_")+__FUNCTION__)
+
 /**
  * Determines if and when the control flow should abort processing a series of
  * Rules/Bindings

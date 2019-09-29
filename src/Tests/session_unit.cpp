@@ -29,7 +29,7 @@ MPX_TEST("test_sync_state", {
     }
     assertEquals(waitForChild(0), 0);
     syncState();
-    assert(getActiveWorkspaceIndex() == 1);
+    assertEquals(getActiveWorkspaceIndex(), 1);
     assert(isShowingDesktop());
 });
 
@@ -119,7 +119,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     setActiveLayout(&l);
     switchToWorkspace(1);
     setActiveLayout(NULL);
-    auto list = serializeState(mask);
+    const auto& list = serializeState(mask);
     saveCustomState();
     flush();
     if(!fork()) {
@@ -129,11 +129,12 @@ MPX_TEST_ITER("test_restore_state", 16, {
         RUN_AS_WM = 0;
         onStartup();
         loadCustomState();
-        auto list2 = serializeState(mask);
+        const auto& list2 = serializeState(mask);
         for(int i = 0; i < list.size(); i++) {
             if(list[i] != list2[i])
                 std::cout << i << " " << list[i] << " " << list2[i] << "\n";
         }
+        assertEquals(list.size(), list2.size());
         assert(list == list2);
         fullCleanup();
         quit(0);

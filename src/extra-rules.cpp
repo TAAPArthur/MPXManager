@@ -79,7 +79,8 @@ void addAvoidDocksRule(void) {
     }, FUNC_NAME));
 }
 void addNoDockFocusRule(void) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK);}, FUNC_NAME));
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK);},
+    FUNC_NAME));
 }
 void addFocusFollowsMouseRule(void) {
     NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_ENTER;

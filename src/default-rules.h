@@ -9,8 +9,6 @@
 
 #include "mywm-structs.h"
 
-#define DEFAULT_EVENT(F){F,PASSTHROUGH_IF_TRUE, #F}
-#define DEFAULT_LAMBDA_EVENT(F){F,PASSTHROUGH_IF_TRUE, __PRETTY_FUNCTION__}
 
 /**
  * Handles the case where we get an unchecked error by logging the error

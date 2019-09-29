@@ -95,13 +95,13 @@ void updateWorkspaceNames() {
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), (char*)names);
 }
 void addEWMHRules() {
-    getEventRules(XCB_CLIENT_MESSAGE).add(new BoundFunction(onClientMessage));
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}));
-    getEventRules(UnregisteringWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}));
-    getEventRules(UnregisteringWindow).add(new BoundFunction(updateEWMHClientList));
-    getEventRules(onXConnection).add(new BoundFunction(broadcastEWMHCompilence));
-    getEventRules(Idle).add(new BoundFunction(setActiveProperties));
-    getBatchEventRules(onScreenChange).add(new BoundFunction(updateEWMHWorkspaceProperties));
+    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage));
+    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}, FUNC_NAME});
+    getEventRules(UnregisteringWindow).add({+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}, FUNC_NAME});
+    getEventRules(UnregisteringWindow).add(DEFAULT_EVENT(updateEWMHClientList));
+    getEventRules(onXConnection).add(DEFAULT_EVENT(broadcastEWMHCompilence));
+    getEventRules(Idle).add(DEFAULT_EVENT(setActiveProperties));
+    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties));
 }
 int getSavedWorkspaceIndex(WindowID win) {
     unsigned int workspaceIndex = 0;

@@ -109,8 +109,9 @@ MPX_TEST("test_toggle_show_desktop", {
 
 static void clientMessageSetup() {
     CRASH_ON_ERRORS = -1;
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);}));
-    startupMethod = addEWMHRules;
+    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);},
+    "_SRC_ANY_MASKS"));
+    addEWMHRules();
     onStartup();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
@@ -263,7 +264,6 @@ MPX_TEST_ITER("test_client_ping", 2, {
 });
 
 MPX_TEST_ITER("wm_move_resize_window", 3, {
-    setLogLevel(0);
     movePointer(0, 0);
     WindowInfo* winInfo = getAllWindows()[0];
     floatWindow(winInfo);
