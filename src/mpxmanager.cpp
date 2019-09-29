@@ -33,54 +33,57 @@ static void clearWMSettings(void) {
     startupMethod = NULL;
     RUN_AS_WM = 0;
 }
+struct Mode {
+    std::string name;
+    void(*func)();
+    bool runEventLoop = 1;
+};
+ArrayList<Mode>modes = {
+#if XMOUSE_CONTROL_EXT_ENABLED
+    {"xmousecontrol", addStartXMouseControlRule},
+#endif
+#if MPX_EXT_ENABLED
+    {"mpx", +[]() {addAutoMPXRules(); getEventRules(onXConnection).add(startMPX);}},
+    {"mpx-start", +[](){getEventRules(onXConnection).add(startMPX);}, 0},
+    {"mpx-stop", +[](){getEventRules(onXConnection).add(stopMPX);}, 0},
+    {"mpx-restart", +[](){getEventRules(onXConnection).add(restartMPX);}, 0},
+    {"mpx-restore", +[](){getEventRules(onXConnection).add(restoreMPX);}, 0},
+    {
+        "mpx-split", +[]() {
+            addAutoMPXRules();
+            getEventRules(onXConnection).add(splitMaster);
+            addDieOnIdleRule();
+        }
+    },
+
+#endif
+};
+static void listModes() {
+    for(const Mode& mode : modes)
+        std::cout << mode.name << " ";
+    std::cout << "\n";
+}
 static void setMode(std::string str) {
     const char* c = str.c_str();
     clearWMSettings();
-    if(!c || c[0] == 0 || strcasecmp(c, " "))
-        return;
-#if XMOUSE_CONTROL_EXT_ENABLED
-    else if(strcasecmp(c, "xmousecontrol") == 0) {
-        startupMethod = addStartXMouseControlRule;
+    for(const Mode& mode : modes) {
+        if(strcasecmp(c, mode.name.c_str()) == 0) {
+            mode.func();
+            RUN_EVENT_LOOP = mode.runEventLoop;
+            return;
+            break;
+        }
     }
-#endif
-#if MPX_EXT_ENABLED
-    else if(strcasecmp(c, "mpx") == 0) {
-        addAutoMPXRules();
-        getEventRules(onXConnection).add(startMPX);
-    }
-    else if(strcasecmp(c, "mpx-start") == 0) {
-        getEventRules(onXConnection).add(startMPX);
-        RUN_EVENT_LOOP = 0;
-    }
-    else if(strcasecmp(c, "mpx-stop") == 0) {
-        getEventRules(onXConnection).add(stopMPX);
-        RUN_EVENT_LOOP = 0;
-    }
-    else if(strcasecmp(c, "mpx-restart") == 0) {
-        getEventRules(onXConnection).add(restartMPX);
-        RUN_EVENT_LOOP = 0;
-    }
-    else if(strcasecmp(c, "mpx-split") == 0) {
-        addAutoMPXRules();
-        getEventRules(onXConnection).add(splitMaster);
-        addDieOnIdleRule();
-    }
-    else if(strcasecmp(c, "mpx-restore") == 0) {
-        getEventRules(onXConnection).add(restoreMPX);
-        RUN_EVENT_LOOP = 0;
-    }
-#endif
-    else {
-        LOG(LOG_LEVEL_ERROR, "could not find mode %s\n", c);
-        exit(1);
-    }
+    LOG(LOG_LEVEL_ERROR, "could not find mode '%s'\n", c);
+    quit(1);
 }
 static int sendOptionToWaitFor = 0;
-static void _handleOption(std::string str, bool local) {
+static bool lastLocal = 0;
+static void _handleOption(std::string str, bool local = lastLocal) {
     int index = str.find('=');
     std::string name = str.substr(0, index);
     std::string value = index == str.npos ? "" : str.substr(index + 1);
-    Option* option = findOption(name, value);
+    const Option* option = findOption(name, value);
     if(option)
         if(local)
             option->call(value);
@@ -92,6 +95,7 @@ static void _handleOption(std::string str, bool local) {
         LOG(LOG_LEVEL_ERROR, "cannot find option %s with value '%s'\n", name.c_str(), value.c_str());
         quit(1);
     }
+    lastLocal = local;
 }
 static void setOption(std::string str) {
     _handleOption(str, 1);
@@ -108,14 +112,15 @@ static void clearStartupMethod(void) {
     startupMethod = NULL;
 }
 
-static Option options[] = {
+static ArrayList<Option> options = {
     {"mode", setMode},
     {"clear-startup-method", clearStartupMethod},
     {"replace", +[]() {setOption("STEAL_WM_SELECTION=1");}},
     {"set", setOption},
     {"send", sendOption},
     {"enable-inter-client-communication", enableInterClientCommunication},
-    {"list-options", +[]() {std::cout << options << "\n"; quit(0);}},
+    {"list-modes", +[]() {listModes(); exit(0);}},
+    {"list-start-options", +[]() {listOptions(options); exit(0);}},
 };
 
 /**
@@ -129,7 +134,7 @@ static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions) {
         bool foundMatch = 0;
         LOG(LOG_LEVEL_TRACE, "processing %s\n", argv[i]);
         std::string str = argv[i];
-        for(Option& option : options) {
+        for(const Option& option : options) {
             if(str == ("--" + option.name))
                 if(option.getType() == FUNC_VOID)
                     option.call("");
@@ -145,8 +150,11 @@ static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions) {
             break;
         }
         if(!foundMatch && exitOnUnknownOptions) {
-            LOG(LOG_LEVEL_ERROR, "could not process %s\n", argv[i]);
-            quit(1);
+            LOG(LOG_LEVEL_DEBUG, "Trying to send/set %s.\n", argv[i]);
+            const char* c = argv[i];
+            if(c[0] == '-' && c[1] == '-')
+                c += 2;
+            _handleOption(c);
         }
     }
 }
