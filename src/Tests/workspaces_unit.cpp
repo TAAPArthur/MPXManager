@@ -6,6 +6,7 @@
 #include "../system.h"
 #include "../logger.h"
 #include "../workspaces.h"
+#include "../layouts.h"
 #include "../windows.h"
 #include "../monitors.h"
 #include "../masters.h"
@@ -67,6 +68,17 @@ MPX_TEST("test_workspace_window_add", {
     addWorkspaces(2);
     getWorkspace(1)->getWindowStack().add(getAllWindows()[0]);
     getWorkspace(0)->getWindowStack().add(getAllWindows()[1]);
+    removeWorkspaces(1);
+});
+MPX_TEST("test_workspace_window_has_mask", {
+    getAllWindows().add(new WindowInfo(1));
+    getAllWindows().add(new WindowInfo(2));
+    addWorkspaces(2);
+    getAllWindows()[0]->addMask(MAPPABLE_MASK);
+    getWorkspace(1)->getWindowStack().add(getAllWindows()[0]);
+    getWorkspace(0)->getWindowStack().add(getAllWindows()[1]);
+    assert(!getWorkspace(0)->hasWindowWithMask(MAPPABLE_MASK));
+    assert(getWorkspace(1)->hasWindowWithMask(MAPPABLE_MASK));
     removeWorkspaces(1);
 });
 MPX_TEST("test_monitor_add", {
@@ -146,8 +158,8 @@ MPX_TEST("test_mask_add_remove_toggle", {
     workspace->toggleMask(6);
     delete workspace;
 });
-static Layout* fakeLayouts[2] = {(Layout*)1, (Layout*)2};
 MPX_TEST("test_layout_toggle", {
+    Layout* fakeLayouts[2] = {getDefaultLayouts()[0], getDefaultLayouts()[1]};
     addWorkspaces(1);
     getWorkspace(0)->getLayouts().add(fakeLayouts[0]);
     assert(getWorkspace(0)->toggleLayout(fakeLayouts[1]));
@@ -162,6 +174,7 @@ MPX_TEST("test_layout_toggle", {
 });
 
 MPX_TEST_ITER("test_layout_cycle", 2, {
+    Layout* fakeLayouts[2] = {getDefaultLayouts()[0], getDefaultLayouts()[1]};
     addWorkspaces(1);
     getWorkspace(0)->cycleLayouts(_i ? 0 : 0);
     getWorkspace(0)->getLayouts().add(fakeLayouts[0]);

@@ -14,8 +14,8 @@ MPX_TEST("print", {
 });
 MPX_TEST("boundFunction_eq", {
     std::string name = "name";
-    BoundFunction* b = new BoundFunction(incrementCount, ALWAYS_PASSTHROUGH, name);
-    BoundFunction* b2 = new BoundFunction(incrementCount, ALWAYS_PASSTHROUGH, name);
+    BoundFunction* b = new BoundFunction(incrementCount, name);
+    BoundFunction* b2 = new BoundFunction(*b);
     assertEquals(b->getName(), name);
     assertEquals(b2->getName(), b->getName());
     assertEquals(*b2, *b);
@@ -30,34 +30,56 @@ MPX_TEST("boundFunction_eq", {
     list.deleteElements();
 });
 ///Test to make sure callBoundedFunction() actually calls the right function
-MPX_TEST("test_call_bounded_function", {
+static void test() {
+    createSimpleEnv();
+    getAllMonitors().add(new Monitor(1, {0, 0, 1, 1}));
+    getAllMonitors()[0]->assignWorkspace(getActiveMaster()->getWorkspace());
+    addRootMonitor();
     static WindowInfo* fakeWinInfo = new WindowInfo(1);
     BoundFunction b[] = {
-        {+[](WindowInfo * winInfo) {incrementCount(); assertEquals(fakeWinInfo, winInfo); return 0;}},
+        {+[](WindowInfo * winInfo) {incrementCount(); assertEquals(fakeWinInfo, winInfo); return 1;}},
         incrementCount,
-        {+[]()->int{incrementCount(); return 0;}},
-        {+[](WindowInfo * winInfo)->bool{incrementCount(); assertEquals(fakeWinInfo, winInfo); return 0;}},
+        {+[](WindowInfo * winInfo)->bool{incrementCount(); assertEquals(fakeWinInfo, winInfo); return 1;}},
+        {+[](Master * master)->bool{incrementCount(); assertEquals(getActiveMaster(), master); return 1;}},
+        {+[](Workspace * w)->bool{incrementCount(); assertEquals(getActiveMaster()->getWorkspace(), w); return 1;}},
+        {+[](Monitor * m)->bool{incrementCount(); assertEquals(getActiveMaster()->getWorkspace()->getMonitor(), m); return 1;}},
+        {+[]()->int{incrementCount(); return 1;}},
         {+[](uint32_t i) {incrementCount(); assertEquals(fakeWinInfo->getID(), i);}},
         {+[](uint32_t i)->int{incrementCount(); assertEquals(fakeWinInfo->getID(), i); return i;}},
         {+[](WindowInfo * winInfo) { incrementCount(); assertEquals(fakeWinInfo, winInfo);}},
+        {+[](int i){incrementCount(); assertEquals(i, 123);}, 123},
+        {+[](int i)->int{incrementCount(); assertEquals(i, 123); return 1;}, 123},
     };
+    BoundFunction f = BoundFunction(b[0]);
     for(int i = 0; i < LEN(b);) {
-        b[i].execute(fakeWinInfo);
-        assert(getCount() == ++i);
+        getEventRules(0).add(b[i]);
+        b[i].execute(fakeWinInfo, getActiveMaster());
+        assertEquals(getCount(), ++i);
     }
+    applyEventRules(0, fakeWinInfo);
+    assertEquals(getCount(), LEN(b) * 2);
     delete fakeWinInfo;
+    getEventRules(0).deleteElements();
+    simpleCleanup();
+}
+MPX_TEST("test_call_bounded_function", {
+    test();
 });
 MPX_TEST("test_call_bounded_function_null_window", {
     static WindowInfo* fakeWinInfo = NULL;
+    static Master* fakeMaster = NULL;
     BoundFunction funcs[] = {
         {+[](WindowInfo * winInfo) {assert(winInfo); quit(1);}},
         {+[](WindowInfo * winInfo)->bool{assert(winInfo); quit(1); return 0;}},
         {+[](uint32_t i) {assert(i); quit(1);}},
         {+[](uint32_t i)->int{quit(1); return i;}},
         {+[](WindowInfo * winInfo) {assert(winInfo); quit(1);}},
+        {+[](Master * m) {assert(m); quit(1);}},
+        {+[](Workspace * w) {assert(w); quit(1);}},
+        {+[](Monitor * m) {assert(m); quit(1);}},
     };
     for(BoundFunction& b : funcs)
-        b.execute(fakeWinInfo);
+        b.execute(fakeWinInfo, fakeMaster);
 });
 MPX_TEST("apply_rules_passthrough", {
     getEventRules(0).add(new BoundFunction {NO_PASSTHROUGH});

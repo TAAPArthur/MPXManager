@@ -53,7 +53,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
  *
  */
 #define LOG(i,str...) \
-    do{if(isLogging(i)) dprintf(LOG_FD, str);}while(0)
+    LOG_RUN(i, dprintf(LOG_FD, str))
 
 /**
  * if i>= getLogLevel(), run code

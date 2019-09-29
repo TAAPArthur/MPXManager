@@ -64,6 +64,37 @@ WindowID getPrivateWindow(void) {
     return compliantWindowManagerIndicatorWindow;
 }
 
+
+static std::unordered_map<WindowMasks, uint32_t> maskToAtom;
+static void createMaskAtomMapping() {
+    maskToAtom[ABOVE_MASK] = ewmh->_NET_WM_STATE_ABOVE;
+    maskToAtom[BELOW_MASK] = ewmh->_NET_WM_STATE_BELOW;
+    maskToAtom[FULLSCREEN_MASK] = ewmh->_NET_WM_STATE_FULLSCREEN;
+    maskToAtom[HIDDEN_MASK] = ewmh->_NET_WM_STATE_HIDDEN;
+    maskToAtom[NO_TILE_MASK] = WM_STATE_NO_TILE;
+    maskToAtom[ROOT_FULLSCREEN_MASK] = WM_STATE_ROOT_FULLSCREEN;
+    maskToAtom[STICKY_MASK] = ewmh->_NET_WM_STATE_STICKY;
+    maskToAtom[URGENT_MASK] = ewmh->_NET_WM_STATE_DEMANDS_ATTENTION;
+    maskToAtom[WM_DELETE_WINDOW_MASK] = WM_DELETE_WINDOW;
+    maskToAtom[WM_TAKE_FOCUS_MASK] = WM_TAKE_FOCUS;
+    maskToAtom[X_MAXIMIZED_MASK] = ewmh->_NET_WM_STATE_MAXIMIZED_HORZ;
+    maskToAtom[Y_MAXIMIZED_MASK] = ewmh->_NET_WM_STATE_MAXIMIZED_VERT;
+    maskToAtom[URGENT_MASK] = ewmh->_NET_WM_STATE_DEMANDS_ATTENTION;
+}
+WindowMasks getMaskFromAtom(xcb_atom_t atom) {
+    for(auto pair : maskToAtom)
+        if(pair.second == atom)
+            return pair.first;
+    return NO_MASK;
+}
+int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) {
+    int count = 0;
+    for(auto pair : maskToAtom)
+        if(pair.first & masks)
+            arr[count++] = pair.second;
+    return count;
+}
+
 xcb_atom_t getAtom(const char* name) {
     if(!name)return XCB_ATOM_NONE;
     xcb_intern_atom_reply_t* reply;
@@ -186,6 +217,7 @@ void openXDisplay(void) {
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
     XSetErrorHandler(handleXLibError);
     compliantWindowManagerIndicatorWindow = 0;
+    createMaskAtomMapping();
     if(applyRule)
         applyEventRules(onXConnection, NULL);
 }
@@ -312,7 +344,7 @@ static inline xcb_generic_event_t* getNextEvent() {
         idle++;
         flush();
         unlock();
-        LOG(LOG_LEVEL_VERBOSE, "Idle %d\n", idle);
+        LOG(LOG_LEVEL_DEBUG, "Idle %d\n", idle);
         if(!isShuttingDown())
             event = xcb_wait_for_event(dis);
     }

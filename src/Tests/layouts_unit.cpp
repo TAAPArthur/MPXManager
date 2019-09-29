@@ -24,8 +24,29 @@ int NUMBER_OF_LAYOUT_FAMILIES = LEN(LAYOUT_FAMILIES);
 void setActiveLayoutByName(std::string name, Workspace* w = getActiveWorkspace()) {
     w->setActiveLayout(findLayoutByName(name));
 }
-
 SET_ENV(createXSimpleEnv, fullCleanup);
+MPX_TEST("print_layout", {
+    suppressOutput();
+    std::cout << getDefaultLayouts()[FULL];
+});
+
+MPX_TEST("tile_worskspace_event", {
+
+    addWorkspaces(2);
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    scan(root);
+    getAllWindows()[0]->moveToWorkspace(0);
+    getAllWindows()[1]->moveToWorkspace(1);
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {assertEquals(winInfo, getAllWindows()[1]); return 0;}));
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
+    tileWorkspace(1);
+    assertEquals(getCount(), 1);
+});
+
+
 
 
 MPX_TEST("tile", {
@@ -136,6 +157,18 @@ MPX_TEST_ITER("default_layouts", LAST_LAYOUT, {
     }
 });
 
+MPX_TEST("raise_focused", {
+    setActiveLayout(getDefaultLayouts()[FULL]);
+    assert(getActiveLayout()->getArgs().raiseFocused);
+    Window ids[] = {mapArbitraryWindow(), mapArbitraryWindow(), mapArbitraryWindow()};
+    scan(root);
+    for(WindowInfo* winInfo : getAllWindows())
+        winInfo->moveToWorkspace(0);
+    getActiveMaster()->onWindowFocus(ids[1]);
+    tileWorkspace(0);
+    WindowID stack[] = {ids[0], ids[2], ids[1]};
+    assert(checkStackingOrder(stack, LEN(stack)));
+});
 
 MPX_TEST_ITER("test_fixed_position_windows", NUMBER_OF_LAYOUT_FAMILIES, {
     DEFAULT_BORDER_WIDTH = 0;
@@ -215,12 +248,17 @@ MPX_TEST("test_empty_layout", {
 MPX_TEST("floating_windows", {
     WindowID win = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createInputOnlyWindow());
+    WindowID win3 = mapWindow(createNormalWindow());
     scan(root);
     for(WindowInfo* winInfo : getAllWindows()) {
         winInfo->moveToWorkspace(getActiveWorkspaceIndex());
         floatWindow(winInfo);
     }
+    getWindowInfo(win3)->setTilingOverrideEnabled(1 << CONFIG_INDEX_BORDER);
+    int customBorder = 5;
+    getWindowInfo(win3)->setTilingOverride({0, 0, 0, 0, customBorder});
     retile();
+    assertEquals(getRealGeometry(getWindowInfo(win3)).border, customBorder);
     assertEquals(getRealGeometry(getWindowInfo(win2)).border, 0);
     assertEquals(getRealGeometry(getWindowInfo(win)).border, DEFAULT_BORDER_WIDTH);
 });

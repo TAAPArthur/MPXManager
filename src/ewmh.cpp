@@ -8,7 +8,6 @@
 #include "ewmh.h"
 #include "globals.h"
 #include "logger.h"
-#include "session.h"
 #include "system.h"
 #include "time.h"
 #include "user-events.h"
@@ -31,7 +30,7 @@ bool isMPXManagerRunning(void) {
     return result;
 }
 void broadcastEWMHCompilence() {
-    LOG(LOG_LEVEL_TRACE, "Complying with EWMH\n");
+    LOG(LOG_LEVEL_DEBUG, "Complying with EWMH\n");
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else  ignore it)
     if(!STEAL_WM_SELECTION) {
@@ -43,7 +42,7 @@ void broadcastEWMHCompilence() {
         }
         free(ownerReply);
     }
-    LOG(LOG_LEVEL_TRACE, "Setting selection owner\n");
+    LOG(LOG_LEVEL_DEBUG, "Setting selection owner\n");
     if(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), WM_SELECTION_ATOM,
                   XCB_CURRENT_TIME)) == 0) {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
@@ -53,7 +52,7 @@ void broadcastEWMHCompilence() {
     xcb_ewmh_set_wm_pid(ewmh, root, getpid());
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
-    LOG(LOG_LEVEL_TRACE, "Complied with EWMH/ICCCM specs\n");
+    LOG(LOG_LEVEL_DEBUG, "Complied with EWMH/ICCCM specs\n");
 }
 
 void updateEWMHClientList() {
@@ -94,14 +93,22 @@ void updateWorkspaceNames() {
     if(ewmh && RUN_AS_WM)
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), (char*)names);
 }
-void addEWMHRules() {
-    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage));
-    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}, FUNC_NAME});
-    getEventRules(UnregisteringWindow).add({+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}, FUNC_NAME});
-    getEventRules(UnregisteringWindow).add(DEFAULT_EVENT(updateEWMHClientList));
-    getEventRules(onXConnection).add(DEFAULT_EVENT(broadcastEWMHCompilence));
-    getEventRules(Idle).add(DEFAULT_EVENT(setActiveProperties));
-    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties));
+void addEWMHRules(AddFlag flag) {
+    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), flag);
+    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}, "_recordWindow"},
+    flag);
+    getEventRules(UnregisteringWindow).add({+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}, "_unrecordWindow"},
+    flag);
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
+    getEventRules(UnregisteringWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
+    getEventRules(onXConnection).add(DEFAULT_EVENT(broadcastEWMHCompilence), flag);
+    getEventRules(WindowWorkspaceMove).add(DEFAULT_EVENT(setSavedWorkspaceIndex), flag);
+    getEventRules(TrueIdle).add(DEFAULT_EVENT(setActiveProperties), flag);
+    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
+    getBatchEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
+    getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
 }
 int getSavedWorkspaceIndex(WindowID win) {
     unsigned int workspaceIndex = 0;
@@ -113,6 +120,16 @@ int getSavedWorkspaceIndex(WindowID win) {
     }
     else workspaceIndex = getActiveWorkspaceIndex();
     return workspaceIndex;
+}
+void setSavedWorkspaceIndex(WindowInfo* winInfo) {
+    xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), winInfo->getWorkspaceIndex());
+}
+void autoResumeWorkspace(WindowInfo* winInfo) {
+    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isDock()) {
+        WorkspaceID w = getSavedWorkspaceIndex(winInfo->getID());
+        LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d", winInfo->getID(), w);
+        winInfo->moveToWorkspace(w);
+    }
 }
 
 void setShowingDesktop(int value) {
@@ -141,10 +158,10 @@ void onClientMessage(void) {
         //data: source,timestamp,current active window
         WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo->allowRequestFromSource(data.data32[0])) {
-            Master* m = data.data32[2] ? getMasterById(data.data32[2]) : getMasterById(getClientKeyboard(data.data32[2]));
-            LOG(LOG_LEVEL_DEBUG, "Activating window %d for master %d due to client request\n", win, getActiveMaster()->getID());
+            Master* m = data.data32[3] ? getMasterById(data.data32[3]) : getClientMaster(win);
             if(m)
                 setActiveMaster(m);
+            LOG(LOG_LEVEL_DEBUG, "Activating window %d for master %d due to client request\n", win, getActiveMaster()->getID());
             activateWindow(winInfo);
         }
     }
@@ -201,17 +218,14 @@ void onClientMessage(void) {
     }
     //change window's workspace
     else if(message == ewmh->_NET_WM_DESKTOP) {
-        LOG(LOG_LEVEL_DEBUG, "Changing window workspace %d\n\n", data.data32[0]);
         WindowInfo* winInfo = getWindowInfo(win);
-        int destIndex = data.data32[0];
-        if(winInfo && winInfo->allowRequestFromSource(data.data32[1]))
-            if(destIndex == -1) {
-                winInfo->addMask(STICKY_MASK);
-                floatWindow(winInfo);
-                xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), destIndex);
-            }
-            else
-                winInfo->moveToWorkspace(destIndex);
+        WorkspaceID destIndex = data.data32[0];
+        if(!(destIndex == -1 || destIndex < getNumberOfWorkspaces()))
+            destIndex = getNumberOfWorkspaces() - 1;
+        if(winInfo && winInfo->allowRequestFromSource(data.data32[1])) {
+            LOG(LOG_LEVEL_DEBUG, "Changing window workspace %d %d\n\n", destIndex, data.data32[0]);
+            winInfo->moveToWorkspace(destIndex);
+        }
     }
     else if(message == ewmh->_NET_WM_STATE) {
         LOG(LOG_LEVEL_DEBUG, "Settings client window manager state %d\n", data.data32[3]);
@@ -271,11 +285,6 @@ void onClientMessage(void) {
     */
 }
 
-void onFocusInEvent2(void) {
-    xcb_input_focus_in_event_t* event = (xcb_input_focus_in_event_t*)getLastEvent();
-    setActiveMasterByDeviceId(event->deviceid);
-    setActiveWindowProperty(event->event);
-}
 /**
  * Will shift the position of the window in response the change in mouse movements
  * @param winInfo
@@ -295,6 +304,7 @@ struct RefWindowMouse {
     bool change[2];
     bool move;
     RectWithBorder calculateNewPosition(const short newMousePos[2]) {
+        assert(win);
         RectWithBorder result = RectWithBorder(ref);
         for(int i = 0; i < 2; i++) {
             short delta = newMousePos[i] - mousePos[i];
@@ -302,22 +312,22 @@ struct RefWindowMouse {
                 if(move)
                     result[i] += delta;
                 else if((signed)(delta + result[2 + i]) < 0) {
-                    assert(result.x < 0);
-                    result[i] += delta;
-                    result[i + 2] = -delta;
+                    result[i] += delta + result[i + 2];
+                    result[i + 2 ] = -delta - result[i + 2];
                 }
                 else
                     result[i + 2] += delta;
             }
         }
+        LOG_RUN(LOG_LEVEL_TRACE, std::cout << "WindowMoveResizeResult: " << result << "\n");
         return result;
     }
     const RectWithBorder getRef() {return ref;}
 };
 
 static Index<RefWindowMouse> key;
-static RefWindowMouse* getRef(Master* m) {
-    return get(key, m);
+static RefWindowMouse* getRef(Master* m, bool createNew = 1) {
+    return get(key, m, createNew);
 }
 static void removeRef(Master* m) {
     remove(key, m);
@@ -325,22 +335,95 @@ static void removeRef(Master* m) {
 
 void startWindowMoveResize(WindowInfo* winInfo, bool move, bool changeX, bool changeY, Master* m) {
     auto ref = getRef(m);
-    short pos[2];
-    getMousePosition(m->getID(), root, pos);
+    short pos[2] = {0, 0};
+    getMousePosition(m, root, pos);
     *ref = (RefWindowMouse) {winInfo->getID(), getRealGeometry(winInfo->getID()), {pos[0], pos[1]}, {changeX, changeY}, move};
 }
 void commitWindowMoveResize(Master* m) {
     removeRef(m);
 }
 void cancelWindowMoveResize(Master* m) {
-    auto ref = getRef(m);
-    RectWithBorder r = ref->getRef();
-    processConfigureRequest(ref->win, r, 0, 0, CONFIG_X | CONFIG_Y | CONFIG_WIDTH | CONFIG_HEIGHT);
+    auto ref = getRef(m, 0);
+    if(ref) {
+        RectWithBorder r = ref->getRef();
+        processConfigureRequest(ref->win, r, 0, 0,
+                                XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+    }
 }
+
 void updateWindowMoveResize(Master* m) {
-    auto ref = getRef(m);
-    short pos[2];
-    getMousePosition(m->getID(), root, pos);
-    RectWithBorder r = ref->calculateNewPosition(pos);
-    processConfigureRequest(ref->win, r, 0, 0, CONFIG_X | CONFIG_Y | CONFIG_WIDTH | CONFIG_HEIGHT);
+    auto ref = getRef(m, 0);
+    if(ref) {
+        short pos[2];
+        if(getMousePosition(m, root, pos)) {
+            RectWithBorder r = ref->calculateNewPosition(pos);
+            if(r.width && r.height)
+                processConfigureRequest(ref->win, r, 0, 0,
+                                        XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+        }
+    }
+}
+
+void loadSavedAtomState(WindowInfo* winInfo) {
+    xcb_ewmh_get_atoms_reply_t reply;
+    if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL)) {
+        setWindowStateFromAtomInfo(winInfo, reply.atoms, reply.atoms_len, XCB_EWMH_WM_STATE_ADD);
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+}
+void setXWindowStateFromMask(WindowInfo* winInfo) {
+    xcb_atom_t supportedStates[] = {SUPPORTED_STATES};
+    xcb_ewmh_get_atoms_reply_t reply;
+    int count = 0;
+    bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL);
+    xcb_atom_t windowState[LEN(supportedStates) + (hasState ? reply.atoms_len : 0)];
+    if(hasState) {
+        for(int i = 0; i < reply.atoms_len; i++) {
+            char isSupportedState = 0;
+            for(int n = 0; n < LEN(supportedStates); n++)
+                if(supportedStates[n] == reply.atoms[i]) {
+                    isSupportedState = 1;
+                    break;
+                }
+            if(!isSupportedState)
+                windowState[count++] = reply.atoms[i];
+        }
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+    count += getAtomsFromMask(winInfo->getMask(), windowState + count);
+    xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), count, windowState);
+}
+
+void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action) {
+    LOG(LOG_LEVEL_TRACE, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
+    WindowMask mask = 0;
+    for(unsigned int i = 0; i < numberOfAtoms; i++) {
+        mask |= getMaskFromAtom(atoms[i]);
+    }
+    if(action == XCB_EWMH_WM_STATE_TOGGLE) {
+        if(winInfo->hasMask(mask))
+            action = XCB_EWMH_WM_STATE_REMOVE;
+        else
+            action = XCB_EWMH_WM_STATE_ADD;
+    }
+    if(action == XCB_EWMH_WM_STATE_REMOVE)
+        winInfo->removeMask(mask);
+    else
+        winInfo->addMask(mask);
+}
+void syncState() {
+    WorkspaceID currentWorkspace ;
+    if(!xcb_ewmh_get_current_desktop_reply(ewmh,
+                                           xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
+                                           &currentWorkspace, NULL)) {
+        currentWorkspace = getActiveWorkspaceIndex();
+    }
+    if(currentWorkspace >= getNumberOfWorkspaces())
+        currentWorkspace = getNumberOfWorkspaces() - 1;
+    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
+    unsigned int value = 0;
+    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
+    setShowingDesktop(value);
+    LOG(LOG_LEVEL_INFO, "Current workspace is %d\n", currentWorkspace);
+    switchToWorkspace(currentWorkspace);
 }

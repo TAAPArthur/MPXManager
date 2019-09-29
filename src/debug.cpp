@@ -1,11 +1,36 @@
 
 #include "mywm-structs.h"
+#include "system.h"
+#include "logger.h"
 #include "windows.h"
 #include "workspaces.h"
 #include "monitors.h"
+#include "xsession.h"
+#include "boundfunction.h"
+#include "user-events.h"
 
 static bool validating = 0;
 #define assertEquals(A,B)do{auto __A=A; auto __B =B; int __result=(__A==__B); if(!__result){valid=0;std::cout<<__A<<"!="<<__B<<"\n";assert(0 && #A "!=" #B);}}while(0)
+void resetUserMask(WindowInfo* winInfo) {
+    winInfo->resetUserMask();
+}
+bool isWindowMapped(WindowID win) {
+    xcb_get_window_attributes_reply_t* reply;
+    reply = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, win), NULL);
+    bool result = reply->map_state != XCB_MAP_STATE_UNMAPPED;
+    free(reply);
+    return result;
+}
+bool validateX() {
+    if(!ewmh)
+        return 1;
+    bool valid = 1;
+    for(WindowInfo* winInfo : getAllWindows()) {
+        if(winInfo->hasMask(MAPPED_MASK))
+            assertEquals(isWindowMapped(winInfo->getID()), 1);
+    }
+    return valid;
+}
 bool validate() {
     if(validating)
         return 0;
@@ -42,5 +67,14 @@ bool validate() {
             assertEquals(m->getWorkspace()->getMonitor(), m);
     }
     validating = 0;
+    LOG(LOG_LEVEL_DEBUG, "validation result: %d\n", valid);
     return valid;
 }
+void dieOnIntegratyCheckFail() {
+    if(!validate() || !validateX())
+        quit(3);
+}
+void addDieOnIntegratyCheckFailRule() {
+    getEventRules(TrueIdle).add(DEFAULT_EVENT(dieOnIntegratyCheckFail), PREPEND_UNIQUE);
+}
+

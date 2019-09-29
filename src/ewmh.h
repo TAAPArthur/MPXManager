@@ -115,8 +115,19 @@ void setActiveWindowProperty(WindowID win);
 void setActiveWorkspaceProperty(WorkspaceID index);
 
 
-void addEWMHRules();
+void addEWMHRules(AddFlag flag = ADD_UNIQUE);
 
+/**
+ * Reads EWMH desktop property to find the workspace the window should be long.
+ * If the field is not present the active workspace is used.
+ * If the field is greater than the number of workspaces, the last workspace is used
+ * @param win
+ * @return the workspace the window should be placed in by default
+ */
+int getSavedWorkspaceIndex(WindowID win);
+void setSavedWorkspaceIndex(WindowInfo* winInfo);
+
+void autoResumeWorkspace(WindowInfo* winInfo);
 void updateWorkspaceNames();
 
 /**
@@ -137,17 +148,17 @@ void onClientMessage(void);
 
 extern xcb_ewmh_client_source_type_t source;
 
-static inline void sendActivateWindowRequest(WindowInfo* winInfo) {
-    xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, winInfo->getID(), source, 0,
+static inline void sendActivateWindowRequest(WindowID wid) {
+    xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, wid, source, 0,
                                           getFocusedWindow() ? getFocusedWindow()->getID() : root);
 }
-static inline void sendChangeWindowStateRequest(WindowInfo* winInfo, xcb_ewmh_wm_state_action_t action,
+static inline void sendChangeWindowStateRequest(WindowID wid, xcb_ewmh_wm_state_action_t action,
         xcb_atom_t state, xcb_atom_t state2 = 0) {
-    xcb_ewmh_request_change_wm_state(ewmh, defaultScreenNumber, winInfo->getID(), action,
+    xcb_ewmh_request_change_wm_state(ewmh, defaultScreenNumber, wid, action,
                                      state, state2, source);
 }
-static inline void sendChangeWindowWorkspaceRequest(WindowInfo* winInfo, WorkspaceID index) {
-    xcb_ewmh_request_change_wm_desktop(ewmh, defaultScreenNumber, winInfo->getID(), index, source);
+static inline void sendChangeWindowWorkspaceRequest(WindowID wid, WorkspaceID index) {
+    xcb_ewmh_request_change_wm_desktop(ewmh, defaultScreenNumber, wid, index, source);
 }
 static inline void sendChangeWorkspaceRequest(WorkspaceID id) {
     xcb_ewmh_request_change_current_desktop(ewmh, defaultScreenNumber, id, 0);
@@ -158,24 +169,24 @@ static inline void sendChangeNumWorkspaceRequestAbs(int num) {
 static inline void sendChangeNumWorkspaceRequest(int num) {
     sendChangeNumWorkspaceRequest(getNumberOfWorkspaces() + num);
 }
-static inline void sendCloseWindowRequest(WindowInfo* winInfo) {
-    xcb_ewmh_request_close_window(ewmh, defaultScreenNumber, winInfo->getID(), 0, source);
+static inline void sendCloseWindowRequest(WindowID wid) {
+    xcb_ewmh_request_close_window(ewmh, defaultScreenNumber, wid, 0, source);
 }
-static inline void sendWMMoveResizeRequest(WindowInfo* winInfo, short x, short y,
+static inline void sendWMMoveResizeRequest(WindowID wid, short x, short y,
         xcb_ewmh_moveresize_direction_t direction,
         uint8_t button
                                           ) {
-    xcb_ewmh_request_wm_moveresize(ewmh, defaultScreenNumber, winInfo->getID(), x, y, direction, (xcb_button_index_t)button,
+    xcb_ewmh_request_wm_moveresize(ewmh, defaultScreenNumber, wid, x, y, direction, (xcb_button_index_t)button,
                                    source);
 }
-static inline void sendMoveResizeRequest(WindowInfo* winInfo, const short* values, int mask) {
+static inline void sendMoveResizeRequest(WindowID wid, const short* values, int mask) {
     assert(XCB_EWMH_MOVERESIZE_WINDOW_X == 1 << 8);
-    xcb_ewmh_request_moveresize_window(ewmh, defaultScreenNumber, winInfo->getID(),
+    xcb_ewmh_request_moveresize_window(ewmh, defaultScreenNumber, wid,
                                        XCB_GRAVITY_NORTH_WEST, source, (xcb_ewmh_moveresize_window_opt_flags_t)(mask << 8), values[0], values[1], values[2],
                                        values[3]);
 }
-static inline void sendRestackRequest(WindowInfo* winInfo, xcb_window_t sibling_window, xcb_stack_mode_t detail) {
-    xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, winInfo->getID(), sibling_window, detail);
+static inline void sendRestackRequest(WindowID wid, xcb_window_t sibling_window, xcb_stack_mode_t detail) {
+    xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, wid, sibling_window, detail);
 }
 
 void commitWindowMoveResize(Master* m = getActiveMaster()) ;
@@ -183,4 +194,28 @@ void startWindowMoveResize(WindowInfo* winInfo, bool move, bool allowMoveX = 1, 
                            Master* m = getActiveMaster());
 void cancelWindowMoveResize(Master* m = getActiveMaster());
 void updateWindowMoveResize(Master* m) ;
+/**
+ * Sets the WM_STATE from the window masks
+ */
+void setXWindowStateFromMask(WindowInfo* winInfo);
+/**
+ * Reads the WM_STATE fields from the given window and sets the window mask to be consistent with the state
+ * If the WM_STATE cannot be read, then nothing is done
+ * @see setWindowStateFromAtomInfo
+ */
+void loadSavedAtomState(WindowInfo* winInfo);
+
+/**
+ * Sets the window state based on a list of atoms
+ * @param winInfo the window whose mask will be modified
+ * @param atoms the list of atoms to add,remove or toggle depending on ACTION
+ * @param numberOfAtoms the number of atoms
+ * @param action whether to add,remove or toggle atoms. For toggle, if all of the corresponding masks for the list of atoms is set, then they all will be removed else they all will be added
+ * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
+ */
+void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action);
+/**
+ * Sync EWMH global properties with our internal state
+ */
+void syncState();
 #endif /* EWMH_H_ */

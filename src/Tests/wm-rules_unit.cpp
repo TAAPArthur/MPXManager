@@ -9,6 +9,7 @@
 #include "tester.h"
 #include "test-event-helper.h"
 #include "../state.h"
+#include "../extra-rules.h"
 #include "../window-properties.h"
 #include "../wm-rules.h"
 #include "../logger.h"
@@ -71,11 +72,29 @@ MPX_TEST_ERR("test_handle_error", 1, {
     runEventLoop(NULL);
     assert(0);
 });
+MPX_TEST("handle_error_continue", {
+    setLogLevel(LOG_LEVEL_NONE);
+    CRASH_ON_ERRORS = 0;
+    onStartup();
+    xcb_generic_event_t event = {0};
+    xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
+    addShutdownOnIdleRule();
+    runEventLoop(NULL);
+});
+MPX_TEST("auto_grab_bindings", {
+    Binding b = {0, 1, requestShutdown};
+    getDeviceBindings().add(b);
+    onStartup();
+    triggerBinding(&b);
+    runEventLoop();
+});
 
 MPX_TEST("test_auto_tile", {
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
     getEventRules(onXConnection).add(DEFAULT_EVENT(mapArbitraryWindow));
     addBasicRules();
+    getEventRules(TileWorkspace).deleteElements();
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoResumeWorkspace));
     addAutoTileRules();
     createSimpleEnv();
     openXDisplay();
@@ -126,36 +145,26 @@ SET_ENV(createWMEnvWithRunningWM, fullCleanup);
 
 
 
-MPX_TEST("test_detect_new_windows", {
-    NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    IGNORE_SUBWINDOWS = 1;
+MPX_TEST_ITER("test_detect_new_windows", 2, {
+    NON_ROOT_EVENT_MASKS &= ~XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
+    lock();
     WindowID win = createUnmappedWindow();
     WindowID child = createNormalSubWindow(win);
     WindowID win2 = createUnmappedWindow();
+    destroyWindow(createUnmappedWindow());
     flush();
+    if(_i)
+        scan(root);
+    unlock();
     waitUntilIdle();
     assertEquals(getActiveWindowStack().size(), 2);
     createIgnoredWindow();
     WindowID win3 = createUnmappedWindow();
     waitUntilIdle();
-    assert(getAllWindows().find(win)&&
-           getAllWindows().find(win2)&&
+    assert(getAllWindows().find(win) &&
+           getAllWindows().find(win2) &&
            getAllWindows().find(win3));
     assert(!getAllWindows().find(child));
-    assert(getActiveWindowStack().size() == 3);
-});
-MPX_TEST("test_detect_sub_windows", {
-    IGNORE_SUBWINDOWS = 0;
-    lock();
-    WindowID win = createUnmappedWindow();
-    WindowID win2 = createNormalSubWindow(win);
-    WindowID win3 = createNormalSubWindow(win2);
-    unlock();
-    flush();
-    waitUntilIdle();
-    assert(getAllWindows().find(win));
-    assert(getAllWindows().find(win2));
-    assert(getAllWindows().find(win3));
     assert(getActiveWindowStack().size() == 3);
 });
 MPX_TEST("test_detect_new_override_redirect_windows", {
@@ -167,23 +176,15 @@ MPX_TEST("test_detect_new_override_redirect_windows", {
     assert(getActiveWindowStack().size() == 3);
 });
 MPX_TEST("test_reparent_windows", {
-    IGNORE_SUBWINDOWS = 1;
     WindowID win = createNormalWindow();
     WindowID child = createNormalSubWindow(win);
     WindowID parent = createNormalWindow();
     waitUntilIdle();
-    assert(getAllWindows().find(win)&& getAllWindows().find(parent));
-    assert(!getAllWindows().find(child));
     xcb_reparent_window_checked(dis, child, root, 0, 0);
     xcb_reparent_window_checked(dis, win, parent, 0, 0);
     waitUntilIdle();
-    assert(getAllWindows().find(child)&& getAllWindows().find(parent));
-    assert(!getAllWindows().find(win));
-    assert(getActiveWindowStack().size() == 2);
-    xcb_reparent_window_checked(dis, win, root, 0, 0);
-    waitUntilIdle();
-    assert(getAllWindows().find(win));
-    assert(getActiveWindowStack().size() == 3);
+    assertEquals(root, getWindowInfo(child)->getParent());
+    assertEquals(parent, getWindowInfo(win)->getParent());
 });
 
 MPX_TEST("test_delete_windows", {
@@ -238,6 +239,17 @@ MPX_TEST("test_map_windows", {
     //wait for all to be mapped
     WAIT_UNTIL_TRUE(isWindowMapped(win)&& isWindowMapped(win2)&& isWindowMapped(win3));
 });
+
+MPX_TEST("test_unmap", {
+    WindowID win = createUnmappedWindow();
+    waitUntilIdle();
+    xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .window = win};
+    catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
+    flush();
+    waitUntilIdle();
+    assert(!getWindowInfo(win)->hasMask(MAPPED_MASK));
+});
+
 MPX_TEST("test_device_event", {
     getDeviceBindings().add({0, 1, incrementCount, {}, "incrementCount"});
     assertEquals(getDeviceBindings().size(), 1);
@@ -253,12 +265,20 @@ MPX_TEST("test_key_repeat", {
     onDeviceEvent();
     assert(getCount() == 0);
 });
-MPX_TEST("test_master_device_add_remove", {
+MPX_TEST_ITER("test_master_device_add_remove", 2, {
     int numMaster = getAllMasters().size();
     createMasterDevice("test1");
     createMasterDevice("test2");
     flush();
-    WAIT_UNTIL_TRUE(getAllMasters().size() == numMaster + 2);
+    waitUntilIdle();
+    assert(getAllMasters().size() == numMaster + 2);
+    Master* m = _i ? NULL : getAllMasters()[1];
+    for(Slave* slave : getAllSlaves())
+        attachSlaveToMaster(slave, m);
+    waitUntilIdle();
+    assertEquals(getAllSlaves().size(), 2);
+    if(m)
+        assertEquals(m->getSlaves().size(), 2);
     lock();
     destroyAllNonDefaultMasters();
     flush();
@@ -266,13 +286,39 @@ MPX_TEST("test_master_device_add_remove", {
     WAIT_UNTIL_TRUE(getAllMasters().size() == 1);
 });
 MPX_TEST("test_focus_update", {
-    WindowID win = mapArbitraryWindow();
-    focusWindow(win);
-    flush();
-    WAIT_UNTIL_TRUE(getFocusedWindow());
-    assert(getFocusedWindow()->getID() == win);
+    WindowID wins[] = { mapArbitraryWindow(), mapArbitraryWindow()};
+    for(WindowID win : wins) {
+        focusWindow(win);
+        flush();
+        waitUntilIdle();
+        assert(getFocusedWindow()->getID() == win);
+    }
 });
-/* Re-enable
+MPX_TEST("selection_steal", {
+    broadcastEWMHCompilence();
+    if(!fork()) {
+        saveXSession();
+        openXDisplay();
+        STEAL_WM_SELECTION = 1;
+        broadcastEWMHCompilence();
+        quit(0);
+    }
+    assertEquals(waitForChild(0), 0);
+    WAIT_UNTIL_TRUE(isShuttingDown());
+});
+MPX_TEST("steal_other_selection", {
+    auto atom = ewmh->MANAGER;
+    assert(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), atom, XCB_CURRENT_TIME)) == 0);
+    if(!fork()) {
+        saveXSession();
+        openXDisplay();
+        assert(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), atom, XCB_CURRENT_TIME)) == 0);
+        quit(0);
+    }
+    assertEquals(waitForChild(0), 0);
+    waitUntilIdle();
+});
+/* Re-enabls
 MPX_TEST("test_visibility_update", {
     setLogLevel(LOG_LEVEL_DEBUG);
     lock();

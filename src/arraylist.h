@@ -22,6 +22,10 @@ enum AddFlag {
     ADD_REMOVE,
     /// Adds value to the list iff the list does not already contain it else it removes the element
     ADD_TOGGLE,
+    PREPEND_ALWAYS,
+    PREPEND_UNIQUE,
+    /// Adds value to the list iff the list does not already contain it else it removes the element
+    PREPEND_TOGGLE,
 };
 
 template<class T>
@@ -43,7 +47,7 @@ struct Iterator {
 template<class T>
 struct ArrayList: std::vector<T> {
     template<typename U = T, typename V = int>
-    using EnableIf = typename std::enable_if_t<std::is_convertible<std::remove_pointer_t<U>, int>::value, V>  ;
+    using EnableIf = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value, V >  ;
     template<typename U = T, typename V = int>
     using EnableIfPointer = typename std::enable_if_t<std::is_pointer<U>::value, V>  ;
     template<typename U = T, typename V = int>
@@ -99,9 +103,19 @@ struct ArrayList: std::vector<T> {
     template<typename U = T>
     EnableIfPointer<U, bool>add(T value, AddFlag flag) {
         switch(flag) {
+            case PREPEND_ALWAYS:
+                add(value);
+                shiftToHead(size() - 1);
+                return 1;
             case ADD_ALWAYS:
                 add(value);
                 return 1;
+            case PREPEND_UNIQUE:
+                if(addUnique(value)) {
+                    shiftToHead(size() - 1);
+                    return 1;
+                }
+                break;
             case ADD_UNIQUE:
                 if(addUnique(value))
                     return 1;
@@ -114,10 +128,13 @@ struct ArrayList: std::vector<T> {
                 delete remove(i);
                 return 0;
             }
+            case PREPEND_TOGGLE:
             case ADD_TOGGLE: {
                 int index = indexOf(value);
                 if(index == -1) {
                     this->add(value);
+                    if(flag == PREPEND_TOGGLE)
+                        shiftToHead(size() - 1);
                     return 1;
                 }
                 else
@@ -164,6 +181,22 @@ struct ArrayList: std::vector<T> {
     EnableIf<U, T> find(uint32_t  value) const {
         int index = indexOf(value);
         return index != -1 ? (*this)[index] : NULL;
+    }
+    /**
+     * @param value
+     * @return the first element whose memory starts with value
+     */
+    bool contains(const T  value)const {
+        return indexOf(value) != -1;
+    }
+
+    /**
+     * @param value
+     * @return the first element whose memory starts with value
+     */
+    template<typename U = T>
+    EnableIf<U, bool> contains(uint32_t  value) const {
+        return indexOf(value) != -1;
     }
     /**
      * Remove the index-th element form list
@@ -229,11 +262,11 @@ struct ArrayList: std::vector<T> {
      * For example:
      *   getNextIndex(0,-1) returns size-1
      *   getNextIndex(size-1,1) returns 0
-     * @param current must be a valid index of the list
+     * @param current
      * @param delta
      */
     uint32_t getNextIndex(int current, int delta)const {
-        return (current + delta % (ssize_t)this->size() + this->size()) % this->size();
+        return ((current + delta) % (ssize_t)this->size() + this->size()) % this->size();
     }
     /// returns the number of elements in the list
     uint32_t size()const {return std::vector<T>::size();};

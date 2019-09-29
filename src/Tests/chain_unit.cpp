@@ -5,19 +5,31 @@
 
 #include "../bindings.h"
 #include "../chain.h"
+#include "../extra-rules.h"
 #include "../devices.h"
 #include "../globals.h"
 
 #include <stdlib.h>
 
 static Binding* autoGrabBinding = new Binding {0, Button1};
-static Binding* nonAutoGrabBinding = new Binding {0, Button1, {}, {.noGrab = 1}};
+static Binding* nonAutoGrabBinding = new Binding {0, Button1, {incrementCount}, {.noGrab = 1}};
 static Binding* nonAutoGrabBindingAbort = new Binding {0, Button2, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}};
-static Chain sampleChain = {0, 0, {}, {autoGrabBinding, nonAutoGrabBinding, nonAutoGrabBindingAbort}};
-static UserEvent event = {0, Button1};
+static Chain sampleChain = {0, Button2, {}, {autoGrabBinding, nonAutoGrabBinding, nonAutoGrabBindingAbort}, {}, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
 static UserEvent eventNoPassthrough = {0, Button2};
 
 SET_ENV(createXSimpleEnv, fullCleanup);
+
+MPX_TEST("auto_grab", {
+    addBasicRules();
+    addApplyChainBindingsRule();
+    sampleChain.start(eventNoPassthrough);
+    getDeviceBindings().add(sampleChain);
+    assertEquals(getCount(), 0);
+    triggerBinding(nonAutoGrabBinding);
+    addShutdownOnIdleRule();
+    runEventLoop();
+    assertEquals(getCount(), 1);
+});
 
 MPX_TEST_ITER("test_start_end_grab", 2, {
     saveXSession();
@@ -104,3 +116,4 @@ MPX_TEST("test_chain_bindings", {
     assert(getActiveChain() == NULL);
     getDeviceBindings().deleteElements();
 });
+

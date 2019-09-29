@@ -41,6 +41,7 @@ struct WMStruct {
 
 std::ostream& operator<<(std::ostream&, const Monitor&);
 std::ostream& operator<<(std::ostream&, const Layout&);
+std::ostream& operator<<(std::ostream& strm, const Layout* layout);
 std::ostream& operator<<(std::ostream&, const Master&);
 std::ostream& operator<<(std::ostream&, const Slave&);
 std::ostream& operator<<(std::ostream&, const WindowInfo&);
@@ -55,12 +56,12 @@ std::ostream& operator<<(std::ostream& stream, const ArrayList<T>& list) {
 }
 template<class T>
 std::ostream& operator<<(std::ostream& stream, const ArrayList<T*>& list) {
-     stream << "{ ";
-     for(int i = 0; i < list.size(); i++)
+    stream << "{ ";
+    for(int i = 0; i < list.size(); i++)
         stream  << (i ? ", " : "") << *list[i];
-     stream << " }";
-     return stream;
- }
+    stream << " }";
+    return stream;
+}
 template<class T>
 std::enable_if_t < std::is_convertible<T, int>::value, std::ostream& >
 operator>>(std::ostream& stream, const ArrayList<T*>& list) {
@@ -70,7 +71,6 @@ operator>>(std::ostream& stream, const ArrayList<T*>& list) {
     stream << " }";
     return stream;
 }
-
 template<class T>
 std::enable_if_t < std::is_convertible<T, std::string>::value, std::ostream& >
 operator>>(std::ostream& stream, const ArrayList<T*>& list) {

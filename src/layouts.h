@@ -12,6 +12,9 @@
 #include "masters.h"
 #include "workspaces.h"
 
+/// size of config parameters
+#define CONFIG_LEN 6
+enum {CONFIG_INDEX_X = 0, CONFIG_INDEX_Y = 1, CONFIG_INDEX_WIDTH, CONFIG_INDEX_HEIGHT, CONFIG_INDEX_BORDER, CONFIG_INDEX_STACK};
 
 /// Number of transformations
 #define TRANSFORM_LEN (4)
@@ -76,10 +79,10 @@ typedef struct {
     /// generic argument
     float argStep;
     int getDimIndex()const {
-        return dim == 0 ? CONFIG_WIDTH : CONFIG_HEIGHT;
+        return dim == 0 ? CONFIG_INDEX_WIDTH : CONFIG_INDEX_HEIGHT;
     }
     int getOtherDimIndex()const {
-        return dim == 0 ? CONFIG_HEIGHT : CONFIG_WIDTH;
+        return dim == 0 ? CONFIG_INDEX_HEIGHT : CONFIG_INDEX_WIDTH;
     }
 } LayoutArgs;
 
@@ -125,10 +128,10 @@ public:
         layoutFunction(layoutFunction), args(args), refArgs(args) {
     }
 
-    std::string getName() {
+    std::string getName()const {
         return name;
     }
-    bool operator==(Layout& l) {return name == l.name;};
+    bool operator==(const Layout& l)const {return name == l.name;};
     auto getFunc() {return layoutFunction;}
     void apply(LayoutState* state) {layoutFunction(state);}
     LayoutArgs& getArgs() {return args;}
@@ -177,14 +180,8 @@ static inline int toggleLayout(std::string name) { return getActiveWorkspace()->
 static inline void setActiveLayout(std::string name) {getActiveMaster()->getWorkspace()->setActiveLayout(findLayoutByName(name));}
 static inline void setActiveLayout(Layout* l) {getActiveMaster()->getWorkspace()->setActiveLayout(l);}
 static inline Layout* getActiveLayout() {return getActiveWorkspace()->getActiveLayout();}
-/**
- * Registers num layouts so they can searched for later
- *
- * @param layouts
- * @param num
- */
-void registerLayouts(Layout* layout);
 
+ArrayList<Layout*>& getRegisteredLayouts();
 /**
  * Increases the corresponding field for the layout by step
  *

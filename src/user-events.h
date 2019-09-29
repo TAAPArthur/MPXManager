@@ -32,6 +32,8 @@ enum {
     PostRegisterWindow,
     /// Called right before a window is remove from our internal lists
     UnregisteringWindow,
+    /// called right after a window changes workspaces
+    WindowWorkspaceMove,
     /// triggered when root screen is changed
     onScreenChange,
     ProcessDeviceEvent,

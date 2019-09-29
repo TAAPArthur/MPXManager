@@ -60,13 +60,9 @@ void addAutoMPXRules(void) {
     getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY).add({autoAttachSlave});
     getEventRules(onXConnection).add(restoreMPX);
 }
-static void toggleSplitRules(bool remove = 0) {
-    std::string name = "SPLIT_ACTIVE_SLAVES_INTO_NEW_MASTER";
-    if(remove) {
-        //TODO actually remove something
-    }
-    getEventRules(Idle).add({endSplitMaster, .passThrough = NO_PASSTHROUGH, .name = name});
-    getEventRules(ProcessDeviceEvent).add({attachActiveSlaveToActiveMaster, .passThrough = NO_PASSTHROUGH, .name = name});
+static void toggleSplitRules(AddFlag flag) {
+    getEventRules(Idle).add(DEFAULT_EVENT(endSplitMaster), flag);
+    getEventRules(ProcessDeviceEvent).add(PASSTHROUGH_EVENT(attachActiveSlaveToActiveMaster, NO_PASSTHROUGH));
 }
 int splitMaster(void) {
     endSplitMaster();
@@ -74,12 +70,12 @@ int splitMaster(void) {
     std::string name = "dummy" + getTime();
     createMasterDevice(name);
     initCurrentMasters();
-    toggleSplitRules(1);
+    toggleSplitRules(ADD_UNIQUE);
     return getActiveMasterKeyboardID();
 }
 void endSplitMaster(void) {
     ungrabDevice(XIAllDevices);
-    toggleSplitRules(0);
+    toggleSplitRules(ADD_REMOVE);
 }
 
 Master* getMasterForSlave(std::string slaveName) {

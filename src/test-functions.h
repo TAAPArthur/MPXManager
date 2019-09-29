@@ -52,7 +52,8 @@ void typeKey(int keycode, MasterID id = 0, WindowID win = 0);
  * Sends a button press followed by a button release
  * @param button
  */
-void clickButton(int button, MasterID id = 0, WindowID win = 0);
+void clickButton(int button, MasterID id, WindowID win = 0);
+static inline void clickButton(int button) {return clickButton(button, 0);}
 
 
 /**
@@ -64,5 +65,6 @@ void clickButton(int button, MasterID id = 0, WindowID win = 0);
  * @param relativeWindow
  */
 void movePointer(short x, short y, MasterID = getActiveMasterPointerID(), WindowID relativeWindow = root);
+void movePointerRelative(short x, short y, MasterID id = getActiveMasterPointerID()) ;
 
 #endif

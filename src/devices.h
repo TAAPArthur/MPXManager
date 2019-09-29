@@ -23,7 +23,8 @@ void createMasterDevice(std::string name);
  * @param slaveId
  * @param masterId
  */
-void attachSlaveToMaster(int slaveId, int masterId);
+void attachSlaveToMaster(SlaveID slaveId, MasterID masterId);
+void floatSlave(SlaveID slaveId) ;
 void attachSlaveToMaster(Slave* slave, Master* master);
 /**
  * Sends a XIChangeHierarchy request to remove the specified master.
@@ -60,6 +61,9 @@ void setActiveMasterByDeviceId(MasterID deviceId);
  * @return 1 if result now contains position
  */
 bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]);
+static inline bool getMousePosition(Master* m, int relativeWindow, int16_t result[2]) {
+    return getMousePosition(m->getPointerID(), relativeWindow, result);
+}
 
 /**
  * Swap the ids of master devices backed by master1 and master2
@@ -76,12 +80,13 @@ void swapDeviceId(Master* master1, Master* master2);
  * @param window
  */
 void setClientPointerForWindow(WindowID window, MasterID id = getActiveMasterPointerID());
+MasterID getClientPointerForWindow(WindowID win) ;
 /**
  * Returns the client keyboard for the given window
  * @param win
  * @return
  */
-MasterID getClientKeyboard(WindowID win);
+Master* getClientMaster(WindowID win) ;
 
 /**
  * Queries the X Server and returns the focused window.
@@ -89,7 +94,7 @@ MasterID getClientKeyboard(WindowID win);
  * @param id a keyboard master device
  * @return the current window focused by the given keyboard device
  */
-WindowID getActiveFocus(MasterID id);
+WindowID getActiveFocus(MasterID id = getActiveMasterKeyboardID());
 
 /**
  * Creates a new X11 monitor with the given bounds.

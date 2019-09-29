@@ -167,6 +167,11 @@ public:
      * @return the active layout for the active workspace
      */
     Layout* getActiveLayout(void)const {return activeLayout;}
+    /**
+     * @param mask
+     * @return true if there exists at least one window  in workspace with the given mask
+     */
+    bool hasWindowWithMask(WindowMask mask) ;
 
     /**
      * @return layouts of w

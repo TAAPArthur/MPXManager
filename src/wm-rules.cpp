@@ -54,7 +54,7 @@ void onHiearchyChangeEvent(void) {
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_ATTACHED) {
             getAllSlaves().find(iter.data->deviceid)->setMasterID(iter.data->attachment);
         }
-        else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_REMOVED) {
+        else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_DETACHED) {
             getAllSlaves().find(iter.data->deviceid)->setMasterID(0);
         }
         xcb_input_hierarchy_info_next(&iter);
@@ -86,19 +86,9 @@ void onConfigureRequestEvent(void) {
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
     return getEventRules(PreRegisterWindow).add({
         +[](WindowInfo * winInfo) {return !winInfo->isOverrideRedirectWindow();},
-        PASSTHROUGH_IF_TRUE,
-        FUNC_NAME
+        FUNC_NAME,
+        PASSTHROUGH_IF_TRUE
     }, flag);
-}
-static void onWindowDetection(WindowID id, WindowID parent, short* geo) {
-    if(registerWindow(id, parent)) {
-        WindowInfo* winInfo = getWindowInfo(id);
-        if(geo)
-            winInfo->setGeometry(geo);
-        if(!IGNORE_SUBWINDOWS)
-            scan(id);
-        applyEventRules(onWindowMove, winInfo);
-    }
 }
 void onCreateEvent(void) {
     xcb_create_notify_event_t* event = (xcb_create_notify_event_t*)getLastEvent();
@@ -107,12 +97,11 @@ void onCreateEvent(void) {
         LOG(LOG_LEVEL_VERBOSE, "Window %d is already in our records; Ignoring create event\n", event->window);
         return;
     }
-    LOG(LOG_LEVEL_WARN, "%d %d\n", IGNORE_SUBWINDOWS, event->parent != root);
-    if(IGNORE_SUBWINDOWS && event->parent != root) {
-        LOG(LOG_LEVEL_VERBOSE, "Window %d's parent is not root but %d; Ignoring\n", event->window, event->parent);
-        return;
+    if(registerWindow(event->window, event->parent)) {
+        WindowInfo* winInfo = getWindowInfo(event->window);
+        winInfo->setGeometry(&event->x);
+        applyEventRules(onWindowMove, winInfo);
     }
-    onWindowDetection(event->window, event->parent, &event->x);
 }
 void onDestroyEvent(void) {
     xcb_destroy_notify_event_t* event = (xcb_destroy_notify_event_t*)getLastEvent();
@@ -164,11 +153,12 @@ void onUnmapEvent(void) {
 }
 void onReparentEvent(void) {
     xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
-    if(IGNORE_SUBWINDOWS) {
-        if(event->parent == root)
-            onWindowDetection(event->window, event->parent, NULL);
-        else
-            unregisterWindow(getWindowInfo(event->window));
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(winInfo)
+        winInfo->setParent(event->parent);
+    else if(registerWindow(event->window, event->parent)) {
+        WindowInfo* winInfo = getWindowInfo(event->window);
+        applyEventRules(onWindowMove, winInfo);
     }
 }
 
@@ -195,11 +185,7 @@ void onPropertyEvent(void) {
     xcb_property_notify_event_t* event = (xcb_property_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
-        if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
-            loadDockProperties(winInfo);
-            markState();
-        }
-        else if(event->atom == ewmh->_NET_WM_USER_TIME);
+        if(event->atom == ewmh->_NET_WM_USER_TIME);
         else loadWindowProperties(winInfo);
     }
 }
@@ -211,6 +197,9 @@ static WindowInfo* getTargetWindow(int root, int event, int child) {
     for(i = LEN(list) - 1; i >= 1 && !list[i]; i--);
     return getWindowInfo(list[i]);
 }
+void addApplyBindingsRule(AddFlag flag) {
+    getEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(+[]() {checkBindings(getLastUserEvent());}), flag);
+}
 void onDeviceEvent(void) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
     LOG(LOG_LEVEL_VERBOSE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
@@ -219,12 +208,11 @@ void onDeviceEvent(void) {
     setActiveMasterByDeviceId(event->deviceid);
     if((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && getActiveMaster()->isIgnoreKeyRepeat())
         return;
-    // TODO move/resize window setLastKnowMasterPosition(event->root_x >> 16, event->root_y >> 16);
-    UserEvent userEvent = {event->mods.effective, event->detail, 1U << event->event_type,
-                           (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
-                           .winInfo = getTargetWindow(event->root, event->event, event->child),
-                          };
-    checkBindings(userEvent);
+    setLastUserEvent({event->mods.effective, event->detail, 1U << event->event_type,
+                      (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
+                      .winInfo = getTargetWindow(event->root, event->event, event->child),
+                     });
+    applyEventRules(ProcessDeviceEvent, NULL);
 }
 
 void onGenericEvent(void) {
@@ -255,15 +243,12 @@ void registerForEvents() {
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     registerForMonitorChange();
 }
-bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
+void listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     uint32_t mask = winInfo->getEventMasks() ? winInfo->getEventMasks() : NON_ROOT_EVENT_MASKS;
     if(registerForWindowEvents(winInfo->getID(), mask) == 0) {
         passiveGrab(winInfo->getID(), NON_ROOT_DEVICE_EVENT_MASKS);
         LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d\n", NON_ROOT_EVENT_MASKS, winInfo->getID());
-        return 1;
     }
-    LOG(LOG_LEVEL_DEBUG, "Could not register for events %d\n", winInfo->getID());
-    return 0;
 }
 
 void addAutoTileRules(AddFlag flag) {
@@ -275,8 +260,8 @@ void addAutoTileRules(AddFlag flag) {
                    };
     for(int i = 0; i < LEN(events); i++)
         getEventRules(events[i]).add(DEFAULT_EVENT(markState), flag);
-    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState), flag);
-    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState), flag);
+    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
+    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState), flag);
 }
 void assignDefaultLayoutsToWorkspace() {
@@ -309,10 +294,10 @@ void addBasicRules(AddFlag flag) {
     getEventRules(onXConnection).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
-    getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, PASSTHROUGH_IF_TRUE, "_autoAddToWorkspace"},
-    flag);
+    addApplyBindingsRule(flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return winInfo->getWorkspace()->isVisible();}));
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }

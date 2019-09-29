@@ -49,4 +49,5 @@ struct Chain : Binding {
     }
 };
 bool checkAllChainBindings(const UserEvent& userEvent);
+void addApplyChainBindingsRule(AddFlag flag = PREPEND_UNIQUE);
 #endif

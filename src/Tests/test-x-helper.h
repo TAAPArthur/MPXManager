@@ -87,14 +87,7 @@ static inline WindowID mapWindow(int win) {
     return win;
 }
 static inline WindowID mapArbitraryWindow() {return mapWindow(createNormalWindow());}
-static inline bool isWindowMapped(WindowID win) {
-    xcb_get_window_attributes_reply_t* reply;
-    reply = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, win), NULL);
-    bool result = reply->map_state != XCB_MAP_STATE_UNMAPPED;
-    free(reply);
-    return result;
-}
-static inline bool checkStackingOrder(const WindowID* stackingOrder, int num) {
+static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bool adj = 0) {
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
     if(!reply) {
@@ -104,14 +97,21 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num) {
     int numberOfChildren = xcb_query_tree_children_length(reply);
     xcb_window_t* children = xcb_query_tree_children(reply);
     int counter = 0;
+    LOG_RUN(LOG_LEVEL_TRACE, PRINT_ARR("Window Stack", children, numberOfChildren, "\n"));
+    LOG_RUN(LOG_LEVEL_TRACE, PRINT_ARR("Expected Stack", stackingOrder, num, "\n"));
     for(int i = 0; i < numberOfChildren; i++) {
         if(children[i] == stackingOrder[counter]) {
             counter++;
             if(counter == num)
                 break;
         }
+        if(adj && counter) {
+            LOG(LOG_LEVEL_WARN, "results not adjacent\n");
+            break;
+        }
     }
     free(reply);
+    LOG(LOG_LEVEL_TRACE, "%d vs %d\n", counter, num);
     return counter == num;
 }
 

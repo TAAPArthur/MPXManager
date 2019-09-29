@@ -60,7 +60,7 @@ struct Option {
     void* getVar()const {return varFunc.var.var;}
 
     std::string getName() const {return name;}
-    bool matches(std::string, bool)const ;
+    bool matches(std::string, bool, bool)const ;
     /**
      * If option holds a function, calls the function bound to option with argument value.
      * Else sets name to value
@@ -68,13 +68,13 @@ struct Option {
      * @param value the value to set/pass. If NULL, a value of '1' is used
      */
     void operator()(std::string value)const ;
+    operator std::string()const {return name;}
     bool operator==(const Option& option)const {
         return name == option.name && getType() == option.getType();
     }
 };
 
 
-void listOptions(ArrayList<Option>& options);
 /**
  * Finds a option by name
  *
@@ -105,7 +105,7 @@ void receiveClientMessage(void);
  */
 void send(std::string name, std::string value);
 
-ArrayList<Option>& getOptions();
+ArrayList<Option*>& getOptions();
 
 /**
  * @return 1 iff there are send messages whose receipt has not been confirmed

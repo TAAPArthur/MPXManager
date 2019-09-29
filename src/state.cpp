@@ -167,7 +167,7 @@ static int compareState() {
 
 
 int updateState() {
-    if(!couldStateHaveChanged)
+    if(!isStateMarked())
         LOG(LOG_LEVEL_TRACE, "State coult not have changed \n");
-    return couldStateHaveChanged ? (StateChangeType) compareState() : NO_CHANGE;
+    return isStateMarked() ? (StateChangeType) compareState() : NO_CHANGE;
 }

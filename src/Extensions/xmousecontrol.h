@@ -13,23 +13,19 @@
 #if XMOUSE_CONTROL_EXT_ENABLED
 /// default modifier for this extension
 extern int XMOUSE_CONTROL_DEFAULT_MASK;
-enum {
-    SCROLL_UP = 4,
-    SCROLL_DOWN = 5,
-    SCROLL_LEFT = 6,
-    SCROLL_RIGHT = 7,
-};
+#define SCROLL_UP    4
+#define SCROLL_DOWN  5
+#define SCROLL_LEFT  6
+#define SCROLL_RIGHT 7
 /// Masks that dictate how the mouse will be controlled every update
-enum {
-    MOVE_UP_MASK = 1 << 0,
-    MOVE_DOWN_MASK = 1 << 1,
-    MOVE_LEFT_MASK = 1 << 2,
-    MOVE_RIGHT_MASK = 1 << 3,
-    SCROLL_UP_MASK = 1 << 4,
-    SCROLL_DOWN_MASK = 1 << 5,
-    SCROLL_LEFT_MASK = 1 << 6,
-    SCROLL_RIGHT_MASK = 1 << 7,
-} ;
+#define    MOVE_UP_MASK (1 << 0)
+#define    MOVE_DOWN_MASK (1 << 1)
+#define    MOVE_LEFT_MASK (1 << 2)
+#define    MOVE_RIGHT_MASK (1 << 3)
+#define    SCROLL_UP_MASK (1 << 4)
+#define    SCROLL_DOWN_MASK (1 << 5)
+#define    SCROLL_LEFT_MASK (1 << 6)
+#define    SCROLL_RIGHT_MASK (1 << 7)
 
 /**
  * How frequently move/scroll masks are applied

@@ -186,12 +186,7 @@ int focusWindow(WindowID win, Master* master) {
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME,
                                master->getKeyboardID());
-    if(catchError(cookie)) {
-        return 0;
-    }
-    if(SYNC_FOCUS)
-        master->onWindowFocus(win);
-    return 1;
+   return !catchError(cookie);
 }
 int focusWindow(WindowInfo* winInfo, Master* master) {
     if(!winInfo->hasMask(INPUT_MASK))

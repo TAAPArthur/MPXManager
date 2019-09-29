@@ -12,6 +12,7 @@
 #include <xcb/xcb_icccm.h>
 
 #include "../globals.h"
+#include "../state.h"
 #include "../logger.h"
 #include "../window-properties.h"
 #include "../wmfunctions.h"
@@ -21,7 +22,7 @@
 #include "tester.h"
 #include "test-event-helper.h"
 
-SET_ENV(createXSimpleEnv, NULL);
+SET_ENV(createXSimpleEnv, fullCleanup);
 MPX_TEST("register_unregister", {
     WindowID win = createInputOnlyWindow();
     assertEquals(getAllWindows().size(), 0);
@@ -32,17 +33,44 @@ MPX_TEST("register_unregister", {
     assert(unregisterWindow(getWindowInfo(win)) == 1);
     assertEquals(getAllWindows().size(), 0);
 });
+MPX_TEST("unregister_focus_transfer", {
+    WindowID win = mapArbitraryWindow();
+    WindowID win2 = mapArbitraryWindow();
+    WindowID win3 = mapArbitraryWindow();
+    assert(registerWindow(win, root));
+    assert(registerWindow(win2, root));
+    assert(registerWindow(win3, root));
+    for(WindowInfo* winInfo : getAllWindows()) {
+        winInfo->addMask(INPUT_MASK);
+        winInfo->moveToWorkspace(0);
+        assert(winInfo->isActivatable());
+        assert(winInfo->isNotInInvisibleWorkspace());
+    }
+    getActiveMaster()->onWindowFocus(win2);
+    getActiveMaster()->onWindowFocus(win);
+    focusWindow(win);
+    assertEquals(getActiveFocus(), win);
+    assert(unregisterWindow(getWindowInfo(win)));
+    flush();
+    assertEquals(getActiveFocus(), win2);
+    assert(unregisterWindow(getWindowInfo(win2)));
+    assertEquals(getActiveFocus(), win3);
+});
 MPX_TEST_ITER("register_bad_window", 2, {
     WindowID win = 2;
     if(_i) {
         win = createNormalWindow();
-        assert(!catchError(xcb_destroy_window_checked(dis, win)));
+        assert(!destroyWindow(win));
     }
     assert(registerWindow(win, root) == 0);
     assert(getAllWindows().size() == 0);
     assert(unregisterWindow(getWindowInfo(win)) == 0);
-}
-             );
+});
+MPX_TEST("preregister_fail", {
+    getEventRules(PreRegisterWindow).add(NO_PASSTHROUGH);
+    assert(registerWindow(createNormalWindow(), root) == 0);
+    assert(getAllWindows().size() == 0);
+});
 
 MPX_TEST_ITER("detect_input_only_window", 2, {
     WindowID win = createInputOnlyWindow();
@@ -51,6 +79,25 @@ MPX_TEST_ITER("detect_input_only_window", 2, {
     else
         registerWindow(win, root);
     assert(getWindowInfo(win)->hasMask(INPUT_ONLY_MASK));
+});
+MPX_TEST("filter_window", {
+    static auto type = ewmh->_NET_WM_WINDOW_TYPE_TOOLTIP;
+    WindowID win = mapWindow(createNormalWindowWithType(type));
+    WindowID win2 = mapWindow(createNormalWindow());
+    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(ClientMapAllow).add({
+        +[](WindowInfo * winInfo) {
+            if(winInfo->getType() == type) {
+                unregisterWindow(winInfo);
+                return 0;
+            }
+            return 1;
+        }, "filter", PASSTHROUGH_IF_TRUE});
+    scan(root);
+
+    assertEquals(getCount(), 2);
+    assert(getWindowInfo(win2));
+    assert(!getWindowInfo(win));
 });
 MPX_TEST_ITER("detect_mapped_windows", 2, {
     WindowID win = createNormalWindow();
@@ -65,10 +112,17 @@ MPX_TEST_ITER("detect_mapped_windows", 2, {
     assert(getWindowInfo(win2)->hasMask(MAPPED_MASK));
 });
 MPX_TEST("test_window_scan", {
+    addIgnoreOverrideRedirectWindowsRule();
+    WindowID win = createIgnoredWindow();
+    scan(root);
+    assert(!getWindowInfo(win));
+});
+MPX_TEST("test_window_scan", {
     scan(root);
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
     WindowID win3 = createUnmappedWindow();
+    WindowID win4 = createIgnoredWindow();
     assert(!isWindowMapped(win));
     assert(!isWindowMapped(win2));
     assert(!isWindowMapped(win3));
@@ -78,24 +132,10 @@ MPX_TEST("test_window_scan", {
     assert(getWindowInfo(win));
     assert(getWindowInfo(win2));
     assert(getWindowInfo(win3));
-    assert(getAllWindows().size() == 3);
-}
-        );
-MPX_TEST("test_child_window_scan", {
-    IGNORE_SUBWINDOWS = 1;
-    int parent = createNormalWindow();
-    WindowID win = createNormalSubWindow(parent);
-    int child = createNormalSubWindow(win);
-    int grandChild = createNormalSubWindow(child);
-    scan(parent);
-    assert(getWindowInfo(win));
-    assert(!getWindowInfo(child));
-    assert(getAllWindows().size() == 1);
-    IGNORE_SUBWINDOWS = 0;
-    scan(win);
-    assert(getWindowInfo(child));
-    assert(getWindowInfo(grandChild));
-    assert(getAllWindows().size() == 3);
+    assert(!getWindowInfo(win3)->isOverrideRedirectWindow());
+    assert(getWindowInfo(win4));
+    assert(getWindowInfo(win4)->isOverrideRedirectWindow());
+    assertEquals(getAllWindows().size(), 4);
 });
 
 
@@ -163,17 +203,77 @@ MPX_TEST("test_workspace_change", {
     assert(getActiveWindowStack().size() == 1);
     assert(getWorkspace(!nonEmptyIndex)->getWindowStack().size() == 1);
 });
+MPX_TEST("test_workspace_change_focus", {
+    addWorkspaces(2);
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    scan(root);
+    for(WindowInfo* winInfo : getAllWindows()) {
+        winInfo->addMask(INPUT_MASK);
+        getActiveMaster()->onWindowFocus(winInfo->getID());
+        winInfo->moveToWorkspace(0);
+    }
+    getAllWindows()[0]->moveToWorkspace(1);
+    assert(focusWindow(getAllWindows()[1]));
+    assertEquals(getActiveFocus(), getAllWindows()[1]->getID());
+    switchToWorkspace(1);
+    markState();
+    updateState();
+    flush();
+    assertEquals(getActiveFocus(), getAllWindows()[0]->getID());
+});
+
 SET_ENV(onStartup, fullCleanup);
 
 MPX_TEST("test_activate_window", {
     WindowID win = createUnmappedWindow();
     WindowID win2 = mapWindow(createNormalWindow());
+    WindowID win3 = mapWindow(createNormalWindow());
     scan(root);
     assert(getWindowInfo(win2)->isActivatable());
     assert(!activateWindow(getWindowInfo(win)));
     assert(activateWindow(getWindowInfo(win2)));
     getWindowInfo(win2)->removeMask(ALL_MASK);
     assert(!activateWindow(getWindowInfo(win2)));
+    assert(getWindowInfo(win3)->isActivatable());
+    getWindowInfo(win3)->moveToWorkspace(1);
+    getWindowInfo(win3)->removeMask(MAPPED_MASK);
+    assert(!getWorkspace(1)->isVisible());
+    assert(getWindowInfo(win3)->isActivatable());
+    markState();
+    updateState();
+    assert(activateWindow(getWindowInfo(win3)));
+    markState();
+    updateState();
+    assertEquals(getActiveWorkspaceIndex(), 1);
+
+});
+MPX_TEST_ITER("test_sticky_window", 2, {
+    assert(getWorkspace(0)->isVisible());
+    assert(!getWorkspace(1)->isVisible());
+    mapArbitraryWindow();
+    scan(root);
+    WindowInfo* winInfo = getAllWindows()[0];
+    winInfo->addMask(STICKY_MASK);
+    winInfo->moveToWorkspace(0);
+    Master* m = new Master(10, 11, "dummy");
+    m->setWorkspaceIndex(1);
+    getAllMasters().add(m);
+    auto check = +[](int i) {
+        WindowInfo* winInfo = getAllWindows()[0];
+        markState();
+        updateState();
+        assertEquals(winInfo->getWorkspaceIndex(), i % getNumberOfWorkspaces());
+        validate();
+    };
+    switchToWorkspace(2);
+    setActiveMaster(getAllMasters()[_i]);
+    check(2);
+    for(int i = 1; i < getNumberOfWorkspaces() + 1; i++) {
+        switchToWorkspace(i % getNumberOfWorkspaces());
+        check(i);
+    }
 });
 MPX_TEST_ITER("test_workspace_activation", 3, {
     addWorkspaces(3);
@@ -190,11 +290,9 @@ MPX_TEST_ITER("test_workspace_activation", 3, {
             switchToWorkspace(1);
     }
     assert(activateWindow(winInfo));
-    assert(getActiveMaster()->getFocusedWindow() == winInfo);
     assert(checkStackingOrder(stackingOrder + 1, 2));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo->getID());
     assert(activateWindow(winInfo2));
-    assert(getActiveMaster()->getFocusedWindow() == winInfo2);
     assert(checkStackingOrder(stackingOrder, 2));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo2->getID());
 });
@@ -239,9 +337,18 @@ MPX_TEST("test_window_swap", {
     winInfo3->moveToWorkspace(nonActiveWorkspace);
     assert(winInfo->getWorkspace() == NULL);
 
-    swapWindows(winInfo2, winInfo);
-    assert(winInfo->getWorkspaceIndex() == 0);
-    assert(winInfo2->getWorkspace() == NULL);
+    for(int i = 0; i < 3; i++) {
+        swapWindows(winInfo2, winInfo);
+        validate();
+        if(i % 2 == 0) {
+            assert(winInfo2->getWorkspace() == NULL);
+            assertEquals(winInfo->getWorkspaceIndex(), 0);
+        }
+        else {
+            assert(winInfo->getWorkspace() == NULL);
+            assertEquals(winInfo2->getWorkspaceIndex(), 0);
+        }
+    }
 
     assert(getWorkspace(0)->getWindowStack()[0] == winInfo);
     swapWindows(winInfo3, winInfo);
@@ -253,36 +360,54 @@ MPX_TEST("test_window_swap", {
 });
 
 MPX_TEST("test_configure_windows", {
-    WindowInfo* winInfo[] = {new WindowInfo(mapWindow(createNormalWindow())), new WindowInfo(mapWindow(createNormalWindow()))};
-    WindowMask mask = EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK;
-    for(int n = 0; n < LEN(winInfo); n++) {
-        winInfo[n]->addMask(mask);
-        getAllWindows().add(winInfo[n]);
-        WindowID win = winInfo[n]->getID();
-        short values[] = {1, 2, 3, 4, 5};
-        int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+    createNormalWindow();
+    mapArbitraryWindow();
+    createNormalWindow();
+    scan(root);
+    WindowMask mask = EXTERNAL_CONFIGURABLE_MASK ;
+    ArrayList<WindowID> list = {mapArbitraryWindow(), createNormalWindow()};
+    short values[] = {1, 2, 3, 4, 5};
+    int allSizeMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
                        XCB_CONFIG_WINDOW_BORDER_WIDTH;
-        int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
+    int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
+    for(WindowInfo* winInfo : getAllWindows()) {
+        list.add(winInfo->getID());
+        if(winInfo->hasMask(MAPPED_MASK))
+            assertEquals(0, processConfigureRequest(winInfo->getID(), values, 0, 0, allSizeMasks));
+        winInfo->addMask(mask);
+    }
+    for(WindowID win : list) {
         int defaultValues[] = {10, 10, 10, 10, 10};
         for(int i = 0; i < LEN(masks); i++) {
-            xcb_configure_window(dis, win, allMasks, defaultValues);
+            configureWindow(win, allSizeMasks, defaultValues);
             processConfigureRequest(win, values, 0, 0, masks[i]);
             waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
-            xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
+            const RectWithBorder& rect = getRealGeometry(win);
             for(int n = 0; n < 5; n++)
-                assert((&reply->x)[n] == (n == i ? values[0] : defaultValues[0]));
-            free(reply);
+                assert(rect[n] == (n == i ? values[0] : defaultValues[0]));
         }
-        xcb_configure_window(dis, win, allMasks, defaultValues);
+        configureWindow(win, allSizeMasks, defaultValues);
         processConfigureRequest(win, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
-        xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
-        assert(reply->width == values[0]);
-        assert(reply->height == values[1]);
-        free(reply);
+        const RectWithBorder& rect = getRealGeometry(win);
+        assertEquals(rect.width, values[0]);
+        assertEquals(rect.height, values[1]);
         //TODO check below
-        processConfigureRequest(win, NULL, winInfo[!n]->getID(), XCB_STACK_MODE_ABOVE,
-                                XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
+        WindowID stack[] = {getAllWindows()[0]->getID(), win};
+        if(stack[0] != stack[1]) {
+            processConfigureRequest(win, values, getAllWindows()[0]->getID(), XCB_STACK_MODE_ABOVE,
+                                    XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
+            assert(checkStackingOrder(stack, LEN(stack), 0));
+        }
     }
+});
+MPX_TEST("remove_border", {
+    WindowID win = createNormalWindow();
+    scan(root);
+    int border = 10;
+    configureWindow(win, XCB_CONFIG_WINDOW_BORDER_WIDTH, &border);
+    assertEquals(getRealGeometry(win).border, border);
+    removeBorder((win));
+    assertEquals(getRealGeometry(win).border, 0);
 });
 
 /*
@@ -351,7 +476,7 @@ MPX_TEST("test_auto_focus_delete", {
     assert(head->getID() == getActiveFocus(getActiveMasterKeyboardID()));
 });
 
-SET_ENV(openXDisplay, NULL);
+SET_ENV(openXDisplay, fullCleanup);
 MPX_TEST_ERR("kill_window", 1, {
     suppressOutput();
     WindowID win = createNormalWindow();
@@ -366,6 +491,12 @@ MPX_TEST("kill_window_bad", {
     killClientOfWindowInfo(&dummy);
 });
 
+MPX_TEST_ERR("test_kill_window", 1, {
+    suppressOutput();
+    registerWindow(mapArbitraryWindow(), root);
+    killClientOfWindowInfo(getAllWindows()[0]);
+    waitForNormalEvent(XCB_DESTROY_NOTIFY);
+});
 MPX_TEST("test_kill_window", {
     closeConnection();
     setLogLevel(LOG_LEVEL_NONE);
@@ -393,23 +524,31 @@ MPX_TEST("test_kill_window", {
     assertEquals(waitForChild(0), 1);
 });
 
-MPX_TEST_ITER("test_delete_window_request", 3, {
+MPX_TEST_ITER("test_delete_window_request", 8, {
     CRASH_ON_ERRORS = 0;
-    KILL_TIMEOUT = _i == 0 ? 0 : 100;
+    bool forceKill = _i & 1;
+    bool sleep = _i & 2;
+    bool ping = _i & 4;
+    KILL_TIMEOUT = 100;
     if(!spawnPipe(NULL, 0)) {
         saveXSession();
         openXDisplay();
         WindowID win = mapArbitraryWindow();
         xcb_atom_t atoms[] = {WM_DELETE_WINDOW, ewmh->_NET_WM_PING};
-        xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, _i == 0 ? 2 : 1, atoms);
+        xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, ping ? 2 : 1, atoms);
         flush();
         consumeEvents();
         write(STATUS_FD_EXTERNAL_WRITE, &win, sizeof(win));
         close(STATUS_FD_EXTERNAL_WRITE);
-        if(_i) {
+        int result = read(STATUS_FD_EXTERNAL_READ, &win, sizeof(win));
+        if(result < sizeof(win)) {
+            assertEquals(result, sizeof(win));
+        }
+        close(STATUS_FD_EXTERNAL_READ);
+        if(sleep) {
             msleep(KILL_TIMEOUT * 10);
         }
-        if(_i == 0) {
+        if(!forceKill) {
             /// wait for client message
             waitForNormalEvent(XCB_CLIENT_MESSAGE);
         }
@@ -424,21 +563,22 @@ MPX_TEST_ITER("test_delete_window_request", 3, {
     WindowID win;
     int result = read(STATUS_FD_READ, &win, sizeof(win));
     if(result < sizeof(win)) {
-        LOG(LOG_LEVEL_ERROR, "killing failed %s\n", strerror(errno));
         assertEquals(result, sizeof(win));
     }
-    resetPipe();
     assert(win);
+
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
     assert(winInfo);
     loadWindowProperties(winInfo);
     assert(winInfo);
     assert(winInfo->hasMask(WM_DELETE_WINDOW_MASK));
+    if(ping)
+        assert(winInfo->hasMask(WM_PING_MASK));
     consumeEvents();
-    lock();
-    if(_i != 1) {
-        startWM();
+    write(STATUS_FD, &win, sizeof(win));
+    resetPipe();
+    if(!forceKill) {
         killClientOfWindowInfo(winInfo);
         flush();
     }
@@ -447,9 +587,19 @@ MPX_TEST_ITER("test_delete_window_request", 3, {
         assert(killClientOfWindow(win) == 0);
         LOG(0, "Killed client\n");
     }
-    unlock();
     assertEquals(waitForChild(0), 1);
     fullCleanup();
+});
+MPX_TEST("test_delete_window_request_race", {
+    createSimpleEnv();
+    WindowInfo* winInfo = new WindowInfo(1, 1);
+    winInfo->addMask(WM_DELETE_WINDOW_MASK);
+    getAllWindows().add(winInfo);
+    lock();
+    killClientOfWindowInfo(winInfo);
+    unregisterWindow(winInfo);
+    unlock();
+    waitForAllThreadsToExit();
 });
 
 /*

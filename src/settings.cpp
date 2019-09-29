@@ -10,26 +10,25 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 
+#include "Extensions/session.h"
+#include "chain.h"
 #include "communications.h"
+#include "ewmh.h"
+#include "extra-rules.h"
 #include "functions.h"
 #include "globals.h"
 #include "layouts.h"
-#include "session.h"
 #include "logger.h"
-#include "window-properties.h"
 #include "masters.h"
-#include "session.h"
+#include "monitors.h"
 #include "settings.h"
-#include "workspaces.h"
 #include "system.h"
+#include "window-properties.h"
 #include "windows.h"
-#include "chain.h"
 #include "wm-rules.h"
-#include "extra-rules.h"
-#include "ewmh.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
-#include "monitors.h"
+#include "workspaces.h"
 
 #define _startCycleWindowChainBinding(M,K) Chain(M,K,{ \
             Binding{Mod1Mask, XK_Tab, {[](){cycleWindows(DOWN);}}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}}, \
@@ -68,9 +67,9 @@ static Chain DEFAULT_CHAIN_BINDINGS[] = {
  * @param N the workspace to switch to/act on
  */
 #define WORKSPACE_OPERATION(K,N) \
-    {DEFAULT_MOD_MASK,             K, +[](){switchToWorkspace(N); activateWorkspace(N);}}, \
+    {DEFAULT_MOD_MASK,             K, +[](){switchToWorkspace(N); ;}}, \
     {DEFAULT_MOD_MASK|ShiftMask,   K, +[](WindowInfo*winInfo){winInfo->moveToWorkspace(N);}}, \
-    {DEFAULT_MOD_MASK|ControlMask,   K, +[](){swapMonitors(getActiveWorkspaceIndex(),N);activateWorkspace(N);}}
+    {DEFAULT_MOD_MASK|ControlMask,   K, +[](){swapMonitors(getActiveWorkspaceIndex(),N);}}
 
 /**
  * Creates a set of bindings related to the windowStack
@@ -159,7 +158,7 @@ void defaultPrintFunction(void) {
         const char* color;
         if(w->isVisible())
             color = "green";
-        else if(doesWorkspaceHaveWindowWithMask(w->getID(), MAPPABLE_MASK))
+        else if(w->hasWindowWithMask(MAPPABLE_MASK))
             color = "yellow";
         else continue;
         dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->getName().c_str(), w == getActiveWorkspace() ? "*" : "",
@@ -184,9 +183,18 @@ void onStartup(void) {
     addDefaultMaster();
     if(RUN_AS_WM) {
         addBasicRules();
+        addIgnoreOverrideRedirectWindowsRule();
+        addApplyChainBindingsRule();
         addAutoTileRules();
         addEWMHRules();
-        addResumeRules();
+        addAutoFocusRule();
+        addNoDockFocusRule();
+        addAlwaysOnTopBottomRules();
+        addAvoidDocksRule();
+        addFloatRule();
+        addPrintStatusRule();
+        addIgnoreSmallWindowRule();
+        //addResumeCustomStateRules();
     }
     if(!RUN_AS_WM)
         ROOT_EVENT_MASKS &= ~WM_MASKS;

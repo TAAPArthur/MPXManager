@@ -104,12 +104,6 @@ void swapWithTop(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 
 
 /**
- * Get the next window in the& stacking order in the given direction
- * @param dir
- * @return
- */
-WindowInfo* getNextWindowInStack(int dir, const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
-/**
  * Activates the window at the bottom of the Workspace& stack
  * @return 1 if successful
  */
@@ -126,5 +120,5 @@ int focusTop(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
  * activates the workspace that contains the mouse pointer
  * @see getLastKnownMasterPosition()
  */
-bool activateWorkspaceUnderMouse(void);
+void activateWorkspaceUnderMouse(void);
 #endif

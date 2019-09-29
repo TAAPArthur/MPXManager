@@ -11,6 +11,7 @@
 #include <xcb/xcb_ewmh.h>
 #include <string>
 #include "mywm-structs.h"
+#include "window-masks.h"
 
 extern int defaultScreenNumber;
 
@@ -218,4 +219,6 @@ void setLastEvent(void* event);
  * @see getLastEvent
  */
 void* getLastEvent(void);
+WindowMasks getMaskFromAtom(xcb_atom_t atom) ;
+int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) ;
 #endif /* XSESSION_H_ */

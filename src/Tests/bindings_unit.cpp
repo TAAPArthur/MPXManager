@@ -26,6 +26,13 @@ MPX_TEST("binding_eq", {
     assert(!(Binding(3, 2, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test")));
     assert(!(Binding(1, 2, incrementCount, {.mode = 0}, "test") == Binding(1, 2, incrementCount, {.mode = 1}, "test")));
 });
+MPX_TEST("getLastUserEvent", {
+    UserEvent e ={ 1,2};
+    setLastUserEvent(e);
+    UserEvent& e2 = getLastUserEvent();
+    assertEquals(e.detail,e2.detail);
+    assertEquals(e.mod,e2.mod);
+});
 
 /*
 MPX_TEST("test_binding_mode_match", {
@@ -140,8 +147,8 @@ MPX_TEST("event_rules", {
     assert(getCount() == MPX_LAST_EVENT * 2);
 });
 MPX_TEST("event_rules_abort", {
-    getEventRules(0).add(new BoundFunction(incrementCount, NO_PASSTHROUGH));
-    getEventRules(0).add(new BoundFunction(incrementCount, NO_PASSTHROUGH));
+    getEventRules(0).add(new BoundFunction(incrementCount, "test", NO_PASSTHROUGH));
+    getEventRules(0).add(new BoundFunction(incrementCount, "test2", NO_PASSTHROUGH));
     assert(!applyEventRules(0, NULL));
     assert(getCount() == 1);
 });

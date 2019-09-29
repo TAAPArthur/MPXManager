@@ -35,6 +35,12 @@
 bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
     if(newlyCreated)
         winInfo->setCreationTime(getTime());
+    if(winInfo->hasMask(MAPPED_MASK)) {
+        LOG(LOG_LEVEL_DEBUG, "Window is mapped %d\n", winInfo->getID());
+        loadWindowProperties(winInfo);
+        if(!applyEventRules(ClientMapAllow, winInfo))
+            return 0;
+    }
     return applyEventRules(PostRegisterWindow, winInfo);
 }
 
@@ -87,20 +93,11 @@ void scan(xcb_window_t baseWindow) {
             LOG(LOG_LEVEL_TRACE, "processing child %d\n", children[i]);
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
             if(registerWindow(children[i], baseWindow, attr)) {
-                WindowInfo* winInfo = getWindowInfo(children[i]);
-                assert(winInfo);
                 xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, children[i]), NULL);
                 if(reply) {
                     getWindowInfo(children[i])->setGeometry(&reply->x);
                     free(reply);
                 }
-                if(winInfo->hasMask(MAPPED_MASK)) {
-                    LOG(LOG_LEVEL_DEBUG, "Window is mapped %d\n", winInfo->getID());
-                    if(!applyEventRules(ClientMapAllow, winInfo))
-                        winInfo = NULL;
-                }
-                if(winInfo && !IGNORE_SUBWINDOWS)
-                    scan(children[i]);
             }
             if(attr)
                 free(attr);
@@ -109,10 +106,13 @@ void scan(xcb_window_t baseWindow) {
     }
 }
 
-static void focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo) {
+static bool focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo) {
     auto filter = [](WindowInfo * winInfo) {return winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo);};
-    if(!master->getMostRecentlyFocusedWindow(filter))
+    if(!master->getMostRecentlyFocusedWindow(filter)) {
         focusWindow(defaultWinInfo);
+        return 0;
+    }
+    return 1;
 }
 
 bool unregisterWindow(WindowInfo* winInfo) {
@@ -146,10 +146,6 @@ static void* waitForWindowToDie(void* p) {
     }
     unlock();
     while(!isShuttingDown()) {
-        if(hasPingMask) {
-            xcb_ewmh_send_wm_ping(ewmh, id, 0);
-            flush();
-        }
         lock();
         winInfo = getWindowInfo(id);
         int timeout = winInfo ? getTime() - winInfo->getPingTimeStamp() >= KILL_TIMEOUT : 0;
@@ -162,6 +158,10 @@ static void* waitForWindowToDie(void* p) {
             LOG(LOG_LEVEL_INFO, "Window %d is not responsive; force killing\n", id);
             killClientOfWindow(id);
             break;
+        }
+        if(hasPingMask) {
+            xcb_ewmh_send_wm_ping(ewmh, id, 0);
+            flush();
         }
         msleep(KILL_TIMEOUT);
     }
@@ -195,8 +195,10 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
 
 int attemptToMapWindow(WindowID id) {
     WindowInfo* winInfo = getWindowInfo(id);
+    LOG(LOG_LEVEL_TRACE, "Attempting to map window %d\n", id);
     if(!winInfo || winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable())
         return catchError(xcb_map_window_checked(dis, id));
+    LOG(LOG_LEVEL_TRACE, "Failed to map window %d\n", id);
     return -1;
 }
 
@@ -204,8 +206,10 @@ int attemptToMapWindow(WindowID id) {
 // TODO trigger this on window move
 void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
     Workspace* w = winInfo->getWorkspace();
-    if(!w)
-        return;
+    assert(w);
+    LOG_RUN(LOG_LEVEL_VERBOSE,
+            std::cout << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " " <<
+            *winInfo << "\n";);
     if(w->isVisible()) {
         attemptToMapWindow(winInfo->getID());
     }
@@ -224,7 +228,8 @@ void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
         if(updateFocus) {
             for(Master* master : getAllMasters()) {
                 if(master->getFocusedWindow() == winInfo)
-                    focusNextVisibleWindow(master, NULL);
+                    if(focusNextVisibleWindow(master, NULL))
+                        LOG(LOG_LEVEL_DEBUG, "Could not find window to update focus to\n");
             }
         }
     }
@@ -244,7 +249,6 @@ void switchToWorkspace(int workspaceIndex) {
          */
         if(!getActiveWorkspace()->isVisible()) {
             Workspace* visibleWorkspace = getActiveMaster()->getWorkspace()->getNextWorkspace(1, VISIBLE);
-            assert(visibleWorkspace);
             if(visibleWorkspace)
                 currentIndex = visibleWorkspace->getID();
         }
@@ -271,17 +275,6 @@ void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex){
 */
 
 
-void activateWorkspace(int workspaceIndex) {
-    switchToWorkspace(workspaceIndex);
-    Workspace* w = getWorkspace(workspaceIndex);
-    auto filter = [](WindowInfo * winInfo) {return winInfo->getWorkspaceIndex() == getActiveWorkspaceIndex();};
-    WindowInfo* winInfo = getActiveMaster()->getMostRecentlyFocusedWindow(filter);
-    if(!winInfo)
-        winInfo = w->getWindowStack().empty() ? NULL : w->getWindowStack()[0];
-    if(winInfo)
-        activateWindow(winInfo);
-    else focusWindow(root);
-}
 
 
 WindowID activateWindow(WindowInfo* winInfo) {
@@ -297,11 +290,6 @@ WindowID activateWindow(WindowInfo* winInfo) {
     return 0;
 }
 
-bool doesWorkspaceHaveWindowWithMask(WorkspaceID index, WindowMask mask) {
-    for(WindowInfo* winInfo : getWorkspace(index)->getWindowStack())
-        if(winInfo->hasMask(mask))return 1;
-    return 0;
-}
 
 
 
@@ -331,18 +319,8 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2) {
     int index2 = w2 ? w2->getWindowStack().indexOf(winInfo2) : -1;
     if(index1 != -1)
         w1->getWindowStack()[index1] = winInfo2;
-    else if(w2)
-        w2->getWindowStack().removeElement(winInfo2);
     if(index2 != -1)
         w2->getWindowStack()[index2] = winInfo1;
-    else if(w1)
-        w1->getWindowStack().removeElement(winInfo1);
-    if((w1 && w1->isVisible()) != (w2 && w2->isVisible())) {
-        if(w2)
-            updateWindowWorkspaceState(winInfo1, 0);
-        if(w1)
-            updateWindowWorkspaceState(winInfo2, 0);
-    }
     setWindowPosition(winInfo2->getID(), winInfo1->getGeometry());
     setWindowPosition(winInfo1->getID(), winInfo2->getGeometry());
 }
@@ -374,20 +352,23 @@ static inline int filterConfigValues(int* filteredArr, const WindowInfo* winInfo
     else configMask &= ~XCB_CONFIG_WINDOW_STACK_MODE;
     return configMask;
 }
-void processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask) {
+int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask) {
+    assert(configMask);
     LOG(LOG_LEVEL_TRACE, "processing configure request window %d\n", win);
     int actualValues[7];
     WindowInfo* winInfo = getWindowInfo(win);
     if(!winInfo) {
-        for(int i = 0; i < 5; i++)
-            actualValues[i] = values[i];
-        actualValues[5] = sibling;
-        actualValues[6] = stackMode;
+        WindowInfo fake = WindowInfo(0, 0);
+        fake.addMask(EXTERNAL_CONFIGURABLE_MASK);
+        filterConfigValues(actualValues, &fake, values, sibling, stackMode, configMask);
         configureWindow(win, configMask, actualValues);
+        return configMask;
     }
     int mask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
+    LOG(LOG_LEVEL_TRACE, "Mask filtered from %d to %d\n", configMask, mask);
     if(mask) {
         configureWindow(win, mask, actualValues);
+        /*
         LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d\n", win, mask);
         if(mask & XCB_CONFIG_WINDOW_STACK_MODE) {
             Workspace* workspace = winInfo->getWorkspace();
@@ -402,13 +383,15 @@ void processConfigureRequest(WindowID win, const short values[5], WindowID sibli
                 else LOG(LOG_LEVEL_WARN, "not updating workspace window stack to reflect sibling change: win %d, sibling %d\n", win,
                              sibling);
         }
+        */
     }
     else
         LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
+    return mask;
 }
-void removeBorder(WindowInfo* winInfo) {
-    short i = 0;
-    xcb_configure_window(dis, winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &i);
+void removeBorder(WindowID win) {
+    int i = 0;
+    configureWindow(win, XCB_CONFIG_WINDOW_BORDER_WIDTH, &i);
 }
 bool raiseWindowInfo(WindowInfo* winInfo, bool above) {
     assert(winInfo);
@@ -426,7 +409,5 @@ RectWithBorder getRealGeometry(WindowID id) {
         rect = &reply->x;
         free(reply);
     }
-    else
-        return {0, 0, 0, 0};
     return rect;
 }

@@ -32,3 +32,11 @@ wait
 sleep 1s
 ./mpxmanager-debug --send="quit" --set="quit" &>/dev/null
 wait
+
+./mpxmanager-debug --clear-startup-method  --enable-inter-client-communication --set=log-level=3 &>/dev/null &
+sleep 1s
+./mpxmanager-debug --send="dump" 2>&1 | grep -iq "Dumping:"
+./mpxmanager-debug --send="dump=0" 2>&1 | grep -iq "Dumping:"
+./mpxmanager-debug --send="dump=test" 2>&1 | grep -iq "Dumping:"
+./mpxmanager-debug --send="quit" --set="quit" &>/dev/null
+wait

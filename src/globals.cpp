@@ -7,13 +7,10 @@
 
 #include "globals.h"
 
-bool IGNORE_SUBWINDOWS = 1;
 bool LD_PRELOAD_INJECTION = 0;
 //  TODO start up option
 bool RUN_AS_WM = 1;
 bool STEAL_WM_SELECTION = 0;
-//  TODO rule
-bool SYNC_FOCUS = 1;
 std::string LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
 std::string MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
 std::string SHELL = "/bin/sh";

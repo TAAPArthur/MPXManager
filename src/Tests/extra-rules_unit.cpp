@@ -12,6 +12,7 @@
 #include "../wm-rules.h"
 #include "../extra-rules.h"
 #include "../logger.h"
+#include "../ewmh.h"
 #include "../globals.h"
 #include "../window-properties.h"
 #include "../wmfunctions.h"
@@ -50,6 +51,7 @@ MPX_TEST("test_desktop_rule", {
     setActiveLayout(getDefaultLayouts()[GRID]);
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
+    winInfo->moveToWorkspace(0);
     assert(winInfo->hasMask(STICKY_MASK | NO_TILE_MASK | BELOW_MASK));
     assert(!winInfo->hasMask(ABOVE_MASK));
     m->setViewport({10, 20, 100, 100});
@@ -127,6 +129,7 @@ MPX_TEST("test_always_on_top", {
     assert(consumeEvents() == 0);
 });
 MPX_TEST("test_focus_follows_mouse", {
+    addEWMHRules();
     addFocusFollowsMouseRule();
     setActiveLayout(getDefaultLayouts()[GRID]);
     mapArbitraryWindow();
@@ -191,13 +194,33 @@ MPX_TEST_ITER("test_auto_focus", 4, {
     autoFocus();
     assert(autoFocused == (getAllWindows().back()->getID() == getActiveFocus(getActiveMasterKeyboardID())));
 });
-MPX_TEST("ignore_small_window", {
+MPX_TEST_ITER("ignore_small_window", 3, {
     addIgnoreSmallWindowRule();
     WindowID win = mapArbitraryWindow();
     xcb_size_hints_t hints = {0};
-    xcb_icccm_size_hints_set_base_size(&hints, 1, 1);
+    if(_i)
+        xcb_icccm_size_hints_set_size(&hints, _i - 1, 1, 1);
+    else
+        xcb_icccm_size_hints_set_base_size(&hints, 1, 1);
     assert(!catchError(xcb_icccm_set_wm_size_hints_checked(dis, win, XCB_ATOM_WM_NORMAL_HINTS, &hints)));
     flush();
     scan(root);
-    assert(getWindowInfo(win) == NULL);
+    if(_i != 1)
+        assert(getWindowInfo(win));
+    else
+        assert(getWindowInfo(win) == NULL);
+});
+MPX_TEST("test_detect_sub_windows", {
+    NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
+    addScanChildrenRule();
+    WindowID win = createUnmappedWindow();
+    WindowID win2 = createNormalSubWindow(win);
+    flush();
+    startWM();
+    waitUntilIdle();
+    WindowID win3 = createNormalSubWindow(win2);
+    waitUntilIdle();
+    assert(getAllWindows().find(win));
+    assert(getAllWindows().find(win2));
+    assert(getAllWindows().find(win3));
 });

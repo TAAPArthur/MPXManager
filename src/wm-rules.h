@@ -106,7 +106,7 @@ void addBasicRules(AddFlag flag = ADD_UNIQUE);
  * @see ROOT_EVENT_MASKS
  */
 void registerForEvents();
-bool listenForNonRootEventsFromWindow(WindowInfo* winInfo);
+void listenForNonRootEventsFromWindow(WindowInfo* winInfo);
 
 /**
  * Attempts to translate the generic event receive into an extension event and applies corresponding Rules.
@@ -120,4 +120,5 @@ void onGenericEvent(void);
  */
 void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
+void addApplyBindingsRule(AddFlag flag = ADD_UNIQUE);
 #endif /* DEFAULT_RULES_H_ */
