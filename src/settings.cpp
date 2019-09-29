@@ -24,6 +24,7 @@
 #include "system.h"
 #include "windows.h"
 #include "chain.h"
+#include "wm-rules.h"
 #include "extra-rules.h"
 #include "ewmh.h"
 #include "wmfunctions.h"
@@ -176,4 +177,22 @@ void loadNormalSettings() {
     printStatusMethod = defaultPrintFunction;
     enableInterClientCommunication();
     addDefaultBindings();
+}
+void (*startupMethod)();
+void onStartup(void) {
+    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
+    addDefaultMaster();
+    if(RUN_AS_WM) {
+        addBasicRules();
+        addAutoTileRules();
+        addEWMHRules();
+        addResumeRules();
+    }
+    if(!RUN_AS_WM)
+        ROOT_EVENT_MASKS &= ~WM_MASKS;
+    if(startupMethod)
+        startupMethod();
+    openXDisplay();
+    assert(getActiveMaster());
+    assert(getNumberOfWorkspaces());
 }

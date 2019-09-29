@@ -14,7 +14,7 @@
 #include <X11/Xlib-xcb.h>
 
 #include "../devices.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../logger.h"
 #include "../events.h"
 #include "../wmfunctions.h"

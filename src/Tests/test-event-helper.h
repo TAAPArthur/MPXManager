@@ -19,7 +19,7 @@
 #include "../xsession.h"
 #include "../system.h"
 #include "../masters.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../device-grab.h"
 #include "../user-events.h"
 #include "../debug.h"
@@ -28,6 +28,12 @@ static inline void waitUntilIdle(void) {
     static int idleCount;
     WAIT_UNTIL_TRUE(idleCount != getIdleCount());
     idleCount = getIdleCount();
+}
+static inline void onStartup() {
+    addBasicRules();
+    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
+    addDefaultMaster();
+    openXDisplay();
 }
 
 static inline void exitFailure() {

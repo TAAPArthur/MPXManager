@@ -9,7 +9,7 @@
 
 #include "../bindings.h"
 #include "../devices.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../test-functions.h"
 #include "../globals.h"
 #include "test-x-helper.h"

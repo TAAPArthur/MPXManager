@@ -10,7 +10,7 @@
 #include "test-event-helper.h"
 #include "../state.h"
 #include "../window-properties.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../logger.h"
 #include "../globals.h"
 #include "../wmfunctions.h"
@@ -55,9 +55,7 @@ static void nonDefaultDeviceEventsetup(){
 
 SET_ENV(NULL, fullCleanup);
 MPX_TEST("test_on_startup", {
-    startupMethod = incrementCount;
     onStartup();
-    assert(getCount());
     assert(getAllMonitors().size());
     assert(getAllMasters().size());
     assert(dis);
@@ -76,10 +74,11 @@ MPX_TEST_ERR("test_handle_error", 1, {
 
 MPX_TEST("test_auto_tile", {
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(onXConnection).add(DEFAULT_EVENT(mapArbitraryWindow));
+    addBasicRules();
+    addAutoTileRules();
+    createSimpleEnv();
     openXDisplay();
-    saveXSession();
-    mapArbitraryWindow();
-    onStartup();
     assert(!isStateMarked());
 
     assertEquals(getCount(), 1);

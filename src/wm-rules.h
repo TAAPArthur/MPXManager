@@ -1,6 +1,6 @@
 
 /**
- * @file default-rules.h
+ * @file wm-rules.h
  * @brief Provides functionally common to WM and perhaps need for a good experience
  *
  */
@@ -96,10 +96,6 @@ void addDefaultDeviceRules();
 void onXConnect(void);
 
 /**
- * Handles initializing the WindowManager and processing user settings from the config file
- */
-void onStartup();
-/**
  * Adds a bunch of rules needed for the WM to function as expected
  * The majority are wrappers to map X11 event to the corresponding function
  */
@@ -122,7 +118,6 @@ void onGenericEvent(void);
  * When any of these are called, we check the state via a Periodic hook. If it indeed has, we retile the workspace.
  * We unmark the state if for any reason, a workspace has been retiled
  */
-void addAutoTileRules(void);
-extern void (*startupMethod)();
-bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag);
+void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
+bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
 #endif /* DEFAULT_RULES_H_ */

@@ -8,7 +8,7 @@
 
 #include "../../logger.h"
 #include "../../globals.h"
-#include "../../default-rules.h"
+#include "../../wm-rules.h"
 #include "../../wmfunctions.h"
 #include "../../functions.h"
 #include "../../functions.h"

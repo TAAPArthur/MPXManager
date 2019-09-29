@@ -16,8 +16,8 @@ LDFLAGS :=  ${NON_X_LDFLAGS} -lm -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-x
 
 LAYER0_SRCS := globals.cpp logger.cpp debug.cpp
 LAYER1_SRCS := arraylist.h ext.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp system.cpp
-LAYER2_SRCS := boundfunction.cpp bindings.cpp xsession.cpp devices.cpp test-functions.cpp device-grab.cpp
-LAYER3_SRCS := window-properties.cpp wmfunctions.cpp layouts.cpp state.cpp chain.cpp default-rules.cpp
+LAYER2_SRCS := boundfunction.cpp xsession.cpp bindings.cpp devices.cpp test-functions.cpp device-grab.cpp
+LAYER3_SRCS := window-properties.cpp wmfunctions.cpp layouts.cpp state.cpp chain.cpp wm-rules.cpp
 LAYER4_SRCS := session.cpp ewmh.cpp extra-rules.cpp functions.cpp communications.cpp
 LAYER5_SRCS := Extensions/xmousecontrol.cpp Extensions/window-clone.cpp Extensions/mpx.cpp
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}

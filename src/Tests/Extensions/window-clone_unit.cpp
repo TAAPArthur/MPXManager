@@ -23,10 +23,12 @@ static WindowInfo* winInfo;
 static WindowInfo* cloneInfo;
 static std::string defaultTitle = "test";
 static std::string newTitle = "test2";
+
 static void setup() {
     POLL_COUNT = 1;
     CRASH_ON_ERRORS = -1;
     addCloneRules();
+    addAutoTileRules();
     onStartup();
     switchToWorkspace(0);
     setActiveLayout(getDefaultLayouts()[GRID]);

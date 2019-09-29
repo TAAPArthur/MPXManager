@@ -160,6 +160,7 @@ void openXDisplay(void) {
     setRootDims(&screen->width_in_pixels);
     root = screen->root;
     xcb_intern_atom_cookie_t* cookie;
+    bool applyRule = ewmh == NULL;
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
@@ -185,6 +186,8 @@ void openXDisplay(void) {
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
     XSetErrorHandler(handleXLibError);
     compliantWindowManagerIndicatorWindow = 0;
+    if(applyRule)
+        applyEventRules(onXConnection, NULL);
 }
 
 void closeConnection(void) {

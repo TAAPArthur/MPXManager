@@ -2,7 +2,7 @@
 
 
 #include "bindings.h"
-#include "default-rules.h"
+#include "wm-rules.h"
 #include "devices.h"
 #include "globals.h"
 #include "layouts.h"

@@ -7,6 +7,8 @@
 #ifndef MPX_SETTINGS_H_
 #define MPX_SETTINGS_H_
 
+extern void (*startupMethod)();
+void onStartup(void);
 
 /**
  * Load default settings
