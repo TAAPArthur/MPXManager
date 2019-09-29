@@ -86,8 +86,8 @@ void onConfigureRequestEvent(void) {
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
     return getEventRules(PreRegisterWindow).add({
         +[](WindowInfo * winInfo) {return !winInfo->isOverrideRedirectWindow();},
-        PASSTHROUGH_IF_TRUE,
-        FUNC_NAME
+        FUNC_NAME,
+        PASSTHROUGH_IF_TRUE
     }, flag);
 }
 static void onWindowDetection(WindowID id, WindowID parent, short* geo) {
@@ -275,8 +275,8 @@ void addAutoTileRules(AddFlag flag) {
                    };
     for(int i = 0; i < LEN(events); i++)
         getEventRules(events[i]).add(DEFAULT_EVENT(markState), flag);
-    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState), flag);
-    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState), flag);
+    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
+    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState), flag);
 }
 void assignDefaultLayoutsToWorkspace() {
@@ -309,7 +309,7 @@ void addBasicRules(AddFlag flag) {
     getEventRules(onXConnection).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
-    getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, PASSTHROUGH_IF_TRUE, "_autoAddToWorkspace"},
+    getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, "_autoAddToWorkspace", PASSTHROUGH_IF_TRUE},
     flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);

@@ -25,7 +25,7 @@
 
 void addUnknownWindowIgnoreRule(void) {
     getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->hasMask(IMPLICIT_TYPE) ? unregisterWindow(winInfo) : 0;},
-    PASSTHROUGH_IF_FALSE, FUNC_NAME));
+    FUNC_NAME, PASSTHROUGH_IF_FALSE));
 }
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
     auto sizeHints = getWindowSizeHints(winInfo);
@@ -35,7 +35,7 @@ static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
 
 void addIgnoreSmallWindowRule(void) {
     getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 100) ? unregisterWindow(winInfo) : 0;},
-    PASSTHROUGH_IF_FALSE, FUNC_NAME));
+    FUNC_NAME, PASSTHROUGH_IF_FALSE));
 }
 /* TODO comeback too
 void addAutoAddToWorkspace(WindowInfo* winInfo) {

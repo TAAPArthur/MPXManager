@@ -140,8 +140,8 @@ MPX_TEST("event_rules", {
     assert(getCount() == MPX_LAST_EVENT * 2);
 });
 MPX_TEST("event_rules_abort", {
-    getEventRules(0).add(new BoundFunction(incrementCount, NO_PASSTHROUGH));
-    getEventRules(0).add(new BoundFunction(incrementCount, NO_PASSTHROUGH));
+    getEventRules(0).add(new BoundFunction(incrementCount, "test", NO_PASSTHROUGH));
+    getEventRules(0).add(new BoundFunction(incrementCount, "test2", NO_PASSTHROUGH));
     assert(!applyEventRules(0, NULL));
     assert(getCount() == 1);
 });
