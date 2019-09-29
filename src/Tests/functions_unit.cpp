@@ -15,6 +15,7 @@ static WindowInfo* middle;
 static WindowInfo* bottom;
 static void functionSetup() {
     onStartup();
+    addEWMHRules();
     int size = 3;
     for(int i = 0; i < size; i++)
         mapWindow(createNormalWindow());
@@ -35,16 +36,16 @@ MPX_TEST("cycle_window", {
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     startWM();
     waitUntilIdle();
-    assertEquals(getFocusedWindow(), bottom);
-    ATOMIC(cycleWindows(DOWN));
-    assert(getActiveMaster()->isFocusStackFrozen());
-    assertEquals(getFocusedWindow(), middle);
-    ATOMIC(cycleWindows(DOWN));
-    assert(getActiveMaster()->isFocusStackFrozen());
-    assertEquals(getFocusedWindow(), top);
+    WindowID stack[] = {middle->getID(), top->getID(), bottom->getID()};
+    for(WindowID active : stack) {
+        ATOMIC(cycleWindows(DOWN));
+        assertEquals(getActiveFocus(), active);
+        assert(getActiveMaster()->isFocusStackFrozen());
+        waitUntilIdle();
+    }
+
     ATOMIC(cycleWindows(UP));
-    assert(getActiveMaster()->isFocusStackFrozen());
-    assertEquals(getFocusedWindow(), middle);
+    assertEquals(getActiveFocus(), top->getID());
     endCycleWindows();
     assert(!getActiveMaster()->isFocusStackFrozen());
 });
@@ -100,30 +101,21 @@ MPX_TEST_ITER("find_and_raise_local", 2, {
     else
         assert(winInfo != winInfo2);
 });
+MPX_TEST("auto_clear_cache", {
+    assert(getFocusedWindow());
+    WindowInfo* winInfo = getFocusedWindow();
+    assert(getAllWindows().size() == 3);
+    startWM();
+
+    waitUntilIdle();
+    for(int i = 0; i < getAllWindows().size() - 1; i++) {
+        assert(winInfo != findAndRaise({}, ACTION_ACTIVATE));
+        waitUntilIdle();
+    }
+    assertEquals(*winInfo, *findAndRaise({}, ACTION_ACTIVATE));
+});
 
 
-MPX_TEST("test_get_next_window_in_stack_fail", {
-    for(WindowInfo* winInfo : getAllWindows())
-        winInfo->addMask(HIDDEN_MASK);
-    assert(getNextWindowInStack(0) == NULL);
-    assert(getNextWindowInStack(1) == NULL);
-    assert(getNextWindowInStack(-1) == NULL);
-}
-        );
-MPX_TEST("test_get_next_window_in_stack", {
-    bottom->addMask(HIDDEN_MASK);
-    getActiveMaster()->onWindowFocus(top->getID());
-    assert(getFocusedWindow() == top);
-    assert(getNextWindowInStack(0) == top);
-    assert(getNextWindowInStack(DOWN) == getActiveWindowStack()[1]);
-    //bottom is marked hidden
-    assert(getNextWindowInStack(UP) != bottom);
-    assert(getNextWindowInStack(UP) == getActiveWindowStack()[getActiveWindowStack().size() - 2]);
-    assert(getFocusedWindow() == top);
-    switchToWorkspace(!getActiveWorkspaceIndex());
-    assert(getNextWindowInStack(0) != getFocusedWindow());
-}
-        );
 
 MPX_TEST("test_activate_top_bottom", {
     assert(focusBottom());
@@ -139,8 +131,7 @@ MPX_TEST("test_shift_top", {
     shiftTop();
     assert(getActiveWindowStack()[0] == bottom);
     assert(getActiveWindowStack()[1] == top);
-}
-        );
+});
 MPX_TEST("test_shift_focus", {
     for(WindowInfo* winInfo : getActiveWindowStack()) {
         getActiveMaster()->onWindowFocus(winInfo->getID());
@@ -149,8 +140,18 @@ MPX_TEST("test_shift_focus", {
         assertWindowIsFocused(id);
         getActiveMaster()->onWindowFocus(id);
     }
-}
-        );
+});
+MPX_TEST_ITER("test_shift_focus_null", 3, {
+    if(_i == 0)
+        getActiveMaster()->getWindowStack().clear();
+    else if(_i == 1)
+        switchToWorkspace(2);
+    else
+        for(WindowInfo* winInfo : getAllWindows())
+            winInfo->addMask(HIDDEN_MASK);
+    shiftFocus(1);
+    swapWithTop();
+});
 MPX_TEST("test_swap_top", {
     getActiveMaster()->onWindowFocus(bottom->getID());
     swapWithTop();

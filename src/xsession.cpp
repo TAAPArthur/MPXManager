@@ -312,7 +312,7 @@ static inline xcb_generic_event_t* getNextEvent() {
         idle++;
         flush();
         unlock();
-        LOG(LOG_LEVEL_VERBOSE, "Idle %d\n", idle);
+        LOG(LOG_LEVEL_DEBUG, "Idle %d\n", idle);
         if(!isShuttingDown())
             event = xcb_wait_for_event(dis);
     }

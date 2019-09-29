@@ -47,13 +47,15 @@ static inline void fullCleanup() {
     LOG(0, "full cleanup\n");
     setLogLevel(LOG_LEVEL_NONE);
     requestShutdown();
-    if(getNumberOfThreads() && dis) {
+    if(getNumberOfThreads() && ewmh) {
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
         //wake up other thread
         createNormalWindow();
         flush();
     }
     waitForAllThreadsToExit();
+
+    LOG(0, "validating state\n");
     validate();
     getDeviceBindings().deleteElements();
     for(int i = 0; i < MPX_LAST_EVENT; i++) {
@@ -64,6 +66,7 @@ static inline void fullCleanup() {
             if(b->func)
                 assert(b->getName() != "");
     }
+    LOG(0, "cleaning up xserver\n");
     cleanupXServer();
 }
 static inline void triggerBinding(Binding* b, WindowID win = root) {
@@ -125,7 +128,8 @@ static inline int waitForNormalEvent(int type) {
         LOG(LOG_LEVEL_ALL, "Found event %p\n", e);
         if(!e)
             return 0;
-        LOG(LOG_LEVEL_ALL, "type %d %s\n", e->response_type, eventTypeToString(e->response_type));
+        LOG(LOG_LEVEL_ALL, "type %d (%d) %s\n", e->response_type, e->response_type & 127,
+            eventTypeToString(e->response_type & 127));
         int t = e->response_type & 127;
         free(e);
         if(type == t)

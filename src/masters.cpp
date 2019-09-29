@@ -89,12 +89,14 @@ WindowInfo* Master::getMostRecentlyFocusedWindow(bool(*filter)(WindowInfo*)) {
     return NULL;
 }
 Master* getMasterById(MasterID id, bool keyboard) {
+    LOG(LOG_LEVEL_TRACE, "Looking up %d keyboard: %d\n", id, keyboard);
     if(keyboard)
         return getAllMasters().find(id);
     else
         for(Master* master : getAllMasters())
             if(master->getPointerID() == id)
                 return master;
+    LOG(LOG_LEVEL_TRACE, "Could not find master matching %d\n", id);
     return NULL;
 }
 Master* getMasterByName(std::string name) {

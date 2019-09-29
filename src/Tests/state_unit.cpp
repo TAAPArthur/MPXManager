@@ -27,6 +27,14 @@ MPX_TEST("init", {
     markState();
     assert(updateState() == WORKSPACE_MONITOR_CHANGE);
 });
+MPX_TEST("print", {
+    setLogLevel(0);
+    suppressOutput();
+    markState();
+    addVisibleWindow(0);
+    assert(updateState());
+
+});
 MPX_TEST("test_no_state_change", {
     markState();
     assert(updateState() == WORKSPACE_MONITOR_CHANGE);

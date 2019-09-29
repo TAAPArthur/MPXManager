@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <type_traits>
+#include <memory>
 #include "masters.h"
 #include "windows.h"
 #include "mywm-structs.h"
@@ -43,17 +44,14 @@ struct GenericFunctionWrapper {
     template<typename U, typename V >
     using EnableIfWinInfo = typename std::enable_if_t<std::is_same<V, WindowInfo*>::value, int>;
     template<typename U, typename V >
-    using EnableIfWin = typename std::enable_if_t<std::is_same<V, WindowID>::value, int>;
+    using EnableIfWin = typename std::enable_if_t<std::is_convertible<V, WindowID>::value, int>;
     template<typename U, typename V >
     using EnableIfMaster = typename std::enable_if_t<std::is_same<V, Master*>::value, int>;
     template<typename U, typename V >
     using EnableIfWorkspace = typename std::enable_if_t<std::is_same<V, Workspace*>::value, int>;
     template<typename U, typename V >
     using EnableIfMonitor = typename std::enable_if_t<std::is_same<V, Monitor*>::value, int>;
-    int call(WindowInfo* winInfo = NULL, Master* master = NULL)const {
-        return _call(winInfo, master);
-    } ;
-    virtual int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const = 0;
+    virtual int call(WindowInfo* winInfo = NULL, Master* master = NULL)const = 0;
 };
 
 
@@ -63,28 +61,28 @@ struct FunctionWrapper: GenericFunctionWrapper {
     FunctionWrapper(R(*func)(P)): func(func) {}
 
     static_assert(std::is_convertible<R, int>::value);
-    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return call(winInfo, master);
+    int call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
+        return _call(winInfo, master);
     }
 
     template<typename U = R, typename V = P>
-    EnableIfWinInfo<U, V> call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
+    EnableIfWinInfo<U, V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
         return winInfo ? func(winInfo) : 0;
     }
     template<typename U = R, typename V = P>
-    EnableIfMaster<U, V> call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
+    EnableIfMaster<U, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         return master ? func(master) : 0;
     }
     template<typename U = R, typename V = P>
-    EnableIfWin<U, V> call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
+    EnableIfWin<U, V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
         return winInfo ? func(winInfo->getID()) : 0;
     }
     template<typename U = R, typename V = P>
-    EnableIfWorkspace<U, V> call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
+    EnableIfWorkspace<U, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         return master && master->getWorkspace() ? func(master->getWorkspace()) : 0;
     }
     template<typename U = R, typename V = P>
-    EnableIfMonitor <U, V> call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
+    EnableIfMonitor <U, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         return master && master->getWorkspace() &&
                master->getWorkspace()->getMonitor() ? func(master->getWorkspace()->getMonitor()) : 0;
     }
@@ -93,38 +91,38 @@ template <typename P>
 struct FunctionWrapper<void, P>: GenericFunctionWrapper {
     void (*func)(P);
     FunctionWrapper(void(*func)(P)): func(func) {}
-    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return call(winInfo, master);
+    int call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
+        return _call(winInfo, master);
     }
     template< typename V = P>
-    EnableIfWinInfo<void, V> call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
+    EnableIfWinInfo<void, V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
         if(winInfo)
             func(winInfo);
-        return 1;
+        return winInfo ? 1 : 0;
     }
     template< typename V = P>
-    EnableIfMaster<void, V> call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
+    EnableIfMaster<void, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         if(master)
             func(master);
-        return 1;
+        return master ? 1 : 0;
     }
     template< typename V = P>
-    EnableIfWin<void, V> call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
+    EnableIfWin<void, V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
         if(winInfo)
             func(winInfo->getID());
-        return 1;
+        return master ? 1 : 0;
     }
     template<typename V = P>
-    EnableIfWorkspace<void, V> call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
+    EnableIfWorkspace<void, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         if(master && master->getWorkspace())
             func(master->getWorkspace());
-        return 1;
+        return master ? 1 : 0;
     }
     template<typename V = P>
-    EnableIfMonitor <void, V> call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
+    EnableIfMonitor <void, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         if(master && master->getWorkspace() && master->getWorkspace()->getMonitor())
             func(master->getWorkspace()->getMonitor());
-        return 1;
+        return master ? 1 : 0;
     }
 };
 template <typename R>
@@ -132,10 +130,8 @@ struct FunctionWrapper<R, void>: GenericFunctionWrapper {
     static_assert(std::is_convertible<R, int>::value);
     R(*func)();
     FunctionWrapper(R(*func)()): func(func) {}
-    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return call(winInfo, master);
-    }
-    int call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master __attribute__((unused)) = NULL) const {
+    int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
+             Master* master __attribute__((unused)) = NULL) const override {
         return func();
     }
 };
@@ -143,10 +139,8 @@ template <>
 struct FunctionWrapper<void, void>: GenericFunctionWrapper {
     void (*func)();
     FunctionWrapper(void(*func)()): func(func) {}
-    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return call(winInfo, master);
-    }
-    int call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master __attribute__((unused)) = NULL) const {
+    int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
+             Master* master __attribute__((unused)) = NULL) const override {
         func();
         return 1;
     }
@@ -156,10 +150,8 @@ struct FunctionContainer : GenericFunctionWrapper {
     R(*func)(P);
     P value;
     FunctionContainer(R(*func)(P), P value): func(func), value(value) {}
-    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return call(winInfo, master);
-    }
-    int call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master __attribute__((unused)) = NULL) const {
+    int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
+             Master* master __attribute__((unused)) = NULL) const override {
         return func(value);
     }
 };
@@ -168,16 +160,13 @@ struct FunctionContainer<void, P> : GenericFunctionWrapper {
     void (*func)(P);
     P value;
     FunctionContainer(void(*func)(P), P value): func(func), value(value) {}
-    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return call(winInfo, master);
-    }
-    int call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master __attribute__((unused)) = NULL) const {
+    int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
+             Master* master __attribute__((unused)) = NULL) const override {
         func(value);
         return 1;
     }
 };
 
-#include <memory>
 /**
  * Used to bind a function with arguments to a Rule or Binding
  * such that when the latter is triggered the bound function
@@ -260,5 +249,5 @@ int getNumberOfEventsTriggerSinceLastIdle(int type);
  * @param winInfo
  * @return the result
  */
-int applyEventRules(int type, WindowInfo* winInfo);
+int applyEventRules(int type, WindowInfo* winInfo = NULL, Master* m = getActiveMaster());
 #endif

@@ -106,7 +106,7 @@ void addBasicRules(AddFlag flag = ADD_UNIQUE);
  * @see ROOT_EVENT_MASKS
  */
 void registerForEvents();
-bool listenForNonRootEventsFromWindow(WindowInfo* winInfo);
+void listenForNonRootEventsFromWindow(WindowInfo* winInfo);
 
 /**
  * Attempts to translate the generic event receive into an extension event and applies corresponding Rules.

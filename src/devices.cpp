@@ -36,9 +36,18 @@ void createMasterDevice(std::string name) {
 }
 void attachSlaveToMaster(Slave* slave, Master* master) {
     assert(!Slave::isTestDevice(slave->getName()));
-    attachSlaveToMaster(slave->getID(), slave->isKeyboardDevice() ? master->getKeyboardID() : master->getPointerID());
+    if(master)
+        attachSlaveToMaster(slave->getID(), slave->isKeyboardDevice() ? master->getKeyboardID() : master->getPointerID());
+    else floatSlave(slave->getID());
 }
-void attachSlaveToMaster(int slaveId, int masterId) {
+void floatSlave(SlaveID slaveId) {
+    LOG(LOG_LEVEL_DEBUG, "floating %d \n", slaveId);
+    XIAnyHierarchyChangeInfo changes;
+    changes.type = XIDetachSlave;
+    changes.attach.deviceid = slaveId;
+    XIChangeHierarchy(dpy, &changes, 1);
+}
+void attachSlaveToMaster(SlaveID slaveId, MasterID masterId) {
     LOG(LOG_LEVEL_DEBUG, "attaching %d to %d\n", slaveId, masterId);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIAttachSlave;
@@ -86,27 +95,32 @@ void initCurrentMasters() {
     devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
     ArrayList<MasterID>masters;
     getAllSlaves().deleteElements();
+    LOG(LOG_LEVEL_TRACE, "Detected %d devices\n", ndevices);
     for(int i = 0; i < ndevices; i++) {
         device = &devices[i];
-        if(device->use == XIMasterPointer)
-            continue;
-        if(device->use == XISlaveKeyboard || device->use == XISlavePointer) {
-            if(!Slave::isTestDevice(device->name)) {
-                Slave* slave = new Slave{device->deviceid, device->attachment, device->use == XISlaveKeyboard, device->name};
-                getAllSlaves().add(slave);
+        switch(device->use) {
+            case  XIMasterPointer:
+                continue;
+            case XISlaveKeyboard:
+            case XISlavePointer :
+            case XIFloatingSlave:
+                if(!Slave::isTestDevice(device->name)) {
+                    Slave* slave = new Slave{device->deviceid, device->attachment, device->use == XISlaveKeyboard, device->name};
+                    getAllSlaves().add(slave);
+                }
+                break;
+            case XIMasterKeyboard: {
+                int lastSpace = 0;
+                for(int n = 0; device->name[n]; n++)
+                    if(device->name[n] == ' ')
+                        lastSpace = n;
+                if(lastSpace)
+                    device->name[lastSpace] = 0;
+                Master* master = new Master(device->deviceid, device->attachment, device->name);
+                masters.add(device->deviceid);
+                if(!getAllMasters().addUnique(master))
+                    delete master;
             }
-        }
-        if(device->use == XIMasterKeyboard) {
-            int lastSpace = 0;
-            for(int n = 0; device->name[n]; n++)
-                if(device->name[n] == ' ')
-                    lastSpace = n;
-            if(lastSpace)
-                device->name[lastSpace] = 0;
-            Master* master = new Master(device->deviceid, device->attachment, device->name);
-            masters.add(device->deviceid);
-            if(!getAllMasters().addUnique(master))
-                delete master;
         }
     }
     XIFreeDeviceInfo(devices);
@@ -132,15 +146,17 @@ void setActiveMasterByDeviceId(MasterID id) {
 
 
 bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]) {
-    xcb_input_xi_query_pointer_reply_t* reply1 =
+    xcb_input_xi_query_pointer_reply_t* reply =
         xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, relativeWindow, id), NULL);
-    if(reply1) {
-        result[0] = reply1->win_x >> 16;
-        result[1] = reply1->win_y >> 16;
-        free(reply1);
+    assert(reply);
+    if(reply) {
+        result[0] = reply->win_x >> 16;
+        result[1] = reply->win_y >> 16;
+        free(reply);
     }
-    return reply1 ? 1 : 0;
+    return reply ? 1 : 0;
 }
+/*
 static int getAssociatedMasterDevice(int deviceId) {
     int ndevices;
     XIDeviceInfo* masterDevices;
@@ -150,18 +166,17 @@ static int getAssociatedMasterDevice(int deviceId) {
     XIFreeDeviceInfo(masterDevices);
     return id;
 }
+*/
 void setClientPointerForWindow(WindowID window, MasterID id) {
     xcb_input_xi_set_client_pointer(dis, window, id);
 }
-MasterID getClientKeyboard(WindowID win) {
+MasterID getClientPointerForWindow(WindowID win) {
     MasterID masterPointer;
     XIGetClientPointer(dpy, win, (int*)&masterPointer);
-    Master* master = getMasterById(masterPointer, 0);
-    if(master)
-        return master->getKeyboardID();
-    else {
-        return getAssociatedMasterDevice(masterPointer);
-    }
+    return masterPointer;
+}
+Master* getClientMaster(WindowID win) {
+    return getMasterById(getClientPointerForWindow(win), 0);
 }
 WindowID getActiveFocus(MasterID id) {
     WindowID win = 0;

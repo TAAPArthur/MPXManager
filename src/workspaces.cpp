@@ -92,3 +92,9 @@ int Workspace::toggleLayout(Layout* layout) {
     }
     return 1;
 }
+bool Workspace::hasWindowWithMask(WindowMask mask) {
+    for(WindowInfo* winInfo : getWindowStack())
+        if(winInfo->hasMask(mask))
+            return 1;
+    return 0;
+}

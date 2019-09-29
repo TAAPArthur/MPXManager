@@ -41,11 +41,12 @@ WindowInfo* Binding::getWindowToActOn(const UserEvent& event)const {
     }
 }
 bool Binding::trigger(const UserEvent& event)const {
-    LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Triggering " << this->getName() << "\n");
-    return shouldPassThrough(getPassThrough(), boundFunction(getWindowToActOn(event)));
+    LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Triggering " << *this << "\n");
+    return shouldPassThrough(getPassThrough(), boundFunction(getWindowToActOn(event), event.getMaster()));
 }
 std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
-    return stream << "{" << binding.mod << " " << binding.detail << " " << binding.getMask() << "}" ;
+    return stream << "{" << binding.mod << " " << binding.detail << " " << binding.boundFunction << " " << binding.getMask()
+           << "}" ;
 }
 bool Binding::matches(const UserEvent& event) {
     return

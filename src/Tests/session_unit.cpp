@@ -13,7 +13,6 @@
 SET_ENV(onStartup, fullCleanup);
 MPX_TEST("test_sync_state", {
     saveXSession();
-    activateWorkspace(0);
     setShowingDesktop(0);
     assert(!isShowingDesktop());
     assert(getActiveWorkspaceIndex() == 0);
@@ -115,7 +114,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     getAllWindows()[1]->moveToWorkspace(!getActiveWorkspaceIndex());
     getAllWindows()[0]->moveToWorkspace(getActiveWorkspaceIndex());
     Layout l = Layout("VERY_VERY_VERY_VERY_VERY_VERY_VERY_VERY_LONG_NAME", NULL);
-    registerLayouts(&l);
+    getRegisteredLayouts().add(l);
     setActiveLayout(&l);
     switchToWorkspace(1);
     setActiveLayout(NULL);

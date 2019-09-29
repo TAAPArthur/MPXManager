@@ -68,9 +68,9 @@ static Chain DEFAULT_CHAIN_BINDINGS[] = {
  * @param N the workspace to switch to/act on
  */
 #define WORKSPACE_OPERATION(K,N) \
-    {DEFAULT_MOD_MASK,             K, +[](){switchToWorkspace(N); activateWorkspace(N);}}, \
+    {DEFAULT_MOD_MASK,             K, +[](){switchToWorkspace(N); ;}}, \
     {DEFAULT_MOD_MASK|ShiftMask,   K, +[](WindowInfo*winInfo){winInfo->moveToWorkspace(N);}}, \
-    {DEFAULT_MOD_MASK|ControlMask,   K, +[](){swapMonitors(getActiveWorkspaceIndex(),N);activateWorkspace(N);}}
+    {DEFAULT_MOD_MASK|ControlMask,   K, +[](){swapMonitors(getActiveWorkspaceIndex(),N);}}
 
 /**
  * Creates a set of bindings related to the windowStack
@@ -159,7 +159,7 @@ void defaultPrintFunction(void) {
         const char* color;
         if(w->isVisible())
             color = "green";
-        else if(doesWorkspaceHaveWindowWithMask(w->getID(), MAPPABLE_MASK))
+        else if(w->hasWindowWithMask(MAPPABLE_MASK))
             color = "yellow";
         else continue;
         dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->getName().c_str(), w == getActiveWorkspace() ? "*" : "",

@@ -54,7 +54,7 @@ void onHiearchyChangeEvent(void) {
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_ATTACHED) {
             getAllSlaves().find(iter.data->deviceid)->setMasterID(iter.data->attachment);
         }
-        else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_REMOVED) {
+        else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_DETACHED) {
             getAllSlaves().find(iter.data->deviceid)->setMasterID(0);
         }
         xcb_input_hierarchy_info_next(&iter);
@@ -90,16 +90,6 @@ bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
         PASSTHROUGH_IF_TRUE
     }, flag);
 }
-static void onWindowDetection(WindowID id, WindowID parent, short* geo) {
-    if(registerWindow(id, parent)) {
-        WindowInfo* winInfo = getWindowInfo(id);
-        if(geo)
-            winInfo->setGeometry(geo);
-        if(!IGNORE_SUBWINDOWS)
-            scan(id);
-        applyEventRules(onWindowMove, winInfo);
-    }
-}
 void onCreateEvent(void) {
     xcb_create_notify_event_t* event = (xcb_create_notify_event_t*)getLastEvent();
     LOG(LOG_LEVEL_VERBOSE, "Detected create event for Window %d\n", event->window);
@@ -107,12 +97,11 @@ void onCreateEvent(void) {
         LOG(LOG_LEVEL_VERBOSE, "Window %d is already in our records; Ignoring create event\n", event->window);
         return;
     }
-    LOG(LOG_LEVEL_WARN, "%d %d\n", IGNORE_SUBWINDOWS, event->parent != root);
-    if(IGNORE_SUBWINDOWS && event->parent != root) {
-        LOG(LOG_LEVEL_VERBOSE, "Window %d's parent is not root but %d; Ignoring\n", event->window, event->parent);
-        return;
+    if(registerWindow(event->window, event->parent)) {
+        WindowInfo* winInfo = getWindowInfo(event->window);
+        winInfo->setGeometry(&event->x);
+        applyEventRules(onWindowMove, winInfo);
     }
-    onWindowDetection(event->window, event->parent, &event->x);
 }
 void onDestroyEvent(void) {
     xcb_destroy_notify_event_t* event = (xcb_destroy_notify_event_t*)getLastEvent();
@@ -164,11 +153,12 @@ void onUnmapEvent(void) {
 }
 void onReparentEvent(void) {
     xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
-    if(IGNORE_SUBWINDOWS) {
-        if(event->parent == root)
-            onWindowDetection(event->window, event->parent, NULL);
-        else
-            unregisterWindow(getWindowInfo(event->window));
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(winInfo)
+        winInfo->setParent(event->parent);
+    else if(registerWindow(event->window, event->parent)) {
+        WindowInfo* winInfo = getWindowInfo(event->window);
+        applyEventRules(onWindowMove, winInfo);
     }
 }
 
@@ -195,11 +185,7 @@ void onPropertyEvent(void) {
     xcb_property_notify_event_t* event = (xcb_property_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
-        if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
-            loadDockProperties(winInfo);
-            markState();
-        }
-        else if(event->atom == ewmh->_NET_WM_USER_TIME);
+        if(event->atom == ewmh->_NET_WM_USER_TIME);
         else loadWindowProperties(winInfo);
     }
 }
@@ -257,15 +243,12 @@ void registerForEvents() {
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     registerForMonitorChange();
 }
-bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
+void listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     uint32_t mask = winInfo->getEventMasks() ? winInfo->getEventMasks() : NON_ROOT_EVENT_MASKS;
     if(registerForWindowEvents(winInfo->getID(), mask) == 0) {
         passiveGrab(winInfo->getID(), NON_ROOT_DEVICE_EVENT_MASKS);
         LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d\n", NON_ROOT_EVENT_MASKS, winInfo->getID());
-        return 1;
     }
-    LOG(LOG_LEVEL_DEBUG, "Could not register for events %d\n", winInfo->getID());
-    return 0;
 }
 
 void addAutoTileRules(AddFlag flag) {
@@ -314,6 +297,7 @@ void addBasicRules(AddFlag flag) {
     addApplyBindingsRule(flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return winInfo->getWorkspace()->isVisible();}));
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }

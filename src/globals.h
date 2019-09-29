@@ -44,9 +44,6 @@
 #define WINDOW_MANAGER_NAME "MPX Manager"
 
 
-/// if true we ignore non-top level windows
-extern bool IGNORE_SUBWINDOWS;
-
 /// if true, then preload LD_PRELOAD_PATH
 extern bool LD_PRELOAD_INJECTION;
 /**
@@ -66,11 +63,6 @@ extern bool RUN_AS_WM;
  */
 extern bool STEAL_WM_SELECTION;
 
-/**
- * If true then when we manually set focus, we will update our state
- * immediately instead of waiting for the async focus notification event.
-*/
-extern bool SYNC_FOCUS;
 
 /// the path of the lib to preload
 extern std::string LD_PRELOAD_PATH;

@@ -11,9 +11,6 @@
 #include "windows.h"
 #include "masters.h"
 //
-/// size of config parameters
-#define CONFIG_LEN 6
-enum {CONFIG_X = 0, CONFIG_Y = 1, CONFIG_WIDTH, CONFIG_HEIGHT, CONFIG_BORDER, CONFIG_STACK};
 
 bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
 static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveMaster()->getWorkspace()->getWindowStack();}
@@ -59,7 +56,7 @@ void killClientOfWindowInfo(WindowInfo* winInfo);
  */
 int attemptToMapWindow(WindowID id);
 
-void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus = 0);
+void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus = 1);
 /**
  * If the workspace is visible, map all MAPPABLE windows
  * Else unmap all windows
@@ -76,11 +73,6 @@ void syncMappedState(WorkspaceID index);
  */
 void switchToWorkspace(int workspaceIndex);
 
-/**
- * Switch to workspace and activate the last focused window of the active master
- * @param workspaceIndex
- */
-void activateWorkspace(int workspaceIndex);
 /**
  * Switch to the workspace of winInfo (is it has one) and raise and focus winInfo
  * @param winInfo
@@ -111,7 +103,7 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
  * @param configMask
  * @see xcb_configure_window
  */
-void processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask);
+int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask);
 
 
 /**
@@ -119,7 +111,7 @@ void processConfigureRequest(WindowID win, const short values[5], WindowID sibli
  *
  * @param winInfo
  */
-void removeBorder(WindowInfo* winInfo);
+void removeBorder(WindowID win);
 /**
  * Raises or lowers the winInfo depending on above.
  * @param winInfo
@@ -131,13 +123,4 @@ bool raiseWindowInfo(WindowInfo* winInfo, bool above = 1);
  * @see raiseWindowInfo
  */
 bool lowerWindowInfo(WindowInfo* winInfo);
-/**
- *
- *
- * @param index
- * @param mask
- *
- * @return true if there exists at least one window  in workspace with the given mask
- */
-bool doesWorkspaceHaveWindowWithMask(WorkspaceID index, WindowMask mask);
 #endif

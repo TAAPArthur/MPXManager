@@ -65,12 +65,12 @@ MPX_TEST("test_get_slaves", {
     assert(slaveCounter[0]);
     assert(slaveCounter[1]);
 });
-MPX_TEST("move_slaves", {
+MPX_TEST_ITER("move_slaves", 2, {
     createMasterDevice("test");
     initCurrentMasters();
     int numSlaves = getAllSlaves().size();
     assert(getAllMasters().size() == 2);
-    Master* m = getAllMasters()[1];
+    Master* m = _i == 0 ? getAllMasters()[1] : NULL;
     assert(m != getActiveMaster());
     for(Slave* slave : getActiveMaster()->getSlaves()) {
         attachSlaveToMaster(slave, m);
@@ -79,7 +79,8 @@ MPX_TEST("move_slaves", {
     initCurrentMasters();
     assertEquals(numSlaves, getAllSlaves().size());
     assertEquals(getActiveMaster()->getSlaves().size(), 0);
-    assertEquals(m->getSlaves().size(), 2);
+    if(m)
+        assertEquals(m->getSlaves().size(), 2);
 });
 
 MPX_TEST("master_by_name", {
@@ -124,7 +125,7 @@ MPX_TEST("get_mouse_pos", {
 MPX_TEST("test_set_client_pointer", {
     WindowID win = createNormalWindow();
     setClientPointerForWindow(win);
-    assert(getActiveMasterKeyboardID() == getClientKeyboard(win));
+    assert(getActiveMaster() == getClientMaster(win));
 });
 MPX_TEST("test_get_client_pointer_unknown", {
     createMasterDevice("test");
@@ -133,7 +134,7 @@ MPX_TEST("test_get_client_pointer_unknown", {
     WindowID win = createNormalWindow();
     setClientPointerForWindow(win, newMaster->getID());
     getAllMasters().removeElement(newMaster);
-    assert(newMaster->getKeyboardID() == getClientKeyboard(win));
+    assert(newMaster->getPointerID() == getClientPointerForWindow(win));
     delete newMaster;
 });
 MPX_TEST("test_slave_swapping_same_device", {

@@ -22,14 +22,6 @@ void loadCustomState(void);
  */
 void saveCustomState(void);
 /**
- * Reads EWMH desktop property to find the workspace the window should be long.
- * If the field is not present the active workspace is used.
- * If the field is greater than the number of workspaces, the last workspace is used
- * @param win
- * @return the workspace the window should be placed in by default
- */
-int getSavedWorkspaceIndex(WindowID win);
-/**
  * Sets the WM_STATE from the window masks
  */
 void setXWindowStateFromMask(WindowInfo* winInfo);

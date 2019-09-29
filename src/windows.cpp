@@ -10,6 +10,8 @@
 #include "masters.h"
 #include "windows.h"
 #include "workspaces.h"
+#include "boundfunction.h"
+#include "user-events.h"
 
 
 ///list of all windows
@@ -78,6 +80,7 @@ void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
     }
     removeFromWorkspace();
     ::getWorkspace(destIndex)->getWindowStack().add(this);
+    applyEventRules(WindowWorkspaceMove);
 }
 
 

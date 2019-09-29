@@ -69,6 +69,17 @@ MPX_TEST("test_workspace_window_add", {
     getWorkspace(0)->getWindowStack().add(getAllWindows()[1]);
     removeWorkspaces(1);
 });
+MPX_TEST("test_workspace_window_has_mask", {
+    getAllWindows().add(new WindowInfo(1));
+    getAllWindows().add(new WindowInfo(2));
+    addWorkspaces(2);
+    getAllWindows()[0]->addMask(MAPPABLE_MASK);
+    getWorkspace(1)->getWindowStack().add(getAllWindows()[0]);
+    getWorkspace(0)->getWindowStack().add(getAllWindows()[1]);
+    assert(!getWorkspace(0)->hasWindowWithMask(MAPPABLE_MASK));
+    assert(getWorkspace(1)->hasWindowWithMask(MAPPABLE_MASK));
+    removeWorkspaces(1);
+});
 MPX_TEST("test_monitor_add", {
     addWorkspaces(1);
     addFakeMonitor(1);

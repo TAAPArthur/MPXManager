@@ -74,7 +74,7 @@ void addAvoidDocksRule(void) {
             winInfo->setDock();
             winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);
             winInfo->removeFromWorkspace();
-            removeBorder(winInfo);
+            removeBorder(winInfo->getID());
         }
     }, FUNC_NAME));
 }
@@ -155,4 +155,7 @@ void addAutoFocusRule() {
 void addAlwaysOnTopBottomRules() {
     getEventRules(onWindowMove).add(DEFAULT_EVENT(markAlwaysOnTop));
     getBatchEventRules(onWindowMove).add(DEFAULT_EVENT(enforceAlwaysOnTop));
+}
+void addScanChildrenRule(AddFlag flag) {
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(scan), flag);
 }

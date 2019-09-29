@@ -62,4 +62,5 @@ void addShutdownOnIdleRule();
 void addAutoFocusRule() ;
 void addIgnoreSmallWindowRule(void) ;
 extern void (*printStatusMethod)(void);
+void addScanChildrenRule(AddFlag flag=ADD_UNIQUE);
 #endif

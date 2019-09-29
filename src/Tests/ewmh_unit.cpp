@@ -70,7 +70,6 @@ MPX_TEST("ewmh_hooks", {
     addShutdownOnIdleRule();
     createNormalWindow();
     focusWindow(mapWindow(createNormalWindow()));
-    activateWorkspace(0);
     runEventLoop(NULL);
 
 });
@@ -86,6 +85,20 @@ MPX_TEST("isMPXManagerRunning", {
         quit(0);
     }
     assertEquals(waitForChild(0), 0);
+});
+MPX_TEST_ITER("auto_resume_workspace", 2, {
+    addWorkspaces(2);
+    WindowID win = mapArbitraryWindow();
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    winInfo->moveToWorkspace(getNumberOfWorkspaces() - 1);
+    setSavedWorkspaceIndex(winInfo);
+    winInfo->removeFromWorkspace();
+    autoResumeWorkspace(getWindowInfo(win));
+    if(_i)
+        removeWorkspaces(getNumberOfWorkspaces() - 1);
+    autoResumeWorkspace(getWindowInfo(win));
+    assertEquals(winInfo->getWorkspaceIndex(), getNumberOfWorkspaces() - 1);
 });
 
 MPX_TEST("test_toggle_show_desktop", {
@@ -115,37 +128,42 @@ static void clientMessageSetup() {
     onStartup();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
-    mapWindow(createNormalWindow());
-    scan(root);
     startWM();
     waitUntilIdle();
-    focusWindow(win1);
-    focusWindow(win2);
-    getWindowInfo(win2)->moveToWorkspace(0);
+    assert(focusWindow(win1));
+    assert(focusWindow(win2));
+    for(WindowInfo* winInfo : getAllWindows())
+        assert(winInfo->getWorkspace());
+    getWindowInfo(win1)->moveToWorkspace(0);
     getWindowInfo(win2)->moveToWorkspace(1);
     waitUntilIdle();
+    assertEquals(getAllWindows().size(), 2);
 }
-SET_ENV(clientMessageSetup, []() {waitForAllThreadsToExit(); cleanupXServer();});
-/* TODO uncomment
-MPX_TEST_ERR("test_client_close_window", 1, {
-    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
-    setLogLevel(0);
-    //suppressOutput();
-    sendCloseWindowRequest(getAllWindows()[0]);
-    flush();
-    waitForNormalEvent(XCB_DESTROY_NOTIFY);
-    WAIT_UNTIL_TRUE(0);
-});
-*/
+
 SET_ENV(clientMessageSetup, fullCleanup);
-MPX_TEST("test_client_activate_window", {
+
+MPX_TEST_ITER("test_client_close_window", 2, {
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
+    suppressOutput();
+    addIgnoreOverrideRedirectWindowsRule();
+    sendCloseWindowRequest(_i ? createIgnoredWindow() : getAllWindows()[0]->getID());
+    flush();
+    waitForAllThreadsToExit();
+    assert(xcb_connection_has_error(dis));
+});
+
+MPX_TEST_ITER("test_client_activate_window", 2, {
     for(WindowInfo* winInfo : getAllWindows()) {
         Workspace* w = winInfo->getWorkspace();
-        sendActivateWindowRequest(winInfo);
+        assert(w);
+        if(_i)
+            setClientPointerForWindow(winInfo->getID(), getActiveMaster()->getPointerID());
+        assert(winInfo->isActivatable());
+        sendActivateWindowRequest(winInfo->getID());
         flush();
         waitUntilIdle();
-        assert(getActiveWorkspace() == w);
-        assert(getFocusedWindow() == winInfo);
+        assertEquals(getActiveWorkspace(), w);
+        assertEquals(getFocusedWindow(), winInfo);
     }
 });
 
@@ -155,15 +173,17 @@ MPX_TEST("test_client_change_desktop", {
         flush();
         WAIT_UNTIL_TRUE(getActiveWorkspaceIndex() == i);
     }
+    sendChangeWorkspaceRequest(-2);
 });
 MPX_TEST("test_client_change_num_desktop", {
     assert(getNumberOfWorkspaces() >= 2);
     switchToWorkspace(1);
     for(int n = 0; n < 2; n++) {
-        for(int i = 1; i < getNumberOfWorkspaces() * 2; i++) {
+        for(int i = 1; i < 10; i++) {
             sendChangeNumWorkspaceRequestAbs(i);
             flush();
-            WAIT_UNTIL_TRUE(getNumberOfWorkspaces() == i);
+            waitUntilIdle();
+            assertEquals(getNumberOfWorkspaces(), i);
             assert(getActiveWorkspaceIndex() <= getNumberOfWorkspaces());
         }
     }
@@ -174,7 +194,7 @@ MPX_TEST("test_client_set_sticky_window", {
     mapArbitraryWindow();
     WAIT_UNTIL_TRUE(getAllWindows().size());
     WindowInfo* winInfo = getAllWindows()[0];
-    sendChangeWindowWorkspaceRequest(winInfo, -1);
+    sendChangeWindowWorkspaceRequest(winInfo->getID(), -1);
     flush();
     WAIT_UNTIL_TRUE(winInfo->hasMask(STICKY_MASK));
 });
@@ -182,11 +202,13 @@ MPX_TEST("test_client_set_sticky_window", {
 MPX_TEST("test_client_set_window_workspace", {
     int index = 3;
     WindowInfo* winInfo = getAllWindows()[0];
-    sendChangeWindowWorkspaceRequest(winInfo, index);
+    sendChangeWindowWorkspaceRequest(winInfo->getID(), index);
     flush();
     WAIT_UNTIL_TRUE(getWorkspace(index)->getWindowStack().find(winInfo->getID()));
-}
-        );
+    // just don't crash
+    sendChangeWindowWorkspaceRequest(winInfo->getID(), -2);
+    waitUntilIdle();
+});
 MPX_TEST("test_client_set_window_state", {
     WindowInfo* winInfo = getAllWindows()[0];
     xcb_ewmh_wm_state_action_t states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
@@ -194,9 +216,9 @@ MPX_TEST("test_client_set_window_state", {
     WindowID ignoredWindow = createIgnoredWindow();
     for(int i = 0; i < LEN(states); i++) {
         WindowInfo fakeWinInfo = {.id = ignoredWindow};
-        sendChangeWindowStateRequest(&fakeWinInfo, states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
+        sendChangeWindowStateRequest(fakeWinInfo.getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
                                      ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
-        sendChangeWindowStateRequest(winInfo, states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
+        sendChangeWindowStateRequest(winInfo->getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
                                      ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
         flush();
         if(i % 2 == 0)
@@ -229,21 +251,15 @@ MPX_TEST("test_client_request_restack", {
     WindowInfo* winInfo2 = getAllWindows()[1];
     winInfo2->moveToWorkspace(0);
     WindowID stackingOrder[] = {winInfo->getID(), winInfo2->getID(), winInfo->getID()};
-    int idle;
-    lock();
-    idle = getIdleCount();
     assert(raiseWindowInfo(winInfo2));
-    unlock();
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
     assert(checkStackingOrder(stackingOrder, 2));
     winInfo->addMask(EXTERNAL_RAISE_MASK);
     //processConfigureRequest(winInfo->getID(), NULL, winInfo2->getID(), XCB_STACK_MODE_ABOVE,  XCB_CONFIG_WINDOW_STACK_MODE|XCB_CONFIG_WINDOW_SIBLING);
     lock();
-    idle = getIdleCount();
     xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, winInfo->getID(), winInfo2->getID(), XCB_STACK_MODE_ABOVE);
     flush();
     unlock();
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    waitUntilIdle();
     assert(checkStackingOrder(stackingOrder + 1, 2));
 });
 
@@ -263,21 +279,77 @@ MPX_TEST_ITER("test_client_ping", 2, {
     waitUntilIdle();
 });
 
-MPX_TEST_ITER("wm_move_resize_window", 3, {
+static void wmMoveSetup() {
+    getDeviceBindings().add({0, 0, DEFAULT_EVENT(updateWindowMoveResize), {.noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION}});
+    clientMessageSetup();
+    lock();
     movePointer(0, 0);
     WindowInfo* winInfo = getAllWindows()[0];
     floatWindow(winInfo);
-    sendWMMoveResizeRequest(winInfo, 0, 0, XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT, 1);
-    //TODO assert something
+    grabPointer();
+    unlock();
+}
+SET_ENV(wmMoveSetup, fullCleanup);
+MPX_TEST_ITER("wm_move_resize_window", 4, {
+    int deltaX = 10;
+    int deltaY = 20;
+    WindowInfo* winInfo = getAllWindows()[0];
+    RectWithBorder rect = getRealGeometry(winInfo->getID());
+    if(_i) {
+        rect.width += deltaX * (_i & 1);
+        rect.height += deltaY * (_i & 2 ? 1 : 0);
+        xcb_ewmh_moveresize_direction_t action = _i == 1 ? XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT : _i == 2 ?
+        XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOM : XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT;
+        sendWMMoveResizeRequest(winInfo->getID(), 0, 0, action, 1);
+    }
+    else {
+        rect.x += deltaX;
+        rect.y += deltaY;
+        sendWMMoveResizeRequest(winInfo->getID(), 0, 0, XCB_EWMH_WM_MOVERESIZE_MOVE, 1);
+    }
+    waitUntilIdle();
+    movePointer(deltaX, deltaY);
+    flush();
+    waitUntilIdle();
+    assertEquals(rect, getRealGeometry(winInfo->getID()));
+    consumeEvents();
 });
-/* TODO uncomment
+MPX_TEST("wm_move_resize_window_invert", {
+    movePointer(20, 40);
+    WindowInfo* winInfo = getAllWindows()[0];
+    setWindowPosition(winInfo->getID(), {10, 20, 10, 20});
+    RectWithBorder rect = {0, 0, 10, 20};
+    xcb_ewmh_moveresize_direction_t action = XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT;
+    sendWMMoveResizeRequest(winInfo->getID(), 0, 0, action, 1);
+    waitUntilIdle();
+    movePointer(0, 0);
+    flush();
+    waitUntilIdle();
+    assertEquals(rect, getRealGeometry(winInfo->getID()));
+});
+MPX_TEST_ITER("wm_move_resize_window_cancel_commit", 2, {
+    WindowInfo* winInfo = getAllWindows()[0];
+    RectWithBorder rect = getRealGeometry(winInfo->getID());
+    sendWMMoveResizeRequest(winInfo->getID(), 0, 0, XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT, 1);
+    waitUntilIdle();
+    movePointer(10, 10);
+    flush();
+    waitUntilIdle();
+    if(_i)
+        commitWindowMoveResize(getActiveMaster());
+    assert(rect != getRealGeometry(winInfo->getID()));
+    sendWMMoveResizeRequest(winInfo->getID(), 0, 0, XCB_EWMH_WM_MOVERESIZE_CANCEL, 1);
+    waitUntilIdle();
+    if(_i)
+        assert(rect != getRealGeometry(winInfo->getID()));
+    else
+        assertEquals(rect, getRealGeometry(winInfo->getID()));
+});
 MPX_TEST("test_client_request_move_resize", {
-    setLogLevel(0);
     Rect rect = {1, 2, 3, 4};
     WindowInfo* winInfo = getAllWindows()[0];
     winInfo->addMask(EXTERNAL_MOVE_MASK | EXTERNAL_RESIZE_MASK);
-    sendMoveResizeRequest(winInfo, rect, CONFIG_X | CONFIG_Y | CONFIG_WIDTH | CONFIG_HEIGHT);
+    sendMoveResizeRequest(winInfo->getID(), rect, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
     flush();
     WAIT_UNTIL_TRUE(rect == winInfo->getGeometry());
 });
-*/

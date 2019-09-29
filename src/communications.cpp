@@ -114,7 +114,6 @@ static ArrayList<Option> options = {
     _OPTION(DEFAULT_UNFOCUS_BORDER_COLOR),
     _OPTION(EVENT_PERIOD),
     _OPTION(IGNORE_MASK),
-    _OPTION(IGNORE_SUBWINDOWS),
     _OPTION(KILL_TIMEOUT),
     _OPTION(LD_PRELOAD_INJECTION),
     _OPTION(MASTER_INFO_PATH),
@@ -123,7 +122,6 @@ static ArrayList<Option> options = {
     _OPTION(RUN_AS_WM),
     _OPTION(SHELL),
     _OPTION(STEAL_WM_SELECTION),
-    _OPTION(SYNC_FOCUS),
 };
 
 ArrayList<Option>& getOptions() {return options;}
