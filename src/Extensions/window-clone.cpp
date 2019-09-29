@@ -13,7 +13,7 @@
 #include "../ext.h"
 #include "../bindings.h"
 #include "../xsession.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../devices.h"
 #include "../globals.h"
 #include "../logger.h"

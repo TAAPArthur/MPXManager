@@ -1,16 +1,14 @@
 /**
- * @file default-rules.c
- * @copybrief default-rules.h
+ * @file wm-rules.cpp
+ * @copybrief wm-rules.h
  *
  */
 
 #include <assert.h>
 
 #include "mywm-structs.h"
-
-
 #include "bindings.h"
-#include "default-rules.h"
+#include "wm-rules.h"
 #include "devices.h"
 #include "globals.h"
 #include "layouts.h"
@@ -268,7 +266,7 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     return 0;
 }
 
-void addAutoTileRules(void) {
+void addAutoTileRules(AddFlag flag) {
     int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
                     XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
                     XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
@@ -276,10 +274,18 @@ void addAutoTileRules(void) {
                     onScreenChange,
                    };
     for(int i = 0; i < LEN(events); i++)
-        getEventRules(events[i]).add(DEFAULT_EVENT(markState));
-    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState));
-    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState));
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState));
+        getEventRules(events[i]).add(DEFAULT_EVENT(markState), flag);
+    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState), flag);
+    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState), flag);
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState), flag);
+}
+void assignDefaultLayoutsToWorkspace() {
+    for(Workspace* w : getAllWorkspaces())
+        if(w->getLayouts().size() == 0 && w->getActiveLayout() == NULL) {
+            for(Layout* layout : getDefaultLayouts())
+                w->getLayouts().add(layout);
+            w->setActiveLayout(getDefaultLayouts()[0]);
+        }
 }
 
 void addBasicRules(AddFlag flag) {
@@ -300,6 +306,7 @@ void addBasicRules(AddFlag flag) {
     getEventRules(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusOutEvent), flag);
     getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), flag);
     getEventRules(onXConnection).add(DEFAULT_EVENT(onXConnect), flag);
+    getEventRules(onXConnection).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
     getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, PASSTHROUGH_IF_TRUE, "_autoAddToWorkspace"},
@@ -310,28 +317,4 @@ void addBasicRules(AddFlag flag) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }
 }
-void (*startupMethod)();
-void onStartup(void) {
-    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
-    addDefaultMaster();
-    if(RUN_AS_WM) {
-        addBasicRules();
-        addAutoTileRules();
-    }
-    if(!RUN_AS_WM)
-        ROOT_EVENT_MASKS &= ~WM_MASKS;
-    for(Layout* layout : getDefaultLayouts())
-        registerLayouts(layout);
-    if(startupMethod)
-        startupMethod();
-    for(Workspace* w : getAllWorkspaces())
-        if(w->getLayouts().size() == 0 && w->getActiveLayout() == NULL)
-            for(Layout* layout : getDefaultLayouts())
-                w->getLayouts().add(layout);
-    openXDisplay();
-    applyEventRules(onXConnection, NULL);
-    assert(getActiveMaster());
-    assert(getNumberOfWorkspaces());
-}
-
 

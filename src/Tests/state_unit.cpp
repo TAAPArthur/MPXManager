@@ -10,7 +10,7 @@
 #include "test-x-helper.h"
 #include "test-event-helper.h"
 #include "../state.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../layouts.h"
 #include "../wmfunctions.h"
 #include "../window-properties.h"

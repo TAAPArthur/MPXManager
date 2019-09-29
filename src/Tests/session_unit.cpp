@@ -3,7 +3,7 @@
 #include "../wmfunctions.h"
 #include "../devices.h"
 #include "../masters.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../session.h"
 #include "tester.h"
 #include "test-mpx-helper.h"
@@ -127,6 +127,8 @@ MPX_TEST_ITER("test_restore_state", 16, {
         RUN_AS_WM = 0;
         clearAllLists();
         RUN_AS_WM = 0;
+        // reapply onXConnect rules
+        ewmh = NULL;
         onStartup();
         loadCustomState();
         const auto& list2 = serializeState(mask);

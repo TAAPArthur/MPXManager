@@ -20,7 +20,7 @@
 #include "../xsession.h"
 #include "../session.h"
 #include "../layouts.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../extra-rules.h"
 
 

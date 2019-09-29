@@ -10,7 +10,7 @@
 #include "Extensions/mpx.h"
 #include "Extensions/xmousecontrol.h"
 #include "communications.h"
-#include "default-rules.h"
+#include "wm-rules.h"
 #include "ewmh.h"
 #include "extra-rules.h"
 #include "globals.h"

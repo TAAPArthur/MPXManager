@@ -9,7 +9,7 @@
 #include "tester.h"
 #include "test-event-helper.h"
 #include "../state.h"
-#include "../default-rules.h"
+#include "../wm-rules.h"
 #include "../extra-rules.h"
 #include "../logger.h"
 #include "../globals.h"
