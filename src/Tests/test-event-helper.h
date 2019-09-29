@@ -30,6 +30,10 @@ static inline void waitUntilIdle(void) {
     idleCount = getIdleCount();
 }
 
+static inline void exitFailure() {
+    exit(10);
+}
+
 static inline void startWM() {
     runInNewThread(runEventLoop, NULL, "event-loop");
 }
@@ -46,6 +50,14 @@ static inline void fullCleanup() {
     waitForAllThreadsToExit();
     validate();
     getDeviceBindings().deleteElements();
+    for(int i = 0; i < MPX_LAST_EVENT; i++) {
+        for(const BoundFunction* b : getEventRules(i))
+            if(b->func)
+                assert(b->getName() != "");
+        for(const BoundFunction* b : getBatchEventRules(i))
+            if(b->func)
+                assert(b->getName() != "");
+    }
     cleanupXServer();
 }
 static inline void triggerBinding(Binding* b, WindowID win = root) {

@@ -182,10 +182,10 @@ void swapOnUnmapEvent(void) {
     }
 }
 void addCloneRules(void) {
-    getEventRules(XCB_EXPOSE).add(new BoundFunction(onExpose));
+    getEventRules(XCB_EXPOSE).add(DEFAULT_EVENT(onExpose));
     //getEventRules(XCB_INPUT_MOTION + GENERIC_EVENT_OFFSET).add( &swapWithOriginalRule);
-    getEventRules(XCB_MAP_NOTIFY).add(new BoundFunction(swapOnMapEvent));
-    getEventRules(XCB_UNMAP_NOTIFY).add(new BoundFunction(swapOnUnmapEvent));
-    getEventRules(XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET).add(new BoundFunction(swapWithOriginalOnEnter));
-    getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(new BoundFunction(focusParent));
+    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(swapOnMapEvent));
+    getEventRules(XCB_UNMAP_NOTIFY).add(DEFAULT_EVENT(swapOnUnmapEvent));
+    getEventRules(XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(swapWithOriginalOnEnter));
+    getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(focusParent));
 }

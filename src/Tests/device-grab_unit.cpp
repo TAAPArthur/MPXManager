@@ -124,7 +124,7 @@ MPX_TEST("test_monitors", {
     registerForMonitorChange();
     static volatile int monitorRuleApplied = 0;
     void (*onMonitorDetectionTest)(void) = []() {monitorRuleApplied++;};
-    BoundFunction* f = new BoundFunction(onMonitorDetectionTest);
+    BoundFunction f = DEFAULT_EVENT(onMonitorDetectionTest);
     getEventRules(onScreenChange).add(f);
     Rect bounds = {0, 0, 1, 1};
     createFakeMonitor(bounds);

@@ -27,9 +27,6 @@
 #include "workspaces.h"
 #include "xsession.h"
 
-
-
-
 void onXConnect(void) {
     addDefaultMaster();
     initCurrentMasters();
@@ -92,7 +89,7 @@ bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
     return getEventRules(PreRegisterWindow).add({
         +[](WindowInfo * winInfo) {return !winInfo->isOverrideRedirectWindow();},
         PASSTHROUGH_IF_TRUE,
-        "ignoreOverrideRedirectRule"
+        FUNC_NAME
     }, flag);
 }
 static void onWindowDetection(WindowID id, WindowID parent, short* geo) {
@@ -280,8 +277,8 @@ void addAutoTileRules(void) {
                    };
     for(int i = 0; i < LEN(events); i++)
         getEventRules(events[i]).add(DEFAULT_EVENT(markState));
-    getEventRules(onXConnection).add(DEFAULT_EVENT(updateState));
-    getEventRules(Periodic).add(DEFAULT_EVENT(updateState));
+    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState));
+    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState));
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState));
 }
 
@@ -304,9 +301,8 @@ void addBasicRules(AddFlag flag) {
     getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), flag);
     getEventRules(onXConnection).add(DEFAULT_EVENT(onXConnect), flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
-    getEventRules(PreRegisterWindow).add({listenForNonRootEventsFromWindow,
-                                          PASSTHROUGH_IF_TRUE}, flag);
-    getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, PASSTHROUGH_IF_TRUE, "auto add to workspace"},
+    getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
+    getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, PASSTHROUGH_IF_TRUE, "_autoAddToWorkspace"},
     flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);

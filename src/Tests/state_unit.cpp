@@ -38,11 +38,12 @@ MPX_TEST("test_no_state_change", {
 static void setup() {
     DEFAULT_NUMBER_OF_WORKSPACES = 4;
     onStartup();
-    assert(getAllMonitors().size() == 1);
+    assertEquals(getAllMonitors().size(), 1);
+    assertEquals(getNumberOfWorkspaces(), DEFAULT_NUMBER_OF_WORKSPACES);
     assert(getWorkspace(0)->isVisible());
     markState();
     updateState();
-    getEventRules(TileWorkspace).add(new BoundFunction(incrementCount));
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
 }
 SET_ENV(setup, fullCleanup);
 MPX_TEST("test_state_change_num_windows", {

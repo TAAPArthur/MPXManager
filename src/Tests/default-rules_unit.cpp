@@ -75,7 +75,7 @@ MPX_TEST_ERR("test_handle_error", 1, {
 });
 
 MPX_TEST("test_auto_tile", {
-    getEventRules(TileWorkspace).add(new BoundFunction(incrementCount));
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
     openXDisplay();
     saveXSession();
     mapArbitraryWindow();
@@ -114,7 +114,8 @@ static inline void createWMEnvWithRunningWM() {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;
     onStartup();
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());}));
+    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());},
+    "_moveToWorkspace"));
     startWM();
     assert(getDeviceBindings().size() == 0);
     waitUntilIdle();
@@ -309,7 +310,8 @@ MPX_TEST("test_visibility_update", {
 */
 
 static void clientSetup() {
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK);}));
+    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK);},
+    "_addExternalMasks"));
     onStartup();
     if(!fork()) {
         saveXSession();

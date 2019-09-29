@@ -300,7 +300,8 @@ static inline void setEnvRect(const char* name, const Rect& rect) {
     }
 }
 void autoAddToWorkspace(WindowInfo* winInfo) {
-    winInfo->moveToWorkspace(getSavedWorkspaceIndex(winInfo->getID()));
+    if(!winInfo->isDock() && winInfo->getWorkspace() == NULL)
+        winInfo->moveToWorkspace(getSavedWorkspaceIndex(winInfo->getID()));
 }
 void setClientMasterEnvVar(void) {
     char strValue[8];
@@ -326,9 +327,9 @@ void setClientMasterEnvVar(void) {
         setenv("LD_PRELOAD", LD_PRELOAD_PATH.c_str(), 1);
 }
 void addResumeRules() {
-    getEventRules(onXConnection).add(new BoundFunction(loadCustomState));
-    getEventRules(onXConnection).add(new BoundFunction(syncState));
-    getEventRules(PostRegisterWindow).add(new BoundFunction(loadSavedAtomState));
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {if(!winInfo->isDock())autoAddToWorkspace(winInfo);}));
+    getEventRules(onXConnection).add(DEFAULT_EVENT(loadCustomState));
+    getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoAddToWorkspace));
 }
 
