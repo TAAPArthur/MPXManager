@@ -15,9 +15,10 @@ _mpxmanagerAutocomplete ()   #  By convention, the function name
     sendOptions=
     if [[ "$last" == "--set" || "$last" == "--send" || "$last" == "-s" ]]; then
         COMPREPLY=( $( compgen -W "$sendOptions --" -- $cur ) )
-        return 0;
+    elif [[ "$last" == "--mode" ]]; then
+        COMPREPLY=( $( compgen -W "$modeOptions --" -- $cur ) )
     else
-        COMPREPLY=( $( compgen -W "-h --help -v --version -s --set --send --recompile --restart --force-restart --name --path " -- $cur ) )
+        COMPREPLY=( $( compgen -W "-h --help -v --version $startOptions --recompile --restart --force-restart --name --path " -- $cur ) )
     fi
     return 0
 }

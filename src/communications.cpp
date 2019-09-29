@@ -1,12 +1,12 @@
 #include <assert.h>
+#include <cstdlib>
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include <string>
 
 #include "communications.h"
 #include "system.h"
@@ -42,7 +42,6 @@ std::ostream& operator<<(std::ostream& strm, const Option& option) {
     return strm;
 }
 
-#include <cstdlib>
 int isInt(std::string str, bool* isNumeric) {
     char* end;
     int num = strtol(str.c_str(), &end, 10);
@@ -54,7 +53,7 @@ int isInt(std::string str, bool* isNumeric) {
     return num;
 }
 
-bool Option::matches(std::string str, bool isNumeric) {
+bool Option::matches(std::string str, bool isNumeric) const {
     switch(getType()) {
         case VAR_BOOL:
         case VAR_INT:
@@ -67,7 +66,7 @@ bool Option::matches(std::string str, bool isNumeric) {
     }
     return strcasecmp(name.c_str(), str.c_str()) == 0;
 }
-void Option::operator()(std::string value) {
+void Option::operator()(std::string value)const {
     LOG(LOG_LEVEL_DEBUG, "calling option %s(%s)\n", name.c_str(), value.c_str());
     int i = isInt(value, NULL);
     LOG_RUN(LOG_LEVEL_TRACE, std::cout << "Before: " << *this << "\n");
@@ -93,14 +92,14 @@ void Option::operator()(std::string value) {
     }
     LOG_RUN(LOG_LEVEL_TRACE, std::cout << "After: " << *this << "\n");
 }
-static void listOptions(void);
 #define _OPTION(VAR){#VAR,{&VAR}}
 
-static Option _options[] = {
+static ArrayList<Option> options = {
     {"dump", +[](WindowMask i) {dumpWindow(i);}},
     {"dump", +[](std::string s) {dumpWindow(s);}},
     {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}},
-    {"list-options", listOptions, FORK_ON_RECEIVE},
+    {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
+    {"list-options", +[](){listOptions(options);}, FORK_ON_RECEIVE},
     {"log-level", setLogLevel},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"restart", restart, CONFIRM_EARLY},
@@ -126,16 +125,15 @@ static Option _options[] = {
     _OPTION(STEAL_WM_SELECTION),
     _OPTION(SYNC_FOCUS),
 };
-static ArrayList<Option*> options(_options, LEN(_options));
 
-ArrayList<Option*>& getOptions() {return options;}
+ArrayList<Option>& getOptions() {return options;}
 
-/**
- * Lists all options with their current value
- */
-static void listOptions(void) {
-    std::cout << options << "\n";
+void listOptions(ArrayList<Option>& options) {
+    for(const Option& option : options)
+        std::cout << option.getName() << " ";
+    std::cout << "\n";
 }
+
 
 static int outstandingSendCount;
 int getConfirmedSentMessage(WindowID win) {
@@ -166,12 +164,12 @@ void send(std::string name, std::string value) {
     catchError(xcb_ewmh_send_client_message(dis, root, root, WM_INTERPROCESS_COM, sizeof(data), data));
     outstandingSendCount++;
 }
-Option* findOption(std::string name, std::string value) {
+const Option* findOption(std::string name, std::string value) {
     bool isNumeric;
     isInt(value, &isNumeric);
-    for(Option* option : options) {
-        if(option->matches(name, isNumeric))
-            return option;
+    for(const Option& option : options) {
+        if(option.matches(name, isNumeric))
+            return &option;
     }
     return NULL;
 }
@@ -190,7 +188,7 @@ void receiveClientMessage(void) {
         std::string value = "";
         if(valueAtom)
             value = getAtomValue(valueAtom);
-        Option* option = findOption(name, value);
+        const Option* option = findOption(name, value);
         if(option) {
             int childPID;
             if(option->flags & CONFIRM_EARLY) {
