@@ -21,6 +21,9 @@
 Master* UserEvent::getMaster()const {
     return master ? master : getActiveMaster();
 }
+static UserEvent lastUserEvent;
+UserEvent& getLastUserEvent() {return lastUserEvent;}
+void setLastUserEvent(const UserEvent& event) {lastUserEvent = event;}
 
 uint32_t Binding::getMask()const {
     return flags.mask;

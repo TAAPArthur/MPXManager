@@ -26,6 +26,13 @@ MPX_TEST("binding_eq", {
     assert(!(Binding(3, 2, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test")));
     assert(!(Binding(1, 2, incrementCount, {.mode = 0}, "test") == Binding(1, 2, incrementCount, {.mode = 1}, "test")));
 });
+MPX_TEST("getLastUserEvent", {
+    UserEvent e ={ 1,2};
+    setLastUserEvent(e);
+    UserEvent& e2 = getLastUserEvent();
+    assertEquals(e.detail,e2.detail);
+    assertEquals(e.mod,e2.mod);
+});
 
 /*
 MPX_TEST("test_binding_mode_match", {

@@ -63,3 +63,6 @@ bool checkAllChainBindings(const UserEvent& userEvent) {
             return 0;
     return 1;
 }
+void addApplyChainBindingsRule(AddFlag flag) {
+    getEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(+[]() {checkAllChainBindings(getLastUserEvent());}), flag);
+}

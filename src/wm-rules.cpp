@@ -211,6 +211,9 @@ static WindowInfo* getTargetWindow(int root, int event, int child) {
     for(i = LEN(list) - 1; i >= 1 && !list[i]; i--);
     return getWindowInfo(list[i]);
 }
+void addApplyBindingsRule(AddFlag flag) {
+    getEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(+[]() {checkBindings(getLastUserEvent());}), flag);
+}
 void onDeviceEvent(void) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
     LOG(LOG_LEVEL_VERBOSE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
@@ -219,12 +222,11 @@ void onDeviceEvent(void) {
     setActiveMasterByDeviceId(event->deviceid);
     if((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && getActiveMaster()->isIgnoreKeyRepeat())
         return;
-    // TODO move/resize window setLastKnowMasterPosition(event->root_x >> 16, event->root_y >> 16);
-    UserEvent userEvent = {event->mods.effective, event->detail, 1U << event->event_type,
-                           (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
-                           .winInfo = getTargetWindow(event->root, event->event, event->child),
-                          };
-    checkBindings(userEvent);
+    setLastUserEvent({event->mods.effective, event->detail, 1U << event->event_type,
+                      (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
+                      .winInfo = getTargetWindow(event->root, event->event, event->child),
+                     });
+    applyEventRules(ProcessDeviceEvent, NULL);
 }
 
 void onGenericEvent(void) {
@@ -309,8 +311,7 @@ void addBasicRules(AddFlag flag) {
     getEventRules(onXConnection).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
-    getEventRules(PostRegisterWindow).add({+[](WindowInfo * winInfo) {if(winInfo->getWorkspace() == NULL)winInfo->moveToWorkspace(getActiveWorkspaceIndex());}, "_autoAddToWorkspace", PASSTHROUGH_IF_TRUE},
-    flag);
+    addApplyBindingsRule(flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {

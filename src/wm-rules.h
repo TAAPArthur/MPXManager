@@ -120,4 +120,5 @@ void onGenericEvent(void);
  */
 void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
+void addApplyBindingsRule(AddFlag flag = ADD_UNIQUE);
 #endif /* DEFAULT_RULES_H_ */

@@ -138,6 +138,8 @@ ArrayList<Binding*>& getDeviceBindings();
 bool checkBindings(const UserEvent& userEvent, const ArrayList<Binding*>& bindings = getDeviceBindings());
 
 
+UserEvent& getLastUserEvent();
+void setLastUserEvent(const UserEvent& event);
 
 
 #endif

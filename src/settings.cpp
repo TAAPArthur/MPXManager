@@ -184,6 +184,7 @@ void onStartup(void) {
     addDefaultMaster();
     if(RUN_AS_WM) {
         addBasicRules();
+        addApplyChainBindingsRule();
         addAutoTileRules();
         addEWMHRules();
         addResumeRules();
