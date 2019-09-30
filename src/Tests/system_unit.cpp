@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 #include "../system.h"
+#include "../masters.h"
 #include "../arraylist.h"
 #include "../globals.h"
 #include "../logger.h"
@@ -174,6 +175,11 @@ MPX_TEST_ITER_ERR("spawn_fail", 2, 1, {
     else spawnPipe("");
 });
 MPX_TEST_ERR("seg_fault", SIGSEGV, {
+    kill(getpid(), SIGSEGV);
+});
+MPX_TEST_ERR("seg_fault_recursive", SIGSEGV, {
+    Master* p = (Master*)0xDEADBEEF;
+    getAllMasters().add(p);
     kill(getpid(), SIGSEGV);
 });
 MPX_TEST_ERR("sig_term", SIGTERM, {
