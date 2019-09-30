@@ -190,6 +190,8 @@ static void handler(int sig) {
     printStackTrace();
     printSummary();
     validate();
+    if(sig == SIGSEGV || sig == SIGABRT)
+        exit(sig);
     quit(sig);
 }
 
