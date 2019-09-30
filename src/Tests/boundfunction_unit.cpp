@@ -35,6 +35,8 @@ MPX_TEST("test_call_bounded_function", {
     BoundFunction b[] = {
         {+[](WindowInfo * winInfo) {incrementCount(); assertEquals(fakeWinInfo, winInfo); return 0;}},
         incrementCount,
+        {+[](int i){assertEquals(i,123);},123},
+        {+[](int i)->int{assertEquals(i,123);return 0;},123},
         {+[]()->int{incrementCount(); return 0;}},
         {+[](WindowInfo * winInfo)->bool{incrementCount(); assertEquals(fakeWinInfo, winInfo); return 0;}},
         {+[](uint32_t i) {incrementCount(); assertEquals(fakeWinInfo->getID(), i);}},

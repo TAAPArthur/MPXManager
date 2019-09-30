@@ -133,14 +133,14 @@ static Binding bindings[] = {
     PAIR(0,	XK_KP_Down, BIND(addXMouseControlMask, MOVE_DOWN_MASK), BIND(removeXMouseControlMask, MOVE_DOWN_MASK)),
     PAIR(0,	XK_KP_Right, BIND(addXMouseControlMask, MOVE_RIGHT_MASK), BIND(removeXMouseControlMask, MOVE_RIGHT_MASK)),
 
-    {0, XK_Hyper_L, BIND(removeXMouseControlMask, -1), {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
+    {0, XK_Hyper_L, {removeXMouseControlMask, -1}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
 
-    {0,	XK_e, BIND(adjustScrollSpeed, 2)},
-    {0 | ShiftMask,	XK_e, BIND(adjustScrollSpeed, -2)},
-    {0 | Mod1Mask,	XK_e, BIND(adjustSpeed, 0)},
-    {0,	XK_r, BIND(adjustScrollSpeed, 2)},
-    {0 | ShiftMask,	XK_r, BIND(adjustScrollSpeed, -2)},
-    {0 | Mod1Mask,	XK_r, BIND(adjustSpeed, 0)},
+    {0,	XK_e, {adjustScrollSpeed, 2}},
+    {0 | ShiftMask,	XK_e, {adjustScrollSpeed, -2}},
+    {0 | Mod1Mask,	XK_e, {adjustSpeed, 0}},
+    {0,	XK_r, {adjustScrollSpeed, 2}},
+    {0 | ShiftMask,	XK_r, {adjustScrollSpeed, -2}},
+    {0 | Mod1Mask,	XK_r, {adjustSpeed, 0}},
     {0,	XK_q, resetXMouseControl},
 
     {0, XK_c, BIND(clickButton, Button2)},

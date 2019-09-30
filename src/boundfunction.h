@@ -151,6 +151,31 @@ struct FunctionWrapper<void, void>: GenericFunctionWrapper {
         return 1;
     }
 };
+template <typename R, typename P>
+struct FunctionContainer : GenericFunctionWrapper {
+    R(*func)(P);
+    P value;
+    FunctionContainer(R(*func)(P), P value): func(func), value(value) {}
+    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
+        return call(winInfo, master);
+    }
+    int call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master __attribute__((unused)) = NULL) const {
+        return func(value);
+    }
+};
+template <typename P>
+struct FunctionContainer<void, P> : GenericFunctionWrapper {
+    void (*func)(P);
+    P value;
+    FunctionContainer(void(*func)(P), P value): func(func), value(value) {}
+    int _call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
+        return call(winInfo, master);
+    }
+    int call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master __attribute__((unused)) = NULL) const {
+        func(value);
+        return 1;
+    }
+};
 
 #include <memory>
 /**
@@ -181,6 +206,16 @@ struct BoundFunction {
         name(name) {
     }
 
+    template <typename P>
+    BoundFunction(void(*func)(P), P value, std::string name = "",
+                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionContainer<void, P>(func, value)),
+        passThrough(passThrough), name(name) {
+    }
+    template <typename R, typename P>
+    BoundFunction(R(*func)(P), P value, std::string name = "",
+                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionContainer<R, P>(func, value)), passThrough(passThrough),
+        name(name) {
+    }
 
     int call(WindowInfo* w = NULL, Master* m = NULL)const;
     int execute(WindowInfo* w = NULL, Master* m = NULL)const;
