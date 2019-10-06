@@ -290,11 +290,9 @@ MPX_TEST_ITER("test_workspace_activation", 3, {
             switchToWorkspace(1);
     }
     assert(activateWindow(winInfo));
-    assert(getActiveMaster()->getFocusedWindow() == winInfo);
     assert(checkStackingOrder(stackingOrder + 1, 2));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo->getID());
     assert(activateWindow(winInfo2));
-    assert(getActiveMaster()->getFocusedWindow() == winInfo2);
     assert(checkStackingOrder(stackingOrder, 2));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo2->getID());
 });

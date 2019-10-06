@@ -235,3 +235,17 @@ MPX_TEST("true_idle", {
     WAIT_UNTIL_TRUE(isShuttingDown());
     assertEquals(counter, 10);
 });
+MPX_TEST("atom_mask_mapping", {
+    for(int i = 0; i < 32; i++) {
+        WindowMask mask = 1 << i;
+        xcb_atom_t atom;
+        int count = getAtomsFromMask(mask, &atom);
+        if(count) {
+            assert(atom);
+            assertEquals(getMaskFromAtom(atom), mask);
+        }
+    }
+    assert(!getAtomsFromMask(0, NULL));
+    assertEquals(getMaskFromAtom(0), NO_MASK);
+
+});

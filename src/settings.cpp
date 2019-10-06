@@ -10,26 +10,25 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 
+#include "Extensions/session.h"
+#include "chain.h"
 #include "communications.h"
+#include "ewmh.h"
+#include "extra-rules.h"
 #include "functions.h"
 #include "globals.h"
 #include "layouts.h"
-#include "session.h"
 #include "logger.h"
-#include "window-properties.h"
 #include "masters.h"
-#include "session.h"
+#include "monitors.h"
 #include "settings.h"
-#include "workspaces.h"
 #include "system.h"
+#include "window-properties.h"
 #include "windows.h"
-#include "chain.h"
 #include "wm-rules.h"
-#include "extra-rules.h"
-#include "ewmh.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
-#include "monitors.h"
+#include "workspaces.h"
 
 #define _startCycleWindowChainBinding(M,K) Chain(M,K,{ \
             Binding{Mod1Mask, XK_Tab, {[](){cycleWindows(DOWN);}}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}}, \
@@ -187,7 +186,7 @@ void onStartup(void) {
         addApplyChainBindingsRule();
         addAutoTileRules();
         addEWMHRules();
-        addResumeRules();
+        addResumeCustomStateRules();
     }
     if(!RUN_AS_WM)
         ROOT_EVENT_MASKS &= ~WM_MASKS;

@@ -249,7 +249,6 @@ void switchToWorkspace(int workspaceIndex) {
          */
         if(!getActiveWorkspace()->isVisible()) {
             Workspace* visibleWorkspace = getActiveMaster()->getWorkspace()->getNextWorkspace(1, VISIBLE);
-            assert(visibleWorkspace);
             if(visibleWorkspace)
                 currentIndex = visibleWorkspace->getID();
         }

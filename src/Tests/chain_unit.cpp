@@ -25,7 +25,6 @@ MPX_TEST("auto_grab", {
     sampleChain.start(eventNoPassthrough);
     getDeviceBindings().add(sampleChain);
     assertEquals(getCount(), 0);
-    setLogLevel(0);
     triggerBinding(nonAutoGrabBinding);
     addShutdownOnIdleRule();
     runEventLoop();

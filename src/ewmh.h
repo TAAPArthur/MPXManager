@@ -194,4 +194,28 @@ void startWindowMoveResize(WindowInfo* winInfo, bool move, bool allowMoveX = 1, 
                            Master* m = getActiveMaster());
 void cancelWindowMoveResize(Master* m = getActiveMaster());
 void updateWindowMoveResize(Master* m) ;
+/**
+ * Sets the WM_STATE from the window masks
+ */
+void setXWindowStateFromMask(WindowInfo* winInfo);
+/**
+ * Reads the WM_STATE fields from the given window and sets the window mask to be consistent with the state
+ * If the WM_STATE cannot be read, then nothing is done
+ * @see setWindowStateFromAtomInfo
+ */
+void loadSavedAtomState(WindowInfo* winInfo);
+
+/**
+ * Sets the window state based on a list of atoms
+ * @param winInfo the window whose mask will be modified
+ * @param atoms the list of atoms to add,remove or toggle depending on ACTION
+ * @param numberOfAtoms the number of atoms
+ * @param action whether to add,remove or toggle atoms. For toggle, if all of the corresponding masks for the list of atoms is set, then they all will be removed else they all will be added
+ * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
+ */
+void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action);
+/**
+ * Sync EWMH global properties with our internal state
+ */
+void syncState();
 #endif /* EWMH_H_ */

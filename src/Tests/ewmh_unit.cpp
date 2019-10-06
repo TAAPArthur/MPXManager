@@ -18,7 +18,6 @@
 #include "../ewmh.h"
 #include "../globals.h"
 #include "../xsession.h"
-#include "../session.h"
 #include "../layouts.h"
 #include "../wm-rules.h"
 #include "../extra-rules.h"
@@ -72,6 +71,39 @@ MPX_TEST("ewmh_hooks", {
     focusWindow(mapWindow(createNormalWindow()));
     runEventLoop(NULL);
 
+});
+MPX_TEST("test_sync_state", {
+    addWorkspaces(2);
+    saveXSession();
+    setShowingDesktop(0);
+    assert(!isShowingDesktop());
+    assert(getActiveWorkspaceIndex() == 0);
+    if(!fork()) {
+        fullCleanup();
+        openXDisplay();
+        setActiveWorkspaceProperty(1);
+        setShowingDesktop(1);
+        assert(isShowingDesktop());
+        flush();
+        closeConnection();
+        quit(0);
+    }
+    assertEquals(waitForChild(0), 0);
+    syncState();
+    assertEquals(getActiveWorkspaceIndex(), 1);
+    assert(isShowingDesktop());
+});
+MPX_TEST("test_invalid_state", {
+    WindowID win = mapArbitraryWindow();
+    xcb_ewmh_set_wm_desktop(ewmh, win, getNumberOfWorkspaces() + 1);
+    xcb_ewmh_set_current_desktop(ewmh, defaultScreenNumber, getNumberOfWorkspaces() + 1);
+    flush();
+
+    addEWMHRules();
+    syncState();
+    scan(root);
+    assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
+    assert(getWindowInfo(win)->getWorkspaceIndex() < getNumberOfWorkspaces());
 });
 SET_ENV(createXSimpleEnv, fullCleanup);
 MPX_TEST("isMPXManagerRunning", {
@@ -208,6 +240,17 @@ MPX_TEST("test_client_set_window_workspace", {
     // just don't crash
     sendChangeWindowWorkspaceRequest(winInfo->getID(), -2);
     waitUntilIdle();
+});
+MPX_TEST("test_client_set_window_unknown_state", {
+    WindowInfo* winInfo = getAllWindows()[0];
+    catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo->getID(), 1, &ewmh->MANAGER));
+    setXWindowStateFromMask(winInfo);
+    xcb_ewmh_get_atoms_reply_t reply;
+    if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL)) {
+        assertEquals(reply.atoms[0], ewmh->MANAGER);
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+
 });
 MPX_TEST("test_client_set_window_state", {
     WindowInfo* winInfo = getAllWindows()[0];

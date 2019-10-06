@@ -8,7 +8,6 @@
 #include "ewmh.h"
 #include "globals.h"
 #include "logger.h"
-#include "session.h"
 #include "system.h"
 #include "time.h"
 #include "user-events.h"
@@ -107,6 +106,8 @@ void addEWMHRules(AddFlag flag) {
     getEventRules(TrueIdle).add(DEFAULT_EVENT(setActiveProperties), flag);
     getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
     getBatchEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
+    getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
 }
 int getSavedWorkspaceIndex(WindowID win) {
     unsigned int workspaceIndex = 0;
@@ -123,7 +124,7 @@ void setSavedWorkspaceIndex(WindowInfo* winInfo) {
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), winInfo->getWorkspaceIndex());
 }
 void autoResumeWorkspace(WindowInfo* winInfo) {
-    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE) {
+    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isDock()) {
         WorkspaceID w = getSavedWorkspaceIndex(winInfo->getID());
         LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d", winInfo->getID(), w);
         winInfo->moveToWorkspace(w);
@@ -359,4 +360,68 @@ void updateWindowMoveResize(Master* m) {
             processConfigureRequest(ref->win, r, 0, 0,
                                     XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
     }
+}
+
+void loadSavedAtomState(WindowInfo* winInfo) {
+    xcb_ewmh_get_atoms_reply_t reply;
+    if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL)) {
+        setWindowStateFromAtomInfo(winInfo, reply.atoms, reply.atoms_len, XCB_EWMH_WM_STATE_ADD);
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+}
+void setXWindowStateFromMask(WindowInfo* winInfo) {
+    xcb_atom_t supportedStates[] = {SUPPORTED_STATES};
+    xcb_ewmh_get_atoms_reply_t reply;
+    int count = 0;
+    bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL);
+    xcb_atom_t windowState[LEN(supportedStates) + (hasState ? reply.atoms_len : 0)];
+    if(hasState) {
+        for(int i = 0; i < reply.atoms_len; i++) {
+            char isSupportedState = 0;
+            for(int n = 0; n < LEN(supportedStates); n++)
+                if(supportedStates[n] == reply.atoms[i]) {
+                    isSupportedState = 1;
+                    break;
+                }
+            if(!isSupportedState)
+                windowState[count++] = reply.atoms[i];
+        }
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+    count += getAtomsFromMask(winInfo->getMask(), windowState + count);
+    xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), count, windowState);
+}
+
+void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action) {
+    LOG(LOG_LEVEL_TRACE, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
+    WindowMask mask = 0;
+    for(unsigned int i = 0; i < numberOfAtoms; i++) {
+        mask |= getMaskFromAtom(atoms[i]);
+    }
+    if(action == XCB_EWMH_WM_STATE_TOGGLE) {
+        if(winInfo->hasMask(mask))
+            action = XCB_EWMH_WM_STATE_REMOVE;
+        else
+            action = XCB_EWMH_WM_STATE_ADD;
+    }
+    if(action == XCB_EWMH_WM_STATE_REMOVE)
+        winInfo->removeMask(mask);
+    else
+        winInfo->addMask(mask);
+}
+void syncState() {
+    WorkspaceID currentWorkspace ;
+    if(!xcb_ewmh_get_current_desktop_reply(ewmh,
+                                           xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
+                                           &currentWorkspace, NULL)) {
+        currentWorkspace = getActiveWorkspaceIndex();
+    }
+    if(currentWorkspace >= getNumberOfWorkspaces())
+        currentWorkspace = getNumberOfWorkspaces() - 1;
+    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
+    unsigned int value = 0;
+    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
+    setShowingDesktop(value);
+    LOG(LOG_LEVEL_INFO, "Current workspace is %d\n", currentWorkspace);
+    switchToWorkspace(currentWorkspace);
 }

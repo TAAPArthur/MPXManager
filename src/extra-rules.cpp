@@ -11,7 +11,6 @@
 #include "user-events.h"
 #include "monitors.h"
 #include "extra-rules.h"
-#include "session.h"
 #include "state.h"
 #include "system.h"
 #include "windows.h"

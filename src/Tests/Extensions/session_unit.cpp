@@ -1,48 +1,17 @@
-#include "../layouts.h"
-#include "../ewmh.h"
-#include "../wmfunctions.h"
-#include "../devices.h"
-#include "../masters.h"
-#include "../wm-rules.h"
-#include "../session.h"
-#include "tester.h"
-#include "test-mpx-helper.h"
-#include "test-x-helper.h"
-#include "test-event-helper.h"
+#include "../../layouts.h"
+#include "../../ewmh.h"
+#include "../../wmfunctions.h"
+#include "../../devices.h"
+#include "../../masters.h"
+#include "../../wm-rules.h"
+#include "../../Extensions/session.h"
+#include "../tester.h"
+#include "../test-mpx-helper.h"
+#include "../test-x-helper.h"
+#include "../test-event-helper.h"
 
 SET_ENV(onStartup, fullCleanup);
-MPX_TEST("test_sync_state", {
-    saveXSession();
-    setShowingDesktop(0);
-    assert(!isShowingDesktop());
-    assert(getActiveWorkspaceIndex() == 0);
-    if(!fork()) {
-        fullCleanup();
-        openXDisplay();
-        setActiveWorkspaceProperty(1);
-        setShowingDesktop(1);
-        assert(isShowingDesktop());
-        flush();
-        closeConnection();
-        quit(0);
-    }
-    assertEquals(waitForChild(0), 0);
-    syncState();
-    assertEquals(getActiveWorkspaceIndex(), 1);
-    assert(isShowingDesktop());
-});
 
-MPX_TEST("test_invalid_state", {
-    WindowID win = mapArbitraryWindow();
-    xcb_ewmh_set_wm_desktop(ewmh, win, getNumberOfWorkspaces() + 1);
-    xcb_ewmh_set_current_desktop(ewmh, defaultScreenNumber, getNumberOfWorkspaces() + 1);
-    flush();
-    addResumeRules();
-    syncState();
-    scan(root);
-    assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
-    assert(getWindowInfo(win)->getWorkspaceIndex() < getNumberOfWorkspaces());
-});
 
 static long rectToLong(const Rect& r) {
     return ((long)r.x) << 48L | ((long)r.y) << 32L | r.width << 16L | r.height;
@@ -87,6 +56,7 @@ const ArrayList<long>serializeState(uint8_t mask) {
 
 SET_ENV(onStartup, fullCleanup);
 MPX_TEST_ITER("test_restore_state", 16, {
+    addResumeCustomStateRules();
     int mask = _i;
     CRASH_ON_ERRORS = -1;
     saveCustomState();
