@@ -86,6 +86,7 @@ public:
     ReverseArrayList<WindowInfo*>& getWindowStack(void) {
         return windowStack;
     }
+    friend std::ostream& operator<<(std::ostream& strm, const Master& m) ;
     friend void Slave::setMasterID(MasterID id);
     const ArrayList<Slave*>& getSlaves(void)const {
         return slaves;
