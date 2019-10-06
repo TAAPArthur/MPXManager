@@ -23,11 +23,8 @@ const ArrayList<Workspace*>& getAllWorkspaces() {
 std::ostream& operator<<(std::ostream& strm, const Workspace& w) {
     if(!w.isVisible() && ((Workspace&)w).getWindowStack().empty())
         return strm << "{}";
-    strm << "{ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName() << ", Layout" <<
-         w.getActiveLayout() << ", windows: { ";
-    for(WindowInfo* winInfo : w.windows)
-        strm << winInfo->getID() << ", ";
-    return strm << "}}";
+    return strm << "{ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName() << ", Layout" <<
+           w.getActiveLayout() << ", windows: " >> w.windows << "}";
 }
 
 void addWorkspaces(int num) {
