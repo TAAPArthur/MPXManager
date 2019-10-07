@@ -20,7 +20,7 @@ unsigned int XMOUSE_CONTROL_UPDATER_INTERVAL = 30;
 unsigned int BASE_MOUSE_SPEED = 10;
 unsigned int BASE_SCROLL_SPEED = 1;
 
-struct MasterInfo {
+struct XMouseControlMasterState {
     /// ID of the backing master device
     MasterID id;
     /// the id of the pointer of said master device
@@ -33,10 +33,10 @@ struct MasterInfo {
     double vScale;
 } ;
 
-static MasterInfo* getMasterInfo(Master* m = getActiveMaster(), bool createNew = 1) {
-    static Index<MasterInfo> index;
+static XMouseControlMasterState* getXMouseControlMasterState(Master* m = getActiveMaster(), bool createNew = 1) {
+    static Index<XMouseControlMasterState> index;
     bool newElement = 0;
-    MasterInfo* info = get(index, m, createNew, &newElement);
+    XMouseControlMasterState* info = get(index, m, createNew, &newElement);
     if(newElement) {
         info->id = m->getID();
         info->pointerId = m->getPointerID();
@@ -45,28 +45,28 @@ static MasterInfo* getMasterInfo(Master* m = getActiveMaster(), bool createNew =
     return info;
 }
 void resetXMouseControl() {
-    MasterInfo* info = getMasterInfo();
+    XMouseControlMasterState* info = getXMouseControlMasterState();
     info->scrollScale = BASE_SCROLL_SPEED;
     info->vScale = BASE_MOUSE_SPEED ;
     info->mask = 0;
 }
 void addXMouseControlMask(int mask) {
-    MasterInfo* info = getMasterInfo();
+    XMouseControlMasterState* info = getXMouseControlMasterState();
     info->mask |= mask;
 }
 void removeXMouseControlMask(int mask) {
-    MasterInfo* info = getMasterInfo();
+    XMouseControlMasterState* info = getXMouseControlMasterState();
     info->mask &= ~mask;
 }
 void adjustScrollSpeed(int multiplier) {
-    MasterInfo* info = getMasterInfo();
+    XMouseControlMasterState* info = getXMouseControlMasterState();
     info->scrollScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
     if(info->scrollScale < 1e-6)
         info->scrollScale = 1;
 }
 
 void adjustSpeed(int multiplier) {
-    MasterInfo* info = getMasterInfo();
+    XMouseControlMasterState* info = getXMouseControlMasterState();
     info->vScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
     if(info->vScale < 1e-6)
         info->vScale = 1;
@@ -77,7 +77,7 @@ void adjustSpeed(int multiplier) {
 void xmousecontrolUpdate(void) {
     assert(dis);
     for(Master* master : getAllMasters()) {
-        MasterInfo* info = getMasterInfo(master, 0);
+        XMouseControlMasterState* info = getXMouseControlMasterState(master, 0);
         if(info) {
             if(_IS_SET(info, SCROLL_RIGHT_MASK, SCROLL_LEFT_MASK))
                 for(int i = 0; i < info->scrollScale; i++)

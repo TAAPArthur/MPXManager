@@ -31,19 +31,19 @@ MPX_TEST("test_start_mpx_empty", {
     FILE* fp = fopen(MASTER_INFO_PATH.c_str(), "w");
     assert(fp);
     fclose(fp);
-    assert(loadMasterInfo());
-    assert(loadMasterInfo());
+    assert(loadMPXMasterInfo());
+    assert(loadMPXMasterInfo());
     startMPX();
 });
 
 MPX_TEST("test_save_load_mpx_bad", {
-    assert(!loadMasterInfo());
-    assert(saveMasterInfo());
-    assert(loadMasterInfo());
-    assert(loadMasterInfo());
+    assert(!loadMPXMasterInfo());
+    assert(saveMPXMasterInfo());
+    assert(loadMPXMasterInfo());
+    assert(loadMPXMasterInfo());
     MASTER_INFO_PATH = "";
-    assert(!saveMasterInfo());
-    assert(!loadMasterInfo());
+    assert(!saveMPXMasterInfo());
+    assert(!loadMPXMasterInfo());
 });
 std::string names[] = {"t1", "t2", "t3", "t4"};
 int colors[LEN(names)] = {0, 0xFF, 0xFF00, 0xFF0000};
@@ -66,7 +66,7 @@ static void mpxResume() {
         attachSlaveToMaster(getAllSlaves()[0], getMasterByName(names[1]));
         initCurrentMasters();
         createMasterDevice("_unseen_master_");
-        assert(saveMasterInfo());
+        assert(saveMPXMasterInfo());
         initCurrentMasters();
         destroyAllNonDefaultMasters();
         flush();
@@ -198,7 +198,7 @@ MPX_TEST_ITER("test_save_load_mpx", 2, {
     assert(numOfSlaves == 1);
     deleteList(slaves);
     free(slaves);
-    saveMasterInfo();
+    saveMPXMasterInfo();
     stopMPX();
     unlock();
     WAIT_UNTIL_TRUE(getAllMasters().size() == 1);
@@ -207,7 +207,7 @@ MPX_TEST_ITER("test_save_load_mpx", 2, {
     assert(size(slaves) == 2);
     deleteList(slaves);
     free(slaves);
-    loadMasterInfo();
+    loadMPXMasterInfo();
     startMPX();
     assert(getAllMasters().size() == 2);
     slaves = getSlavesOfMasterByID(&defaultMasterID, 1, &numOfSlaves);

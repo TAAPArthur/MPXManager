@@ -23,7 +23,7 @@ void restoreMPX(void);
 /**
  * Creates master devices according to saved masterInfo.
  * Note that a master device won't be created if one with the same name already exists
- * loadMasterInfo should be called prior.
+ * loadMPXMasterInfo should be called prior.
  */
 void startMPX(void);
 /**
@@ -37,11 +37,11 @@ void restartMPX(void);
 /**
  * Saves the current master/slave configurations for later use
  */
-int saveMasterInfo(void);
+int saveMPXMasterInfo(void);
 /**
  * loads saved master/slave configuration
  */
-int loadMasterInfo(void);
+int loadMPXMasterInfo(void);
 /**
  * Creates a new master and moves all active slaves (slaves that are firing events) to the newly
  * created master

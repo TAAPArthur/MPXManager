@@ -21,17 +21,17 @@
 /**
  * Holds info to match a master devices with a set of slaves
  */
-typedef struct MasterInfo {
+typedef struct MPXMasterInfo {
     /// The name of the master device pair (w/o Keyboard or Pointer suffix)
     const std::string masterName;
     /// the focus color to give the master
     int focusColor;
     /// list of names of slaves
     ArrayList<std::string> slaveNames;
-    MasterInfo(std::string name): masterName(name) {}
-} MasterInfo;
+    MPXMasterInfo(std::string name): masterName(name) {}
+} MPXMasterInfo;
 
-static UniqueArrayList<MasterInfo> masterInfoList;
+static UniqueArrayList<MPXMasterInfo> masterInfoList;
 static bool mpxEnabled;
 
 static void attachActiveSlaveToActiveMaster() {
@@ -83,7 +83,7 @@ void endSplitMaster(void) {
 }
 
 Master* getMasterForSlave(std::string slaveName) {
-    for(MasterInfo* masterInfo : masterInfoList) {
+    for(MPXMasterInfo* masterInfo : masterInfoList) {
         if(masterInfo->slaveNames.indexOf(slaveName) != -1)
             return getMasterByName(masterInfo->masterName);
     }
@@ -92,8 +92,8 @@ Master* getMasterForSlave(std::string slaveName) {
 
 void restoreMPX(void) {
     if(masterInfoList.empty())
-        loadMasterInfo();
-    for(MasterInfo* masterInfo : masterInfoList) {
+        loadMPXMasterInfo();
+    for(MPXMasterInfo* masterInfo : masterInfoList) {
         Master* m = getMasterByName(masterInfo->masterName);
         if(m) {
             LOG(LOG_LEVEL_TRACE, "setting color to %0x\n", masterInfo->focusColor);
@@ -111,9 +111,9 @@ void startMPX(void) {
     LOG(LOG_LEVEL_INFO, "Starting MPX\n");
     mpxEnabled = 1;
     if(masterInfoList.empty())
-        loadMasterInfo();
+        loadMPXMasterInfo();
     initCurrentMasters();
-    for(MasterInfo* masterInfo : masterInfoList) {
+    for(MPXMasterInfo* masterInfo : masterInfoList) {
         auto name = masterInfo->masterName;
         if(!getMasterByName(name)) {
             createMasterDevice(name);
@@ -133,7 +133,7 @@ void restartMPX(void) {
     stopMPX();
     startMPX();
 }
-static FILE* openMasterInfoFile(const char* mode) {
+static FILE* openMPXMasterInfoFile(const char* mode) {
     std::string path;
     if(MASTER_INFO_PATH[0] == '~')
         path = getenv("HOME") + MASTER_INFO_PATH.substr(1);
@@ -142,8 +142,8 @@ static FILE* openMasterInfoFile(const char* mode) {
     return fp;
 }
 
-int saveMasterInfo(void) {
-    FILE* fp = openMasterInfoFile("w");
+int saveMPXMasterInfo(void) {
+    FILE* fp = openMPXMasterInfoFile("w");
     if(!fp)
         return 0;
     LOG(LOG_LEVEL_INFO, "Saving MPX state\n");
@@ -158,17 +158,17 @@ int saveMasterInfo(void) {
     fclose(fp);
     return 1;
 }
-int loadMasterInfo(void) {
+int loadMPXMasterInfo(void) {
     FILE* fp;
     char* line = NULL;
     size_t bSize = 0;
     ssize_t len;
-    fp = openMasterInfoFile("r");
+    fp = openMPXMasterInfoFile("r");
     if(fp == NULL)
         return 0;
     LOG(LOG_LEVEL_INFO, "Loading saved MPX state\n");
     masterInfoList.deleteElements();
-    MasterInfo* info = NULL;
+    MPXMasterInfo* info = NULL;
     int state = 0;
     while((len = getline(&line, &bSize, fp)) != -1) {
         if(line[len - 1] == '\n')
@@ -179,7 +179,7 @@ int loadMasterInfo(void) {
         }
         switch(state) {
             case 0:
-                masterInfoList.add(info = new MasterInfo(line));
+                masterInfoList.add(info = new MPXMasterInfo(line));
                 break;
             case 1:
                 info->focusColor = (int)strtol(line, NULL, 16);
