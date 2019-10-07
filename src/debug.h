@@ -7,4 +7,5 @@
 #define MPXMANAGER_DEBUG_H_
 bool validate();
 void validateX();
+void resetUserMask(WindowInfo* winInfo);
 #endif
