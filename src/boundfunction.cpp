@@ -31,12 +31,13 @@ void incrementBatchEventRuleCounter(int i) {
 }
 static int applyRules(ArrayList<BoundFunction*>& rules, WindowInfo* winInfo, Master* m = NULL) {
     for(BoundFunction* func : rules) {
-        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Running " << func->getName() << "\n");
+        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Running func: " << func->getName() << "\n");
         if(!func->execute(winInfo, m)) {
-            LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Rules aborted early" << func->getName() << "\n");
+            LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Rules aborted early " << func->getName() << "\n");
             return 0;
         }
     }
+    LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Rules finished normally\n");
     return 1;
 }
 int getNumberOfEventsTriggerSinceLastIdle(int type) {
