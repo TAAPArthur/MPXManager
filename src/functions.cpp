@@ -14,6 +14,7 @@
 #include "logger.h"
 #include "masters.h"
 #include "monitors.h"
+#include "system.h"
 #include "window-properties.h"
 #include "windows.h"
 #include "wmfunctions.h"
@@ -128,6 +129,24 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool ch
     else
         LOG(LOG_LEVEL_DEBUG, "could not find window\n");
     return target;
+}
+bool matchesClass(WindowInfo* winInfo, std::string str) {
+    return winInfo->getClassName() == str;
+}
+bool matchesTitle(WindowInfo* winInfo, std::string str) {
+    return winInfo->getTitle() == str;
+}
+bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass) {
+    if(s[0] == '$') {
+        auto c = getenv(s.substr(1).c_str());
+        s = c ? c : "";
+    }
+    const BoundFunction f = {matchOnClass ? matchesClass : matchesTitle, s, "raiseOrRunCheck"};
+    if(!findAndRaise(f)) {
+        spawn(cmd.c_str());
+        return 0;
+    }
+    return 1;
 }
 
 
