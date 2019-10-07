@@ -18,18 +18,7 @@
 /// Direction away from the head of the list
 #define DOWN 1
 
-#define _RUN_OR_RAISE(TYPE,STR_TO_MATCH,COMMAND_STR) \
-    OR(BIND(findAndRaise,(&((Rule){STR_TO_MATCH,TYPE,NULL}))), BIND(spawn,COMMAND_STR))
-
-#define _RUN_OR_RAISE_HELPER(_1,_2,NAME,...) NAME
-#define _RUN_OR_RAISE_IMPLICIT(TYPE,STR_TO_MATCH) _RUN_OR_RAISE(TYPE,STR_TO_MATCH,STR_TO_MATCH)
-
-/**
- * Creates a rule with type TYPE that tries to find window with property STR and if it can't it will run COM
- * @param TYPE rule type
- * @param args if args has two elements then STR is the first ad COM is the 2nd else both are args
- */
-#define RUN_OR_RAISE(TYPE,args...) _RUN_OR_RAISE_HELPER(args,_RUN_OR_RAISE,_RUN_OR_RAISE_IMPLICIT)(TYPE,args)
+#define RAISE_OR_RUN(MATCH) +[]{raiseOrRun(MATCH);}
 
 enum WindowAction {
     ACTION_RAISE, ACTION_FOCUS, ACTION_ACTIVATE, ACTION_LOWER
@@ -42,9 +31,16 @@ enum WindowAction {
  * @param rule
  * @return 1 if a matching window was found
  */
-WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_RAISE, bool checkLocalFirst = 1,
+WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_ACTIVATE, bool checkLocalFirst = 1,
                          bool cache = 1, Master* master = getActiveMaster());
 
+static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, 0, 0);}
+bool matchesClass(WindowInfo* winInfo, std::string str);
+bool matchesTitle(WindowInfo* winInfo, std::string str);
+bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass = 0);
+static inline bool raiseOrRun(std::string s) {
+    return raiseOrRun(s, s, 1);
+}
 /**
  * Call to stop cycling windows
  *
