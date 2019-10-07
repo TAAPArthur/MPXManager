@@ -180,12 +180,13 @@ void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name) {
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
     Master* master = getActiveMaster();
-    getMousePosition(master->getPointerID(), root, pos);
-    Rect rect = {pos[0], pos[1], 1, 1};
-    for(Monitor* m : getAllMonitors()) {
-        if(m->getBase().intersects(rect) && m->getWorkspace()) {
-            switchToWorkspace(m->getWorkspace()->getID());
-            return;
+    if(getMousePosition(master->getPointerID(), root, pos)){
+        Rect rect = {pos[0], pos[1], 1, 1};
+        for(Monitor* m : getAllMonitors()) {
+            if(m->getBase().intersects(rect) && m->getWorkspace()) {
+                switchToWorkspace(m->getWorkspace()->getID());
+                return;
+            }
         }
     }
 }

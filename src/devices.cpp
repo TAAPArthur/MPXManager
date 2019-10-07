@@ -198,10 +198,10 @@ void swapDeviceId(Master* master1, Master* master2) {
     xcb_input_xi_set_focus(dis, getActiveFocus(master2->getID()), 0, master2->getID());
     short pos1[2];
     short pos2[2];
-    getMousePosition(master1->getPointerID(), root, pos1);
-    getMousePosition(master2->getPointerID(), root, pos2);
-    movePointer(master2->getPointerID(), root, pos1[0], pos1[1]);
-    movePointer(master1->getPointerID(), root, pos2[0], pos2[1]);
+    if(getMousePosition(master1->getPointerID(), root, pos1) && getMousePosition(master2->getPointerID(), root, pos2)) {
+        movePointer(master2->getPointerID(), root, pos1[0], pos1[1]);
+        movePointer(master1->getPointerID(), root, pos2[0], pos2[1]);
+    }
     for(Slave* slave : master1->getSlaves()) {
         attachSlaveToMaster(slave, master2);
     }

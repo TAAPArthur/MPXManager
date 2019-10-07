@@ -334,7 +334,7 @@ static void removeRef(Master* m) {
 
 void startWindowMoveResize(WindowInfo* winInfo, bool move, bool changeX, bool changeY, Master* m) {
     auto ref = getRef(m);
-    short pos[2];
+    short pos[2]={0,0};
     getMousePosition(m, root, pos);
     *ref = (RefWindowMouse) {winInfo->getID(), getRealGeometry(winInfo->getID()), {pos[0], pos[1]}, {changeX, changeY}, move};
 }
@@ -354,11 +354,12 @@ void updateWindowMoveResize(Master* m) {
     auto ref = getRef(m, 0);
     if(ref) {
         short pos[2];
-        getMousePosition(m, root, pos);
-        RectWithBorder r = ref->calculateNewPosition(pos);
-        if(r.width && r.height)
-            processConfigureRequest(ref->win, r, 0, 0,
-                                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+        if(getMousePosition(m, root, pos)){
+            RectWithBorder r = ref->calculateNewPosition(pos);
+            if(r.width && r.height)
+                processConfigureRequest(ref->win, r, 0, 0,
+                                        XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+        }
     }
 }
 
