@@ -15,17 +15,18 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "globals.h"
 #include "arraylist.h"
+#include "compatibility.h"
+#include "debug.h"
+#include "globals.h"
 #include "logger.h"
-#include "system.h"
-#include "mywm-structs.h"
+#include "masters.h"
 #include "monitors.h"
+#include "mywm-structs.h"
+#include "system.h"
 #include "windows.h"
 #include "workspaces.h"
-#include "masters.h"
 #include "workspaces.h"
-#include "debug.h"
 
 int statusPipeFD[4] = {0};
 int numPassedArguments;
@@ -40,7 +41,7 @@ int isShuttingDown(void) {
 }
 
 
-void (*onChildSpawn)(void) = NULL;
+void (*onChildSpawn)(void) = setClientMasterEnvVar;
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -103,6 +104,40 @@ void resetPipe() {
         close(STATUS_FD_READ);
         for(int i = 0; i < LEN(statusPipeFD); i++)
             statusPipeFD[i] = 0;
+    }
+}
+static inline void setEnvRect(const char* name, const Rect& rect) {
+    const char var[4][32] = {"_%s_X", "_%s_Y", "_%s_WIDTH", "_%s_HEIGHT"};
+    char strName[32];
+    char strValue[8];
+    for(int n = 0; n < 4; n++) {
+        sprintf(strName, var[n], name);
+        sprintf(strValue, "%d", rect[n]);
+        setenv(strName, strValue, 1);
+    }
+}
+void setClientMasterEnvVar(void) {
+    char strValue[8];
+    if(getActiveMaster()) {
+        sprintf(strValue, "%d", getActiveMasterKeyboardID());
+        setenv(DEFAULT_KEYBOARD_ENV_VAR_NAME, strValue, 1);
+        sprintf(strValue, "%d", getActiveMasterPointerID());
+        setenv(DEFAULT_POINTER_ENV_VAR_NAME, strValue, 1);
+        if(getFocusedWindow()) {
+            sprintf(strValue, "%d", getFocusedWindow()->getID());
+            setenv("_WIN_ID", strValue, 1);
+        }
+        Monitor* m = getActiveWorkspace()->getMonitor();
+        if(getFocusedWindow())
+            setEnvRect("WIN", getFocusedWindow()->getGeometry());
+        if(m) {
+            setEnvRect("VIEW", m->getViewport());
+            setEnvRect("MON", m->getBase());
+        }
+        const Rect rootBounds = {0, 0, getRootWidth(), getRootHeight()};
+        setEnvRect("ROOT", rootBounds);
+        if(LD_PRELOAD_INJECTION)
+            setenv("LD_PRELOAD", LD_PRELOAD_PATH.c_str(), 1);
     }
 }
 
