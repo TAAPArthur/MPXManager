@@ -7,8 +7,10 @@
 #include "../arraylist.h"
 #include "../globals.h"
 #include "../logger.h"
+#include "../compatibility.h"
 
 #include "tester.h"
+#include "test-mpx-helper.h"
 
 MPX_TEST("get_time", {
     unsigned int time = getTime();
@@ -132,6 +134,21 @@ MPX_TEST_ITER("spawn_pipe_child_close", 2, {
     else
         read(STATUS_FD_READ, buffer, LEN(buffer));
 });
+
+MPX_TEST("spawn_env", {
+    createSimpleEnv();
+    LD_PRELOAD_INJECTION = 1;
+    getAllWindows().add(new WindowInfo(1));
+    getActiveMaster()->onWindowFocus(getAllWindows()[0]->getID());
+    getAllMonitors().add(new Monitor(1, {0, 0, 0, 0}, ""));
+    assignUnusedMonitorsToWorkspaces();
+    if(!spawn(NULL)) {
+        assert(getenv(DEFAULT_KEYBOARD_ENV_VAR_NAME));
+        assert(getenv(DEFAULT_POINTER_ENV_VAR_NAME));
+        assert(std::string(getenv("LD_PRELOAD")) == LD_PRELOAD_PATH);
+    }
+});
+
 MPX_TEST("quit", {
     quit(0);
     assert(0);

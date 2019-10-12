@@ -109,4 +109,8 @@ int waitForChild(int pid);
 void resetPipe();
 extern void (*onChildSpawn)(void);
 void clearAllLists();
+/**
+ * Set environment vars such to help old clients know which master device to use
+ */
+void setClientMasterEnvVar(void);
 #endif

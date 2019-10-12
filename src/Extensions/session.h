@@ -17,9 +17,5 @@ void loadCustomState(void);
  * The state is stored as properties of the root window
  */
 void saveCustomState(void);
-/**
- * Set environment vars such to help old clients know which master device to use
- */
-void setClientMasterEnvVar(void);
 void addResumeCustomStateRules();
 #endif
