@@ -190,20 +190,21 @@ int focusWindow(WindowID win, Master* master) {
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME,
                                master->getKeyboardID());
-   return !catchError(cookie);
+    return !catchError(cookie);
 }
 int focusWindow(WindowInfo* winInfo, Master* master) {
-    if(!winInfo->hasMask(INPUT_MASK))
+    if(!winInfo->isFocusAllowed())
         return 0;
-    if(winInfo->hasMask(WM_TAKE_FOCUS_MASK)) {
-        //TODO MPX support
-        uint32_t data[] = {WM_TAKE_FOCUS, getTime()};
-        LOG(LOG_LEVEL_TRACE, "sending request to take focus to ");
-        xcb_ewmh_send_client_message(dis, winInfo->getID(), winInfo->getID(), ewmh->WM_PROTOCOLS, 2, data);
+    if(focusWindow(winInfo->getID(), master)) {
+        if(winInfo->hasMask(WM_TAKE_FOCUS_MASK)) {
+            //TODO MPX support
+            uint32_t data[] = {WM_TAKE_FOCUS, getTime()};
+            LOG(LOG_LEVEL_TRACE, "sending request to take focus to ");
+            xcb_ewmh_send_client_message(dis, winInfo->getID(), winInfo->getID(), ewmh->WM_PROTOCOLS, 2, data);
+        }
         return 1;
     }
-    else
-        return focusWindow(winInfo->getID(), master);
+    return 0;
 }
 int loadDockProperties(WindowInfo* winInfo) {
     LOG(LOG_LEVEL_TRACE, "Reloading dock properties\n");

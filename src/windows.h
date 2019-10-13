@@ -255,6 +255,13 @@ public:
     bool isVisible() const {
         return hasMask(PARTIALLY_VISIBLE);
     }
+    /**
+     *
+     * @return 1 iff the window supports being focused
+     */
+    bool isFocusAllowed() const {
+        return hasPartOfMask(INPUT_MASK | WM_TAKE_FOCUS_MASK) ? 1 : 0;
+    }
 
     /**
      *
@@ -286,7 +293,7 @@ public:
      * @return true if the window can receive focus
      */
     bool isActivatable() const {
-        return  hasMask(MAPPABLE_MASK | INPUT_MASK) &&
+        return  hasMask(MAPPABLE_MASK) && hasPartOfMask(WM_TAKE_FOCUS_MASK | INPUT_MASK) &&
                 !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
     }
 
