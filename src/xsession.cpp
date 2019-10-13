@@ -29,6 +29,7 @@
 
 xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_DELETE_WINDOW;
+xcb_atom_t WM_NAME;
 xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 xcb_atom_t WM_SELECTION_ATOM;
@@ -197,6 +198,7 @@ void openXDisplay(void) {
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
     _CREATE_ATOM(WM_TAKE_FOCUS);
     _CREATE_ATOM(WM_DELETE_WINDOW);
+    _CREATE_ATOM(WM_NAME);
     _CREATE_ATOM(WM_STATE_NO_TILE);
     _CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
     _CREATE_ATOM(WM_INTERPROCESS_COM);
@@ -302,6 +304,7 @@ const char* opcodeToString(int opcode) {
     }
 }
 void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms) {
+    std::cout << "Dumping Atoms: ";
     for(int i = 0; i < numberOfAtoms; i++) {
         if(i)
             std::cout << ", ";

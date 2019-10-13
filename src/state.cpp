@@ -134,7 +134,7 @@ static int compareState() {
         else {
             Workspace* w = getWorkspace(i);
             for(WindowInfo* winInfo : w->getWindowStack())
-                if(w->isVisible() ^ winInfo->hasMask(MAPPED_MASK)) {
+                if(winInfo->hasMask(MAPPABLE_MASK) && (w->isVisible() ^ winInfo->hasMask(MAPPED_MASK))) {
                     LOG(LOG_LEVEL_DEBUG, "Detected WINDOW_CHANGE Workspace: %d (Visibile %d) for %d \n", i, w->isVisible(),
                         winInfo->getID());
                     updateWindowWorkspaceState(winInfo);

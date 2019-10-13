@@ -33,7 +33,7 @@ void scan(xcb_window_t baseWindow);
  * @param winInfo
  * @return 1 iff the window was already in our records
  */
-bool unregisterWindow(WindowInfo* winInfo);
+bool unregisterWindow(WindowInfo* winInfo, bool destroyed = 0) ;
 
 /**
  * Send a kill signal to the client with the window

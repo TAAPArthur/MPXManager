@@ -87,7 +87,7 @@ bool loadWindowType(WindowID win, bool transient, uint32_t* type, string* typeNa
  * Loads grouptId, input and window state for a given window
  * @param winInfo
  */
-static void loadWindowHints(WindowInfo* winInfo) {
+void loadWindowHints(WindowInfo* winInfo) {
     xcb_icccm_wm_hints_t hints;
     if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->getID()), &hints, NULL)) {
         winInfo->setGroup(hints.window_group);
@@ -98,6 +98,8 @@ static void loadWindowHints(WindowInfo* winInfo) {
         else
             winInfo->removeMask(INPUT_MASK);
     }
+}
+static void loadWindowSizeHints(WindowInfo* winInfo) {
     xcb_size_hints_t sizeHints;
     if(xcb_icccm_get_wm_size_hints_reply(dis, xcb_icccm_get_wm_size_hints(dis, winInfo->getID(), XCB_ATOM_WM_NORMAL_HINTS),
                                          &sizeHints
@@ -140,6 +142,7 @@ void loadWindowProperties(WindowInfo* winInfo) {
         winInfo->transientFor = prop;
     loadProtocols(winInfo);
     loadWindowHints(winInfo);
+    loadWindowSizeHints(winInfo);
     if(winInfo->isDock())
         loadDockProperties(winInfo);
     if(!loadWindowType(winInfo->getID(), winInfo->transientFor, &winInfo->type, &winInfo->typeName))

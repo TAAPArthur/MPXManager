@@ -23,9 +23,14 @@
 #include "../device-grab.h"
 #include "../user-events.h"
 #include "../debug.h"
-static inline void waitUntilIdle(void) {
+static inline void waitUntilIdle(bool safe = 0) {
     flush();
     static int idleCount;
+    if(safe && idleCount == getIdleCount()) {
+        msleep(100);
+        if(idleCount == getIdleCount())
+            return;
+    }
     WAIT_UNTIL_TRUE(idleCount != getIdleCount());
     idleCount = getIdleCount();
 }
@@ -106,7 +111,7 @@ static inline void* getNextDeviceEvent() {
     }
     return event;
 }
-static inline void waitToReceiveInput(int mask, int detailMask) {
+static inline void waitToReceiveInput(int mask, int detailMask = 0) {
     flush();
     LOG(LOG_LEVEL_ALL, "waiting for input %d\n\n", mask);
     while(mask || detailMask) {

@@ -24,6 +24,7 @@ extern xcb_gcontext_t graphics_context;
  * Used to send client messages to direct focus of an application
 */
 extern xcb_atom_t WM_TAKE_FOCUS;
+extern xcb_atom_t WM_NAME;
 
 /**
  * WM_DELETE_WINDOW atom

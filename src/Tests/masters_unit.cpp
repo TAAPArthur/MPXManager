@@ -75,6 +75,11 @@ MPX_TEST("masterWindowStackIter", {
         assertEquals(--i, winInfo->getID());
     assert(*getActiveMaster()->getWindowStack().begin() != *getActiveMaster()->getWindowStack().rbegin());
 });
+MPX_TEST("freeze_focus_stack_empty", {
+
+    for(int i=0;i<4;i++)
+        getActiveMaster()->setFocusStackFrozen(i%2);
+});
 
 MPX_TEST("freeze_focus_stack", {
     assert(addWindowInfo(new WindowInfo(3)));

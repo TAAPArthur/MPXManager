@@ -51,7 +51,7 @@ void endCycleWindows(Master* m = getActiveMaster());
  * Freezes and cycle through windows in the active master's& stack
  * @param delta
  */
-void cycleWindows(int delta, Master* m = getActiveMaster());
+void cycleWindows(int delta);
 
 
 

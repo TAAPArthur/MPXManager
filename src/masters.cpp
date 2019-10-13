@@ -74,7 +74,7 @@ void Master::setFocusStackFrozen(int value) {
         freezeFocusStack = value;
         if(value)
             focusedWindowIndex = getWindowStack().size();
-        else
+        else if(focusedWindowIndex<getWindowStack().size())
             getWindowStack().shiftToEnd(focusedWindowIndex);
     }
 }

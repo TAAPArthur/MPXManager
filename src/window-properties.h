@@ -48,6 +48,8 @@ bool loadWindowType(WindowID win, bool transient, uint32_t* type, std::string* t
  * @param winInfo
  */
 void loadWindowProperties(WindowInfo*);
+void loadWindowHints(WindowInfo* winInfo);
+void loadWindowTitle(WindowInfo* winInfo) ;
 
 
 /**
