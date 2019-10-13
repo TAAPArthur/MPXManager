@@ -164,6 +164,7 @@ MPX_TEST("raise_focused", {
     scan(root);
     for(WindowInfo* winInfo : getAllWindows())
         winInfo->moveToWorkspace(0);
+    getActiveMaster()->onWindowFocus(ids[2]);
     getActiveMaster()->onWindowFocus(ids[1]);
     tileWorkspace(0);
     WindowID stack[] = {ids[0], ids[2], ids[1]};
