@@ -6,11 +6,11 @@ RELEASE_FLAGS := -g -O3 -flto -DNDEBUG
 PROFILE_FLAGS := -g -rdynamic -pg  -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-sign-compare -Wno-missing-field-initializers
+IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
 ERROR_FLAGS := -Werror -Wall -Wextra
 CPPFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
-TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage
+TESTFLAGS := ${CPPFLAGS} -Wno-sign-compare ${DEBUGGING_FLAGS} --coverage
 NON_X_LDFLAGS := -lm -lpthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lm -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 

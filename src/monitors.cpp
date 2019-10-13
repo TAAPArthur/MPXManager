@@ -91,9 +91,9 @@ void removeDuplicateMonitors(void) {
         LOG(LOG_LEVEL_TRACE, "MONITOR_DUPLICATION_POLICY or MONITOR_DUPLICATION_RESOLUTION is not set\n");
         return;
     }
-    for(int i = 0; i < getAllMonitors().size(); i++) {
+    for(uint32_t i = 0; i < getAllMonitors().size(); i++) {
         Monitor* m1 = getAllMonitors()[i];
-        for(int n = i + 1; n < getAllMonitors().size(); n++) {
+        for(uint32_t n = i + 1; n < getAllMonitors().size(); n++) {
             Monitor* m2 = getAllMonitors()[n];
             bool dup =
                 (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && (m1->getBase() == m2->getBase())  ||

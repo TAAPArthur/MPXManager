@@ -40,7 +40,7 @@ void removeAllWorkspaces() {
 void Workspace::setMonitor(Monitor* m) {
     monitor = m;
 };
-int getNumberOfWorkspaces() {
+uint32_t getNumberOfWorkspaces() {
     return getAllWorkspaces().size();
 }
 //workspace methods
@@ -49,7 +49,7 @@ Workspace* Workspace::getNextWorkspace(int dir, int mask) {
     int empty = ((mask >> 2) & 3) - 1;
     int hidden = (mask & 3) - 1;
     int index = id;
-    for(int i = 0; i < getNumberOfWorkspaces(); i++) {
+    for(uint32_t i = 0; i < getNumberOfWorkspaces(); i++) {
         index = getAllWorkspaces().getNextIndex(index, dir);
         if((hidden == -1 || hidden == !getWorkspace(index)->isVisible()) &&
                 (empty == -1 || empty == getWorkspace(index)->getWindowStack().empty())

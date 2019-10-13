@@ -87,9 +87,9 @@ static void updateEWMHWorkspaceProperties() {
 }
 void updateWorkspaceNames() {
     const char* names[getNumberOfWorkspaces()];
-    for(int i = 0; i < getNumberOfWorkspaces(); i++) {
-        names[i] = getWorkspace(i)->getName().c_str();
-    }
+    int i = 0;
+    for(Workspace* w : getAllWorkspaces())
+        names[i++] = w->getName().c_str();
     if(ewmh && RUN_AS_WM)
         xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), (char*)names);
 }
@@ -110,11 +110,11 @@ void addEWMHRules(AddFlag flag) {
     getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
 }
-int getSavedWorkspaceIndex(WindowID win) {
-    unsigned int workspaceIndex = 0;
+WorkspaceID getSavedWorkspaceIndex(WindowID win) {
+    WorkspaceID workspaceIndex = 0;
     if((xcb_ewmh_get_wm_desktop_reply(ewmh,
                                       xcb_ewmh_get_wm_desktop(ewmh, win), &workspaceIndex, NULL))) {
-        if(workspaceIndex != -1 && workspaceIndex >= getNumberOfWorkspaces()) {
+        if(workspaceIndex != NO_WORKSPACE && workspaceIndex >= getNumberOfWorkspaces()) {
             workspaceIndex = getNumberOfWorkspaces() - 1;
         }
     }
@@ -220,7 +220,7 @@ void onClientMessage(void) {
     else if(message == ewmh->_NET_WM_DESKTOP) {
         WindowInfo* winInfo = getWindowInfo(win);
         WorkspaceID destIndex = data.data32[0];
-        if(!(destIndex == -1 || destIndex < getNumberOfWorkspaces()))
+        if(!(destIndex == NO_WORKSPACE || destIndex < getNumberOfWorkspaces()))
             destIndex = getNumberOfWorkspaces() - 1;
         if(winInfo && winInfo->allowRequestFromSource(data.data32[1])) {
             LOG(LOG_LEVEL_DEBUG, "Changing window workspace %d %d\n\n", destIndex, data.data32[0]);
@@ -265,10 +265,10 @@ void onClientMessage(void) {
             if(delta > 0)
                 addWorkspaces(delta);
             else {
-                int newLastIndex = data.data32[0] - 1;
+                WorkspaceID newLastIndex = data.data32[0] - 1;
                 if(getActiveWorkspaceIndex() > newLastIndex)
                     getActiveMaster()->setWorkspaceIndex(newLastIndex);
-                for(int i = data.data32[0]; i < getNumberOfWorkspaces(); i++) {
+                for(uint32_t i = data.data32[0]; i < getNumberOfWorkspaces(); i++) {
                     for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack())
                         winInfo->moveToWorkspace(newLastIndex);
                 }
@@ -378,9 +378,9 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
     bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL);
     xcb_atom_t windowState[LEN(supportedStates) + (hasState ? reply.atoms_len : 0)];
     if(hasState) {
-        for(int i = 0; i < reply.atoms_len; i++) {
+        for(uint32_t i = 0; i < reply.atoms_len; i++) {
             char isSupportedState = 0;
-            for(int n = 0; n < LEN(supportedStates); n++)
+            for(uint32_t n = 0; n < LEN(supportedStates); n++)
                 if(supportedStates[n] == reply.atoms[i]) {
                     isSupportedState = 1;
                     break;
@@ -394,7 +394,7 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
     xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), count, windowState);
 }
 
-void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action) {
+void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
     LOG(LOG_LEVEL_TRACE, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
     WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++) {

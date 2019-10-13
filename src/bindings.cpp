@@ -91,7 +91,7 @@ int Binding::ungrab() {
     return -1;
 }
 
-int Binding::getDetail() {
+uint32_t Binding::getDetail() {
     if(detail == 0 && buttonOrKey != 0) {
         detail = getButtonDetailOrKeyCode(buttonOrKey);
         assert(detail);

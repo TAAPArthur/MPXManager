@@ -124,7 +124,7 @@ void addEWMHRules(AddFlag flag = ADD_UNIQUE);
  * @param win
  * @return the workspace the window should be placed in by default
  */
-int getSavedWorkspaceIndex(WindowID win);
+WorkspaceID getSavedWorkspaceIndex(WindowID win);
 void setSavedWorkspaceIndex(WindowInfo* winInfo);
 
 void autoResumeWorkspace(WindowInfo* winInfo);
@@ -213,7 +213,7 @@ void loadSavedAtomState(WindowInfo* winInfo);
  * @param action whether to add,remove or toggle atoms. For toggle, if all of the corresponding masks for the list of atoms is set, then they all will be removed else they all will be added
  * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
  */
-void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, int numberOfAtoms, int action);
+void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action);
 /**
  * Sync EWMH global properties with our internal state
  */

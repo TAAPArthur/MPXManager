@@ -81,7 +81,7 @@ static bool lastLocal = 0;
 static void _handleOption(std::string str, bool local = lastLocal) {
     int index = str.find('=');
     std::string name = str.substr(0, index);
-    std::string value = index == str.npos ? "" : str.substr(index + 1);
+    std::string value = index == -1 ? "" : str.substr(index + 1);
     const Option* option = findOption(name, value);
     if(option)
         if(local)

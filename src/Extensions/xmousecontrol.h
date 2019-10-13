@@ -6,13 +6,14 @@
 #ifndef XMOUSE_CONTROL_H
 #define XMOUSE_CONTROL_H
 
+#include <X11/X.h>
+
 #ifndef XMOUSE_CONTROL_EXT_ENABLED
     /// enables this extensions
     #define XMOUSE_CONTROL_EXT_ENABLED 1
 #endif
 #if XMOUSE_CONTROL_EXT_ENABLED
-/// default modifier for this extension
-extern int XMOUSE_CONTROL_DEFAULT_MASK;
+
 #define SCROLL_UP    4
 #define SCROLL_DOWN  5
 #define SCROLL_LEFT  6
@@ -53,7 +54,7 @@ void* runXMouseControl(void* c __attribute__((unused)));
 /**
  * Add rules/bindings to get the XMousecontrol experience
  */
-void addDefaultXMouseControlBindings(void);
+void addDefaultXMouseControlBindings(unsigned int mask=Mod3Mask);
 void resetXMouseControl();
 /**
  * Removes a masks
