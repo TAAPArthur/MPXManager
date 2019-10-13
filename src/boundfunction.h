@@ -13,9 +13,9 @@
 #include "mywm-structs.h"
 #include "windows.h"
 
-#define DEFAULT_EVENT(F){F, #F,PASSTHROUGH_IF_TRUE}
-#define PASSTHROUGH_EVENT(F,P){F, #F,P}
-#define FUNC_NAME (std::string("_")+__FUNCTION__)
+#define DEFAULT_EVENT(F){F, "_" #F,PASSTHROUGH_IF_TRUE}
+#define PASSTHROUGH_EVENT(F,P){F, "_" #F,P}
+#define FUNC_NAME (std::string("_")+std::string(__FUNCTION__).substr(3))
 
 /**
  * Determines if and when the control flow should abort processing a series of

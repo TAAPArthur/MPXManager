@@ -95,8 +95,9 @@ void updateWorkspaceNames() {
 }
 void addEWMHRules(AddFlag flag) {
     getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), flag);
-    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}, FUNC_NAME}, flag);
-    getEventRules(UnregisteringWindow).add({+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}, FUNC_NAME},
+    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}, "_recordWindow"},
+    flag);
+    getEventRules(UnregisteringWindow).add({+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}, "_unrecordWindow"},
     flag);
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
