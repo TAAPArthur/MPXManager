@@ -98,7 +98,7 @@ int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) {
 xcb_atom_t getAtom(const char* name) {
     if(!name)return XCB_ATOM_NONE;
     xcb_intern_atom_reply_t* reply;
-    reply = xcb_intern_atom_reply(dis, xcb_intern_atom(dis, 0, 32, name), NULL);
+    reply = xcb_intern_atom_reply(dis, xcb_intern_atom(dis, 0, strlen(name), name), NULL);
     xcb_atom_t atom = reply->atom;
     free(reply);
     return atom;
@@ -305,7 +305,7 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms) {
     for(int i = 0; i < numberOfAtoms; i++) {
         if(i)
             std::cout << ", ";
-        std::cout << getAtomValue(atoms[i]);
+        std::cout << getAtomValue(atoms[i]) << " (" << atoms[i] << ")";
     }
     std::cout << "\n";
 }

@@ -37,10 +37,14 @@ MPX_TEST("get_key_code", {
 });
 
 MPX_TEST("get_set_atom", {
-    xcb_atom_t test = getAtom("TEST");
-    assert(test == getAtom("TEST"));
+    char buffer[256];
+    for(int i = 0; i < LEN(buffer); i++)
+        buffer[i] = 'a';
+    buffer[LEN(buffer) - 1] = 0;
+    xcb_atom_t test = getAtom(buffer);
+    assert(test == getAtom(buffer));
     std::string str = getAtomValue(test);
-    assert(str == "TEST");
+    assert(str == buffer);
 });
 
 MPX_TEST("get_set_atom_bad", {
