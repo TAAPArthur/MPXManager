@@ -205,20 +205,23 @@ void receiveClientMessage(void) {
             }
             // TODO stop forking
             else if(!(childPID = fork())) {
-                openXDisplay();
+                std::cout << std::flush;
                 char outputFile[64] = {0};
                 if(callerPID) {
                     const char* formatter = "/proc/%d/fd/1";
                     sprintf(outputFile, formatter, callerPID);
-                    if(dup2(open(outputFile, O_WRONLY | O_APPEND), LOG_FD) == -1) {
+                    int fd = open(outputFile, O_WRONLY | O_APPEND);
+                    if(fd == -1 || dup2(fd, LOG_FD) == -1) {
                         LOG(LOG_LEVEL_WARN, "could not open %s for writing; could not call/set %s aborting\n", outputFile,
                             option->name.c_str());
                         exit(0);
                     }
+                    close(fd);
                 }
+                openXDisplay();
                 option->call(value);
-                if(callerPID)
-                    LOG(LOG_LEVEL_INFO, "\n");
+                std::cout << std::flush;
+                close(LOG_FD);
                 exit(0);
             }
             else {
