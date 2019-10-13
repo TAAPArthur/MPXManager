@@ -71,7 +71,7 @@ void addAvoidDocksRule(AddFlag flag) {
     }, FUNC_NAME), flag);
 }
 void addNoDockFocusRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK);},
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK|WM_TAKE_FOCUS_MASK);},
     FUNC_NAME), flag);
 }
 void addFocusFollowsMouseRule(AddFlag flag) {

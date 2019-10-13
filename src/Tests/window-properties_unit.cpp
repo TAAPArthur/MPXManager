@@ -191,9 +191,16 @@ MPX_TEST("test_focus_inputless_window", {
     assert(focusWindow(&winInfo) == 0);
 });
 MPX_TEST("test_wm_take_focus", {
-    WindowInfo winInfo = WindowInfo(1);
+    WindowInfo winInfo = WindowInfo(mapArbitraryWindow());
     winInfo.addMask(INPUT_MASK | WM_TAKE_FOCUS_MASK);
     assert(focusWindow(&winInfo));
+});
+MPX_TEST("test_focus_unmapped_window", {
+    CRASH_ON_ERRORS = 0;
+    setLogLevel(LOG_LEVEL_NONE);
+    WindowInfo winInfo = WindowInfo(createNormalWindow());
+    winInfo.addMask(INPUT_MASK | WM_TAKE_FOCUS_MASK);
+    assert(focusWindow(&winInfo) == 0);
 });
 
 MPX_TEST("test_focus_window_bad", {
