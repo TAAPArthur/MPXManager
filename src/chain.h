@@ -15,14 +15,13 @@ ArrayList<const Chain*>& getActiveChains(Master* m = getActiveMaster());
 struct Chain : Binding {
 
     ArrayList<Binding*>members;
-    int chainMask = 0;
     Chain(unsigned int mod, int buttonOrKey, const BoundFunction boundFunction = {}, const ArrayList<Binding*>& members = {},
           const
-          BindingFlags& flags = {}, int mask  = 0): Binding(mod, buttonOrKey, boundFunction, flags),
-        members(members), chainMask(mask) {
+          BindingFlags& flags = {}, std::string name = ""): Binding(mod, buttonOrKey, boundFunction, flags, name),
+        members(members) {
     }
-    Chain(unsigned int mod, int buttonOrKey, const ArrayList<Binding*>& members = {}, const BindingFlags& flags = {}, int
-          mask  = 0): Binding(mod, buttonOrKey, {}, flags), members(members), chainMask(mask) {
+    Chain(unsigned int mod, int buttonOrKey, const ArrayList<Binding*>& members, const BindingFlags& flags = {}, std::string
+          name = ""): Binding(mod, buttonOrKey, {}, flags, name), members(members) {
     }
     ~Chain() {
         members.deleteElements();
@@ -50,4 +49,5 @@ struct Chain : Binding {
 };
 bool checkAllChainBindings(const UserEvent& userEvent);
 void addApplyChainBindingsRule(AddFlag flag = PREPEND_UNIQUE);
+void endActiveChain(Master*master=getActiveMaster());
 #endif

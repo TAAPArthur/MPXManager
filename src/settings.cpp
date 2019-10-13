@@ -30,37 +30,42 @@
 #include "workspaces.h"
 #include "workspaces.h"
 
-#define _startCycleWindowChainBinding(M,K) Chain(M,K,{ \
-            Binding{Mod1Mask, XK_Tab, {[](){cycleWindows(DOWN);}}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}}, \
-            Binding{Mod1Mask | ShiftMask, XK_Tab, {[](){cycleWindows(UP);}}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}}, \
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {[](){endCycleWindows();}}, {.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}  },\
-            Binding {WILDCARD_MODIFIER, 0, {},{.passThrough = NO_PASSTHROUGH,.noGrab = 1}},\
-            },{},\
-        XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE)
+#define _startCycleWindowChainBinding(M,K) new Chain(M,K,{ \
+            Binding{Mod1Mask, XK_Tab, {cycleWindows,DOWN}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsDown"}, \
+            Binding{Mod1Mask | ShiftMask, XK_Tab, {cycleWindows,UP}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsUp"}, \
+            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endCycleWindows"  },\
+            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endChain"  },\
+            Binding {WILDCARD_MODIFIER, 0, {},{.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "absorbCycleWindows"},\
+            },{.chainMask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE},"cycleWindows")
 
-static Chain DEFAULT_CHAIN_BINDINGS[] = {
-    _startCycleWindowChainBinding(Mod1Mask, XK_Tab),
-    _startCycleWindowChainBinding(Mod1Mask | ShiftMask, XK_Tab),
-    Chain{
-        Mod4Mask, Button1, +[](WindowInfo * winInfo){startWindowMoveResize(winInfo, 1);},
-        {
-            {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-            {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, {.noGrab = 1}},
-            {WILDCARD_MODIFIER, 0, commitWindowMoveResize, {.noGrab = 1}},
+void addChainDefaultBindings() {
+    Chain* DEFAULT_CHAIN_BINDINGS[] = {
+        _startCycleWindowChainBinding(Mod1Mask, XK_Tab),
+        _startCycleWindowChainBinding(Mod1Mask | ShiftMask, XK_Tab),
+        new Chain{
+            DEFAULT_MOD_MASK, Button1, +[](WindowInfo * winInfo){startWindowMoveResize(winInfo, 1);},
+            {
+                {DEFAULT_MOD_MASK, 0, DEFAULT_EVENT(updateWindowMoveResize), {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+                {WILDCARD_MODIFIER, XK_Escape, DEFAULT_EVENT(cancelWindowMoveResize), {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}},
+                {WILDCARD_MODIFIER, 0, DEFAULT_EVENT(commitWindowMoveResize), {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}},
+            },
+            {.chainMask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION},
+            "_windowMove"
         },
-        {.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS},
-        XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION,
-    },
-    /*
-    {
-        Mod4Mask, Button3, BOTH(BIND(startMouseOperation), CHAIN_GRAB(XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION,
-        {Mod4Mask, Button3, resizeWindowWithMouse, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS, .noGrab = 1, .passThrough = NO_PASSTHROUGH},
-        {Mod4Mask, 0, resizeWindowWithMouse, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION, .noGrab = 1, .passThrough = NO_PASSTHROUGH},
-        {WILDCARD_MODIFIER, 0, stopMouseOperation, .mask = -1, .noGrab = 1})),
-        .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS
-    },
-    */
-};
+        new Chain{
+            DEFAULT_MOD_MASK, Button3, +[](WindowInfo * winInfo){startWindowMoveResize(winInfo, 0);},
+            {
+                {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+                {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, {.noGrab = 1}},
+                {WILDCARD_MODIFIER, 0, commitWindowMoveResize, {.noGrab = 1}},
+            },
+            {.chainMask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION},
+            "_windowResize"
+        },
+    };
+    for(Chain* binding : DEFAULT_CHAIN_BINDINGS)
+        getDeviceBindings().add(binding);
+}
 /**
  * Creates a set of bindings related to switching workspaces
  * @param K the key to bind; various modifiers will be used for the different functions
@@ -99,6 +104,7 @@ void addDefaultBindings() {
         STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
 
         {WILDCARD_MODIFIER, Button1, activateWorkspaceUnderMouse, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1,  .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+        {WILDCARD_MODIFIER, Button1, activateWindow, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1,  .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, XK_c, killClientOfWindow, {.noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindow, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK, Button1, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
@@ -113,6 +119,7 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK | ShiftMask, XF86XK_AudioPlay, +[](WindowInfo * winInfo) {winInfo->toggleMask(ROOT_FULLSCREEN_MASK);}},
 
         {DEFAULT_MOD_MASK, XK_space, +[]() {cycleLayouts(DOWN);}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_space, +[]() {cycleLayouts(UP);}},
 
         //{DEFAULT_MOD_MASK,Button2,BIND(resizeWindowWithMouse), .noGrab=1, .passThrough=1 ,.mask=XCB_INPUT_XI_EVENT_MASK_MOTION},
 
@@ -141,12 +148,6 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK | ShiftMask, XK_a, [](){increaseLayoutArg(LAYOUT_ARG, -1);}, .mode = LAYOUT_MODE},
         */
     };
-    for(int i = 0; i < LEN(DEFAULT_BINDINGS); i++) {
-        if(DEFAULT_BINDINGS[i].mod & Mod4Mask) {
-            DEFAULT_BINDINGS[i].mod &= ~Mod4Mask;
-            DEFAULT_BINDINGS[i].mod |= DEFAULT_MOD_MASK;
-        }
-    }
     for(Binding& binding : DEFAULT_BINDINGS)
         getDeviceBindings().add(binding);
 }
@@ -180,6 +181,7 @@ void loadNormalSettings() {
     printStatusMethod = defaultPrintFunction;
     enableInterClientCommunication();
     addDefaultBindings();
+    addChainDefaultBindings();
 }
 void (*startupMethod)();
 void onStartup(void) {
@@ -193,12 +195,13 @@ void onStartup(void) {
         addAutoTileRules();
         addEWMHRules();
         addAutoFocusRule();
+        addAvoidDocksRule();
         addNoDockFocusRule();
         addAlwaysOnTopBottomRules();
-        addAvoidDocksRule();
         addFloatRule();
         addPrintStatusRule();
         addIgnoreSmallWindowRule();
+        addUnknownInputOnlyWindowIgnoreRule();
         //addResumeCustomStateRules();
     }
     if(!RUN_AS_WM)

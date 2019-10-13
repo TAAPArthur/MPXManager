@@ -14,12 +14,12 @@
 static Binding* autoGrabBinding = new Binding {0, Button1};
 static Binding* nonAutoGrabBinding = new Binding {0, Button1, {incrementCount}, {.noGrab = 1}};
 static Binding* nonAutoGrabBindingAbort = new Binding {0, Button2, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}};
-static Chain sampleChain = {0, Button2, {}, {autoGrabBinding, nonAutoGrabBinding, nonAutoGrabBindingAbort}, {}, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS};
+static Chain sampleChain = {0, Button2, {}, {autoGrabBinding, nonAutoGrabBinding, nonAutoGrabBindingAbort}, {.chainMask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}, };
 static UserEvent eventNoPassthrough = {0, Button2};
 
 SET_ENV(createXSimpleEnv, fullCleanup);
 
-MPX_TEST("auto_grab", {
+MPX_TEST("auto_grab_detail", {
     addBasicRules();
     addApplyChainBindingsRule();
     sampleChain.start(eventNoPassthrough);
@@ -29,6 +29,18 @@ MPX_TEST("auto_grab", {
     addShutdownOnIdleRule();
     runEventLoop();
     assertEquals(getCount(), 1);
+});
+MPX_TEST_ITER("auto_grab_device", 3, {
+    uint32_t masks[] = {XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS, XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, XCB_INPUT_XI_EVENT_MASK_MOTION};
+    uint32_t mask = masks[_i];
+    Binding b = {0, Button1, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = mask, .chainMask = mask}};
+    Chain chain = Chain(0, 0, {
+        b,
+        {WILDCARD_MODIFIER, 0, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}},
+    }, {.noGrab = 1, .chainMask = mask});
+    chain.trigger({0, Button1, .mask = mask});
+    triggerBinding(&b);
+    waitToReceiveInput(mask);
 });
 
 MPX_TEST_ITER("test_start_end_grab", 2, {
@@ -63,6 +75,12 @@ MPX_TEST_ITER("triple_start", 2, {
         else
             sampleChain.trigger(eventNoPassthrough);
     assertEquals(getActiveChains().size(), 3);
+});
+MPX_TEST("external_end", {
+    sampleChain.start(eventNoPassthrough);
+    assert(getActiveChain());
+    endActiveChain();
+    assert(!getActiveChain());
 });
 
 MPX_TEST("test_chain_bindings", {
@@ -117,3 +135,9 @@ MPX_TEST("test_chain_bindings", {
     getDeviceBindings().deleteElements();
 });
 
+
+MPX_TEST("chain_get_name", {
+    std::string name = "name";
+    Chain chain = Chain(0, 0, {}, {.noGrab = 1,}, name);
+    assert(chain.getName() == name);
+});
