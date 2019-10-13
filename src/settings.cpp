@@ -171,6 +171,9 @@ void defaultPrintFunction(void) {
     }
     dprintf(STATUS_FD, "\n");
 }
+void __attribute__((weak)) loadSettings(void) {
+    loadNormalSettings();
+}
 void loadNormalSettings() {
     SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;

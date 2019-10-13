@@ -104,13 +104,22 @@ libmpx-test.so: Tests/test-preload.c
 config.cpp:
 	cp --no-clobber sample-config.cpp config.cpp
 
-test: libmpx-test.so unitTest correctness.out arg_test.out preinstall code_coverage.out format
+test: libmpx-test.so correctness.out arg_test.out functional.out preinstall code_coverage.out format
 
 T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
 TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))
 
 mpxmanager-debug: $(SRCS:.cpp=.o)
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+
+functionalTest: CPPFLAGS := ${TESTFLAGS}
+functionalTest: Tests/tester.o Tests/functional_test.cpp $(BASE_SRCS:.cpp=.o)
+	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+
+functional.out: functionalTest
+	$(call RUN_TEST, ./$^ )
+	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
+	touch $@
 
 unitTest: CPPFLAGS := ${TESTFLAGS}
 unitTest: Tests/tester.o $(call TEST_FILES, ${TEST_SRCS}) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o)

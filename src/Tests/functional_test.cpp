@@ -16,10 +16,11 @@
 #include "../devices.h"
 #include "../wm-rules.h"
 #include "../logger.h"
-#include "../events.h"
 #include "../wmfunctions.h"
+#include "../window-properties.h"
 #include "../functions.h"
 #include "../ewmh.h"
+#include "../chain.h"
 #include "../globals.h"
 #include "../layouts.h"
 #include "../xsession.h"
@@ -28,120 +29,145 @@
 #include "tester.h"
 #include "test-event-helper.h"
 
-MPX_TEST("test_triple_start", {
-    setLogLevel(LOG_LEVEL_NONE);
-    xcb_get_selection_owner_reply_t* ownerReply;
-    ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
-            WM_SELECTION_ATOM), NULL);
-    assert(ownerReply->owner);
-    free(ownerReply);
-    if(!fork())
-        onStartup();
-    wait(NULL);
-    ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
-            WM_SELECTION_ATOM), NULL);
-    assert(ownerReply->owner);
-    free(ownerReply);
-    onStartup();
-    exit(10);
-}
-        );
-MPX_TEST("test_top_focused_window_synced", {
-    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
-    int idle;
-    lock();
-    activateWorkspace(0);
-    WindowInfo* winInfo = getHead(getActiveWindowStack());
-    WindowInfo* last = getLast(getActiveWindowStack());
-    winInfo->addMask(STICKY_MASK);
-    activateWindow(winInfo);
-    raiseWindowInfo(last);
-    activateWorkspace(getNumberOfWorkspaces() - 1);
-    assert(getActiveWindowStack().size() == 1);
-    idle = getIdleCount();
-    unlock();
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
-    assert(getFocusedWindow() == winInfo);
-    lock();
-    activateWindow(last);
-    assert(getActiveWindowStack().size() == 2);
-    retile();
-    flush();
-    WindowID stackingOrder[] = {last->getID(), winInfo->getID(), last->getID()};
-    assert(checkStackingOrder(stackingOrder + (last->getID() == getActiveFocus(getActiveMasterKeyboardID())), 2));
-    unlock();
-});
-MPX_TEST("test_monitor_deletion", {
-    POLL_COUNT = 0;
-    MONITOR_DUPLICATION_POLICY = 0;
-    Monitor* m = getHead(getAllMonitors());
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        createMonitor(m->base);
-    detectMonitors();
-    assert(getNumberOfWorkspaces() + 1 == getAllMonitors().size());
-    assert(m);
-    assert(getWorkspaceFromMonitor(m));
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        assert(isVisible(i));
-    removeMonitor(m->getID());
-    markState();
+
+int _main(int argc, char* const* argv) ;
+
+static const char* const args[] = {"" __FILE__, "--no-event-loop"};
+static void setup() {
+    _main(2, (char* const*)args);
     startWM();
     waitUntilIdle();
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        assert(isVisible(i));
-    consumeEvents();
 }
-        );
-MPX_TEST("test_workspace_deletion", {
-    assert(getNumberOfWorkspaces() > 3);
-    activateWorkspace(1);
-    for(int i = 0; i < 10; i++)
-        registerWindow(createWindowInfo(createNormalWindow()));
-    flush();
-    activateWorkspace(0);
-    MONITOR_DUPLICATION_POLICY = 0;
-    createMonitor((Rect) {0, 0, 100, 100});
-    detectMonitors();
-    startWM();
-    WAIT_UNTIL_TRUE(getWorkspaceByIndex(1)->mapped);
+SET_ENV(setup, fullCleanup);
+MPX_TEST("auto_window_map", {
     lock();
-    activateWorkspace(1);
-    activateWorkspace(2);
-    assert(isVisible(2));
-    assert(!isVisible(1));
-    assert(isVisible(0));
-    xcb_ewmh_request_change_number_of_desktops(ewmh, defaultScreenNumber, 1);
-    flush();
+    WindowID win = createNormalWindow();
+    scan(root);
     unlock();
-    WAIT_UNTIL_TRUE(getNumberOfWorkspaces() == 1);
-    assert(isVisible(0));
-    assert(getActiveWindowStack().size() == getAllWindows().size());
-}
-        );
-MPX_TEST("test_workspace_monitor_addition", {
-    MONITOR_DUPLICATION_POLICY = 0;
-    removeWorkspaces(getNumberOfWorkspaces() - 1);
-    createMonitor((Rect) {0, 0, 100, 100});
-    detectMonitors();
-    assert(getNumberOfWorkspaces() < getAllMonitors().size());
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        assert(isVisible(i));
-    consumeEvents();
-    xcb_ewmh_request_change_number_of_desktops(ewmh, defaultScreenNumber, getAllMonitors().size());
-    flush();
-    startWM();
-    WAIT_UNTIL_TRUE(getNumberOfWorkspaces() == getAllMonitors().size());
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        assert(isVisible(i));
-}
-        );
-/*TODO functional test
-MPX_TEST("hung_thread", {
-    runInNewThread([](void*)->void* {
-        while(1)msleep(100);
-        return NULL;
-    }, NULL, "Spin Forever");
-    requestShutdown();
-    waitForAllThreadsToExit();
+    waitUntilIdle();
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(winInfo);
+    assert(winInfo->getWorkspace());
+    assert(winInfo->hasMask(MAPPED_MASK));
 });
-*/
+MPX_TEST("test_dock_detection", {
+    lock();
+    WindowID win = createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
+    scan(root);
+    unlock();
+    waitUntilIdle();
+    mapWindow(win);
+    waitUntilIdle();
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(winInfo);
+    assert(winInfo->isDock());
+});
+
+MPX_TEST("test_monitor_detection", {
+    POLL_COUNT = 0;
+    MONITOR_DUPLICATION_POLICY = 0;
+    lock();
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        createFakeMonitor({100, 100, 100, 100});
+    unlock();
+    waitUntilIdle();
+    assert(getNumberOfWorkspaces() + 1 == getAllMonitors().size());
+    for(Workspace* w : getAllWorkspaces())
+        assert(w->isVisible());
+    lock();
+    swapMonitors(0, 1);
+    clearFakeMonitors();
+    unlock();
+    waitUntilIdle();
+    for(Workspace* w : getAllWorkspaces())
+        assert(w->isVisible() == (w->getID() == 1));
+});
+MPX_TEST("default_active_layout", {
+
+    for(Workspace* w : getAllWorkspaces())
+        assert(w->getActiveLayout());
+});
+MPX_TEST("click_to_focus", {
+    setActiveLayout(getDefaultLayouts()[GRID]);
+    WindowID wins[] = {mapArbitraryWindow(), mapArbitraryWindow()};
+    waitUntilIdle();
+    for(WindowID win : wins) {
+        movePointer(1, 1, getActiveMasterPointerID(), win);
+        clickButton(1);
+        waitUntilIdle();
+        assert(getFocusedWindow());
+        assertEquals(getFocusedWindow()->getID(), win);
+    }
+});
+static void multiMonitorSetup() {
+    MONITOR_DUPLICATION_POLICY = 0;
+    setup();
+    lock();
+    createFakeMonitor({100, 100, 100, 100});
+    createFakeMonitor({100, 100, 100, 100});
+    detectMonitors();
+    assertEquals(getAllMonitors().size(), 3);
+    getActiveMaster()->setWorkspaceIndex(3);
+    unlock();
+    for(int i=0;i<10;i++)
+        createNormalWindow();
+    waitUntilIdle();
+}
+SET_ENV(multiMonitorSetup, fullCleanup);
+MPX_TEST("defaultWorkspace", {
+    assertEquals(getActiveMaster()->getWorkspace()->getWindowStack().size(),getAllWindows().size());
+});
+MPX_TEST("switchWorkspace", {
+    int count = 0;
+    for(Workspace* w : getAllWorkspaces())
+        count += w->isVisible();
+    assertEquals(getAllMonitors().size(), count);
+    for(Workspace* w : getAllWorkspaces())
+        switchToWorkspace(w->getID());
+    clearFakeMonitors();
+});
+static void bindingsSetup() {
+    ROOT_DEVICE_EVENT_MASKS = 0;
+    setup();
+}
+SET_ENV(bindingsSetup, fullCleanup);
+MPX_TEST("cycle_window", {
+    mapArbitraryWindow();
+    waitUntilIdle();
+    sendKeyPress(getKeyCode(XK_Alt_L));
+    sendKeyPress(getKeyCode(XK_Tab));
+    waitUntilIdle();
+    assert(getActiveChain());
+    sendKeyRelease(getKeyCode(XK_Tab));
+    sendKeyRelease(getKeyCode(XK_Alt_L));
+    waitUntilIdle();
+    assert(!getActiveChain());
+});
+MPX_TEST_ITER("move_window", 2, {
+    sendKeyPress(getKeyCode(XK_Super_L));
+    bool move = !_i % 2;
+    WindowID win = mapArbitraryWindow();
+    waitUntilIdle();
+    RectWithBorder rect = getRealGeometry(win);
+    if(move) {
+        rect.x++;
+        rect.y++;
+    }
+    else {
+        rect.width++;
+        rect.height++;
+    }
+    movePointer(1, 1, getActiveMasterPointerID(), win);
+    sendButtonPress(move ? Button1 : Button3);
+    waitUntilIdle();
+
+    movePointerRelative(1, 1);
+    waitUntilIdle();
+    assertEquals(rect, getRealGeometry(win));
+    sendButtonRelease(move ? Button1 : Button3);
+    waitUntilIdle();
+    movePointerRelative(1, 1);
+    waitUntilIdle(1);
+    assertEquals(rect, getRealGeometry(win));
+})
+;
