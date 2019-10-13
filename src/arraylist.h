@@ -206,7 +206,7 @@ struct ArrayList: std::vector<T> {
     T remove(uint32_t index) {
         assert(index < this->size());
         T value = (*this)[index];
-        for(int i = index; i < this->size() - 1; i++)
+        for(uint32_t i = index; i < this->size() - 1; i++)
             (*this)[i] = (*this)[i + 1];
         this->pop_back();
         return value;
@@ -220,12 +220,12 @@ struct ArrayList: std::vector<T> {
      * @return the element that has been removed or NULL
      */
     T removeElement(const T element) {
-        uint32_t index = indexOf(element);
+        int index = indexOf(element);
         return index != -1 ? this->remove(index) : (T) 0;
     }
     template<typename U = T>
     EnableIf<U, T> removeElement(uint32_t  element) {
-        uint32_t index = indexOf(element);
+        int index = indexOf(element);
         return index != -1 ? this->remove(index) : NULL;
     }
     T pop() {return remove(this->size() - 1);};

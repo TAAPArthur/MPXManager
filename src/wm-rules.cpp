@@ -78,7 +78,7 @@ void onConfigureRequestEvent(void) {
     xcb_configure_request_event_t* event = (xcb_configure_request_event_t*)getLastEvent();
     short values[5];
     int n = 0;
-    for(int i = 0; i < LEN(values); i++)
+    for(uint8_t i = 0U; i < LEN(values); i++)
         if(event->value_mask & (1 << i))
             values[n++] = (&event->x)[i];
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
@@ -258,8 +258,8 @@ void addAutoTileRules(AddFlag flag) {
                     XCB_CLIENT_MESSAGE,
                     onScreenChange,
                    };
-    for(int i = 0; i < LEN(events); i++)
-        getEventRules(events[i]).add(DEFAULT_EVENT(markState), flag);
+    for(auto event : events)
+        getEventRules(event).add(DEFAULT_EVENT(markState), flag);
     getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState), flag);

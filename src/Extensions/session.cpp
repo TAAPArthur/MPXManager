@@ -32,9 +32,9 @@ static void loadSavedLayouts() {
     LOG(LOG_LEVEL_TRACE, "Loading active layouts\n");
     cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, 0, UINT_MAX);
     if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
-        int len = xcb_get_property_value_length(reply);
+        uint32_t len = xcb_get_property_value_length(reply);
         char* strings = (char*) xcb_get_property_value(reply);
-        int index = 0, count = 0;
+        uint32_t index = 0, count = 0;
         while(index < len) {
             Layout* layout = findLayoutByName(std::string(&strings[index]));
             getWorkspace(count++)->setActiveLayout(layout);
@@ -51,7 +51,7 @@ static void loadSavedLayoutOffsets() {
     LOG(LOG_LEVEL_TRACE, "Loading Workspace layout offsets\n");
     cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, 0, UINT_MAX);
     if((reply = xcb_get_property_reply(dis, cookie, NULL)))
-        for(int i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++)
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++)
             getWorkspace(i)->setLayoutOffset(((int*)xcb_get_property_value(reply))[i]);
     free(reply);
 }
@@ -61,7 +61,7 @@ static void loadSavedMonitorWorkspaceMapping() {
     LOG(LOG_LEVEL_TRACE, "Loading Workspace monitor mappings\n");
     cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
     if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
-        for(int i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
             Monitor* m = getAllMonitors().find(((MonitorID*)xcb_get_property_value(reply))[i]);
             if(m) {
                 Workspace* w = m->getWorkspace();
@@ -78,9 +78,9 @@ static void loadSavedWorkspaceWindows() {
     LOG(LOG_LEVEL_TRACE, "Loading Workspace window stacks\n");
     cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
     if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
-        int index = 0;
+        WorkspaceID index = 0;
         WindowID* wid = (WindowID*) xcb_get_property_value(reply);
-        for(int i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
             if(wid[i] == 0) {
                 index++;
                 if(index == getNumberOfWorkspaces())
@@ -102,7 +102,7 @@ static void loadSavedMasterWindows() {
     if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
         Master* master = NULL;
         WindowID* wid = (WindowID*)xcb_get_property_value(reply);
-        for(int i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
             if(wid[i] == 0) {
                 master = getMasterById(wid[++i]);
             }
@@ -147,7 +147,7 @@ void saveCustomState(void) {
         for(auto p = master->getWindowStack().rbegin(); p != master->getWindowStack().rend(); ++p)
             masterWindows[numMasterWindows++] = (*p)->getID();
     }
-    for(int i = 0; i < getNumberOfWorkspaces(); i++) {
+    for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack()) {
             windows[numWindows++] = winInfo->getID();
         }

@@ -158,7 +158,7 @@ void setBorder(WindowID win) {
     setBorderColor(win, getActiveMaster()->getFocusColor());
 }
 void resetBorder(WindowID win) {
-    int maxValue = 0;
+    TimeStamp maxValue = 0;
     Master* master = NULL;
     for(Master* m : getAllMasters()) {
         if(m != getActiveMaster() && m->getFocusedWindow() && m->getFocusedWindow()->getID() == win)

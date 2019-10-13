@@ -23,7 +23,7 @@
  * This metadata will be compared to the current workspaces and if they
  * don't match, we consider the workspaces to have changed
  */
-typedef struct {
+struct WorkspaceState {
     ///representing  the view port of the workspaces' monitors
     Rect monitorViewport = {0, 0, 0, 0};
     /// if the workspace is known to be visible
@@ -36,7 +36,13 @@ typedef struct {
     WindowMask* windowMasks;
     /// the layout of the workspace
     void* layout;
-} WorkspaceState;
+    ~WorkspaceState() {
+        if(size) {
+            delete[] windowIds;
+            delete[] windowMasks;
+        }
+    }
+} ;
 std::ostream& operator<<(std::ostream& strm, const WorkspaceState& state) {
     strm << "{" << state.monitorViewport << " Visible:" << state.visible << " Size:" << state.size;
     for(int i = 0; i < state.size; i++)
@@ -44,7 +50,7 @@ std::ostream& operator<<(std::ostream& strm, const WorkspaceState& state) {
     return strm << " }";
 }
 
-static int numberOfRecordedWorkspaces;
+static WorkspaceID numberOfRecordedWorkspaces;
 static WorkspaceState* savedStates;
 static char couldStateHaveChanged = 1;
 
@@ -59,12 +65,6 @@ void unmarkState(void) {
 }
 
 static void destroyCurrentState() {
-    for(int i = 0; i < numberOfRecordedWorkspaces; i++) {
-        if(savedStates[i].size) {
-            delete[] savedStates[i].windowIds;
-            delete[] savedStates[i].windowMasks;
-        }
-    }
     delete[] savedStates;
     savedStates = NULL;
 }
@@ -78,7 +78,7 @@ static inline Rect getMonitorLocationFromWorkspace(Workspace* workspace) {
 }
 static WorkspaceState* computeState() {
     WorkspaceState* states = new WorkspaceState[getNumberOfWorkspaces()];
-    for(int i = 0; i < getNumberOfWorkspaces(); i++) {
+    for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         Workspace* w = getWorkspace(i);
         if(!w->isVisible() && i < numberOfRecordedWorkspaces)
             states[i].monitorViewport = savedStates[i].monitorViewport;
@@ -117,7 +117,7 @@ static int compareState() {
     WorkspaceState* currentState = computeState();
     assert(currentState);
     int changed = NO_CHANGE;
-    for(int i = 0; i < getNumberOfWorkspaces(); i++) {
+    for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         LOG_RUN(LOG_LEVEL_VERBOSE,
                 std::cout << "Index: " << i << "\n";
                 std::cout <<    "Current:" << currentState[i] << "\n";

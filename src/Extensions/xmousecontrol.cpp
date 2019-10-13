@@ -112,50 +112,46 @@ void addStartXMouseControlRule() {
     {MASK,KEY,{KR,A2},{.mask=XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}}
 
 
-static Binding bindings[] = {
-    // Directional control with WASD.
-    PAIR(0,	XK_w, addXMouseControlMask, SCROLL_UP_MASK, removeXMouseControlMask, SCROLL_UP_MASK),
-    PAIR(0,	XK_a, addXMouseControlMask, SCROLL_LEFT_MASK, removeXMouseControlMask, SCROLL_LEFT_MASK),
-    PAIR(0,	XK_s, addXMouseControlMask, SCROLL_DOWN_MASK, removeXMouseControlMask, SCROLL_DOWN_MASK),
-    PAIR(0,	XK_d, addXMouseControlMask, SCROLL_RIGHT_MASK, removeXMouseControlMask, SCROLL_RIGHT_MASK),
+void addDefaultXMouseControlBindings(uint32_t mask) {
+    Binding bindings[] = {
+        // Directional control with WASD.
+        PAIR(mask,	XK_w, addXMouseControlMask, SCROLL_UP_MASK, removeXMouseControlMask, SCROLL_UP_MASK),
+        PAIR(mask,	XK_a, addXMouseControlMask, SCROLL_LEFT_MASK, removeXMouseControlMask, SCROLL_LEFT_MASK),
+        PAIR(mask,	XK_s, addXMouseControlMask, SCROLL_DOWN_MASK, removeXMouseControlMask, SCROLL_DOWN_MASK),
+        PAIR(mask,	XK_d, addXMouseControlMask, SCROLL_RIGHT_MASK, removeXMouseControlMask, SCROLL_RIGHT_MASK),
 
-    PAIR(0,	XK_Up, addXMouseControlMask, MOVE_UP_MASK, removeXMouseControlMask, MOVE_UP_MASK),
-    PAIR(0,	XK_Left, addXMouseControlMask, MOVE_LEFT_MASK, removeXMouseControlMask, MOVE_LEFT_MASK),
-    PAIR(0,	XK_Down, addXMouseControlMask, MOVE_DOWN_MASK, removeXMouseControlMask, MOVE_DOWN_MASK),
-    PAIR(0,	XK_Right, addXMouseControlMask, MOVE_RIGHT_MASK, removeXMouseControlMask, MOVE_RIGHT_MASK),
+        PAIR(mask,	XK_Up, addXMouseControlMask, MOVE_UP_MASK, removeXMouseControlMask, MOVE_UP_MASK),
+        PAIR(mask,	XK_Left, addXMouseControlMask, MOVE_LEFT_MASK, removeXMouseControlMask, MOVE_LEFT_MASK),
+        PAIR(mask,	XK_Down, addXMouseControlMask, MOVE_DOWN_MASK, removeXMouseControlMask, MOVE_DOWN_MASK),
+        PAIR(mask,	XK_Right, addXMouseControlMask, MOVE_RIGHT_MASK, removeXMouseControlMask, MOVE_RIGHT_MASK),
 
-    PAIR(0,	XK_KP_Up, addXMouseControlMask, MOVE_UP_MASK, removeXMouseControlMask, MOVE_UP_MASK),
-    PAIR(0,	XK_KP_Left, addXMouseControlMask, MOVE_LEFT_MASK, removeXMouseControlMask, MOVE_LEFT_MASK),
-    PAIR(0,	XK_KP_Down, addXMouseControlMask, MOVE_DOWN_MASK, removeXMouseControlMask, MOVE_DOWN_MASK),
-    PAIR(0,	XK_KP_Right, addXMouseControlMask, MOVE_RIGHT_MASK, removeXMouseControlMask, MOVE_RIGHT_MASK),
+        PAIR(mask,	XK_KP_Up, addXMouseControlMask, MOVE_UP_MASK, removeXMouseControlMask, MOVE_UP_MASK),
+        PAIR(mask,	XK_KP_Left, addXMouseControlMask, MOVE_LEFT_MASK, removeXMouseControlMask, MOVE_LEFT_MASK),
+        PAIR(mask,	XK_KP_Down, addXMouseControlMask, MOVE_DOWN_MASK, removeXMouseControlMask, MOVE_DOWN_MASK),
+        PAIR(mask,	XK_KP_Right, addXMouseControlMask, MOVE_RIGHT_MASK, removeXMouseControlMask, MOVE_RIGHT_MASK),
 
-    {0, XK_Hyper_L, {removeXMouseControlMask, -1}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
+        {mask, XK_Hyper_L, {removeXMouseControlMask, -1}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
 
-    {0,	XK_e, {adjustScrollSpeed, 2}},
-    {0 | ShiftMask,	XK_e, {adjustScrollSpeed, -2}},
-    {0 | Mod1Mask,	XK_e, {adjustSpeed, 0}},
-    {0,	XK_r, {adjustScrollSpeed, 2}},
-    {0 | ShiftMask,	XK_r, {adjustScrollSpeed, -2}},
-    {0 | Mod1Mask,	XK_r, {adjustSpeed, 0}},
-    {0,	XK_q, resetXMouseControl},
+        {mask,	XK_e, {adjustScrollSpeed, 2}},
+        {mask | ShiftMask,	XK_e, {adjustScrollSpeed, -2}},
+        {mask | Mod1Mask,	XK_e, {adjustSpeed, 0}},
+        {mask,	XK_r, {adjustScrollSpeed, 2}},
+        {mask | ShiftMask,	XK_r, {adjustScrollSpeed, -2}},
+        {mask | Mod1Mask,	XK_r, {adjustSpeed, 0}},
+        {mask,	XK_q, resetXMouseControl},
 
-    {0, XK_c, {clickButton, Button2}},
-    {0, XK_x, {clickButton, Button3}},
-    {0, XK_space, {clickButton, Button1}},
-    {0, XK_Insert, {clickButton, Button2}},
-    {0, XK_space, {clickButton, Button1}},
-    {0 | ShiftMask,	XK_space, {clickButton, Button1}},
-    {0,	XK_Insert, {clickButton, Button2}},
+        {mask, XK_c, {clickButton, Button2}},
+        {mask, XK_x, {clickButton, Button3}},
+        {mask, XK_space, {clickButton, Button1}},
+        {mask, XK_Insert, {clickButton, Button2}},
+        {mask, XK_space, {clickButton, Button1}},
+        {mask | ShiftMask,	XK_space, {clickButton, Button1}},
+        {mask,	XK_Insert, {clickButton, Button2}},
 
-    {0,	XK_Return, grabKeyboard},
-    {0 | ShiftMask,	XK_Return, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},
-};
-int XMOUSE_CONTROL_DEFAULT_MASK = Mod3Mask;
-void addDefaultXMouseControlBindings(void) {
-    for(int i = 0; i < LEN(bindings); i++) {
-        Binding* b = new Binding(bindings[i]);
-        b->mod |= XMOUSE_CONTROL_DEFAULT_MASK;
+        {mask,	XK_Return, grabKeyboard},
+        {mask | ShiftMask,	XK_Return, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},
+    };
+    for(Binding&b:bindings)
         getDeviceBindings().add(b);
-    }
 }
 #endif

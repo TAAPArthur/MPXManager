@@ -232,7 +232,7 @@ void tileWorkspace(WorkspaceID index) {
     applyLayout(workspace);
     ArrayList<WindowInfo*>& list = workspace->getWindowStack();
     LayoutState dummy = {.monitor = workspace->getMonitor(), .stack = list};
-    for(int i = 0; i < list.size(); i++) {
+    for(uint32_t i = 0; i < list.size(); i++) {
         WindowInfo* winInfo = list[i];
         if(winInfo->isInteractable() && !winInfo->isTileable())
             if(winInfo->hasPartOfMask(MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)) {
@@ -286,15 +286,15 @@ void applyLayout(Workspace* workspace) {
     }
 }
 
-static int splitEven(LayoutState* state, int offset, short const* baseValues, int dim, int num,
-                     int last) {
+static uint32_t splitEven(LayoutState* state, int offset, short const* baseValues, int dim, int num,
+                          int last) {
     assert(num);
     short values[CONFIG_LEN];
     memcpy(values, baseValues, sizeof(values));
     int sizePerWindow = values[dim] / num;
     int rem = values[dim] % num;
     LOG(LOG_LEVEL_DEBUG, "tiling at most %d windows size %d %d\n", num, sizePerWindow, dim);
-    int i = offset;
+    uint32_t i = offset;
     int count = 0;
     while(i < state->stack.size()) {
         WindowInfo* winInfo = state->stack[i++];

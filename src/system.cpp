@@ -102,7 +102,7 @@ void resetPipe() {
         LOG(LOG_LEVEL_TRACE, "reseting pipe\n");
         close(STATUS_FD);
         close(STATUS_FD_READ);
-        for(int i = 0; i < LEN(statusPipeFD); i++)
+        for(int i = LEN(statusPipeFD) - 1; i >= 0; i--)
             statusPipeFD[i] = 0;
     }
 }

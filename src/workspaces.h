@@ -11,7 +11,7 @@
 
 /// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
 #ifndef NO_WORKSPACE
-    #define NO_WORKSPACE -1
+    #define NO_WORKSPACE ((WorkspaceID)-1)
 #endif
 //
 ///@see Workspace::getNextWorkspace()
@@ -32,7 +32,7 @@ const ArrayList<Workspace*>& getAllWorkspaces();
  * @return the number of workspaces
  * @see createContext
  */
-int getNumberOfWorkspaces();
+uint32_t getNumberOfWorkspaces();
 /**
  * Creates and adds num workspace
  * @param num the number of workspaces to add
@@ -135,10 +135,10 @@ public:
     /**
      * @return the mask of w
      */
-    int getMask() {
+    WindowMask getMask() {
         return mask;
     }
-    int hasPartOfMask(WindowMask mask) {
+    WindowMask hasPartOfMask(WindowMask mask) {
         return getMask()& mask;
     }
     /**

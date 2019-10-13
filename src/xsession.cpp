@@ -317,7 +317,7 @@ int getIdleCount() {
 
 static inline xcb_generic_event_t* pollForEvent() {
     xcb_generic_event_t* event;
-    for(int i = 0; i < POLL_COUNT; i++) {
+    for(int i = POLL_COUNT - 1; i >= 0; i--) {
         if(i)
             msleep(POLL_INTERVAL);
         event = xcb_poll_for_event(dis);

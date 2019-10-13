@@ -99,7 +99,7 @@ struct Binding {
      */
     virtual bool trigger(const UserEvent& event)const;
     bool matches(const UserEvent& event);
-    int getDetail();
+    uint32_t getDetail();
     /// @return the id of the device to grab
     int getTargetID() const {return flags.targetID;}
     int setTargetID(MasterID id) {return flags.targetID = id;}
