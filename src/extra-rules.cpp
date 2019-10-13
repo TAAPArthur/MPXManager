@@ -20,8 +20,8 @@
 #include "time.h"
 
 
-void addUnknownWindowIgnoreRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->hasMask(IMPLICIT_TYPE) ? unregisterWindow(winInfo) : 0;},
+void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->hasMask(IMPLICIT_TYPE | INPUT_ONLY_MASK) ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
@@ -31,7 +31,7 @@ static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
 }
 
 void addIgnoreSmallWindowRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 100) ? unregisterWindow(winInfo) : 0;},
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 128) ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 void (*printStatusMethod)();
@@ -62,11 +62,11 @@ void addAvoidDocksRule(AddFlag flag) {
         assert(winInfo->getType());
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
             LOG(LOG_LEVEL_DEBUG, "Marking window as dock\n");
-            loadDockProperties(winInfo);
             winInfo->setDock();
             winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);
-            winInfo->removeFromWorkspace();
             removeBorder(winInfo->getID());
+            loadDockProperties(winInfo);
+            winInfo->removeFromWorkspace();
         }
     }, FUNC_NAME), flag);
 }

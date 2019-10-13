@@ -303,12 +303,14 @@ struct RefWindowMouse {
     short mousePos[2];
     bool change[2];
     bool move;
-    RectWithBorder calculateNewPosition(const short newMousePos[2]) {
+    RectWithBorder calculateNewPosition(const short newMousePos[2], bool* hasChanged) {
+        *hasChanged=0;
         assert(win);
         RectWithBorder result = RectWithBorder(ref);
         for(int i = 0; i < 2; i++) {
             short delta = newMousePos[i] - mousePos[i];
             if(change[i]) {
+                *hasChanged=1;
                 if(move)
                     result[i] += delta;
                 else if((signed)(delta + result[2 + i]) < 0) {
@@ -319,7 +321,8 @@ struct RefWindowMouse {
                     result[i + 2] += delta;
             }
         }
-        LOG_RUN(LOG_LEVEL_TRACE, std::cout << "WindowMoveResizeResult: " << result << "\n");
+        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "WindowMoveResizeResult: " << result << "\n");
+        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "WindowMoveResizeRef   : " << ref << "\n");
         return result;
     }
     const RectWithBorder getRef() {return ref;}
@@ -356,8 +359,9 @@ void updateWindowMoveResize(Master* m) {
     if(ref) {
         short pos[2];
         if(getMousePosition(m, root, pos)) {
-            RectWithBorder r = ref->calculateNewPosition(pos);
-            if(r.width && r.height)
+            bool change=0;
+            RectWithBorder r = ref->calculateNewPosition(pos, &change);
+            if(change && r.width && r.height)
                 processConfigureRequest(ref->win, r, 0, 0,
                                         XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
         }
@@ -427,4 +431,6 @@ void syncState() {
     setShowingDesktop(value);
     LOG(LOG_LEVEL_INFO, "Current workspace is %d\n", currentWorkspace);
     switchToWorkspace(currentWorkspace);
+    for(Master* m : getAllMasters())
+        m->onWindowFocus(getActiveFocus(m->getKeyboardID()));
 }

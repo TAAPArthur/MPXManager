@@ -116,6 +116,14 @@ MPX_TEST("test_register_events", {
     assert(attr->your_event_mask == ROOT_EVENT_MASKS);
     free(attr);
 });
+MPX_TEST("test_unregister_events", {
+    registerForWindowEvents(root, ROOT_EVENT_MASKS);
+    unregisterForWindowEvents(root);
+    xcb_get_window_attributes_reply_t* attr;
+    attr = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, root), NULL);
+    assert(attr->your_event_mask == 0);
+    free(attr);
+});
 SET_ENV(createXSimpleEnv, fullCleanup);
 #ifndef NO_XRANDR
 MPX_TEST("test_monitors", {

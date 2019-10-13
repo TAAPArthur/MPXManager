@@ -45,7 +45,8 @@ bool hasInteractiveWindow(const ArrayList<WindowInfo*>& stack) {
     return 0;
 }
 
-void cycleWindows(int delta, Master* master) {
+void cycleWindows(int delta) {
+    Master* master = getActiveMaster();
     master->setFocusStackFrozen(1);
     int index = getNextIndexInStack(master->getWindowStack(), -delta, master->getFocusedWindow());
     if(index >= 0)

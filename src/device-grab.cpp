@@ -64,3 +64,6 @@ int registerForWindowEvents(WindowID window, int mask) {
     cookie = xcb_change_window_attributes_checked(dis, window, XCB_CW_EVENT_MASK, &mask);
     return catchErrorSilent(cookie);
 }
+int unregisterForWindowEvents(WindowID window) {
+    return registerForWindowEvents(window, 0);
+}

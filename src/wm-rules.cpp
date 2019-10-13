@@ -106,7 +106,7 @@ void onCreateEvent(void) {
 void onDestroyEvent(void) {
     xcb_destroy_notify_event_t* event = (xcb_destroy_notify_event_t*)getLastEvent();
     LOG(LOG_LEVEL_VERBOSE, "Detected destroy event for Window %d\n", event->window);
-    unregisterWindow(getWindowInfo(event->window));
+    unregisterWindow(getWindowInfo(event->window), 1);
 }
 void onVisibilityEvent(void) {
     xcb_visibility_notify_event_t* event = (xcb_visibility_notify_event_t*)getLastEvent();
@@ -185,8 +185,13 @@ void onPropertyEvent(void) {
     xcb_property_notify_event_t* event = (xcb_property_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
-        if(event->atom == ewmh->_NET_WM_USER_TIME);
-        else loadWindowProperties(winInfo);
+        if(event->atom == ewmh->_NET_WM_NAME || event->atom == WM_NAME)
+            loadWindowTitle(winInfo);
+        else if(event->atom == ewmh->_NET_WM_USER_TIME);
+        else {
+            LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(&event->atom, 1));
+            //loadWindowProperties(winInfo);
+        }
     }
 }
 
@@ -252,7 +257,7 @@ void listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 }
 
 void addAutoTileRules(AddFlag flag) {
-    int events[] = {XCB_MAP_NOTIFY, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
+    int events[] = {ClientMapAllow, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
                     XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
                     XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
                     XCB_CLIENT_MESSAGE,

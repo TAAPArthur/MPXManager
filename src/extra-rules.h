@@ -21,11 +21,6 @@ void addNoDockFocusRule(AddFlag flag = ADD_UNIQUE);
 void focusFollowMouse();
 
 /**
- * Add ProcessingWindow rule that will cause the WM to ignore windows that don't have their window type set (@see isUnknown). The window manager will not interact at all with these windows like to set focus
- * (non-default)
- */
-void addUnknownWindowIgnoreRule(AddFlag flag = ADD_UNIQUE);
-/**
  * Adds rules for focus to change when a mouse enters a new window (non-default)
  * (non-default)
  */
@@ -63,4 +58,9 @@ void addShutdownOnIdleRule(AddFlag flag = ADD_UNIQUE);
 void addAutoFocusRule(AddFlag flag = ADD_UNIQUE) ;
 void addIgnoreSmallWindowRule(AddFlag flag = ADD_UNIQUE) ;
 void addScanChildrenRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Add ProcessingWindow rule that will cause the WM to ignore windows that don't have their window type set (@see isUnknown). The window manager will not interact at all with these windows like to set focus
+ * (non-default)
+ */
+void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag = ADD_UNIQUE) ;
 #endif

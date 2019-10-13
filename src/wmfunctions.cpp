@@ -35,8 +35,10 @@
 bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
     if(newlyCreated)
         winInfo->setCreationTime(getTime());
-    if(winInfo->hasMask(MAPPED_MASK)) {
-        LOG(LOG_LEVEL_DEBUG, "Window is mapped %d\n", winInfo->getID());
+    else
+        loadWindowHints(winInfo);
+    if(winInfo->hasMask(MAPPABLE_MASK)) {
+        LOG(LOG_LEVEL_DEBUG, "Window is mappable %d\n", winInfo->getID());
         loadWindowProperties(winInfo);
         if(!applyEventRules(ClientMapAllow, winInfo))
             return 0;
@@ -115,11 +117,13 @@ static bool focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo) {
     return 1;
 }
 
-bool unregisterWindow(WindowInfo* winInfo) {
+bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     if(!winInfo)
         return 0;
     WindowID winToRemove = winInfo->getID();
     LOG(LOG_LEVEL_DEBUG, "window %d has been removed\n", winToRemove);
+    if(!destroyed)
+        unregisterForWindowEvents(winInfo->getID());
     ArrayList<Master*> mastersFocusedOnWindow ;
     for(Master* master : getAllMasters())
         if(master->getFocusedWindow() == winInfo)

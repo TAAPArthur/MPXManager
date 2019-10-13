@@ -110,4 +110,6 @@ int registerForWindowEvents(WindowID window, int mask);
  * This method does nothing if compiled without XRANDR support
  */
 void registerForMonitorChange();
+
+int unregisterForWindowEvents(WindowID window) ;
 #endif

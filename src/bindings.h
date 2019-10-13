@@ -55,16 +55,20 @@ struct BindingFlags {
     bool noGrab = 0;
     ///The mask to grab;
     uint32_t mask = 0 ;
-    /**The target of the grab;; Default: is ALL_MASTER*/
-    uint32_t targetID = 0;
+    /**The target of the grab;; Default: is XIAllMasterDevices*/
+    uint32_t targetID = 1;
     /// Details which window to pass to the boundFunction
     WindowParamType windowTarget = DEFAULT_WINDOW ;
     /// if true the binding won't trigger for key repeats
     bool noKeyRepeat = 0;
     /// Binding will be triggered in the active master is in a compatible mode
     unsigned int mode = 0;
+    // used only for chain bindings
+    bool noGrabDevice;
+    uint32_t chainMask = 0 ;
 };
 
+#define ANY_MASK (-1)
 ///used for key/mouse bindings
 struct Binding {
     /**Modifier to match on*/
@@ -80,7 +84,8 @@ struct Binding {
     Binding(uint32_t mod, uint32_t buttonOrKey, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
             std::string name = ""): mod(mod), buttonOrKey(buttonOrKey), boundFunction(boundFunction), flags(flags), name(name) {
         if(flags.mask == 0)
-            this->flags.mask = isButton(buttonOrKey) ? XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS : XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
+            this->flags.mask = buttonOrKey == 0 ? ANY_MASK : isButton(buttonOrKey) ? XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
+                               XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
     }
 
 
