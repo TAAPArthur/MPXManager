@@ -42,11 +42,12 @@ else
   CPPFLAGS += ${RELEASE_FLAGS}
 endif
 
+
 pkgname := mpxmanager
 
 all: mpxmanager
 
-install: mpxmanager.1 libmpxmanager.a libmpx-patch.so
+install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
@@ -62,8 +63,18 @@ preinstall: mpxmanager.1 mpxmanager-autocomplete.sh
 mpxmanager.1: mpxmanager.sh
 	help2man -No mpxmanager.1 ./mpxmanager.sh
 
-mpxmanager-autocomplete.sh: mpxmanager.cpp mpxmanager.sh
-	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 |grep -v ' '|cut -d'=' -f1 |xargs -I {} echo {} | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
+mpxmanager.sh: mpxmanager.sh.template
+	cp $< $@
+	sed -i "s/CC=.*/CC='${CC}'/g" mpxmanager.sh
+	sed -i "s/LDFLAGS=.*/LDFLAGS='${LDFLAGS}'/g" mpxmanager.sh
+	sed -i "s/CPPFLAGS=.*/CPPFLAGS='${CPPFLAGS}'/g" mpxmanager.sh
+	sed -i "s/GIT_HASH=.*/GIT_HASH=$$(git rev-parse --short HEAD)/g" mpxmanager.sh
+
+mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.cpp communications.cpp
+	cp $< $@
+	sed -i "s/startOptions=.*/startOptions=\"$$(echo $$(./mpxmanager --list-start-options 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'| sed -E 's/((\w|-)+\W)/--\1/g'))\"/g"  mpxmanager-autocomplete.sh
+	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --set list-options quit 2>&1 | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
+	sed -i "s/modeOptions=.*/modeOptions=\"$$(echo $$(./mpxmanager --list-modes 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: ${SRCS}
 	${CC} $^ -o $@ ${CPPFLAGS} ${LDFLAGS}

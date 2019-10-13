@@ -7,15 +7,16 @@
 #%
 #%
 #%Action:
-#%    --recompile                   Recompile with program. Needed for changes to config to be loaded
-#%    --restart                     Restart the program
+#%    --hash                        Displays git hash
+#%    --help, -h                    Print this help
+#%    --mode, -m                    run with a predefined settings. Valid options are: xmousecontrol
 #%    --name                        Name of executable
 #%    --path                        Path to the config file
+#%    --quit                        Exists a running instance
+#%    --recompile                   Recompile with program. Needed for changes to config to be loaded
+#%    --restart                     Restart the program
 #%    --send=<name=value>, -s       send argument(s) to running instance (can be called multiple times)
 #%    --set=<name=value>            set argument(s) for new instances (can be called multiple times)
-#%    --mode, -m                    run with a predefined settings. Valid options are: xmousecontrol
-#%    -h, --help                    Print this help
-#%    --quit                        Exists a running instance
 #%    -v, --version                 Print script information
 #%
 #%Modes:
@@ -34,7 +35,7 @@
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} (taaparthur.no-ip.org) 0.9.1
+#-    version         ${SCRIPT_NAME} (taaparthur.no-ip.org) ${VERSION}
 #-    author          Arthur Williams
 #-    license         MIT
 #================================================================
@@ -43,25 +44,35 @@
 #MAN generated with help2man -No mpxmanager.1 ./mpxmanager.sh
 
 set -e
+[ -z "$DEBUG" ] || set -xe
+
+VERSION=0.9.9
+GIT_HASH=
+CC=
+CPPFLAGS=
+LDFLAGS=
 
 displayHelp(){
     SCRIPT_HEADSIZE=$(head -200 ${0} |grep -n "^# END_OF_HEADER" | cut -f1 -d:)
     SCRIPT_NAME="$(basename ${0})"
     head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${SCRIPT_NAME}/${SCRIPT_NAME}/g" ;
+    head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${VERSION}/${VERSION} ${GIT_HASH}/g" ;
 }
 
 run(){
     exec $path/$fileName $@
 }
 displayVersion(){
-    echo "0.9.8"
+    echo $VERSION
+}
+displayHash(){
+    echo $GIT_HASH
 }
 
 fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))
 path=$HOME/.mpxmanager
 optspec=":vhs-:"
 
-LIBS="-lpthread -lm -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb"
 
 getopts "$optspec" optchar || run
     case "${optchar}" in
@@ -83,7 +94,10 @@ getopts "$optspec" optchar || run
                     mkdir -p $path
                     [ -f $path/config.cpp ] || cp /usr/share/mpxmanager/sample-config.cpp $path/config.cpp
                     shift
-                    gcc $path/config.cpp -o $path/$fileName -lmpxmanager $LIBS "$@"
+                    $CC $path/config.cpp -o $path/$fileName -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
+                    ;;
+                hash)
+                    displayHash
                     ;;
                 help)
                     displayHelp
