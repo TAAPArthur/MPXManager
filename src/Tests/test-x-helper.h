@@ -61,8 +61,8 @@ static inline WindowID  createInputOnlyWindow(void) {
 static inline WindowID  createInputWindow(int input) {
     return createWindow(root, 1, 0, 0, input, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
-static inline WindowID createTypelessWindow(void) {
-    return createWindow(root, 0, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+static inline WindowID createTypelessInputOnlyWindow(void) {
+    return createWindow(root, 0, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
 }
 static inline WindowID createIgnoredWindow(void) {
     return createWindow(root, 1, 1, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);

@@ -31,7 +31,8 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     stream << " Title '" << winInfo.getTitle() << "'" ;
     stream << " Class '" << winInfo.getClassName()  << "' '" << winInfo.getInstanceName() << "'";
     stream << " Type '" << winInfo.getTypeName() << "'";
-    stream << " Mask " << winInfo.getMask() << ": " << maskToString(winInfo.getMask());
+    stream << " Masks: " << (winInfo.getMask() ? __builtin_popcount(winInfo.getMask()) : 0) << ": " << maskToString(
+               winInfo.getMask());
     if(winInfo.getWorkspace())
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;
     if(winInfo.isOverrideRedirectWindow())

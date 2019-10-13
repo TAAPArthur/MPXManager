@@ -386,8 +386,10 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
         }
         */
     }
-    else
+    else {
         LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
+        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << *winInfo << "\n");
+    }
     return mask;
 }
 void removeBorder(WindowID win) {

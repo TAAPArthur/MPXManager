@@ -180,7 +180,7 @@ int _main(int argc, char* const* argv) {
                 LOG(LOG_LEVEL_ERROR, "did not receive confirmation\n");
                 quit(2);
             }
-            LOG(LOG_LEVEL_TRACE, "waiting for send receipts %d %d\n", isMPXManagerRunning(), hasOutStandingMessages());
+            LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d\n", isMPXManagerRunning(), hasOutStandingMessages());
         }
     }
     return 0;

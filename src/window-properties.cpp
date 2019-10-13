@@ -114,13 +114,17 @@ static void loadProtocols(WindowInfo* winInfo) {
     if(xcb_icccm_get_wm_protocols_reply(dis,
                                         xcb_icccm_get_wm_protocols(dis, winInfo->getID(), ewmh->WM_PROTOCOLS),
                                         &reply, NULL)) {
-        for(int i = 0; i < reply.atoms_len; i++)
+        LOG(LOG_LEVEL_TRACE, "Found %d protocols\n", reply.atoms_len);
+        LOG_RUN(LOG_LEVEL_TRACE, dumpAtoms(reply.atoms, reply.atoms_len));
+        for(uint32_t i = 0; i < reply.atoms_len; i++)
             if(reply.atoms[i] == WM_DELETE_WINDOW)
                 winInfo->addMask(WM_DELETE_WINDOW_MASK);
             else if(reply.atoms[i] == ewmh->_NET_WM_PING)
                 winInfo->addMask(WM_PING_MASK);
             else if(reply.atoms[i] == WM_TAKE_FOCUS)
                 winInfo->addMask(WM_TAKE_FOCUS_MASK);
+            else
+                LOG(LOG_LEVEL_DEBUG, "Unsupported protocol detected %s %d\n", getAtomValue(reply.atoms[i]).c_str(), reply.atoms[i]);
         xcb_icccm_get_wm_protocols_reply_wipe(&reply);
     }
 }

@@ -267,10 +267,15 @@ const char* eventTypeToString(int type) {
             _ADD_EVENT_TYPE_CASE(ClientMapAllow);
             _ADD_EVENT_TYPE_CASE(PreRegisterWindow);
             _ADD_EVENT_TYPE_CASE(PostRegisterWindow);
+            _ADD_EVENT_TYPE_CASE(UnregisteringWindow);
+            _ADD_EVENT_TYPE_CASE(WindowWorkspaceMove);
             _ADD_EVENT_TYPE_CASE(onScreenChange);
+            _ADD_EVENT_TYPE_CASE(ProcessDeviceEvent);
             _ADD_EVENT_TYPE_CASE(onWindowMove);
+            _ADD_EVENT_TYPE_CASE(TileWorkspace);
             _ADD_EVENT_TYPE_CASE(Periodic);
             _ADD_EVENT_TYPE_CASE(Idle);
+            _ADD_EVENT_TYPE_CASE(TrueIdle);
         case 0:
             return "Error";
         default:

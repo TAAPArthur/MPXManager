@@ -131,13 +131,13 @@ typedef enum {
 
 } WindowMasks;
 #include <string>
-#define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0))s+=#str " ";
+#define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0)){s+=#str " ";mask&=~str;}
 static inline std::string maskToString(WindowMask mask) {
     std::string s = "";
     _PRINT_MASK(NO_MASK, mask);
+    _PRINT_MASK(MAXIMIZED_MASK, mask);
     _PRINT_MASK(X_MAXIMIZED_MASK, mask);
     _PRINT_MASK(Y_MAXIMIZED_MASK, mask);
-    _PRINT_MASK(MAXIMIZED_MASK, mask);
     _PRINT_MASK(FULLSCREEN_MASK, mask);
     _PRINT_MASK(ROOT_FULLSCREEN_MASK, mask);
     _PRINT_MASK(BELOW_MASK, mask);
@@ -145,15 +145,15 @@ static inline std::string maskToString(WindowMask mask) {
     _PRINT_MASK(NO_TILE_MASK, mask);
     _PRINT_MASK(STICKY_MASK, mask);
     _PRINT_MASK(HIDDEN_MASK, mask);
+    _PRINT_MASK(FLOATING_MASK, mask);
     _PRINT_MASK(EXTERNAL_RESIZE_MASK, mask);
     _PRINT_MASK(EXTERNAL_MOVE_MASK, mask);
     _PRINT_MASK(EXTERNAL_BORDER_MASK, mask);
     _PRINT_MASK(EXTERNAL_RAISE_MASK, mask);
-    _PRINT_MASK(FLOATING_MASK, mask);
+    _PRINT_MASK(SRC_ANY, mask);
     _PRINT_MASK(SRC_INDICATION_OTHER, mask);
     _PRINT_MASK(SRC_INDICATION_APP, mask);
     _PRINT_MASK(SRC_INDICATION_PAGER, mask);
-    _PRINT_MASK(SRC_ANY, mask);
     _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK, mask);
     _PRINT_MASK(INPUT_ONLY_MASK, mask);
     _PRINT_MASK(INPUT_MASK, mask);

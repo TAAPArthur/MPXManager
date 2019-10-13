@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "mywm-structs.h"
+#include <cstdio>
 
 
 
@@ -52,8 +53,7 @@ enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LE
  * @param str
  *
  */
-#define LOG(i,str...) \
-    LOG_RUN(i, dprintf(LOG_FD, str))
+#define LOG(i,str...) LOG_RUN(i, std::printf(str))
 
 /**
  * if i>= getLogLevel(), run code
@@ -84,6 +84,7 @@ void setLogLevel(uint32_t level);
 static inline int isLogging(int i) {
     return LOGGING && i >= getLogLevel();
 }
+void dumpWindowStack() ;
 
 /**
  * Prints the stack strace

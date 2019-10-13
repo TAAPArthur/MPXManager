@@ -94,6 +94,7 @@ getopts "$optspec" optchar || run
                     mkdir -p $path
                     [ -f $path/config.cpp ] || cp /usr/share/mpxmanager/sample-config.cpp $path/config.cpp
                     shift
+                    echo $CC $path/config.cpp -o $path/$fileName -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
                     $CC $path/config.cpp -o $path/$fileName -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
                     ;;
                 hash)

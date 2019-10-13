@@ -54,7 +54,6 @@ static inline void fullCleanup() {
         flush();
     }
     waitForAllThreadsToExit();
-
     LOG(0, "validating state\n");
     validate();
     getDeviceBindings().deleteElements();
@@ -123,6 +122,7 @@ static inline void waitToReceiveInput(int mask, int detailMask) {
 
 static inline int waitForNormalEvent(int type) {
     flush();
+    LOG(LOG_LEVEL_ALL, "Waiting for event of type %d\n", type);
     while(type) {
         xcb_generic_event_t* e = xcb_wait_for_event(dis);
         LOG(LOG_LEVEL_ALL, "Found event %p\n", e);

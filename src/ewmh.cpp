@@ -127,7 +127,7 @@ void setSavedWorkspaceIndex(WindowInfo* winInfo) {
 void autoResumeWorkspace(WindowInfo* winInfo) {
     if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isDock()) {
         WorkspaceID w = getSavedWorkspaceIndex(winInfo->getID());
-        LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d", winInfo->getID(), w);
+        LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d\n", winInfo->getID(), w);
         winInfo->moveToWorkspace(w);
     }
 }
