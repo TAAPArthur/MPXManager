@@ -256,7 +256,6 @@ MPX_TEST("test_client_set_window_unknown_state", {
 MPX_TEST("test_client_set_window_state", {
     WindowInfo* winInfo = getAllWindows()[0];
     xcb_ewmh_wm_state_action_t states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
-    addUnknownWindowIgnoreRule();
     WindowID ignoredWindow = createIgnoredWindow();
     for(int i = 0; i < LEN(states); i++) {
         WindowInfo fakeWinInfo = {.id = ignoredWindow};

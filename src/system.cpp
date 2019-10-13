@@ -183,6 +183,7 @@ int spawnPipe(const char* command, bool dup) {
 }
 
 int waitForChild(int pid) {
+    LOG(LOG_LEVEL_DEBUG, "Waiting for process: %d\n", pid);
     int status = 0;
     waitpid(pid, &status, 0);
     return WIFEXITED(status) ? WEXITSTATUS(status) : WIFSIGNALED(status) ? WTERMSIG(status) : -1;

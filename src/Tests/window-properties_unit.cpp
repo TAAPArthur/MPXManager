@@ -1,6 +1,7 @@
 #include "tester.h"
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
+#include "test-event-helper.h"
 #include "../globals.h"
 #include "../layouts.h"
 #include "../window-properties.h"
@@ -112,8 +113,8 @@ MPX_TEST("load_protocols", {
     WindowID win = createUnmappedWindow();
     WindowInfo* winInfo = new WindowInfo(win);
     getAllWindows().add(winInfo);
-    xcb_atom_t atoms[] = {WM_TAKE_FOCUS, WM_DELETE_WINDOW, ewmh->_NET_WM_PING};
-    xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, 3, atoms);
+    xcb_atom_t atoms[] = {WM_TAKE_FOCUS, WM_DELETE_WINDOW, ewmh->_NET_WM_PING, ewmh->_NET_WM_SYNC_REQUEST};
+    xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, LEN(atoms), atoms);
     loadWindowProperties(winInfo);
     assert(winInfo->hasMask(WM_DELETE_WINDOW_MASK));
     assert(winInfo->hasMask(WM_TAKE_FOCUS_MASK));

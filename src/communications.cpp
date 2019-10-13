@@ -13,6 +13,7 @@
 #include "bindings.h"
 #include "globals.h"
 #include "logger.h"
+#include "window-properties.h"
 #include "wmfunctions.h"
 #include "windows.h"
 #include "xsession.h"
@@ -104,12 +105,14 @@ static ArrayList<Option*> options = {
     {"dump", +[](WindowMask i) {dumpWindow(i);}, FORK_ON_RECEIVE},
     {"dump", +[](std::string s) {assert(s != ""); std::cout << s << "\n"; dumpWindow(s);}, FORK_ON_RECEIVE},
     {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}, FORK_ON_RECEIVE},
+    {"dump-stack", dumpWindowStack, FORK_ON_RECEIVE},
     {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
     {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
     {"log-level", setLogLevel},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"restart", restart, CONFIRM_EARLY},
     {"sum", printSummary, FORK_ON_RECEIVE},
+    {"load", +[](WindowID win) {WindowInfo* winInfo = getWindowInfo(win); if(winInfo)loadWindowProperties(winInfo);}},
     _OPTION(AUTO_FOCUS_NEW_WINDOW_TIMEOUT),
     _OPTION(CLONE_REFRESH_RATE),
     _OPTION(CRASH_ON_ERRORS),
@@ -144,7 +147,7 @@ int getConfirmedSentMessage(WindowID win) {
         result = *(int*)xcb_get_property_value(reply);
     }
     free(reply);
-    LOG(LOG_LEVEL_TRACE, "Found %d outof %d confirmations\n", result, outstandingSendCount);
+    LOG(LOG_LEVEL_TRACE, "Found %d out of %d confirmations\n", result, outstandingSendCount);
     return result;
 }
 bool hasOutStandingMessages(void) {

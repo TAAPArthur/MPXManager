@@ -69,13 +69,13 @@ MPX_TEST("test_float_rule", {
         assert(winInfo->hasMask(FLOATING_MASK));
 });
 MPX_TEST_ITER("test_ignored_windows", 2, {
-    addUnknownWindowIgnoreRule();
+    addUnknownInputOnlyWindowIgnoreRule();
     if(_i)
-        createTypelessWindow();
+        createTypelessInputOnlyWindow();
     else
-        mapWindow(createTypelessWindow());
+        mapWindow(createTypelessInputOnlyWindow());
     scan(root);
-    assert(getAllWindows().size() == _i);
+    assertEquals(getAllWindows().size(), _i);
 });
 
 MPX_TEST_ITER("detect_dock", 2, {

@@ -35,15 +35,20 @@ void dumpWindow(WindowMask filterMask) {
     LOG(LOG_LEVEL_DEBUG, "Dumping:\n");
     for(WindowInfo* winInfo : getAllWindows()) {
         if(!filterMask ||  winInfo->hasMask(filterMask))
-            std::cout << winInfo << "\n";
+            std::cout << *winInfo << "\n";
     }
 }
 void dumpWindow(std::string match) {
     LOG(LOG_LEVEL_DEBUG, "Dumping:\n");
     for(WindowInfo* winInfo : getAllWindows()) {
         if(winInfo->matches(match))
-            std::cout << winInfo << "\n";
+            std::cout << *winInfo << "\n";
     }
+}
+void dumpWindowStack() {
+    LOG(LOG_LEVEL_DEBUG, "Dumping Window Stack:\n");
+    for(WindowInfo* winInfo : getActiveWorkspace()->getWindowStack())
+        std::cout << *winInfo << "\n";
 }
 
 void printStackTrace(void) {

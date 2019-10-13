@@ -37,7 +37,6 @@ static int applyRules(ArrayList<BoundFunction*>& rules, WindowInfo* winInfo, Mas
             return 0;
         }
     }
-    LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Rules finished normally\n");
     return 1;
 }
 int getNumberOfEventsTriggerSinceLastIdle(int type) {
@@ -53,8 +52,8 @@ void applyBatchEventRules(void) {
         }
 }
 int applyEventRules(int type, WindowInfo* winInfo, Master* m) {
-    LOG(LOG_LEVEL_DEBUG, "Event detected %d %s number of rules: %d parameters %p %p\n",
-        type, eventTypeToString(type), getEventRules(type).size(), winInfo, m);
+    LOG(LOG_LEVEL_DEBUG, "Event detected %d %s number of rules: %d parameters WindowID: %d MasterID: %d\n",
+        type, eventTypeToString(type), getEventRules(type).size(), winInfo ? winInfo->getID() : 0, m ? m->getID() : 0);
     incrementBatchEventRuleCounter(type);
     return applyRules(getEventRules(type), winInfo, m);
 }

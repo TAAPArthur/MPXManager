@@ -114,6 +114,7 @@ static ArrayList<Option*> options = {
     {"mode", setMode},
     {"clear-startup-method", clearStartupMethod},
     {"replace", +[]() {STEAL_WM_SELECTION = 1;}},
+    {"no-event-loop", +[]() {RUN_EVENT_LOOP = 0;}},
     {"set", setOption},
     {"send", sendOption},
     {"enable-inter-client-communication", enableInterClientCommunication},
@@ -127,7 +128,7 @@ static ArrayList<Option*> options = {
  * @param argv the list of args. An element by be like "-s", "--long", --long=V", etc
  * @param exitOnUnknownOptions if true will exit(1) if encounter an unknown option
  */
-static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions) {
+static void parseArgs(int argc, char* const* argv, int exitOnUnknownOptions) {
     for(int i = 1; i < argc; i++) {
         bool foundMatch = 0;
         LOG(LOG_LEVEL_TRACE, "processing %s\n", argv[i]);
@@ -156,14 +157,8 @@ static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions) {
         }
     }
 }
-/**
- * @param argc
- * @param argv[]
- *
- * @return
- */
-int main(int argc, char* argv[]) {
-    LOG(LOG_LEVEL_TRACE, "MPXManager started with %d args\n", argc);
+int _main(int argc, char* const* argv) {
+    LOG(LOG_LEVEL_DEBUG, "MPXManager started with %d args\n", argc);
     numPassedArguments = argc;
     passedArguments = argv;
     startupMethod = loadSettings;
@@ -185,9 +180,20 @@ int main(int argc, char* argv[]) {
                 LOG(LOG_LEVEL_ERROR, "did not receive confirmation\n");
                 quit(2);
             }
-            LOG(LOG_LEVEL_TRACE, "waiting for send receipts %d %d\n", isMPXManagerRunning(), hasOutStandingMessages());
+            LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d\n", isMPXManagerRunning(), hasOutStandingMessages());
         }
     }
-    quit(0);
     return 0;
 }
+#ifndef MPX_TEST_NO_MAIN
+/**
+ * @param argc
+ * @param argv[]
+ *
+ * @return
+ */
+int __attribute__((weak)) main(int argc, char* const  argv[])   {
+    _main(argc, argv);
+    quit(0);
+}
+#endif

@@ -72,6 +72,7 @@ MPX_TEST("test_send_receive_func", {
     send("dump", "");
     send("dump", "0");
     send("dump", "test");
+    send("load", "0");
     send("dump-options", "");
     send("log-level", "10");
     flush();

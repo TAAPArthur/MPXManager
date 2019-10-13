@@ -394,8 +394,8 @@ MPX_TEST("test_configure_windows", {
         //TODO check below
         WindowID stack[] = {getAllWindows()[0]->getID(), win};
         if(stack[0] != stack[1]) {
-            processConfigureRequest(win, values, getAllWindows()[0]->getID(), XCB_STACK_MODE_ABOVE,
-                                    XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
+            int mask = XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING;
+            assertEquals(mask, processConfigureRequest(win, values, getAllWindows()[0]->getID(), XCB_STACK_MODE_ABOVE, mask));
             assert(checkStackingOrder(stack, LEN(stack), 0));
         }
     }
