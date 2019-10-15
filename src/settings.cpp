@@ -108,6 +108,7 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, XK_c, killClientOfWindow, {.noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindow, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK, Button1, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+        {DEFAULT_MOD_MASK, Button3, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, {.passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, XK_t, sinkWindow},
         {DEFAULT_MOD_MASK | ControlMask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(ALWAYS_ON_TOP);}},
@@ -165,6 +166,8 @@ void defaultPrintFunction(void) {
         dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->getName().c_str(), w == getActiveWorkspace() ? "*" : "",
                 w->getActiveLayout() ? w->getActiveLayout()->getName().c_str() : "");
     }
+    if(getActiveChain())
+        dprintf(STATUS_FD,"[%s] ", getActiveChain()->getName().c_str());
     if(getFocusedWindow() && getFocusedWindow()->isNotInInvisibleWorkspace()) {
         if(isLogging(LOG_LEVEL_DEBUG))
             dprintf(STATUS_FD, "%0xd ", getFocusedWindow()->getID());
@@ -200,7 +203,7 @@ void onStartup(void) {
         addAlwaysOnTopBottomRules();
         addFloatRule();
         addPrintStatusRule();
-        addIgnoreSmallWindowRule();
+        //addIgnoreSmallWindowRule();
         addUnknownInputOnlyWindowIgnoreRule();
         //addResumeCustomStateRules();
     }
