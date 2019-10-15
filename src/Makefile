@@ -84,17 +84,15 @@ mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.cpp c
 	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --set list-options quit 2>&1 | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 	sed -i "s/modeOptions=.*/modeOptions=\"$$(echo $$(./mpxmanager --list-modes 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
-mpxmanager: ${SRCS}
+mpxmanager: $(BASE_SRCS:.cpp=.o)
 	${CC} $^ -o $@ ${CPPFLAGS} ${LDFLAGS}
 
 
-libmpxmanager.so: ${BASE_SRCS}
+libmpxmanager.so: $(BASE_SRCS:.cpp=.o)
 	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CPPFLAGS} ${LDFLAGS}
 
-libmpxmanager.a: ${BASE_SRCS}
-	${CC} $^ -c -fpic ${CPPFLAGS} ${LDFLAGS}
-	ar rcs libmpxmanager.a *.o
-	rm *.o
+libmpxmanager.a: $(BASE_SRCS:.cpp=.o)
+	ar rcs libmpxmanager.a $^
 
 
 libmpx-patch.so: Hacks/mpx-patch.c
