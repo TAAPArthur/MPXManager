@@ -56,6 +56,14 @@ install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a l
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
+uninstall:
+	rm -f "$(DESTDIR)/usr/lib/libmpxmanager.a"
+	rm -f "$(DESTDIR)/usr/lib/libmpx-patch.so"
+	rm -frd "$(DESTDIR)/usr/include/$(pkgname)"
+	rm -f "$(DESTDIR)/usr/share/$(pkgname)/sample-config.cpp"
+	rm -f "$(DESTDIR)/usr/share/man/man1/mpxmanager.1"
+	rm -f "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
+	rm -f "$(DESTDIR)/usr/bin/$(pkgname)"
 
 preinstall: mpxmanager.1 mpxmanager-autocomplete.sh
 	sed -i "s/pkgver=.*/pkgver='$$(./mpxmanager.sh -v)'/g" ../PKGBUILD
