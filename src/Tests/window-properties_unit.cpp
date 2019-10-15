@@ -50,7 +50,7 @@ MPX_TEST("get_set_class", {
     assertEquals(instanceName, instanceNameNew);
 });
 MPX_TEST_ITER("get_set_type", 4, {
-    WindowID win = createTypelessWindow();
+    WindowID win = createTypelessInputOnlyWindow();
     bool normal = _i / 2;
     bool implicit = _i % 2;
     xcb_atom_t atom = normal ? ewmh->_NET_WM_WINDOW_TYPE_NORMAL : ewmh->_NET_WM_WINDOW_TYPE_DIALOG;

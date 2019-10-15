@@ -39,7 +39,7 @@ std::ostream& operator<<(std::ostream& strm, const Option& option) {
             strm << "string";
             break;
     }
-    return strm;
+    return strm << " (Flags: " << option.flags << ")";
 }
 
 int isInt(std::string str, bool* isNumeric) {
@@ -49,11 +49,11 @@ int isInt(std::string str, bool* isNumeric) {
         num = strtol(str.c_str(), &end, 16);
     }
     if(isNumeric)
-        *isNumeric = (*end == 0);
+        *isNumeric = (*end == 0) && !str.empty();
     return num;
 }
 
-bool Option::matches(std::string str, bool isNumeric) const {
+bool Option::matches(std::string str, bool empty, bool isNumeric) const {
     switch(getType()) {
         case VAR_BOOL:
         case VAR_INT:
@@ -61,7 +61,13 @@ bool Option::matches(std::string str, bool isNumeric) const {
             if(!isNumeric)
                 return 0;
             break;
+        case FUNC_VOID:
+            if(!empty)
+                return 0;
+            break;
         default:
+            if(empty)
+                return 0;
             break;
     }
     return strcasecmp(name.c_str(), str.c_str()) == 0;
@@ -94,12 +100,12 @@ void Option::operator()(std::string value)const {
 }
 #define _OPTION(VAR){#VAR,{&VAR}}
 
-static ArrayList<Option> options = {
-    {"dump", +[](WindowMask i) {dumpWindow(i);}},
-    {"dump", +[](std::string s) {dumpWindow(s);}},
-    {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}},
+static ArrayList<Option*> options = {
+    {"dump", +[](WindowMask i) {dumpWindow(i);}, FORK_ON_RECEIVE},
+    {"dump", +[](std::string s) {assert(s != ""); std::cout << s << "\n"; dumpWindow(s);}, FORK_ON_RECEIVE},
+    {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}, FORK_ON_RECEIVE},
     {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
-    {"list-options", +[](){listOptions(options);}, FORK_ON_RECEIVE},
+    {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
     {"log-level", setLogLevel},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"restart", restart, CONFIRM_EARLY},
@@ -124,13 +130,8 @@ static ArrayList<Option> options = {
     _OPTION(STEAL_WM_SELECTION),
 };
 
-ArrayList<Option>& getOptions() {return options;}
+ArrayList<Option*>& getOptions() {return options;}
 
-void listOptions(ArrayList<Option>& options) {
-    for(const Option& option : options)
-        std::cout << option.getName() << " ";
-    std::cout << "\n";
-}
 
 
 static int outstandingSendCount;
@@ -143,6 +144,7 @@ int getConfirmedSentMessage(WindowID win) {
         result = *(int*)xcb_get_property_value(reply);
     }
     free(reply);
+    LOG(LOG_LEVEL_TRACE, "Found %d outof %d confirmations\n", result, outstandingSendCount);
     return result;
 }
 bool hasOutStandingMessages(void) {
@@ -165,9 +167,9 @@ void send(std::string name, std::string value) {
 const Option* findOption(std::string name, std::string value) {
     bool isNumeric;
     isInt(value, &isNumeric);
-    for(const Option& option : options) {
-        if(option.matches(name, isNumeric))
-            return &option;
+    for(const Option* option : getOptions()) {
+        if(option->matches(name, value.empty(), isNumeric))
+            return option;
     }
     return NULL;
 }
@@ -188,6 +190,7 @@ void receiveClientMessage(void) {
             value = getAtomValue(valueAtom);
         const Option* option = findOption(name, value);
         if(option) {
+            LOG_RUN(LOG_LEVEL_DEBUG, std::cout << *option << "\n";);
             int childPID;
             if(option->flags & CONFIRM_EARLY) {
                 LOG(LOG_LEVEL_TRACE, "sending early confirmation\n");

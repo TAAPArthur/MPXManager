@@ -17,7 +17,7 @@ LDFLAGS :=  ${NON_X_LDFLAGS} -lm -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-x
 LAYER0_SRCS := globals.cpp logger.cpp debug.cpp
 LAYER1_SRCS := arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp system.cpp
 LAYER2_SRCS := xsession.cpp bindings.cpp devices.cpp test-functions.cpp device-grab.cpp
-LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.cpp wm-rules.cpp extra-rules.cpp 
+LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.cpp wm-rules.cpp extra-rules.cpp
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp
 LAYER5_SRCS := $(wildcard Extensions/*.cpp)
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
@@ -26,7 +26,7 @@ TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
 BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.cpp
 
-CHECK_TEST_COVERAGE = (gcov -mr $$(basename -a $(1)) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 ".cpp" && echo "test coverage is not high enough" && cat $(1).gcov |grep -C5 "\#\#\#\#")
+CHECK_TEST_COVERAGE = (gcov -mr $(1) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 ".cpp" && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#")
 RUN_TEST = LD_PRELOAD=$$(pwd)/libmpx-test.so xvfb-run -w 1 -a $(if $(QUICK) , valgrind -q --leak-check=full --error-exitcode=123 $(1),$(1))
 
 NO_XRANDR ?= 0
@@ -121,19 +121,23 @@ correctness.out: unitTest
 	touch $@
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1, exit 0)
 
-code_coverage_%.out: % | unitTest
+arraylist.h_code_coverage.out: arraylist.h
+	touch $@
+
+%_code_coverage.out: % | unitTest
 	rm -f $@ *gcda
 	TEST_FILE=$(patsubst %.o,%.cpp, $(call TEST_FILES, $<)) $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
-	[ ! -s  $@ ] || less $@.bk
+	[ -s  $$(basename -a $<).gcov ]
 	[ ! -s  $@ ]
 
-code_coverage.out: unitTest $(patsubst %,code_coverage_%.out,${TEST_SRCS})
+
+code_coverage.out: unitTest $(patsubst %,%_code_coverage.out,${TEST_SRCS})
 
 
 arg_test.out: CPPFLAGS := ${TESTFLAGS}
 arg_test.out: mpxmanager-debug Tests/arg-tests.sh
 	$(call RUN_TEST, Tests/arg-tests.sh )
-	$(call CHECK_TEST_COVERAGE,${TOP_LAYER_SRCS})
+	touch $@
 
 
 FORMATTER := astyle --project "$$file" >/dev/null ; rm -f "$$file.orig" || true
@@ -183,3 +187,4 @@ clean:
 	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.a *.o libmpxmanager*.so mpxmanager-profile mpxmanager-speed-test
 	find . -name '*.orig' -exec rm {} \;
 	find . -name '*.o' -exec rm {} \;
+	find . -name '*.out' -exec rm {} \;

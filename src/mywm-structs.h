@@ -41,6 +41,7 @@ struct WMStruct {
 
 std::ostream& operator<<(std::ostream&, const Monitor&);
 std::ostream& operator<<(std::ostream&, const Layout&);
+std::ostream& operator<<(std::ostream& strm, const Layout* layout);
 std::ostream& operator<<(std::ostream&, const Master&);
 std::ostream& operator<<(std::ostream&, const Slave&);
 std::ostream& operator<<(std::ostream&, const WindowInfo&);

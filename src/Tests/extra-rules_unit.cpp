@@ -194,15 +194,21 @@ MPX_TEST_ITER("test_auto_focus", 4, {
     autoFocus();
     assert(autoFocused == (getAllWindows().back()->getID() == getActiveFocus(getActiveMasterKeyboardID())));
 });
-MPX_TEST("ignore_small_window", {
+MPX_TEST_ITER("ignore_small_window", 3, {
     addIgnoreSmallWindowRule();
     WindowID win = mapArbitraryWindow();
     xcb_size_hints_t hints = {0};
-    xcb_icccm_size_hints_set_base_size(&hints, 1, 1);
+    if(_i)
+        xcb_icccm_size_hints_set_size(&hints, _i - 1, 1, 1);
+    else
+        xcb_icccm_size_hints_set_base_size(&hints, 1, 1);
     assert(!catchError(xcb_icccm_set_wm_size_hints_checked(dis, win, XCB_ATOM_WM_NORMAL_HINTS, &hints)));
     flush();
     scan(root);
-    assert(getWindowInfo(win) == NULL);
+    if(_i != 1)
+        assert(getWindowInfo(win));
+    else
+        assert(getWindowInfo(win) == NULL);
 });
 MPX_TEST("test_detect_sub_windows", {
     NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;

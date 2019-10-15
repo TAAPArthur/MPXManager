@@ -30,7 +30,7 @@ bool isMPXManagerRunning(void) {
     return result;
 }
 void broadcastEWMHCompilence() {
-    LOG(LOG_LEVEL_TRACE, "Complying with EWMH\n");
+    LOG(LOG_LEVEL_DEBUG, "Complying with EWMH\n");
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else  ignore it)
     if(!STEAL_WM_SELECTION) {
@@ -42,7 +42,7 @@ void broadcastEWMHCompilence() {
         }
         free(ownerReply);
     }
-    LOG(LOG_LEVEL_TRACE, "Setting selection owner\n");
+    LOG(LOG_LEVEL_DEBUG, "Setting selection owner\n");
     if(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), WM_SELECTION_ATOM,
                   XCB_CURRENT_TIME)) == 0) {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
@@ -52,7 +52,7 @@ void broadcastEWMHCompilence() {
     xcb_ewmh_set_wm_pid(ewmh, root, getpid());
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
-    LOG(LOG_LEVEL_TRACE, "Complied with EWMH/ICCCM specs\n");
+    LOG(LOG_LEVEL_DEBUG, "Complied with EWMH/ICCCM specs\n");
 }
 
 void updateEWMHClientList() {
@@ -334,7 +334,7 @@ static void removeRef(Master* m) {
 
 void startWindowMoveResize(WindowInfo* winInfo, bool move, bool changeX, bool changeY, Master* m) {
     auto ref = getRef(m);
-    short pos[2]={0,0};
+    short pos[2] = {0, 0};
     getMousePosition(m, root, pos);
     *ref = (RefWindowMouse) {winInfo->getID(), getRealGeometry(winInfo->getID()), {pos[0], pos[1]}, {changeX, changeY}, move};
 }
@@ -354,7 +354,7 @@ void updateWindowMoveResize(Master* m) {
     auto ref = getRef(m, 0);
     if(ref) {
         short pos[2];
-        if(getMousePosition(m, root, pos)){
+        if(getMousePosition(m, root, pos)) {
             RectWithBorder r = ref->calculateNewPosition(pos);
             if(r.width && r.height)
                 processConfigureRequest(ref->win, r, 0, 0,

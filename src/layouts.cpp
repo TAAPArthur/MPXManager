@@ -19,6 +19,12 @@
 
 #define MAX(A,B) (A>=B?A:B)
 
+std::ostream& operator<<(std::ostream& strm, const Layout& layout) {
+    return strm << layout.getName();
+}
+std::ostream& operator<<(std::ostream& strm, const Layout* layout) {
+    return layout ? strm << *layout : strm << "(nil)";
+}
 
 static Layout DEFAULT_LAYOUTS[] = {
     {.name = "Full", .layoutFunction = full, .args = {.noBorder = 1, .raiseFocused = 1}},

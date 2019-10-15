@@ -58,12 +58,13 @@ void assertWindowIsFocused(WindowID win) {
 }
 
 MPX_TEST("find_window", {
-    int (*matches)() = []()->int{return 1;};
+    int (*matches)() = []() {return 1;};
     assertEquals(findWindow(matches, getAllWindows()), top);
     ArrayList<WindowID>ignore = {top->getID()};
     assertEquals(findWindow(matches, getAllWindows(), &ignore), middle);
-    int (*noMatches)() = []()->int{return 0;};
+    int (*noMatches)() = []() {return 0;};
     assert(!findWindow(noMatches, getAllWindows(), &ignore));
+    assert(!findWindow(noMatches, getAllWindows(), NULL));
 });
 MPX_TEST_ITER("find_and_raise_basic", 4, {
     static std::string titles[] = {"a", "c", "d"};

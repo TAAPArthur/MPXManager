@@ -77,7 +77,6 @@ static void setMode(std::string str) {
     LOG(LOG_LEVEL_ERROR, "could not find mode '%s'\n", c);
     quit(1);
 }
-static int sendOptionToWaitFor = 0;
 static bool lastLocal = 0;
 static void _handleOption(std::string str, bool local = lastLocal) {
     int index = str.find('=');
@@ -88,7 +87,6 @@ static void _handleOption(std::string str, bool local = lastLocal) {
         if(local)
             option->call(value);
         else {
-            sendOptionToWaitFor += option->flags & FORK_ON_RECEIVE ? 1 : 0;
             send(option->name, value);
         }
     else {
@@ -112,15 +110,15 @@ static void clearStartupMethod(void) {
     startupMethod = NULL;
 }
 
-static ArrayList<Option> options = {
+static ArrayList<Option*> options = {
     {"mode", setMode},
     {"clear-startup-method", clearStartupMethod},
-    {"replace", +[]() {setOption("STEAL_WM_SELECTION=1");}},
+    {"replace", +[]() {STEAL_WM_SELECTION = 1;}},
     {"set", setOption},
     {"send", sendOption},
     {"enable-inter-client-communication", enableInterClientCommunication},
     {"list-modes", +[]() {listModes(); exit(0);}},
-    {"list-start-options", +[]() {listOptions(options); exit(0);}},
+    {"list-start-options", +[]() {std::cout >> options; exit(0);}},
 };
 
 /**
@@ -134,16 +132,16 @@ static void parseArgs(int argc, char* argv[], int exitOnUnknownOptions) {
         bool foundMatch = 0;
         LOG(LOG_LEVEL_TRACE, "processing %s\n", argv[i]);
         std::string str = argv[i];
-        for(const Option& option : options) {
-            if(str == ("--" + option.name))
-                if(option.getType() == FUNC_VOID)
-                    option.call("");
+        for(const Option* option : options) {
+            if(str == ("--" + option->name))
+                if(option->getType() == FUNC_VOID)
+                    option->call("");
                 else
-                    option.call(argv[++i]);
-            else if(str.find("--" + option.name + "=") == 0) {
+                    option->call(argv[++i]);
+            else if(str.find("--" + option->name + "=") == 0) {
                 int index = str.find('=');
                 std::string value = str.substr(index + 1);
-                option.call(value);
+                option->call(value);
             }
             else continue;
             foundMatch = 1;
@@ -183,8 +181,10 @@ int main(int argc, char* argv[]) {
                     msleep(100);
             while(isMPXManagerRunning() && hasOutStandingMessages())
                 msleep(100);
-            if(hasOutStandingMessages())
+            if(hasOutStandingMessages()) {
+                LOG(LOG_LEVEL_ERROR, "did not receive confirmation\n");
                 quit(2);
+            }
             LOG(LOG_LEVEL_TRACE, "waiting for send receipts %d %d\n", isMPXManagerRunning(), hasOutStandingMessages());
         }
     }

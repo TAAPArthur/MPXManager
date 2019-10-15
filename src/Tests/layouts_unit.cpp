@@ -25,6 +25,10 @@ void setActiveLayoutByName(std::string name, Workspace* w = getActiveWorkspace()
     w->setActiveLayout(findLayoutByName(name));
 }
 SET_ENV(createXSimpleEnv, fullCleanup);
+MPX_TEST("print_layout", {
+    suppressOutput();
+    std::cout << getDefaultLayouts()[FULL];
+});
 
 MPX_TEST("tile_worskspace_event", {
 

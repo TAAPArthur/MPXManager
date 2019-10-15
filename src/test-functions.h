@@ -65,5 +65,6 @@ static inline void clickButton(int button) {return clickButton(button, 0);}
  * @param relativeWindow
  */
 void movePointer(short x, short y, MasterID = getActiveMasterPointerID(), WindowID relativeWindow = root);
+void movePointerRelative(short x, short y, MasterID id = getActiveMasterPointerID()) ;
 
 #endif

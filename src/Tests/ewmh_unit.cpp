@@ -174,7 +174,7 @@ static void clientMessageSetup() {
 
 SET_ENV(clientMessageSetup, fullCleanup);
 
-MPX_TEST_ITER("test_client_close_window", 2, {
+MPX_TEST_ITER_ERR("test_client_close_window", 2, 1, {
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     suppressOutput();
     addIgnoreOverrideRedirectWindowsRule();
@@ -182,6 +182,7 @@ MPX_TEST_ITER("test_client_close_window", 2, {
     flush();
     waitForAllThreadsToExit();
     assert(xcb_connection_has_error(dis));
+    exit(1);
 });
 
 MPX_TEST_ITER("test_client_activate_window", 2, {

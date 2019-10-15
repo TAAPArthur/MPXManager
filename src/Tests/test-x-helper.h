@@ -87,13 +87,6 @@ static inline WindowID mapWindow(int win) {
     return win;
 }
 static inline WindowID mapArbitraryWindow() {return mapWindow(createNormalWindow());}
-static inline bool isWindowMapped(WindowID win) {
-    xcb_get_window_attributes_reply_t* reply;
-    reply = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, win), NULL);
-    bool result = reply->map_state != XCB_MAP_STATE_UNMAPPED;
-    free(reply);
-    return result;
-}
 static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bool adj = 0) {
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);

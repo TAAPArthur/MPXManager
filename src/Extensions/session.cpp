@@ -122,13 +122,6 @@ static void loadSavedActiveMaster() {
     }
 }
 
-void syncFocus(bool keepLocal = false) {
-    for(Master* master : getAllMasters())
-        if(keepLocal)
-            focusWindow(master->getFocusedWindow(), master);
-        else
-            master->onWindowFocus(getActiveFocus(master->getID()));
-}
 void loadCustomState(void) {
     loadSavedLayouts();
     loadSavedLayoutOffsets();
@@ -164,8 +157,11 @@ void saveCustomState(void) {
         layoutOffsets[i] = getWorkspace(i)->getLayoutOffset();
         Layout* layout = getWorkspace(i)->getActiveLayout();
         std::string name = layout ? layout->getName() : "";
-        if(bufferSize < len + (name.length()) + 2)
-            activeLayoutNames = (char*)realloc(activeLayoutNames, bufferSize *= 2);
+        const int requiredSize = len + (name.length()) + 2;
+        if(bufferSize < requiredSize) {
+            bufferSize = requiredSize * 2;
+            activeLayoutNames = (char*)realloc(activeLayoutNames, bufferSize);
+        }
         strcpy(&activeLayoutNames[len], name.c_str());
         len += (name.length()) + 1;
     }

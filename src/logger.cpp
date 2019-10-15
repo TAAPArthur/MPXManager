@@ -32,12 +32,14 @@ void printSummary(void) {
     std::cout << "Windows: "    << getAllWindows() << "\n";
 }
 void dumpWindow(WindowMask filterMask) {
+    LOG(LOG_LEVEL_DEBUG, "Dumping:\n");
     for(WindowInfo* winInfo : getAllWindows()) {
         if(!filterMask ||  winInfo->hasMask(filterMask))
             std::cout << winInfo << "\n";
     }
 }
 void dumpWindow(std::string match) {
+    LOG(LOG_LEVEL_DEBUG, "Dumping:\n");
     for(WindowInfo* winInfo : getAllWindows()) {
         if(winInfo->matches(match))
             std::cout << winInfo << "\n";

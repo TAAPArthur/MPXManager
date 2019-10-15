@@ -136,3 +136,9 @@ MPX_TEST("test_move_scale", {
     assertEquals(result2[0] - result[0], displacement * (1 + scaleFactor));
     assertEquals(result2[1] - result[1], displacement * (1 + scaleFactor));
 });
+MPX_TEST("warm_bindings", {
+    addDefaultXMouseControlBindings();
+    const UserEvent& event = {0};
+    for(auto b : getDeviceBindings())
+        b->trigger(event);
+});

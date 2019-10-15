@@ -120,6 +120,8 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool ch
     }
     else LOG(LOG_LEVEL_DEBUG, "found window locally\n");
     if(target) {
+        assert(rule(target));
+        LOG_RUN(LOG_LEVEL_TRACE, std::cout << *target << "\n");
         applyAction(target, action);
         if(windowsToIgnore)
             windowsToIgnore->add(target->getID());
@@ -180,7 +182,7 @@ void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name) {
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
     Master* master = getActiveMaster();
-    if(getMousePosition(master->getPointerID(), root, pos)){
+    if(getMousePosition(master->getPointerID(), root, pos)) {
         Rect rect = {pos[0], pos[1], 1, 1};
         for(Monitor* m : getAllMonitors()) {
             if(m->getBase().intersects(rect) && m->getWorkspace()) {

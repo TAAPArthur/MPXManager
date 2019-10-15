@@ -128,7 +128,7 @@ public:
         layoutFunction(layoutFunction), args(args), refArgs(args) {
     }
 
-    std::string getName() {
+    std::string getName()const {
         return name;
     }
     bool operator==(const Layout& l)const {return name == l.name;};

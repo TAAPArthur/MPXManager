@@ -112,5 +112,18 @@ MPX_TEST("test_move_pointer", {
         consumeEvents();
     }
 });
+MPX_TEST("test_move_pointer_relative", {
+    assert(!consumeEvents());
+    movePointer(0, 0);
+    consumeEvents();
+    short pos[2];
+    for(int i = 1; i < 10; i++) {
+        movePointerRelative(1, 2);
+        getMousePosition(getActiveMasterPointerID(), root, pos);
+        assertEquals(i, pos[0]);
+        assertEquals(i * 2, pos[1]);
+        consumeEvents();
+    }
+});
 
 

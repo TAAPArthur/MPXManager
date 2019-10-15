@@ -83,7 +83,12 @@ MPX_TEST_ITER("test_restore_state", 16, {
     getActiveMaster()->onWindowFocus(getAllWindows()[0]->getID());
     getAllWindows()[1]->moveToWorkspace(!getActiveWorkspaceIndex());
     getAllWindows()[0]->moveToWorkspace(getActiveWorkspaceIndex());
-    Layout l = Layout("VERY_VERY_VERY_VERY_VERY_VERY_VERY_VERY_LONG_NAME", NULL);
+    char longName[512];
+    for(int i = 0; i < LEN(longName) - 1; i++)
+        longName[i] = 'A';
+    longName[LEN(longName) - 1] = 0;
+
+    Layout l = Layout(longName, NULL);
     getRegisteredLayouts().add(l);
     setActiveLayout(&l);
     switchToWorkspace(1);

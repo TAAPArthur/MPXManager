@@ -2,7 +2,6 @@
 
 
 #include "bindings.h"
-#include "wm-rules.h"
 #include "devices.h"
 #include "globals.h"
 #include "layouts.h"
@@ -20,7 +19,6 @@
 #include "xsession.h"
 #include "time.h"
 
-#define FUNC_NAME (std::string("_")+__FUNCTION__)
 
 void addUnknownWindowIgnoreRule(void) {
     getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->hasMask(IMPLICIT_TYPE) ? unregisterWindow(winInfo) : 0;},
@@ -28,7 +26,7 @@ void addUnknownWindowIgnoreRule(void) {
 }
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
     auto sizeHints = getWindowSizeHints(winInfo);
-    return sizeHints && (sizeHints->flags & XCB_ICCCM_SIZE_HINT_BASE_SIZE) &&
+    return sizeHints && (sizeHints->flags & XCB_ICCCM_SIZE_HINT_P_SIZE) &&
            sizeHints->base_width * sizeHints->base_height <= area;
 }
 
@@ -36,12 +34,6 @@ void addIgnoreSmallWindowRule(void) {
     getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 100) ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE));
 }
-/* TODO comeback too
-void addAutoAddToWorkspace(WindowInfo* winInfo) {
-    if(!winInfo->isDock())
-        winInfo->moveToWorkspace(getSavedWorkspaceIndex(winInfo->getID()));
-}
-*/
 void (*printStatusMethod)(void);
 void addPrintStatusRule(void) {
     getEventRules(Idle).add(new BoundFunction(+[]() {
