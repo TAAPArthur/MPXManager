@@ -27,11 +27,11 @@ MPX_TEST("binding_eq", {
     assert(!(Binding(1, 2, incrementCount, {.mode = 0}, "test") == Binding(1, 2, incrementCount, {.mode = 1}, "test")));
 });
 MPX_TEST("getLastUserEvent", {
-    UserEvent e ={ 1,2};
+    UserEvent e = { 1, 2};
     setLastUserEvent(e);
     UserEvent& e2 = getLastUserEvent();
-    assertEquals(e.detail,e2.detail);
-    assertEquals(e.mod,e2.mod);
+    assertEquals(e.detail, e2.detail);
+    assertEquals(e.mod, e2.mod);
 });
 
 /*
@@ -67,7 +67,7 @@ MPX_TEST_ITER("check_bindings", LEN_PASSTHROUGH, {
     uint32_t* modsPointer = &mods[0][0];
     uint32_t details[][2] = {{2, 7}, {0, detail}};
     uint32_t* detailsPointer = &details[0][0];
-    uint32_t masks[][2] = {{badMask, 0}, {mask, mask | 1}};
+    uint32_t masks[][2] = {{badMask, 1}, {mask, mask | 1}};
     uint32_t* masksPointer = &masks[0][0];
     void (*terminate)() = []() {exit(10);};
 
@@ -76,15 +76,15 @@ MPX_TEST_ITER("check_bindings", LEN_PASSTHROUGH, {
         for(uint32_t badDetail : details[BAD])
             for(int n = 0; n < sizeof(masks) / sizeof(masks[0][0]); n++)
                 for(int i = 0; i < sizeof(mods) / sizeof(mods[0][0]); i++)
-                    getDeviceBindings().add(new Binding{modsPointer[i], badDetail, terminate, {.mask = masksPointer[n]}});
+                    getDeviceBindings().add(new Binding{modsPointer[i], badDetail, terminate, {.mask = masksPointer[n]}, .name = "badDetail"});
         for(uint32_t badMod : mods[BAD])
             for(int n = 0; n < sizeof(masks) / sizeof(masks[0][0]); n++)
                 for(int i = 0; i < sizeof(details) / sizeof(details[0][0]); i++)
-                    getDeviceBindings().add(new Binding{badMod, detailsPointer[i], terminate, {.mask = masksPointer[n]}});
+                    getDeviceBindings().add(new Binding{badMod, detailsPointer[i], terminate, {.mask = masksPointer[n]}, .name = "badMod"});
         for(uint32_t badMask : masks[BAD])
             for(int i = 0; i < sizeof(mods) / sizeof(mods[0][0]); i++)
                 for(int i = 0; i < sizeof(details) / sizeof(details[0][0]); i++)
-                    getDeviceBindings().add(new Binding{modsPointer[i], detailsPointer[i], terminate, {.mask = badMask}});
+                    getDeviceBindings().add(new Binding{modsPointer[i], detailsPointer[i], terminate, {.mask = badMask}, .name = "badMask"});
         for(uint32_t goodDetail : details[GOOD])
             for(uint32_t goodMask : masks[GOOD])
                 for(uint32_t goodMod : mods[GOOD])

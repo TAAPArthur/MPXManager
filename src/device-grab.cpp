@@ -24,10 +24,12 @@ void passiveUngrab(WindowID window) {
 int grabDevice(MasterID deviceID, uint32_t maskValue) {
     assert(!isSpecialID(deviceID));
     XIEventMask eventmask = {deviceID, 4, (unsigned char*)& maskValue};
+    LOG(LOG_LEVEL_INFO, "Grabbing device %d with mask %d\n", deviceID, maskValue);
     return XIGrabDevice(dpy, deviceID,  root, CurrentTime, None, GrabModeAsync,
                         GrabModeAsync, 1, &eventmask);
 }
 int ungrabDevice(MasterID id) {
+    LOG(LOG_LEVEL_INFO, "Ungrabbing device %d\n", id);
     return XIUngrabDevice(dpy, id, 0);
 }
 

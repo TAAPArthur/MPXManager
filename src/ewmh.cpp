@@ -372,6 +372,7 @@ void loadSavedAtomState(WindowInfo* winInfo) {
     }
 }
 void setXWindowStateFromMask(WindowInfo* winInfo) {
+    LOG(LOG_LEVEL_DEBUG,"Setting X State from masks %d\n",winInfo->getID());
     xcb_atom_t supportedStates[] = {SUPPORTED_STATES};
     xcb_ewmh_get_atoms_reply_t reply;
     int count = 0;
@@ -395,7 +396,7 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
 }
 
 void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
-    LOG(LOG_LEVEL_TRACE, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
+    LOG(LOG_LEVEL_DEBUG, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
     WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++) {
         mask |= getMaskFromAtom(atoms[i]);

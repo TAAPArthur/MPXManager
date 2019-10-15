@@ -45,7 +45,8 @@ bool Binding::trigger(const UserEvent& event)const {
     return shouldPassThrough(getPassThrough(), boundFunction(getWindowToActOn(event), event.getMaster()));
 }
 std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
-    return stream << "{" << binding.mod << " " << binding.detail << " " << binding.boundFunction << " " << binding.getMask()
+    return stream << "{ Name:'" << binding.getName() << "' " << binding.mod << " " << binding.detail << " Func:'" <<
+           binding.boundFunction << "' " << binding.getMask()
            << "}" ;
 }
 bool Binding::matches(const UserEvent& event) {

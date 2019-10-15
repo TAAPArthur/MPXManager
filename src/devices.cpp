@@ -152,6 +152,7 @@ bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]) {
     if(reply) {
         result[0] = reply->win_x >> 16;
         result[1] = reply->win_y >> 16;
+        LOG(LOG_LEVEL_DEBUG, "Mouse position for Master %d is %d, %d\n", id, result[0], result[1]);
         free(reply);
     }
     return reply ? 1 : 0;
@@ -217,7 +218,9 @@ void clearFakeMonitors() {
 void createFakeMonitor(Rect bounds) {
     char buffer[255];
     sprintf(buffer, "xsane-xrandr add-monitor %d %d %d %d  &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
-    waitForChild(spawn(buffer));
+    if(waitForChild(spawn(buffer))) {
+        LOG(LOG_LEVEL_WARN, "Failed to create monitor\n");
+    }
 }
 void detectMonitors(void) {
 #ifdef NO_XRANDR

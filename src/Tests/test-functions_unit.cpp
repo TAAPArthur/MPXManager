@@ -1,4 +1,5 @@
 #include "test-x-helper.h"
+#include "test-event-helper.h"
 #include "tester.h"
 #include "../system.h"
 #include "../arraylist.h"
@@ -32,31 +33,6 @@ static void setup(void) {
     passiveGrab(root, mask);
 }
 SET_ENV(setup, cleanupXServer);
-void* getNextDeviceEvent() {
-    flush();
-    void* event = xcb_wait_for_event(dis);
-    LOG(LOG_LEVEL_DEBUG, "Event received%d\n\n", ((xcb_generic_event_t*)event)->response_type);
-    if(((xcb_generic_event_t*)event)->response_type == XCB_GE_GENERIC) {
-        loadGenericEvent((xcb_ge_generic_event_t*)event);
-        xcb_input_key_press_event_t* dEvent = (xcb_input_key_press_event_t*)event;
-        LOG(LOG_LEVEL_DEBUG, "Detail %d type %s @ (%d,%d)\n", dEvent->detail,
-            eventTypeToString(GENERIC_EVENT_OFFSET + dEvent->event_type), dEvent->root_x >> 16, dEvent->root_y >> 16);
-    }
-    return event;
-}
-void waitToReceiveInput(int mask, int detailMask) {
-    LOG(LOG_LEVEL_ALL, "waiting for input %d\n\n", mask);
-    while(mask || detailMask) {
-        xcb_input_key_press_event_t* e = (xcb_input_key_press_event_t*)getNextDeviceEvent();
-        LOG(LOG_LEVEL_ALL, "type %d\n", e->response_type);
-        LOG(LOG_LEVEL_ALL, "type %d (%d); detail %d remaining mask:%d %d\n", e->event_type, (1 << e->event_type), e->detail,
-            mask, detailMask);
-        mask &= ~(1 << e->event_type);
-        detailMask &= ~(1 << e->detail);
-        free(e);
-        msleep(10);
-    }
-}
 
 MPX_TEST("test_send_key_press", {
     sendKeyPress(keyDetail);

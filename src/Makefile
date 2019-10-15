@@ -2,7 +2,7 @@ CC := g++ -std=gnu++17 -lstdc++
 CXX := ${CC}
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0
-RELEASE_FLAGS := -g -O3 -flto -DNDEBUG
+RELEASE_FLAGS := -g -rdynamic -O3 -flto
 PROFILE_FLAGS := -g -rdynamic -pg  -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
@@ -38,8 +38,10 @@ ifeq ($(DEBUG),1)
   CPPFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DDEBUG
 else ifeq ($(DEBUG),2)
   CPPFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DNDEBUG
-else
+else ifeq ($(DEBUG),3)
   CPPFLAGS += ${RELEASE_FLAGS}
+else
+  CPPFLAGS += ${RELEASE_FLAGS} -DNDEBUG
 endif
 
 
@@ -128,7 +130,7 @@ unitTest: Tests/tester.o $(call TEST_FILES, ${TEST_SRCS}) $(TEST_SRCS:.cpp=.o) $
 correctness.out: unitTest
 	$(call RUN_TEST, ./unitTest )
 	touch $@
-	$(if $(TEST_FILE)$(TEST_FUNC),exit 1, exit 0)
+	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 
 arraylist.h_code_coverage.out: arraylist.h
 	touch $@
