@@ -183,10 +183,18 @@ void onStartup(void) {
     addDefaultMaster();
     if(RUN_AS_WM) {
         addBasicRules();
+        addIgnoreOverrideRedirectWindowsRule();
         addApplyChainBindingsRule();
         addAutoTileRules();
         addEWMHRules();
-        addResumeCustomStateRules();
+        addAutoFocusRule();
+        addNoDockFocusRule();
+        addAlwaysOnTopBottomRules();
+        addAvoidDocksRule();
+        addFloatRule();
+        addPrintStatusRule();
+        addIgnoreSmallWindowRule();
+        //addResumeCustomStateRules();
     }
     if(!RUN_AS_WM)
         ROOT_EVENT_MASKS &= ~WM_MASKS;
