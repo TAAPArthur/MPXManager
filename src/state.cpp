@@ -119,14 +119,14 @@ static int compareState() {
     int changed = NO_CHANGE;
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         LOG_RUN(LOG_LEVEL_VERBOSE,
-                std::cout << "Index: " << i << "\n";
-                std::cout <<    "Current:" << currentState[i] << "\n";
-                if(i < numberOfRecordedWorkspaces)
-                std::cout << "Saved:  " << savedStates[i] << "\n";
-               );
+            std::cout << "Index: " << i << "\n";
+            std::cout <<    "Current:" << currentState[i] << "\n";
+            if(i < numberOfRecordedWorkspaces)
+            std::cout << "Saved:  " << savedStates[i] << "\n";
+        );
         if((savedStates || currentState[i].visible) &&
-                (i >= numberOfRecordedWorkspaces ||
-                 savedStates[i].visible != currentState[i].visible)) {
+            (i >= numberOfRecordedWorkspaces ||
+                savedStates[i].visible != currentState[i].visible)) {
             changed |= WORKSPACE_MONITOR_CHANGE;
             LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_MONITOR_CHANGE %d\n", i);
             syncMappedState(i);
@@ -142,15 +142,15 @@ static int compareState() {
                 }
         }
         if((savedStates || currentState[i].size) &&
-                (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
-                 memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
-                 savedStates[i].layout != currentState[i].layout ||
-                 savedStates[i].size && (
-                     memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size) ||
-                     memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size)
-                 )
+            (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
+                memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
+                savedStates[i].layout != currentState[i].layout ||
+                savedStates[i].size && (
+                    memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size) ||
+                    memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size)
                 )
-          ) {
+            )
+        ) {
             changed |= WORKSPACE_WINDOW_CHANGE;
             LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
             tileWorkspace(i);

@@ -8,7 +8,7 @@
 #include <strings.h>
 
 #ifndef NO_XRANDR
-    #include <xcb/randr.h>
+#include <xcb/randr.h>
 #endif
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
@@ -60,7 +60,7 @@ WindowID getPrivateWindow(void) {
         int overrideRedirect = 1;
         compliantWindowManagerIndicatorWindow = xcb_generate_id(dis);
         xcb_create_window(dis, 0, compliantWindowManagerIndicatorWindow, root, 0, 0, 1, 1, 0,
-                          XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
+            XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
     }
     return compliantWindowManagerIndicatorWindow;
 }
@@ -161,8 +161,8 @@ static xcb_gcontext_t create_graphics_context(void) {
     uint32_t values[3] = { screen->black_pixel, screen->white_pixel, 0};
     graphics_context = xcb_generate_id(dis);
     xcb_void_cookie_t cookie = xcb_create_gc_checked(dis,
-                               graphics_context, root,
-                               mask, values);
+            graphics_context, root,
+            mask, values);
     catchError(cookie);
     return graphics_context;
 }
@@ -211,7 +211,7 @@ void openXDisplay(void) {
     char selectionName[8];
     sprintf(selectionName, "WM_S%d", '0' + defaultScreenNumber);
     xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(dis,
-                                     xcb_intern_atom(dis, 0, strlen(selectionName), selectionName), NULL);
+            xcb_intern_atom(dis, 0, strlen(selectionName), selectionName), NULL);
     assert(reply);
     WM_SELECTION_ATOM = reply->atom;
     free(reply);

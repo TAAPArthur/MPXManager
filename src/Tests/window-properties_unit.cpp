@@ -219,8 +219,8 @@ static inline WindowID setDock(WindowID win, int i, int size, bool full = 0, int
     strut[i * 2 + 4 + 1] = end;
     //strut[i*2+4+1]=0;
     xcb_void_cookie_t cookie = full ?
-                               xcb_ewmh_set_wm_strut_partial_checked(ewmh, win, *((xcb_ewmh_wm_strut_partial_t*)strut)) :
-                               xcb_ewmh_set_wm_strut_checked(ewmh, win, strut[0], strut[1], strut[2], strut[3]);
+        xcb_ewmh_set_wm_strut_partial_checked(ewmh, win, *((xcb_ewmh_wm_strut_partial_t*)strut)) :
+        xcb_ewmh_set_wm_strut_checked(ewmh, win, strut[0], strut[1], strut[2], strut[3]);
     assert(xcb_request_check(dis, cookie) == NULL);
     setWindowType(win, ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     return win;

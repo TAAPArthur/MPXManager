@@ -11,7 +11,7 @@
 
 /// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
 #ifndef NO_WORKSPACE
-    #define NO_WORKSPACE ((WorkspaceID)-1)
+#define NO_WORKSPACE ((WorkspaceID)-1)
 #endif
 //
 ///@see Workspace::getNextWorkspace()

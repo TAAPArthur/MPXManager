@@ -55,7 +55,7 @@ int Test::runTest(int i) {
 }
 void Test::printSummary(int i) {
     printf("%s:%d %s.%d (%d of %d) #%02d failed with status %d\n", fileName, lineNumber, name, i, i + 1, end, testNumber,
-           status[i]);
+        status[i]);
 }
 struct FailedTest {Test* t; int index;};
 
@@ -76,9 +76,9 @@ int main(void) {
     size_t passedCount = 0;
     for(Test* t : tests)
         if((!file || strcmp(file, t->fileName) == 0) &&
-                (!func || strcmp(func, t->name) == 0) &&
-                (!startingFrom || strcmp(startingFrom, t->fileName) == 0 || passedCount || failedTests.size())
-          ) {
+            (!func || strcmp(func, t->name) == 0) &&
+            (!startingFrom || strcmp(startingFrom, t->fileName) == 0 || passedCount || failedTests.size())
+        ) {
             for(int i = 0; i < t->end; i++)
                 if(!t->runTest(i)) {
                     failedTests.push_back({t, i});

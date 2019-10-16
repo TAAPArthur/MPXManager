@@ -10,7 +10,7 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 #ifndef NO_XRANDR
-    #include <xcb/randr.h>
+#include <xcb/randr.h>
 #endif
 
 #include "monitors.h"

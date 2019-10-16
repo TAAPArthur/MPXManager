@@ -54,7 +54,7 @@ struct ArrayList: std::vector<T> {
     using EnableIfNotPointer = typename std::enable_if_t < !std::is_pointer<U>::value, V >  ;
     template<typename U = T, typename V = int>
     using EnableIfPointerAndInt = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value &&
-                                  std::is_pointer<U>::value, V >  ;
+        std::is_pointer<U>::value, V >  ;
     template<typename U = T, typename V = int>
     ArrayList() {}
     ArrayList(std::initializer_list<T> __l) {

@@ -22,7 +22,7 @@ ArrayList<WindowInfo*>& getAllWindows(void) {
 
 std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     stream << "{ WindowInfo: ID " << winInfo.getID() << (winInfo.isTileable() ? "*" : "") <<
-           (!winInfo.isMappable() ? "?" : "");
+        (!winInfo.isMappable() ? "?" : "");
     stream << " Parent: " << winInfo.getParent();
     if(winInfo.getGroup())
         stream << " Group: " << winInfo.getGroup();
@@ -32,7 +32,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     stream << " Class '" << winInfo.getClassName()  << "' '" << winInfo.getInstanceName() << "'";
     stream << " Type '" << winInfo.getTypeName() << "'";
     stream << " Masks: " << (winInfo.getMask() ? __builtin_popcount(winInfo.getMask()) : 0) << ": " << maskToString(
-               winInfo.getMask());
+            winInfo.getMask());
     if(winInfo.getWorkspace())
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;
     if(winInfo.isOverrideRedirectWindow())

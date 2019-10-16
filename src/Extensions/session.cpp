@@ -168,7 +168,7 @@ void saveCustomState(void) {
     xcb_atom_t REPLACE = XCB_PROP_MODE_REPLACE;
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, 8, len, activeLayoutNames);
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, 32,  LEN(layoutOffsets),
-                        layoutOffsets);
+        layoutOffsets);
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, 32, numWindows, windows);
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, 32, LEN(monitors), monitors);
     xcb_change_property(dis, REPLACE, root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, 32, numMasterWindows, masterWindows);

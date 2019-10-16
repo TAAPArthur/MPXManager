@@ -82,10 +82,10 @@ struct Binding {
     std::string name;
 
     Binding(uint32_t mod, uint32_t buttonOrKey, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
-            std::string name = ""): mod(mod), buttonOrKey(buttonOrKey), boundFunction(boundFunction), flags(flags), name(name) {
+        std::string name = ""): mod(mod), buttonOrKey(buttonOrKey), boundFunction(boundFunction), flags(flags), name(name) {
         if(flags.mask == 0)
             this->flags.mask = buttonOrKey == 0 ? ANY_MASK : isButton(buttonOrKey) ? XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
-                               XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
+                XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
     }
 
 

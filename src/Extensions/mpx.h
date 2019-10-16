@@ -9,8 +9,8 @@
 #include "../mywm-structs.h"
 
 #ifndef MPX_EXT_ENABLED
-    /// Enables the extension
-    #define MPX_EXT_ENABLED 1
+/// Enables the extension
+#define MPX_EXT_ENABLED 1
 #endif
 /**
  * Adds hierarchy rules that will detect master/slave addition/removal and make the correct pairings

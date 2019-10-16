@@ -260,9 +260,9 @@ MPX_TEST("test_client_set_window_state", {
     for(int i = 0; i < LEN(states); i++) {
         WindowInfo fakeWinInfo = {.id = ignoredWindow};
         sendChangeWindowStateRequest(fakeWinInfo.getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
-                                     ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
+            ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
         sendChangeWindowStateRequest(winInfo->getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
-                                     ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
+            ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
         flush();
         if(i % 2 == 0)
             WAIT_UNTIL_TRUE(winInfo->hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));

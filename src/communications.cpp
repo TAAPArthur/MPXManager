@@ -157,8 +157,8 @@ static void sendConfirmation(WindowID target) {
     LOG(LOG_LEVEL_DEBUG, "sending receive confirmation to %d\n", target);
     int count = getConfirmedSentMessage(target) + 1;
     catchErrorSilent(xcb_change_property_checked(dis, XCB_PROP_MODE_REPLACE, target, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL,
-                     32,
-                     1, &count));
+            32,
+            1, &count));
     flush();
 }
 void send(std::string name, std::string value) {

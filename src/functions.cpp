@@ -21,7 +21,7 @@
 #include "workspaces.h"
 
 static int getNextIndexInStack(const ArrayList<WindowInfo*>& stack, int delta, bool filter = 0,
-                               WindowInfo* winInfo = getFocusedWindow()) {
+    WindowInfo* winInfo = getFocusedWindow()) {
     if(stack.empty())
         return -1;
     int index = winInfo ? stack.indexOf(winInfo) : -1;
@@ -86,7 +86,7 @@ WindowInfo* findWindow(const BoundFunction& rule, ArrayList<WindowInfo*>& search
     return NULL;
 }
 WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool checkLocalFirst, bool cache,
-                         Master* master) {
+    Master* master) {
     ArrayList<WindowID>* windowsToIgnore = cache ? getWindowCache(getActiveMaster()) : NULL;
     if(windowsToIgnore)
         if(cache && windowsToIgnore && master->getFocusedWindow())

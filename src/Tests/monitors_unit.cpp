@@ -140,7 +140,7 @@ MPX_TEST_ITER("test_monitor_dup_resolution", 5, {
     assert(getAllMonitors().size() == 1);
     assert(getAllMonitors()[0] == (_i < LEN(masks) / 2 ? larger : smaller));
 }
-             );
+);
 MPX_TEST_ITER("test_monitor_intersection", 12, {
     int id = 2;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;

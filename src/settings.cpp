@@ -164,10 +164,10 @@ void defaultPrintFunction(void) {
             color = "yellow";
         else continue;
         dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->getName().c_str(), w == getActiveWorkspace() ? "*" : "",
-                w->getActiveLayout() ? w->getActiveLayout()->getName().c_str() : "");
+            w->getActiveLayout() ? w->getActiveLayout()->getName().c_str() : "");
     }
     if(getActiveChain())
-        dprintf(STATUS_FD,"[%s] ", getActiveChain()->getName().c_str());
+        dprintf(STATUS_FD, "[%s] ", getActiveChain()->getName().c_str());
     if(getFocusedWindow() && getFocusedWindow()->isNotInInvisibleWorkspace()) {
         if(isLogging(LOG_LEVEL_DEBUG))
             dprintf(STATUS_FD, "%0xd ", getFocusedWindow()->getID());

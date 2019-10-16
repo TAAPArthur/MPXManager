@@ -368,7 +368,7 @@ MPX_TEST("test_configure_windows", {
     ArrayList<WindowID> list = {mapArbitraryWindow(), createNormalWindow()};
     short values[] = {1, 2, 3, 4, 5};
     int allSizeMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-                       XCB_CONFIG_WINDOW_BORDER_WIDTH;
+        XCB_CONFIG_WINDOW_BORDER_WIDTH;
     int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
     for(WindowInfo* winInfo : getAllWindows()) {
         list.add(winInfo->getID());

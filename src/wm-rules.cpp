@@ -214,9 +214,9 @@ void onDeviceEvent(void) {
     if((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && getActiveMaster()->isIgnoreKeyRepeat())
         return;
     setLastUserEvent({event->mods.effective, event->detail, 1U << event->event_type,
-                      (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
-                      .winInfo = getTargetWindow(event->root, event->event, event->child),
-                     });
+            (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
+            .winInfo = getTargetWindow(event->root, event->event, event->child),
+        });
     applyEventRules(ProcessDeviceEvent, NULL);
 }
 
@@ -258,11 +258,11 @@ void listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 
 void addAutoTileRules(AddFlag flag) {
     int events[] = {ClientMapAllow, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
-                    XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
-                    XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
-                    XCB_CLIENT_MESSAGE,
-                    onScreenChange,
-                   };
+            XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
+            XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
+            XCB_CLIENT_MESSAGE,
+            onScreenChange,
+        };
     for(auto event : events)
         getEventRules(event).add(DEFAULT_EVENT(markState), flag);
     getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);

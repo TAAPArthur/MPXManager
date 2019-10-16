@@ -69,7 +69,7 @@ bool loadWindowType(WindowID win, bool transient, uint32_t* type, string* typeNa
     xcb_ewmh_get_atoms_reply_t name;
     bool failed = 0;
     if(xcb_ewmh_get_wm_window_type_reply(ewmh,
-                                         xcb_ewmh_get_wm_window_type(ewmh, win), &name, NULL)) {
+            xcb_ewmh_get_wm_window_type(ewmh, win), &name, NULL)) {
         *type = name.atoms[0];
         xcb_ewmh_get_atoms_reply_wipe(&name);
     }
@@ -102,8 +102,8 @@ void loadWindowHints(WindowInfo* winInfo) {
 static void loadWindowSizeHints(WindowInfo* winInfo) {
     xcb_size_hints_t sizeHints;
     if(xcb_icccm_get_wm_size_hints_reply(dis, xcb_icccm_get_wm_size_hints(dis, winInfo->getID(), XCB_ATOM_WM_NORMAL_HINTS),
-                                         &sizeHints
-                                         , NULL))
+            &sizeHints
+            , NULL))
         *getWindowSizeHints(winInfo) = sizeHints;
 }
 
@@ -114,8 +114,8 @@ static void loadWindowSizeHints(WindowInfo* winInfo) {
 static void loadProtocols(WindowInfo* winInfo) {
     xcb_icccm_get_wm_protocols_reply_t reply;
     if(xcb_icccm_get_wm_protocols_reply(dis,
-                                        xcb_icccm_get_wm_protocols(dis, winInfo->getID(), ewmh->WM_PROTOCOLS),
-                                        &reply, NULL)) {
+            xcb_icccm_get_wm_protocols(dis, winInfo->getID(), ewmh->WM_PROTOCOLS),
+            &reply, NULL)) {
         LOG(LOG_LEVEL_TRACE, "Found %d protocols\n", reply.atoms_len);
         LOG_RUN(LOG_LEVEL_TRACE, dumpAtoms(reply.atoms, reply.atoms_len));
         for(uint32_t i = 0; i < reply.atoms_len; i++)
@@ -192,7 +192,7 @@ int focusWindow(WindowID win, Master* master) {
     LOG(LOG_LEVEL_DEBUG, "Trying to set focus to %d for master %d\n", win, master->getID());
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME,
-                               master->getKeyboardID());
+            master->getKeyboardID());
     return !catchError(cookie);
 }
 int focusWindow(WindowInfo* winInfo, Master* master) {
@@ -214,12 +214,12 @@ int loadDockProperties(WindowInfo* winInfo) {
     xcb_window_t win = winInfo->getID();
     xcb_ewmh_wm_strut_partial_t strut;
     if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
-                                           xcb_ewmh_get_wm_strut_partial(ewmh, win), &strut, NULL)) {
+            xcb_ewmh_get_wm_strut_partial(ewmh, win), &strut, NULL)) {
         winInfo->setDockProperties((int*)&strut, sizeof(xcb_ewmh_wm_strut_partial_t) / sizeof(int));
     }
     else if(xcb_ewmh_get_wm_strut_reply(ewmh,
-                                        xcb_ewmh_get_wm_strut(ewmh, win),
-                                        (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
+            xcb_ewmh_get_wm_strut(ewmh, win),
+            (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
         winInfo->setDockProperties((int*)&strut, sizeof(xcb_ewmh_get_extents_reply_t) / sizeof(int));
     else {
         LOG(LOG_LEVEL_TRACE, "could not read struct data\n");

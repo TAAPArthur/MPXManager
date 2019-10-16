@@ -109,7 +109,7 @@ MPX_TEST("test_chain_bindings", {
         new Binding{WILDCARD_MODIFIER, 0, subtract, {.passThrough = ALWAYS_PASSTHROUGH}},
     },
     {.passThrough = NO_PASSTHROUGH, .noGrab = 1}
-                              );
+    );
     getDeviceBindings().add(dummy);
     getDeviceBindings().add(chain);
     assert(getActiveChain() == NULL);

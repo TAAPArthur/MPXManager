@@ -151,7 +151,7 @@ void addDefaultXMouseControlBindings(uint32_t mask) {
         {mask,	XK_Return, grabKeyboard},
         {mask | ShiftMask,	XK_Return, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},
     };
-    for(Binding&b:bindings)
+    for(Binding& b : bindings)
         getDeviceBindings().add(b);
 }
 #endif

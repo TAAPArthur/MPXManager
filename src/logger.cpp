@@ -12,7 +12,7 @@
 #include <execinfo.h>
 
 #ifndef INIT_LOG_LEVEL
-    #define INIT_LOG_LEVEL LOG_LEVEL_INFO
+#define INIT_LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 static int LOG_LEVEL = INIT_LOG_LEVEL;

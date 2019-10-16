@@ -53,11 +53,11 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     WindowID window = xcb_generate_id(dis);
     parent = parent ? parent : winInfo->getParent();
     xcb_void_cookie_t cookie = xcb_create_window_checked(dis,
-                               XCB_COPY_FROM_PARENT, window, parent,
-                               0, 0, 10, 10, 0,
-                               winInfo->hasMask(INPUT_ONLY_MASK) ? XCB_WINDOW_CLASS_INPUT_ONLY : XCB_WINDOW_CLASS_INPUT_OUTPUT,
-                               screen->root_visual,
-                               XCB_CW_OVERRIDE_REDIRECT, values);
+            XCB_COPY_FROM_PARENT, window, parent,
+            0, 0, 10, 10, 0,
+            winInfo->hasMask(INPUT_ONLY_MASK) ? XCB_WINDOW_CLASS_INPUT_ONLY : XCB_WINDOW_CLASS_INPUT_OUTPUT,
+            screen->root_visual,
+            XCB_CW_OVERRIDE_REDIRECT, values);
     catchError(cookie);
     xcb_icccm_wm_hints_t hints = {.input = winInfo->hasMask(INPUT_MASK), .initial_state = XCB_ICCCM_WM_STATE_NORMAL };
     catchError(xcb_icccm_set_wm_hints_checked(dis, window, &hints));
@@ -97,7 +97,7 @@ static void updateClone(WindowInfo* clone) {
     const RectWithBorder& dims = clone->getGeometry();
     setWindowTitle(clone->getID(), getWindowInfo(clone->getEffectiveID())->getTitle());
     xcb_copy_area(dis, clone->getEffectiveID(), clone->getID(), graphics_context,
-                  info->offset[0], info->offset[1], 0, 0, dims.width, dims.height);
+        info->offset[0], info->offset[1], 0, 0, dims.width, dims.height);
 }
 void updateAllClonesOfWindow(WindowInfo* winInfo) {
     auto* list = getClonesOfWindow(winInfo);

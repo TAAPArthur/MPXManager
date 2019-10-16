@@ -182,11 +182,11 @@ static Rect getMonitorBoundsForWindow(WindowInfo* winInfo, const Monitor* m) {
 void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values[CONFIG_LEN]) {
     assert(winInfo);
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-               XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-               XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
+        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+        XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     int config[CONFIG_LEN] = {0};
     config[CONFIG_INDEX_STACK] = state->getArgs() &&
-                                 state->getArgs()->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
+        state->getArgs()->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
         config[i] = values[i];
     transformConfig(state->getArgs(), state->monitor, config);
@@ -241,8 +241,8 @@ void tileWorkspace(WorkspaceID index) {
             }
             else if(!winInfo->hasMask(INPUT_ONLY_MASK)) {
                 int border = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
-                             winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
-                             DEFAULT_BORDER_WIDTH;
+                    winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
+                    DEFAULT_BORDER_WIDTH;
                 configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &border);
             }
         if(winInfo->hasMask(BELOW_MASK))
@@ -288,7 +288,7 @@ void applyLayout(Workspace* workspace) {
 }
 
 static uint32_t splitEven(LayoutState* state, int offset, short const* baseValues, int dim, int num,
-                          int last) {
+    int last) {
     assert(num);
     short values[CONFIG_LEN];
     memcpy(values, baseValues, sizeof(values));
@@ -344,7 +344,7 @@ void column(LayoutState* state) {
     int offset = 0;
     for(int i = 0; i < numCol; i++) {
         offset = splitEven(state, offset, values,
-                           state->getArgs()->getOtherDimIndex(), size / numCol + (rem-- > 0 ? 0 : 1), i == numCol - 1);
+                state->getArgs()->getOtherDimIndex(), size / numCol + (rem-- > 0 ? 0 : 1), i == numCol - 1);
         values[splitDim - 2] += values[splitDim];
     }
 }

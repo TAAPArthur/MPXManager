@@ -159,9 +159,9 @@ static inline Binding& getBinding(int _i) {
 }
 static inline int getID(int _i) {
     return _i / 5 == 0 ? XIAllMasterDevices :
-           _i / 5 == 1 ? XIAllDevices :
-           isKeyboardMask(getBinding(_i).getMask()) ? getActiveMasterKeyboardID() :
-           getActiveMasterPointerID();
+        _i / 5 == 1 ? XIAllDevices :
+        isKeyboardMask(getBinding(_i).getMask()) ? getActiveMasterKeyboardID() :
+        getActiveMasterPointerID();
 }
 
 static inline void testBiningSetup() {

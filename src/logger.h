@@ -30,17 +30,17 @@
 
 
 enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO,
-      LOG_LEVEL_WARN, LOG_LEVEL_ERROR, LOG_LEVEL_NONE
-     };
+    LOG_LEVEL_WARN, LOG_LEVEL_ERROR, LOG_LEVEL_NONE
+};
 
 
 /// the init log level
 #ifndef INIT_LOG_LEVEL
-    #define INIT_LOG_LEVEL LOG_LEVEL_INFO
+#define INIT_LOG_LEVEL LOG_LEVEL_INFO
 #endif
 /// if false then all logging will be disabled
 #ifndef LOGGING
-    #define LOGGING 1
+#define LOGGING 1
 #endif
 
 /// The FD to log to

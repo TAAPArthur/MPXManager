@@ -14,7 +14,7 @@
  */
 static int getDeviceIDByMask(int mask) {
     return isKeyboardMask(mask) ? getActiveMasterKeyboardID() :
-           getActiveMasterPointerID();
+        getActiveMasterPointerID();
 }
 ArrayList<const Chain*>& getActiveChains(Master* master) {
     static Index<ArrayList<const Chain*>> key;
@@ -25,7 +25,7 @@ const Chain* getActiveChain(Master* master) {
     auto& chain = getActiveChains(master);
     return !chain.empty() ? chain.back() : NULL;
 }
-void endActiveChain(Master*master){
+void endActiveChain(Master* master) {
     if(getActiveChain(master))
         getActiveChain(master)->end();
 }

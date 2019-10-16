@@ -31,7 +31,7 @@ uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
 std::ostream& operator<<(std::ostream& strm, const Monitor& m) {
     return strm << "{id:" << m.getID() << ", name:" << m.getName() << ", base:" << m.getBase() << ", viewport: " <<
-           m.getViewport() << "}";
+        m.getViewport() << "}";
 }
 
 
@@ -71,8 +71,8 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
         if(!view.intersects(*(Rect*)values))
             continue;
         int intersectionWidth = fromPositiveSide ?
-                                dim - (&view.x)[offset] :
-                                (&view.x)[offset] + (&view.width)[offset] - values[offset];
+            dim - (&view.x)[offset] :
+            (&view.x)[offset] + (&view.width)[offset] - values[offset];
         assert(intersectionWidth > 0);
         (&view.width)[offset] -= intersectionWidth;
         if(fromPositiveSide)
@@ -99,9 +99,9 @@ void removeDuplicateMonitors(void) {
                 (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && (m1->getBase() == m2->getBase())  ||
                 (MONITOR_DUPLICATION_POLICY & INTERSECTS) && m1->getBase().intersects(m2->getBase()) ||
                 (MONITOR_DUPLICATION_POLICY & CONTAINS) && (m1->getBase().contains(m2->getBase()) ||
-                        m2->getBase().contains(m1->getBase()));
+                    m2->getBase().contains(m1->getBase()));
             (MONITOR_DUPLICATION_POLICY & CONTAINS_PROPER)&& (m1->getBase().containsProper(m2->getBase()) ||
-                    m2->getBase().containsProper(m1->getBase()));
+                m2->getBase().containsProper(m1->getBase()));
             if(!dup)
                 continue;
             Monitor* monitorToRemove = NULL;

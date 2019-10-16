@@ -162,8 +162,8 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
     WindowID win3 = createUnmappedWindow();
     waitUntilIdle();
     assert(getAllWindows().find(win) &&
-           getAllWindows().find(win2) &&
-           getAllWindows().find(win3));
+        getAllWindows().find(win2) &&
+        getAllWindows().find(win3));
     assert(!getAllWindows().find(child));
     assert(getActiveWindowStack().size() == 3);
 });
@@ -201,16 +201,16 @@ MPX_TEST("test_delete_windows", {
     WindowID win4 = createUnmappedWindow();
     waitUntilIdle();
     assert(getAllWindows().find(win4)&&
-           getAllWindows().find(win2)&&
-           getAllWindows().find(win3));
+        getAllWindows().find(win2)&&
+        getAllWindows().find(win3));
     assert(!getAllWindows().find(win));
     destroyWindow(win2);
     destroyWindow(win3);
     destroyWindow(win4);
     waitUntilIdle();
     assert(!(getAllWindows().find(win2) ||
-             getAllWindows().find(win3) ||
-             getAllWindows().find(win4)));
+            getAllWindows().find(win3) ||
+            getAllWindows().find(win4)));
     assert(getAllWindows().size() == 0);
 });
 
@@ -232,8 +232,8 @@ MPX_TEST("test_map_windows", {
     mapWindow(win2);
     //wait for all to be in list
     WAIT_UNTIL_TRUE(getAllWindows().find(win)&&
-                    getAllWindows().find(win2)&&
-                    getAllWindows().find(win3));
+        getAllWindows().find(win2)&&
+        getAllWindows().find(win3));
     //WAIT_UNTIL_TRUE(!isWindowMapped(win)&&isWindowMapped(win2)&&isWindowMapped(win3));
     mapWindow(win);
     //wait for all to be mapped
@@ -384,8 +384,8 @@ MPX_TEST("test_map_request", {
 MPX_TEST("test_configure_request", {
     int values[] = {2, 1, 1000, 1000, 1, XCB_STACK_MODE_ABOVE};
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-               XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-               XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
+        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+        XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     for(int i = 0; i < 2; i++) {
         WindowID win = i ? createUnmappedWindow() : createIgnoredWindow();
         assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
@@ -393,7 +393,7 @@ MPX_TEST("test_configure_request", {
     }
     consumeEvents();
     int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-                   XCB_CONFIG_WINDOW_BORDER_WIDTH;
+        XCB_CONFIG_WINDOW_BORDER_WIDTH;
     int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
     int defaultValues[] = {10, 10, 10, 10, 10};
     WindowID win = createUnmappedWindow();

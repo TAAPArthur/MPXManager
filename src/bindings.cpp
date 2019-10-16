@@ -46,8 +46,8 @@ bool Binding::trigger(const UserEvent& event)const {
 }
 std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
     return stream << "{ Name:'" << binding.getName() << "' " << binding.mod << " " << binding.detail << " Func:'" <<
-           binding.boundFunction << "' " << binding.getMask()
-           << "}" ;
+        binding.boundFunction << "' " << binding.getMask()
+        << "}" ;
 }
 bool Binding::matches(const UserEvent& event) {
     return
@@ -101,5 +101,5 @@ uint32_t Binding::getDetail() {
 }
 bool Binding::operator==(const Binding& binding)const {
     return name == binding.name && mod == binding.mod && buttonOrKey == binding.buttonOrKey &&
-           flags.mode == binding.flags.mode;
+        flags.mode == binding.flags.mode;
 }

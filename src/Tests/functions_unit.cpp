@@ -52,7 +52,7 @@ MPX_TEST("cycle_window", {
 
 void assertWindowIsFocused(WindowID win) {
     xcb_input_xi_get_focus_reply_t* reply = xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis,
-                                            getActiveMasterKeyboardID()), NULL);
+                getActiveMasterKeyboardID()), NULL);
     assert(reply->focus == win);
     free(reply);
 }
@@ -147,7 +147,7 @@ MPX_TEST("test_activate_top_bottom", {
     assert(focusBottom());
     assertWindowIsFocused(bottom->getID());
 }
-        );
+);
 MPX_TEST("test_shift_top", {
     getActiveMaster()->onWindowFocus(bottom->getID());
     shiftTop();
@@ -180,7 +180,7 @@ MPX_TEST("test_swap_top", {
     assert(getActiveWindowStack()[0] == bottom);
     assert(getActiveWindowStack().back() == top);
 }
-        );
+);
 
 
 MPX_TEST("test_swap_position", {
@@ -189,7 +189,7 @@ MPX_TEST("test_swap_position", {
     assert(getActiveWindowStack()[0] == bottom);
     assert(getActiveWindowStack().back() == top);
 }
-        );
+);
 
 MPX_TEST("test_activate_workspace_with_mouse", {
     assert(getAllMonitors().size() == 1);

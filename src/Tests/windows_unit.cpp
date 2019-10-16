@@ -46,7 +46,7 @@ MPX_TEST("test_mask_reset", {
     assert(winInfo->getUserMask() == 0);
     assert(winInfo->getMask() == nonUserMask);
 }
-        );
+);
 MPX_TEST("test_window_workspace_masks", {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);

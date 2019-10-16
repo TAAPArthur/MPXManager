@@ -64,7 +64,7 @@ typedef struct {
 } Thread;
 static ArrayList<Thread*> threads __attribute__((unused)) ;
 void runInNewThread(void* (*method)(void*)__attribute__((unused)), void* arg __attribute__((unused)),
-                    const char* name) {
+    const char* name) {
     if(isShuttingDown())return;
     pthread_t thread;
     int result __attribute__((unused)) = pthread_create(&thread, NULL, method, arg) == 0;

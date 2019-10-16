@@ -9,8 +9,8 @@
 #include <X11/X.h>
 
 #ifndef XMOUSE_CONTROL_EXT_ENABLED
-    /// enables this extensions
-    #define XMOUSE_CONTROL_EXT_ENABLED 1
+/// enables this extensions
+#define XMOUSE_CONTROL_EXT_ENABLED 1
 #endif
 #if XMOUSE_CONTROL_EXT_ENABLED
 
@@ -54,7 +54,7 @@ void* runXMouseControl(void* c __attribute__((unused)));
 /**
  * Add rules/bindings to get the XMousecontrol experience
  */
-void addDefaultXMouseControlBindings(unsigned int mask=Mod3Mask);
+void addDefaultXMouseControlBindings(unsigned int mask = Mod3Mask);
 void resetXMouseControl();
 /**
  * Removes a masks

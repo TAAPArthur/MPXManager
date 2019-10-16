@@ -22,8 +22,8 @@
 #include "xsession.h"
 
 #ifdef DOXYGEN
-    #undef assert
-    #define assert(x)
+#undef assert
+#define assert(x)
 #endif
 
 static bool RUN_EVENT_LOOP = 1;

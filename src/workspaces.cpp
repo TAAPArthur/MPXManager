@@ -22,7 +22,7 @@ const ArrayList<Workspace*>& getAllWorkspaces() {
 
 std::ostream& operator<<(std::ostream& strm, const Workspace& w) {
     return strm << "{ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName() << ", windows: " >>
-           w.windows << ", Layout: " << w.getActiveLayout() << "}";
+        w.windows << ", Layout: " << w.getActiveLayout() << "}";
 }
 
 void addWorkspaces(int num) {
@@ -52,8 +52,8 @@ Workspace* Workspace::getNextWorkspace(int dir, int mask) {
     for(uint32_t i = 0; i < getNumberOfWorkspaces(); i++) {
         index = getAllWorkspaces().getNextIndex(index, dir);
         if((hidden == -1 || hidden == !getWorkspace(index)->isVisible()) &&
-                (empty == -1 || empty == getWorkspace(index)->getWindowStack().empty())
-          )
+            (empty == -1 || empty == getWorkspace(index)->getWindowStack().empty())
+        )
             return getWorkspace(index);
     }
     return NULL;

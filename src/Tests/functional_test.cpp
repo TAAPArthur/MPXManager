@@ -109,13 +109,13 @@ static void multiMonitorSetup() {
     assertEquals(getAllMonitors().size(), 3);
     getActiveMaster()->setWorkspaceIndex(3);
     unlock();
-    for(int i=0;i<10;i++)
+    for(int i = 0; i < 10; i++)
         createNormalWindow();
     waitUntilIdle();
 }
 SET_ENV(multiMonitorSetup, fullCleanup);
 MPX_TEST("defaultWorkspace", {
-    assertEquals(getActiveMaster()->getWorkspace()->getWindowStack().size(),getAllWindows().size());
+    assertEquals(getActiveMaster()->getWorkspace()->getWindowStack().size(), getAllWindows().size());
 });
 MPX_TEST("switchWorkspace", {
     int count = 0;

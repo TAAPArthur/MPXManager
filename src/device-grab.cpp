@@ -4,7 +4,7 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 #ifndef NO_XRANDR
-    #include <xcb/randr.h>
+#include <xcb/randr.h>
 #endif
 
 #include "device-grab.h"
@@ -26,7 +26,7 @@ int grabDevice(MasterID deviceID, uint32_t maskValue) {
     XIEventMask eventmask = {deviceID, 4, (unsigned char*)& maskValue};
     LOG(LOG_LEVEL_INFO, "Grabbing device %d with mask %d\n", deviceID, maskValue);
     return XIGrabDevice(dpy, deviceID,  root, CurrentTime, None, GrabModeAsync,
-                        GrabModeAsync, 1, &eventmask);
+            GrabModeAsync, 1, &eventmask);
 }
 int ungrabDevice(MasterID id) {
     LOG(LOG_LEVEL_INFO, "Ungrabbing device %d\n", id);
@@ -40,10 +40,10 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
         deviceID, detail, mod, maskValue, isKeyboardMask(maskValue));
     if(!isKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,
-                            XIGrabModeAsync, XIGrabModeAsync, 1, &eventmask, 2, modifiers);
+                XIGrabModeAsync, XIGrabModeAsync, 1, &eventmask, 2, modifiers);
     else
         return XIGrabKeycode(dpy, deviceID, detail, root, XIGrabModeAsync, XIGrabModeAsync,
-                             1, &eventmask, 2, modifiers);
+                1, &eventmask, 2, modifiers);
 }
 int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboard) {
     LOG(LOG_LEVEL_TRACE, "UNGrabbing device:%d detail:%d mod:%d %d\n",

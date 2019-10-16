@@ -88,7 +88,7 @@ struct FunctionWrapper: GenericFunctionWrapper {
     template<typename U = R, typename V = P>
     EnableIfMonitor <U, V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
         return master && master->getWorkspace() &&
-               master->getWorkspace()->getMonitor() ? func(master->getWorkspace()->getMonitor()) : 0;
+            master->getWorkspace()->getMonitor() ? func(master->getWorkspace()->getMonitor()) : 0;
     }
 };
 template <typename P>
@@ -135,7 +135,7 @@ struct FunctionWrapper<R, void>: GenericFunctionWrapper {
     std::function<R()>func;
     FunctionWrapper(std::function<R()>func): func(func) {}
     int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
-             Master* master __attribute__((unused)) = NULL) const override {
+        Master* master __attribute__((unused)) = NULL) const override {
         return func();
     }
 };
@@ -144,7 +144,7 @@ struct FunctionWrapper<void, void>: GenericFunctionWrapper {
     std::function<void()>func;
     FunctionWrapper(std::function<void()>func): func(func) {}
     int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
-             Master* master __attribute__((unused)) = NULL) const override {
+        Master* master __attribute__((unused)) = NULL) const override {
         func();
         return 1;
     }
@@ -163,40 +163,40 @@ struct BoundFunction {
     BoundFunction(PassThrough passThrough = ALWAYS_PASSTHROUGH): passThrough(passThrough) {}
     template <typename R, typename P>
     BoundFunction(R(*_func)(P), std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper(_func)), passThrough(passThrough), name(name) {}
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper(_func)), passThrough(passThrough), name(name) {}
     template <typename R>
     BoundFunction(R(*_func)(), std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>(_func))),
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>(_func))),
         passThrough(passThrough),
         name(name) {}
     template <typename P>
     BoundFunction(void(*_func)(P), std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P>(std::function<void(P)>(_func))),
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P>(std::function<void(P)>(_func))),
         passThrough(passThrough),
         name(name) {    }
     BoundFunction(void(*_func)(), std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(_func)), passThrough(passThrough),
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(_func)), passThrough(passThrough),
         name(name) {    }
 
 
 
     template <typename R, typename P>
     BoundFunction(R(*_func)(P), P value, std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>([ = ]() {return _func(value);}))),
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>([ = ]() {return _func(value);}))),
     passThrough(passThrough),    name(name) {    }
     template <typename P>
     BoundFunction(void(*_func)(P), P value, std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(std::function<void()>([ = ]() {_func(value);}))),
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(std::function<void()>([ = ]() {_func(value);}))),
     passThrough(passThrough),  name(name) {    }
 
     template <typename R, typename P1, typename P2>
     BoundFunction(R(*_func)(P1, P2), P2 value, std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, P1>(std::function<R(P1)>([ = ](
-                                  P1 p) {return _func(p, value);}))), passThrough(passThrough),  name(name) {    }
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, P1>(std::function<R(P1)>([ = ](
+                            P1 p) {return _func(p, value);}))), passThrough(passThrough),  name(name) {    }
     template <typename P1, typename P2>
     BoundFunction(void(*_func)(P1, P2), P2 value, std::string name = "",
-                  PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P1>(std::function<void(P1)>([ = ](
-                                  P1 p) {_func(p, value);}))), passThrough(passThrough),   name(name) {    }
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P1>(std::function<void(P1)>([ = ](
+                            P1 p) {_func(p, value);}))), passThrough(passThrough),   name(name) {    }
 
     int call(WindowInfo* w = NULL, Master* m = NULL)const;
     int execute(WindowInfo* w = NULL, Master* m = NULL)const;

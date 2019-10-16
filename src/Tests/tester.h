@@ -56,7 +56,7 @@ struct Test {
     char status[64];
     const int testNumber;
     Test(const char* name, void(*const func)(int), int end, int exitCode, const char* fileName,
-         const int lineNumber): name(name), func(func), end(end), exitCode(exitCode), fileName(fileName),
+        const int lineNumber): name(name), func(func), end(end), exitCode(exitCode), fileName(fileName),
         lineNumber(lineNumber), testNumber(tests.size()) {
         tests.push_back(this);
         if(strcmp(fileName, Env::file) == 0) {

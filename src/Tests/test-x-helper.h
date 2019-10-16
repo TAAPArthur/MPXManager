@@ -31,15 +31,15 @@ static inline int createWindow(int parent, int mapped, int ignored, int userIgno
     assert(dis);
     xcb_window_t window = xcb_generate_id(dis);
     xcb_void_cookie_t c = xcb_create_window_checked(dis,                   /* Connection          */
-                          XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
-                          window,                        /* window Id           */
-                          parent,                  /* parent window       */
-                          0, 0,                          /* x, y                */
-                          150, 150,                      /* width, height       */
-                          0,                            /* border_width        */
-                          clazz, /* class               */
-                          screen->root_visual,           /* visual              */
-                          XCB_CW_OVERRIDE_REDIRECT, &ignored);                     /* masks, not used yet */
+            XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
+            window,                        /* window Id           */
+            parent,                  /* parent window       */
+            0, 0,                          /* x, y                */
+            150, 150,                      /* width, height       */
+            0,                            /* border_width        */
+            clazz, /* class               */
+            screen->root_visual,           /* visual              */
+            XCB_CW_OVERRIDE_REDIRECT, &ignored);                     /* masks, not used yet */
     xcb_generic_error_t* e = xcb_request_check(dis, c);
     if(e) {
         logError(e);

@@ -77,8 +77,8 @@ MPX_TEST("masterWindowStackIter", {
 });
 MPX_TEST("freeze_focus_stack_empty", {
 
-    for(int i=0;i<4;i++)
-        getActiveMaster()->setFocusStackFrozen(i%2);
+    for(int i = 0; i < 4; i++)
+        getActiveMaster()->setFocusStackFrozen(i % 2);
 });
 
 MPX_TEST("freeze_focus_stack", {

@@ -22,17 +22,17 @@
 
 ///The modifier that will match any other modifier
 #ifndef WILDCARD_MODIFIER
-    #define WILDCARD_MODIFIER AnyModifier
+#define WILDCARD_MODIFIER AnyModifier
 #endif
 
 
 /// the X pointer that exists by default
 #ifndef DEFAULT_POINTER
-    #define DEFAULT_POINTER 2
+#define DEFAULT_POINTER 2
 #endif
 /// the X keyboard that exists by default
 #ifndef DEFAULT_KEYBOARD
-    #define DEFAULT_KEYBOARD 3
+#define DEFAULT_KEYBOARD 3
 #endif
 
 #define __CAT(x, y) x ## y

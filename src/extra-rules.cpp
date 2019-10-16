@@ -27,7 +27,7 @@ void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
     auto sizeHints = getWindowSizeHints(winInfo);
     return sizeHints && (sizeHints->flags & XCB_ICCCM_SIZE_HINT_P_SIZE) &&
-           sizeHints->base_width * sizeHints->base_height <= area;
+        sizeHints->base_width * sizeHints->base_height <= area;
 }
 
 void addIgnoreSmallWindowRule(AddFlag flag) {
@@ -45,7 +45,7 @@ void addDesktopRule(AddFlag flag) {
     getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) {
             winInfo->addMask(NO_ACTIVATE_MASK | NO_RECORD_FOCUS | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
-                             BELOW_MASK |        STICKY_MASK);
+                BELOW_MASK |        STICKY_MASK);
             winInfo->setTilingOverrideEnabled(3);
         }
     },
@@ -71,7 +71,7 @@ void addAvoidDocksRule(AddFlag flag) {
     }, FUNC_NAME), flag);
 }
 void addNoDockFocusRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK|WM_TAKE_FOCUS_MASK);},
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK | WM_TAKE_FOCUS_MASK);},
     FUNC_NAME), flag);
 }
 void addFocusFollowsMouseRule(AddFlag flag) {

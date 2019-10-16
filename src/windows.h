@@ -294,7 +294,7 @@ public:
      */
     bool isActivatable() const {
         return  hasMask(MAPPABLE_MASK) && hasPartOfMask(WM_TAKE_FOCUS_MASK | INPUT_MASK) &&
-                !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
+            !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
     }
 
 

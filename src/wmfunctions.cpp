@@ -212,8 +212,8 @@ void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
     Workspace* w = winInfo->getWorkspace();
     assert(w);
     LOG_RUN(LOG_LEVEL_VERBOSE,
-            std::cout << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " " <<
-            *winInfo << "\n";);
+        std::cout << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " " <<
+        *winInfo << "\n";);
     if(w->isVisible()) {
         attemptToMapWindow(winInfo->getID());
     }
@@ -311,7 +311,7 @@ void setWindowPosition(WindowID win, const RectWithBorder geo) {
     int values[5];
     geo.copyTo(values);
     uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-                    XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
+        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
     configureWindow(win, mask, values);
 }
 
@@ -330,8 +330,8 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2) {
     setWindowPosition(winInfo1->getID(), geo);
 }
 static inline int filterConfigValues(int* filteredArr, const WindowInfo* winInfo, const short values[5],
-                                     WindowID sibling,
-                                     int stackMode, int configMask) {
+    WindowID sibling,
+    int stackMode, int configMask) {
     int i = 0;
     int n = 0;
     if(configMask & XCB_CONFIG_WINDOW_X && ++n && winInfo->isExternallyMoveable())

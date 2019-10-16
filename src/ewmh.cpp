@@ -21,7 +21,7 @@ static ArrayList<WindowID> mappedOrder;
 
 bool isMPXManagerRunning(void) {
     xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
-            WM_SELECTION_ATOM), NULL);
+                WM_SELECTION_ATOM), NULL);
     bool result = 0;
     if(ownerReply && ownerReply->owner) {
         result = getWindowTitle(ownerReply->owner) == WINDOW_MANAGER_NAME;
@@ -35,7 +35,7 @@ void broadcastEWMHCompilence() {
     //we set its class to input only and set override redirect so we (and anyone else  ignore it)
     if(!STEAL_WM_SELECTION) {
         xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
-                WM_SELECTION_ATOM), NULL);
+                    WM_SELECTION_ATOM), NULL);
         if(ownerReply->owner) {
             LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d\n", WM_SELECTION_ATOM, ownerReply->owner);
             quit(0);
@@ -44,7 +44,7 @@ void broadcastEWMHCompilence() {
     }
     LOG(LOG_LEVEL_DEBUG, "Setting selection owner\n");
     if(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), WM_SELECTION_ATOM,
-                  XCB_CURRENT_TIME)) == 0) {
+                XCB_CURRENT_TIME)) == 0) {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
@@ -113,7 +113,7 @@ void addEWMHRules(AddFlag flag) {
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {
     WorkspaceID workspaceIndex = 0;
     if((xcb_ewmh_get_wm_desktop_reply(ewmh,
-                                      xcb_ewmh_get_wm_desktop(ewmh, win), &workspaceIndex, NULL))) {
+                xcb_ewmh_get_wm_desktop(ewmh, win), &workspaceIndex, NULL))) {
         if(workspaceIndex != NO_WORKSPACE && workspaceIndex >= getNumberOfWorkspaces()) {
             workspaceIndex = getNumberOfWorkspaces() - 1;
         }
@@ -183,11 +183,11 @@ void onClientMessage(void) {
         LOG(LOG_LEVEL_TRACE, "Restacking Window %d sibling %d detail %d\n\n", win, data.data32[1], data.data32[2]);
         if(winInfo->allowRequestFromSource(data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
-                                    XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
+                XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
     }
     else if(message == ewmh->_NET_REQUEST_FRAME_EXTENTS) {
         xcb_ewmh_set_frame_extents(ewmh, win, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH,
-                                   DEFAULT_BORDER_WIDTH);
+            DEFAULT_BORDER_WIDTH);
     }
     else if(message == ewmh->_NET_MOVERESIZE_WINDOW) {
         LOG(LOG_LEVEL_DEBUG, "Move/Resize window request %d\n\n", win);
@@ -304,13 +304,13 @@ struct RefWindowMouse {
     bool change[2];
     bool move;
     RectWithBorder calculateNewPosition(const short newMousePos[2], bool* hasChanged) {
-        *hasChanged=0;
+        *hasChanged = 0;
         assert(win);
         RectWithBorder result = RectWithBorder(ref);
         for(int i = 0; i < 2; i++) {
             short delta = newMousePos[i] - mousePos[i];
             if(change[i]) {
-                *hasChanged=1;
+                *hasChanged = 1;
                 if(move)
                     result[i] += delta;
                 else if((signed)(delta + result[2 + i]) < 0) {
@@ -350,7 +350,7 @@ void cancelWindowMoveResize(Master* m) {
     if(ref) {
         RectWithBorder r = ref->getRef();
         processConfigureRequest(ref->win, r, 0, 0,
-                                XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+            XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
     }
 }
 
@@ -359,11 +359,11 @@ void updateWindowMoveResize(Master* m) {
     if(ref) {
         short pos[2];
         if(getMousePosition(m, root, pos)) {
-            bool change=0;
+            bool change = 0;
             RectWithBorder r = ref->calculateNewPosition(pos, &change);
             if(change && r.width && r.height)
                 processConfigureRequest(ref->win, r, 0, 0,
-                                        XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
         }
     }
 }
@@ -376,7 +376,7 @@ void loadSavedAtomState(WindowInfo* winInfo) {
     }
 }
 void setXWindowStateFromMask(WindowInfo* winInfo) {
-    LOG(LOG_LEVEL_DEBUG,"Setting X State from masks %d\n",winInfo->getID());
+    LOG(LOG_LEVEL_DEBUG, "Setting X State from masks %d\n", winInfo->getID());
     xcb_atom_t supportedStates[] = {SUPPORTED_STATES};
     xcb_ewmh_get_atoms_reply_t reply;
     int count = 0;
@@ -419,8 +419,8 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
 void syncState() {
     WorkspaceID currentWorkspace ;
     if(!xcb_ewmh_get_current_desktop_reply(ewmh,
-                                           xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
-                                           &currentWorkspace, NULL)) {
+            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
+            &currentWorkspace, NULL)) {
         currentWorkspace = getActiveWorkspaceIndex();
     }
     if(currentWorkspace >= getNumberOfWorkspaces())

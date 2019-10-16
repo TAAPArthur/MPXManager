@@ -32,7 +32,7 @@ enum WindowAction {
  * @return 1 if a matching window was found
  */
 WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_ACTIVATE, bool checkLocalFirst = 1,
-                         bool cache = 1, Master* master = getActiveMaster());
+    bool cache = 1, Master* master = getActiveMaster());
 
 static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, 0, 0);}
 bool matchesClass(WindowInfo* winInfo, std::string str);
@@ -65,7 +65,7 @@ void cycleWindows(int delta);
  * @return the first window that matches rule or NULL
  */
 WindowInfo* findWindow(const BoundFunction& rule, ArrayList<WindowInfo*>& searchList,
-                       ArrayList<WindowID>* ignoreList = NULL);
+    ArrayList<WindowID>* ignoreList = NULL);
 
 
 /**

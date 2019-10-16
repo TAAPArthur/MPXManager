@@ -149,10 +149,10 @@ MPX_TEST("test_focus_follows_mouse", {
         int id = (i % 2 ? id1 : id2);
         int n = 0;
         WAIT_UNTIL_TRUE(getActiveFocus(getActiveMaster()->getID()) == id,
-                        movePointer(n, n, getActiveMasterPointerID(), id);
-                        n = !n;
-                        flush()
-                       );
+            movePointer(n, n, getActiveMasterPointerID(), id);
+            n = !n;
+            flush()
+        );
     }
 });
 
