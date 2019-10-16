@@ -1,20 +1,19 @@
-
 #include "user-events.h"
 #include "boundfunction.h"
 #include "logger.h"
 #include "xsession.h"
 
-/// Holds an Arraylist of rules that will be applied in response to various conditions
-static ArrayList<BoundFunction*> eventRules[MPX_LAST_EVENT];
 
 /// Holds batch events
 typedef struct {
     /// how many times the event has been trigged
     int counter;
     /// the list of events to trigger when counter is non zero
-    ArrayList<BoundFunction*> list;
+    UniqueArrayList<BoundFunction*> list;
 } BatchEventList;
 
+/// Holds an Arraylist of rules that will be applied in response to various conditions
+static UniqueArrayList<BoundFunction*> eventRules[MPX_LAST_EVENT];
 static BatchEventList batchEventRules[MPX_LAST_EVENT];
 
 ArrayList<BoundFunction*>& getEventRules(int i) {
@@ -58,14 +57,11 @@ int applyEventRules(int type, WindowInfo* winInfo, Master* m) {
     return applyRules(getEventRules(type), winInfo, m);
 }
 int BoundFunction::execute(WindowInfo* winInfo, Master* master)const {
-    return shouldPassThrough(passThrough, operator()(winInfo, master));
+    return shouldPassThrough(passThrough, call(winInfo, master));
 }
 int BoundFunction::call(WindowInfo* winInfo, Master* master)const {
     LOG(LOG_LEVEL_VERBOSE, "Calling func with %p %p\n", winInfo, master);
     return func ? func->call(winInfo, master) : 1;
-}
-int BoundFunction::operator()(WindowInfo* winInfo, Master* master)const {
-    return call(winInfo, master);
 }
 bool BoundFunction::operator==(const BoundFunction& boundFunction)const {
     assert(name != "" || boundFunction.name != "");

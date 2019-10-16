@@ -1,7 +1,3 @@
-/**
- * @file layouts.c
- * @copydoc layouts.h
- */
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -22,25 +18,25 @@
 std::ostream& operator<<(std::ostream& strm, const Layout& layout) {
     return strm << layout.getName();
 }
-std::ostream& operator<<(std::ostream& strm, const Layout* layout) {
-    return layout ? strm << *layout : strm << "(nil)";
-}
 
-static Layout DEFAULT_LAYOUTS[] = {
-    {.name = "Full", .layoutFunction = full, .args = {.noBorder = 1, .raiseFocused = 1}},
-    {.name = "Grid", .layoutFunction = column},
-    {.name = "2 Column", .layoutFunction = column, .args = {.dim = 0, .arg = {2}}},
-    {.name = "2 Row", .layoutFunction = column, .args = {.dim = 1, .arg = {2}}},
-    {.name = "2 Pane", .layoutFunction = column, .args = {.limit = 2, .dim = 0, .raiseFocused = 1, .arg = {2}}},
-    {.name = "2 HPane", .layoutFunction = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1,  .arg = {2} }},
-    {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}, .argStep = {.1}}},
-};
+Layout FULL = {.name = "Full", .layoutFunction = full, .args = {.noBorder = 1, .raiseFocused = 1}},
+       GRID = {.name = "Grid", .layoutFunction = column},
+       TWO_COL = {.name = "2 Col", .layoutFunction = column, .args = {.dim = 0, .arg = {2}}},
+       TWO_ROW = {.name = "2 Row", .layoutFunction = column, .args = {.dim = 1, .arg = {2}}},
+       TWO_PANE = {.name = "2 Pane", .layoutFunction = column, .args = {.limit = 2, .dim = 0, .raiseFocused = 1, .arg = {2}}},
+       TWO_HPLANE = {.name = "2 HPane", .layoutFunction = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1,  .arg = {2} }},
+       MASTER = {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}, .argStep = {.1}}};
+static ArrayList<Layout*> registeredLayouts = {&FULL, &GRID, &TWO_ROW, &TWO_COL, &TWO_PANE, &TWO_HPLANE, &MASTER};
 
-static ArrayList<Layout*> defaultLayouts = ArrayList<Layout*>(DEFAULT_LAYOUTS, LEN(DEFAULT_LAYOUTS));
-const ArrayList<Layout*>& getDefaultLayouts() {
-    return defaultLayouts;
+void registeredLayout(Layout* layout) {
+    registeredLayouts.add(layout);
 }
-static ArrayList<Layout*> registeredLayouts = ArrayList<Layout*>(defaultLayouts);
+void unregisteredLayout(Layout* layout) {
+    registeredLayouts.removeElement(layout);
+}
+const ArrayList<Layout*>& getRegisteredLayouts() {
+    return registeredLayouts;
+}
 
 
 Layout* findLayoutByName(std::string name) {
@@ -50,9 +46,6 @@ Layout* findLayoutByName(std::string name) {
     return NULL;
 }
 
-ArrayList<Layout*>& getRegisteredLayouts() {
-    return registeredLayouts;
-}
 void increaseLayoutArg(int index, int step, Layout* l) {
     if(l) {
         switch(index) {
@@ -157,7 +150,7 @@ static void applyMasksToConfig(const Monitor* m, int* values, WindowInfo* winInf
 }
 
 static int adjustBorders(LayoutState* state, WindowInfo* winInfo, int config[CONFIG_LEN], int mask) {
-    if(winInfo->hasMask(INPUT_ONLY_MASK)) {
+    if(winInfo->isInputOnly()) {
         mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
         for(int i = CONFIG_INDEX_BORDER; i < CONFIG_LEN - 1; i++)
             config[i] = config[i + 1];
@@ -239,7 +232,7 @@ void tileWorkspace(WorkspaceID index) {
                 short config[CONFIG_LEN] = {0};
                 configureWindow(&dummy, winInfo, config);
             }
-            else if(!winInfo->hasMask(INPUT_ONLY_MASK)) {
+            else if(!winInfo->isInputOnly()) {
                 int border = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
                     winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
                     DEFAULT_BORDER_WIDTH;

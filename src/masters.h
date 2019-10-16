@@ -24,7 +24,7 @@ ArrayList<Master*>& getAllMasters();
 /**
  *
  * @return The master device currently interacting with the wm
- * @see setActiveMasterNodeById
+ * @see setActiveMasterNodeByID
  */
 Master* getActiveMaster(void);
 /**
@@ -34,10 +34,10 @@ Master* getActiveMaster(void);
  */
 void setActiveMaster(Master* master);
 
-///holds data on a master device pair like the ids and focus history
+/// holds data on a master device pair like the ids and focus history
 struct Master : WMStruct {
 private:
-    /**pointer master id associated with id;*/
+    /// pointer master id associated with id
     const MasterID pointerID;
     /// the name of the master keyboard
     std::string name;
@@ -58,20 +58,12 @@ private:
     /**Time the focused window changed*/
     TimeStamp focusedTimeStamp = 0;
     /// The current binding mode
-    char bindingMode = 0;
-    char bindingFamily = 0;
+    uint8_t bindingMode = 0;
     /**When true, the focus stack won't be updated on focus change*/
     bool freezeFocusStack = 0;
-    /// If true ignore all events with the send_event bit
-    bool ignoreSendEvents;
-    /// If true ignore all device events with the key repeat flag set
-    bool ignoreKeyRepeat;
 
-    /**Index of active workspace;
-     * */
+    /// Index of active workspace;
     WorkspaceID activeWorkspaceIndex = 0;
-    /// When set, device event rules will be passed this window instead of the active window or focused
-    WindowID targetWindow = 0;
 
 public:
     /**
@@ -80,22 +72,46 @@ public:
      * @param name the name of the master keyboard
      * @param focusColor
      */
-    Master(MasterID keyboardID, MasterID pointerID, std::string n,
+    Master(MasterID keyboardID, MasterID pointerID, std::string name,
         int focusColor = 0x00FF00): WMStruct(keyboardID),
-        pointerID(pointerID), name(n),        focusColor(focusColor) {
+        pointerID(pointerID), name(name),        focusColor(focusColor) {
         assert(keyboardID > 1 && pointerID > 1);
     }
     ~Master();
-    ReverseArrayList<WindowInfo*>& getWindowStack(void) {
+    /**
+     * Returns an Iterable list where the first member will be the currently focused window
+     * (if the stack isn't frozen)
+     *
+     * @return
+     */
+    const ReverseArrayList<WindowInfo*>& getWindowStack(void) {
         return windowStack;
     }
+    /**
+     * Prints the struct
+     *
+     * @param strm
+     * @param m
+     *
+     * @return
+     */
     friend std::ostream& operator<<(std::ostream& strm, const Master& m) ;
+    /**
+     * @copydoc Slave::setMasterID
+     * @relates Slave
+     */
     friend void Slave::setMasterID(MasterID id);
+    /**
+     * @return a list of all recorded slaves
+     */
     const ArrayList<Slave*>& getSlaves(void)const {
         return slaves;
     }
+    /// @return the keyboard
     MasterID getKeyboardID(void)const {return id;}
+    /// @return the pointer id
     MasterID getPointerID(void)const {return pointerID;}
+    /// @return the name of this device
     std::string getName(void)const {return name;}
     /**
      * @return  whether of not the master window stack will be updated on focus change
@@ -121,29 +137,35 @@ public:
      */
     WindowInfo* getFocusedWindow(void);
     /**
-     *
-     * @return the time the master focused the window
+     * @return the time we noticed that the master focused its currently focused window
      */
     unsigned int getFocusedTime(void)const {
         return focusedTimeStamp;
     }
+    /// @return the color to set to border of the focused window too
     unsigned int getFocusColor(void)const {
         return focusColor;
     }
+    /**
+     * @param color the new border color of the focused window
+     */
     void setFocusColor(uint32_t color) {
         focusColor = color;
     }
-    bool isIgnoreKeyRepeat() {return ignoreKeyRepeat;}
-    void setIgnoreKeyRepeat(bool b = 1) {ignoreKeyRepeat = b;}
-    bool isIgnoreSendEvents() {return ignoreSendEvents;}
     /**
-     * Only bindings whose mode & mode will be triggered by this master
+     * Only bindings whose mode & this->mode || mode == ANY_MODE will be triggered by this master
      *
      * @param mode
      */
     void setCurrentMode(int mode) {bindingMode = mode;}
-    bool allowsMode(int mode) {
-        return bindingMode == mode || (bindingFamily & (1 << mode));
+    /**
+     * @copybrief setCurrentMode
+     * @param mode the mode of the binding that might be triggered
+     *
+     * @return true if the mode is currently allowed by this master
+     */
+    bool allowsMode(uint32_t mode) {
+        return mode == ANY_MODE || bindingMode == mode;
     }
     /**
      * Returns the current binding mode for the active master
@@ -153,8 +175,6 @@ public:
     int getCurrentMode(void) {
         return bindingMode;
     }
-    WindowID getTargetWindow(void)const {return targetWindow;}
-    void setTargetWindow(WindowID target) {targetWindow = target;}
     /**
      * To be called when a master focuses a given window.
      *
@@ -167,6 +187,18 @@ public:
      * @param win
      */
     void onWindowFocus(WindowID win);
+    /**
+     * Clears the focus stack
+     */
+    void clearFocusStack();
+    /**
+     * Removes a given window from the focus stack
+     *
+     * @param win the window to remove
+     *
+     * @return the window removed or NULL
+     */
+    WindowInfo* removeWindowFromFocusStack(WindowID win);
 
     /**
      *
@@ -182,31 +214,44 @@ public:
     void setWorkspaceIndex(int index) {
         activeWorkspaceIndex = index;
     }
+    /**
+     *
+     * @return the active Workspace of this Master or NULL
+     */
     Workspace* getWorkspace(void) {
         return ::getWorkspace(getWorkspaceIndex());
     }
-    WindowInfo* getMostRecentlyFocusedWindow(bool(*filter)(WindowInfo*));
 };
 
 
 
-void addDefaultMaster();
 /**
- * @return the id of the active master
+ * Creates and adds the default master if it doesn't already exits
  */
+void addDefaultMaster();
+/// @return the keyboard id of the active master
 static inline MasterID getActiveMasterKeyboardID(void) {return getActiveMaster()->getKeyboardID();}
+/// @return the pointer id of the active master
 static inline MasterID getActiveMasterPointerID(void) {return getActiveMaster()->getPointerID();}
+/// @return the ID of the active Workspace or NO_WORKSPACE
 static inline WorkspaceID getActiveWorkspaceIndex(void) {return getActiveMaster()->getWorkspaceIndex();}
+/// @return the active Workspace or NULL
 static inline Workspace* getActiveWorkspace(void) {return getActiveMaster()->getWorkspace();}
 
 
+/// @return the window with recorded focus for the active Master
 static inline WindowInfo* getFocusedWindow() {return getActiveMaster()->getFocusedWindow();}
 
+/**
+ * @param name
+ * @return  the master with the given name
+ */
 Master* getMasterByName(std::string name) ;
 /**
- * @brief returns the master node with id == keyboardId
+ * @brief returns the master node with id == keyboardID
  * @param id id of the master device
+ * @param keyboard whether to look for a keyboard or pointer device
  * @return the master device with the give node
  */
-Master* getMasterById(MasterID id, bool keyboard = 1);
+Master* getMasterByID(MasterID id, bool keyboard = 1);
 #endif

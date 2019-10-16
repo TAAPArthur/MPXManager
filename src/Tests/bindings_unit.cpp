@@ -1,5 +1,4 @@
 #include <stdlib.h>
-
 #include "../bindings.h"
 #include "../devices.h"
 #include "../globals.h"
@@ -36,16 +35,16 @@ MPX_TEST("getLastUserEvent", {
 
 MPX_TEST("test_binding_mode_match", {
     getActiveMaster()->setCurrentMode(0);
-    Binding binding = {WILDCARD_MODIFIER, 0,{}, {.mode = 0}};
-    Binding bindingWrongMode = {WILDCARD_MODIFIER, 0,{}, {.mode = 1}};
-    Binding bindingWildcard = {WILDCARD_MODIFIER, 0,{}, {.mode = ANY_MODE}};
+    Binding binding = {WILDCARD_MODIFIER, 0, {}, {.mode = 0}};
+    Binding bindingWrongMode = {WILDCARD_MODIFIER, 0, {}, {.mode = 1}};
+    Binding bindingWildcard = {WILDCARD_MODIFIER, 0, {}, {.mode = ANY_MODE}};
     UserEvent nullEvent = {0};
     assert(binding.matches(nullEvent));
     assert(!bindingWrongMode.matches(nullEvent));
     assert(bindingWildcard.matches(nullEvent));
 });
 
-MPX_TEST_ITER("check_bindings", LEN_PASSTHROUGH, {
+MPX_TEST_ITER("check_bindings", NO_PASSTHROUGH, {
     PassThrough passThrough = (PassThrough) _i;
     static int count = 0;
     static void (*funcNoArg)() = []() {
@@ -107,29 +106,50 @@ MPX_TEST_ITER("check_binding_target", 4, {
     static int count = 0;
     static WindowInfo* dummy = new WindowInfo(1);
     static WindowInfo* focusDummy = new WindowInfo(2);
+    static WindowInfo* target = new WindowInfo(3);
     getActiveMaster()->setCurrentMode(0);
     getAllWindows().add(dummy);
     getAllWindows().add(focusDummy);
+    getAllWindows().add(target);
     getActiveMaster()->onWindowFocus(focusDummy->getID());
-    int numTypes = 4;
-    static int i = _i;
+    static WindowParamType i = (WindowParamType) _i;
+    static bool targetSet = _i > TARGET_WINDOW;
     static void (*funcWinArg)(WindowInfo * winInfo) = [](WindowInfo * winInfo) {
+        count++;
         switch(i) {
             case DEFAULT_WINDOW:
             case FOCUSED_WINDOW:
                 assert(focusDummy == winInfo);
-                break;
+                return;
             case TARGET_WINDOW:
-                assert(dummy == winInfo);
+                if(targetSet)
+                    assert(target == winInfo);
+                else
+                    assert(dummy == winInfo);
+                return;
         }
-        count++;
+        assert(0);
     };
-    Binding b = {WILDCARD_MODIFIER, 0, funcWinArg, {.passThrough = NO_PASSTHROUGH, .mask = KEYBOARD_MASKS, .windowTarget = (i == numTypes ? TARGET_WINDOW : (WindowParamType)i)}};
+    static WindowParamType windowTarget = (WindowParamType) _i;
+    if(targetSet) {
+        setActiveTarget(target->getID());
+        assertEquals(getTarget(), target->getID());
+        windowTarget = DEFAULT_WINDOW;
+        i = TARGET_WINDOW;
+    }
+
+    Binding b = {WILDCARD_MODIFIER, 0, funcWinArg, {.passThrough = NO_PASSTHROUGH, .mask = KEYBOARD_MASKS, .windowTarget = windowTarget}};
     getDeviceBindings().add(&b);
     UserEvent event = {1, 1, KEYBOARD_MASKS, 0, getActiveMaster(), dummy};
     assert(checkBindings(event) == 0);
     getDeviceBindings().clear();
     assert(count);
+    if(targetSet) {
+        clearTarget();
+        assertEquals(getTarget(), 0);
+        windowTarget = DEFAULT_WINDOW;
+        i = TARGET_WINDOW;
+    }
 });
 MPX_TEST("event_rules", {
     for(int i = 0; i < MPX_LAST_EVENT; i++) {
@@ -149,6 +169,11 @@ MPX_TEST("event_rules_abort", {
 });
 
 
+MPX_TEST("test_no_grab", {
+    Binding b = {0, 0, {}, { .noGrab = 1}};
+    assert(b.grab());
+    assert(b.ungrab());
+});
 
 using namespace TestGrabs;
 
@@ -160,10 +185,5 @@ MPX_TEST_ITER("test_grab_binding", NUM_ITER, {
 });
 MPX_TEST_ITER("test_grab_ungrab_binding_exclusive", NUM_ITER, {
     testGrabDetailExclusive(_i, 1);
-});
-MPX_TEST_ITER("test_bad_grab_detail", NUM_ITER, {
-    Binding b = {0, 0, {}, { .noGrab = 1}};
-    assert(b.grab());
-    assert(b.ungrab());
 });
 

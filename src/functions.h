@@ -64,7 +64,7 @@ void cycleWindows(int delta);
  * @param ignoreList can be NULL
  * @return the first window that matches rule or NULL
  */
-WindowInfo* findWindow(const BoundFunction& rule, ArrayList<WindowInfo*>& searchList,
+WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& searchList,
     ArrayList<WindowID>* ignoreList = NULL);
 
 

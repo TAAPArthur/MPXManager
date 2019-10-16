@@ -63,4 +63,6 @@ void addScanChildrenRule(AddFlag flag = ADD_UNIQUE);
  * (non-default)
  */
 void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag = ADD_UNIQUE) ;
+void addIgnoreKeyRepeat(AddFlag flag = PREPEND_UNIQUE);
+void addKeepTransientsOnTopRule();
 #endif

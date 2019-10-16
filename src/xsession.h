@@ -13,7 +13,8 @@
 #include "mywm-structs.h"
 #include "window-masks.h"
 
-extern int defaultScreenNumber;
+/// the default screen index
+extern const int defaultScreenNumber;
 
 
 ///global graphics context
@@ -24,6 +25,7 @@ extern xcb_gcontext_t graphics_context;
  * Used to send client messages to direct focus of an application
 */
 extern xcb_atom_t WM_TAKE_FOCUS;
+/// predecessor to _NET_WM_NAME
 extern xcb_atom_t WM_NAME;
 
 /**
@@ -116,6 +118,9 @@ static inline void flush(void) {
  * @return
  */
 xcb_atom_t getAtom(const char* name);
+/**
+ * @copydoc getAtom(const char*)
+ */
 static inline xcb_atom_t getAtom(std::string name) {
     return getAtom(name.c_str());
 }
@@ -125,9 +130,9 @@ static inline xcb_atom_t getAtom(std::string name) {
  * Note that an atom can have multiple names and this method just returns one of them
  *
  * @param atom the atom whose name is wanted
- * @param value pointer to a str
+ * @return  the name of the atom
  */
-std::string getAtomValue(xcb_atom_t atom);
+std::string getAtomName(xcb_atom_t atom);
 /**
  *
  * @param keysym
@@ -135,7 +140,24 @@ std::string getAtomValue(xcb_atom_t atom);
  */
 int getKeyCode(int keysym);
 
+/**
+ * Returns true if buttonOrKey is a valid button.
+ * A valid button is less than 8.
+ *
+ * @param buttonOrKey
+ *
+ * @return 1 if buttonOrKey is a valid button value
+ */
 static inline bool isButton(int buttonOrKey) {return buttonOrKey < 8;}
+/**
+ * Checks to see if buttonOrKey is a button or not.
+ * If it is, return buttonOrKey
+ * Else convert it to a key code and return that value
+ *
+ * @param buttonOrKey
+ *
+ * @return the button detail or keyCode from buttonOrKey
+ */
 int getButtonDetailOrKeyCode(int buttonOrKey);
 /**
  * If it does not already exist creates a window to be used as proof-of-life.
@@ -165,6 +187,7 @@ int catchError(xcb_void_cookie_t cookie);
  * It may trigger an assert; @see CRASH_ON_ERRORS
  *
  * @param e
+ * @param xlibError 1 iff the error didn't come from xcb
  */
 void logError(xcb_generic_error_t* e, bool xlibError = 0);
 /**
@@ -198,7 +221,6 @@ int isSyntheticEvent();
 int getIdleCount(void);
 
 /**
- * TODO rename
  * Continually listens and responds to event and applying corresponding Rules.
  * This method will only exit when the x connection is lost
  * @param arg unused
@@ -220,10 +242,50 @@ void setLastEvent(void* event);
  * @see getLastEvent
  */
 void* getLastEvent(void);
+/**
+ *
+ *
+ * @param atom
+ * @see getAtomsFromMask
+ *
+ * @return the WindowMask(s) this atom represents
+ */
 WindowMasks getMaskFromAtom(xcb_atom_t atom) ;
+/**
+ *
+ *
+ * @param masks
+ * @param arr an sufficiently large array used to store the atoms retrieved from masks
+ *
+ * @see getMaskFromAtom
+ *
+ * @return the number of atoms written to arr
+ */
 int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) ;
 
 
+/**
+ * Returns the max number of master devices the XServer can support.
+ *
+ * This method suffers from the same problems as getMaxNumberOfMasterDevices()
+ *
+ * Every new master creates 4 devices (The master pair and each of their slave devices)
+ * In addition the first 2 devices are reserved.
+ *
+ * @param force
+ *
+ * @return the (getMaxNumberOfDevices()-2)/4
+ */
 uint32_t getMaxNumberOfMasterDevices(bool force = 0);
-uint32_t getMaxNumberOfDevices(bool force);
+/**
+ * Returns the max number of devices the XServer can support.
+ * This value is read from a property on the root window, so it can be incorrect.
+ * Once retried, the same value will be used unless force is given, in which case
+ * we would reload it
+ *
+ * @param force
+ *
+ * @return the maximum number of devices X can handle
+ */
+uint32_t getMaxNumberOfDevices(bool force = 0);
 #endif /* XSESSION_H_ */

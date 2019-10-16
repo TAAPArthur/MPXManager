@@ -1,8 +1,3 @@
-/**
- * @file xsession.cpp
- * @brief Create/destroy XConnection
- */
-
 #include <assert.h>
 #include <string.h>
 #include <strings.h>
@@ -40,15 +35,16 @@ xcb_atom_t WM_WORKSPACE_WINDOWS;
 xcb_atom_t WM_MASTER_WINDOWS;
 xcb_atom_t WM_ACTIVE_MASTER;
 xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
-xcb_atom_t MAX_DEVICES;
+static xcb_atom_t MAX_DEVICES;
 
 
-int maxNumDevices;
+static int maxNumDevices;
 uint32_t getMaxNumberOfMasterDevices(bool force) {
     return (getMaxNumberOfDevices(force) - 2) / 4;
 }
 uint32_t getMaxNumberOfDevices(bool force) {
     if(force || maxNumDevices == 0) {
+        maxNumDevices = 40; // the max devices as of 2019-10-19
         xcb_get_property_cookie_t cookie;
         xcb_get_property_reply_t* reply;
         LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
@@ -61,13 +57,12 @@ uint32_t getMaxNumberOfDevices(bool force) {
     return maxNumDevices;
 }
 xcb_gcontext_t graphics_context;
-typedef xcb_window_t WindowID;
 Display* dpy;
 xcb_connection_t* dis;
 WindowID root;
 xcb_ewmh_connection_t* ewmh;
 xcb_screen_t* screen;
-int defaultScreenNumber;
+const int defaultScreenNumber = 0;
 
 /**
  * Window created by us to show to the world that an EWMH compliant WM is active
@@ -123,7 +118,7 @@ xcb_atom_t getAtom(const char* name) {
     free(reply);
     return atom;
 }
-std::string getAtomValue(xcb_atom_t atom) {
+std::string getAtomName(xcb_atom_t atom) {
     xcb_get_atom_name_reply_t* valueReply = xcb_get_atom_name_reply(dis, xcb_get_atom_name(dis, atom), NULL);
     std::string str = "";
     if(valueReply) {
@@ -205,11 +200,6 @@ void openXDisplay(void) {
     }
     dis = XGetXCBConnection(dpy);
     assert(!xcb_connection_has_error(dis));
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(dis));
-    screen = iter.data;
-    //defaultScreenNumber=iter.index;
-    setRootDims(&screen->width_in_pixels);
-    root = screen->root;
     xcb_intern_atom_cookie_t* cookie;
     bool applyRule = ewmh == NULL;
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
@@ -228,6 +218,9 @@ void openXDisplay(void) {
     _CREATE_ATOM(WM_MASTER_WINDOWS);
     _CREATE_ATOM(WM_ACTIVE_MASTER);
     _CREATE_ATOM(MAX_DEVICES);
+    screen = ewmh->screens[0];
+    setRootDims(&screen->width_in_pixels);
+    root = screen->root;
     char selectionName[8];
     sprintf(selectionName, "WM_S%d", '0' + defaultScreenNumber);
     xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(dis,
@@ -328,7 +321,7 @@ void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms) {
     for(int i = 0; i < numberOfAtoms; i++) {
         if(i)
             std::cout << ", ";
-        std::cout << getAtomValue(atoms[i]) << " (" << atoms[i] << ")";
+        std::cout << getAtomName(atoms[i]) << " (" << atoms[i] << ")";
     }
     std::cout << "\n";
 }

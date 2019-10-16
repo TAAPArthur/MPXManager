@@ -78,7 +78,7 @@ MPX_TEST_ITER("detect_input_only_window", 2, {
         scan(root);
     else
         registerWindow(win, root);
-    assert(getWindowInfo(win)->hasMask(INPUT_ONLY_MASK));
+    assert(getWindowInfo(win)->isInputOnly());
 });
 MPX_TEST("filter_window", {
     static auto type = ewmh->_NET_WM_WINDOW_TYPE_TOOLTIP;
@@ -391,7 +391,6 @@ MPX_TEST("test_configure_windows", {
         const RectWithBorder& rect = getRealGeometry(win);
         assertEquals(rect.width, values[0]);
         assertEquals(rect.height, values[1]);
-        //TODO check below
         WindowID stack[] = {getAllWindows()[0]->getID(), win};
         if(stack[0] != stack[1]) {
             int mask = XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING;
@@ -410,44 +409,6 @@ MPX_TEST("remove_border", {
     assertEquals(getRealGeometry(win).border, 0);
 });
 
-/*
- * TODO
-
-volatile int count = 0;
-void markAndSleep(void){
-    count = 1;
-    unlock();
-    while(!isShuttingDown())
-        msleep(50);
-    lock();
-}
-MPX_TEST("test_auto_focus_tiling",{
-    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 10000;
-    setActiveLayout(&DEFAULT_LAYOUTS[FULL]);
-    int first = mapWindow(createNormalWindow());
-    static Rule sleeperRule = {NULL, 0, BIND(markAndSleep)};
-    flush();
-    int idle = 0;
-    START_MY_WM;
-    //wait until first has settled in
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
-    assert(getFocusedWindow()->getID() == first);
-    addToList(getEventRules(XCB_MAP_NOTIFY), &sleeperRule);
-    int second = mapWindow(createNormalWindow());
-    WindowID stackingOrder[] = {first, second};
-    WAIT_UNTIL_TRUE(count);
-    // there is a race between retiling and manually updating the focus state
-    // the following code and the sleeprRule resolve the race such that retiling.
-    // A layout like full will raise the focused window so if the state isn't updated,
-    // the stacking order will be messed up
-    lock();
-    retile();
-    flush();
-    assert(checkStackingOrder(stackingOrder, 2));
-    unlock();
-}
-);
-*/
 MPX_TEST("test_auto_focus_delete", {
     for(int i = 0; i < 3; i++)
         mapWindow(createNormalWindow());
@@ -547,18 +508,19 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
         close(STATUS_FD_EXTERNAL_READ);
         if(sleep) {
             msleep(KILL_TIMEOUT * 10);
+            assert(!xcb_connection_has_error(dis));
+            exit(1);
         }
         if(!forceKill) {
             /// wait for client message
             waitForNormalEvent(XCB_CLIENT_MESSAGE);
+            exit(1);
         }
         else {
             flush();
             WAIT_UNTIL_TRUE(!xcb_connection_has_error(dis));
+            exit(1);
         }
-        suppressOutput();
-        closeConnection();
-        quit(10);
     }
     WindowID win;
     int result = read(STATUS_FD_READ, &win, sizeof(win));
@@ -573,8 +535,7 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
     loadWindowProperties(winInfo);
     assert(winInfo);
     assert(winInfo->hasMask(WM_DELETE_WINDOW_MASK));
-    if(ping)
-        assert(winInfo->hasMask(WM_PING_MASK));
+    assertEquals(ping, winInfo->hasMask(WM_PING_MASK));
     consumeEvents();
     write(STATUS_FD, &win, sizeof(win));
     resetPipe();
@@ -583,8 +544,10 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
         flush();
     }
     else {
-        removeWindow(win);
-        assert(killClientOfWindow(win) == 0);
+        lock();
+        delete getAllWindows().removeElement(win);
+        assertEquals(killClientOfWindow(win), 0);
+        unlock();
         LOG(0, "Killed client\n");
     }
     assertEquals(waitForChild(0), 1);

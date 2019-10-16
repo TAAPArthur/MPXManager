@@ -21,13 +21,10 @@ Layout LAYOUT_FAMILIES[] = {
     _LAYOUT_FAMILY(masterPane),
 };
 int NUMBER_OF_LAYOUT_FAMILIES = LEN(LAYOUT_FAMILIES);
-void setActiveLayoutByName(std::string name, Workspace* w = getActiveWorkspace()) {
-    w->setActiveLayout(findLayoutByName(name));
-}
 SET_ENV(createXSimpleEnv, fullCleanup);
 MPX_TEST("print_layout", {
     suppressOutput();
-    std::cout << getDefaultLayouts()[FULL];
+    std::cout << FULL;
 });
 
 MPX_TEST("tile_worskspace_event", {
@@ -56,7 +53,7 @@ MPX_TEST("tile", {
         assert(state);
         count++;
     };
-    Layout l = {.layoutFunction = dummy};
+    Layout l = {"", .layoutFunction = dummy};
     mapArbitraryWindow();
     scan(root);
     getAllWindows()[0]->moveToWorkspace(getActiveWorkspaceIndex());
@@ -119,25 +116,33 @@ MPX_TEST_ITER("test_layouts", NUMBER_OF_LAYOUT_FAMILIES, {
         rects.clear();
     }
 });
-MPX_TEST_ITER("default_layouts", LAST_LAYOUT, {
+MPX_TEST_ITER("default_layouts", getRegisteredLayouts().size(), {
     DEFAULT_BORDER_WIDTH = 0;
     Monitor* m = getAllMonitors()[0];
     short w = 60;
     short h = 120;
     m->setBase({0, 0, w, h});
-    setActiveLayout(getDefaultLayouts()[_i]);
+    setActiveLayout(getRegisteredLayouts()[_i]);
     float arg = getActiveLayout()->getArgs().arg;
     const int size = 3;
     const Rect empty = {0, 0, 0, 0};
     const Rect rect[][size] = {
-        [FULL] = {m->getBase(), empty, empty},
-        [GRID] = {{0, 0, w / 2, h}, {w / 2, 0, w / 2, h / 2}, {w / 2, h / 2, w / 2, h / 2}},
-        [TWO_COLUMN] = {{0, 0, w / 2, h}, {w / 2, 0, w / 2, h / 2}, {w / 2, h / 2, w / 2, h / 2}},
-        [TWO_ROW] = {{0, 0, w, h / 2}, {0, h / 2, w / 2, h / 2}, {w / 2, h / 2, w / 2, h / 2}},
-        [TWO_PANE] = {{0, 0, w / 2, h}, {w / 2, 0, w / 2, h}, empty},
-        [TWO_HPLANE] = {{0, 0, w, h / 2}, {0, h / 2, w, h / 2}, empty},
-        [MASTER] = {{0, 0, w * arg, h}, {w * arg, 0, w * (1 - arg), h / 2}, {w * arg, h / 2, w * (1 - arg), h / 2}}
+        //FULL
+        {m->getBase(), empty, empty},
+        //GRID
+        {{0, 0, w / 2, h}, {w / 2, 0, w / 2, h / 2}, {w / 2, h / 2, w / 2, h / 2}},
+        //TWO_COLUMN
+        {{0, 0, w / 2, h}, {w / 2, 0, w / 2, h / 2}, {w / 2, h / 2, w / 2, h / 2}},
+        //TWO_ROW
+        {{0, 0, w, h / 2}, {0, h / 2, w / 2, h / 2}, {w / 2, h / 2, w / 2, h / 2}},
+        //TWO_PANE
+        {{0, 0, w / 2, h}, {w / 2, 0, w / 2, h}, empty},
+        //TWO_HPLANE
+        {{0, 0, w, h / 2}, {0, h / 2, w, h / 2}, empty},
+        //MASTER
+        {{0, 0, w * arg, h}, {w * arg, 0, w * (1 - arg), h / 2}, {w * arg, h / 2, w * (1 - arg), h / 2}}
     };
+
     int area = 0;
     for(Rect r : rect[_i])
         area += r.width* r.height;
@@ -158,7 +163,7 @@ MPX_TEST_ITER("default_layouts", LAST_LAYOUT, {
 });
 
 MPX_TEST("raise_focused", {
-    setActiveLayout(getDefaultLayouts()[FULL]);
+    setActiveLayout(FULL);
     assert(getActiveLayout()->getArgs().raiseFocused);
     Window ids[] = {mapArbitraryWindow(), mapArbitraryWindow(), mapArbitraryWindow()};
     scan(root);
@@ -222,10 +227,10 @@ MPX_TEST("test_tile_input_only_window", {
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
     winInfo->moveToWorkspace(getActiveWorkspaceIndex());
-    assert(winInfo->hasMask(INPUT_ONLY_MASK));
+    assert(winInfo->isInputOnly());
     assert(winInfo->isTileable());
     assert(getActiveWindowStack().size() == 1);
-    setActiveLayout(getDefaultLayouts()[GRID]);
+    setActiveLayout(GRID);
     assert(getActiveLayout()->getArgs().noBorder == 0);
     retile();
 });
@@ -263,62 +268,6 @@ MPX_TEST("floating_windows", {
     assertEquals(getRealGeometry(getWindowInfo(win2)).border, 0);
     assertEquals(getRealGeometry(getWindowInfo(win)).border, DEFAULT_BORDER_WIDTH);
 });
-/* TODO test transients
-MPX_TEST("test_transient_windows", {
-    WindowID stackingOrder[5] = {0,0,1,1};
-    int transIndex = 3;
-    int transTarget = 0;
-    assert(transTarget < transIndex);
-    WindowInfo* transWin;
-    for(int i = 0, count = 0; count < LEN(stackingOrder); count++){
-        WindowID win = mapWindow(createNormalWindow());
-        WindowInfo* winInfo = new WindowInfo(win);
-        addWindowInfo(winInfo);
-        winInfo->addMask( ABOVE_MASK);
-        if(i != transIndex || stackingOrder[transTarget + 1] != 0){
-            stackingOrder[i] = win;
-            winInfo->moveToWorkspace( getActiveWorkspaceIndex());
-            getActiveWindowStack().shiftToHead(getActiveWindowStack().size() - 1);
-            if(i == transTarget)i++;
-            i++;
-        }
-        else {
-            stackingOrder[transTarget + 1] = win;
-            xcb_icccm_set_wm_transient_for(dis, win, stackingOrder[transTarget]);
-            loadWindowProperties(transWin = winInfo);
-            assert(transWin->transientFor);
-        }
-    }
-    assert(transWin);
-    moveWindowToWorkspace(transWin, getActiveWorkspaceIndex());
-    shiftToHead(getActiveWindowStack(), getSize(getActiveWindowStack()) - 1);
-    retile();
-    flush();
-    assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
-}
-        );
-MPX_TEST("test_transient_windows_always_above", {
-    DEFAULT_WINDOW_MASKS = MAPPABLE_MASK | MAPPED_MASK;
-    WindowInfo* winInfo = new WindowInfo(mapWindow(createNormalWindow()));
-    registerWindow(winInfo);
-    winInfo->moveWindowToWorkspace( getActiveWorkspaceIndex());
-    WindowInfo* winInfo2 = new WindowInfo(mapWindow(createNormalWindow()));
-    registerWindow(winInfo2);
-    xcb_icccm_set_wm_transient_for(dis, winInfo2->getID(), winInfo->getID());
-    loadWindowProperties(winInfo2);
-    assert(winInfo2->transientFor == winInfo->getID());
-    moveWindowToWorkspace(winInfo2, getActiveWorkspaceIndex());
-    assert(isActivatable(winInfo)&& isActivatable(winInfo2));
-    assert(isInteractable(winInfo2));
-    for(int i = 0; i < 2; i++){
-        assert(checkStackingOrder((WindowID[]){
-            winInfo->getID(), winInfo2->getID()
-        }, 2));
-        activateWindow(winInfo);
-    }
-}
-        );
-*/
 
 MPX_TEST("test_tile_windows", {
     setActiveLayout(NULL);
@@ -377,28 +326,37 @@ MPX_TEST_ITER("test_privileged_windows_size", 5, {
 });
 
 MPX_TEST("find_layout_by_name", {
-    assert(getDefaultLayouts()[FULL] == findLayoutByName(getDefaultLayouts()[FULL]->getName()));
+    assert(&FULL == findLayoutByName(FULL.getName()));
 });
 
 MPX_TEST("test_get_layout_by_name", {
     assert(findLayoutByName("__bad__layout__name") == NULL);
 });
+MPX_TEST("test_get_layout_by_name_new", {
+    Layout* l = new Layout{"__name", NULL};
+    assert(findLayoutByName(l->getName()) == NULL);
+    registeredLayout(l);
+    assertEquals(findLayoutByName(l->getName()), l);
+    unregisteredLayout(l);
+    assert(findLayoutByName(l->getName()) == NULL);
+    delete l;
+});
 MPX_TEST("test_set_layout_by_name", {
-    setActiveLayoutByName(getDefaultLayouts()[FULL]->getName());
-    assert(getActiveLayout() == getDefaultLayouts()[FULL]);
-    setActiveLayoutByName("__bad__layout__name");
+    setActiveLayout(FULL.getName());
+    assert(getActiveLayout() == &FULL);
+    setActiveLayout("__bad__layout__name");
     assert(getActiveLayout() == NULL);
 });
 MPX_TEST_ITER("test_layout_arg_change", LAYOUT_ARG + 1, {
-    setActiveLayout(getDefaultLayouts()[0]);
+    setActiveLayout(FULL);
     getActiveLayout()->getArgs().argStep = 1;
     LayoutArgs arg = getActiveLayout()->getArgs();
     increaseLayoutArg(_i, 1);
-    assert(getActiveLayout() == getDefaultLayouts()[0]);
+    assert(getActiveLayout() == &FULL);
     assert(memcmp(&arg, &getActiveLayout()->getArgs(), sizeof(arg)));
 });
 MPX_TEST("test_register_restore_layout", {
-    Layout c = {NULL};
+    Layout c = {"", NULL};
     Layout zeroLayout = c;
     setActiveLayout(&c);
     for(int i = 0; i <= LAYOUT_ARG; i++)

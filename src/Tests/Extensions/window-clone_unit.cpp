@@ -31,7 +31,7 @@ static void setup() {
     addAutoTileRules();
     onStartup();
     switchToWorkspace(0);
-    setActiveLayout(getDefaultLayouts()[GRID]);
+    setActiveLayout(GRID);
     WindowID win = mapArbitraryWindow();
     setWindowTitle(win, defaultTitle);
     scan(root);

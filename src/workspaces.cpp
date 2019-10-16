@@ -1,8 +1,3 @@
-/**
- * @file workspaces.c
- * @copybrief workspaces.h
- *
- */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,8 +16,11 @@ const ArrayList<Workspace*>& getAllWorkspaces() {
 
 
 std::ostream& operator<<(std::ostream& strm, const Workspace& w) {
-    return strm << "{ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName() << ", windows: " >>
-        w.windows << ", Layout: " << w.getActiveLayout() << "}";
+    strm << "{ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName() << ", windows: " >>
+        w.windows;
+    if(w.getActiveLayout())
+        strm << ", Layout: " << *w.getActiveLayout() ;
+    return  strm << " }";
 }
 
 void addWorkspaces(int num) {
@@ -76,7 +74,7 @@ void Workspace::cycleLayouts(int dir) {
     setActiveLayout(layouts[pos]);
     setLayoutOffset(pos);
 }
-int Workspace::toggleLayout(Layout* layout) {
+bool Workspace::toggleLayout(Layout* layout) {
     if(layout != getActiveLayout()) {
         setActiveLayout(layout);
     }

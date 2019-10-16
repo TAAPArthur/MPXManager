@@ -16,6 +16,7 @@ typedef enum {
     WINDOW_CHANGE = 4,
 } StateChangeType;
 
+/// @return iff the state is marked
 bool isStateMarked(void);
 /**
  * Marks that the state may have possibility changed
@@ -34,8 +35,6 @@ void unmarkState(void);
  * <li> the stacking order of the interactable windows has changed </li>
  * <li> the user mask for any interactable window has changed </li>
  * </ul>
- * @param onWorkspaceWindowChange the callback function to be trigger for every workspace when set of window state changes
- * @param onWorkspaceMonitorChange the callback function to be trigger for every workspace when workspace-monitor pair changes
  * that has changed
  * @return 1 iff the state has actually changed
  */

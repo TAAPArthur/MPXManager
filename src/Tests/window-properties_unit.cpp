@@ -61,18 +61,13 @@ MPX_TEST_ITER("get_set_type", 4, {
         setWindowTransientFor(win, createNormalWindow());
     flush();
 
-    string typeName = getAtomValue(atom);
-    xcb_atom_t atomNew;
-    string typeNameNew;
-    loadWindowType(win, implicit && !normal, &atomNew, &typeNameNew);
-    assertEquals(typeNameNew, typeName);
-    assertEquals(atomNew, atom);
+    string typeName = getAtomName(atom);
     WindowInfo* winInfo = new WindowInfo(win);
+    winInfo->setTransientFor(implicit && !normal);
     getAllWindows().add(winInfo);
     loadWindowProperties(winInfo);
     assertEquals(winInfo->getType(), atom);
-
-
+    assertEquals(winInfo->getTypeName(), typeName);
 });
 MPX_TEST("load_properties_normal", {
     WindowID win = createNormalWindow();

@@ -88,7 +88,7 @@ MPX_TEST("default_active_layout", {
         assert(w->getActiveLayout());
 });
 MPX_TEST("click_to_focus", {
-    setActiveLayout(getDefaultLayouts()[GRID]);
+    setActiveLayout(GRID);
     WindowID wins[] = {mapArbitraryWindow(), mapArbitraryWindow()};
     waitUntilIdle();
     for(WindowID win : wins) {

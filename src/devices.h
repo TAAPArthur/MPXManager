@@ -1,7 +1,8 @@
 /**
  * @file devices.h
  * @brief Provides XI2 helper methods for pointer/keyboard related methods like grabs and device query
- *
+ * These methods generally don't modify our internal representation, but just make X calls.
+ * The correct events should be listened for to update state
  */
 #ifndef MPX_DEVICES_H_
 #define MPX_DEVICES_H_
@@ -11,6 +12,7 @@
 #include <string>
 #include "monitors.h"
 #include "masters.h"
+#include "xsession.h"
 
 
 /**
@@ -20,11 +22,23 @@
 void createMasterDevice(std::string name);
 /**
  * Attaches the specified slave to the specified master
- * @param slaveId
- * @param masterId
+ * @param slaveID valid slaveID
+ * @param masterID valid MasterID
  */
-void attachSlaveToMaster(SlaveID slaveId, MasterID masterId);
-void floatSlave(SlaveID slaveId) ;
+void attachSlaveToMaster(SlaveID slaveID, MasterID masterID);
+/**
+ * Disassociates a slave from its master
+ *
+ * @param slaveID
+ */
+void floatSlave(SlaveID slaveID) ;
+/**
+ * Attaches slave to master
+ * If master is NULL, slave becomes floating
+ *
+ * @param slave
+ * @param master
+ */
 void attachSlaveToMaster(Slave* slave, Master* master);
 /**
  * Sends a XIChangeHierarchy request to remove the specified master.
@@ -45,11 +59,16 @@ void destroyAllNonDefaultMasters(void);
  */
 void initCurrentMasters(void);
 /**
- * Sets the active master to be the device associated with deviceId
- * @param deviceId either master keyboard or slave keyboard (or master pointer)id
- * @return 1 iff keyboardSlaveId was a master keyboard device
+ * Sets the active master to be the device associated with deviceID
+ * @param deviceID either master keyboard or slave keyboard (or master pointer)id
  */
-void setActiveMasterByDeviceId(MasterID deviceId);
+void setActiveMasterByDeviceID(MasterID deviceID);
+/**
+ * @param id a MasterID or a SlaveID
+ *
+ * @return the active master to be the device associated with deviceID
+ */
+Master* getMasterByDeviceID(MasterID id) ;
 
 
 
@@ -61,8 +80,27 @@ void setActiveMasterByDeviceId(MasterID deviceId);
  * @return 1 if result now contains position
  */
 bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]);
+/**
+ * Wrapper for getMousePosition
+ *
+ * @param m
+ * @param relativeWindow
+ * @param result where the x,y location will be stored
+ *
+ * @return 1 if result now contains position
+ */
 static inline bool getMousePosition(Master* m, int relativeWindow, int16_t result[2]) {
     return getMousePosition(m->getPointerID(), relativeWindow, result);
+}
+/**
+ * Wrapper for getMousePosition
+ *
+ * @param result where the x,y location will be stored
+ *
+ * @return 1 if result now contains position
+ */
+static inline bool getMousePosition(int16_t result[2]) {
+    return getMousePosition(getActiveMasterPointerID(), root, result);
 }
 
 /**
@@ -73,13 +111,21 @@ static inline bool getMousePosition(Master* m, int relativeWindow, int16_t resul
  * @param master1
  * @param master2
  */
-void swapDeviceId(Master* master1, Master* master2);
+void swapDeviceID(Master* master1, Master* master2);
 
 /**
  * Sets the client pointer for the given window to the active master
  * @param window
+ * @param id
  */
 void setClientPointerForWindow(WindowID window, MasterID id = getActiveMasterPointerID());
+/**
+ *
+ *
+ * @param win
+ *
+ * @return the MasterID (pointer) associated with win
+ */
 MasterID getClientPointerForWindow(WindowID win) ;
 /**
  * Returns the client keyboard for the given window

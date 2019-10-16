@@ -98,6 +98,7 @@ typedef struct {
     const int numWindows;
     /// the stack of windows
     const ArrayList<WindowInfo*>& stack;
+    /// @return layout args
     LayoutArgs* getArgs() {return args;}
 } LayoutState;
 
@@ -105,7 +106,7 @@ typedef struct {
 typedef struct Layout {
 private:
     /**
-     * The name of the layout. Used solely for user
+     * The name of the layout.
      */
     const std::string name = "";
     /**
@@ -121,19 +122,30 @@ private:
      */
     LayoutArgs refArgs;
 public:
+    /**
+     * @param name the name of the layout
+     * @param layoutFunction the underlying layout function
+     * @param args
+     */
     Layout(std::string name,  void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}): name(name),
         layoutFunction(layoutFunction), args(args), refArgs(args) {
     }
-    Layout(void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}):
-        layoutFunction(layoutFunction), args(args), refArgs(args) {
-    }
 
-    std::string getName()const {
-        return name;
-    }
+    /// @return the name of the layout
+    std::string getName()const {return name;}
+    /// @return the name of the layout
+    operator std::string()const {return name;}
+    /// @return 1 iff the names match
     bool operator==(const Layout& l)const {return name == l.name;};
+    /// @return the backing function
     auto getFunc() {return layoutFunction;}
+    /**
+     * Tiles the windows of the stack specified by state
+     *
+     * @param state
+     */
     void apply(LayoutState* state) {layoutFunction(state);}
+    /// @return configurable options
     LayoutArgs& getArgs() {return args;}
     /**
      * Saves the current args for layout so they can be restored later
@@ -150,10 +162,9 @@ public:
     }
 } Layout;
 
-/// Convince indexes into DEFAULT_LAYOUTS
-enum {FULL, GRID, TWO_COLUMN, TWO_ROW, TWO_PANE, TWO_HPLANE, MASTER, LAST_LAYOUT};
-/// ArrayList of default layouts
-const ArrayList<Layout*>& getDefaultLayouts();
+///@{ Default layouts
+extern Layout FULL, GRID, TWO_ROW, TWO_COL, TWO_PANE, TWO_HPLANE, MASTER;
+///@}
 
 /**
  * Searches for the set of registered layouts for a layout with the given name and returns it
@@ -171,22 +182,45 @@ Layout* findLayoutByName(std::string name);
 static inline void cycleLayouts(int dir) {getActiveWorkspace()->cycleLayouts(dir);}
 
 /**
- * Apply this external layout to the workspace if it is not already the active layout
- * @param layout
+ * Looks up the registered layout with this name and sets it to be the active
+ * layout of the workspace if it is not already the active layout
+ *
+ * @param name the name of a register layout
+ *
+ * @return
  */
-static inline int toggleLayout(Layout* layout) { return getActiveWorkspace()->toggleLayout(layout);}
 static inline int toggleLayout(std::string name) { return getActiveWorkspace()->toggleLayout(findLayoutByName(name));}
 
-static inline void setActiveLayout(std::string name) {getActiveMaster()->getWorkspace()->setActiveLayout(findLayoutByName(name));}
+/// @param name the name of the registered layout that will become the new active layout of the active workspace
+static inline void setActiveLayout(std::string name) {getActiveWorkspace()->setActiveLayout(findLayoutByName(name));}
+/// @param l the new active layout of the active workspace
 static inline void setActiveLayout(Layout* l) {getActiveMaster()->getWorkspace()->setActiveLayout(l);}
+/// @return the active layout of the active workspace
 static inline Layout* getActiveLayout() {return getActiveWorkspace()->getActiveLayout();}
 
-ArrayList<Layout*>& getRegisteredLayouts();
+/**
+ * Registers a window so it can be found by its name
+ * All default layouts are considered registered
+ * @param layout
+ */
+void registeredLayout(Layout* layout);
+/**
+ * @return list of registered layouts
+ */
+const ArrayList<Layout*>& getRegisteredLayouts();
+
+/**
+ * Unregisters a window so it can be found by its name
+ *
+ * @param layout
+ */
+void unregisteredLayout(Layout* layout);
 /**
  * Increases the corresponding field for the layout by step
  *
  * @param index a LayoutArgIndex
  * @param step
+ * @param l the layout to change
  */
 void increaseLayoutArg(int index, int step, Layout* l = getActiveWorkspace()->getActiveLayout());
 
@@ -203,13 +237,19 @@ void retile(void);
  * @return the number of windows that will be tiled
  */
 int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, LayoutArgs* args);
+/**
+ * @param w
+ * @return the number of windows that will be tilled for the given workspace
+ */
 static inline int getNumberOfWindowsToTile(Workspace* w) {
     return getNumberOfWindowsToTile(w->getWindowStack(), w->getActiveLayout() ? &w->getActiveLayout()->getArgs() : NULL);
 }
 
 /**
  * Provides a transformation of config
- * @param state holds info related to the layout like the monitor
+ *
+ * @param args
+ * @param m
  * @param config the config that will be modified
  */
 void transformConfig(LayoutArgs* args, const Monitor* m, int config[CONFIG_LEN]);

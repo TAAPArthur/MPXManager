@@ -1,3 +1,6 @@
+/**
+ * @file
+ */
 #ifndef MPX_CHAIN_BINDINGS_H_
 #define MPX_CHAIN_BINDINGS_H_
 
@@ -14,15 +17,21 @@ const Chain* getActiveChain(Master* m = getActiveMaster());
 ArrayList<const Chain*>& getActiveChains(Master* m = getActiveMaster());
 struct Chain : Binding {
 
+private:
     ArrayList<Binding*>members;
+    /**
+     * if non 0, the Master device(s) will be grabbed with this mask for the duration of the chain
+     * used only for chain bindings;
+     */
+    uint32_t chainMask = 0 ;
+public:
     Chain(unsigned int mod, int buttonOrKey, const BoundFunction boundFunction = {}, const ArrayList<Binding*>& members = {},
-        const
-        BindingFlags& flags = {}, std::string name = ""): Binding(mod, buttonOrKey, boundFunction, flags, name),
-        members(members) {
-    }
-    Chain(unsigned int mod, int buttonOrKey, const ArrayList<Binding*>& members, const BindingFlags& flags = {}, std::string
-        name = ""): Binding(mod, buttonOrKey, {}, flags, name), members(members) {
-    }
+        const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(mod, buttonOrKey, boundFunction,
+                flags, name),
+        members(members), chainMask(chainMask) { }
+    Chain(unsigned int mod, int buttonOrKey, const ArrayList<Binding*>& members, const BindingFlags& flags = {}, uint32_t
+        chainMask = 0, std::string
+        name = ""): Binding(mod, buttonOrKey, {}, flags, name), members(members), chainMask(chainMask) { }
     ~Chain() {
         members.deleteElements();
     }

@@ -1,5 +1,5 @@
 /**
- * @file mywm-util.h
+ * @file
  *
  * @brief Calls to these function do not need a corresponding X11 function
  *
@@ -65,6 +65,9 @@ int isShuttingDown(void);
  * @return a pthread identifier
  */
 void runInNewThread(void* (*method)(void*), void* arg, const char*);
+/**
+ * @return the number of threads that have not terminated and been cleaned up
+ */
 int getNumberOfThreads(void);
 /**
  * exits the application
@@ -107,8 +110,14 @@ int waitForChild(int pid);
  * Closes all pipes opend by spawnPipe and zeros out statusPipeFD
  */
 void resetPipe();
+/**
+ * function to run in child after a fork/spawn call
+ */
 extern void (*onChildSpawn)(void);
-void clearAllLists();
+/**
+ * Destroys internal structs
+ */
+void destroyAllLists();
 /**
  * Set environment vars such to help old clients know which master device to use
  */

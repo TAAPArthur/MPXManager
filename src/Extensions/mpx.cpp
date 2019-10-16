@@ -31,23 +31,24 @@ typedef struct MPXMasterInfo {
     MPXMasterInfo(std::string name): masterName(name) {}
 } MPXMasterInfo;
 
-static UniqueArrayList<MPXMasterInfo> masterInfoList;
+
+static UniqueArrayList<MPXMasterInfo*> masterInfoList;
 static bool mpxEnabled;
 
 static void attachActiveSlaveToActiveMaster() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
     LOG(LOG_LEVEL_TRACE, "device event %d %d %d %d\n\n", event->event_type, event->deviceid, event->sourceid, event->flags);
-    int masterId;
+    int masterID;
     Master* master = getAllMasters().back();
     switch(event->event_type) {
         case XCB_INPUT_KEY_PRESS:
         case XCB_INPUT_KEY_RELEASE:
-            masterId = master->getID();
+            masterID = master->getID();
             break;
         default:
-            masterId = master->getPointerID();
+            masterID = master->getPointerID();
     }
-    attachSlaveToMaster(event->sourceid, masterId);
+    attachSlaveToMaster(event->sourceid, masterID);
 }
 
 static void autoAttachSlave(void) {
@@ -122,7 +123,7 @@ void stopMPX(void) {
     mpxEnabled = 0;
     destroyAllNonDefaultMasters();
     flush();
-    setActiveMaster(getMasterById(DEFAULT_KEYBOARD));
+    setActiveMaster(getMasterByID(DEFAULT_KEYBOARD));
     assert(getActiveMaster()->getID() == DEFAULT_KEYBOARD);
 }
 void restartMPX(void) {

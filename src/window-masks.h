@@ -5,7 +5,12 @@
 #ifndef WINDOW_MASKS_H_
 #define WINDOW_MASKS_H_
 
+#include <string>
 #include "mywm-structs.h"
+
+/// typeof WindowInfo::mask
+typedef unsigned int WindowMask;
+
 
 /**
  * Offset for SRC_INDICATION_* masks
@@ -73,47 +78,47 @@ typedef enum {
     /// allow from any source
     SRC_ANY =                SRC_INDICATION_OTHER | SRC_INDICATION_APP | SRC_INDICATION_PAGER,
 
-    IGNORE_WORKSPACE_MASKS_MASK = 1 << 15,
 
-    /**The window is an input only window (more importantly it cannot have a border)*/
-    INPUT_ONLY_MASK =           1 << 16,
     /**The window can receive input focus*/
-    INPUT_MASK =           1 << 17,
-    /// Will not update our internal focus representation when a window with this mask is focused
-    NO_RECORD_FOCUS =      1 << 18,
-    /// Windows with this mask will not be activatable
-    NO_ACTIVATE_MASK =      1 << 19,
+    INPUT_MASK =           1 << 15,
 
-    /**The WM will not forcibly set focus but request the application focus itself*/
-    WM_TAKE_FOCUS_MASK =    1 << 20,
+    /**The WM send a client message after focusing the window*/
+    WM_TAKE_FOCUS_MASK =    1 << 16,
 
     /**The WM will not forcibly delete windows immediately but request the application dies*/
-    WM_DELETE_WINDOW_MASK = 1 << 21,
+    WM_DELETE_WINDOW_MASK = 1 << 17,
     /**Used in conjunction with WM_DELETE_WINDOW_MASK to kill the window */
-    WM_PING_MASK =          1 << 22,
-    /// the window type was not set explicitly
-    IMPLICIT_TYPE =         1 << 23,
+    WM_PING_MASK =          1 << 18,
 
     /**
      * Best effort will be made to place all windows with this mask above any other window without it.
      * One particular flaw the implementation is that if a window with this mask is lowered, it will not automatically be re-raised
      * This mask is implemented via a onWindowMove Rule
      */
-    ALWAYS_ON_TOP = 1 << 24,
+    ALWAYS_ON_TOP = 1 << 20,
     /**
      * Best effort will be made to place all windows with this mask below any other window without it.
      * One particular flaw the implementation is that if a window with this mask is raised, it will not automatically be re-lowered
      * This mask is implemented via a onWindowMove Rule
      */
-    ALWAYS_ON_BOTTOM = 1 << 25,
+    ALWAYS_ON_BOTTOM = 1 << 21,
+    //
+    /// Will not update our internal focus representation when a window with this mask is focused
+    /// Intended for Desktop windows
+    NO_RECORD_FOCUS =      1 << 22,
+    /// Windows with this mask will not be activatable
+    /// Intended for Desktop windows
+    NO_ACTIVATE_MASK =      1 << 23,
 
-    ///Window is effectively associated with its monitor instead of its workspace
+    /**Marks the window as urgent*/
+    URGENT_MASK =           1 << 24,
+
+    /// Window is effectively associated with its monitor instead of its workspace
     /// (it is move dded between workspaces to stay on its monitor)
     STICKY_MASK =   1 << 26,
 
-
-    /**Marks the window as urgent*/
-    URGENT_MASK =           1 << 27,
+    /// Workspace masks will be ignored
+    IGNORE_WORKSPACE_MASKS_MASK = 1 << 27,
 
 
     ///Keeps track on the visibility state of the window
@@ -130,8 +135,12 @@ typedef enum {
     ALL_MASK =              -1
 
 } WindowMasks;
-#include <string>
 #define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0)){s+=#str " ";mask&=~str;}
+
+/**
+ * @param mask
+ * @return a string representation of mask
+ */
 static inline std::string maskToString(WindowMask mask) {
     std::string s = "";
     _PRINT_MASK(NO_MASK, mask);
@@ -155,21 +164,90 @@ static inline std::string maskToString(WindowMask mask) {
     _PRINT_MASK(SRC_INDICATION_APP, mask);
     _PRINT_MASK(SRC_INDICATION_PAGER, mask);
     _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK, mask);
-    _PRINT_MASK(INPUT_ONLY_MASK, mask);
     _PRINT_MASK(INPUT_MASK, mask);
     _PRINT_MASK(NO_RECORD_FOCUS, mask);
     _PRINT_MASK(NO_ACTIVATE_MASK, mask);
     _PRINT_MASK(WM_TAKE_FOCUS_MASK, mask);
     _PRINT_MASK(WM_DELETE_WINDOW_MASK, mask);
     _PRINT_MASK(WM_PING_MASK, mask);
-    _PRINT_MASK(IMPLICIT_TYPE, mask);
     _PRINT_MASK(ALWAYS_ON_TOP, mask);
     _PRINT_MASK(ALWAYS_ON_BOTTOM, mask);
-    _PRINT_MASK(PARTIALLY_VISIBLE, mask);
     _PRINT_MASK(FULLY_VISIBLE, mask);
+    _PRINT_MASK(PARTIALLY_VISIBLE, mask);
     _PRINT_MASK(MAPPABLE_MASK, mask);
     _PRINT_MASK(MAPPED_MASK, mask);
     _PRINT_MASK(URGENT_MASK, mask);
     return s;
 }
+
+/**
+ * Abstract class for Workspace and WindowInfo which have WindowMasks
+ */
+struct HasMask {
+    /**
+     * bitmap of window properties
+     */
+    WindowMask mask = 0;
+    virtual ~HasMask() = default;
+    /**
+     * @returns the full mask of the given window
+     */
+    WindowMask getMask(void)const {
+        return mask;
+    }
+    /**
+     * @param mask
+     * @return the intersection of mask and the window mask
+     */
+    virtual WindowMask hasPartOfMask(WindowMask mask)const {
+        return getMask()& mask;
+    }
+
+    /**
+     *
+     * @param mask
+     * @return 1 iff the window containers the complete mask
+     */
+    bool hasMask(WindowMask mask) const {
+        return hasPartOfMask(mask) == mask;
+    }
+    /**
+     * Returns the subset of mask that refers to user set masks
+     */
+    WindowMask getUserMask() const {
+        return hasPartOfMask(USER_MASKS);
+    }
+
+    /**
+     * Resets the user controlled state to the defaults
+     */
+    void resetUserMask() {
+        mask &= ~USER_MASKS;
+    }
+
+    /**
+     * Adds the states give by mask to the window
+     * @param mask
+     */
+    void addMask(WindowMask mask) {
+        this->mask |= mask;
+    }
+    /**
+     * Removes the states give by mask from the window
+     * @param mask
+     */
+    void removeMask(WindowMask mask) {
+        this->mask &= ~mask;
+    }
+    /**
+     * Adds or removes the mask depending if the window already contains
+     * the complete mask
+     * @param mask
+     */
+    void toggleMask(WindowMask mask) {
+        if((getMask() & mask) == mask)
+            removeMask(mask);
+        else addMask(mask);
+    }
+};
 #endif

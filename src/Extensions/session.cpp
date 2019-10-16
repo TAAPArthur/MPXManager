@@ -104,7 +104,7 @@ static void loadSavedMasterWindows() {
         WindowID* wid = (WindowID*)xcb_get_property_value(reply);
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
             if(wid[i] == 0) {
-                master = getMasterById(wid[++i]);
+                master = getMasterByID(wid[++i]);
             }
             else if(master)
                 master->onWindowFocus(wid[i]);
@@ -117,7 +117,7 @@ static void loadSavedActiveMaster() {
     LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
     cookie = xcb_get_property(dis, 0, root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, 0, sizeof(MasterID));
     if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply)) {
-        setActiveMasterByDeviceId(*(MasterID*)xcb_get_property_value(reply));
+        setActiveMasterByDeviceID(*(MasterID*)xcb_get_property_value(reply));
         free(reply);
     }
 }

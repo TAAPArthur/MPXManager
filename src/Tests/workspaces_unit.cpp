@@ -159,7 +159,8 @@ MPX_TEST("test_mask_add_remove_toggle", {
     delete workspace;
 });
 MPX_TEST("test_layout_toggle", {
-    Layout* fakeLayouts[2] = {getDefaultLayouts()[0], getDefaultLayouts()[1]};
+
+    Layout* fakeLayouts[2] = {&FULL, &GRID};
     addWorkspaces(1);
     getWorkspace(0)->getLayouts().add(fakeLayouts[0]);
     assert(getWorkspace(0)->toggleLayout(fakeLayouts[1]));
@@ -174,7 +175,7 @@ MPX_TEST("test_layout_toggle", {
 });
 
 MPX_TEST_ITER("test_layout_cycle", 2, {
-    Layout* fakeLayouts[2] = {getDefaultLayouts()[0], getDefaultLayouts()[1]};
+    Layout* fakeLayouts[2] = {&FULL, &GRID};
     addWorkspaces(1);
     getWorkspace(0)->cycleLayouts(_i ? 0 : 0);
     getWorkspace(0)->getLayouts().add(fakeLayouts[0]);

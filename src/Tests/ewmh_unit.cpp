@@ -79,9 +79,9 @@ MPX_TEST("test_sync_state", {
     assert(!isShowingDesktop());
     assert(getActiveWorkspaceIndex() == 0);
     if(!fork()) {
-        fullCleanup();
         openXDisplay();
-        setActiveWorkspaceProperty(1);
+        getActiveMaster()->setWorkspaceIndex(1);
+        setActiveProperties();
         setShowingDesktop(1);
         assert(isShowingDesktop());
         flush();
@@ -387,6 +387,25 @@ MPX_TEST_ITER("wm_move_resize_window_cancel_commit", 2, {
         assert(rect != getRealGeometry(winInfo->getID()));
     else
         assertEquals(rect, getRealGeometry(winInfo->getID()));
+});
+MPX_TEST("wm_move_resize_window_no_change", {
+    WindowInfo* winInfo = getAllWindows()[0];
+    consumeEvents();
+    startWindowMoveResize(winInfo, 0);
+    updateWindowMoveResize();
+    assertEquals(consumeEvents(), 0);
+});
+MPX_TEST("wm_move_resize_window_zero", {
+    WindowInfo* winInfo = getAllWindows()[0];
+    RectWithBorder rect = getRealGeometry(winInfo->getID());
+    lock();
+    movePointer(rect.width, rect.height);
+    startWindowMoveResize(winInfo, 0);
+    movePointer(0, 0);
+    updateWindowMoveResize();
+    assert(rect != getRealGeometry(winInfo->getID()));
+    assertEquals(Rect(rect.x, rect.y, 1, 1), getRealGeometry(winInfo->getID()));
+    unlock();
 });
 MPX_TEST("test_client_request_move_resize", {
     Rect rect = {1, 2, 3, 4};

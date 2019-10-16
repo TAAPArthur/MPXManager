@@ -48,26 +48,25 @@ void broadcastEWMHCompilence() {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
+    xcb_atom_t actions[] = {SUPPORTED_ACTIONS};
+    xcb_ewmh_set_wm_allowed_actions_checked(ewmh, root, LEN(actions), actions);
     SET_SUPPORTED_OPERATIONS(ewmh);
     xcb_ewmh_set_wm_pid(ewmh, root, getpid());
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
+    // Not strictly needed
+    updateWorkspaceNames();
     LOG(LOG_LEVEL_DEBUG, "Complied with EWMH/ICCCM specs\n");
 }
 
 void updateEWMHClientList() {
     xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, mappedOrder.size(), (WindowID*)mappedOrder.data());
 }
-void setActiveWindowProperty(WindowID win) {
-    xcb_ewmh_set_active_window(ewmh, defaultScreenNumber, win);
-}
-void setActiveWorkspaceProperty(WorkspaceID index) {
-    xcb_ewmh_set_current_desktop_checked(ewmh, DefaultScreen(dpy), index);
-}
+
 void setActiveProperties() {
     WindowInfo* winInfo = getActiveMaster()->getFocusedWindow();
-    setActiveWindowProperty(winInfo ? winInfo->getID() : root);
-    setActiveWorkspaceProperty(getActiveWorkspaceIndex());
+    xcb_ewmh_set_active_window(ewmh, defaultScreenNumber, winInfo ? winInfo->getID() : root);
+    xcb_ewmh_set_current_desktop_checked(ewmh, defaultScreenNumber, getActiveWorkspaceIndex());
 }
 static void updateEWMHWorkspaceProperties() {
     xcb_ewmh_coordinates_t viewPorts[getNumberOfWorkspaces()] = {0};
@@ -95,7 +94,7 @@ void updateWorkspaceNames() {
 }
 void addEWMHRules(AddFlag flag) {
     getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), flag);
-    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.add(winInfo->getID());}, "_recordWindow"},
+    getEventRules(ClientMapAllow).add({+[](WindowInfo * winInfo) {mappedOrder.addUnique(winInfo->getID());}, "_recordWindow"},
     flag);
     getEventRules(UnregisteringWindow).add({+[](WindowInfo * winInfo) {mappedOrder.removeElement(winInfo->getID());}, "_unrecordWindow"},
     flag);
@@ -158,7 +157,7 @@ void onClientMessage(void) {
         //data: source,timestamp,current active window
         WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo->allowRequestFromSource(data.data32[0])) {
-            Master* m = data.data32[3] ? getMasterById(data.data32[3]) : getClientMaster(win);
+            Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
             if(m)
                 setActiveMaster(m);
             LOG(LOG_LEVEL_DEBUG, "Activating window %d for master %d due to client request\n", win, getActiveMaster()->getID());
@@ -319,6 +318,8 @@ struct RefWindowMouse {
                 }
                 else
                     result[i + 2] += delta;
+                if(result[i + 2] == 0)
+                    result[i + 2] = 1;
             }
         }
         LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "WindowMoveResizeResult: " << result << "\n");
@@ -361,7 +362,8 @@ void updateWindowMoveResize(Master* m) {
         if(getMousePosition(m, root, pos)) {
             bool change = 0;
             RectWithBorder r = ref->calculateNewPosition(pos, &change);
-            if(change && r.width && r.height)
+            assert(r.width && r.height);
+            if(change)
                 processConfigureRequest(ref->win, r, 0, 0,
                     XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
         }

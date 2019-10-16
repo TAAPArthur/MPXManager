@@ -1,8 +1,3 @@
-/**
- * @file logger.cpp
- *
- * @copybrief logger.h
- */
 #include "logger.h"
 #include "masters.h"
 #include "monitors.h"
@@ -17,6 +12,10 @@
 
 static int LOG_LEVEL = INIT_LOG_LEVEL;
 
+
+__attribute__((constructor)) static void set_autoflush() {
+    std::cout << std::unitbuf;
+}
 int getLogLevel() {
     return LOG_LEVEL;
 }
@@ -24,7 +23,7 @@ void setLogLevel(uint32_t level) {
     LOG_LEVEL = level;
 }
 void printSummary(void) {
-    LOG(LOG_LEVEL_INFO, "Summary:\n");
+    std::cout << "Summary:\n";
     std::cout << "Slaves: "    << getAllSlaves() << "\n";
     std::cout << "Masters: "    << getAllMasters() << "\n";
     std::cout << "Monitors: "   << getAllMonitors() << "\n";
@@ -32,21 +31,21 @@ void printSummary(void) {
     std::cout << "Windows: "    << getAllWindows() << "\n";
 }
 void dumpWindow(WindowMask filterMask) {
-    LOG(LOG_LEVEL_DEBUG, "Dumping:\n");
+    std::cout << "Dumping:\n";
     for(WindowInfo* winInfo : getAllWindows()) {
         if(!filterMask ||  winInfo->hasMask(filterMask))
             std::cout << *winInfo << "\n";
     }
 }
 void dumpWindow(std::string match) {
-    LOG(LOG_LEVEL_DEBUG, "Dumping:\n");
+    std::cout << "Dumping:\n";
     for(WindowInfo* winInfo : getAllWindows()) {
-        if(winInfo->matches(match))
+        if(winInfo->getClassName() == match || winInfo->getInstanceName() == match)
             std::cout << *winInfo << "\n";
     }
 }
 void dumpWindowStack() {
-    LOG(LOG_LEVEL_DEBUG, "Dumping Window Stack:\n");
+    std::cout << "Dumping Window Stack:\n";
     for(WindowInfo* winInfo : getActiveWorkspace()->getWindowStack())
         std::cout << *winInfo << "\n";
 }

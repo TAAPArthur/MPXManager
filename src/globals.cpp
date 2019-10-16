@@ -1,7 +1,3 @@
-/**
- * @file globals.cpp
- * @copydoc globals.h
- */
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 

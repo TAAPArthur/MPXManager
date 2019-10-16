@@ -44,7 +44,7 @@ MPX_TEST("enable_if_struct", {
     assert(list.find(2));
     list.deleteElements();
 });
-MPX_TEST("enable_if_struct", {
+MPX_TEST("enable_if_struct_equals", {
     ArrayList<TempEquals*> list;
     list.add(new TempEquals{1});
     list.add(new TempEquals{2});

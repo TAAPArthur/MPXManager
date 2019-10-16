@@ -1,3 +1,7 @@
+/**
+ * @file time.h
+ * time related methods
+ */
 #ifndef MPXMANAGER_TIME_H_
 #define MPXMANAGER_TIME_H_
 #include <chrono>

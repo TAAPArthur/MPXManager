@@ -1,11 +1,10 @@
-
 /**
  * @file wm-rules.h
  * @brief Provides functionally common to WM and perhaps need for a good experience
  *
  */
-#ifndef DEFAULT_RULES_H_
-#define DEFAULT_RULES_H_
+#ifndef MPX_WM_RULES_H_
+#define MPX_WM_RULES_H_
 
 #include "mywm-structs.h"
 
@@ -59,9 +58,10 @@ void onConfigureRequestEvent(void);
  */
 void onPropertyEvent(void);
 /**
- * Quits if we have lost the WM_SELECTION
+ * Calls requestShutdown if we have lost the WM_SELECTION
+ * @return 1 if a shutdown wasn't requested
  */
-void onSelectionClearEvent(void);
+bool onSelectionClearEvent(void);
 
 /**
  * Default method for key/button press/release and mouse motion events
@@ -101,12 +101,17 @@ void onXConnect(void);
  */
 void addBasicRules(AddFlag flag = ADD_UNIQUE);
 /**
- * TODO rename
  * Register ROOT_EVENT_MASKS
  * @see ROOT_EVENT_MASKS
  */
 void registerForEvents();
-void listenForNonRootEventsFromWindow(WindowInfo* winInfo);
+/**
+ * Listens for NON_ROOT_EVENT_MASKS and NON_ROOT_DEVICE_EVENT_MASKS
+ *
+ * @param winInfo
+ * @return 1 on success
+ */
+bool listenForNonRootEventsFromWindow(WindowInfo* winInfo);
 
 /**
  * Attempts to translate the generic event receive into an extension event and applies corresponding Rules.
@@ -119,6 +124,19 @@ void onGenericEvent(void);
  * We unmark the state if for any reason, a workspace has been retiled
  */
 void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds a PreRegisterWindow rule to ignore override redirect windows
+ *
+ * @param flag
+ *
+ * @return
+ */
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds ProcessDeviceEvent rule to trigger any of getDeviceBindings() using getLastUserEvent
+ *
+ * @see checkBindings()
+ * @param flag
+ */
 void addApplyBindingsRule(AddFlag flag = ADD_UNIQUE);
 #endif /* DEFAULT_RULES_H_ */

@@ -1,4 +1,6 @@
-
+/**
+ * Helper macros to LD_PRELOAD hacks
+ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

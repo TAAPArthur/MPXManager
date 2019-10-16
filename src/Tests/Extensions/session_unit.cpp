@@ -18,7 +18,7 @@ static long rectToLong(const Rect& r) {
 }
 const ArrayList<long>serializeState(uint8_t mask) {
     ArrayList<long> list;
-    ArrayList<ArrayList<WindowInfo*>*> listsOfStacks;
+    ArrayList<const ArrayList<WindowInfo*>*> listsOfStacks;
     if(mask & 1) {
         list.add(getAllMasters().size());
         for(Master* master : getAllMasters()) {
@@ -46,7 +46,7 @@ const ArrayList<long>serializeState(uint8_t mask) {
         }
     }
     if(mask & 8)
-        for(ArrayList<WindowInfo*>* stack : listsOfStacks) {
+        for(const ArrayList<WindowInfo*>* stack : listsOfStacks) {
             list.add(0);
             for(WindowInfo* winInfo : *stack)
                 list.add(winInfo->getID());
@@ -89,7 +89,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     longName[LEN(longName) - 1] = 0;
 
     Layout l = Layout(longName, NULL);
-    getRegisteredLayouts().add(l);
+    registeredLayout(&l);
     setActiveLayout(&l);
     switchToWorkspace(1);
     setActiveLayout(NULL);
@@ -99,7 +99,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     if(!fork()) {
         saveXSession();
         RUN_AS_WM = 0;
-        clearAllLists();
+        destroyAllLists();
         RUN_AS_WM = 0;
         // reapply onXConnect rules
         ewmh = NULL;

@@ -55,7 +55,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     xcb_void_cookie_t cookie = xcb_create_window_checked(dis,
             XCB_COPY_FROM_PARENT, window, parent,
             0, 0, 10, 10, 0,
-            winInfo->hasMask(INPUT_ONLY_MASK) ? XCB_WINDOW_CLASS_INPUT_ONLY : XCB_WINDOW_CLASS_INPUT_OUTPUT,
+            winInfo->isInputOnly() ? XCB_WINDOW_CLASS_INPUT_ONLY : XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
             XCB_CW_OVERRIDE_REDIRECT, values);
     catchError(cookie);
@@ -64,6 +64,10 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     WindowInfo* clone = new WindowInfo(window, parent, winInfo->getID());
     syncPropertiesWithParent(clone, winInfo);
     clone->addMask(winInfo->getMask());
+    if(winInfo->isInputOnly())
+        clone->markAsInputOnly();
+    if(winInfo->isOverrideRedirectWindow())
+        clone->markAsOverrideRedirect();
     attemptToMapWindow(clone->getID());
     clone->addEventMasks(NON_ROOT_EVENT_MASKS | XCB_EVENT_MASK_EXPOSURE);
     if(!applyEventRules(PreRegisterWindow, clone)) {

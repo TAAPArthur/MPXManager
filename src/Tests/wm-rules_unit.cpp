@@ -101,7 +101,7 @@ MPX_TEST("test_auto_tile", {
     assert(!isStateMarked());
 
     assertEquals(getCount(), 1);
-    setActiveLayout(getDefaultLayouts()[GRID]);
+    setActiveLayout(GRID);
     markState();
     updateState();
     assert(!isStateMarked());
@@ -258,13 +258,6 @@ MPX_TEST("test_device_event", {
     waitUntilIdle();
     assert(getCount());
 });
-MPX_TEST("test_key_repeat", {
-    getActiveMaster()->setIgnoreKeyRepeat();
-    xcb_input_key_press_event_t event = {.flags = XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT};
-    setLastEvent(&event);
-    onDeviceEvent();
-    assert(getCount() == 0);
-});
 MPX_TEST_ITER("test_master_device_add_remove", 2, {
     int numMaster = getAllMasters().size();
     createMasterDevice("test1");
@@ -296,6 +289,7 @@ MPX_TEST("test_focus_update", {
 });
 MPX_TEST("selection_steal", {
     broadcastEWMHCompilence();
+    atexit(fullCleanup);
     if(!fork()) {
         saveXSession();
         openXDisplay();
@@ -313,6 +307,7 @@ MPX_TEST("steal_other_selection", {
         saveXSession();
         openXDisplay();
         assert(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), atom, XCB_CURRENT_TIME)) == 0);
+        fullCleanup();
         quit(0);
     }
     assertEquals(waitForChild(0), 0);

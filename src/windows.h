@@ -3,17 +3,15 @@
  * @brief Methods related to WindowInfo
  *
  */
-#ifndef WINDOWS_H_
-#define WINDOWS_H_
+#ifndef MPX_WINDOWS_H_
+#define MPX_WINDOWS_H_
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_icccm.h>
+#include <string>
 
 #include "globals.h"
 #include "rect.h"
 #include "mywm-structs.h"
 #include "window-masks.h"
-#include <string>
 
 
 /**
@@ -22,16 +20,17 @@
 ArrayList<WindowInfo*>& getAllWindows();
 
 ///holds data on a window
-typedef struct WindowInfo : WMStruct {
+typedef struct WindowInfo : WMStruct, HasMask {
 private:
     /**Window id used to determine changes in window layouts */
     const WindowID effectiveId;
-    /**Window mask */
-    WindowMask mask = 0;
     /// set to 1 iff the window is a dock
     bool dock = 0;
     /// 1 iff override_redirect flag set
     bool overrideRedirect = 0;
+    bool inputOnly = 0;
+    /// the window type was not set explicitly
+    bool implictType = 0;
     /**xcb_atom representing the window type*/
     uint32_t type = 0;
 
@@ -46,12 +45,15 @@ private:
 
     ///time the window was last pinged
     TimeStamp pingTimeStamp = 0;
+    /// the time the window was created or 0, if it existed before us
     TimeStamp creationTime = 0;
+    /// events to listen for
     uint32_t eventMasks = NON_ROOT_EVENT_MASKS;
 
 
-    ///Window gravity
-    char gravity = 0;
+    /// Window gravity (TODO implemented)
+    // char gravity = 0;
+
     /// 5 bits each to enable 1 element of config
     unsigned char tilingOverrideEnabled = 0;
     /** Set to override tiling */
@@ -71,31 +73,52 @@ private:
     WindowID parent = 0;
 
 public:
+    /**
+     * @param id unique X11 id the id of the window
+     * @param parent WindowID of the parent (or 0 if you don't care)
+     * @param effectiveID the id used to detect state changes; if 0, it will be id
+     */
     WindowInfo(WindowID id, WindowID parent = 0, WindowID effectiveID = 0): WMStruct(id),
         effectiveId(effectiveID ? effectiveID : id), parent(parent) {}
+    /**
+     * Removes this window from Workspace & Master stack(s)
+     */
     ~WindowInfo();
+    /// the ID that should be used to detect tiling changes
     WindowID getEffectiveID()const {return effectiveId;}
     friend void loadWindowProperties(WindowInfo* winInfo);
+    /// @param group sets the new window group
     void setGroup(WindowID group) {groupID = group;}
+    /// @return the window group
     WindowID getGroup()const {return groupID;}
+    /// @param win sets the new parent
     void setParent(WindowID win) {parent = win;}
+    /// @return the parent of the window
     WindowID getParent()const {return parent;}
+
+
+    /// @param win the window this is transient for
     void setTransientFor(WindowID win) {transientFor = win;}
+    /// @return the window this is transient for or 0
     WindowID getTransientFor()const {return transientFor;}
+    /// @return the type of the window
     uint32_t getType()const {return type;}
+    /// @param t sets the new type of the window
     void setType(uint32_t t) {type = t;}
+    /// @param str the name of the type of the window
     void setTypeName(std::string str) {typeName = str;}
+    /// @return sets the new name of the type of the window
     std::string getTypeName()const {return typeName ;}
-    void setClassName(std::string str) {className = str;}
+
+    /// @return the class of the window
     std::string getClassName()const {return className ;}
-    void setInstanceName(std::string str) {instanceName = str;}
+    /// @return the resource (instance) name of the window
     std::string getInstanceName()const {return instanceName ;}
+    /// @param str sets the new title of the window
     void setTitle(std::string str) {title = str;}
+    /// @return the title of the window
     std::string getTitle()const {return title ;}
     /**
-     *
-     * @param winInfo
-     *
      * @return true iff this window has the override_redirect bit set
      */
     bool isOverrideRedirectWindow()const {
@@ -104,84 +127,56 @@ public:
     /**
      * Indicates that this window has the override_redirect bit set
      *
-     * @param winInfo
      */
     void markAsOverrideRedirect() {
         addMask(FLOATING_MASK | STICKY_MASK);
         overrideRedirect = 1;
     }
+    /// @return 1 iff this is an input only window
+    bool isInputOnly()const {
+        return inputOnly;
+    };
     /**
-     * @param winInfo
-     * @returns the full mask of the given window
+     * Marks the window as input only.
+     * InputOnly windows cannot have a border
      */
-    WindowMask getMask(void)const {
-        return mask;
-    }
-    /**
-     *
-     * @param winInfo
-     * @param mask
-     * @return the intersection of mask and the window mask
-     */
-    WindowMask hasPartOfMask(WindowMask mask)const;
-
-    /**
-     *
-     * @param mask
-     * @return 1 iff the window containers the complete mask
-     */
-    bool hasMask(WindowMask mask)const;
-    /**
-     * Returns the subset of mask that refers to user set masks
-     */
-    WindowMask getUserMask() {
-        return getMask()&USER_MASKS;
+    void markAsInputOnly() {
+        inputOnly = 1;
+        setTilingOverrideEnabled(1 << 4, 1);
+        tilingOverride.border = 0;
     }
 
-    /**
-     * Resets the user controlled state to the defaults
-     * @param winInfo
-     */
-    void resetUserMask() {
-        mask &= ~USER_MASKS;
-    }
+    /// sets that the window type was not explicitly set
+    void setImplictType(bool b) {implictType = b;}
+    /// @return 1 iff window type was not explicitly set
+    bool isImplictType() {return implictType;}
 
-    /**
-     * Adds the states give by mask to the window
-     * @param winInfo
-     * @param mask
-     */
-    void addMask(WindowMask mask) {
-        this->mask |= mask;
-    }
-    /**
-     * Removes the states give by mask from the window
-     * @param winInfo
-     * @param mask
-     */
-    void removeMask(WindowMask mask) {
-        this->mask &= ~mask;
-    }
-    /**
-     * Adds or removes the mask depending if the window already contains
-     * the complete mask
-     * @param winInfo
-     * @param mask
-     */
-    void toggleMask(WindowMask mask);
-
+    /// @return the masks to grab
     uint32_t getEventMasks() {return eventMasks;}
+    /// @param mask the new masks to grab
     void setEventMasks(uint32_t mask) {eventMasks = mask;}
+    /// @param mask the new masks to grab in addition to the current masks
     void addEventMasks(uint32_t mask) {eventMasks |= mask;}
 
+    /**
+     *
+     *
+     * @return the time the window was detected or 0 if it was detected before we started
+     */
     TimeStamp getCreationTime() {return creationTime;}
+    /**
+     * Sets the creation time. Should only be done if we received a createEvent for this window
+     *
+     * @param t the detection time
+     */
     void setCreationTime(TimeStamp t) {creationTime = t;}
+    /// @return the last time a ping was received
     TimeStamp getPingTimeStamp() {return pingTimeStamp;}
+    /// @param t sets the last time a ping was received
     void setPingTimeStamp(TimeStamp t) {pingTimeStamp = t;}
     /**
      * Enables/Disables tiling to be overridden at the indexes corresponding to mask
      *
-     * @param winInfo
      * @param mask
      * @param enable
      */
@@ -194,7 +189,6 @@ public:
     /**
      * Checks to see if tilling has been overridden at the given index
      *
-     * @param winInfo
      * @param index
      *
      * @return true iff tiling override is enabled
@@ -202,12 +196,14 @@ public:
     bool isTilingOverrideEnabledAtIndex(int index) {
         return tilingOverrideEnabled & (1 << index);
     }
+    /**
+     * @return a bitmap indicating which parts of the geometry will be overridden
+     */
     uint8_t getTilingOverrideMask()const {
         return tilingOverrideEnabled;
     }
     /**
      * Returns User set geometry that will override that generated when tiling
-     * @param winInfo
      * @see WindowInfo->config
      */
     const RectWithBorder& getTilingOverride()const {
@@ -215,11 +211,12 @@ public:
     }
     /**
      * Sets window geometry that will replace that which is generated when tiling
-     * @param winInfo
-     * @param geometry
+     * @param tileOverride
      */
-    void setTilingOverride(const RectWithBorder tileOverride) {
+    void setTilingOverride(const RectWithBorder& tileOverride) {
         tilingOverride = tileOverride;
+        if(inputOnly)
+            tilingOverride.border = 0;
     }
     /**
      * Get the last recorded geometry of the window
@@ -229,14 +226,13 @@ public:
     }
     /**
      * Set the last recorded geometry of the window
-     * @param geometry
+     * @param geo
      */
     void setGeometry(const RectWithBorder geo) {
         geometry = geo;
     }
 
     /**
-     * @param winInfo
      *
      * @return true iff the window has been marked as a dock
      */
@@ -245,11 +241,11 @@ public:
     }
     /**
      * Marks the window as a dock. Registered windows marked as docks will be used to resize monitor viewports
-     * @param winInfo
      */
     void setDock(bool value = true) {dock = value;}
+
+    WindowMask hasPartOfMask(WindowMask mask)const override ;
     /**
-     * @param winInfo
      * @return 1 iff the window is PARTIALLY_VISIBLE or VISIBLE
      */
     bool isVisible() const {
@@ -265,14 +261,12 @@ public:
 
     /**
      *
-     * @param winInfo the window whose map state to query
      * @return the window map state either UNMAPPED(0) or MAPPED(1)
      */
     bool isMappable() const {
         return hasMask(MAPPABLE_MASK);
     }
     /**
-     * @param winInfo
      * @return true if the user can interact (focus,type etc)  with the window
      * For this to be true the window would have to be mapped and not hidden
      */
@@ -281,7 +275,6 @@ public:
     }
     /**
      * Determines if a window should be tiled given its mapState and masks
-     * @param winInfo
      * @return true if the window should be tiled
      */
     bool isTileable()const {
@@ -289,7 +282,6 @@ public:
     }
     /**
      * A window is activatable if it is MAPPABLE and not HIDDEN  and does not have the NO_ACTIVATE_MASK set
-     * @param winInfo
      * @return true if the window can receive focus
      */
     bool isActivatable() const {
@@ -299,7 +291,6 @@ public:
 
 
     /**
-     * @param winInfo
      * @return 1 iff external resize requests should be granted
      */
     bool isExternallyResizable() const {
@@ -307,7 +298,6 @@ public:
     }
 
     /**
-     * @param winInfo
      * @return 1 iff external move requests should be granted
      */
     bool isExternallyMoveable() const {
@@ -315,14 +305,12 @@ public:
     }
 
     /**
-     * @param winInfo
      * @return 1 iff external border requests should be granted
      */
     bool isExternallyBorderConfigurable() const {
         return  hasMask(EXTERNAL_BORDER_MASK) || !isMappable();
     }
     /**
-     * @param winInfo
      * @return 1 iff external raise requests should be granted
      */
     bool isExternallyRaisable() const {
@@ -330,7 +318,6 @@ public:
     }
     /**
      * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
-     * @param winInfo
      * @param source
      * @return
      */
@@ -338,24 +325,42 @@ public:
         return  hasMask(1 << (source + SRC_INDICATION_OFFSET));
     }
     /**
-     * @param winInfo
      *
      * @return the workspace index the window is in or NO_WORKSPACE
      */
     WorkspaceID getWorkspaceIndex()const;
     /**
-     * @param winInfo a window that is in a workspace
      * @return the workspace the window is in or NULL
      */
     Workspace* getWorkspace(void)const;
+    /**
+     * @return true if the window is not in a workspace or is in a visible one
+     */
     bool isNotInInvisibleWorkspace()const;
-    bool removeFromWorkspace();
+    /**
+     * Removes the window from its Workspace if it is in one
+     */
+    void removeFromWorkspace();
+    /**
+     * Moves the window to the specified Workspace.
+     *
+     * The window is first removed from any other Workspace.
+     * If destIndex is NO_WORKPACE, the window gets STICK_MASK and is moved to the active workspace
+     *
+     * @param destIndex
+     */
     void moveToWorkspace(WorkspaceID destIndex);
 
+    /**
+     *
+     *
+     * @param createNew if true a new array will be created if it doesn't exist
+     *
+     * @return size 12 array representing dock properties
+     */
     int* getDockProperties(bool createNew = 0);
     /**
      * Add properties to winInfo that will be used to avoid docks
-     * @param winInfo the window in question
      * @param numberofProperties number of properties
      * @param properties list of properties
      * @see xcb_ewmh_wm_strut_partial_t
@@ -363,16 +368,7 @@ public:
      * @see avoidStruct
      */
     void setDockProperties(int* properties, int numberofProperties);
-    bool matches(std::string str);
 } WindowInfo;
-
-
-static inline bool removeWindow(WindowID win) {
-    WindowInfo* winInfo = getAllWindows().find(win);
-    if(winInfo)
-        delete getAllWindows().removeElement(winInfo);
-    return winInfo ? 1 : 0;
-}
 
 /**
  * Returns a struct with stored metadata on the given window

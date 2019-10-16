@@ -45,8 +45,7 @@ MPX_TEST("test_mask_reset", {
     winInfo->resetUserMask();
     assert(winInfo->getUserMask() == 0);
     assert(winInfo->getMask() == nonUserMask);
-}
-);
+});
 MPX_TEST("test_window_workspace_masks", {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);
@@ -173,22 +172,4 @@ MPX_TEST("test_sticky_window_add", {
     getAllWindows().add(winInfo);
     winInfo->moveToWorkspace(-1);
     assert(winInfo->hasMask(STICKY_MASK));
-});
-MPX_TEST("matches", {
-    WindowInfo* winInfo = new WindowInfo(1);
-    std::string str[] = {"A", "B", "C", "D"};
-    int i = 0;
-    for(auto s : str) {
-        assert(!winInfo->matches(s));
-        if(i == 0)
-            winInfo->setTitle(s);
-        else if(i == 1)
-            winInfo->setClassName(s);
-        else if(i == 2)
-            winInfo->setInstanceName(s);
-        else if(i == 3)
-            winInfo->setTypeName(s);
-        assert(winInfo->matches(s));
-    }
-    delete winInfo;
 });

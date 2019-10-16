@@ -17,22 +17,25 @@ using namespace TestGrabs;
 
 
 SET_ENV(testBiningSetup, cleanupXServer);
-MPX_TEST_ITER("test_init_binding", LEN(input), {
+MPX_TEST_ITER("test_init_binding", NUM_BINDINGS, {
     Binding& binding = getBinding(_i);
-    assert(binding.getDetail() || binding.buttonOrKey == 0);
+    assert(binding.getDetail() || binding.getButtonOrKey() == 0);
 });
 
 MPX_TEST_ITER("test_passive_grab_ungrab", 2, {
 
+    // bug with xserver? sending keypress triggers event 85
+    triggerAllBindings(ALL_MASKS, root);
+    consumeEvents();
     WindowID wins[]{root, mapWindow(createNormalWindow())};
     WindowID win = wins[_i];
     WindowID other = wins[!_i];
-    assert(!xcb_poll_for_event(dis)&& "test failure");
+    assertEquals(consumeEvents(), 0);
     triggerAllBindings(ALL_MASKS, win);
     triggerAllBindings(ALL_MASKS, other);
-    assert(!xcb_poll_for_event(dis)&& "test failure?");
+    assertEquals(consumeEvents(), 0);
     passiveGrab(win, ALL_MASKS);
-    assert(!xcb_poll_for_event(dis)&& "test failure?");
+    assertEquals(consumeEvents(), 0);
 
     triggerAllBindings(ALL_MASKS, win);
     waitToReceiveInput(ALL_MASKS, 0);
@@ -50,9 +53,9 @@ MPX_TEST("passive_regrab", {
     waitToReceiveInput(ALL_MASKS, 0);
     passiveGrab(root, POINTER_MASKS);
     for(int i = 0; i < 2; i++) {
-        for(Binding& b : input)
-            if(isKeyboardMask(b.getMask()) == i)
-                triggerBinding(&b);
+        for(Binding* b : getDeviceBindings())
+            if(isKeyboardMask(b->getMask()) == i)
+                triggerBinding(b);
         if(i == 0)
             waitToReceiveInput(POINTER_MASKS, 0);
         else
@@ -64,7 +67,7 @@ MPX_TEST("passive_regrab", {
 MPX_TEST_ITER("test_grab_device", NUM_ITER, {
     Binding& b = getBinding(_i);
     int mask = b.getMask();
-    int id = getID(_i);
+    int id = b.getTargetID();
     if(isSpecialID(id))
         return;
     assert(!grabDevice(id, mask));
@@ -74,7 +77,7 @@ MPX_TEST_ITER("test_grab_device", NUM_ITER, {
 MPX_TEST_ITER("test_grab_device_exclusive", NUM_ITER, {
     Binding& b = getBinding(_i);
     int mask = b.getMask();
-    int id = getID(_i);
+    int id = b.getTargetID();
     if(isSpecialID(id))
         return;
     saveXSession();

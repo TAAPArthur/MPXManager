@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Proves methods to grab devices or buttons/keys
+ */
 #ifndef MPX_DEVICE_GRAB_H_
 #define MPX_DEVICE_GRAB_H_
 
@@ -92,6 +96,11 @@ int ungrabAllMasterDevices(void);
 static inline bool isKeyboardMask(int mask) {
     return mask & (KEYBOARD_MASKS) ? 1 : 0;
 }
+/**
+ * @param id
+ *
+ * @return  1 iff id is 0 or 1
+ */
 static inline bool isSpecialID(MasterID id) {
     return id == XIAllMasterDevices || id == XIAllDevices;
 }
@@ -111,5 +120,12 @@ int registerForWindowEvents(WindowID window, int mask);
  */
 void registerForMonitorChange();
 
+/**
+ * Undoes registerForMonitorChange
+ *
+ * @param window
+ *
+ * @return the error code if an error occurred
+ */
 int unregisterForWindowEvents(WindowID window) ;
 #endif

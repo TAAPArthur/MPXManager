@@ -65,28 +65,25 @@ string getWindowTitle(WindowID win) {
     }
     return str;
 }
-bool loadWindowType(WindowID win, bool transient, uint32_t* type, string* typeName) {
+bool loadWindowType(WindowInfo* winInfo) {
     xcb_ewmh_get_atoms_reply_t name;
     bool failed = 0;
     if(xcb_ewmh_get_wm_window_type_reply(ewmh,
-            xcb_ewmh_get_wm_window_type(ewmh, win), &name, NULL)) {
-        *type = name.atoms[0];
+            xcb_ewmh_get_wm_window_type(ewmh, winInfo->getID()), &name, NULL)) {
+        winInfo->setType(name.atoms[0]);
         xcb_ewmh_get_atoms_reply_wipe(&name);
     }
     else {
-        LOG(LOG_LEVEL_TRACE, "could not read window type; using default based on transient being set to %d\n", transient);
-        *type = transient ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
+        LOG(LOG_LEVEL_TRACE, "could not read window type; using default based on transient being set to %d\n",
+            winInfo->getTransientFor());
+        winInfo->setType(winInfo->getTransientFor() ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
         failed = 1;
     }
-    *typeName = getAtomValue(*type);
+    winInfo->setTypeName(getAtomName(winInfo->getType()));
     return !failed;
 }
 
 
-/**
- * Loads grouptId, input and window state for a given window
- * @param winInfo
- */
 void loadWindowHints(WindowInfo* winInfo) {
     xcb_icccm_wm_hints_t hints;
     if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->getID()), &hints, NULL)) {
@@ -126,7 +123,7 @@ static void loadProtocols(WindowInfo* winInfo) {
             else if(reply.atoms[i] == WM_TAKE_FOCUS)
                 winInfo->addMask(WM_TAKE_FOCUS_MASK);
             else
-                LOG(LOG_LEVEL_DEBUG, "Unsupported protocol detected %s %d\n", getAtomValue(reply.atoms[i]).c_str(), reply.atoms[i]);
+                LOG(LOG_LEVEL_DEBUG, "Unsupported protocol detected %s %d\n", getAtomName(reply.atoms[i]).c_str(), reply.atoms[i]);
         xcb_icccm_get_wm_protocols_reply_wipe(&reply);
     }
 }
@@ -145,9 +142,8 @@ void loadWindowProperties(WindowInfo* winInfo) {
     loadWindowSizeHints(winInfo);
     if(winInfo->isDock())
         loadDockProperties(winInfo);
-    if(!loadWindowType(winInfo->getID(), winInfo->transientFor, &winInfo->type, &winInfo->typeName))
-        winInfo->addMask(IMPLICIT_TYPE);
-    else winInfo->removeMask(IMPLICIT_TYPE);
+    bool result = !loadWindowType(winInfo);
+    winInfo->setImplictType(result);
 }
 void setBorderColor(WindowID win, unsigned int color) {
     if(color > 0xFFFFFF) {

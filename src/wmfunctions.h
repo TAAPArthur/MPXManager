@@ -10,27 +10,59 @@
 
 #include "windows.h"
 #include "masters.h"
-//
-
-bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
-static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveMaster()->getWorkspace()->getWindowStack();}
 /**
- * Determines if and how a given window should be managed
  *
+ *
+ * @return the workspace of the active master
+ */
+static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveMaster()->getWorkspace()->getWindowStack();}
+
+/**
+ * Called after a window has been successfully registered
+ *
+ * if newlyCreated is true, then a createEvent should have been detected for this window.
+ * The window's creation time will be set to the current time
+ * Else hints are loaded for this window. If this window is currently in the MappedState, then we set the appropriate masks, loadProperties and run ClientMapAllow
+ *
+ * If the function hasn't short circuited, then PostRegisterWindow rules are triggered
  *
  * @param winInfo
- * @return 1 iff the window wasn't ignored
+ * @param newlyCreated
+ *
+ * @return 1 if this function wasn't short circuited
+ */
+bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
+/**
+ * Performs checks on the window and adds it to the our managed list if it passes.
+ *
+ * First a new WindowInfo is created from win and parent.
+ * If attr is set, the window is considered not newly created.
+ * Else attr is loaded
+ * Values from attr are added to the WindowInfo object
+ * If attr fails to be loaded, the method aborts
+ *
+ * PreregisterWindow rules are applied
+ *
+ * If all these pass, the window is added to our list and postRegisterWindow is called
+ *
+ *
+ * @param win
+ * @param parent
+ * @param attr
+ *
+ * @return the result of PostRegisterWindow or 0 if it was never called
  */
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr = NULL);
 
 /**
- * Queries the XServer for all top level windows and process all of them
- * that do not have override redirect
+ * Queries the XServer for all direct children of baseWindow
+ * @param baseWindow
  */
 void scan(xcb_window_t baseWindow);
 /**
  * Removes a window from our records and updates EWMH client list if the window was present
  * @param winInfo
+ * @param destroyed a hint as to wheter the window has been destroyed by X. This should only be true if a destroy event was received
  * @return 1 iff the window was already in our records
  */
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed = 0) ;
@@ -38,8 +70,17 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed = 0) ;
 /**
  * Send a kill signal to the client with the window
  * @param win
+ * @return 0 on success or the error
  */
 int killClientOfWindow(WindowID win);
+/**
+ * Destroys win but not the underlying client.
+ * The underlying client may choose to die if win is closed.
+ *
+ * @param win
+ *
+ * @return 0 on success or the error
+ */
 int destroyWindow(WindowID win);
 
 /**
@@ -56,6 +97,13 @@ void killClientOfWindowInfo(WindowInfo* winInfo);
  */
 int attemptToMapWindow(WindowID id);
 
+/**
+ * Updates the map state of the window to be in sync with its workspace.
+ * For Sticky windows which should always be mapped, this involves moving it to a different workspace
+ *
+ * @param winInfo
+ * @param updateFocus
+ */
 void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus = 1);
 /**
  * If the workspace is visible, map all MAPPABLE windows
@@ -87,6 +135,14 @@ WindowID activateWindow(WindowInfo* winInfo);
  */
 void configureWindow(WindowID win, uint32_t mask, int values[7]);
 
+/**
+ * Sets the window position to be geo.
+ *
+ * This is a wrapper for processConfigureRequest
+ *
+ * @param win
+ * @param geo
+ */
 void setWindowPosition(WindowID win, const RectWithBorder geo);
 /**
  * Swaps the workspaces and positions in said workspaces between the two windows
@@ -96,6 +152,8 @@ void setWindowPosition(WindowID win, const RectWithBorder geo);
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
 /**
  * Filters the configure request to allowed actions then configures the window
+ * The request is filtered by the mask on win if it is registered
+ * @see EXTERNAL_CONFIGURABLE_MASK
  * @param win
  * @param values
  * @param sibling
@@ -109,7 +167,7 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
 /**
  * Sets the border width to 0
  *
- * @param winInfo
+ * @param win
  */
 void removeBorder(WindowID win);
 /**

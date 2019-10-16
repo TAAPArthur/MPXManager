@@ -6,6 +6,7 @@
 #define WORKSPACES_H
 
 #include "mywm-structs.h"
+#include "window-masks.h"
 #include <string>
 #include <assert.h>
 
@@ -26,6 +27,9 @@ typedef enum {
     EMPTY = 8,
 } WorkSpaceFilter;
 
+/**
+ * @return a list of all workspaces
+ */
 const ArrayList<Workspace*>& getAllWorkspaces();
 /**
  *
@@ -40,13 +44,21 @@ uint32_t getNumberOfWorkspaces();
 void addWorkspaces(int num);
 /**
  * Removes (and frees) the last num workspaces
+ * At least one workspace will be left by this function
  *
  * @param num number of workspace to remove
  */
 void removeWorkspaces(int num);
+/**
+ * Destroys every single workspaces
+ */
 void removeAllWorkspaces();
 ///metadata on Workspace
-typedef struct Workspace : WMStruct {
+/**
+ *
+ * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
+ */
+typedef struct Workspace : WMStruct, HasMask {
 private:
     ///user facing name of the workspace
     std::string name;
@@ -60,10 +72,6 @@ private:
      *
      */
     bool mapped = 0;
-    /**
-     * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
-     */
-    WindowMask mask = 0;
 
     ///an windows stack
     ArrayList<WindowInfo*> windows;
@@ -76,13 +84,19 @@ private:
     uint32_t layoutOffset = 0;
 
 public:
+    /**
+     * Creates a new Workspace with id equal the current number of workspaces
+     * and name with the string conversion of its id
+     *
+     */
     Workspace(): WMStruct(getNumberOfWorkspaces()), name(std::to_string(id + 1)) {  }
     /**
-     * @param workspace
      * @return the monitor associate with the given workspace if any
      */
     Monitor* getMonitor() {return monitor;};
+    /// returns the name of this workspace
     const std::string& getName()const {return name;};
+    /// @param n the new name of the workspace
     void setName(std::string n) {name = n;};
 
     /**
@@ -93,67 +107,29 @@ public:
      */
     Workspace* getNextWorkspace(int dir, int mask);
     /**
-     *
-     * @param i the workspace index
      * @return 1 iff the workspace has been assigned a monitor
      */
     bool isVisible()const {
         return ((Workspace*)(this))->getMonitor() ? 1 : 0;
     }
     /**
-     * @param workspace
      * @return the windows stack of the workspace
      */
     ArrayList<WindowInfo*>& getWindowStack() {return windows;}
+    /**
+     * Prints the workspace
+     *
+     * @param strm
+     * @param w
+     *
+     * @return
+     */
     friend std::ostream& operator<<(std::ostream& strm, const Workspace& w) ;
     /**
      * Assigns a workspace to a monitor. The workspace is now considered visible
-     * @param w
      * @param m
      */
     void setMonitor(Monitor* m);
-    /**
-     * Adds a mask to the workspace
-     * @see Workspace::mask
-     *
-     * @param w
-     * @param mask
-     */
-    void addMask(WindowMask mask) {
-        this->mask |= mask;
-    }
-    /**
-     * Removes a mask to the workspace
-     * @see Workspace::mask
-     *
-     * @param w
-     * @param mask
-     */
-    void removeMask(WindowMask mask) {
-        this->mask &= ~mask;
-    }
-    /**
-     * @return the mask of w
-     */
-    WindowMask getMask() {
-        return mask;
-    }
-    WindowMask hasPartOfMask(WindowMask mask) {
-        return getMask()& mask;
-    }
-    /**
-     * @param mask
-     *
-     * @return 1 if w fully contains mask
-     */
-    bool hasMask(WindowMask mask) {
-        return hasPartOfMask(mask) == mask;
-    }
-    void toggleMask(WindowMask mask) {
-        if(hasMask(mask))
-            removeMask(mask);
-        else addMask(mask);
-    }
     /**
      * The currently used layout for the workspace.
      * Note that this layout does not have to be in the list of layout for the active workspace
@@ -179,14 +155,42 @@ public:
     ArrayList<Layout*>& getLayouts() {
         return layouts;
     }
+    /**
+     * Set the next layout in the list to be the active layout
+     *
+     * @param dir -1, 0 or 1
+     */
     void cycleLayouts(int dir);
+    /**
+     * Set the layout specified by offset to be the active layout
+     *
+     * @param offset
+     */
     void setLayoutOffset(int offset);
+    /**
+     * Returns what would be the new active layout if cycleClayouts(0) was set,
+     * which does not have to be the currently active layout
+     * @return the layout at position offset
+     */
     uint32_t getLayoutOffset() {return layoutOffset;}
-    int toggleLayout(Layout* layout);
+    /**
+     * If layout != getActiveLayout(), then make layout the new active layout
+     * Else call cycleWindow(0)
+     *
+     * @param layout
+     *
+     * @return 1 iff the layout changed
+     */
+    bool toggleLayout(Layout* layout);
 } Workspace;
 
 
 
+/**
+ * @param name
+ *
+ * @return the workspace with the specified name
+ */
 Workspace* getWorkspaceByName(std::string name);
 /**
  * @param index

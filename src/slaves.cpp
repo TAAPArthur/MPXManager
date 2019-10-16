@@ -11,7 +11,7 @@ std::ostream& operator<<(std::ostream& strm, const Slave& m) {
     return strm << "{ id:" << m.getID() << ", name:" << m.getName() << ", Master:" << m.getMasterID() << " }";
 }
 Master* Slave::getMaster()const {
-    return getMasterById(getMasterID(), isKeyboardDevice());
+    return getMasterByID(getMasterID(), isKeyboardDevice());
 }
 Slave::~Slave() {
     setMasterID(0);
@@ -39,10 +39,4 @@ static int endsWith(const std::string& s, const char* suffix) {
 }
 bool Slave::isTestDevice(std::string name) {
     return endsWith(name, "XTEST pointer") || endsWith(name, "XTEST keyboard");
-}
-Slave* getSlaveByName(std::string name) {
-    for(Slave* slave : getAllSlaves())
-        if(slave->getName() == name)
-            return slave;
-    return NULL;
 }

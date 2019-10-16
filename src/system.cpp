@@ -1,11 +1,3 @@
-
-/**
- * @file system.cpp
- * @copybrief system.h
- */
-
-
-
 #include <assert.h>
 #include <err.h>
 #include <pthread.h>
@@ -190,7 +182,7 @@ int waitForChild(int pid) {
     LOG(LOG_LEVEL_DEBUG, "Process exited with %d status %d\n", pid, status);
     return exitCode;
 }
-void clearAllLists() {
+void destroyAllLists() {
     setActiveMaster(NULL);
     getAllSlaves().deleteElements();
     getAllMasters().deleteElements();
@@ -203,7 +195,7 @@ static void stop(void) {
     waitForAllThreadsToExit();
     LOG(LOG_LEVEL_INFO, "Shutting down\n");
     resetPipe();
-    clearAllLists();
+    destroyAllLists();
 }
 
 void restart(void) {

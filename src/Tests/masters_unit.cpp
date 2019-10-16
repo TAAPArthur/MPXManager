@@ -10,10 +10,10 @@ SET_ENV(addDefaultMaster, simpleCleanup);
 
 MPX_TEST("default_master", {
     assert(getActiveMaster());
-    Master* m = getMasterById(DEFAULT_KEYBOARD);
+    Master* m = getMasterByID(DEFAULT_KEYBOARD);
     assert(m);
     assertEquals(getActiveMaster(), m);
-    assertEquals(m, getMasterById(DEFAULT_POINTER, 0));
+    assertEquals(m, getMasterByID(DEFAULT_POINTER, 0));
     assert(getAllMasters().size() == 1);
     assert(m->getKeyboardID() == DEFAULT_KEYBOARD);
     assert(m->getPointerID() == DEFAULT_POINTER);
@@ -47,23 +47,6 @@ MPX_TEST("onWindowFocus_bad", {
         getActiveMaster()->onWindowFocus(i);
 
     assert(getActiveMaster()->getWindowStack().size() == 0);
-});
-MPX_TEST("getMostRecentlyFocusedWindow", {
-    WindowInfo* winInfo;
-    winInfo = getActiveMaster()->getMostRecentlyFocusedWindow([](WindowInfo * w)->bool{return w->getID() > 100;});
-    assert(winInfo == NULL);
-    for(int i = 0; i < 10; i++) {
-        assert(addWindowInfo(new WindowInfo(i)));
-        getActiveMaster()->onWindowFocus(i);
-        WindowInfo* winInfo = getActiveMaster()->getMostRecentlyFocusedWindow([](WindowInfo * w)->bool{return w ? 1 : 0;});
-        assert(winInfo == getWindowInfo(i));
-    }
-    winInfo = getActiveMaster()->getMostRecentlyFocusedWindow([](WindowInfo * w)->bool{return w->getID() == 1;});
-    assert(winInfo == getWindowInfo(1));
-    winInfo = getActiveMaster()->getMostRecentlyFocusedWindow([](WindowInfo * w)->bool{return w->getID() % 2 == 0;});
-    assert(winInfo == getWindowInfo(8));
-    winInfo = getActiveMaster()->getMostRecentlyFocusedWindow([](WindowInfo * w)->bool{return w->getID() > 100;});
-    assert(winInfo == NULL);
 });
 MPX_TEST("masterWindowStackIter", {
     int i;
@@ -127,13 +110,18 @@ MPX_TEST("test_focus_delete", {
     getActiveMaster()->setFocusStackFrozen(true);
     getActiveMaster()->onWindowFocus(2);
     assert(getFocusedWindow() == getWindowInfo(2));
-    getActiveMaster()->getWindowStack().removeElement(getFocusedWindow());
+    delete getAllWindows().removeElement(getFocusedWindow());
     assert(getFocusedWindow() == getWindowInfo(1));
-    getActiveMaster()->getWindowStack().removeElement(getFocusedWindow());
+    delete getAllWindows().removeElement(getFocusedWindow());
     assert(getFocusedWindow() == getWindowInfo(3));
-    getActiveMaster()->getWindowStack().removeElement(getFocusedWindow());
+    delete getAllWindows().removeElement(getFocusedWindow());
     assert(getFocusedWindow() == NULL);
-    assert(getActiveMaster()->getWindowStack().size() == 0);
+    assertEquals(getActiveMaster()->getWindowStack().size(), 0);
+    for(WindowInfo* winInfo : getAllWindows())
+        getActiveMaster()->onWindowFocus(winInfo->getID());
+    assertEquals(getActiveMaster()->getWindowStack().size(), getAllWindows().size());
+    getActiveMaster()->clearFocusStack();
+    assertEquals(getActiveMaster()->getWindowStack().size(), 0);
 });
 
 MPX_TEST("test_master_active", {
@@ -142,21 +130,21 @@ MPX_TEST("test_master_active", {
         getAllMasters().add(new Master(i, i + 1, ""));
         //non default masters are not auto set to active
         assert(getActiveMaster()->getKeyboardID() != i);
-        setActiveMaster(getMasterById(i));
-        Master* master = getMasterById(i);
+        setActiveMaster(getMasterByID(i));
+        Master* master = getMasterByID(i);
         assert(master == getActiveMaster());
     }
 });
 
 MPX_TEST("get_master_by_id", {
     assert(getActiveMaster());
-    assert(getMasterById(DEFAULT_KEYBOARD, 1));
-    assert(!getMasterById(DEFAULT_POINTER, 1));
-    assert(!getMasterById(0, 1));
+    assert(getMasterByID(DEFAULT_KEYBOARD, 1));
+    assert(!getMasterByID(DEFAULT_POINTER, 1));
+    assert(!getMasterByID(0, 1));
 
-    assert(!getMasterById(DEFAULT_KEYBOARD, 0));
-    assert(getMasterById(DEFAULT_POINTER, 0));
-    assert(!getMasterById(0, 0));
+    assert(!getMasterByID(DEFAULT_KEYBOARD, 0));
+    assert(getMasterByID(DEFAULT_POINTER, 0));
+    assert(!getMasterByID(0, 0));
 });
 
 MPX_TEST("test_master_active_remove", {
@@ -164,7 +152,7 @@ MPX_TEST("test_master_active_remove", {
     MasterID fakeID = 100;
     assert(DEFAULT_KEYBOARD != fakeID);
     getAllMasters().add(new Master(fakeID, fakeID + 1, ""));
-    setActiveMaster(getMasterById(fakeID));
+    setActiveMaster(getMasterByID(fakeID));
     assert(getActiveMaster()->getKeyboardID() == fakeID);
     delete getAllMasters().removeElement(fakeID);
     assert(getActiveMaster()->getKeyboardID() == DEFAULT_KEYBOARD);

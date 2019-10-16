@@ -101,7 +101,7 @@ void Option::operator()(std::string value)const {
 }
 #define _OPTION(VAR){#VAR,{&VAR}}
 
-static ArrayList<Option*> options = {
+static UniqueArrayList<Option*> options = {
     {"dump", +[](WindowMask i) {dumpWindow(i);}, FORK_ON_RECEIVE},
     {"dump", +[](std::string s) {assert(s != ""); std::cout << s << "\n"; dumpWindow(s);}, FORK_ON_RECEIVE},
     {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}, FORK_ON_RECEIVE},
@@ -187,10 +187,10 @@ void receiveClientMessage(void) {
     WindowID sender = data.data32[3];
     if(message == WM_INTERPROCESS_COM && event->window == root && optionAtom) {
         LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(data.data32, 5));
-        std::string name = getAtomValue(optionAtom);
+        std::string name = getAtomName(optionAtom);
         std::string value = "";
         if(valueAtom)
-            value = getAtomValue(valueAtom);
+            value = getAtomName(valueAtom);
         const Option* option = findOption(name, value);
         if(option) {
             LOG_RUN(LOG_LEVEL_DEBUG, std::cout << *option << "\n";);

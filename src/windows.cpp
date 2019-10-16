@@ -1,9 +1,3 @@
-/**
- * @file windows.c
- * @copybrief windows.h
- *
- */
-
 #include <assert.h>
 
 #include "ext.h"
@@ -57,20 +51,10 @@ WindowMask WindowInfo::hasPartOfMask(WindowMask mask)const {
         winMask |= w->getMask();
     return (winMask & mask);
 }
-bool WindowInfo::hasMask(WindowMask mask)const {
-    return hasPartOfMask(mask) == mask;
-}
 
-void WindowInfo::toggleMask(WindowMask mask) {
-    if((getMask()&mask) == mask)
-        removeMask(mask);
-    else
-        addMask(mask);
-}
-
-bool WindowInfo::removeFromWorkspace() {
-    Workspace* w = getWorkspace();
-    return w ? w->getWindowStack().removeElement(this) : 0;
+void WindowInfo::removeFromWorkspace() {
+    if(getWorkspace())
+        getWorkspace()->getWindowStack().removeElement(this);
 }
 
 void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
@@ -98,7 +82,7 @@ Workspace* WindowInfo::getWorkspace(void)const {
 
 WindowInfo::~WindowInfo() {
     for(Master* master : getAllMasters())
-        master->getWindowStack().removeElement(this);
+        master->removeWindowFromFocusStack(getID());
     removeFromWorkspace();
     removeID(this);
 }
@@ -109,8 +93,4 @@ void WindowInfo::setDockProperties(int* properties, int numberofProperties) {
 int* WindowInfo::getDockProperties(bool createNew) {
     static Index<int[12]> key;
     return *get(key, this, createNew);
-}
-
-bool WindowInfo::matches(std::string str) {
-    return getTitle() == str || getClassName() == str || getInstanceName() == str || getTypeName() == str;
 }

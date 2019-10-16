@@ -1,7 +1,3 @@
-/**
- * @file masters.c
- * @copybrief masters.h
- */
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,16 +50,22 @@ void Master::onWindowFocus(WindowID win) {
     LOG(LOG_LEVEL_DEBUG, "updating focus for win %d at position %d out of%d\n", win, pos, getWindowStack().size());
     if(! isFocusStackFrozen()) {
         if(pos == -1)
-            getWindowStack().add(winInfo);
-        else getWindowStack().shiftToEnd(pos);
+            windowStack.add(winInfo);
+        else windowStack.shiftToEnd(pos);
     }
     else if(pos != -1)
         focusedWindowIndex = pos;
     else {
-        getWindowStack().add(winInfo);
+        windowStack.add(winInfo);
         focusedWindowIndex = getWindowStack().size() - 1;
     }
     focusedTimeStamp = getTime();
+}
+void Master::clearFocusStack() {
+    windowStack.clear();
+}
+WindowInfo* Master::removeWindowFromFocusStack(WindowID win) {
+    return windowStack.removeElement(win);
 }
 WindowInfo* Master::getFocusedWindow(void) {
     return windowStack.empty() ? nullptr : isFocusStackFrozen() &&
@@ -75,18 +77,11 @@ void Master::setFocusStackFrozen(int value) {
         if(value)
             focusedWindowIndex = getWindowStack().size();
         else if(focusedWindowIndex < getWindowStack().size())
-            getWindowStack().shiftToEnd(focusedWindowIndex);
+            windowStack.shiftToEnd(focusedWindowIndex);
     }
 }
 
-WindowInfo* Master::getMostRecentlyFocusedWindow(bool(*filter)(WindowInfo*)) {
-    for(int i = getWindowStack().size() - 1; i >= 0; i--)
-        if(filter(getWindowStack()[i]))
-            return getWindowStack()[i];
-    return NULL;
-}
-Master* getMasterById(MasterID id, bool keyboard) {
-    LOG(LOG_LEVEL_TRACE, "Looking up %d keyboard: %d\n", id, keyboard);
+Master* getMasterByID(MasterID id, bool keyboard) {
     if(keyboard)
         return getAllMasters().find(id);
     else

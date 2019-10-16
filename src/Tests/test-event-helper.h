@@ -145,23 +145,21 @@ static inline int waitForNormalEvent(int type) {
 namespace TestGrabs {
 #define ALL_MASKS KEYBOARD_MASKS|POINTER_MASKS
 #include <X11/keysym.h>
-static Binding input[] = {
-    {0, XK_a, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS}},
-    {0, XK_a, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
-    {0, Button1, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-    {0, Button1, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE}},
-    {0, 0, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_MOTION}},
-};
-static inline const int NUM_ITER = LEN(input) * 3;
-static inline const int NUM_BINDINGS = LEN(input);
+static inline const int NUM_BINDINGS = 5;
+static inline const int NUM_ITER = NUM_BINDINGS * 3;
 static inline Binding& getBinding(int _i) {
+    uint32_t keyboardID = _i / 5 == 0 ? getActiveMasterKeyboardID() :
+        _i / 5 == 1 ? XIAllDevices :  XIAllMasterDevices ;
+    uint32_t pointerID = _i / 5 == 0 ? getActiveMasterPointerID() :
+        _i / 5 == 1 ? XIAllDevices :  XIAllMasterDevices ;
+    static Binding input[] = {
+        {0, XK_a, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS, .targetID = keyboardID}},
+        {0, XK_a, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE, .targetID = keyboardID}},
+        {0, Button1, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS, .targetID = pointerID}},
+        {0, Button1, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .targetID = pointerID}},
+        {0, 0, {}, {.mask = XCB_INPUT_XI_EVENT_MASK_MOTION, .targetID = pointerID}},
+    };
     return input[_i % 5];
-}
-static inline int getID(int _i) {
-    return _i / 5 == 0 ? XIAllMasterDevices :
-        _i / 5 == 1 ? XIAllDevices :
-        isKeyboardMask(getBinding(_i).getMask()) ? getActiveMasterKeyboardID() :
-        getActiveMasterPointerID();
 }
 
 static inline void testBiningSetup() {
@@ -169,20 +167,19 @@ static inline void testBiningSetup() {
     NON_ROOT_DEVICE_EVENT_MASKS = 0;
     ROOT_EVENT_MASKS = 0;
     NON_ROOT_EVENT_MASKS = 0;
-    openXDisplay();
     addDefaultMaster();
-    for(int i = 0; i < LEN(input); i++) {
-        getDeviceBindings().add(&input[i]);
+    for(int i = 0; i < NUM_BINDINGS; i++) {
+        getDeviceBindings().add(getBinding(i));
     }
-    triggerAllBindings(ALL_MASKS);
+    openXDisplay();
     consumeEvents();
-    assert(getDeviceBindings().size() == LEN(input));
+    assert(getDeviceBindings().size() == NUM_BINDINGS);
 }
 static inline void testGrabDetail(int _i, bool binding) {
     Binding& b = getBinding(_i);
     if(!b.getDetail())
         return;
-    int id = getID(_i);
+    int id = b.getTargetID();
     if(binding)
         assert(!b.grab());
     else
@@ -196,9 +193,7 @@ static inline void testGrabDetailExclusive(int _i, bool binding) {
         return;
     int mask = b.getMask();
     int detail = b.getDetail();
-    int id = getID(_i);
-    if(binding)
-        b.setTargetID(id);
+    int id = b.getTargetID();
     saveXSession();
     for(int mod = 0; mod < 3; mod++)
         for(int i = 0; i < 2; i++) {

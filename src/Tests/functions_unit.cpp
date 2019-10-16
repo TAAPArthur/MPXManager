@@ -77,7 +77,7 @@ MPX_TEST_ITER("find_and_raise_basic", 4, {
     static std::string t;
     for(auto title : titles) {
         t = title;
-        int (*matches)(WindowInfo*) = [](WindowInfo * winInfo)->int{return winInfo->matches(t);};
+        int (*matches)(WindowInfo*) = [](WindowInfo * winInfo)->int{return winInfo->getTitle() == t;};
         assertEquals(findAndRaise(matches, (WindowAction)_i)->getTitle(), title);
     }
 });
@@ -113,8 +113,10 @@ MPX_TEST_ITER("raiseOrRun", 8, {
     if(!run)
         if(title)
             winInfo->setTitle(s);
-        else
-            winInfo->setClassName(s);
+        else {
+            setWindowClass(winInfo->getID(), s, s);
+            loadWindowProperties(winInfo);
+        }
     if(env) {
         setenv(envVar.c_str(), s.c_str(), 1);
         s = "$" + envVar;
@@ -165,7 +167,7 @@ MPX_TEST("test_shift_focus", {
 });
 MPX_TEST_ITER("test_shift_focus_null", 3, {
     if(_i == 0)
-        getActiveMaster()->getWindowStack().clear();
+        getActiveMaster()->clearFocusStack();
     else if(_i == 1)
         switchToWorkspace(2);
     else

@@ -110,7 +110,7 @@ static void clearStartupMethod(void) {
     startupMethod = NULL;
 }
 
-static ArrayList<Option*> options = {
+static UniqueArrayList<Option*> options = {
     {"mode", setMode},
     {"clear-startup-method", clearStartupMethod},
     {"replace", +[]() {STEAL_WM_SELECTION = 1;}},

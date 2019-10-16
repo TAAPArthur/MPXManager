@@ -1,12 +1,11 @@
 /**
- * @file util.h
- * @brief ArrayList and other generic helper methods
- *
+ * @file arraylist.h
+ * @brief ArrayList implementation
  */
 #ifndef MYWM_UTIL
 #define MYWM_UTIL
 
-///Returns the length of the array
+/// Returns the length of the array
 #define LEN(X) (sizeof X / sizeof X[0])
 
 #include <assert.h>
@@ -15,75 +14,108 @@
 #include <type_traits>
 #include <vector>
 
-
+/// Flags that control if and where a member is added to the list
 enum AddFlag {
+    /// Always add the object
     ADD_ALWAYS,
+    /// add the object iff it doesn't already exist
     ADD_UNIQUE,
+    /// remove the object if it exists
     ADD_REMOVE,
     /// Adds value to the list iff the list does not already contain it else it removes the element
     ADD_TOGGLE,
+    /// AAlways add the object to the head of the list
     PREPEND_ALWAYS,
+    /// AAlways add the object to the head of the list iff it is not already present in the list
     PREPEND_UNIQUE,
     /// Adds value to the list iff the list does not already contain it else it removes the element
     PREPEND_TOGGLE,
 };
 
+/**
+ * Reversible iterator
+ */
 template<class T>
 struct Iterator {
+    /// backing pointer
     const T* p;
+    /// iff true the iterator will iterate backwards
     const bool reverse;
+    /**
+     * Constructs an iterator starting at p
+     * @param p backing pointer. Should be the first element in the array
+     * @param reverse whether to reverse the iteration or not.
+     */
     Iterator(const T* p, bool reverse = 0): p(p), reverse(reverse) {}
+    /// Move to the next element
     Iterator operator ++() {
         auto temp = *this;
         reverse ? p-- : p++;
         return temp;
     }
+    /// compares backing pointer
     bool operator ==(const Iterator& other)const {return p == other.p;}
+    /// compares backing pointer
     bool operator !=(const Iterator& other)const {return !(*this == other);}
+    /// returns object backed backing pointer
     const T& operator*() {return *p;}
+    /// returns backing pointer
     T* operator->() {return p;}
 };
 
+/**
+ * Wrapper around std::vector with some Java-like methods
+ * This class doesn't not support NULL values
+ */
 template<class T>
 struct ArrayList: std::vector<T> {
+    /// Enable if T or *T (if pointer) is convertible to an int
     template<typename U = T, typename V = int>
     using EnableIf = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value, V >  ;
+    /// Enable if T is a pointer
     template<typename U = T, typename V = int>
     using EnableIfPointer = typename std::enable_if_t<std::is_pointer<U>::value, V>  ;
+    /// Enable if T is not a pointer
     template<typename U = T, typename V = int>
     using EnableIfNotPointer = typename std::enable_if_t < !std::is_pointer<U>::value, V >  ;
+    /// Enable if *T is convertible to an int
     template<typename U = T, typename V = int>
     using EnableIfPointerAndInt = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value &&
         std::is_pointer<U>::value, V >  ;
-    template<typename U = T, typename V = int>
+
+    /// Constructs an empty list
     ArrayList() {}
+    /// Constructs a list with the specified elements
     ArrayList(std::initializer_list<T> __l) {
         for(T t : __l)
             this->add(t);
     }
+    /**
+     * Copies the members onto the heap and adds them to the list
+     */
     template<typename U = T>
     ArrayList(std::initializer_list<std::remove_pointer_t<U>> __l, EnableIfPointer<U>_enable __attribute__((unused)) = 0) {
         for(auto t : __l)
             this->add(t);
     }
-    template<typename U = T>
-    ArrayList(T t, int num, EnableIfPointer<U>_enable __attribute__((unused)) = 0) {
-        for(int i = 0; i < num; i++)
-            this->add(t + i);
-    }
     virtual ~ArrayList() = default;
+    /// Reverse iterator
     virtual Iterator<T> rbegin() const {
         return Iterator(this->data() + this->size() - 1, 1);
     }
+    /// Reverse iterator end
     virtual Iterator<T> rend() const {
         return this->data() - 1;
     }
+    /// normal iterator end
     virtual Iterator<T> begin() const {
         return Iterator(this->data());
     }
+    /// normal iterator end
     virtual Iterator<T> end() const {
         return this->data() + this->size();
     }
+    /// Copies value to the heap and adds into according to flag
     template<typename U = T>
     EnableIfPointer<U, bool> add(const std::remove_pointer_t<U>& value, AddFlag flag = ADD_ALWAYS) {
         return add(new std::remove_pointer_t<U>(value), flag);
@@ -98,7 +130,7 @@ struct ArrayList: std::vector<T> {
     /**
      * Adds/removes value to list according to flag.
      * If value is not added to the list, it is deleted. If an element is removed from the list it is deleted.
-     * @return 1 if element was not freed
+     * @return 1 iff element was not freed
      */
     template<typename U = T>
     EnableIfPointer<U, bool>add(T value, AddFlag flag) {
@@ -223,37 +255,52 @@ struct ArrayList: std::vector<T> {
         int index = indexOf(element);
         return index != -1 ? this->remove(index) : (T) 0;
     }
+    /**
+     * @copydoc removeElement
+     */
     template<typename U = T>
     EnableIf<U, T> removeElement(uint32_t  element) {
         int index = indexOf(element);
         return index != -1 ? this->remove(index) : NULL;
     }
+    /**
+     * Removes the last element from the list and returns it
+     * @return the element removed
+     */
     T pop() {return remove(this->size() - 1);};
     /**
-     * Returns the index of the element with value.
+     * Returns the index of the element equal to value.
      * If size is non zero, we check for equality by comparing the first size bytes of value with every element.
      * If size is zero, we check if the pointers are equal
      * @param value
      * @return the index of the element whose memory address starts with the first size byte of value
      */
     template<typename U = T>
-    EnableIfNotPointer<U> indexOf(const T t)const {
+    EnableIfNotPointer<U> indexOf(const T value)const {
         for(int i = this->size() - 1; i >= 0; i--)
-            if((*this)[i] == t)
+            if((*this)[i] == value)
                 return i;
         return -1;
     }
+    /**
+     * Returns the index of the element that points to an element equal to what value points to.
+     * @copydoc indexOf
+     */
     template<typename U = T>
-    auto indexOf(const std::remove_pointer_t<U>* t)const -> decltype((*t) == (*t), int()) {
+    auto indexOf(const std::remove_pointer_t<U>* value)const -> decltype((*value) == (*value), int()) {
         for(int i = this->size() - 1; i >= 0; i--)
-            if((*(*this)[i]) == *t)
+            if((*(*this)[i]) == *value)
                 return i;
         return -1;
     }
+    /**
+     * Returns the index of the element that points to an element with an int value equal to value
+     * @copydoc indexOf
+     */
     template<typename U = T>
-    EnableIfPointerAndInt<U, int> indexOf(uint32_t id)const  {
+    EnableIfPointerAndInt<U, int> indexOf(uint32_t value)const  {
         for(int i = this->size() - 1; i >= 0; i--)
-            if((uint32_t)(*(*this)[i]) == id)
+            if((uint32_t)(*(*this)[i]) == value)
                 return i;
         return -1;
     }
@@ -300,25 +347,47 @@ struct ArrayList: std::vector<T> {
         (*this)[index2] = temp;
     }
 };
+/**
+ * Subclass of ArrayList that iterates in the reverse order
+ */
 template<class T>
 struct ReverseArrayList: ArrayList<T> {
+    /// Returns an iterator from end to start
     virtual Iterator<T> begin() const override {
         return Iterator(this->data() + this->size() - 1, 1);
     }
+    /// counterpart of begin
     virtual Iterator<T> end() const override {
         return this->data() - 1;
     }
+    /// Returns start to end
     virtual Iterator<T> rbegin() const override {
         return Iterator(this->data());
     }
+    /// counterpart of end
     virtual Iterator<T> rend() const override {
         return this->data() + this->size();
     }
 };
+/**
+ * ArrayList of pointers
+ * When this object is deconstructed, ArrayList<T>::deleteElements() is called
+ *
+ * @tparam T
+ */
 template<typename T>
-struct UniqueArrayList: ArrayList<T*> {
+struct UniqueArrayList: ArrayList<T> {
+    static_assert(std::is_pointer<T>::value);
+    /// Constructs an empty list
+    UniqueArrayList() {}
+    /// Constructs a list with the specified elements
+    UniqueArrayList(std::initializer_list<T> __l) : ArrayList<T>(__l) {}
+    /**
+     * Copies the members onto the heap and adds them to the list
+     */
+    UniqueArrayList(std::initializer_list<std::remove_pointer_t<T>> __l): ArrayList<T>(__l) {}
     ~UniqueArrayList() {
-        ArrayList<T*>::deleteElements();
+        ArrayList<T>::deleteElements();
     }
 };
 

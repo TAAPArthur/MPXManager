@@ -36,7 +36,7 @@
             Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endCycleWindows"  },\
             Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endChain"  },\
             Binding {WILDCARD_MODIFIER, 0, {},{.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "absorbCycleWindows"},\
-            },{.chainMask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE},"cycleWindows")
+            },{},XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE,"cycleWindows")
 
 void addChainDefaultBindings() {
     Chain* DEFAULT_CHAIN_BINDINGS[] = {
@@ -48,8 +48,8 @@ void addChainDefaultBindings() {
                 {DEFAULT_MOD_MASK, 0, DEFAULT_EVENT(updateWindowMoveResize), {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
                 {WILDCARD_MODIFIER, XK_Escape, DEFAULT_EVENT(cancelWindowMoveResize), {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}},
                 {WILDCARD_MODIFIER, 0, DEFAULT_EVENT(commitWindowMoveResize), {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}},
-            },
-            {.chainMask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION},
+            }, {},
+            XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION,
             "_windowMove"
         },
         new Chain{
@@ -59,7 +59,7 @@ void addChainDefaultBindings() {
                 {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, {.noGrab = 1}},
                 {WILDCARD_MODIFIER, 0, commitWindowMoveResize, {.noGrab = 1}},
             },
-            {.chainMask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION},
+            {}, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION,
             "_windowResize"
         },
     };
@@ -114,8 +114,8 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK | ControlMask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(ALWAYS_ON_TOP);}},
         {DEFAULT_MOD_MASK | Mod1Mask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(STICKY_MASK);}},
 
-        {0, XF86XK_AudioPlay, +[]() {toggleLayout(getDefaultLayouts()[FULL]);}},
-        {DEFAULT_MOD_MASK, XK_F11, +[]() {toggleLayout(getDefaultLayouts()[FULL]);}},
+        {0, XF86XK_AudioPlay, +[]() {toggleLayout(FULL);}},
+        {DEFAULT_MOD_MASK, XK_F11, +[]() {toggleLayout(FULL);}},
         {DEFAULT_MOD_MASK, XF86XK_AudioPlay, +[](WindowInfo * winInfo) {winInfo->toggleMask(FULLSCREEN_MASK);}},
         {DEFAULT_MOD_MASK | ShiftMask, XF86XK_AudioPlay, +[](WindowInfo * winInfo) {winInfo->toggleMask(ROOT_FULLSCREEN_MASK);}},
 

@@ -36,9 +36,9 @@ bool Chain::check(const UserEvent& userEvent)const {
     return shouldPassThrough(getPassThrough(), end());
 }
 bool Chain::start(const UserEvent& event)const {
-    LOG(LOG_LEVEL_DEBUG, "starting chain; mask:%d\n", flags.chainMask);
-    if(flags.chainMask)
-        grabDevice(getDeviceIDByMask(flags.chainMask), flags.chainMask);
+    LOG(LOG_LEVEL_DEBUG, "starting chain; mask:%d\n", chainMask);
+    if(chainMask)
+        grabDevice(getDeviceIDByMask(chainMask), chainMask);
     for(Binding* member : members) {
         member->grab();
     }
@@ -48,8 +48,8 @@ bool Chain::start(const UserEvent& event)const {
 bool Chain::end()const {
     LOG(LOG_LEVEL_DEBUG, "ending chain\n");
     getActiveChains().removeElement(this);
-    if(flags.chainMask)
-        ungrabDevice(getDeviceIDByMask(flags.chainMask));
+    if(chainMask)
+        ungrabDevice(getDeviceIDByMask(chainMask));
     for(Binding* member : members)
         member->ungrab();
     return 1;
@@ -58,7 +58,7 @@ bool Chain::trigger(const UserEvent& event)const {
     return start(event);
 }
 bool checkAllChainBindings(const UserEvent& userEvent) {
-    auto& chains = getActiveChains(userEvent.getMaster());
+    auto& chains = getActiveChains(userEvent.master);
     for(int i = chains.size() - 1; i >= 0; i--)
         if(!chains[i]->check(userEvent)) {
             LOG(LOG_LEVEL_DEBUG, "checkAllChainBindings terminated early\n");

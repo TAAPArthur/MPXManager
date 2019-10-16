@@ -1,9 +1,3 @@
-/**
- * @file devices.c
- * @copybrief devices.h
- */
-
-
 #include <assert.h>
 #include <string.h>
 
@@ -40,19 +34,19 @@ void attachSlaveToMaster(Slave* slave, Master* master) {
         attachSlaveToMaster(slave->getID(), slave->isKeyboardDevice() ? master->getKeyboardID() : master->getPointerID());
     else floatSlave(slave->getID());
 }
-void floatSlave(SlaveID slaveId) {
-    LOG(LOG_LEVEL_DEBUG, "floating %d \n", slaveId);
+void floatSlave(SlaveID slaveID) {
+    LOG(LOG_LEVEL_DEBUG, "floating %d \n", slaveID);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIDetachSlave;
-    changes.attach.deviceid = slaveId;
+    changes.attach.deviceid = slaveID;
     XIChangeHierarchy(dpy, &changes, 1);
 }
-void attachSlaveToMaster(SlaveID slaveId, MasterID masterId) {
-    LOG(LOG_LEVEL_DEBUG, "attaching %d to %d\n", slaveId, masterId);
+void attachSlaveToMaster(SlaveID slaveID, MasterID masterID) {
+    LOG(LOG_LEVEL_DEBUG, "attaching %d to %d\n", slaveID, masterID);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIAttachSlave;
-    changes.attach.deviceid = slaveId;
-    changes.attach.new_master = masterId;
+    changes.attach.deviceid = slaveID;
+    changes.attach.new_master = masterID;
     XIChangeHierarchy(dpy, &changes, 1);
 }
 void destroyMasterDevice(MasterID id, int returnPointer, int returnKeyboard) {
@@ -130,15 +124,19 @@ void initCurrentMasters() {
     assert(getAllMasters().size() >= 1);
     assert(getActiveMaster());
 }
-void setActiveMasterByDeviceId(MasterID id) {
-    Master* master = getMasterById(id, 1);
+Master* getMasterByDeviceID(MasterID id) {
+    Master* master = getMasterByID(id, 1);
     if(!master)
-        master = getMasterById(id, 0);
+        master = getMasterByID(id, 0);
     if(!master) {
         Slave* slave = getAllSlaves().find(id);
         if(slave)
             master = slave->getMaster();
     }
+    return master;
+}
+void setActiveMasterByDeviceID(MasterID id) {
+    Master* master = getMasterByDeviceID(id);
     if(master)
         setActiveMaster(master);
     assert(getActiveMaster());
@@ -158,11 +156,11 @@ bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]) {
     return reply ? 1 : 0;
 }
 /*
-static int getAssociatedMasterDevice(int deviceId) {
+static int getAssociatedMasterDevice(int deviceID) {
     int ndevices;
     XIDeviceInfo* masterDevices;
     MasterID id;
-    masterDevices = XIQueryDevice(dpy, deviceId, &ndevices);
+    masterDevices = XIQueryDevice(dpy, deviceID, &ndevices);
     id = masterDevices[0].attachment;
     XIFreeDeviceInfo(masterDevices);
     return id;
@@ -177,7 +175,7 @@ MasterID getClientPointerForWindow(WindowID win) {
     return masterPointer;
 }
 Master* getClientMaster(WindowID win) {
-    return getMasterById(getClientPointerForWindow(win), 0);
+    return getMasterByID(getClientPointerForWindow(win), 0);
 }
 WindowID getActiveFocus(MasterID id) {
     WindowID win = 0;
@@ -189,7 +187,7 @@ WindowID getActiveFocus(MasterID id) {
     }
     return win;
 }
-void swapDeviceId(Master* master1, Master* master2) {
+void swapDeviceID(Master* master1, Master* master2) {
     if(master1 == master2)
         return;
     LOG(LOG_LEVEL_DEBUG, "Swapping %d(%d) with %d (%d)\n",
@@ -233,7 +231,6 @@ void detectMonitors(void) {
     assert(monitors);
     xcb_randr_monitor_info_iterator_t iter = xcb_randr_get_monitors_monitors_iterator(monitors);
     ArrayList<MonitorID> monitorNames;
-    TimeStamp t = getTime();
     while(iter.rem) {
         xcb_randr_monitor_info_t* monitorInfo = iter.data;
         Monitor* m = getAllMonitors().find(monitorInfo->name);
@@ -242,15 +239,14 @@ void detectMonitors(void) {
             getAllMonitors().add(m);
         }
         else m->setBase(*(Rect*)&monitorInfo->x);
-        m->setTimeStamp(t);
-        m->setName(getAtomValue(monitorInfo->name));
+        m->setName(getAtomName(monitorInfo->name));
         m->setPrimary(monitorInfo->primary);
         monitorNames.add(monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
     free(monitors);
     for(int i = getAllMonitors().size() - 1; i >= 0; i--)
-        if(getAllMonitors()[i]->getTimeStamp() < t)
+        if(!monitorNames.find(getAllMonitors()[i]->getID()))
             delete getAllMonitors().remove(i);
 #endif
     assert(getAllMonitors().size() > 0);

@@ -103,7 +103,7 @@ MPX_TEST("test_set_active_master_by_id", {
         for(Slave* slave : master->getSlaves())
             ids.add(slave->getID());
         for(MasterID id : ids) {
-            setActiveMasterByDeviceId(id);
+            setActiveMasterByDeviceID(id);
             assert(getActiveMaster() == master);
             setActiveMaster(active);
         }
@@ -140,9 +140,9 @@ MPX_TEST("test_get_client_pointer_unknown", {
 });
 MPX_TEST("test_slave_swapping_same_device", {
     getAllMasters().add(new Master(-1, -2, ""));
-    setActiveMaster(getMasterById(-1));
+    setActiveMaster(getMasterByID(-1));
     //will error due to no Xserver if it doesn't check for equality first
-    swapDeviceId(getActiveMaster(), getActiveMaster());
+    swapDeviceID(getActiveMaster(), getActiveMaster());
 });
 
 MPX_TEST("test_slave_swapping", {
@@ -163,7 +163,7 @@ MPX_TEST("test_slave_swapping", {
     ArrayList<SlaveID> slaves2 = filter((master2->getSlaves()));
     assert(!slaves1.empty());
     assert(!slaves2.empty());
-    swapDeviceId(master1, master2);
+    swapDeviceID(master1, master2);
     initCurrentMasters();
     ArrayList<SlaveID> slavesNew1 = filter((master1->getSlaves()));
     ArrayList<SlaveID> slavesNew2 = filter((master2->getSlaves()));

@@ -1,9 +1,3 @@
-/**
- * @file wm-rules.cpp
- * @copybrief wm-rules.h
- *
- */
-
 #include <assert.h>
 
 #include "mywm-structs.h"
@@ -67,7 +61,6 @@ void onError(void) {
 }
 void onConfigureNotifyEvent(void) {
     xcb_configure_notify_event_t* event = (xcb_configure_notify_event_t*)getLastEvent();
-    if(event->override_redirect)return;
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         winInfo->setGeometry(&event->x);
@@ -164,7 +157,7 @@ void onReparentEvent(void) {
 
 void onFocusInEvent(void) {
     xcb_input_focus_in_event_t* event = (xcb_input_focus_in_event_t*)getLastEvent();
-    setActiveMasterByDeviceId(event->deviceid);
+    setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
     if(winInfo) {
         if(!winInfo->hasMask(NO_RECORD_FOCUS))
@@ -175,7 +168,7 @@ void onFocusInEvent(void) {
 
 void onFocusOutEvent(void) {
     xcb_input_focus_out_event_t* event = (xcb_input_focus_out_event_t*)getLastEvent();
-    setActiveMasterByDeviceId(event->deviceid);
+    setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
     if(winInfo)
         resetBorder(winInfo->getID());
@@ -210,9 +203,7 @@ void onDeviceEvent(void) {
     LOG(LOG_LEVEL_VERBOSE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
         event->root, event->event, event->child);
-    setActiveMasterByDeviceId(event->deviceid);
-    if((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) && getActiveMaster()->isIgnoreKeyRepeat())
-        return;
+    setActiveMasterByDeviceID(event->deviceid);
     setLastUserEvent({event->mods.effective, event->detail, 1U << event->event_type,
             (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
             .winInfo = getTargetWindow(event->root, event->event, event->child),
@@ -226,12 +217,14 @@ void onGenericEvent(void) {
         applyEventRules(type, NULL);
 }
 
-void onSelectionClearEvent(void) {
+bool onSelectionClearEvent(void) {
     xcb_selection_clear_event_t* event = (xcb_selection_clear_event_t*)getLastEvent();
     if(event->owner == getPrivateWindow() && event->selection == WM_SELECTION_ATOM) {
         LOG(LOG_LEVEL_INFO, "We lost the WM_SELECTION; another window manager is taking over (%d)", event->owner);
-        quit(0);
+        requestShutdown();
+        return 0;
     }
+    return 1;
 }
 
 
@@ -248,12 +241,15 @@ void registerForEvents() {
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     registerForMonitorChange();
 }
-void listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
+bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     uint32_t mask = winInfo->getEventMasks() ? winInfo->getEventMasks() : NON_ROOT_EVENT_MASKS;
+    bool result = 0;
     if(registerForWindowEvents(winInfo->getID(), mask) == 0) {
+        result = 1;
         passiveGrab(winInfo->getID(), NON_ROOT_DEVICE_EVENT_MASKS);
         LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d\n", NON_ROOT_EVENT_MASKS, winInfo->getID());
     }
+    return result;
 }
 
 void addAutoTileRules(AddFlag flag) {
@@ -272,9 +268,9 @@ void addAutoTileRules(AddFlag flag) {
 void assignDefaultLayoutsToWorkspace() {
     for(Workspace* w : getAllWorkspaces())
         if(w->getLayouts().size() == 0 && w->getActiveLayout() == NULL) {
-            for(Layout* layout : getDefaultLayouts())
+            for(Layout* layout : getRegisteredLayouts())
                 w->getLayouts().add(layout);
-            w->setActiveLayout(getDefaultLayouts()[0]);
+            w->setActiveLayout(getRegisteredLayouts()[0]);
         }
 }
 

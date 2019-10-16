@@ -11,12 +11,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "mywm-structs.h"
+#include "window-masks.h"
 #include <cstdio>
 
 
 
 /**
- * Pritns the element in arr space seperated. Arr is treated like an array of ints
+ * Prints the element in arr space separated. Arr is treated like an array of ints
  *
  * @param label some prefix
  * @param arr
@@ -84,6 +85,9 @@ void setLogLevel(uint32_t level);
 static inline int isLogging(int i) {
     return LOGGING && i >= getLogLevel();
 }
+/**
+ * Prints every window in the active Workspace
+ */
 void dumpWindowStack() ;
 
 /**

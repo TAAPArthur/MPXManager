@@ -1,3 +1,7 @@
+/**
+ * @file user-events.h
+ * @brief Defines the types of hooks that can be triggered at various points in the code
+ */
 
 #ifndef MPX_USER_EVENTS
 #define MPX_USER_EVENTS
@@ -47,7 +51,7 @@ enum {
     Periodic,
     /// called when the connection is idle
     Idle,
-    /// called when the connection is idle (even after the application of Idle rules)
+    /// called when the connection is idle (even after the calls to Idle. )
     /// These calls should not affect the XState
     TrueIdle,
     /// max value of supported events

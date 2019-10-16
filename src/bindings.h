@@ -12,42 +12,57 @@
 #include "xsession.h"
 #include "boundfunction.h"
 
-#define LEN_PASSTHROUGH 4
-
-
 /**
  * Details which window to act on for Bindings
  */
-typedef enum {
-    /// Use the focused window for key bindings and the target/event window for mouse bindings
+enum WindowParamType {
+    /// Use the focused window for key bindings and the event window for mouse bindings
     DEFAULT_WINDOW = 0,
     /// Always use the focused window
     FOCUSED_WINDOW,
-    /// Always use the target window (the target of the active master if set of the event window)
-    TARGET_WINDOW
-} WindowParamType;
-struct UserEvent {
     /**
-     * Compares Bindings with detail and mods to see if it should be triggered.
-     * If bindings->mod ==anyModier, then it will match any modifiers.
-     * If bindings->detail or keycode is 0 it will match any detail
-     * @param binding
-     * @param detail either a keycode or a button
-     * @param mods modifiers
-     * @param mask
-     * @param keyRepeat if the event was a key repeat
-     * @return Returns true if the binding should be triggered based on the combination of detail and mods
+     * Always use the target window if set
+     * If not set then the event window is used
+     * @see getTarget(), setTarget()
+     *
      */
+    TARGET_WINDOW
+} ;
+/**
+ * Compares Bindings with detail and mods to see if it should be triggered.
+ * If bindings->mod ==anyModier, then it will match any modifiers.
+ * If bindings->detail or keycode is 0 it will match any detail
+ * Intended to be extracted form a device event to contain only the needed information to match against a binding
+ */
+struct UserEvent {
+    /// @return Returns true if the binding should be triggered based on the combination of detail and mods
     uint32_t mod = 0;
+    /// either a keycode or a button
     uint32_t detail = 0;
+    /// the mask to match
     uint32_t mask = 0;
+    /// @param keyRepeat if the event was a key repeat
     bool keyRepeat = 0;
+    /// the master who triggered this binding; should not be null
     Master* master = getActiveMaster();
+    /// the window the binding was triggered on
     WindowInfo* winInfo = NULL;
-    Master* getMaster() const;
 };
+/**
+ * Prints userEvent
+ *
+ * @param stream
+ * @param userEvent
+ *
+ * @return
+ */
 std::ostream& operator<<(std::ostream& stream, const UserEvent& userEvent);
 
+/**
+ * Optional arguments to Bindings
+ *
+ * These are separated into their own class to make it easier to specify only some
+ */
 struct BindingFlags {
     /**Whether more bindings should be considered*/
     PassThrough passThrough = ALWAYS_PASSTHROUGH;
@@ -63,24 +78,35 @@ struct BindingFlags {
     bool noKeyRepeat = 0;
     /// Binding will be triggered in the active master is in a compatible mode
     unsigned int mode = 0;
-    // used only for chain bindings
-    bool noGrabDevice;
-    uint32_t chainMask = 0 ;
 };
 
+/// Wildcard mask
 #define ANY_MASK (-1)
 ///used for key/mouse bindings
 struct Binding {
+protected:
     /**Modifier to match on*/
     unsigned int mod;
     /**Either Button or KeySym to match**/
     int buttonOrKey;
     /**Function to call on match**/
     const BoundFunction boundFunction;
+    /// extra optional flags
     BindingFlags flags;
     /// user specified name to be used for debugging
     std::string name;
+    /**Converted detail of key bindings. Should not be set manually*/
+    int detail = 0;
 
+public:
+    /**
+     * Note that flags.mask is inferred from buttonOrKey if set to the default value of 0.
+     * @param mod a valid X modifier
+     * @param buttonOrKey a button detail or key sym
+     * @param boundFunction the function to call when this binding is triggered
+     * @param flags
+     * @param name
+     */
     Binding(uint32_t mod, uint32_t buttonOrKey, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
         std::string name = ""): mod(mod), buttonOrKey(buttonOrKey), boundFunction(boundFunction), flags(flags), name(name) {
         if(flags.mask == 0)
@@ -89,37 +115,74 @@ struct Binding {
     }
 
 
-    /**Converted detail of key bindings. Should not be set manually*/
-    int detail = 0;
     virtual ~Binding() = default;
+    /**
+     * 2 Bindings (A and B) are equal iff a event that triggers A would also trigger B
+     *
+     * @param binding
+     *
+     * @return 1 iff the mode, buttonOrKey, mode and mask
+     */
     bool operator==(const Binding& binding)const;
+    /**
+     * Prints this binding
+     *
+     * @param stream
+     * @param binding
+     *
+     * @return
+     */
     friend std::ostream& operator<<(std::ostream& stream, const Binding& binding);
+    /**
+     * Returns the window that will be passed on to the BoundFunction
+     * This can vary with the flags set and properties of the event.master
+     * If event.master has an explicitly set target, it is chosen
+     * Else the window is chosen according to flags.windowTarget
+     *
+     * @see WindowParamType
+     *
+     * @param event
+     *
+     * @return the window that will be passed on to the BoundFunction
+     */
     WindowInfo* getWindowToActOn(const UserEvent& event)const;
-    uint32_t getMask()const;
+    /// @copydoc BindingFlags::mask
+    uint32_t getMask()const {return flags.mask;}
+    /// @copydoc BindingFlags::windowTarget
     WindowParamType getWindowTarget()const {return flags.windowTarget;}
+    /// @copydoc BindingFlags::passThrough
     PassThrough getPassThrough()const {return flags.passThrough;}
+    /// @return if this Binding won't grap a button/key
     bool isNotGrabbable()const {return flags.noGrab;}
     /**
      * @return 1 iff the code should proceed or 0 iff it should return immediately
      */
     virtual bool trigger(const UserEvent& event)const;
+    /**
+     * Compares the mod, mask, keyrepeat and mode of the event and returns true if they match
+     *
+     * @param event
+     *
+     * @return 1 iff this Binding matches event
+     */
     bool matches(const UserEvent& event);
+    /// @return the button or key sym used to compute detail
+    uint32_t getButtonOrKey() {return buttonOrKey;}
+    /// @return the button or key code used to initiate grabs
     uint32_t getDetail();
     /// @return the id of the device to grab
     int getTargetID() const {return flags.targetID;}
-    int setTargetID(MasterID id) {return flags.targetID = id;}
     /**
      * Wrapper around grabDetail()
-     * @param binding
      * @return 0 iff the grab was successful
      */
     int grab();
     /**
      * Wrapper around ungrab()
-     * @param binding
      * @return 0 iff the grab was successful
      */
     int ungrab();
+    /// @return name
     std::string getName()const {return name;}
 } ;
 
@@ -132,19 +195,56 @@ struct Binding {
 ArrayList<Binding*>& getDeviceBindings();
 
 /**
- * Check all bindings of a given type to see if they match the params
- * @param mods modifier mask
- * @param detail either a KeyCode or a mouse button
- * @param bindingType
- * @param winInfo the relevant window
- * @param keyRepeat if the event was a key repeat
+ * Check bindings to see if they match the userEvent
+ * Bindings will be checked in order a binding that matches may cause all subsequent bindings to be skipped
+ * @param userEvent
+ * @param bindings list of bindings to check against
  * @return 1 if a binding was matched that had passThrough == false
  */
 bool checkBindings(const UserEvent& userEvent, const ArrayList<Binding*>& bindings = getDeviceBindings());
 
 
+/**
+ * @return the last event stored by setLastUserEvent()
+ */
 UserEvent& getLastUserEvent();
+/**
+ * Stores an event that can be retrieved by getLastUserEvent
+ *
+ * @param event
+ */
 void setLastUserEvent(const UserEvent& event);
 
+/**
+ * Binding::getWindowToActOn will return target if passed an event from this master
+ *
+ * @param master
+ * @param target the window future bindings will operate on
+ */
+void setTarget(Master* master, WindowID target);
+/**
+ * Sets the target for the active master
+ *
+ * @param target
+ */
+static inline void setActiveTarget(WindowID target) {
+    setTarget(getActiveMaster(), target);
+}
+/**
+ *
+ *
+ * @param master
+ *
+ * @return the set target of 0 if unset
+ */
+WindowID getTarget(Master* master = getActiveMaster()) ;
+/**
+ * Clears the target
+ *
+ * @param master
+ */
+static inline void clearTarget(Master* master = getActiveMaster()) {
+    setTarget(master, 0);
+}
 
 #endif

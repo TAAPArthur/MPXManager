@@ -21,7 +21,7 @@
 
 
 void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->hasMask(IMPLICIT_TYPE | INPUT_ONLY_MASK) ? unregisterWindow(winInfo) : 0;},
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->isImplictType() && winInfo->isInputOnly() ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
@@ -80,7 +80,7 @@ void addFocusFollowsMouseRule(AddFlag flag) {
 }
 void focusFollowMouse() {
     xcb_input_enter_event_t* event = (xcb_input_enter_event_t*)getLastEvent();
-    setActiveMasterByDeviceId(event->deviceid);
+    setActiveMasterByDeviceID(event->deviceid);
     WindowID win = event->event;
     WindowInfo* winInfo = getWindowInfo(win);
     LOG(LOG_LEVEL_DEBUG, "focus following mouse %d win %d\n", getActiveMaster()->getID(), win);
@@ -111,7 +111,7 @@ void addDieOnIdleRule(AddFlag flag) {
 void addShutdownOnIdleRule(AddFlag flag) {
     getEventRules(TrueIdle).add(DEFAULT_EVENT(requestShutdown), flag);
 }
-/* TODO comeback too
+
 void keepTransientsOnTop(WindowInfo* winInfo) {
     if(!winInfo->hasMask(ALWAYS_ON_TOP)) {
         int id = winInfo->getID();
@@ -121,7 +121,9 @@ void keepTransientsOnTop(WindowInfo* winInfo) {
         }
     }
 }
-*/
+void addKeepTransientsOnTopRule() {
+    getEventRules(onWindowMove).add(DEFAULT_EVENT(keepTransientsOnTop));
+}
 
 void autoFocus() {
     xcb_map_notify_event_t* event = (xcb_map_notify_event_t*)getLastEvent();
@@ -150,4 +152,11 @@ void addAlwaysOnTopBottomRules(AddFlag flag) {
 }
 void addScanChildrenRule(AddFlag flag) {
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(scan), flag);
+}
+static bool isNotRepeatedKey() {
+    xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
+    return !(event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT);
+}
+void addIgnoreKeyRepeat(AddFlag flag) {
+    getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey), flag);
 }

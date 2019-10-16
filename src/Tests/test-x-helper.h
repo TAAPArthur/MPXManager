@@ -139,7 +139,7 @@ static inline void cleanupXServer() {
         getEventRules(i).deleteElements();
         getBatchEventRules(i).deleteElements();
     }
-    clearAllLists();
+    destroyAllLists();
 }
 static inline void createXSimpleEnv(void) {
     openXDisplay();

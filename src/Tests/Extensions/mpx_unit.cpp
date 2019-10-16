@@ -80,7 +80,7 @@ SET_ENV(mpxResume, fullCleanup);
 MPX_TEST("save_load", {
     startMPX();
     assertEquals(getAllMasters().size(), LEN(names) + 1);
-    assertEquals(getMasterById(DEFAULT_KEYBOARD)->getFocusColor(), defaultColor);
+    assertEquals(getMasterByID(DEFAULT_KEYBOARD)->getFocusColor(), defaultColor);
     for(int i = 0; i < LEN(names); i++) {
         Master* m = getMasterByName(names[i]);
         assert(m);
@@ -118,34 +118,34 @@ MPX_TEST("test_split_master", {
     int size = getAllMasters().size();
     int id = splitMaster();
     assert(id);
-    Master* newMaster = getMasterById(id);
+    Master* newMaster = getMasterByID(id);
     assert(size + 1 == getAllMasters().size());
     int numOfSlaves;
     ArrayList* slaves = getSlavesOfMasterByID(NULL, 0, &numOfSlaves);
     assert(numOfSlaves == 2);
     lock();
-    int keyboardId = 0, mouseId = 0;
+    int keyboardID = 0, mouseID = 0;
     void dummySlaveInput(Slave * device){
         int detail = 1, type = XCB_INPUT_BUTTON_PRESS;
         if(device->keyboard){
             type = XCB_INPUT_KEY_PRESS;
             detail = 100;
-            keyboardId = device->getID();
+            keyboardID = device->getID();
         }
-        else mouseId = device->getID();
+        else mouseID = device->getID();
         sendDeviceAction(device->getID(), detail, type);
     }
     for(Slave* slave : slaves) dummySlaveInput(slave);
     flush();
-    assert(keyboardId);
-    assert(mouseId);
-    Rule hackKeyboard = CREATE_WILDCARD(BIND(splitMasterHack, keyboardId), .passThrough = ALWAYS_PASSTHROUGH);
-    Rule hackMouse = CREATE_WILDCARD(BIND(splitMasterHack, mouseId), .passThrough = ALWAYS_PASSTHROUGH);
+    assert(keyboardID);
+    assert(mouseID);
+    Rule hackKeyboard = CREATE_WILDCARD(BIND(splitMasterHack, keyboardID), .passThrough = ALWAYS_PASSTHROUGH);
+    Rule hackMouse = CREATE_WILDCARD(BIND(splitMasterHack, mouseID), .passThrough = ALWAYS_PASSTHROUGH);
     prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS), &hackKeyboard);
     prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS), &hackMouse);
-    int idle = getIdleCount();
+    int idle = getIDleCount();
     unlock();
-    WAIT_UNTIL_TRUE(getIdleCount() > idle);
+    WAIT_UNTIL_TRUE(getIDleCount() > idle);
     ArrayList* newSlaves = getSlavesOfMaster(newMaster);
     assert(listsEqual(newSlaves, slaves));
     deleteList(newSlaves);
@@ -174,8 +174,8 @@ MPX_TEST_ITER("test_save_load_mpx", 2, {
     int masterFocusColor = 255;
     int activeMasterFocusColor = 256;
     int numOfSlaves;
-    MasterID defaultMasterID = _i ? getActiveMaster()->getID() : getActiveMaster()->pointerId;
-    MasterID newMasterID = _i ? master->getID() : master->pointerId;
+    MasterID defaultMasterID = _i ? getActiveMaster()->getID() : getActiveMaster()->pointerID;
+    MasterID newMasterID = _i ? master->getID() : master->pointerID;
     int idle;
     master->focusColor = masterFocusColor;
     getActiveMaster()->focusColor = activeMasterFocusColor;
@@ -186,9 +186,9 @@ MPX_TEST_ITER("test_save_load_mpx", 2, {
     deleteList(slaves);
     free(slaves);
     flush();
-    idle = getIdleCount();
+    idle = getIDleCount();
     unlock();
-    WAIT_UNTIL_TRUE(idle != getIdleCount());
+    WAIT_UNTIL_TRUE(idle != getIDleCount());
     lock();
     slaves = getSlavesOfMaster(getActiveMaster());
     assert(size(slaves) == 1);

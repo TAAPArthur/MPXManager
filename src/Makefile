@@ -196,6 +196,6 @@ prof: mpxmanager-profile
 
 clean:
 	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.a *.o libmpxmanager*.so mpxmanager-profile mpxmanager-speed-test
-	find . -name '*.orig' -exec rm {} \;
+	find . \( -name "*.orig" -o -name "*.gc??" -o -name "*.o" \) -exec rm {} \;
 	find . -name '*.o' -exec rm -f {} \;
 	find . -name '*.out' -exec rm {} \;

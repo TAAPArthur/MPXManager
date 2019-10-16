@@ -1,8 +1,3 @@
-/**
- * @file monitors.c
- * @copybrief monitors.h
- */
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -82,9 +77,7 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     return changed;
 }
 void addRootMonitor() {
-    Monitor* rootMonitor = new Monitor(1, {0, 0, getRootWidth(), getRootHeight()}, 0);
-    if(!getAllMonitors().addUnique(rootMonitor))
-        delete rootMonitor;
+    getAllMonitors().add(new Monitor(1, {0, 0, getRootWidth(), getRootHeight()}, 0), ADD_UNIQUE);
 }
 void removeDuplicateMonitors(void) {
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION) {

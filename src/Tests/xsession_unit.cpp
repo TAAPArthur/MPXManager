@@ -43,15 +43,22 @@ MPX_TEST("get_set_atom", {
     buffer[LEN(buffer) - 1] = 0;
     xcb_atom_t test = getAtom(buffer);
     assert(test == getAtom(buffer));
-    std::string str = getAtomValue(test);
+    std::string str = getAtomName(test);
     assert(str == buffer);
 });
 
 MPX_TEST("get_set_atom_bad", {
     assert(getAtom(NULL) == XCB_ATOM_NONE);
-    std::string str = getAtomValue(-1);
+    std::string str = getAtomName(-1);
     assert(str == "");
 });
+
+MPX_TEST("get_max_devices", {
+    int maxMasters = getMaxNumberOfMasterDevices();
+    assert(maxMasters);
+    assert(maxMasters * 4 <= getMaxNumberOfDevices());
+});
+
 MPX_TEST("reopen_display", {
     closeConnection();
     openXDisplay();
@@ -216,11 +223,10 @@ MPX_TEST("test_regular_events", {
 MPX_TEST("test_event_spam", {
     addDefaultMaster();
     grabPointer();
-    BoundFunction b = DEFAULT_EVENT(requestShutdown);
     EVENT_PERIOD = 5;
     POLL_COUNT = 10;
     POLL_INTERVAL = 1;
-    getEventRules(Periodic).add(b);
+    getEventRules(Periodic).add(DEFAULT_EVENT(requestShutdown));
     getEventRules(Idle).add(DEFAULT_EVENT(exitFailure));
     startWM();
     while(!isShuttingDown()) {

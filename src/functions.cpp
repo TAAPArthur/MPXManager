@@ -79,7 +79,8 @@ static ArrayList<WindowID>* getWindowCache(Master* m) {
     return get(key, m);
 }
 
-WindowInfo* findWindow(const BoundFunction& rule, ArrayList<WindowInfo*>& searchList, ArrayList<WindowID>* ignoreList) {
+WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& searchList,
+    ArrayList<WindowID>* ignoreList) {
     for(WindowInfo* winInfo : searchList)
         if((!ignoreList || !ignoreList->find(winInfo->getID())) && winInfo->isMappable() && rule(winInfo))
             return winInfo;

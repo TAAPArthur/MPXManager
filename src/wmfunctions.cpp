@@ -1,9 +1,3 @@
-/**
- * @file wmfunctions.c
- * @brief wmfunctions.h
- *
- */
-
 #include <assert.h>
 #include <string.h>
 #include <strings.h>
@@ -58,7 +52,7 @@ bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_rep
         if(attr->override_redirect)
             winInfo->markAsOverrideRedirect();
         if(attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY)
-            winInfo->addMask(INPUT_ONLY_MASK);
+            winInfo->markAsInputOnly();
         if(attr->map_state)
             winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
         if(freeAttr)
@@ -109,12 +103,12 @@ void scan(xcb_window_t baseWindow) {
 }
 
 static bool focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo) {
-    auto filter = [](WindowInfo * winInfo) {return winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo);};
-    if(!master->getMostRecentlyFocusedWindow(filter)) {
-        focusWindow(defaultWinInfo);
-        return 0;
-    }
-    return 1;
+    for(WindowInfo* winInfo : master->getWindowStack()) {
+        if(winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo))
+            return 1;
+    };
+    focusWindow(defaultWinInfo);
+    return 0;
 }
 
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
@@ -129,7 +123,9 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
         if(master->getFocusedWindow() == winInfo)
             mastersFocusedOnWindow.add(master);
     applyEventRules(UnregisteringWindow, winInfo);
-    bool result = removeWindow(winToRemove);
+    bool result = getAllWindows().removeElement(winInfo) ? 1 : 0;
+    if(winInfo)
+        delete winInfo;
     ArrayList<WindowInfo*>& windowStack = getActiveMaster()->getWorkspace()->getWindowStack();
     WindowInfo* defaultWinInfo = windowStack.empty() ? NULL : windowStack[0];
     if(defaultWinInfo)
@@ -206,8 +202,6 @@ int attemptToMapWindow(WindowID id) {
     return -1;
 }
 
-// TODO xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), destIndex);
-// TODO trigger this on window move
 void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
     Workspace* w = winInfo->getWorkspace();
     assert(w);
@@ -262,25 +256,6 @@ void switchToWorkspace(int workspaceIndex) {
     getActiveMaster()->setWorkspaceIndex(workspaceIndex);
 }
 
-/* TODO delete
-void moveWindowToWorkspace(WindowInfo* winInfo, int destIndex){
-    assert(destIndex == -1 || destIndex >= 0 && destIndex < getNumberOfWorkspaces());
-    assert(winInfo);
-    if(destIndex == -1){
-        winInfo->addMask(STICKY_MASK);
-        destIndex = getActiveMaster()->getWorkspaceIndex();
-    }
-    winInfo->removeFromWorkspace();
-    winInfo->addToWorkspace(destIndex);
-    updateWindowWorkspaceState(winInfo, destIndex, NO_WORKSPACE, 1);
-    xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), destIndex);
-    LOG(LOG_LEVEL_TRACE, "window %d added to workspace %d\n", winInfo->getID(), destIndex);
-}
-*/
-
-
-
-
 WindowID activateWindow(WindowInfo* winInfo) {
     if(winInfo && raiseWindowInfo(winInfo) && winInfo->isActivatable()) {
         LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d\n", winInfo->getID(), winInfo->getWorkspaceIndex());
@@ -293,8 +268,6 @@ WindowID activateWindow(WindowInfo* winInfo) {
     }
     return 0;
 }
-
-
 
 
 void configureWindow(WindowID win, uint32_t mask, int values[7]) {

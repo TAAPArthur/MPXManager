@@ -36,6 +36,8 @@ int Test::runTest(int i) {
     pthread_t thread;
     int flag = 1;
     if(noFork || !(flag = fork())) {
+        if(!noFork)
+            signal(SIGINT, NULL);
         printf("%s:%d %s.%d \n", fileName, lineNumber, name, i);
         if(testSetup)
             testSetup();
@@ -77,7 +79,8 @@ int main(void) {
     for(Test* t : tests)
         if((!file || strcmp(file, t->fileName) == 0) &&
             (!func || strcmp(func, t->name) == 0) &&
-            (!startingFrom || strcmp(startingFrom, t->fileName) == 0 || passedCount || failedTests.size())
+            (!startingFrom || strcmp(startingFrom, t->fileName) == 0 || strcmp(startingFrom, t->name) == 0 || passedCount ||
+                failedTests.size())
         ) {
             for(int i = 0; i < t->end; i++)
                 if(!t->runTest(i)) {

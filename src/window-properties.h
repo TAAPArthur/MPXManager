@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Methods to load client supplied window info into our WindowInfo
+ */
 #ifndef MPX_WINDOW_PROPERTIES
 #define MPX_WINDOW_PROPERTIES
 #include <xcb/xcb.h>
@@ -11,15 +15,51 @@
 #include "ewmh.h"
 #include <string>
 
+/**
+ * Sets the win to be a transient for transientTo
+ *
+ * @param win
+ * @param transientTo
+ */
 void setWindowTransientFor(WindowID win, WindowID transientTo);
+/**
+ * Sets the ICCC class and instance (resource) for the window
+ *
+ * @param win
+ * @param className
+ * @param instanceName
+ */
 void setWindowClass(WindowID win, std::string className, std::string instanceName);
+/**
+ * Sets the window title
+ *
+ * @param win
+ * @param title
+ */
 void setWindowTitle(WindowID win, std::string title);
+/**
+ * Sets the window type in order of preference
+ *
+ * @param win
+ * @param atoms
+ * @param num
+ */
 void setWindowType(WindowID win, xcb_atom_t* atoms, int num);
+/**
+ * Sets a single window type
+ *
+ * @param win
+ * @param atom
+ */
 static inline void setWindowType(WindowID win, xcb_atom_t atom) {setWindowType(win, &atom, 1);}
 
 /**
  * Loads class and instance name for the given window
- * @param info
+ * @param win
+ * @param className
+ * @param instanceName
+ *
+ * @return 1 iff the class info was successfully loaded
  */
 bool loadClassInfo(WindowID win, std::string* className, std::string* instanceName);
 /**
@@ -32,23 +72,36 @@ bool loadClassInfo(WindowID win, std::string* className, std::string* instanceNa
 std::string getWindowTitle(WindowID win);
 /**
  * Loads title for a given window
- * @param winInfo
  */
 std::string loadTitleInfo();
 
 /**
  * Loads type name and atom value for a given window
+ * If the window type is not set, the type is set to _NET_WM_WINDOW_TYPE_DIALOG or _NET_WM_WINDOW_TYPE_NORMAL depending if the window is transient or not
+ *
  * @param winInfo
- * @return 1 if the caller should continue as normal
+ * @return 1 the window type was set for the window
  */
-bool loadWindowType(WindowID win, bool transient, uint32_t* type, std::string* typeName);
+bool loadWindowType(WindowInfo* winInfo) ;
 /**
  * Load various window properties
  * This should be called when a window is requested to be mapped
  * @param winInfo
  */
-void loadWindowProperties(WindowInfo*);
+void loadWindowProperties(WindowInfo* winInfo);
+/**
+ * Loads normal hints
+ * Loads grouptID, input and window state for a given window
+ * @param winInfo
+ * @see loadWindowProperties
+ */
 void loadWindowHints(WindowInfo* winInfo);
+/**
+ * Loads the window title
+ *
+ * @param winInfo
+ * @see loadWindowProperties
+ */
 void loadWindowTitle(WindowInfo* winInfo) ;
 
 
@@ -90,6 +143,7 @@ void setWorkspaceNames(char* names[], int numberOfNames);
 /**
  * Focuses the given window
  * @param win   the window to focus
+ * @param master the master who gets the focus
  * @return 1 iff no error was detected
  */
 int focusWindow(WindowID win, Master* master = getActiveMaster());
@@ -100,8 +154,26 @@ int focusWindow(WindowID win, Master* master = getActiveMaster());
  */
 int focusWindow(WindowInfo* winInfo, Master* master = getActiveMaster());
 
+/**
+ * Returns the cached window size hints
+ *
+ * These are cached on calls to load properties
+ *
+ * @param winInfo
+ *
+ * @return
+ */
 xcb_size_hints_t* getWindowSizeHints(WindowInfo* winInfo);
+
+/**
+ * @param id
+ * @return the live window geometry
+ */
 RectWithBorder getRealGeometry(WindowID id) ;
+/**
+ * @param winInfo
+ * @return the live window geometry
+ */
 static inline RectWithBorder getRealGeometry(WindowInfo* winInfo) {
     return getRealGeometry(winInfo->getID());
 }
