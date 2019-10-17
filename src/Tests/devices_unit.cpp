@@ -23,13 +23,14 @@ MPX_TEST("test_init_current_masters", {
     assertEquals(getAllMasters().size(), 1);
 
 });
-MPX_TEST("test_create_destroy_master", {
+MPX_TEST_ITER("test_create_destroy_master", 2, {
+    int size = _i ? getMaxNumberOfMasterDevices() : 2;
     initCurrentMasters();
     int numSlaves = getAllSlaves().size();
-    createMasterDevice("test");
-    flush();
+    for(int i = getAllMasters().size(); i < size; i++)
+        createMasterDevice("test");
     initCurrentMasters();
-    assertEquals(getAllMasters().size(), 2);
+    assertEquals(getAllMasters().size(), size);
     destroyAllNonDefaultMasters();
     initCurrentMasters();
     assertEquals(getAllMasters().size(), 1);

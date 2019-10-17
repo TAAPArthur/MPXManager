@@ -222,4 +222,8 @@ void setLastEvent(void* event);
 void* getLastEvent(void);
 WindowMasks getMaskFromAtom(xcb_atom_t atom) ;
 int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) ;
+
+
+uint32_t getMaxNumberOfMasterDevices(bool force = 0);
+uint32_t getMaxNumberOfDevices(bool force);
 #endif /* XSESSION_H_ */

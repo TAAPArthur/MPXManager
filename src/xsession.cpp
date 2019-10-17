@@ -40,7 +40,26 @@ xcb_atom_t WM_WORKSPACE_WINDOWS;
 xcb_atom_t WM_MASTER_WINDOWS;
 xcb_atom_t WM_ACTIVE_MASTER;
 xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
+xcb_atom_t MAX_DEVICES;
 
+
+int maxNumDevices;
+uint32_t getMaxNumberOfMasterDevices(bool force) {
+    return (getMaxNumberOfDevices(force) - 2) / 4;
+}
+uint32_t getMaxNumberOfDevices(bool force) {
+    if(force || maxNumDevices == 0) {
+        xcb_get_property_cookie_t cookie;
+        xcb_get_property_reply_t* reply;
+        LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
+        cookie = xcb_get_property(dis, 0, root, MAX_DEVICES, XCB_ATOM_INTEGER, 0, sizeof(int));
+        if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply)) {
+            maxNumDevices = *(int*)xcb_get_property_value(reply);
+            free(reply);
+        }
+    }
+    return maxNumDevices;
+}
 xcb_gcontext_t graphics_context;
 typedef xcb_window_t WindowID;
 Display* dpy;
@@ -208,6 +227,7 @@ void openXDisplay(void) {
     _CREATE_ATOM(WM_WORKSPACE_WINDOWS);
     _CREATE_ATOM(WM_MASTER_WINDOWS);
     _CREATE_ATOM(WM_ACTIVE_MASTER);
+    _CREATE_ATOM(MAX_DEVICES);
     char selectionName[8];
     sprintf(selectionName, "WM_S%d", '0' + defaultScreenNumber);
     xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(dis,

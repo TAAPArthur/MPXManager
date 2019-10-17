@@ -99,6 +99,14 @@ MPX_TEST("click_to_focus", {
         assertEquals(getFocusedWindow()->getID(), win);
     }
 });
+
+MPX_TEST("detect_many_masters", {
+    for(int i = getAllMasters().size(); i < getMaxNumberOfMasterDevices(); i++)
+        createMasterDevice("test");
+    waitUntilIdle();
+    assertEquals(getAllMasters().size(), getMaxNumberOfMasterDevices());
+});
+
 static void multiMonitorSetup() {
     MONITOR_DUPLICATION_POLICY = 0;
     setup();
