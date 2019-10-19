@@ -96,17 +96,13 @@ libmpxmanager.so: $(BASE_SRCS:.cpp=.o)
 libmpxmanager.a: $(BASE_SRCS:.cpp=.o)
 	ar rcs libmpxmanager.a $^
 
-
 libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} -fPIC -shared -o $@ $^ ${CPPFLAGS} ${LDFLAGS}
 
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-config.cpp:
-	cp --no-clobber sample-config.cpp config.cpp
-
-test: libmpx-test.so correctness.out arg_test.out functional.out preinstall code_coverage.out format
+test: libmpx-test.so code_coverage.out correctness.out arg_test.out functional.out preinstall format doc-check
 
 T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
 TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))
@@ -132,17 +128,14 @@ correctness.out: unitTest
 	touch $@
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 
-arraylist.h_code_coverage.out: arraylist.h
-	touch $@
-
-%_code_coverage.out: % | unitTest
+%_code_coverage.out: %.cpp | unitTest
 	rm -f $@ *gcda
 	TEST_FILE=$(patsubst %.o,%.cpp, $(call TEST_FILES, $<)) $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
 	[ -s  $$(basename -a $<).gcov ]
 	[ ! -s  $@ ]
 
 
-code_coverage.out: unitTest $(patsubst %,%_code_coverage.out,${TEST_SRCS})
+code_coverage.out: unitTest $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
 
 
 arg_test.out: CPPFLAGS := ${TESTFLAGS}

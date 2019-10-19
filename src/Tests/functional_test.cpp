@@ -1,5 +1,3 @@
-
-
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XI.h>
 #include <X11/keysym.h>
