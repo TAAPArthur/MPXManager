@@ -1,8 +1,3 @@
-/**
- * @file Extensions/mpx.cpp
- * @copydoc mpx.h
- */
-
 #include <assert.h>
 #include <string.h>
 

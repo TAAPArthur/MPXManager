@@ -1,7 +1,3 @@
-/**
- * @file session.c
- * @brief Save/load MPXManager state
- */
 #include <limits.h>
 #include <assert.h>
 #include <string.h>

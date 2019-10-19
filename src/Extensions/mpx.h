@@ -55,8 +55,6 @@ int splitMaster(void);
 void endSplitMaster(void);
 
 /**
- * @copybrief getMasterNameForSlave
- *
  * @param slaveName
  *
  * @return the master or NULL

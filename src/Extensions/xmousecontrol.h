@@ -14,11 +14,13 @@
 #endif
 #if XMOUSE_CONTROL_EXT_ENABLED
 
+/// @{ Extra mouse button macros
 #define SCROLL_UP    4
 #define SCROLL_DOWN  5
 #define SCROLL_LEFT  6
 #define SCROLL_RIGHT 7
-/// Masks that dictate how the mouse will be controlled every update
+/// @}
+/// @{ Masks that dictate how the mouse will be controlled every update
 #define    MOVE_UP_MASK (1 << 0)
 #define    MOVE_DOWN_MASK (1 << 1)
 #define    MOVE_LEFT_MASK (1 << 2)
@@ -27,6 +29,7 @@
 #define    SCROLL_DOWN_MASK (1 << 5)
 #define    SCROLL_LEFT_MASK (1 << 6)
 #define    SCROLL_RIGHT_MASK (1 << 7)
+/// @}
 
 /**
  * How frequently move/scroll masks are applied
@@ -41,6 +44,9 @@ extern unsigned int BASE_MOUSE_SPEED;
  * How many times the 'scroll button' is pressed ever update
  */
 extern unsigned int BASE_SCROLL_SPEED;
+/**
+ * Starts the extension on XConnection
+ */
 void addStartXMouseControlRule();
 
 /**
@@ -53,8 +59,12 @@ void addStartXMouseControlRule();
 void* runXMouseControl(void* c __attribute__((unused)));
 /**
  * Add rules/bindings to get the XMousecontrol experience
+ * @param mask the default mask of the bindings
  */
 void addDefaultXMouseControlBindings(unsigned int mask = Mod3Mask);
+/**
+ * Resets the current master
+ */
 void resetXMouseControl();
 /**
  * Removes a masks

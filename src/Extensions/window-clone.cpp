@@ -1,8 +1,3 @@
-/**
- * @file window-clone.c
- * @copybrief window-clone.h
- *
- */
 #include <assert.h>
 #include <string.h>
 

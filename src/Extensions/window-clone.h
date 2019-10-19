@@ -11,33 +11,50 @@
 
 #include "../mywm-structs.h"
 
-struct CloneInfo;
+/// Holds meta data mapping a clone to its parent
+struct CloneInfo {
+    /// ID of the clone window
+    WindowID clone;
+    /// ID of the original window
+    WindowID original;
+    ///x,y offset for cloned windows; they will clone the original starting at this offset
+    int offset[2];
+};
 /**
  * Creates a new window and immediate processes.
  *
  * This method sets everything up for the returned window to be treated as a clone and also grabs the needed events in case any auto updated in needed
  *
  * @param winInfo
+ * @param parent the new parent. If 0, it will have the same parent as winInfo
  *
  * @return a clone of winInfo
  */
 WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent = 0);
 
+/**
+ * 
+ *
+ * @param winInfo
+ * @param createNew
+ *
+ * @return a list of clones for the given window or null
+ */
 ArrayList<WindowID>* getClonesOfWindow(WindowInfo* winInfo, bool createNew = 0);
+/**
+ * 
+ *
+ * @param winInfo a window clone
+ * @param createNew
+ *
+ * @return information about the clone
+ */
 CloneInfo* getCloneInfo(WindowInfo* winInfo, bool createNew = 1);
-/// Holds meta data mapping a clone to its parent
-struct CloneInfo {
-    /// ID of the clone window
-    WindowID clone;
-    WindowID original;
-    ///x,y offset for cloned windows; they will clone the original starting at this offset
-    int offset[2];
-};
 
 /**
  * Updates the displayed image for all cloned windows
  *
- * @param win
+ * @param winInfo
  */
 void updateAllClonesOfWindow(WindowInfo* winInfo);
 /**
