@@ -34,6 +34,7 @@ int _main(int argc, char* const* argv) ;
 
 static const char* const args[] = {"" __FILE__, "--no-event-loop"};
 static void setup() {
+    addDieOnIntegratyCheckFailRule();
     _main(2, (char* const*)args);
     startWM();
     waitUntilIdle();
@@ -191,5 +192,4 @@ MPX_TEST_ITER("move_window", 2, {
     movePointerRelative(1, 1);
     waitUntilIdle(1);
     assertEquals(rect, getRealGeometry(win));
-})
-;
+});

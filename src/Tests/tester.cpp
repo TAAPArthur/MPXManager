@@ -64,6 +64,18 @@ struct FailedTest {Test* t; int index;};
 const char* Env::file = "";
 std::vector<Test*>tests;
 std::vector<FailedTest>failedTests;
+size_t passedCount = 0;
+int exitCode;
+void printResults(int signal = 0) {
+    printf("Passed %ld/%ld tests\n", passedCount, passedCount + failedTests.size());
+    for(FailedTest& test : failedTests)
+        test.t->printSummary(test.index);
+    assert(tests.size());
+    exitCode = signal ? signal : passedCount && failedTests.empty() ? 0 : 1;
+    printf("....................%d\n", exitCode);
+    if(signal)
+        exit(exitCode);
+}
 int main(void) {
     char* startingFrom = getenv("STARTING_FROM");
     char* file = getenv("TEST_FILE");
@@ -75,7 +87,7 @@ int main(void) {
     uint32_t maxFails = failStr ? std::stoi(failStr) : -1;
     setLogLevel(LOG_LEVEL_ERROR);
     CRASH_ON_ERRORS = -1;
-    size_t passedCount = 0;
+    signal(SIGINT, printResults);
     for(Test* t : tests)
         if((!file || strcmp(file, t->fileName) == 0) &&
             (!func || strcmp(func, t->name) == 0) &&
@@ -94,11 +106,6 @@ int main(void) {
             if(failedTests.size() >= maxFails)
                 break;
         }
-    printf("Passed %ld/%ld tests\n", passedCount, passedCount + failedTests.size());
-    for(FailedTest& test : failedTests)
-        test.t->printSummary(test.index);
-    assert(tests.size());
-    int exitCode = passedCount && failedTests.empty() ? 0 : 1;
-    printf("....................%d\n", exitCode);
+    printResults();
     return exitCode;
 }
