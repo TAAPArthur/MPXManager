@@ -50,6 +50,15 @@ MPX_TEST("auto_window_map", {
     assert(winInfo->getWorkspace());
     assert(winInfo->hasMask(MAPPED_MASK));
 });
+MPX_TEST("auto_focus", {
+    lock();
+    WindowID win = mapArbitraryWindow();
+    unlock();
+    waitUntilIdle();
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(winInfo);
+    assertEquals(getFocusedWindow(), winInfo);
+});
 MPX_TEST("test_dock_detection", {
     lock();
     WindowID win = createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
@@ -118,7 +127,7 @@ static void multiMonitorSetup() {
     getActiveMaster()->setWorkspaceIndex(3);
     unlock();
     for(int i = 0; i < 10; i++)
-        createNormalWindow();
+        mapArbitraryWindow();
     waitUntilIdle();
 }
 SET_ENV(multiMonitorSetup, fullCleanup);
@@ -130,8 +139,13 @@ MPX_TEST("switchWorkspace", {
     for(Workspace* w : getAllWorkspaces())
         count += w->isVisible();
     assertEquals(getAllMonitors().size(), count);
-    for(Workspace* w : getAllWorkspaces())
-        switchToWorkspace(w->getID());
+    assert(getActiveWorkspace()->getWindowStack().size());
+    assert(getActiveMaster()->getWindowStack().size());
+    for(int i = 0; i < 2; i++)
+        for(Workspace* w : getAllWorkspaces()) {
+            switchToWorkspace(w->getID());
+            waitUntilIdle(1);
+        }
     clearFakeMonitors();
 });
 static void bindingsSetup() {

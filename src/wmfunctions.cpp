@@ -102,12 +102,13 @@ void scan(xcb_window_t baseWindow) {
     }
 }
 
-static bool focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo) {
+static bool focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo = NULL) {
     for(WindowInfo* winInfo : master->getWindowStack()) {
         if(winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo))
             return 1;
     };
-    focusWindow(defaultWinInfo);
+    if(defaultWinInfo)
+        focusWindow(defaultWinInfo);
     return 0;
 }
 
@@ -226,7 +227,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
         if(updateFocus) {
             for(Master* master : getAllMasters()) {
                 if(master->getFocusedWindow() == winInfo)
-                    if(focusNextVisibleWindow(master, NULL))
+                    if(focusNextVisibleWindow(master))
                         LOG(LOG_LEVEL_DEBUG, "Could not find window to update focus to\n");
             }
         }
