@@ -1,8 +1,3 @@
-/**
- * @file functions.c
- * @copybrief functions.h
- */
-
 #include <assert.h>
 
 #include "bindings.h"
