@@ -34,22 +34,17 @@ MPX_TEST("getLastUserEvent", {
     assertEquals(e.mod, e2.mod);
 });
 
-/*
 MPX_TEST("test_binding_mode_match", {
-    getActiveMaster()->setCurrentMode(NORMAL_MODE);
-    Binding binding = {WILDCARD_MODIFIER, 0, {.mask = -1}};
-    UserEvent nullEvent = {0, 0, 0, false, NULL, NULL};
-    assert(!binding.matches(nullEvent));
-    assert(!binding.matches(nullEvent));
-    binding.mode = NORMAL_MODE;
+    getActiveMaster()->setCurrentMode(0);
+    Binding binding = {WILDCARD_MODIFIER, 0,{}, {.mode = 0}};
+    Binding bindingWrongMode = {WILDCARD_MODIFIER, 0,{}, {.mode = 1}};
+    Binding bindingWildcard = {WILDCARD_MODIFIER, 0,{}, {.mode = ANY_MODE}};
+    UserEvent nullEvent = {0};
     assert(binding.matches(nullEvent));
-    assert(binding.matches(nullEvent));
-    binding.mode = 0;
-    assert(!binding.matches(nullEvent));
-    getActiveMaster()->setCurrentMode(ALL_MODES);
-    assert(binding.matches(nullEvent));
+    assert(!bindingWrongMode.matches(nullEvent));
+    assert(bindingWildcard.matches(nullEvent));
 });
-*/
+
 MPX_TEST_ITER("check_bindings", LEN_PASSTHROUGH, {
     PassThrough passThrough = (PassThrough) _i;
     static int count = 0;

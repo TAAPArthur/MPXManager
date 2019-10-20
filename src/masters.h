@@ -13,6 +13,9 @@
 #include <string.h>
 #include <string>
 
+/// will match any mode
+#define ANY_MODE ((uint32_t)-1)
+
 /**
  *
  * @return a list of all master devices

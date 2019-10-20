@@ -132,22 +132,20 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, XK_q, saveCustomState, {.passThrough = ALWAYS_PASSTHROUGH}},
         {DEFAULT_MOD_MASK, XK_q, +[]() {if(waitForChild(spawn("mpxmanager --recompile -g")) == 0)restart();}},
 
-        /* TODO fix modes
-        {DEFAULT_MOD_MASK, XK_F1, [](){getActiveMaster()->setCurrentMode(0);}, .mode = ANY_MODE},
-        {DEFAULT_MOD_MASK, XK_F2, [](){getActiveMaster()->setCurrentMode(1);}, .mode = ANY_MODE},
-        {DEFAULT_MOD_MASK, XK_F3, [](){getActiveMaster()->setCurrentMode(2);}, .mode = ANY_MODE},
-        {DEFAULT_MOD_MASK, XK_F4, [](){getActiveMaster()->setCurrentMode(3);}, .mode = ANY_MODE},
+        {DEFAULT_MOD_MASK, XK_F1, +[](){getActiveMaster()->setCurrentMode(0);}, {.mode = ANY_MODE}},
+        {DEFAULT_MOD_MASK, XK_F2, +[](){getActiveMaster()->setCurrentMode(1);}, {.mode = ANY_MODE}},
+        {DEFAULT_MOD_MASK, XK_F3, +[](){getActiveMaster()->setCurrentMode(2);}, {.mode = ANY_MODE}},
+        {DEFAULT_MOD_MASK, XK_F4, +[](){getActiveMaster()->setCurrentMode(3);}, {.mode = ANY_MODE}},
 
-        {DEFAULT_MOD_MASK, XK_r, [](){if(getActiveLayout())getActiveLayout()->restoreArgs();}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK, XK_p, [](){increaseLayoutArg(LAYOUT_PADDING, 10);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK | ShiftMask, XK_p, [](){increaseLayoutArg(LAYOUT_PADDING, -10);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK, XK_b, [](){increaseLayoutArg(LAYOUT_NO_BORDER, 1);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK, XK_d, [](){increaseLayoutArg(LAYOUT_DIM, 1);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK, XK_t, [](){increaseLayoutArg(LAYOUT_TRANSFORM, 1);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK | ShiftMask, XK_t, [](){increaseLayoutArg(LAYOUT_TRANSFORM, -1);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK, XK_a, [](){increaseLayoutArg(LAYOUT_ARG, 1);}, .mode = LAYOUT_MODE},
-        {DEFAULT_MOD_MASK | ShiftMask, XK_a, [](){increaseLayoutArg(LAYOUT_ARG, -1);}, .mode = LAYOUT_MODE},
-        */
+        {DEFAULT_MOD_MASK, XK_r, +[](){if(getActiveLayout())getActiveLayout()->restoreArgs();}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK, XK_p, +[](){increaseLayoutArg(LAYOUT_PADDING, 10);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_p, +[](){increaseLayoutArg(LAYOUT_PADDING, -10);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK, XK_b, +[](){increaseLayoutArg(LAYOUT_NO_BORDER, 1);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK, XK_d, +[](){increaseLayoutArg(LAYOUT_DIM, 1);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK, XK_t, +[](){increaseLayoutArg(LAYOUT_TRANSFORM, 1);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_t, +[](){increaseLayoutArg(LAYOUT_TRANSFORM, -1);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK, XK_a, +[](){increaseLayoutArg(LAYOUT_ARG, 1);}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_a, +[](){increaseLayoutArg(LAYOUT_ARG, -1);}, {.mode = LAYOUT_MODE}},
     };
     for(Binding& binding : DEFAULT_BINDINGS)
         getDeviceBindings().add(binding);

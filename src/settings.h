@@ -7,6 +7,8 @@
 #ifndef MPX_SETTINGS_H_
 #define MPX_SETTINGS_H_
 
+#define LAYOUT_MODE 1
+
 extern void (*startupMethod)();
 void onStartup(void);
 
