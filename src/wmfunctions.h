@@ -53,6 +53,15 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
  * @return the result of PostRegisterWindow or 0 if it was never called
  */
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr = NULL);
+/**
+ * Used to register a window when more information is know that just the window id and parent
+ *
+ * @param winInfo
+ * @param attr
+ *
+ * @return
+ */
+bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr = NULL);
 
 /**
  * Queries the XServer for all direct children of baseWindow

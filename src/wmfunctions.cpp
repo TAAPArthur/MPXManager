@@ -43,11 +43,13 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr) {
     assert(!getAllWindows().find(win) && "Window registered exists");
     LOG(LOG_LEVEL_TRACE, "processing %d (%x)\n", win, win);
-    WindowInfo* winInfo = new WindowInfo(win, parent);
+    return registerWindow(new WindowInfo(win, parent), attr);
+}
+bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr) {
     bool freeAttr = !attr;
     bool newlyCreated = !attr;
     if(!attr)
-        attr = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, win), NULL);
+        attr = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, winInfo->getID()), NULL);
     if(attr) {
         if(attr->override_redirect)
             winInfo->markAsOverrideRedirect();
@@ -59,7 +61,7 @@ bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_rep
             free(attr);
     }
     else {
-        LOG(LOG_LEVEL_DEBUG, "Could not load attributes %d \n", win);
+        LOG(LOG_LEVEL_DEBUG, "Could not load attributes %d \n", winInfo->getID());
         delete winInfo;
         return 0;
     }

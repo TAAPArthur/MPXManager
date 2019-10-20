@@ -33,7 +33,7 @@ struct CloneInfo {
 WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent = 0);
 
 /**
- * 
+ *
  *
  * @param winInfo
  * @param createNew
@@ -42,7 +42,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent = 0);
  */
 ArrayList<WindowID>* getClonesOfWindow(WindowInfo* winInfo, bool createNew = 0);
 /**
- * 
+ *
  *
  * @param winInfo a window clone
  * @param createNew

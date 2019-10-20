@@ -14,6 +14,7 @@
 #include "../../Extensions/window-clone.h"
 #include "../../test-functions.h"
 #include "../../state.h"
+#include "../../extra-rules.h"
 #include "../tester.h"
 #include "../test-mpx-helper.h"
 #include "../test-event-helper.h"
@@ -29,6 +30,7 @@ static void setup() {
     CRASH_ON_ERRORS = -1;
     addCloneRules();
     addAutoTileRules();
+    addEWMHRules();
     onStartup();
     switchToWorkspace(0);
     setActiveLayout(GRID);
@@ -40,6 +42,7 @@ static void setup() {
     startWM();
     waitUntilIdle();
     ATOMIC(cloneInfo = cloneWindow(winInfo));
+    assert(cloneInfo->getWorkspace());
     waitUntilIdle();
 }
 SET_ENV(setup, fullCleanup);
@@ -81,14 +84,59 @@ MPX_TEST_ITER("test_simple_kill_clone", 2, {
     updateAllClones();
 });
 
+MPX_TEST_ITER("clone_special_windows", 3, {
+    addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
+
+    WindowID overrideRedirectWindow = createIgnoredWindow();
+    WindowID inputOnly = createInputOnlyWindow();
+    waitUntilIdle();
+    lock();
+    if(_i == 1) {
+        addIgnoreOverrideRedirectWindowsRule();
+        assert(cloneWindow(getWindowInfo(overrideRedirectWindow)) == NULL);
+    }
+    else if(_i == 2)
+        assert(cloneWindow(getWindowInfo(overrideRedirectWindow))->isOverrideRedirectWindow());
+    else
+        assert(cloneWindow(getWindowInfo(inputOnly))->isInputOnly());
+    unlock();
+});
 
 MPX_TEST("test_auto_update_clones", {
     startAutoUpdatingClones();
-    startAutoUpdatingClones();
-    startAutoUpdatingClones();
+    msleep(100);
+    // TODO actually test something
     requestShutdown();
     createNormalWindow();
     waitForAllThreadsToExit();
 });
 
 
+MPX_TEST("focus_clone", {
+    focusWindow(cloneInfo);
+    waitUntilIdle();
+    assertEquals(getFocusedWindow(), winInfo);
+});
+MPX_TEST("mouse_enter", {
+    movePointer(1, 1, getActiveMasterPointerID(), winInfo->getID());
+    movePointer(1, 1, getActiveMasterPointerID(), cloneInfo->getID());
+    waitUntilIdle();
+    short pos[2];
+    getMousePosition(pos);
+    Rect mouse = {pos[0], pos[1], 1, 1};
+    assert(getRealGeometry(winInfo).contains(mouse));
+    assert(!getRealGeometry(cloneInfo).contains(mouse));
+});
+MPX_TEST("swap_on_unmap", {
+    assertEquals(winInfo->getWorkspaceIndex(), 0);
+    winInfo->moveToWorkspace(1);
+    waitUntilIdle();
+    assertEquals(winInfo->getWorkspaceIndex(), 0);
+    assertEquals(cloneInfo->getWorkspaceIndex(), 1);
+    switchToWorkspace(1);
+    /// wake WM
+    createNormalWindow();
+    waitUntilIdle();
+    assertEquals(winInfo->getWorkspaceIndex(), 1);
+    assertEquals(cloneInfo->getWorkspaceIndex(), 0);
+});

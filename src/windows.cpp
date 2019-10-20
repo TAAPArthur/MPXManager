@@ -18,6 +18,8 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     stream << "{ WindowInfo: ID " << winInfo.getID() << (winInfo.isTileable() ? "*" : "") <<
         (!winInfo.isMappable() ? "?" : "");
     stream << " Parent: " << winInfo.getParent();
+    if(winInfo.getID() != winInfo.getEffectiveID())
+        stream << " EffectiveID: " << winInfo.getEffectiveID();
     if(winInfo.getGroup())
         stream << " Group: " << winInfo.getGroup();
     if(winInfo.getTransientFor())

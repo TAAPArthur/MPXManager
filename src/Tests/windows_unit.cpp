@@ -16,6 +16,13 @@ MPX_TEST("win_int", {
     WindowInfo winInfo = WindowInfo(1);
     assert((int)winInfo == 1);
 });
+MPX_TEST("test_constructor", {
+    WindowInfo* winInfo = new WindowInfo(1, 2, 3);
+    assertEquals(winInfo->getID(), 1);
+    assertEquals(winInfo->getParent(), 2);
+    assertEquals(winInfo->getEffectiveID(), 3);
+    addWindowInfo(winInfo);
+});
 MPX_TEST("test_mask_add_remove_toggle", {
     WindowInfo* winInfo = new WindowInfo(1);
     assert(winInfo->getMask() == 0);

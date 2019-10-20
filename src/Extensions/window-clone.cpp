@@ -58,19 +58,14 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     catchError(xcb_icccm_set_wm_hints_checked(dis, window, &hints));
     WindowInfo* clone = new WindowInfo(window, parent, winInfo->getID());
     syncPropertiesWithParent(clone, winInfo);
-    clone->addMask(winInfo->getMask());
-    if(winInfo->isInputOnly())
-        clone->markAsInputOnly();
-    if(winInfo->isOverrideRedirectWindow())
-        clone->markAsOverrideRedirect();
-    attemptToMapWindow(clone->getID());
+    clone->addMask(winInfo->getUserMask());
     clone->addEventMasks(NON_ROOT_EVENT_MASKS | XCB_EVENT_MASK_EXPOSURE);
-    if(!applyEventRules(PreRegisterWindow, clone)) {
-        delete clone;
+    if(winInfo->getWorkspace())
+        clone->moveToWorkspace(winInfo->getWorkspaceIndex());
+    if(winInfo->hasMask(MAPPED_MASK))
+        attemptToMapWindow(clone->getID());
+    if(!registerWindow(clone))
         return NULL;
-    }
-    getAllWindows().add(clone);
-    postRegisterWindow(clone, 0);
     passiveGrab(clone->getID(), NON_ROOT_DEVICE_EVENT_MASKS | XCB_INPUT_XI_EVENT_MASK_ENTER);
     getClonesOfWindow(winInfo, 1)->add(clone->getID());
     CloneInfo* cloneInfo = getCloneInfo(clone);
