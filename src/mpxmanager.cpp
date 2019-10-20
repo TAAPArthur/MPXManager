@@ -26,8 +26,12 @@
 #define assert(x)
 #endif
 
+/// if true, the event loop will be started else we wait for send confirmations and exit
 static bool RUN_EVENT_LOOP = 1;
 
+/**
+ * Clear properties so we won't conflict with running WM
+ */
 static void clearWMSettings(void) {
     ROOT_EVENT_MASKS = ROOT_DEVICE_EVENT_MASKS = NON_ROOT_EVENT_MASKS = NON_ROOT_DEVICE_EVENT_MASKS = 0;
     startupMethod = NULL;
@@ -38,6 +42,7 @@ struct Mode {
     void(*func)();
     bool runEventLoop = 1;
 };
+/// all enabled modes
 ArrayList<Mode>modes = {
 #if XMOUSE_CONTROL_EXT_ENABLED
     {"xmousecontrol", addStartXMouseControlRule},
@@ -58,11 +63,18 @@ ArrayList<Mode>modes = {
 
 #endif
 };
+/// list all defined modes
 static void listModes() {
     for(const Mode& mode : modes)
         std::cout << mode.name << " ";
     std::cout << "\n";
 }
+/**
+ * Calls the mode with name str.
+ * It is an error if str is not found
+ *
+ * @param str the name of a mode
+ */
 static void setMode(std::string str) {
     const char* c = str.c_str();
     clearWMSettings();
@@ -77,7 +89,14 @@ static void setMode(std::string str) {
     LOG(LOG_LEVEL_ERROR, "could not find mode '%s'\n", c);
     quit(1);
 }
+/// whether the send (0) or set(1) was last called
 static bool lastLocal = 0;
+/**
+ * Finds the option matching str and either calls in locally or sends it to a running instance
+ *
+ * @param str
+ * @param local
+ */
 static void _handleOption(std::string str, bool local) {
     int index = str.find('=');
     std::string name = str.substr(0, index);
@@ -95,9 +114,19 @@ static void _handleOption(std::string str, bool local) {
     }
     lastLocal = local;
 }
+/**
+ * Calls the option specified by str
+ *
+ * @param str of the form: name[=value]
+ */
 static void setOption(std::string str) {
     _handleOption(str, 1);
 }
+/**
+ * sends str to a running instance
+ *
+ * @param str of the form: name[=value]
+ */
 static void sendOption(std::string str) {
     if(!dpy) {
         openXDisplay();
@@ -106,10 +135,13 @@ static void sendOption(std::string str) {
     }
     _handleOption(str, 0);
 }
+/// sets the startup method to NULL
+/// used generally when this instance is short lived
 static void clearStartupMethod(void) {
     startupMethod = NULL;
 }
 
+/// list of startup options
 static UniqueArrayList<Option*> options = {
     {"mode", setMode},
     {"clear-startup-method", clearStartupMethod},

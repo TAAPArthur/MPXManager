@@ -1,6 +1,5 @@
 /**
- * @file settings.c
- * @copybrief settings.h
+ * @file
  */
 
 #include <stdlib.h>
@@ -10,7 +9,6 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 
-#include "Extensions/session.h"
 #include "chain.h"
 #include "communications.h"
 #include "ewmh.h"
@@ -28,7 +26,6 @@
 #include "wm-rules.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
-#include "workspaces.h"
 
 #define _startCycleWindowChainBinding(M,K) new Chain(M,K,{ \
             Binding{Mod1Mask, XK_Tab, {cycleWindows,DOWN}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsDown"}, \
@@ -38,6 +35,7 @@
             Binding {WILDCARD_MODIFIER, 0, {},{.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "absorbCycleWindows"},\
             },{},XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE,"cycleWindows")
 
+/// Add default chain bindings
 void addChainDefaultBindings() {
     Chain* DEFAULT_CHAIN_BINDINGS[] = {
         _startCycleWindowChainBinding(Mod1Mask, XK_Tab),
@@ -88,6 +86,7 @@ void addChainDefaultBindings() {
     {DEFAULT_MOD_MASK,             KEY_DOWN, +[](){swapPosition(DOWN);}}, \
     {DEFAULT_MOD_MASK,             KEY_LEFT, +[](){shiftFocus(UP);}}, \
     {DEFAULT_MOD_MASK,             KEY_RIGHT, +[](){shiftFocus(DOWN);}}
+/// add default bindings
 void addDefaultBindings() {
     Binding DEFAULT_BINDINGS[] = {
         WORKSPACE_OPERATION(XK_1, 0),
@@ -129,7 +128,7 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK | ShiftMask, XK_Return, +[]() {focusTop();}},
 
         {DEFAULT_MOD_MASK | ShiftMask, XK_q, requestShutdown},
-        {DEFAULT_MOD_MASK, XK_q, saveCustomState, {.passThrough = ALWAYS_PASSTHROUGH}},
+        //{DEFAULT_MOD_MASK, XK_q, saveCustomState, {.passThrough = ALWAYS_PASSTHROUGH}},
         {DEFAULT_MOD_MASK, XK_q, +[]() {if(waitForChild(spawn("mpxmanager --recompile -g")) == 0)restart();}},
 
         {DEFAULT_MOD_MASK, XK_F1, +[](){getActiveMaster()->setCurrentMode(0);}, {.mode = ANY_MODE}},

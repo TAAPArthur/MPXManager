@@ -7,9 +7,14 @@
 #ifndef MPX_SETTINGS_H_
 #define MPX_SETTINGS_H_
 
+/// Layout related keybindings
 #define LAYOUT_MODE 1
 
+/// User specified start up method to run before connection to X
 extern void (*startupMethod)();
+/**
+ * Loads default settings
+ */
 void onStartup(void);
 
 /**
