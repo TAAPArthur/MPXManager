@@ -1,4 +1,4 @@
-set -e
+set -ex
 
 ./mpxmanager-debug --set="CRASH_ON_ERRORS=1" --set="quit" &>/dev/null
 ./mpxmanager-debug --set="CRASH_ON_ERRORS=2" --set="quit" &>/dev/null
@@ -23,7 +23,7 @@ wait
 
 ./mpxmanager-debug --set=log-level=3 &>/dev/null &
 sleep 1s
-./mpxmanager-debug --send=restart
+./mpxmanager-debug --send=restart &>/dev/null
 sleep 1s
 ./mpxmanager-debug --send="quit" --set="quit" &>/dev/null
 wait
@@ -36,6 +36,8 @@ wait
 ./mpxmanager-debug --clear-startup-method  --enable-inter-client-communication --set=log-level=3 &>/dev/null &
 sleep 1s
 ./mpxmanager-debug --send="dump" 2>&1 | grep -iq "Dumping:"
+./mpxmanager-debug --dump 2>&1 | grep -iq "Dumping:"
+./mpxmanager-debug --dump=0 2>&1 | grep -iq "Dumping:"
 ./mpxmanager-debug --send="dump=0" 2>&1 | grep -iq "Dumping:"
 ./mpxmanager-debug --send="dump=test" 2>&1 | grep -iq "Dumping:"
 ./mpxmanager-debug --send="quit" --set="quit" &>/dev/null

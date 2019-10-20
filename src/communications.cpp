@@ -19,28 +19,10 @@
 #include "xsession.h"
 
 std::ostream& operator<<(std::ostream& strm, const Option& option) {
-    strm << option.name << " ";
-    switch(option.getType()) {
-        case VAR_STRING:
-            strm << "= '" << *(std::string*)option.getVar() << "'";
-            break;
-        case VAR_INT:
-            strm << "= " << *(int*)option.getVar() << "(int)";
-            break;
-        case VAR_BOOL:
-            strm << "= " << *(bool*)option.getVar() << " (bool)";
-            break;
-        case FUNC_VOID:
-            strm << "void";
-            break;
-        case FUNC_INT:
-            strm << "int";
-            break;
-        case FUNC_STRING:
-            strm << "string";
-            break;
-    }
-    return strm << " (Flags: " << option.flags << ")";
+    strm << option.name;
+    if(!option.isVoid())
+        strm << " = ";
+    return option.func->toString(strm) << " (Flags: " << option.flags << ")";
 }
 
 int isInt(std::string str, bool* isNumeric) {
@@ -55,51 +37,16 @@ int isInt(std::string str, bool* isNumeric) {
 }
 
 bool Option::matches(std::string str, bool empty, bool isNumeric) const {
-    switch(getType()) {
-        case VAR_BOOL:
-        case VAR_INT:
-        case FUNC_INT:
-            if(!isNumeric)
-                return 0;
-            break;
-        case FUNC_VOID:
-            if(!empty)
-                return 0;
-            break;
-        default:
-            if(empty)
-                return 0;
-            break;
-    }
-    return strcasecmp(name.c_str(), str.c_str()) == 0;
+    if(func->isVoid() == empty && func->isNumeric() == isNumeric)
+        return strcasecmp(name.c_str(), str.c_str()) == 0;
+    return 0;
 }
 void Option::operator()(std::string value)const {
     LOG(LOG_LEVEL_DEBUG, "calling option %s(%s)\n", name.c_str(), value.c_str());
-    int i = isInt(value, NULL);
-    LOG_RUN(LOG_LEVEL_TRACE, std::cout << "Before: " << *this << "\n");
-    switch(getType()) {
-        case VAR_STRING:
-            *(std::string*)getVar() = value;
-            break;
-        case VAR_INT:
-            *(int*)getVar() = i;
-            break;
-        case VAR_BOOL:
-            *(bool*)getVar() = (bool)i;
-            break;
-        case FUNC_INT:
-            ((void(*)(int))varFunc.var.func)(i);
-            break;
-        case FUNC_STRING:
-            ((void(*)(std::string))varFunc.var.func)(value);
-            break;
-        case FUNC_VOID:
-            varFunc.var.func();
-            break;
-    }
+    func->call(value);
     LOG_RUN(LOG_LEVEL_TRACE, std::cout << "After: " << *this << "\n");
 }
-#define _OPTION(VAR){#VAR,{&VAR}}
+#define _OPTION(VAR) Option(std::string(#VAR),&VAR)
 
 static UniqueArrayList<Option*> options = {
     {"dump", +[](WindowMask i) {dumpWindow(i);}, FORK_ON_RECEIVE},
@@ -169,11 +116,14 @@ void send(std::string name, std::string value) {
 }
 const Option* findOption(std::string name, std::string value) {
     bool isNumeric;
+    bool empty = value.empty();
     isInt(value, &isNumeric);
     for(const Option* option : getOptions()) {
-        if(option->matches(name, value.empty(), isNumeric))
+        if(option->matches(name, empty, isNumeric))
             return option;
     }
+    LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s' Empty %d numeric %d\n", name.c_str(), value.c_str(),
+        empty, isNumeric);
     return NULL;
 }
 

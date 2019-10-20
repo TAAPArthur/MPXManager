@@ -45,10 +45,10 @@ MPX_TEST("test_send_receive", {
         RUN_AS_WM = 0;
         saveXSession();
         setup();
-        send("POLL_COUNT", "0");
-        send("SHELL", "shell");
+        send("POLL_COUNT", "2");
         send("STEAL_WM_SELECTION", "1");
         send("KILL_TIMEOUT", "1000");
+        send("SHELL", "shell");
         send("CRASH_ON_ERRORS", "0");
         WAIT_UNTIL_TRUE(!hasOutStandingMessages());
         send("__bad__option__", "0");
@@ -58,11 +58,11 @@ MPX_TEST("test_send_receive", {
     }
     startWM();
     WAIT_UNTIL_TRUE(CRASH_ON_ERRORS == 0);
-    assert(POLL_COUNT == 0);
-    assert(SHELL == "shell");
-    assert(STEAL_WM_SELECTION == 1);
-    assert(KILL_TIMEOUT == 1000);
-    assert(waitForChild(0) == 0);
+    assertEquals(POLL_COUNT, 2);
+    assertEquals(STEAL_WM_SELECTION, 1);
+    assertEquals(KILL_TIMEOUT, 1000);
+    assertEquals(SHELL, "shell");
+    assertEquals(waitForChild(0), 0);
 });
 
 MPX_TEST("test_send_receive_func", {

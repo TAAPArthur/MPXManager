@@ -78,7 +78,7 @@ static void setMode(std::string str) {
     quit(1);
 }
 static bool lastLocal = 0;
-static void _handleOption(std::string str, bool local = lastLocal) {
+static void _handleOption(std::string str, bool local) {
     int index = str.find('=');
     std::string name = str.substr(0, index);
     std::string value = index == -1 ? "" : str.substr(index + 1);
@@ -135,7 +135,7 @@ static void parseArgs(int argc, char* const* argv, int exitOnUnknownOptions) {
         std::string str = argv[i];
         for(const Option* option : options) {
             if(str == ("--" + option->name))
-                if(option->getType() == FUNC_VOID)
+                if(option->isVoid())
                     option->call("");
                 else
                     option->call(argv[++i]);
@@ -153,7 +153,10 @@ static void parseArgs(int argc, char* const* argv, int exitOnUnknownOptions) {
             const char* c = argv[i];
             if(c[0] == '-' && c[1] == '-')
                 c += 2;
-            _handleOption(c);
+            if(lastLocal)
+                setOption(c);
+            else
+                sendOption(c);
         }
     }
 }
