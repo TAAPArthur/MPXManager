@@ -38,6 +38,8 @@ enum {
     UnregisteringWindow,
     /// called right after a window changes workspaces
     WindowWorkspaceMove,
+    /// called right after a monitor changes workspaces
+    MonitorWorkspaceChange,
     /// triggered when root screen is changed
     onScreenChange,
     ProcessDeviceEvent,

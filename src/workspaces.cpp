@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "boundfunction.h"
 #include "globals.h"
-#include "workspaces.h"
 #include "mywm-structs.h"
+#include "user-events.h"
 #include "windows.h"
+#include "workspaces.h"
 
 
 ///list of all workspaces
@@ -37,6 +39,7 @@ void removeAllWorkspaces() {
 
 void Workspace::setMonitor(Monitor* m) {
     monitor = m;
+    applyEventRules(MonitorWorkspaceChange, getWindowStack().empty() ? NULL : getWindowStack()[0]);
 };
 uint32_t getNumberOfWorkspaces() {
     return getAllWorkspaces().size();

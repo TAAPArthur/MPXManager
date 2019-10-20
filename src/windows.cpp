@@ -1,11 +1,11 @@
 #include <assert.h>
 
+#include "boundfunction.h"
 #include "ext.h"
 #include "masters.h"
+#include "user-events.h"
 #include "windows.h"
 #include "workspaces.h"
-#include "boundfunction.h"
-#include "user-events.h"
 
 
 ///list of all windows

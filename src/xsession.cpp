@@ -283,6 +283,7 @@ const char* eventTypeToString(int type) {
             _ADD_EVENT_TYPE_CASE(PreRegisterWindow);
             _ADD_EVENT_TYPE_CASE(PostRegisterWindow);
             _ADD_EVENT_TYPE_CASE(UnregisteringWindow);
+            _ADD_EVENT_TYPE_CASE(MonitorWorkspaceChange);
             _ADD_EVENT_TYPE_CASE(WindowWorkspaceMove);
             _ADD_EVENT_TYPE_CASE(onScreenChange);
             _ADD_EVENT_TYPE_CASE(ProcessDeviceEvent);

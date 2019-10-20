@@ -257,6 +257,7 @@ void addAutoTileRules(AddFlag flag) {
             XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
             XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
             XCB_CLIENT_MESSAGE,
+            WindowWorkspaceMove, MonitorWorkspaceChange,
             onScreenChange,
         };
     for(auto event : events)
