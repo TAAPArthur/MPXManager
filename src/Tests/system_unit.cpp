@@ -7,7 +7,6 @@
 #include "../arraylist.h"
 #include "../globals.h"
 #include "../logger.h"
-#include "../compatibility.h"
 
 #include "tester.h"
 #include "test-mpx-helper.h"
@@ -145,8 +144,9 @@ MPX_TEST("spawn_env", {
     if(!spawn(NULL)) {
         assert(getenv(DEFAULT_KEYBOARD_ENV_VAR_NAME));
         assert(getenv(DEFAULT_POINTER_ENV_VAR_NAME));
-        assert(std::string(getenv("LD_PRELOAD")) == LD_PRELOAD_PATH);
+        std::string(getenv("LD_PRELOAD")).rfind(LD_PRELOAD_PATH, 0);
     }
+    assertEquals(waitForChild(0), 0);
 });
 
 MPX_TEST("quit", {

@@ -25,9 +25,10 @@ PROFILE_LAYERS := settings.cpp ${TEST_SRCS}
 TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
 BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.cpp
+LD_PRELOAD=$$(pwd)/libmpx-test.so
 
 CHECK_TEST_COVERAGE = (gcov -mr $(1) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 ".cpp" && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#")
-RUN_TEST = LD_PRELOAD=$$(pwd)/libmpx-test.so xvfb-run -w 1 -a $(if $(QUICK) , valgrind -q --leak-check=full --error-exitcode=123 $(1),$(1))
+RUN_TEST = LD_PRELOAD=$(LD_PRELOAD) xvfb-run -w 1 -a $(if $(QUICK) , valgrind -q --leak-check=full --error-exitcode=123 $(1),$(1))
 
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
@@ -111,9 +112,10 @@ mpxmanager-debug: $(SRCS:.cpp=.o)
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
-functionalTest: Tests/tester.o Tests/functional_test.cpp $(BASE_SRCS:.cpp=.o)
+functionalTest: Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp $(BASE_SRCS:.cpp=.o) |libmpx-patch.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
+functional.out: LD_PRELOAD := $$(pwd)/libmpx-patch.so
 functional.out: functionalTest
 	$(call RUN_TEST, ./$^ )
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)

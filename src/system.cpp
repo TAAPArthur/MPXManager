@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 #include "arraylist.h"
-#include "compatibility.h"
 #include "debug.h"
 #include "globals.h"
 #include "logger.h"
@@ -128,8 +127,13 @@ void setClientMasterEnvVar(void) {
         }
         const Rect rootBounds = {0, 0, getRootWidth(), getRootHeight()};
         setEnvRect("ROOT", rootBounds);
-        if(LD_PRELOAD_INJECTION)
-            setenv("LD_PRELOAD", LD_PRELOAD_PATH.c_str(), 1);
+        if(LD_PRELOAD_INJECTION) {
+            std::string newPreload = LD_PRELOAD_PATH.c_str();
+            const char* previousPreload = getenv("LD_PRELOAD");
+            if(previousPreload)
+                newPreload += std::string(" ") + previousPreload ;
+            setenv("LD_PRELOAD", newPreload.c_str(), 1);
+        }
     }
 }
 

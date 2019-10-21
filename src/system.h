@@ -17,6 +17,11 @@
 #ifndef MPX_SYSTEM
 #define MPX_SYSTEM
 
+/// name of env variable that (if set) should be the default pointer
+#define DEFAULT_POINTER_ENV_VAR_NAME "CLIENT_POINTER"
+/// name of env variable that (if set) should be the default keyboard 
+#define DEFAULT_KEYBOARD_ENV_VAR_NAME "CLIENT_KEYBOARD"
+
 /// The other end of STATUS_FD
 #define STATUS_FD_EXTERNAL_READ statusPipeFD[0]
 ///Returns the field descriptor used to communicate WM status to an external program
