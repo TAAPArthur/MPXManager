@@ -32,18 +32,13 @@ static bool mpxEnabled;
 
 static void attachActiveSlaveToActiveMaster() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "device event %d %d %d %d\n\n", event->event_type, event->deviceid, event->sourceid, event->flags);
-    int masterID;
+    LOG(LOG_LEVEL_DEBUG, "device event %d %d %d %d\n", event->event_type, event->deviceid, event->sourceid, event->flags);
     Master* master = getAllMasters().back();
-    switch(event->event_type) {
-        case XCB_INPUT_KEY_PRESS:
-        case XCB_INPUT_KEY_RELEASE:
-            masterID = master->getID();
-            break;
-        default:
-            masterID = master->getPointerID();
-    }
-    attachSlaveToMaster(event->sourceid, masterID);
+    Slave* slave = getAllSlaves().find(event->sourceid);
+    if(slave)
+        attachSlaveToMaster(slave, master);
+    else
+        LOG(LOG_LEVEL_DEBUG, "Slave %d (%d) not found\n", event->sourceid, event->deviceid);
 }
 
 static void autoAttachSlave(void) {
@@ -53,24 +48,25 @@ static void autoAttachSlave(void) {
 }
 void addAutoMPXRules(void) {
     ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
-    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY).add({autoAttachSlave});
-    getEventRules(onXConnection).add(restoreMPX);
+    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY).add(DEFAULT_EVENT(autoAttachSlave));
+    getEventRules(onXConnection).add(DEFAULT_EVENT(restoreMPX));
 }
-static void toggleSplitRules(AddFlag flag) {
-    getEventRules(Idle).add(DEFAULT_EVENT(endSplitMaster), flag);
+static void toggleSplitRules(AddFlag flag = PREPEND_UNIQUE) {
+    getEventRules(TrueIdle).add(DEFAULT_EVENT(endSplitMaster), flag);
     getEventRules(ProcessDeviceEvent).add(PASSTHROUGH_EVENT(attachActiveSlaveToActiveMaster, NO_PASSTHROUGH));
 }
 int splitMaster(void) {
     endSplitMaster();
-    grabDevice(XIAllDevices, XCB_INPUT_KEY_PRESS | XCB_INPUT_BUTTON_PRESS | XCB_INPUT_MOTION);
-    std::string name = "dummy" + getTime();
+    passiveGrab(root, XCB_INPUT_XI_EVENT_MASK_HIERARCHY | XCB_INPUT_XI_EVENT_MASK_KEY_PRESS |
+        XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_MOTION);
+    std::string name = "dummy" + std::to_string(getTime());
     createMasterDevice(name);
     initCurrentMasters();
-    toggleSplitRules(ADD_UNIQUE);
+    toggleSplitRules();
     return getActiveMasterKeyboardID();
 }
 void endSplitMaster(void) {
-    ungrabDevice(XIAllDevices);
+    passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     toggleSplitRules(ADD_REMOVE);
 }
 

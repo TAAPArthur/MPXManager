@@ -19,9 +19,12 @@
 #include "../test-event-helper.h"
 #include "../test-x-helper.h"
 
+#define DIRNAME  "/tmp"
+#define BASENAME "._dummy_mpx_info.txt"
+static const char* ABS_PATH = DIRNAME "/" BASENAME;
 static void mpxStartup(void) {
-    MASTER_INFO_PATH = "/tmp/dummy.txt";
-    remove(MASTER_INFO_PATH.c_str());
+    MASTER_INFO_PATH = ABS_PATH;
+    remove(ABS_PATH);
     onStartup();
 }
 SET_ENV(mpxStartup, fullCleanup);
@@ -49,7 +52,10 @@ std::string names[] = {"t1", "t2", "t3", "t4"};
 int colors[LEN(names)] = {0, 0xFF, 0xFF00, 0xFF0000};
 int defaultColor = 0xABCDEF;
 static void mpxResume() {
-    mpxStartup();
+    setenv("HOME", DIRNAME, 1);
+    MASTER_INFO_PATH = "~/" BASENAME;
+    remove(ABS_PATH);
+    onStartup();
     saveXSession();
     if(!fork()) {
         openXDisplay();
@@ -62,8 +68,8 @@ static void mpxResume() {
             assert(m);
             m->setFocusColor(colors[i]);
         }
-        attachSlaveToMaster(getAllSlaves()[1], getMasterByName(names[0]));
-        attachSlaveToMaster(getAllSlaves()[0], getMasterByName(names[1]));
+        attachSlaveToMaster(getAllSlaves()[0], getMasterByName(names[0]));
+        attachSlaveToMaster(getAllSlaves()[1], getMasterByName(names[1]));
         initCurrentMasters();
         createMasterDevice("_unseen_master_");
         assert(saveMPXMasterInfo());
@@ -92,8 +98,8 @@ MPX_TEST("save_load_slaves", {
     startMPX();
     assertEquals(getAllMasters().size(), LEN(names) + 1);
     assert(getActiveMaster()->getSlaves().empty());
-    assertEquals(getAllSlaves()[1]->getMaster(), getMasterByName(names[0]));
-    assertEquals(getAllSlaves()[0]->getMaster(), getMasterByName(names[1]));
+    assertEquals(getAllSlaves()[0]->getMaster(), getMasterByName(names[0]));
+    assertEquals(getAllSlaves()[1]->getMaster(), getMasterByName(names[1]));
 
 });
 MPX_TEST("test_restart", {
@@ -106,124 +112,62 @@ MPX_TEST("test_restart", {
     restartMPX();
     assertEquals(getAllMasters().size(), LEN(names) + 1);
 });
-/* TODO
-static void splitMasterHack(int i){
-    xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
-    event->sourceid = i;
-}
-MPX_TEST("test_split_master", {
-    POLL_COUNT = 10;
-    POLL_INTERVAL = 10;
+MPX_TEST("auto_resume", {
+    stopMPX();
     startWM();
-    int size = getAllMasters().size();
-    int id = splitMaster();
-    assert(id);
-    Master* newMaster = getMasterByID(id);
-    assert(size + 1 == getAllMasters().size());
-    int numOfSlaves;
-    ArrayList* slaves = getSlavesOfMasterByID(NULL, 0, &numOfSlaves);
-    assert(numOfSlaves == 2);
+    waitUntilIdle();
     lock();
-    int keyboardID = 0, mouseID = 0;
-    void dummySlaveInput(Slave * device){
-        int detail = 1, type = XCB_INPUT_BUTTON_PRESS;
-        if(device->keyboard){
-            type = XCB_INPUT_KEY_PRESS;
-            detail = 100;
-            keyboardID = device->getID();
-        }
-        else mouseID = device->getID();
-        sendDeviceAction(device->getID(), detail, type);
-    }
-    for(Slave* slave : slaves) dummySlaveInput(slave);
-    flush();
-    assert(keyboardID);
-    assert(mouseID);
-    Rule hackKeyboard = CREATE_WILDCARD(BIND(splitMasterHack, keyboardID), .passThrough = ALWAYS_PASSTHROUGH);
-    Rule hackMouse = CREATE_WILDCARD(BIND(splitMasterHack, mouseID), .passThrough = ALWAYS_PASSTHROUGH);
-    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_KEY_PRESS), &hackKeyboard);
-    prependToList(getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS), &hackMouse);
-    int idle = getIDleCount();
+    addAutoMPXRules();
+    passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
+    createMasterDevice(names[0]);
     unlock();
-    WAIT_UNTIL_TRUE(getIDleCount() > idle);
-    ArrayList* newSlaves = getSlavesOfMaster(newMaster);
-    assert(listsEqual(newSlaves, slaves));
-    deleteList(newSlaves);
-    free(newSlaves);
-    endSplitMaster();
     consumeEvents();
-    msleep(50);
     lock();
-    for(Slave* slave : slaves){
-        if(slave->getID() != DEFAULT_KEYBOARD && slave->getID() != DEFAULT_POINTER)
-            dummySlaveInput(slave);
-    }
-    flush();
-    assert(!xcb_poll_for_event(dis));
+    applyEventRules(onXConnection);
+    assertEquals(getAllSlaves()[0]->getMaster(), getMasterByName(names[0]));
+    createMasterDevice(names[1]);
     unlock();
-    deleteList(slaves);
-    free(slaves);
-    stopMPX();
-}
-        );
-MPX_TEST_ITER("test_save_load_mpx", 2, {
-    startWM();
-    createMasterDevice("test1");
-    WAIT_UNTIL_TRUE(getAllMasters().size() == 2);
-    Master* master = getElement(getAllMasters(), !indexOf(getAllMasters(), getActiveMaster(), sizeof(int)));
-    int masterFocusColor = 255;
-    int activeMasterFocusColor = 256;
-    int numOfSlaves;
-    MasterID defaultMasterID = _i ? getActiveMaster()->getID() : getActiveMaster()->pointerID;
-    MasterID newMasterID = _i ? master->getID() : master->pointerID;
-    int idle;
-    master->focusColor = masterFocusColor;
-    getActiveMaster()->focusColor = activeMasterFocusColor;
-    lock();
-    ArrayList* slaves = getSlavesOfMasterByID(&defaultMasterID, 1, &numOfSlaves);
-    assert(numOfSlaves == 1);
-    attachSlaveToMaster(((Slave*)getHead(slaves))->getID(), newMasterID);
-    deleteList(slaves);
-    free(slaves);
-    flush();
-    idle = getIDleCount();
-    unlock();
-    WAIT_UNTIL_TRUE(idle != getIDleCount());
-    lock();
-    slaves = getSlavesOfMaster(getActiveMaster());
-    assert(size(slaves) == 1);
-    deleteList(slaves);
-    free(slaves);
-    slaves = getSlavesOfMasterByID(&newMasterID, 1, &numOfSlaves);
-    assert(numOfSlaves == 1);
-    deleteList(slaves);
-    free(slaves);
-    saveMPXMasterInfo();
-    stopMPX();
-    unlock();
-    WAIT_UNTIL_TRUE(getAllMasters().size() == 1);
-    lock();
-    slaves = getSlavesOfMaster(getActiveMaster());
-    assert(size(slaves) == 2);
-    deleteList(slaves);
-    free(slaves);
-    loadMPXMasterInfo();
-    startMPX();
-    assert(getAllMasters().size() == 2);
-    slaves = getSlavesOfMasterByID(&defaultMasterID, 1, &numOfSlaves);
-    deleteList(slaves);
-    free(slaves);
-    assert(numOfSlaves == 0);
-    slaves = getSlavesOfMasterByID(&newMasterID, 1, &numOfSlaves);
-    deleteList(slaves);
-    free(slaves);
-    assert(numOfSlaves == 1);
-    master = getElement(getAllMasters(), !indexOf(getAllMasters(), getActiveMaster(), sizeof(int)));
-    assert(master->focusColor == masterFocusColor);
-    assert(getActiveMaster()->focusColor == activeMasterFocusColor);
-    stopMPX();
-    unlock();
+    waitUntilIdle();
+    assertEquals(getAllSlaves()[1]->getMaster(), getMasterByName(names[1]));
+    assertEquals(getAllMasters().size(), 3);
 });
-
-
-*/
+static void setup() {
+    onStartup();
+    startWM();
+    waitUntilIdle();
+}
+SET_ENV(setup, fullCleanup);
+MPX_TEST_ITER("test_split_master", 2, {
+    static auto injectSlaveID = []() {
+        xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
+        if(event->event_type == XCB_INPUT_MOTION) {
+            event->sourceid = getMasterByID(event->deviceid, 0)->getSlaves()[0]->getID();
+            return;
+        }
+        if(event->deviceid == event->sourceid)
+            return;
+        Master* m;
+        if(m = getMasterByID(event->deviceid, 1))
+            event->sourceid = m->getSlaves()[1]->getID();
+        else if(m = getMasterByID(event->deviceid, 0))
+            event->sourceid = m->getSlaves()[0]->getID();
+        assert(m);
+    };
+    getEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(injectSlaveID), PREPEND_UNIQUE);
+    Master* m = getActiveMaster();
+    assertEquals(getAllMasters().size(), 1);
+    assertEquals(m->getSlaves().size(), 2);
+    assertEquals(getAllSlaves().size(), 2);
+    splitMaster();
+    sendKeyPress(getKeyCode(XK_A));
+    if(_i)
+        sendButtonPress(1);
+    else {
+        movePointer(0, 0);
+        movePointer(1, 1);
+    }
+    waitUntilIdle();
+    assertEquals(getAllMasters().size(), 2);
+    assertEquals(m->getSlaves().size(), 0);
+    assertEquals(getAllMasters()[1]->getSlaves().size(), 2);
+});
