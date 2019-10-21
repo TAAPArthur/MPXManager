@@ -32,5 +32,5 @@ bool isWindowMapped(WindowID win) ;
 /**
  * Adds a TrueIdle rule that will crash the program if an invariant check fails
  */
-void addDieOnIntegratyCheckFailRule();
+void addDieOnIntegrityCheckFailRule();
 #endif

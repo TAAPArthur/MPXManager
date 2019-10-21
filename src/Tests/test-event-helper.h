@@ -35,7 +35,7 @@ static inline void waitUntilIdle(bool safe = 0) {
     idleCount = getIdleCount();
 }
 static inline void onStartup() {
-    addDieOnIntegratyCheckFailRule();
+    addDieOnIntegrityCheckFailRule();
     addBasicRules();
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
     addDefaultMaster();

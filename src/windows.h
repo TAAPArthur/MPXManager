@@ -49,6 +49,8 @@ private:
     TimeStamp creationTime = 0;
     /// events to listen for
     uint32_t eventMasks = NON_ROOT_EVENT_MASKS;
+    /// device events to listen for
+    uint32_t deviceEventMasks = NON_ROOT_DEVICE_EVENT_MASKS;
 
 
     /// Window gravity (TODO implemented)
@@ -157,6 +159,12 @@ public:
     void setEventMasks(uint32_t mask) {eventMasks = mask;}
     /// @param mask the new masks to grab in addition to the current masks
     void addEventMasks(uint32_t mask) {eventMasks |= mask;}
+    /// @return the masks to grab
+    uint32_t getDeviceEventMasks() {return deviceEventMasks;}
+    /// @param mask the new masks to grab
+    void setDeviceEventMasks(uint32_t mask) {deviceEventMasks = mask;}
+    /// @param mask the new masks to grab in addition to the current masks
+    void addDeviceEventMasks(uint32_t mask) {deviceEventMasks |= mask;}
 
     /**
      *

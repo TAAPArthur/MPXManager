@@ -32,7 +32,7 @@ int _main(int argc, char* const* argv) ;
 
 static const char* const args[] = {"" __FILE__, "--no-event-loop"};
 static void setup() {
-    addDieOnIntegratyCheckFailRule();
+    addDieOnIntegrityCheckFailRule();
     _main(2, (char* const*)args);
     startWM();
     waitUntilIdle();

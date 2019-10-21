@@ -274,7 +274,7 @@ WindowID activateWindow(WindowInfo* winInfo) {
 
 
 void configureWindow(WindowID win, uint32_t mask, int values[7]) {
-#ifndef DNDEBUG
+#ifndef NDEBUG
     LOG(LOG_LEVEL_DEBUG, "Config %d: mask %d %d\n", win, mask, __builtin_popcount(mask));
     if(mask)
         PRINT_ARR("values", values, std::min(__builtin_popcount(mask), 7), "\n");

@@ -114,7 +114,7 @@ void addShutdownOnIdleRule(AddFlag flag) {
 
 void keepTransientsOnTop(WindowInfo* winInfo) {
     if(!winInfo->hasMask(ALWAYS_ON_TOP)) {
-        int id = winInfo->getID();
+        WindowID id = winInfo->getID();
         for(WindowInfo* winInfo : getAllWindows()) {
             if(winInfo->isInteractable() && winInfo->getTransientFor() == id)
                 raiseWindowInfo(winInfo);

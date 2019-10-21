@@ -28,7 +28,7 @@ void printSummary(void) {
     std::cout << "Masters: "    << getAllMasters() << "\n";
     std::cout << "Monitors: "   << getAllMonitors() << "\n";
     std::cout << "Workspaces: " << getAllWorkspaces() << "\n";
-    std::cout << "Windows: "    << getAllWindows() << "\n";
+    dumpWindow(0);
 }
 void dumpWindow(WindowMask filterMask) {
     std::cout << "Dumping:\n";

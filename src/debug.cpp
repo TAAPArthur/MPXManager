@@ -68,11 +68,11 @@ bool validate() {
     LOG(LOG_LEVEL_DEBUG, "validation result: %d\n", valid);
     return valid;
 }
-void dieOnIntegratyCheckFail() {
+void dieOnIntegrityCheckFail() {
     if(!validate() || !validateX())
         quit(3);
 }
-void addDieOnIntegratyCheckFailRule() {
-    getEventRules(TrueIdle).add(DEFAULT_EVENT(dieOnIntegratyCheckFail), PREPEND_UNIQUE);
+void addDieOnIntegrityCheckFailRule() {
+    getEventRules(TrueIdle).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), PREPEND_UNIQUE);
 }
 

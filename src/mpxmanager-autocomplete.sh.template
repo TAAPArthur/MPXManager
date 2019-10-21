@@ -18,7 +18,7 @@ _mpxmanagerAutocomplete ()   #  By convention, the function name
     elif [[ "$last" == "--mode" ]]; then
         COMPREPLY=( $( compgen -W "$modeOptions --" -- $cur ) )
     else
-        COMPREPLY=( $( compgen -W "-h --help -v --version $startOptions --recompile --restart --force-restart --name --path " -- $cur ) )
+        COMPREPLY=( $( compgen -W "-h --help -v --version $startOptions $sendOptions --recompile --restart --force-restart --name --path " -- $cur ) )
     fi
     return 0
 }

@@ -165,6 +165,8 @@ void defaultPrintFunction(void) {
     }
     if(getActiveChain())
         dprintf(STATUS_FD, "[%s] ", getActiveChain()->getName().c_str());
+    if(getActiveMaster()->getCurrentMode())
+        dprintf(STATUS_FD, "{%d} ", getActiveMaster()->getCurrentMode());
     if(getFocusedWindow() && getFocusedWindow()->isNotInInvisibleWorkspace()) {
         if(isLogging(LOG_LEVEL_DEBUG))
             dprintf(STATUS_FD, "%0xd ", getFocusedWindow()->getID());

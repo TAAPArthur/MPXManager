@@ -246,8 +246,9 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     bool result = 0;
     if(registerForWindowEvents(winInfo->getID(), mask) == 0) {
         result = 1;
-        passiveGrab(winInfo->getID(), NON_ROOT_DEVICE_EVENT_MASKS);
-        LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d\n", NON_ROOT_EVENT_MASKS, winInfo->getID());
+        uint32_t deviceMask = winInfo->getDeviceEventMasks() ? winInfo->getDeviceEventMasks() : NON_ROOT_DEVICE_EVENT_MASKS;
+        passiveGrab(winInfo->getID(), deviceMask);
+        LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d\n", deviceMask, winInfo->getID());
     }
     return result;
 }

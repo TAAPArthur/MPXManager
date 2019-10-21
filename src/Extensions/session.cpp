@@ -19,7 +19,6 @@
 #include "../wmfunctions.h"
 #include "../workspaces.h"
 #include "../xsession.h"
-#include "../compatibility.h"
 
 
 static void loadSavedLayouts() {
@@ -174,6 +173,7 @@ void saveCustomState(void) {
 }
 void addResumeCustomStateRules() {
     getEventRules(onXConnection).add(DEFAULT_EVENT(loadCustomState));
+    getBatchEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(saveCustomState));
     getBatchEventRules(TileWorkspace).add(DEFAULT_EVENT(saveCustomState));
 }
 

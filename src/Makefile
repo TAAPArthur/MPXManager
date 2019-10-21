@@ -36,9 +36,9 @@ ifeq ($(NO_XRANDR),1)
 endif
 
 ifeq ($(DEBUG),1)
-  CPPFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DDEBUG
+  CPPFLAGS += ${DEBUGGING_FLAGS} -DDEBUG
 else ifeq ($(DEBUG),2)
-  CPPFLAGS += ${DEBUGGING_FLAGS} -DINIT_LOG_LEVEL=LOG_LEVEL_DEBUG -DNDEBUG
+  CPPFLAGS += ${DEBUGGING_FLAGS} -DNDEBUG
 else ifeq ($(DEBUG),3)
   CPPFLAGS += ${RELEASE_FLAGS}
 else
@@ -84,7 +84,7 @@ mpxmanager.sh: mpxmanager.sh.template
 mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.cpp communications.cpp
 	cp $< $@
 	sed -i "s/startOptions=.*/startOptions=\"$$(echo $$(./mpxmanager --list-start-options 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'| sed -E 's/((\w|-)+\W)/--\1/g'))\"/g"  mpxmanager-autocomplete.sh
-	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --set list-options quit 2>&1 | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
+	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --set list-options quit 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 	sed -i "s/modeOptions=.*/modeOptions=\"$$(echo $$(./mpxmanager --list-modes 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: $(BASE_SRCS:.cpp=.o)
@@ -107,9 +107,6 @@ test: libmpx-test.so code_coverage.out correctness.out arg_test.out functional.o
 
 T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
 TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))
-
-mpxmanager-debug: $(SRCS:.cpp=.o)
-	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
 functionalTest: Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp $(BASE_SRCS:.cpp=.o) |libmpx-patch.so
@@ -141,7 +138,7 @@ code_coverage.out: unitTest $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
 
 
 arg_test.out: CPPFLAGS := ${TESTFLAGS}
-arg_test.out: mpxmanager-debug Tests/arg-tests.sh
+arg_test.out: mpxmanager Tests/arg-tests.sh
 	$(call RUN_TEST, Tests/arg-tests.sh )
 	touch $@
 

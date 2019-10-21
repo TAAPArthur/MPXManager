@@ -46,8 +46,8 @@ void applyBatchEventRules(void) {
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
             LOG(LOG_LEVEL_DEBUG, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
                 eventTypeToString(i), getBatchEventRules(i).size());
-            batchEventRules[i].counter = 0;
             applyRules(getBatchEventRules(i), NULL);
+            batchEventRules[i].counter = 0;
         }
 }
 int applyEventRules(int type, WindowInfo* winInfo, Master* m) {

@@ -73,17 +73,17 @@ void waitForAllThreadsToExit(void) {
         relock = 1;
     }
     unlock();
-    LOG(LOG_LEVEL_INFO, "Thread %ld is waiting on %d threads\n", self, threads.size());
+    LOG(LOG_LEVEL_DEBUG, "Thread %ld is waiting on %d threads\n", self, threads.size());
     while(threads.size()) {
         Thread* thread = threads.pop();
-        LOG(LOG_LEVEL_INFO, "Waiting for thread '%s' and %d more threads\n", thread->name, threads.size());
+        LOG(LOG_LEVEL_DEBUG, "Waiting for thread '%s' and %d more threads\n", thread->name, threads.size());
         if(thread->thread != self) {
             int result __attribute__((unused)) = pthread_join(thread->thread, NULL);
             assert(result == 0);
         }
         delete thread;
     }
-    LOG(LOG_LEVEL_INFO, "Finished waiting on threads\n");
+    LOG(LOG_LEVEL_DEBUG, "Finished waiting on threads\n");
     if(relock)
         lock();
 }
@@ -197,7 +197,7 @@ void destroyAllLists() {
 static void stop(void) {
     requestShutdown();
     waitForAllThreadsToExit();
-    LOG(LOG_LEVEL_INFO, "Shutting down\n");
+    LOG(LOG_LEVEL_DEBUG, "Shutting down\n");
     resetPipe();
     destroyAllLists();
 }
@@ -206,7 +206,7 @@ void restart(void) {
     if(passedArguments) {
         LOG(LOG_LEVEL_INFO, "restarting\n");
         stop();
-        LOG(LOG_LEVEL_INFO, "calling execv\n");
+        LOG(LOG_LEVEL_DEBUG, "calling execv\n");
         execv(passedArguments[0], passedArguments);
         err(1, "exec failed; Aborting");
     }
@@ -215,7 +215,7 @@ void restart(void) {
 }
 void quit(int exitCode) {
     stop();
-    LOG(LOG_LEVEL_INFO, "Exiting\n");
+    LOG(LOG_LEVEL_DEBUG, "Exiting\n");
     exit(exitCode);
 }
 
