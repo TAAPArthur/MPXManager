@@ -81,7 +81,7 @@ static WorkspaceState* computeState() {
             states[i].monitorViewport = w->getMonitor() ? w->getMonitor()->getViewport() : (Rect) {0, 0, 0, 0};
         states[i].visible = w->isVisible();
         states[i].layout = w->getActiveLayout();
-        int size = getNumberOfWindowsToTile(w);
+        int size = w->getWindowStack().size();
         int j = 0;
         if(size) {
             states[i].windowIds = new WindowID[size];
@@ -96,7 +96,6 @@ static WorkspaceState* computeState() {
                 }
             }
         }
-        assert(size == j);
         states[i].size = j;
     }
     return states;

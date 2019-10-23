@@ -15,7 +15,7 @@
 #include "../wmfunctions.h"
 #include "../window-properties.h"
 
-static WindowInfo* addVisibleWindow(int i) {
+static WindowInfo* addVisibleWindow(int i = getActiveWorkspaceIndex()) {
     WindowInfo* winInfo = new WindowInfo(createNormalWindow());
     addWindowInfo(winInfo);
     getWorkspace(i)->getWindowStack().add(winInfo);
@@ -168,3 +168,16 @@ MPX_TEST("test_on_invisible_workspace_window_add", {
     assert(mask & (WINDOW_CHANGE | WORKSPACE_WINDOW_CHANGE));
 });
 
+MPX_TEST("test_tile_limit", {
+    setActiveLayout(TWO_PANE);
+    assertEquals(getActiveLayout()->getArgs().limit, 2);
+    addVisibleWindow()->getID();
+    WindowID win2 = addVisibleWindow()->getID();
+    markState();
+    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    WindowID win3 = addVisibleWindow()->getID();
+    assertEquals(getNumberOfWindowsToTile(getActiveWorkspace()), 2);
+    markState();
+    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(getRealGeometry(win3), getRealGeometry(win2));
+});
