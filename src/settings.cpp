@@ -200,6 +200,8 @@ void onStartup(void) {
         addAvoidDocksRule();
         addNoDockFocusRule();
         addAlwaysOnTopBottomRules();
+        addKeepTransientsOnTopRule();
+        addDefaultBorderRule();
         addFloatRule();
         addPrintStatusRule();
         //addIgnoreSmallWindowRule();

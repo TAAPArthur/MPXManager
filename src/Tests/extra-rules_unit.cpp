@@ -256,3 +256,20 @@ MPX_TEST("test_transient_windows_always_above", {
         waitUntilIdle(1);
     }
 });
+MPX_TEST_ITER("border_for_transients", 2, {
+    DEFAULT_BORDER_WIDTH = 1;
+    addEWMHRules();
+    addDefaultBorderRule();
+    WindowID win = createNormalWindow();
+    removeBorder(win);
+    mapWindow(win);
+    registerWindow(win, root);
+    flush();
+    if(_i)
+        assertEquals(getRealGeometry(win).border, DEFAULT_BORDER_WIDTH);
+    else {
+        floatWindow(getWindowInfo(win));
+        retile();
+        assertEquals(getRealGeometry(win).border, DEFAULT_BORDER_WIDTH);
+    }
+});

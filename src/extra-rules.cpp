@@ -160,3 +160,10 @@ static bool isNotRepeatedKey() {
 void addIgnoreKeyRepeat(AddFlag flag) {
     getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey), flag);
 }
+void setDefaultBorderWidth(WindowInfo* winInfo) {
+    if(!winInfo->isInputOnly() && DEFAULT_BORDER_WIDTH && winInfo->getWorkspace())
+        configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, (int*)&DEFAULT_BORDER_WIDTH);
+}
+void addDefaultBorderRule(AddFlag flag) {
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(setDefaultBorderWidth), flag);
+}
