@@ -263,7 +263,7 @@ void addAutoTileRules(AddFlag flag) {
         };
     for(auto event : events)
         getEventRules(event).add(DEFAULT_EVENT(markState), flag);
-    getEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
+    getBatchEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState), flag);
 }

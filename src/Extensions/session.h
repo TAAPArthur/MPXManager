@@ -20,5 +20,5 @@ void saveCustomState(void);
 /**
  * Loads saved state on XConnection and saves after a batch of TileWorkspace
  */
-void addResumeCustomStateRules(AddFlag flag = PREPEND_UNIQUE);
+void addResumeCustomStateRules(AddFlag flag = ADD_UNIQUE);
 #endif
