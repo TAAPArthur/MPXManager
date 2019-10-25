@@ -118,6 +118,20 @@ static int compareState() {
             if(i < numberOfRecordedWorkspaces)
             std::cout << "Saved:  " << savedStates[i] << "\n";
         );
+        if((savedStates || currentState[i].size) &&
+            (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
+                memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
+                savedStates[i].layout != currentState[i].layout ||
+                savedStates[i].size && (
+                    memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size) ||
+                    memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size)
+                )
+            )
+        ) {
+            changed |= WORKSPACE_WINDOW_CHANGE;
+            LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
+            tileWorkspace(i);
+        }
         if((savedStates || currentState[i].visible) &&
             (i >= numberOfRecordedWorkspaces ||
                 savedStates[i].visible != currentState[i].visible)) {
@@ -134,20 +148,6 @@ static int compareState() {
                     updateWindowWorkspaceState(winInfo);
                     changed |= WINDOW_CHANGE ;
                 }
-        }
-        if((savedStates || currentState[i].size) &&
-            (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
-                memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
-                savedStates[i].layout != currentState[i].layout ||
-                savedStates[i].size && (
-                    memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size) ||
-                    memcmp(savedStates[i].windowMasks, currentState[i].windowMasks, sizeof(WindowMask)*savedStates[i].size)
-                )
-            )
-        ) {
-            changed |= WORKSPACE_WINDOW_CHANGE;
-            LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
-            tileWorkspace(i);
         }
     }
     LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);

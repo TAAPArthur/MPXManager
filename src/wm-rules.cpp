@@ -131,7 +131,8 @@ void onMapRequestEvent(void) {
         winInfo->addMask(MAPPABLE_MASK);
         applyEventRules(ClientMapAllow, winInfo);
     }
-    attemptToMapWindow(event->window);
+    else
+        attemptToMapWindow(event->window);
 }
 void onUnmapEvent(void) {
     xcb_unmap_notify_event_t* event = (xcb_unmap_notify_event_t*)getLastEvent();
