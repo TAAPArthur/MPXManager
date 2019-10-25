@@ -224,14 +224,16 @@ MPX_TEST("test_event_spam", {
     addDefaultMaster();
     grabPointer();
     EVENT_PERIOD = 5;
-    POLL_COUNT = 10;
-    POLL_INTERVAL = 1;
+    POLL_COUNT = 100;
+    POLL_INTERVAL = 10;
     getEventRules(Periodic).add(DEFAULT_EVENT(requestShutdown));
     getEventRules(Idle).add(DEFAULT_EVENT(exitFailure));
     startWM();
     while(!isShuttingDown()) {
+        lock();
         clickButton(1);
         flush();
+        unlock();
     }
 });
 MPX_TEST("true_idle", {

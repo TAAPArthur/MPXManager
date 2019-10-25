@@ -63,6 +63,7 @@ WindowID root;
 xcb_ewmh_connection_t* ewmh;
 xcb_screen_t* screen;
 const int defaultScreenNumber = 0;
+static int xrandrFirstEvent = -1;
 
 /**
  * Window created by us to show to the world that an EWMH compliant WM is active
@@ -201,6 +202,9 @@ void openXDisplay(void) {
     dis = XGetXCBConnection(dpy);
     assert(!xcb_connection_has_error(dis));
     xcb_intern_atom_cookie_t* cookie;
+#ifndef NO_XRANDR
+    xrandrFirstEvent = xcb_get_extension_data(dis, &xcb_randr_id)->first_event;
+#endif
     bool applyRule = ewmh == NULL;
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
@@ -382,10 +386,6 @@ int isSyntheticEvent() {
 
 void* runEventLoop(void* arg __attribute__((unused))) {
     xcb_generic_event_t* event;
-    int xrandrFirstEvent = -1;
-#ifndef NO_XRANDR
-    xrandrFirstEvent = xcb_get_extension_data(dis, &xcb_randr_id)->first_event;
-#endif
     LOG(LOG_LEVEL_TRACE, "starting event loop; xrandr event %d\n", xrandrFirstEvent);
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
