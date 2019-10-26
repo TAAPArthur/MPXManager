@@ -98,6 +98,7 @@ MPX_TEST("test_auto_tile", {
     addAutoTileRules();
     createSimpleEnv();
     openXDisplay();
+    applyBatchEventRules();
     assert(!isStateMarked());
 
     assertEquals(getCount(), 1);
@@ -352,7 +353,12 @@ MPX_TEST("test_visibility_update", {
 static void clientSetup() {
     getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK);},
     "_addExternalMasks"));
+    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}, "_autoAddToWorkspace"));
+    getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return !winInfo->isInputOnly();}));
     onStartup();
+    addAutoTileRules();
+    startWM();
+    waitUntilIdle();
     if(!fork()) {
         saveXSession();
         ROOT_EVENT_MASKS = XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
@@ -360,7 +366,6 @@ static void clientSetup() {
         registerForEvents();
     }
     else {
-        startWM();
         assert(waitForChild(0) == 0);
         fullCleanup();
         exit(0);
@@ -368,12 +373,15 @@ static void clientSetup() {
 }
 SET_ENV(clientSetup, fullCleanup);
 
-MPX_TEST("test_map_request", {
-    for(int i = 0; i < 2; i++) {
-        mapWindow(i ? createUnmappedWindow() : createIgnoredWindow());
-        flush();
-        waitForNormalEvent(XCB_MAP_NOTIFY);
-    }
+MPX_TEST_ITER("test_map_request", 2, {
+    mapWindow(_i ? createUnmappedWindow() : createIgnoredWindow());
+    flush();
+    waitForNormalEvent(XCB_MAP_NOTIFY);
+});
+MPX_TEST("test_map_request_unregistered", {
+    mapWindow(createTypelessInputOnlyWindow());
+    flush();
+    waitForNormalEvent(XCB_MAP_NOTIFY);
 });
 
 MPX_TEST("test_configure_request", {

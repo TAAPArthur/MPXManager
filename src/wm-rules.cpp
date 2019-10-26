@@ -130,9 +130,10 @@ void onMapRequestEvent(void) {
     if(winInfo) {
         winInfo->addMask(MAPPABLE_MASK);
         applyEventRules(ClientMapAllow, winInfo);
+        if(winInfo->getWorkspace())
+            return;
     }
-    else
-        attemptToMapWindow(event->window);
+    attemptToMapWindow(event->window);
 }
 void onUnmapEvent(void) {
     xcb_unmap_notify_event_t* event = (xcb_unmap_notify_event_t*)getLastEvent();
