@@ -29,7 +29,7 @@ static inline void suppressOutput(void) {
 #define MPX_TEST_ERR(name,err,body...) MPX_TEST_ITER_ERR(name,1,err,body)
 #define MPX_TEST_ITER_ERR(name,end,err,body...)static  Test _CAT(test,__LINE__)=Test(name,[](int _i __attribute__((unused)))body,end,err,"" __FILE__,__LINE__);
 
-#define SET_ENV(env...) static Env _CAT(e,__LINE__) = Env(env,__FILE__)
+#define SET_ENV(env...) static Env _CAT(e,__LINE__) __attribute__((unused))= Env(env,__FILE__)
 
 static void(*_setup)(void);
 static void(*_teardown)(void);

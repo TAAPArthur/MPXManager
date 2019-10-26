@@ -97,8 +97,6 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
     int numberOfChildren = xcb_query_tree_children_length(reply);
     xcb_window_t* children = xcb_query_tree_children(reply);
     int counter = 0;
-    LOG_RUN(LOG_LEVEL_TRACE, PRINT_ARR("Window Stack", children, numberOfChildren, "\n"));
-    LOG_RUN(LOG_LEVEL_TRACE, PRINT_ARR("Expected Stack", stackingOrder, num, "\n"));
     for(int i = 0; i < numberOfChildren; i++) {
         if(children[i] == stackingOrder[counter]) {
             counter++;
@@ -111,7 +109,11 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
         }
     }
     free(reply);
-    LOG(LOG_LEVEL_TRACE, "%d vs %d\n", counter, num);
+    if(counter != num){
+        LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Window Stack  ", children, numberOfChildren, "\n"));
+        LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Expected Stack", stackingOrder, num, "\n"));
+        LOG(LOG_LEVEL_DEBUG, "%d vs %d\n", counter, num);
+    }
     return counter == num;
 }
 

@@ -2,7 +2,7 @@ CC := g++ -std=gnu++17 -lstdc++
 CXX := ${CC}
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0
-RELEASE_FLAGS := -g -rdynamic -O3 
+RELEASE_FLAGS := -g -rdynamic -O3
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
@@ -101,7 +101,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out correctness.out arg_test.out functional.out preinstall format doc-check
+test: libmpx-test.so code_coverage.out correctness.out arg_test.out functional.out format doc-check preinstall
 
 T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
 TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))

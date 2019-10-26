@@ -47,12 +47,15 @@ int Test::runTest(int i) {
         func(i);
         if(this->testTeardown)
             this->testTeardown();
-        quit(0);
+        if(!noFork)
+            quit(0);
     }
-    pthread_create(&thread, NULL, timer, (void*)&flag);
-    status[i] = waitForChild(flag);
-    flag = 0;
-    pthread_join(thread, NULL);
+    if(!noFork) {
+        pthread_create(&thread, NULL, timer, (void*)&flag);
+        status[i] = waitForChild(flag);
+        flag = 0;
+        pthread_join(thread, NULL);
+    }
     return status[i] == exitCode;
 }
 void Test::printSummary(int i) {
@@ -67,16 +70,18 @@ std::vector<FailedTest>failedTests;
 size_t passedCount = 0;
 int exitCode;
 void printResults(int signal = 0) {
+    exitCode = signal ? signal : passedCount && failedTests.empty() ? 0 : 1;
+    if(signal)
+        printf("aborting\n");
+    printf("....................%d\n", exitCode);
     printf("Passed %ld/%ld tests\n", passedCount, passedCount + failedTests.size());
     for(FailedTest& test : failedTests)
         test.t->printSummary(test.index);
-    assert(tests.size());
-    exitCode = signal ? signal : passedCount && failedTests.empty() ? 0 : 1;
-    printf("....................%d\n", exitCode);
     if(signal)
         exit(exitCode);
 }
 int main(void) {
+    assert(tests.size());
     char* startingFrom = getenv("STARTING_FROM");
     char* file = getenv("TEST_FILE");
     char* func = getenv("TEST_FUNC");

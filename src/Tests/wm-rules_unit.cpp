@@ -133,8 +133,7 @@ static inline void createWMEnvWithRunningWM() {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;
     onSimpleStartup();
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());},
-    "_moveToWorkspace"));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());}));
     startWM();
     assert(getDeviceBindings().size() == 0);
     waitUntilIdle();
@@ -314,46 +313,11 @@ MPX_TEST("steal_other_selection", {
     assertEquals(waitForChild(0), 0);
     waitUntilIdle();
 });
-/* Re-enabls
-MPX_TEST("test_visibility_update", {
-    setLogLevel(LOG_LEVEL_DEBUG);
-    lock();
-    markState();
-    WindowID win = createNormalWindow();
-    flush();
-    LOG(LOG_LEVEL_NONE,"Starting\n");
-    unlock();
-    waitUntilIdle();
-    assert(doesWorkspaceHaveWindowWithMask(0, PARTIALLY_VISIBLE));
-    lock();
-    getWindowInfo(win)->moveToWorkspace(1);
-    markState();
-    updateState();
-    flush();
-    LOG(LOG_LEVEL_NONE,"HERE\n");
-    unlock();
-    WAIT_UNTIL_TRUE(!doesWorkspaceHaveWindowWithMask(1, PARTIALLY_VISIBLE));
-    lock();
-    LOG(LOG_LEVEL_NONE,"HERE\n");
-    createNormalWindow();
-    getWindowInfo(win)->moveToWorkspace(0);
-    markState();
-    updateState();
-    flush();
-    unlock();
-    LOG(LOG_LEVEL_NONE,"THERE\n");
-    waitUntilIdle();
-    assert(doesWorkspaceHaveWindowWithMask(0, PARTIALLY_VISIBLE));
-    LOG(LOG_LEVEL_NONE,"THERE\n");
-    raiseWindowInfo(getWindowInfo(win));
-    assert(getWindowInfo(win)->hasMask(FULLY_VISIBLE));
-});
-*/
+
 
 static void clientSetup() {
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK);},
-    "_addExternalMasks"));
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}, "_autoAddToWorkspace"));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);}));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}));
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return !winInfo->isInputOnly();}));
     onSimpleStartup();
     addAutoTileRules();

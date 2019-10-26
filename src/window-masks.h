@@ -155,6 +155,7 @@ static inline std::string maskToString(WindowMask mask) {
     _PRINT_MASK(STICKY_MASK, mask);
     _PRINT_MASK(HIDDEN_MASK, mask);
     _PRINT_MASK(FLOATING_MASK, mask);
+    _PRINT_MASK(EXTERNAL_CONFIGURABLE_MASK, mask);
     _PRINT_MASK(EXTERNAL_RESIZE_MASK, mask);
     _PRINT_MASK(EXTERNAL_MOVE_MASK, mask);
     _PRINT_MASK(EXTERNAL_BORDER_MASK, mask);

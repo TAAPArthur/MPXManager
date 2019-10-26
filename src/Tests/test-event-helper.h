@@ -50,8 +50,9 @@ static inline void startWM() {
     runInNewThread(runEventLoop, NULL, "event-loop");
 }
 static inline void fullCleanup() {
-    LOG(0, "full cleanup\n");
-    setLogLevel(LOG_LEVEL_NONE);
+    LOG(LOG_LEVEL_DEBUG, "full cleanup\n");
+    if(!isLogging(LOG_LEVEL_DEBUG))
+        setLogLevel(LOG_LEVEL_NONE);
     requestShutdown();
     if(getNumberOfThreads() && ewmh) {
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
@@ -60,7 +61,7 @@ static inline void fullCleanup() {
         flush();
     }
     waitForAllThreadsToExit();
-    LOG(0, "validating state\n");
+    LOG(LOG_LEVEL_DEBUG, "validating state\n");
     validate();
     getDeviceBindings().deleteElements();
     for(int i = 0; i < MPX_LAST_EVENT; i++) {
@@ -71,7 +72,7 @@ static inline void fullCleanup() {
             if(b->func)
                 assert(b->getName() != "");
     }
-    LOG(0, "cleaning up xserver\n");
+    LOG(LOG_LEVEL_DEBUG, "cleaning up xserver\n");
     cleanupXServer();
 }
 static inline void triggerBinding(Binding* b, WindowID win = root) {

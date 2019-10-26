@@ -154,8 +154,7 @@ MPX_TEST("test_toggle_show_desktop", {
 
 static void clientMessageSetup() {
     CRASH_ON_ERRORS = -1;
-    getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);},
-    "_SRC_ANY_MASKS"));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);}));
     addEWMHRules();
     onSimpleStartup();
     WindowID win1 = mapWindow(createNormalWindow());
