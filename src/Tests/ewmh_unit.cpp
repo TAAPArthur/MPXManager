@@ -157,7 +157,7 @@ static void clientMessageSetup() {
     getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);},
     "_SRC_ANY_MASKS"));
     addEWMHRules();
-    onStartup();
+    onSimpleStartup();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
     startWM();

@@ -28,7 +28,7 @@ static void deviceEventsetup(){
     if(!startupMethod)
         startupMethod = sampleStartupMethod;
     NUMBER_OF_DEFAULT_LAYOUTS = 0;
-    onStartup();
+    onSimpleStartup();
     setActiveLayout(startingLayout);
     defaultMaster = getActiveMaster();
     WindowID win1 = mapWindow(createNormalWindow());
@@ -56,7 +56,7 @@ static void nonDefaultDeviceEventsetup(){
 
 SET_ENV(NULL, fullCleanup);
 MPX_TEST("test_on_startup", {
-    onStartup();
+    onSimpleStartup();
     assert(getAllMonitors().size());
     assert(getAllMasters().size());
     assert(dis);
@@ -66,7 +66,7 @@ MPX_TEST("test_on_startup", {
 MPX_TEST_ERR("test_handle_error", 1, {
     setLogLevel(LOG_LEVEL_NONE);
     CRASH_ON_ERRORS = -1;
-    onStartup();
+    onSimpleStartup();
     xcb_generic_event_t event = {0};
     xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
     runEventLoop(NULL);
@@ -75,7 +75,7 @@ MPX_TEST_ERR("test_handle_error", 1, {
 MPX_TEST("handle_error_continue", {
     setLogLevel(LOG_LEVEL_NONE);
     CRASH_ON_ERRORS = 0;
-    onStartup();
+    onSimpleStartup();
     xcb_generic_event_t event = {0};
     xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
     addShutdownOnIdleRule();
@@ -84,7 +84,7 @@ MPX_TEST("handle_error_continue", {
 MPX_TEST("auto_grab_bindings", {
     Binding b = {0, 1, requestShutdown};
     getDeviceBindings().add(b);
-    onStartup();
+    onSimpleStartup();
     triggerBinding(&b);
     runEventLoop();
 });
@@ -118,7 +118,7 @@ MPX_TEST("test_auto_tile", {
     assertEquals(getCount(), count + 1);
 });
 
-SET_ENV(onStartup, fullCleanup);
+SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST("load_properties_on_scan", {
     WindowID win = mapArbitraryWindow();
     xcb_atom_t atoms[] = {WM_DELETE_WINDOW, ewmh->_NET_WM_PING};
@@ -132,7 +132,7 @@ MPX_TEST("load_properties_on_scan", {
 static inline void createWMEnvWithRunningWM() {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;
-    onStartup();
+    onSimpleStartup();
     getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());},
     "_moveToWorkspace"));
     startWM();
@@ -355,7 +355,7 @@ static void clientSetup() {
     "_addExternalMasks"));
     getEventRules(PostRegisterWindow).add(new BoundFunction(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}, "_autoAddToWorkspace"));
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return !winInfo->isInputOnly();}));
-    onStartup();
+    onSimpleStartup();
     addAutoTileRules();
     startWM();
     waitUntilIdle();

@@ -45,7 +45,7 @@ MPX_TEST("test_no_state_change", {
 
 static void setup() {
     DEFAULT_NUMBER_OF_WORKSPACES = 4;
-    onStartup();
+    onSimpleStartup();
     assertEquals(getAllMonitors().size(), 1);
     assertEquals(getNumberOfWorkspaces(), DEFAULT_NUMBER_OF_WORKSPACES);
     assert(getWorkspace(0)->isVisible());

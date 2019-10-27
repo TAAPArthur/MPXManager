@@ -10,7 +10,7 @@
 #include "../test-x-helper.h"
 #include "../test-event-helper.h"
 
-SET_ENV(onStartup, fullCleanup);
+SET_ENV(onSimpleStartup, fullCleanup);
 
 
 static long rectToLong(const Rect& r) {
@@ -54,7 +54,7 @@ const ArrayList<long>serializeState(uint8_t mask) {
     return list;
 }
 
-SET_ENV(onStartup, fullCleanup);
+SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST_ITER("test_restore_state", 16, {
     addResumeCustomStateRules();
     int mask = _i;
@@ -103,7 +103,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
         RUN_AS_WM = 0;
         // reapply onXConnect rules
         ewmh = NULL;
-        onStartup();
+        onSimpleStartup();
         loadCustomState();
         const auto& list2 = serializeState(mask);
         for(int i = 0; i < list.size(); i++) {

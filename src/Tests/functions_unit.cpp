@@ -14,7 +14,7 @@ static WindowInfo* top;
 static WindowInfo* middle;
 static WindowInfo* bottom;
 static void functionSetup() {
-    onStartup();
+    onSimpleStartup();
     addEWMHRules();
     int size = 3;
     for(int i = 0; i < size; i++)

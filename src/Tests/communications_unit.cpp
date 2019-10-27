@@ -19,7 +19,7 @@
 
 static void setup() {
     enableInterClientCommunication();
-    onStartup();
+    onSimpleStartup();
     saveXSession();
     atexit(fullCleanup);
 }

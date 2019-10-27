@@ -22,7 +22,7 @@ static void setup(void) {
     XMOUSE_CONTROL_UPDATER_INTERVAL = 10;
     ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_MOTION;
     addStartXMouseControlRule();
-    onStartup();
+    onSimpleStartup();
 }
 SET_ENV(setup, fullCleanup);
 MPX_TEST("test_scroll", {
@@ -89,7 +89,7 @@ MPX_TEST("test_mouse_remove", {
     initCurrentMasters();
     WAIT_UNTIL_TRUE(getAllMasters().size() == 1);
 });
-SET_ENV(onStartup, fullCleanup);
+SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST("test_scroll_scale", {
     addXMouseControlMask(SCROLL_UP_MASK);
     int scaleFactor = 100;

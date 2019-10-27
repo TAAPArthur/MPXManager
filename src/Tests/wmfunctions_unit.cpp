@@ -224,7 +224,7 @@ MPX_TEST("test_workspace_change_focus", {
     assertEquals(getActiveFocus(), getAllWindows()[0]->getID());
 });
 
-SET_ENV(onStartup, fullCleanup);
+SET_ENV(onSimpleStartup, fullCleanup);
 
 MPX_TEST("test_activate_window", {
     WindowID win = createUnmappedWindow();
@@ -569,7 +569,7 @@ MPX_TEST("test_delete_window_request_race", {
 void multiWorkspaceStartup(void){
     CRASH_ON_ERRORS = -1;
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
-    onStartup();
+    onSimpleStartup();
     switchToWorkspace(0);
     START_MY_WM;
     createNormalWindow();

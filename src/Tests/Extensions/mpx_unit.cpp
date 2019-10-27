@@ -25,7 +25,7 @@ static const char* ABS_PATH = DIRNAME "/" BASENAME;
 static void mpxStartup(void) {
     MASTER_INFO_PATH = ABS_PATH;
     remove(ABS_PATH);
-    onStartup();
+    onSimpleStartup();
 }
 SET_ENV(mpxStartup, fullCleanup);
 MPX_TEST("test_start_mpx_empty", {
@@ -55,7 +55,7 @@ static void mpxResume() {
     setenv("HOME", DIRNAME, 1);
     MASTER_INFO_PATH = "~/" BASENAME;
     remove(ABS_PATH);
-    onStartup();
+    onSimpleStartup();
     saveXSession();
     if(!fork()) {
         openXDisplay();
@@ -132,7 +132,7 @@ MPX_TEST("auto_resume", {
     assertEquals(getAllMasters().size(), 3);
 });
 static void setup() {
-    onStartup();
+    onSimpleStartup();
     startWM();
     waitUntilIdle();
 }

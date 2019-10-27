@@ -21,7 +21,7 @@
 #include "../devices.h"
 #include "../bindings.h"
 
-SET_ENV(onStartup, fullCleanup);
+SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST("test_print_method", {
     addPrintStatusRule();
     printStatusMethod = incrementCount;

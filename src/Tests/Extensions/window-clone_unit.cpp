@@ -31,7 +31,7 @@ static void setup() {
     addCloneRules();
     addAutoTileRules();
     addEWMHRules();
-    onStartup();
+    onSimpleStartup();
     switchToWorkspace(0);
     setActiveLayout(GRID);
     WindowID win = mapArbitraryWindow();
