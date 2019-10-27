@@ -2,8 +2,7 @@ CC := g++ -std=gnu++17 -lstdc++
 CXX := ${CC}
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0
-RELEASE_FLAGS := -g -rdynamic -O3 -flto
-PROFILE_FLAGS := -g -rdynamic -pg  -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
+RELEASE_FLAGS := -g -rdynamic -O3 
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
@@ -21,7 +20,6 @@ LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp
 LAYER5_SRCS := $(wildcard Extensions/*.cpp)
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
-PROFILE_LAYERS := settings.cpp ${TEST_SRCS}
 TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
 BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.cpp
@@ -161,33 +159,13 @@ doc:
 doc-check:
 	+$(MAKE) -C .. $@
 
-mpxmanager-profile: Tests/prof/profile.c Tests/*.c ${PROFILE_LAYERS}
-	${CC} $^ -o $@  ${CPPFLAGS} ${PROFILE_FLAGS} ${LDFLAGS}
-mpxmanager-speed-test: Tests/prof/profile.c Tests/*.c ${PROFILE_LAYERS}
-	${CC} $^ -o $@  ${CPPFLAGS} ${SPEED_TEST_FLAGS} ${LDFLAGS}
-
-benchmark.txt: mpxmanager-profile
-
-speed-test-save:
-	cp benchmark.txt benchmark-ref.txt
-speed-test: QUICK=1
-speed-test: mpxmanager-speed-test
-	$(call RUN_XTEST, ./$^ 10) > benchmark.txt
-	$(call RUN_XTEST, ./$^ 100) >> benchmark.txt
-	$(call RUN_XTEST, ./$^ 1000) >> benchmark.txt
-	cat benchmark.txt | Tests/prof/diff.py | sort
-
-prof: QUICK=1
-prof: mpxmanager-profile
-	$(call RUN_XTEST, ./$^ 256 )
-	gprof -p ./$^
 
 .PHONY: test all clean doc format format-all install package unitTest5 prof
 
 .DELETE_ON_ERROR:
 
 clean:
-	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.a *.o libmpxmanager*.so mpxmanager-profile mpxmanager-speed-test
+	rm -f mywm debug unitTest* *gc?? vgcore* libmpxmanager*.a *.o libmpxmanager*.so
 	find . \( -name "*.orig" -o -name "*.gc??" -o -name "*.o" \) -exec rm {} \;
 	find . -name '*.o' -exec rm -f {} \;
 	find . -name '*.out' -exec rm {} \;
