@@ -301,14 +301,15 @@ struct RefWindowMouse {
     RectWithBorder ref;
     short mousePos[2];
     bool change[2];
-    bool move;
+    bool move = 0;
+    uint32_t lastSeqNumber = 0;
     RectWithBorder calculateNewPosition(const short newMousePos[2], bool* hasChanged) {
         *hasChanged = 0;
         assert(win);
         RectWithBorder result = RectWithBorder(ref);
         for(int i = 0; i < 2; i++) {
             short delta = newMousePos[i] - mousePos[i];
-            if(change[i]) {
+            if(change[i] && delta) {
                 *hasChanged = 1;
                 if(move)
                     result[i] += delta;
@@ -327,6 +328,13 @@ struct RefWindowMouse {
         return result;
     }
     const RectWithBorder getRef() {return ref;}
+    bool shouldUpdate() {
+        if(getLastDetectedEventSequenceNumber() <= lastSeqNumber) {
+            return 0;
+        }
+        lastSeqNumber = getLastDetectedEventSequenceNumber();
+        return 1;
+    }
 };
 
 static Index<RefWindowMouse> key;
@@ -358,6 +366,8 @@ void cancelWindowMoveResize(Master* m) {
 void updateWindowMoveResize(Master* m) {
     auto ref = getRef(m, 0);
     if(ref) {
+        if(!ref->shouldUpdate())
+            return;
         short pos[2];
         if(getMousePosition(m, root, pos)) {
             bool change = 0;

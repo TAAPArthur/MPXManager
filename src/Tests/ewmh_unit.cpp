@@ -415,3 +415,10 @@ MPX_TEST("test_client_request_move_resize", {
     flush();
     WAIT_UNTIL_TRUE(rect == winInfo->getGeometry());
 });
+
+MPX_TEST("event_speed", {
+    startWindowMoveResize(getAllWindows()[0], 0);
+    generateMotionEvents(10000);
+    waitUntilIdle();
+    assert(!consumeEvents());
+});
