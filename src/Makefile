@@ -48,11 +48,13 @@ pkgname := mpxmanager
 
 all: mpxmanager
 
-install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so
-	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
-	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
+install-headers:
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/Extensions" Extensions/*.h
+
+install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so install-headers
+	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
+	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.cpp
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
