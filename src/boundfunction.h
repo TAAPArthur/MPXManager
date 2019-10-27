@@ -114,6 +114,7 @@ struct GenericFunctionWrapper {
 template <typename R, typename P>
 struct FunctionWrapper: GenericFunctionWrapper {
     static_assert(std::is_convertible<R, int>::value);
+    static_assert(std::is_convertible<P, int>::value || std::is_base_of<WMStruct, std::remove_pointer_t<P>>::value);
     /// generic function
     std::function<R(P)>func;
     /**
@@ -312,6 +313,9 @@ struct BoundFunction {
     BoundFunction(R(*_func)(P), P value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>([ = ]() {return _func(value);}))),
     passThrough(passThrough),    name(name) {    }
+    template <typename R>
+    BoundFunction(R(*_func)(std::string), const char* value, std::string name = "",
+        PassThrough passThrough = ALWAYS_PASSTHROUGH): BoundFunction(_func, std::string(value), name, passThrough) {}
     template <typename P>
     BoundFunction(void(*_func)(P), P value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(std::function<void()>([ = ]() {_func(value);}))),

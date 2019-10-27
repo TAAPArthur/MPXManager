@@ -49,6 +49,8 @@ static void test() {
         {+[](WindowInfo * winInfo) { incrementCount(); assertEquals(fakeWinInfo, winInfo);}},
         {+[](int i){incrementCount(); assertEquals(i, 123);}, 123},
         {+[](int i)->int{incrementCount(); assertEquals(i, 123); return 1;}, 123},
+        {+[](std::string s)->void{incrementCount(); assertEquals(s, "123");}, "123"},
+        {+[](std::string s)->int{incrementCount(); assertEquals(s, "123"); return 1;}, "123"},
     };
     BoundFunction f = BoundFunction(b[0]);
     for(int i = 0; i < LEN(b);) {
