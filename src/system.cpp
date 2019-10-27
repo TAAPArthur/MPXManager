@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <err.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -137,7 +138,12 @@ void setClientMasterEnvVar(void) {
     }
 }
 
-static int _spawn(const char* command, bool spawnPipe, bool dup = 1) {
+void suppressOutput(void) {
+    assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDERR_FILENO) == STDERR_FILENO);
+    assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDOUT_FILENO) == STDOUT_FILENO);
+}
+
+static int _spawn(const char* command, bool spawnPipe, bool silent = 0) {
     LOG(LOG_LEVEL_INFO, "running command %s\n", command);
     if(spawnPipe) {
         resetPipe();
@@ -149,15 +155,15 @@ static int _spawn(const char* command, bool spawnPipe, bool dup = 1) {
         if(spawnPipe) {
             close(STATUS_FD);
             close(STATUS_FD_READ);
-            if(dup) {
-                dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
-                dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
-            }
+            dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
+            dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
         }
         else
             resetPipe();
         if(onChildSpawn)
             onChildSpawn();
+        if(silent)
+            suppressOutput();
         if(command == NULL)
             return 0;
         execl(SHELL.c_str(), SHELL.c_str(), "-c", command, (char*)0);
@@ -172,10 +178,13 @@ static int _spawn(const char* command, bool spawnPipe, bool dup = 1) {
     return pid;
 }
 int spawn(const char* command) {
-    return _spawn(command, 0);
+    return spawn(command, 0);
 }
-int spawnPipe(const char* command, bool dup) {
-    return _spawn(command, 1, dup);
+int spawn(const char* command, bool silent) {
+    return _spawn(command, 0, silent);
+}
+int spawnPipe(const char* command) {
+    return _spawn(command, 1);
 }
 
 int waitForChild(int pid) {

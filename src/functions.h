@@ -18,9 +18,6 @@
 /// Direction away from the head of the list
 #define DOWN 1
 
-/// macro helper around raiseOrRun
-#define RAISE_OR_RUN(MATCH) +[]{raiseOrRun(MATCH);}
-
 /// arguments to findAndRaise
 enum WindowAction {
     /// @{ performs the specified action
@@ -70,10 +67,11 @@ bool matchesTitle(WindowInfo* winInfo, std::string str);
  * @param s
  * @param cmd command to spawn
  * @param matchOnClass whether to use matchesClass or matchesTitle
+ * @param silent if 1 redirect stderr and out of child process to /dev/null
  *
  * @return 1 iff a window was found
  */
-bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass = 0);
+bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass = 0, bool silent = 1);
 /**
  * Tries to raise a window with class (or resource) name equal to s.
  * If not it spawns s
@@ -84,6 +82,18 @@ bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass = 0);
  */
 static inline bool raiseOrRun(std::string s) {
     return raiseOrRun(s, s, 1);
+}
+/**
+ * Tries to raise a window with class (or resource) name equal to s.
+ * If not it spawns s
+ *
+ * @param s the class or instance name to be raised or the program to spawn
+ * @param silent if 1 redirect stderr and out of child process to /dev/null
+ *
+ * @return 0 iff the program was spawned
+ */
+static inline bool raiseOrRun(std::string s, bool silent) {
+    return raiseOrRun(s, s, 1, silent);
 }
 /**
  * Call to stop cycling windows

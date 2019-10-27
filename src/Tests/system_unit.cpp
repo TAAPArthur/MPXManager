@@ -92,6 +92,25 @@ MPX_TEST("reset_pipe", {
         assert(i == 0);
     waitForChild(0);
 });
+MPX_TEST_ITER("spawn", 2, {
+    const char* value = "string";
+    char buffer[256];
+
+    if(!spawnPipe(NULL)) {
+        if(!spawn(NULL, _i)) {
+            printf(value);
+            exit(0);
+        }
+        waitForChild(0);
+        exit(0);
+    }
+    int result = read(STATUS_FD_READ, buffer, LEN(buffer));
+    if(_i)
+        assertEquals(result, 0);
+    else
+        assert(strcmp(buffer, value) == 0);
+    assert(waitForChild(0) == 0);
+});
 MPX_TEST("spawn_pipe", {
     const char values[2][256] = {"1\n", "2\n"};
     char buffer[2][256] = {0};

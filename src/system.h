@@ -98,12 +98,32 @@ void waitForAllThreadsToExit(void);
  * @return the pid of the new process
  */
 int spawn(const char* command);
+/**
+ * @copydoc spawn(const char*)
+ *
+ * @param silent if 1, suppress output
+ *
+ */
+int spawn(const char* command, bool silent);
+/**
+ * wrapper for spawn(command, 1)
+ *
+ * @param command
+ *
+ * @return
+ */
+static inline int spawnSilent(const char* command) {return spawn(command, 1);}
 
 /**
  * Like spawn but the child's stdin refers to our stdout
  * @return the pid of the new process
  */
-int spawnPipe(const char* command, bool dup = 1);
+int spawnPipe(const char* command);
+
+/**
+ * Dups stdout and stderror to /dev/null
+ */
+void suppressOutput(void) ;
 /**
  * Waits for the child process given by pid to terminate
  * @param pid the child

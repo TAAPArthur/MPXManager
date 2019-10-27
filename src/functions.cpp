@@ -132,14 +132,14 @@ bool matchesClass(WindowInfo* winInfo, std::string str) {
 bool matchesTitle(WindowInfo* winInfo, std::string str) {
     return winInfo->getTitle() == str;
 }
-bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass) {
+bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass, bool silent) {
     if(s[0] == '$') {
         auto c = getenv(s.substr(1).c_str());
         s = c ? c : "";
     }
     const BoundFunction f = {matchOnClass ? matchesClass : matchesTitle, s, "raiseOrRunCheck"};
     if(!findAndRaise(f)) {
-        spawn(cmd.c_str());
+        spawn(cmd.c_str(), silent);
         return 0;
     }
     return 1;

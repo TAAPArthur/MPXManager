@@ -462,7 +462,7 @@ MPX_TEST("test_kill_window", {
     closeConnection();
     setLogLevel(LOG_LEVEL_NONE);
     WindowID win = 0;
-    if(!spawnPipe(NULL, 0)) {
+    if(!spawnPipe(NULL)) {
         openXDisplay();
         win = createNormalWindow();
         assert(win);
@@ -491,7 +491,7 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
     bool sleep = _i & 2;
     bool ping = _i & 4;
     KILL_TIMEOUT = 100;
-    if(!spawnPipe(NULL, 0)) {
+    if(!spawnPipe(NULL)) {
         saveXSession();
         openXDisplay();
         WindowID win = mapArbitraryWindow();
