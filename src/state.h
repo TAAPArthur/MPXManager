@@ -6,15 +6,16 @@
 #define STATE_H
 #include <cstdint>
 ///Return type of updateState that dictates what changed
-typedef enum {
+enum StateChangeType {
     //nothing changed
     NO_CHANGE = 0,
-    /// window related state changed
+    /// window related state changed; retiling
     WORKSPACE_WINDOW_CHANGE = 1,
     /// workspace-monitor pairing changed
     WORKSPACE_MONITOR_CHANGE = 2,
+    /// window map state is not in sync with workspace
     WINDOW_CHANGE = 4,
-} StateChangeType;
+} ;
 
 /// @return iff the state is marked
 bool isStateMarked(void);

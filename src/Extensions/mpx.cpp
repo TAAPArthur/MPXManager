@@ -16,7 +16,7 @@
 /**
  * Holds info to match a master devices with a set of slaves
  */
-typedef struct MPXMasterInfo {
+struct MPXMasterInfo {
     /// The name of the master device pair (w/o Keyboard or Pointer suffix)
     const std::string masterName;
     /// the focus color to give the master
@@ -24,7 +24,7 @@ typedef struct MPXMasterInfo {
     /// list of names of slaves
     ArrayList<std::string> slaveNames;
     MPXMasterInfo(std::string name): masterName(name) {}
-} MPXMasterInfo;
+} ;
 
 
 static UniqueArrayList<MPXMasterInfo*> masterInfoList;

@@ -20,7 +20,7 @@
 ArrayList<WindowInfo*>& getAllWindows();
 
 ///holds data on a window
-typedef struct WindowInfo : WMStruct, HasMask {
+struct WindowInfo : WMStruct, HasMask {
 private:
     /**Window id used to determine changes in window layouts */
     const WindowID effectiveId;
@@ -376,7 +376,7 @@ public:
      * @see avoidStruct
      */
     void setDockProperties(int* properties, int numberofProperties);
-} WindowInfo;
+} ;
 
 /**
  * Returns a struct with stored metadata on the given window

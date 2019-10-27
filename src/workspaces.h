@@ -16,7 +16,7 @@
 #endif
 //
 ///@see Workspace::getNextWorkspace()
-typedef enum {
+enum WorkSpaceFilter {
     ///only return visible workspaces
     VISIBLE = 1,
     ///only return invisible workspaces
@@ -25,7 +25,7 @@ typedef enum {
     NON_EMPTY = 4,
     ///only return empty workspaces
     EMPTY = 8,
-} WorkSpaceFilter;
+} ;
 
 /**
  * @return a list of all workspaces
@@ -58,7 +58,7 @@ void removeAllWorkspaces();
  *
  * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
  */
-typedef struct Workspace : WMStruct, HasMask {
+struct Workspace : WMStruct, HasMask {
 private:
     ///user facing name of the workspace
     std::string name;
@@ -182,7 +182,7 @@ public:
      * @return 1 iff the layout changed
      */
     bool toggleLayout(Layout* layout);
-} Workspace;
+};
 
 
 

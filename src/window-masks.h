@@ -22,7 +22,7 @@ typedef unsigned int WindowMask;
  * Various flags that detail how a window should be treated.
  *
  */
-typedef enum {
+enum WindowMasks{
     /// no special properties
     NO_MASK = 0,
     /**The window's X size will equal the size of the monitor's viewport*/
@@ -134,7 +134,7 @@ typedef enum {
     /// set all masks
     ALL_MASK =              -1
 
-} WindowMasks;
+} ;
 #define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0)){s+=#str " ";mask&=~str;}
 
 /**

@@ -204,14 +204,14 @@ public:
      *
      * @return the active workspace index
      */
-    int getWorkspaceIndex(void)const {
+    WorkspaceID getWorkspaceIndex(void)const {
         return activeWorkspaceIndex;
     }
     /**
      * Sets the active workspace index
      * @param index
      */
-    void setWorkspaceIndex(int index) {
+    void setWorkspaceIndex(WorkspaceID index) {
         activeWorkspaceIndex = index;
     }
     /**

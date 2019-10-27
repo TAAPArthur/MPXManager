@@ -47,12 +47,12 @@ void unlock(void) {
 }
 
 /// holds thread metadata
-typedef struct {
+struct Thread {
     /// pthread id
     pthread_t thread;
     /// user specified name of thread
     const char* name;
-} Thread;
+} ;
 static ArrayList<Thread*> threads __attribute__((unused)) ;
 void runInNewThread(void* (*method)(void*)__attribute__((unused)), void* arg __attribute__((unused)),
     const char* name) {

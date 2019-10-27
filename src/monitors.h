@@ -97,7 +97,7 @@ public:
     bool resizeToAvoidDock(WindowInfo* winInfo);
 };
 ///Masks used to determine the whether two monitors are duplicates
-typedef enum {
+enum MonitorDuplicationPolicy {
     /// Monitors are duplicates if they have exactly the same base
     SAME_DIMS = 1,
     /// Monitors are duplicates if one monitor completely fits inside the other
@@ -106,16 +106,16 @@ typedef enum {
     CONTAINS_PROPER = 4,
     /// Monitors are duplicates if one intersects with the other.
     INTERSECTS = 8,
-} MonitorDuplicationPolicy;
+} ;
 /// Masks used to dictate how we deal with duplicates monitors
-typedef enum {
+enum MonitorDuplicationResolution {
     /// Take the primary monitors
     TAKE_PRIMARY = 1,
     /// Keep the larger by area (ties are broken arbitrary)
     TAKE_LARGER = 2,
     /// Keep the smaller by area (ties are broken arbitrary)
     TAKE_SMALLER = 4,
-} MonitorDuplicationResolution;
+};
 
 /// Used to determine whether two monitors are duplicates of each other
 extern uint32_t MONITOR_DUPLICATION_POLICY;
@@ -123,7 +123,7 @@ extern uint32_t MONITOR_DUPLICATION_POLICY;
 extern uint32_t MONITOR_DUPLICATION_RESOLUTION;
 
 ///Types of docks
-typedef enum {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} DockTypes;
+enum DockTypes {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} ;
 
 
 

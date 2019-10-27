@@ -23,7 +23,7 @@ enum {CONFIG_INDEX_X = 0, CONFIG_INDEX_Y = 1, CONFIG_INDEX_WIDTH, CONFIG_INDEX_H
  * Transformations that can be applied to layouts.
  * Everything is relative to the midpoint of the view port of the monitor
  */
-typedef enum {
+enum Transform {
     /// Apply no transformation
     NONE = 0,
     /// Rotate by 180 deg
@@ -32,9 +32,9 @@ typedef enum {
     REFLECT_HOR,
     /// Reflect across the y axis
     REFLECT_VERT
-} Transform;
+} ;
 /// Represents a field(s) in Layout Args
-typedef enum {
+enum LayoutArgIndex {
     LAYOUT_LIMIT = 0,
     /// represents all padding fields
     LAYOUT_PADDING,
@@ -49,11 +49,11 @@ typedef enum {
     LAYOUT_LOWER_WINDOWS,
     LAYOUT_TRANSFORM,
     LAYOUT_ARG,
-} LayoutArgIndex;
+} ;
 /**
  * Options used to customize layouts
  */
-typedef struct {
+struct LayoutArgs {
     /// at most limit windows will be tiled
     unsigned short limit;
     /// @{ padding between the tiled size and the actual size of the window
@@ -84,12 +84,12 @@ typedef struct {
     int getOtherDimIndex()const {
         return dim == 0 ? CONFIG_INDEX_HEIGHT : CONFIG_INDEX_WIDTH;
     }
-} LayoutArgs;
+} ;
 
 /**
  * Contains info provided to layout functions (and helper methods) that detail how the windows should be tiled
  */
-typedef struct {
+struct LayoutState {
     /// Customized to the layout family
     LayoutArgs* args;
     /// the monitor used to layout the window
@@ -100,10 +100,10 @@ typedef struct {
     const ArrayList<WindowInfo*>& stack;
     /// @return layout args
     LayoutArgs* getArgs() {return args;}
-} LayoutState;
+} ;
 
 ///holds meta data to to determine what tiling function to call and when/how to call it
-typedef struct Layout {
+struct Layout {
 private:
     /**
      * The name of the layout.
@@ -160,7 +160,7 @@ public:
     void restoreArgs() {
         args = refArgs;
     }
-} Layout;
+} ;
 
 ///@{ Default layouts
 extern Layout FULL, GRID, TWO_ROW, TWO_COL, TWO_PANE, TWO_HPLANE, MASTER;

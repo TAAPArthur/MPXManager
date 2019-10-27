@@ -43,7 +43,7 @@
  * Determines if and when the control flow should abort processing a series of
  * BoundFunction/Bindings
  */
-typedef enum {
+enum PassThrough {
     /// ALWAYS_PASSTHROUGH never abort
     ALWAYS_PASSTHROUGH = 0,
     /// PASSTHROUGH_IF_TRUE abort if the BoundFunction return 0
@@ -52,7 +52,7 @@ typedef enum {
     PASSTHROUGH_IF_FALSE,
     /// NO_PASSTHROUGH always abort after processing
     NO_PASSTHROUGH,
-} PassThrough;
+} ;
 /**
  * Helper method to determine if the control flow should proceed like normal or abort
  *

@@ -5,12 +5,12 @@
 
 
 /// Holds batch events
-typedef struct {
+struct BatchEventList{
     /// how many times the event has been trigged
     int counter;
     /// the list of events to trigger when counter is non zero
     UniqueArrayList<BoundFunction*> list;
-} BatchEventList;
+} ;
 
 /// Holds an Arraylist of rules that will be applied in response to various conditions
 static UniqueArrayList<BoundFunction*> eventRules[MPX_LAST_EVENT];
