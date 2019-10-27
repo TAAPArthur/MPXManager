@@ -97,7 +97,7 @@ MPX_TEST_ITER("detect_dock", 2, {
             assert(prop[i] == 0);
 });
 
-MPX_TEST("test_always_on_top", {
+MPX_TEST("test_always_on_top_bottom", {
     addAlwaysOnTopBottomRules();
     //windows are in same spot
     WindowID bottom = createNormalWindow();
@@ -124,7 +124,7 @@ MPX_TEST("test_always_on_top", {
         {bottom2, normal, top},
     };
     for(int i = 0; i < LEN(stackingOrder); i++)
-        assert(checkStackingOrder(stackingOrder[i], 2));
+        assert(checkStackingOrder(stackingOrder[i], 3));
     msleep(POLL_COUNT* POLL_INTERVAL * 2);
     assert(consumeEvents() == 0);
 });

@@ -14,6 +14,7 @@
 #include "../devices.h"
 #include "../wm-rules.h"
 #include "../logger.h"
+#include "../extra-rules.h"
 #include "../wmfunctions.h"
 #include "../window-properties.h"
 #include "../functions.h"
@@ -106,6 +107,26 @@ MPX_TEST("click_to_focus", {
         assert(getFocusedWindow());
         assertEquals(getFocusedWindow()->getID(), win);
     }
+});
+MPX_TEST("test_always_on_top_bottom_conflicting_masks", {
+    addAlwaysOnTopBottomRules();
+    lock();
+    WindowID wins[4] = {
+        createNormalWindow(),
+        createNormalWindow(),
+        createNormalWindow(),
+        createNormalWindow(),
+    };
+    scan(root);
+    getWindowInfo(wins[0])->addMask(ALWAYS_ON_BOTTOM | ALWAYS_ON_TOP);
+    getWindowInfo(wins[1])->addMask(ALWAYS_ON_BOTTOM | ABOVE_MASK);
+    getWindowInfo(wins[3])->addMask(ALWAYS_ON_TOP | BELOW_MASK);
+    for(WindowID win:wins){
+        assert(lowerWindowInfo(getWindowInfo(win)));
+    }
+    unlock();
+    waitUntilIdle();
+    assert(checkStackingOrder(wins, LEN(wins)));
 });
 
 MPX_TEST("detect_many_masters", {

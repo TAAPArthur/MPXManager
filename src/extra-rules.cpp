@@ -97,9 +97,7 @@ static void enforceAlwaysOnTop() {
         for(WindowInfo* winInfo : getAllWindows()) {
             if(winInfo->hasMask(ALWAYS_ON_BOTTOM))
                 lowerWindowInfo(winInfo);
-        }
-        for(WindowInfo* winInfo : getAllWindows()) {
-            if(winInfo->hasMask(ALWAYS_ON_TOP))
+            else if(winInfo->hasMask(ALWAYS_ON_TOP))
                 raiseWindowInfo(winInfo);
         }
         nonAlwaysOnTopOrBottomWindowMoved = 0;
