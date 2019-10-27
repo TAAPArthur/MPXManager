@@ -219,6 +219,10 @@ int isSyntheticEvent();
  * Returns a monotonically increasing counter indicating the number of times the event loop has been idle. Being idle means event loop has nothing to do at the moment which means it has responded to all prior events
 */
 int getIdleCount(void);
+/**
+ * @return the sequence number of the last event to be queued or 0
+ */
+uint32_t getLastDetectedEventSequenceNumber();
 
 /**
  * Continually listens and responds to event and applying corresponding Rules.

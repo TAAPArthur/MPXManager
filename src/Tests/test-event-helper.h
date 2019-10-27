@@ -143,6 +143,12 @@ static inline int waitForNormalEvent(int type) {
     }
     return 1;
 }
+static inline void generateMotionEvents(int num = 100000) {
+    for(int i = 0; i < num; i++) {
+        movePointerRelative(1, 1);
+        movePointerRelative(-1, -1);
+    }
+}
 namespace TestGrabs {
 #define ALL_MASKS KEYBOARD_MASKS|POINTER_MASKS
 #include <X11/keysym.h>

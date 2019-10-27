@@ -337,23 +337,66 @@ int getIdleCount() {
     return idle;
 }
 
+static xcb_generic_event_t* eventBuffer[2048];
+// next index to read from
+static uint32_t bufferIndexRead = 0;
+// 1 past the last valid index
+static uint32_t bufferIndexWrite = 0;
+static uint32_t lastDetectedEventSequence = 0;
+
+uint32_t getLastDetectedEventSequenceNumber() {return lastDetectedEventSequence;}
+
+static inline xcb_generic_event_t* getEventFromBuffer() {
+    if(bufferIndexWrite == bufferIndexRead) {
+        bufferIndexRead = 0;
+        bufferIndexWrite = 0;
+        return NULL;
+    }
+    return eventBuffer[bufferIndexRead++];
+}
+static inline bool addEventToBuffer(xcb_generic_event_t* event) {
+    LOG(LOG_LEVEL_DEBUG, "Queued event %p %d %d\n", event, bufferIndexRead, bufferIndexWrite);
+    assert(bufferIndexRead == 0);
+    assert(bufferIndexWrite < LEN(eventBuffer));
+    if(event)
+        eventBuffer[bufferIndexWrite++] = event;
+    assert(bufferIndexRead <= bufferIndexWrite);
+    return event && bufferIndexWrite < LEN(eventBuffer);
+}
+static inline void enqueueEvents(xcb_generic_event_t* event) {
+    while(addEventToBuffer(xcb_poll_for_queued_event(dis)));
+    if(event)
+        lastDetectedEventSequence = (bufferIndexWrite ? eventBuffer[bufferIndexWrite - 1] : event)->sequence;
+}
 static inline xcb_generic_event_t* pollForEvent() {
     xcb_generic_event_t* event;
     for(int i = POLL_COUNT - 1; i >= 0; i--) {
         if(i)
             msleep(POLL_INTERVAL);
         event = xcb_poll_for_event(dis);
-        if(event)return event;
+        if(event) {
+            enqueueEvents(event);
+            return event;
+        }
     }
     return NULL;
 }
+static inline xcb_generic_event_t* waitForEvent() {
+    xcb_generic_event_t* event = xcb_wait_for_event(dis);
+    if(event)
+        enqueueEvents(event);
+    return event;
+}
+
 static inline xcb_generic_event_t* getNextEvent() {
     if(EVENT_PERIOD && ++periodCounter > EVENT_PERIOD) {
         periodCounter = 0;
         applyEventRules(Periodic, NULL);
     }
     static xcb_generic_event_t* event;
-    event = pollForEvent();
+    event = getEventFromBuffer();
+    if(!event)
+        event = pollForEvent();
     if(!event && !xcb_connection_has_error(dis)) {
         periodCounter = 0;
         lock();
@@ -373,7 +416,8 @@ static inline xcb_generic_event_t* getNextEvent() {
         unlock();
         LOG(LOG_LEVEL_DEBUG, "Idle %d\n", idle);
         if(!isShuttingDown())
-            event = xcb_wait_for_event(dis);
+            event =  waitForEvent();
+        LOG(LOG_LEVEL_DEBUG, "No longer idle; Size of queue %d \n", bufferIndexWrite);
     }
     return event;
 }

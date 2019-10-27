@@ -173,6 +173,7 @@ MPX_TEST("test_regular_events", {
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     registerForMonitorChange();
     startWM();
+    uint32_t lastSeqNumber = 0;
 
     void (*func)(void) = []() {
         assertEquals(batchCount, -count);
@@ -191,6 +192,8 @@ MPX_TEST("test_regular_events", {
     };
     for(i = count; i < LASTEvent; i++) {
         event.response_type = i;
+        // sequence number doesn't appear to be set for some events for some reason
+        event.sequence = lastSeqNumber + 1;
         getEventRules(i).add(DEFAULT_EVENT(func));
         getBatchEventRules(i).add(DEFAULT_EVENT((i % 2 == 0 ? batchFuncEven : batchFuncOdd)));
         switch(i) {
@@ -216,6 +219,8 @@ MPX_TEST("test_regular_events", {
         WAIT_UNTIL_TRUE(getIdleCount() > idleCount);
         assertEquals(count, i + 1);
         assertEquals(batchCount, -count);
+        assert(lastSeqNumber < getLastDetectedEventSequenceNumber());
+        lastSeqNumber = getLastDetectedEventSequenceNumber();
         idleCount = getIdleCount();
     }
 });
@@ -235,6 +240,16 @@ MPX_TEST("test_event_spam", {
         flush();
         unlock();
     }
+});
+MPX_TEST("spam_mouse_motion", {
+    addDefaultMaster();
+    grabPointer();
+    static int num = 100000;
+    getBatchEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(+[]{assertEquals(getNumberOfEventsTriggerSinceLastIdle(XCB_GE_GENERIC), 2 * num);}));
+    generateMotionEvents(num);
+    startWM();
+    waitUntilIdle();
+    assert(!consumeEvents());
 });
 MPX_TEST("true_idle", {
     POLL_COUNT = 1;
