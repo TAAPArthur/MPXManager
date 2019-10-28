@@ -8,9 +8,6 @@
 #include <string>
 #include "mywm-structs.h"
 
-/// typeof WindowInfo::mask
-typedef unsigned int WindowMask;
-
 
 /**
  * Offset for SRC_INDICATION_* masks
@@ -22,7 +19,7 @@ typedef unsigned int WindowMask;
  * Various flags that detail how a window should be treated.
  *
  */
-enum WindowMasks{
+enum WindowMasks {
     /// no special properties
     NO_MASK = 0,
     /**The window's X size will equal the size of the monitor's viewport*/
@@ -135,50 +132,89 @@ enum WindowMasks{
     ALL_MASK =              -1
 
 } ;
-#define _PRINT_MASK(str,mask) if( (str & mask)||(str==0 &&mask==0)){s+=#str " ";mask&=~str;}
+
+/// typeof WindowInfo::mask
+// typedef unsigned int WindowMask;
 
 /**
- * @param mask
- * @return a string representation of mask
+ * Contains an bitwise or of WindowMasks
  */
-static inline std::string maskToString(WindowMask mask) {
-    std::string s = "";
-    _PRINT_MASK(NO_MASK, mask);
-    _PRINT_MASK(MAXIMIZED_MASK, mask);
-    _PRINT_MASK(X_MAXIMIZED_MASK, mask);
-    _PRINT_MASK(Y_MAXIMIZED_MASK, mask);
-    _PRINT_MASK(FULLSCREEN_MASK, mask);
-    _PRINT_MASK(ROOT_FULLSCREEN_MASK, mask);
-    _PRINT_MASK(BELOW_MASK, mask);
-    _PRINT_MASK(ABOVE_MASK, mask);
-    _PRINT_MASK(NO_TILE_MASK, mask);
-    _PRINT_MASK(STICKY_MASK, mask);
-    _PRINT_MASK(HIDDEN_MASK, mask);
-    _PRINT_MASK(FLOATING_MASK, mask);
-    _PRINT_MASK(EXTERNAL_CONFIGURABLE_MASK, mask);
-    _PRINT_MASK(EXTERNAL_RESIZE_MASK, mask);
-    _PRINT_MASK(EXTERNAL_MOVE_MASK, mask);
-    _PRINT_MASK(EXTERNAL_BORDER_MASK, mask);
-    _PRINT_MASK(EXTERNAL_RAISE_MASK, mask);
-    _PRINT_MASK(SRC_ANY, mask);
-    _PRINT_MASK(SRC_INDICATION_OTHER, mask);
-    _PRINT_MASK(SRC_INDICATION_APP, mask);
-    _PRINT_MASK(SRC_INDICATION_PAGER, mask);
-    _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK, mask);
-    _PRINT_MASK(INPUT_MASK, mask);
-    _PRINT_MASK(NO_RECORD_FOCUS, mask);
-    _PRINT_MASK(NO_ACTIVATE_MASK, mask);
-    _PRINT_MASK(WM_TAKE_FOCUS_MASK, mask);
-    _PRINT_MASK(WM_DELETE_WINDOW_MASK, mask);
-    _PRINT_MASK(WM_PING_MASK, mask);
-    _PRINT_MASK(ALWAYS_ON_TOP, mask);
-    _PRINT_MASK(ALWAYS_ON_BOTTOM, mask);
-    _PRINT_MASK(FULLY_VISIBLE, mask);
-    _PRINT_MASK(PARTIALLY_VISIBLE, mask);
-    _PRINT_MASK(MAPPABLE_MASK, mask);
-    _PRINT_MASK(MAPPED_MASK, mask);
-    _PRINT_MASK(URGENT_MASK, mask);
-    return s;
+struct WindowMask {
+    /// | of WindowMasks
+    uint32_t mask;
+    /**
+     * @param m the starting mask
+     */
+    WindowMask(uint32_t m = 0): mask(m) {}
+    /**
+     * @return  bit mask
+     */
+    operator uint32_t() const {return mask;}
+    /**
+     * @param m the bits to and to mask
+     * @return
+     */
+    WindowMask& operator &=(uint32_t m) {mask &= m; return *this;}
+    /**
+     * @param m the bits to or with mask
+     * @return
+     */
+    WindowMask& operator |=(uint32_t m) {mask |= m; return *this;}
+    /**
+     * @return a string representation of mask
+     */
+    operator std::string() const {
+#define _PRINT_MASK(str) if( (str & M)||(str==0 &&M==0)){s+=#str " ";M&=~str;}
+        uint32_t M = mask;
+        std::string s = std::to_string(mask ? __builtin_popcount(mask) : 0) + ":";
+        _PRINT_MASK(NO_MASK);
+        _PRINT_MASK(MAXIMIZED_MASK);
+        _PRINT_MASK(X_MAXIMIZED_MASK);
+        _PRINT_MASK(Y_MAXIMIZED_MASK);
+        _PRINT_MASK(FULLSCREEN_MASK);
+        _PRINT_MASK(ROOT_FULLSCREEN_MASK);
+        _PRINT_MASK(BELOW_MASK);
+        _PRINT_MASK(ABOVE_MASK);
+        _PRINT_MASK(NO_TILE_MASK);
+        _PRINT_MASK(STICKY_MASK);
+        _PRINT_MASK(HIDDEN_MASK);
+        _PRINT_MASK(FLOATING_MASK);
+        _PRINT_MASK(EXTERNAL_CONFIGURABLE_MASK);
+        _PRINT_MASK(EXTERNAL_RESIZE_MASK);
+        _PRINT_MASK(EXTERNAL_MOVE_MASK);
+        _PRINT_MASK(EXTERNAL_BORDER_MASK);
+        _PRINT_MASK(EXTERNAL_RAISE_MASK);
+        _PRINT_MASK(SRC_ANY);
+        _PRINT_MASK(SRC_INDICATION_OTHER);
+        _PRINT_MASK(SRC_INDICATION_APP);
+        _PRINT_MASK(SRC_INDICATION_PAGER);
+        _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK);
+        _PRINT_MASK(INPUT_MASK);
+        _PRINT_MASK(NO_RECORD_FOCUS);
+        _PRINT_MASK(NO_ACTIVATE_MASK);
+        _PRINT_MASK(WM_TAKE_FOCUS_MASK);
+        _PRINT_MASK(WM_DELETE_WINDOW_MASK);
+        _PRINT_MASK(WM_PING_MASK);
+        _PRINT_MASK(ALWAYS_ON_TOP);
+        _PRINT_MASK(ALWAYS_ON_BOTTOM);
+        _PRINT_MASK(FULLY_VISIBLE);
+        _PRINT_MASK(PARTIALLY_VISIBLE);
+        _PRINT_MASK(MAPPABLE_MASK);
+        _PRINT_MASK(MAPPED_MASK);
+        _PRINT_MASK(URGENT_MASK);
+        return s;
+    }
+};
+/**
+ * prints WindowMask
+ *
+ * @param stream
+ * @param mask
+ *
+ * @return
+ */
+static inline std::ostream& operator<<(std::ostream& stream, const WindowMask& mask) {
+    return stream<<(std::string)mask;
 }
 
 /**

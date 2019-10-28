@@ -103,7 +103,7 @@ void printSummary(void);
  *
  * @param filterMask
  */
-void dumpWindow(WindowMask filterMask);
+void dumpWindow(WindowMask filterMask = 0);
 
 /**
  * Prints all window whose title, class, instance of type equals match

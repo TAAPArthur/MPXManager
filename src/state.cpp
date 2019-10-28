@@ -41,7 +41,7 @@ struct WorkspaceState {
 std::ostream& operator<<(std::ostream& strm, const WorkspaceState& state) {
     strm << "{" << state.monitorViewport << " Visible:" << state.visible << " Size:" << state.size;
     for(int i = 0; i < state.size; i++)
-        strm << " (" << state.windowIds[i] << " " << state.windowMasks[i] << " " << maskToString(state.windowMasks[i]) << ")";
+        strm << " (" << state.windowIds[i] << " " << state.windowMasks[i]  << ")";
     return strm << " }";
 }
 
