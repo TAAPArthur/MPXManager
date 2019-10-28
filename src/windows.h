@@ -369,13 +369,13 @@ public:
     int* getDockProperties(bool createNew = 0);
     /**
      * Add properties to winInfo that will be used to avoid docks
-     * @param numberofProperties number of properties
+     * @param numberOfProperties number of properties
      * @param properties list of properties
      * @see xcb_ewmh_wm_strut_partial_t
      * @see xcb_ewmh_get_extents_reply_t
      * @see avoidStruct
      */
-    void setDockProperties(int* properties, int numberofProperties);
+    void setDockProperties(int* properties, int numberOfProperties);
 } ;
 
 /**

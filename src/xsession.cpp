@@ -243,7 +243,7 @@ void openXDisplay(void) {
 
 void closeConnection(void) {
     if(ewmh) {
-        LOG(LOG_LEVEL_INFO, "closing X connection\n");
+        LOG(LOG_LEVEL_DEBUG, "closing X connection\n");
         xcb_ewmh_connection_wipe(ewmh);
         free(ewmh);
         ewmh = NULL;
@@ -355,7 +355,6 @@ static inline xcb_generic_event_t* getEventFromBuffer() {
     return eventBuffer[bufferIndexRead++];
 }
 static inline bool addEventToBuffer(xcb_generic_event_t* event) {
-    LOG(LOG_LEVEL_DEBUG, "Queued event %p %d %d\n", event, bufferIndexRead, bufferIndexWrite);
     assert(bufferIndexRead == 0);
     assert(bufferIndexWrite < LEN(eventBuffer));
     if(event)
@@ -367,6 +366,7 @@ static inline void enqueueEvents(xcb_generic_event_t* event) {
     while(addEventToBuffer(xcb_poll_for_queued_event(dis)));
     if(event)
         lastDetectedEventSequence = (bufferIndexWrite ? eventBuffer[bufferIndexWrite - 1] : event)->sequence;
+    LOG(LOG_LEVEL_DEBUG, "Size of event queue is now %d \n", bufferIndexWrite);
 }
 static inline xcb_generic_event_t* pollForEvent() {
     xcb_generic_event_t* event;
@@ -414,10 +414,9 @@ static inline xcb_generic_event_t* getNextEvent() {
         idle++;
         flush();
         unlock();
-        LOG(LOG_LEVEL_DEBUG, "Idle %d\n", idle);
+        LOG(LOG_LEVEL_INFO, "Idle %d\n", idle);
         if(!isShuttingDown())
             event =  waitForEvent();
-        LOG(LOG_LEVEL_DEBUG, "No longer idle; Size of queue %d \n", bufferIndexWrite);
     }
     return event;
 }
@@ -430,7 +429,7 @@ int isSyntheticEvent() {
 
 void* runEventLoop(void* arg __attribute__((unused))) {
     xcb_generic_event_t* event;
-    LOG(LOG_LEVEL_TRACE, "starting event loop; xrandr event %d\n", xrandrFirstEvent);
+    LOG(LOG_LEVEL_INFO, "starting event loop; xrandr event %d\n", xrandrFirstEvent);
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
         if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
@@ -452,11 +451,11 @@ void* runEventLoop(void* arg __attribute__((unused))) {
 #endif
         LOG(LOG_LEVEL_VERBOSE, "event processed\n");
     }
-    LOG(LOG_LEVEL_DEBUG, "Exited event loop\n");
+    LOG(LOG_LEVEL_INFO, "Exited event loop\n");
     return NULL;
 }
 int loadGenericEvent(xcb_ge_generic_event_t* event) {
-    LOG(LOG_LEVEL_ALL, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
+    LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
         event->extension, event->response_type, event->event_type, event->sequence);
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode) {
         int type = event->event_type + GENERIC_EVENT_OFFSET;

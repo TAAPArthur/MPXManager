@@ -109,7 +109,7 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
         }
     }
     free(reply);
-    if(counter != num){
+    if(counter != num) {
         LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Window Stack  ", children, numberOfChildren, "\n"));
         LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Expected Stack", stackingOrder, num, "\n"));
         LOG(LOG_LEVEL_DEBUG, "%d vs %d\n", counter, num);
@@ -126,7 +126,7 @@ static inline int consumeEvents() {
         e = xcb_poll_for_event(dis);
         if(e) {
             numEvents++;
-            LOG(LOG_LEVEL_ALL, "Event ignored %d %s\n",
+            LOG(LOG_LEVEL_TRACE, "Event ignored %d %s\n",
                 e->response_type, eventTypeToString(e->response_type & 127));
             free(e);
         }

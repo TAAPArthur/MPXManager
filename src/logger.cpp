@@ -23,31 +23,31 @@ void setLogLevel(uint32_t level) {
     LOG_LEVEL = level;
 }
 void printSummary(void) {
-    std::cout << "Summary:\n";
-    std::cout << "Slaves: "    << getAllSlaves() << "\n";
-    std::cout << "Masters: "    << getAllMasters() << "\n";
-    std::cout << "Monitors: "   << getAllMonitors() << "\n";
-    std::cout << "Workspaces: " << getAllWorkspaces() << "\n";
+    std::cout << "Summary:" << std::endl;
+    std::cout << "Slaves: " << getAllSlaves() << std::endl;
+    std::cout << "Masters: " << getAllMasters() << std::endl;
+    std::cout << "Monitors: " << getAllMonitors() << std::endl;
+    std::cout << "Workspaces: " << getAllWorkspaces() << std::endl;
     dumpWindow();
 }
 void dumpWindow(WindowMask filterMask) {
-    std::cout << "Dumping:\n";
+    std::cout << "Dumping:" << std::endl;
     for(WindowInfo* winInfo : getAllWindows()) {
-        if(!filterMask ||  winInfo->hasMask(filterMask))
-            std::cout << *winInfo << "\n";
+        if(!filterMask || winInfo->hasMask(filterMask))
+            std::cout << *winInfo << std::endl;
     }
 }
 void dumpWindow(std::string match) {
-    std::cout << "Dumping:\n";
+    std::cout << "Dumping:" << std::endl;
     for(WindowInfo* winInfo : getAllWindows()) {
         if(winInfo->getClassName() == match || winInfo->getInstanceName() == match)
-            std::cout << *winInfo << "\n";
+            std::cout << *winInfo << std::endl;
     }
 }
 void dumpWindowStack() {
-    std::cout << "Dumping Window Stack:\n";
+    std::cout << "Dumping Window Stack:" << std::endl;
     for(WindowInfo* winInfo : getActiveWorkspace()->getWindowStack())
-        std::cout << *winInfo << "\n";
+        std::cout << *winInfo << std::endl;
 }
 
 void printStackTrace(void) {

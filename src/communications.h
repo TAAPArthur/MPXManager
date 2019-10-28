@@ -53,7 +53,7 @@ struct GenericOptionFunctionWrapper {
      * @return
      */
     virtual std::ostream& toString(std::ostream& strm) {
-        return strm << getType();
+        return strm << "(" << getType() << ")";
     }
 };
 /**
@@ -63,7 +63,7 @@ struct GenericOptionFunctionWrapper {
  * @tparam P
  */
 template <typename P>
-struct OptionFuntionWrapper : GenericOptionFunctionWrapper {
+struct OptionFunctionWrapper : GenericOptionFunctionWrapper {
     /// backing variable
     P* var = NULL;
     /// generic function holder
@@ -75,8 +75,8 @@ struct OptionFuntionWrapper : GenericOptionFunctionWrapper {
      * @param p var or function pointer
      */
     /// @{
-    OptionFuntionWrapper(std::function<void(P)>p): func(p) {}
-    OptionFuntionWrapper(P* p): var(p), func([ = ](P v) {*var = v;}) {}
+    OptionFunctionWrapper(std::function<void(P)>p): func(p) {}
+    OptionFunctionWrapper(P* p): var(p), func([ = ](P v) {*var = v;}) {}
     /// @}
     void call(std::string p)const override {
         _call(p);
@@ -102,7 +102,7 @@ struct OptionFuntionWrapper : GenericOptionFunctionWrapper {
     std::ostream& toString(std::ostream& strm) override {
         if(var)
             strm << *var << " ";
-        return strm << getType();
+        return strm << "(" << getType() << ")";
     }
     virtual std::string getType()const {
         return typeid(P).name();
@@ -115,13 +115,13 @@ struct OptionFuntionWrapper : GenericOptionFunctionWrapper {
  * Holds a reference to a void function
  */
 template<>
-struct OptionFuntionWrapper<void> : GenericOptionFunctionWrapper {
+struct OptionFunctionWrapper<void> : GenericOptionFunctionWrapper {
     /// generic function holder
     std::function<void(void)>func;
     /**
      * @param func
      */
-    OptionFuntionWrapper(std::function<void(void)>func): func(func) {}
+    OptionFunctionWrapper(std::function<void(void)>func): func(func) {}
     void call(std::string p __attribute__((unused)))const override {
         func();
     }
@@ -156,10 +156,10 @@ struct Option {
      */
     /// @{
     template <typename T>
-    Option(std::string name, T* t, int flags = 0): name(name), func(new OptionFuntionWrapper<T>(t)), flags(flags) {}
+    Option(std::string name, T* t, int flags = 0): name(name), func(new OptionFunctionWrapper<T>(t)), flags(flags) {}
     template <typename T>
-    Option(std::string name, void(*t)(T), int flags = 0): name(name), func(new OptionFuntionWrapper<T>(t)), flags(flags) {}
-    Option(std::string name, void(*t)(void), int flags = 0): name(name), func(new OptionFuntionWrapper<void>(t)),
+    Option(std::string name, void(*t)(T), int flags = 0): name(name), func(new OptionFunctionWrapper<T>(t)), flags(flags) {}
+    Option(std::string name, void(*t)(void), int flags = 0): name(name), func(new OptionFunctionWrapper<void>(t)),
         flags(flags) {}
     /// @}
 

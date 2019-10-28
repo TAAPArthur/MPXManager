@@ -36,7 +36,7 @@ bool Chain::check(const UserEvent& userEvent)const {
     return shouldPassThrough(getPassThrough(), end());
 }
 bool Chain::start(const UserEvent& event)const {
-    LOG(LOG_LEVEL_DEBUG, "starting chain; mask:%d\n", chainMask);
+    LOG(LOG_LEVEL_INFO, "starting chain; mask:%d\n", chainMask);
     if(chainMask)
         grabDevice(getDeviceIDByMask(chainMask), chainMask);
     for(Binding* member : members) {
@@ -46,7 +46,7 @@ bool Chain::start(const UserEvent& event)const {
     return boundFunction(getWindowToActOn(event)) && check(event);
 }
 bool Chain::end()const {
-    LOG(LOG_LEVEL_DEBUG, "ending chain\n");
+    LOG(LOG_LEVEL_INFO, "ending chain\n");
     getActiveChains().removeElement(this);
     if(chainMask)
         ungrabDevice(getDeviceIDByMask(chainMask));
@@ -61,7 +61,7 @@ bool checkAllChainBindings(const UserEvent& userEvent) {
     auto& chains = getActiveChains(userEvent.master);
     for(int i = chains.size() - 1; i >= 0; i--)
         if(!chains[i]->check(userEvent)) {
-            LOG(LOG_LEVEL_DEBUG, "checkAllChainBindings terminated early\n");
+            LOG(LOG_LEVEL_INFO, "checkAllChainBindings terminated early\n");
             return 0;
         }
     return 1;

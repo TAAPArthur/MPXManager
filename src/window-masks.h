@@ -117,7 +117,6 @@ enum WindowMasks {
     /// Workspace masks will be ignored
     IGNORE_WORKSPACE_MASKS_MASK = 1 << 27,
 
-
     ///Keeps track on the visibility state of the window
     PARTIALLY_VISIBLE =     1 << 28,
     ///Keeps track on the visibility state of the window
@@ -214,7 +213,7 @@ struct WindowMask {
  * @return
  */
 static inline std::ostream& operator<<(std::ostream& stream, const WindowMask& mask) {
-    return stream<<(std::string)mask;
+    return stream << (std::string)mask;
 }
 
 /**

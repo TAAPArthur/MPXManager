@@ -30,8 +30,21 @@
 
 
 
-enum {LOG_LEVEL_ALL, LOG_LEVEL_VERBOSE, LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO,
-    LOG_LEVEL_WARN, LOG_LEVEL_ERROR, LOG_LEVEL_NONE
+enum {
+    /// spam
+    LOG_LEVEL_VERBOSE,
+    /// used to debug specific problems
+    LOG_LEVEL_TRACE,
+    /// used for debug problems
+    LOG_LEVEL_DEBUG,
+    /// general infomation
+    LOG_LEVEL_INFO,
+    /// for unexpected behavior that is recoverable
+    LOG_LEVEL_WARN,
+    /// for error messages
+    LOG_LEVEL_ERROR,
+    /// no logging
+    LOG_LEVEL_NONE
 };
 
 

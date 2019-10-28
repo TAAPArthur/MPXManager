@@ -19,7 +19,7 @@
 
 /// name of env variable that (if set) should be the default pointer
 #define DEFAULT_POINTER_ENV_VAR_NAME "CLIENT_POINTER"
-/// name of env variable that (if set) should be the default keyboard 
+/// name of env variable that (if set) should be the default keyboard
 #define DEFAULT_KEYBOARD_ENV_VAR_NAME "CLIENT_KEYBOARD"
 
 /// The other end of STATUS_FD

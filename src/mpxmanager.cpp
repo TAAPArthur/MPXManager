@@ -129,6 +129,7 @@ static void setOption(std::string str) {
  */
 static void sendOption(std::string str) {
     if(!dpy) {
+        setLogLevel(LOG_LEVEL_WARN);
         openXDisplay();
         clearWMSettings();
         RUN_EVENT_LOOP = 0;

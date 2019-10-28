@@ -198,7 +198,6 @@ int focusWindow(WindowInfo* winInfo, Master* master) {
         if(winInfo->hasMask(WM_TAKE_FOCUS_MASK)) {
             //TODO MPX support
             uint32_t data[] = {WM_TAKE_FOCUS, getTime()};
-            LOG(LOG_LEVEL_TRACE, "sending request to take focus to ");
             xcb_ewmh_send_client_message(dis, winInfo->getID(), winInfo->getID(), ewmh->WM_PROTOCOLS, 2, data);
         }
         return 1;

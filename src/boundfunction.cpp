@@ -5,7 +5,7 @@
 
 
 /// Holds batch events
-struct BatchEventList{
+struct BatchEventList {
     /// how many times the event has been trigged
     int counter;
     /// the list of events to trigger when counter is non zero
@@ -32,7 +32,7 @@ static int applyRules(ArrayList<BoundFunction*>& rules, WindowInfo* winInfo, Mas
     for(BoundFunction* func : rules) {
         LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Running func: " << func->getName() << "\n");
         if(!func->execute(winInfo, m)) {
-            LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Rules aborted early " << func->getName() << "\n");
+            LOG_RUN(LOG_LEVEL_INFO, std::cout << "Rules aborted early due to: " << func->getName() << "\n");
             return 0;
         }
     }
@@ -44,14 +44,14 @@ int getNumberOfEventsTriggerSinceLastIdle(int type) {
 void applyBatchEventRules(void) {
     for(int i = 0; i < MPX_LAST_EVENT; i++)
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
-            LOG(LOG_LEVEL_DEBUG, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
+            LOG(LOG_LEVEL_INFO, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
                 eventTypeToString(i), getBatchEventRules(i).size());
             applyRules(getBatchEventRules(i), NULL);
             batchEventRules[i].counter = 0;
         }
 }
 int applyEventRules(int type, WindowInfo* winInfo, Master* m) {
-    LOG(LOG_LEVEL_DEBUG, "Event detected %d %s number of rules: %d parameters WindowID: %d MasterID: %d\n",
+    LOG(LOG_LEVEL_INFO, "Event detected %d %s number of rules: %d parameters WindowID: %d MasterID: %d\n",
         type, eventTypeToString(type), getEventRules(type).size(), winInfo ? winInfo->getID() : 0, m ? m->getID() : 0);
     incrementBatchEventRuleCounter(type);
     return applyRules(getEventRules(type), winInfo, m);

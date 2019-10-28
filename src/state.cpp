@@ -51,11 +51,11 @@ static char couldStateHaveChanged = 1;
 
 bool isStateMarked(void) { return couldStateHaveChanged;}
 void markState(void) {
-    LOG(LOG_LEVEL_ALL, "marking state\n");
+    LOG(LOG_LEVEL_TRACE, "marking state\n");
     couldStateHaveChanged = 1;
 }
 void unmarkState(void) {
-    LOG(LOG_LEVEL_ALL, "unmarking state\n");
+    LOG(LOG_LEVEL_TRACE, "unmarking state\n");
     couldStateHaveChanged = 0;
 }
 
@@ -143,7 +143,7 @@ static int compareState() {
             Workspace* w = getWorkspace(i);
             for(WindowInfo* winInfo : w->getWindowStack())
                 if(winInfo->hasMask(MAPPABLE_MASK) && (w->isVisible() ^ winInfo->hasMask(MAPPED_MASK))) {
-                    LOG(LOG_LEVEL_DEBUG, "Detected WINDOW_CHANGE Workspace: %d (Visibile %d) for %d \n", i, w->isVisible(),
+                    LOG(LOG_LEVEL_DEBUG, "Detected WINDOW_CHANGE Workspace: %d (Visible %d) for %d \n", i, w->isVisible(),
                         winInfo->getID());
                     updateWindowWorkspaceState(winInfo);
                     changed |= WINDOW_CHANGE ;
@@ -163,6 +163,6 @@ static int compareState() {
 
 int updateState() {
     if(!isStateMarked())
-        LOG(LOG_LEVEL_TRACE, "State coult not have changed \n");
+        LOG(LOG_LEVEL_TRACE, "State could not have changed \n");
     return isStateMarked() ? (StateChangeType) compareState() : NO_CHANGE;
 }

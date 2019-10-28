@@ -132,13 +132,13 @@ void autoFocus() {
     if(winInfo->hasMask(INPUT_MASK)) {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             if(focusWindow(winInfo)) {
-                LOG(LOG_LEVEL_DEBUG, "auto focused window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
+                LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
                 raiseWindowInfo(winInfo);
                 getActiveMaster()->onWindowFocus(winInfo->getID());
             }
         }
         else
-            LOG(LOG_LEVEL_TRACE, "did not auto focus window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
+            LOG(LOG_LEVEL_DEBUG, "did not auto focus window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
     }
 }
 void addAutoFocusRule(AddFlag flag) {

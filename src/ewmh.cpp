@@ -150,7 +150,7 @@ void onClientMessage(void) {
     xcb_client_message_data_t data = event->data;
     xcb_window_t win = event->window;
     Atom message = event->type;
-    LOG(LOG_LEVEL_DEBUG, "Received client message/request for window: %d\n", win);
+    LOG(LOG_LEVEL_INFO, "Received client message for window: %d message: %s\n", win, getAtomName(message).c_str());
     if(message == ewmh->_NET_CURRENT_DESKTOP)
         switchToWorkspace(data.data32[0]);
     else if(message == ewmh->_NET_ACTIVE_WINDOW) {
@@ -227,12 +227,17 @@ void onClientMessage(void) {
         }
     }
     else if(message == ewmh->_NET_WM_STATE) {
-        LOG(LOG_LEVEL_DEBUG, "Settings client window manager state %d\n", data.data32[3]);
+        // action, prop1, prop2, source
         WindowInfo* winInfo = getWindowInfo(win);
+        // if prop2 is 0, then there is only 1 property to consider
         int num = data.data32[2] == 0 ? 1 : 2;
+        LOG(LOG_LEVEL_INFO, "Got request to change window state from %d\n", data.data32[3]);
+        LOG_RUN(LOG_LEVEL_INFO, dumpAtoms(&data.data32[1], num));
         if(winInfo) {
             if(winInfo->allowRequestFromSource(data.data32[3]))
                 setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
+            else
+                LOG(LOG_LEVEL_INFO, "Client message denied\n");
         }
         else {
             WindowInfo fakeWinInfo = {.id = win};
@@ -323,8 +328,6 @@ struct RefWindowMouse {
                     result[i + 2] = 1;
             }
         }
-        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "WindowMoveResizeResult: " << result << "\n");
-        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "WindowMoveResizeRef   : " << ref << "\n");
         return result;
     }
     const RectWithBorder getRef() {return ref;}
@@ -388,7 +391,7 @@ void loadSavedAtomState(WindowInfo* winInfo) {
     }
 }
 void setXWindowStateFromMask(WindowInfo* winInfo) {
-    LOG(LOG_LEVEL_DEBUG, "Setting X State from masks %d\n", winInfo->getID());
+    LOG(LOG_LEVEL_INFO, "Setting X State for window %d from masks %d\n", winInfo->getID(), (int)winInfo->getMask());
     xcb_atom_t supportedStates[] = {SUPPORTED_STATES};
     xcb_ewmh_get_atoms_reply_t reply;
     int count = 0;
@@ -412,7 +415,7 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
 }
 
 void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
-    LOG(LOG_LEVEL_DEBUG, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
+    LOG(LOG_LEVEL_INFO, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
     WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++) {
         mask |= getMaskFromAtom(atoms[i]);

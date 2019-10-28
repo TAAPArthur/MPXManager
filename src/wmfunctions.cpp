@@ -274,10 +274,11 @@ WindowID activateWindow(WindowInfo* winInfo) {
 
 
 void configureWindow(WindowID win, uint32_t mask, int values[7]) {
-#ifndef NDEBUG
-    LOG(LOG_LEVEL_DEBUG, "Config %d: mask %d %d\n", win, mask, __builtin_popcount(mask));
+    assert(mask);
+    LOG(LOG_LEVEL_INFO, "Config %d: mask %d %d\n", win, mask, __builtin_popcount(mask));
     if(mask)
-        PRINT_ARR("values", values, std::min(__builtin_popcount(mask), 7), "\n");
+        LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7), "\n"));
+#ifndef NDEBUG
     catchError(xcb_configure_window_checked(dis, win, mask, values));
 #else
     xcb_configure_window(dis, win, mask, values);
@@ -335,7 +336,7 @@ static inline int filterConfigValues(int* filteredArr, const WindowInfo* winInfo
 }
 int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask) {
     assert(configMask);
-    LOG(LOG_LEVEL_TRACE, "processing configure request window %d\n", win);
+    LOG(LOG_LEVEL_DEBUG, "processing configure request window %d\n", win);
     int actualValues[7];
     WindowInfo* winInfo = getWindowInfo(win);
     if(!winInfo) {
@@ -346,7 +347,7 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
         return configMask;
     }
     int mask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
-    LOG(LOG_LEVEL_TRACE, "Mask filtered from %d to %d\n", configMask, mask);
+    LOG(LOG_LEVEL_DEBUG, "Mask filtered from %d to %d\n", configMask, mask);
     if(mask) {
         configureWindow(win, mask, actualValues);
         /*
@@ -367,8 +368,8 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
         */
     }
     else {
-        LOG(LOG_LEVEL_DEBUG, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
-        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << *winInfo << "\n");
+        LOG(LOG_LEVEL_INFO, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
+        LOG_RUN(LOG_LEVEL_INFO, std::cout << *winInfo << "\n");
     }
     return mask;
 }

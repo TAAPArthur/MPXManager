@@ -115,10 +115,11 @@ static inline void* getNextDeviceEvent() {
 }
 static inline void waitToReceiveInput(int mask, int detailMask = 0) {
     flush();
-    LOG(LOG_LEVEL_ALL, "waiting for input %d\n\n", mask);
+    LOG(LOG_LEVEL_TRACE, "waiting for input %d\n\n", mask);
     while(mask || detailMask) {
         xcb_input_key_press_event_t* e = (xcb_input_key_press_event_t*)getNextDeviceEvent();
-        LOG(LOG_LEVEL_ALL, "type %d (%d); detail %d remaining mask:%d %d\n", e->response_type, (1 << e->event_type), e->detail,
+        LOG(LOG_LEVEL_TRACE, "type %d (%d); detail %d remaining mask:%d %d\n", e->response_type, (1 << e->event_type),
+            e->detail,
             mask, detailMask);
         mask &= ~(1 << e->event_type);
         detailMask &= ~(1 << e->detail);
@@ -129,13 +130,13 @@ static inline void waitToReceiveInput(int mask, int detailMask = 0) {
 
 static inline int waitForNormalEvent(int type) {
     flush();
-    LOG(LOG_LEVEL_ALL, "Waiting for event of type %d\n", type);
+    LOG(LOG_LEVEL_TRACE, "Waiting for event of type %d\n", type);
     while(type) {
         xcb_generic_event_t* e = xcb_wait_for_event(dis);
-        LOG(LOG_LEVEL_ALL, "Found event %p\n", e);
+        LOG(LOG_LEVEL_TRACE, "Found event %p\n", e);
         if(!e)
             return 0;
-        LOG(LOG_LEVEL_ALL, "type %d (%d) %s\n", e->response_type, e->response_type & 127,
+        LOG(LOG_LEVEL_TRACE, "type %d (%d) %s\n", e->response_type, e->response_type & 127,
             eventTypeToString(e->response_type & 127));
         int t = e->response_type & 127;
         free(e);

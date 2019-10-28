@@ -35,14 +35,14 @@ void attachSlaveToMaster(Slave* slave, Master* master) {
     else floatSlave(slave->getID());
 }
 void floatSlave(SlaveID slaveID) {
-    LOG(LOG_LEVEL_DEBUG, "floating %d \n", slaveID);
+    LOG(LOG_LEVEL_INFO, "floating %d \n", slaveID);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIDetachSlave;
     changes.attach.deviceid = slaveID;
     XIChangeHierarchy(dpy, &changes, 1);
 }
 void attachSlaveToMaster(SlaveID slaveID, MasterID masterID) {
-    LOG(LOG_LEVEL_DEBUG, "attaching %d to %d\n", slaveID, masterID);
+    LOG(LOG_LEVEL_INFO, "attaching %d to %d\n", slaveID, masterID);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIAttachSlave;
     changes.attach.deviceid = slaveID;
@@ -89,7 +89,7 @@ void initCurrentMasters() {
     devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
     ArrayList<MasterID>masters;
     getAllSlaves().deleteElements();
-    LOG(LOG_LEVEL_TRACE, "Detected %d devices\n", ndevices);
+    LOG(LOG_LEVEL_DEBUG, "Detected %d devices\n", ndevices);
     for(int i = 0; i < ndevices; i++) {
         device = &devices[i];
         switch(device->use) {
@@ -244,14 +244,13 @@ void detectMonitors(void) {
         monitorNames.add(monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
+    LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors\n", monitorNames.size());
     free(monitors);
     for(int i = getAllMonitors().size() - 1; i >= 0; i--)
         if(!monitorNames.find(getAllMonitors()[i]->getID()))
             delete getAllMonitors().remove(i);
 #endif
-    assert(getAllMonitors().size() > 0);
     removeDuplicateMonitors();
     assignUnusedMonitorsToWorkspaces();
     resizeAllMonitorsToAvoidAllDocks();
-    assert(getAllMonitors().size() > 0);
 }

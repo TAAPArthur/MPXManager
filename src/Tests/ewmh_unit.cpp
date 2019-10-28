@@ -252,8 +252,11 @@ MPX_TEST("test_client_set_window_unknown_state", {
     }
 
 });
-MPX_TEST("test_client_set_window_state", {
+MPX_TEST_ITER("test_client_set_window_state", 2, {
     WindowInfo* winInfo = getAllWindows()[0];
+    bool allowRequest = _i;
+    if(!allowRequest)
+        winInfo->removeMask(SRC_ANY);
     xcb_ewmh_wm_state_action_t states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
     WindowID ignoredWindow = createIgnoredWindow();
     for(int i = 0; i < LEN(states); i++) {
@@ -262,11 +265,11 @@ MPX_TEST("test_client_set_window_state", {
             ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
         sendChangeWindowStateRequest(winInfo->getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
             ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
-        flush();
-        if(i % 2 == 0)
-            WAIT_UNTIL_TRUE(winInfo->hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
+        waitUntilIdle();
+        if(i % 2 == 0 && allowRequest)
+            assert(winInfo->hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
         else
-            WAIT_UNTIL_TRUE(!winInfo->hasPartOfMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
+            assert(!winInfo->hasPartOfMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
         loadSavedAtomState(&fakeWinInfo);
         assert(fakeWinInfo.hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK) == (i % 2 == 0));
     }
