@@ -302,7 +302,6 @@ void addBasicRules(AddFlag flag) {
     addApplyBindingsRule(flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return winInfo->getWorkspace()->isVisible();}));
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }

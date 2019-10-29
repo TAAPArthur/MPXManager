@@ -139,4 +139,11 @@ MPX_TEST("swap_on_unmap", {
     waitUntilIdle();
     assertEquals(winInfo->getWorkspaceIndex(), 1);
     assertEquals(cloneInfo->getWorkspaceIndex(), 0);
+
+    switchToWorkspace(0);
+    /// wake WM
+    createNormalWindow();
+    waitUntilIdle();
+    assertEquals(winInfo->getWorkspaceIndex(), 0);
+    assertEquals(cloneInfo->getWorkspaceIndex(), 1);
 });

@@ -123,7 +123,7 @@ void swapWithOriginalOnEnter(void) {
     WindowInfo* winInfo = getWindowInfo(event->event);
     if(winInfo) {
         WindowInfo* origin = getWindowInfo(winInfo->getEffectiveID());
-        if(origin && origin->hasMask(MAPPED_MASK) && winInfo->hasMask(MAPPED_MASK)) {
+        if(origin && origin->isNotInInvisibleWorkspace() && winInfo->isNotInInvisibleWorkspace()) {
             LOG(LOG_LEVEL_DEBUG, "swapping clone %d with %d\n", winInfo->getID(), origin ? origin->getID() : 0);
             swapWindows(origin, winInfo);
             markState();
@@ -136,7 +136,7 @@ void onExpose(void) {
         WindowInfo* winInfo = getWindowInfo(event->window);
         if(winInfo) {
             WindowInfo* origin = getWindowInfo(winInfo->getEffectiveID());
-            if(origin && origin != winInfo && origin->hasMask(MAPPED_MASK))
+            if(origin && origin != winInfo && origin->isNotInInvisibleWorkspace())
                 updateClone(winInfo);
             updateAllClonesOfWindow(winInfo);
         }
@@ -156,7 +156,7 @@ void swapOnMapEvent(void) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         WindowInfo* origin = getWindowInfo(winInfo->getEffectiveID());
-        if(origin && origin != winInfo && !origin->hasMask(MAPPED_MASK)) {
+        if(origin && origin != winInfo && !origin->isNotInInvisibleWorkspace()) {
             LOG(LOG_LEVEL_DEBUG, "swapping mapped clone with unmapped parent %d with %d\n", winInfo->getID(), origin->getID());
             swapWindows(origin, winInfo);
         }
@@ -170,7 +170,7 @@ void swapOnUnmapEvent(void) {
         if(list)
             for(WindowID cloneID : *list) {
                 WindowInfo* clone = getWindowInfo(cloneID);
-                if(clone && clone->hasMask(MAPPED_MASK))
+                if(clone && clone->isNotInInvisibleWorkspace())
                     swapWindows(winInfo, clone);
             }
     }

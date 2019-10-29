@@ -121,12 +121,45 @@ MPX_TEST("test_always_on_top_bottom_conflicting_masks", {
     getWindowInfo(wins[0])->addMask(ALWAYS_ON_BOTTOM | ALWAYS_ON_TOP);
     getWindowInfo(wins[1])->addMask(ALWAYS_ON_BOTTOM | ABOVE_MASK);
     getWindowInfo(wins[3])->addMask(ALWAYS_ON_TOP | BELOW_MASK);
-    for(WindowID win:wins){
+    for(WindowID win : wins) {
         assert(lowerWindowInfo(getWindowInfo(win)));
     }
     unlock();
     waitUntilIdle();
     assert(checkStackingOrder(wins, LEN(wins)));
+});
+MPX_TEST_ITER("tile_invisible", 2, {
+    setActiveLayout(GRID);
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    waitUntilIdle();
+    grabPointer();
+    for(int i = 0; i < 2; i++) {
+        ATOMIC(getAllWindows()[0]->moveToWorkspace(1));
+        waitUntilIdle();
+        if(_i)
+            sendChangeWorkspaceRequest(1);
+        else {
+            movePointerRelative(1, 1);
+            switchToWorkspace(1);
+        }
+        waitUntilIdle();
+        assertEquals(getActiveWorkspaceIndex(), 1);
+        if(i)
+            assertEquals(getRealGeometry(getAllWindows()[0]->getID()), getAllMonitors()[0]->getViewport());
+        else
+            assert(getRealGeometry(getAllWindows()[0]->getID()) !=  getRealGeometry(getAllWindows()[1]->getID()));
+        ATOMIC(getAllWindows()[0]->moveToWorkspace(0));
+        waitUntilIdle();
+        if(_i)
+            sendChangeWorkspaceRequest(0);
+        else {
+            movePointerRelative(1, 1);
+            switchToWorkspace(0);
+        }
+        waitUntilIdle();
+        assertEquals(getActiveWorkspaceIndex(), 0);
+    }
 });
 
 MPX_TEST("detect_many_masters", {

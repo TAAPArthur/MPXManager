@@ -37,9 +37,9 @@ MPX_TEST("tile_worskspace_event", {
     getAllWindows()[0]->moveToWorkspace(0);
     getAllWindows()[1]->moveToWorkspace(1);
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {assertEquals(winInfo, getAllWindows()[1]); return 0;}));
+    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {assertEquals(winInfo, getAllWindows()[0]); return 0;}));
     getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
-    tileWorkspace(1);
+    tileWorkspace(0);
     assertEquals(getCount(), 1);
 });
 

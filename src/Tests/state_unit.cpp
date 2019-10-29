@@ -33,6 +33,8 @@ MPX_TEST("print", {
     markState();
     addVisibleWindow(0);
     assert(updateState());
+    markState();
+    assert(!updateState());
 
 });
 MPX_TEST("test_no_state_change", {

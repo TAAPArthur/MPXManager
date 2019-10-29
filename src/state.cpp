@@ -23,6 +23,7 @@ struct WorkspaceState {
     Rect monitorViewport = {0, 0, 0, 0};
     /// if the workspace is known to be visible
     bool visible = 0;
+    bool forceRetile = 0;
     /// the size of windowIds and windowMasks arrays
     int size = 0;
     ///list of window ids in workspace stack order
@@ -79,6 +80,8 @@ static WorkspaceState* computeState() {
             states[i].monitorViewport = savedStates[i].monitorViewport;
         else
             states[i].monitorViewport = w->getMonitor() ? w->getMonitor()->getViewport() : (Rect) {0, 0, 0, 0};
+        if(i < numberOfRecordedWorkspaces)
+            states[i].forceRetile = savedStates[i].forceRetile;
         states[i].visible = w->isVisible();
         states[i].layout = w->getActiveLayout();
         int size = w->getWindowStack().size();
@@ -101,6 +104,14 @@ static WorkspaceState* computeState() {
     return states;
 }
 
+static inline void _printStateComparison(WorkspaceState* currentState, WorkspaceID i) {
+    if(currentState[i].size || i < numberOfRecordedWorkspaces && savedStates[i].size) {
+        std::cout << "Index:  " << i << "\n";
+        std::cout << "Current:" << currentState[i] << "\n";
+        if(i < numberOfRecordedWorkspaces)
+            std::cout << "Saved:  " << savedStates[i] << "\n";
+    }
+}
 
 /**
  * Compares the current state with the last saved state.
@@ -111,14 +122,17 @@ static int compareState() {
     WorkspaceState* currentState = computeState();
     assert(currentState);
     int changed = NO_CHANGE;
-    for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
-        LOG_RUN(LOG_LEVEL_VERBOSE,
-            std::cout << "Index: " << i << "\n";
-            std::cout <<    "Current:" << currentState[i] << "\n";
-            if(i < numberOfRecordedWorkspaces)
-            std::cout << "Saved:  " << savedStates[i] << "\n";
-        );
-        if((savedStates || currentState[i].size) &&
+    ArrayList<WorkspaceID>workspaceIDs;
+    for(Workspace* w : getAllWorkspaces())
+        if(w->isVisible())
+            workspaceIDs.add(w->getID());
+    for(Workspace* w : getAllWorkspaces())
+        if(!w->isVisible())
+            workspaceIDs.add(w->getID());
+    assert(workspaceIDs.size() == getNumberOfWorkspaces());
+    for(WorkspaceID i : workspaceIDs) {
+        LOG_RUN(LOG_LEVEL_DEBUG, _printStateComparison(currentState, i));
+        if(currentState[i].forceRetile || (savedStates || currentState[i].size) &&
             (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
                 memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
                 savedStates[i].layout != currentState[i].layout ||
@@ -128,9 +142,14 @@ static int compareState() {
                 )
             )
         ) {
-            changed |= WORKSPACE_WINDOW_CHANGE;
-            LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
-            tileWorkspace(i);
+            if(currentState[i].visible || !currentState[i].forceRetile) {
+                changed |= WORKSPACE_WINDOW_CHANGE;
+            }
+            if(currentState[i].visible) {
+                LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
+                tileWorkspace(i);
+            }
+            currentState[i].forceRetile = !currentState[i].visible;
         }
         if((savedStates || currentState[i].visible) &&
             (i >= numberOfRecordedWorkspaces ||

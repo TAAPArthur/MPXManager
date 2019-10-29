@@ -220,7 +220,8 @@ void retile(void) {
 void tileWorkspace(WorkspaceID index) {
     Workspace* workspace = getWorkspace(index);
     LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d\n", index);
-    if(!applyEventRules(TileWorkspace, !workspace->getWindowStack().empty() ? workspace->getWindowStack()[0] : NULL))
+    if(!workspace->getMonitor() ||
+        !applyEventRules(TileWorkspace, !workspace->getWindowStack().empty() ? workspace->getWindowStack()[0] : NULL))
         return;
     applyLayout(workspace);
     ArrayList<WindowInfo*>& list = workspace->getWindowStack();
