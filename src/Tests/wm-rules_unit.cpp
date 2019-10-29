@@ -173,7 +173,9 @@ MPX_TEST("test_detect_new_override_redirect_windows", {
     createIgnoredWindow();
     createIgnoredWindow();
     waitUntilIdle();
-    assert(getActiveWindowStack().size() == 3);
+    assertEquals(getActiveWindowStack().size(), 3);
+    for(WindowInfo* winInfo : getAllWindows())
+        assert(winInfo->isOverrideRedirectWindow());
 });
 MPX_TEST("test_reparent_windows", {
     WindowID win = createNormalWindow();

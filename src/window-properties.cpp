@@ -143,7 +143,7 @@ void loadWindowProperties(WindowInfo* winInfo) {
     if(winInfo->isDock())
         loadDockProperties(winInfo);
     bool result = !loadWindowType(winInfo);
-    winInfo->setImplictType(result);
+    winInfo->setImplicitType(result);
 }
 void setBorderColor(WindowID win, unsigned int color) {
     if(color > 0xFFFFFF) {

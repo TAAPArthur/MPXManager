@@ -86,12 +86,27 @@ MPX_TEST("dock_properties", {
     assert(prop != NULL);
     assert(memcmp(arr, prop, sizeof(arr)) == 0);
 });
-MPX_TEST("override_redirect", {
+MPX_TEST_ITER("override_redirect", 3, {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);
-    winInfo->markAsOverrideRedirect();
-    assert(winInfo->isOverrideRedirectWindow());
-    assert(winInfo->hasMask(FLOATING_MASK | STICKY_MASK));
+    switch(_i) {
+        case 0:
+            assert(!winInfo->isOverrideRedirectWindow());
+            winInfo->markAsOverrideRedirect();
+            assert(winInfo->isOverrideRedirectWindow());
+            assert(winInfo->hasMask(FLOATING_MASK | STICKY_MASK));
+            break;
+        case 1:
+            assert(!winInfo->isNotManageable());
+            winInfo->setNotManageable();
+            assert(winInfo->isNotManageable());
+            break;
+        case 2:
+            assert(!winInfo->isInputOnly());
+            winInfo->markAsInputOnly();
+            assert(winInfo->isInputOnly());
+            break;
+    }
 });
 MPX_TEST("other", {
     WindowInfo* winInfo = new WindowInfo(1);

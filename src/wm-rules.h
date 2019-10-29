@@ -127,11 +127,29 @@ void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
 /**
  * Adds a PreRegisterWindow rule to ignore override redirect windows
  *
+ * This method is enabled by default although it reduces functionality.
+ *
+ * From the ICCCM spec,
+ * "The user will not be able to move, resize, restack, or transfer the input
+ * focus to override-redirect windows, since the window manager is not managing them"
+ * This is interrupted it as it being safe to simply ignore such windows. However,
+ * there are cases where one may want apply rules like ALWAYS_ON_TOP to these windows.
+ * For such reasons, there are other rule in addBasicRules that will help keep sane
+ * behavior even if this rule is removed.
  * @param flag
  *
  * @return
  */
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds a PreRegisterWindow rule indicating that override redirect windows should not be managed.
+ * This should prevent them from being automatically added to workspaces/auto focused
+ *
+ * @param flag
+ *
+ * @return
+ */
+bool addDoNotManageOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE) ;
 /**
  * Adds ProcessDeviceEvent rule to trigger any of getDeviceBindings() using getLastUserEvent
  *

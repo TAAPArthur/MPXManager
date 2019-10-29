@@ -192,7 +192,6 @@ void onStartup(void) {
     addDefaultMaster();
     if(RUN_AS_WM) {
         addBasicRules();
-        addIgnoreOverrideRedirectWindowsRule();
         addApplyChainBindingsRule();
         addAutoTileRules();
         addEWMHRules();

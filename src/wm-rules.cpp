@@ -76,6 +76,12 @@ void onConfigureRequestEvent(void) {
             values[n++] = (&event->x)[i];
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
+bool addDoNotManageOverrideRedirectWindowsRule(AddFlag flag) {
+    return getEventRules(PreRegisterWindow).add({
+        +[](WindowInfo * winInfo) {if(winInfo->isOverrideRedirectWindow())winInfo->setNotManageable();},
+        FUNC_NAME,
+    }, flag);
+}
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
     return getEventRules(PreRegisterWindow).add({
         +[](WindowInfo * winInfo) {return !winInfo->isOverrideRedirectWindow();},
@@ -244,6 +250,8 @@ void registerForEvents() {
     registerForMonitorChange();
 }
 bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
+    if(winInfo->isNotManageable())
+        return 1;
     uint32_t mask = winInfo->getEventMasks() ? winInfo->getEventMasks() : NON_ROOT_EVENT_MASKS;
     bool result = 0;
     if(registerForWindowEvents(winInfo->getID(), mask) == 0) {
@@ -297,11 +305,18 @@ void addBasicRules(AddFlag flag) {
     getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), flag);
     getEventRules(onXConnection).add(DEFAULT_EVENT(onXConnect), flag);
     getEventRules(onXConnection).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
+    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
+    // From the ICCCM spec,
+    // "The user will not be able to move, resize, restack, or transfer the input
+    // focus to override-redirect windows, since the window manager is not managing them"
+    // so it seems like a bug for a OR window to have INPUT_MASK set
+    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}),
+    flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
+    addDoNotManageOverrideRedirectWindowsRule(flag);
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
     addApplyBindingsRule(flag);
     getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
-    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }

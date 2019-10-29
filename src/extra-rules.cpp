@@ -21,7 +21,7 @@
 
 
 void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->isImplictType() && winInfo->isInputOnly() ? unregisterWindow(winInfo) : 0;},
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->isImplicitType() && winInfo->isInputOnly() ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
@@ -129,7 +129,7 @@ void autoFocus() {
     if(!winInfo)
         return;
     long delta = getTime() - winInfo->getCreationTime();
-    if(winInfo->hasMask(INPUT_MASK)) {
+    if(!winInfo->isNotManageable() && winInfo->hasMask(INPUT_MASK)) {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             if(focusWindow(winInfo)) {
                 LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)\n", winInfo->getID(), delta);

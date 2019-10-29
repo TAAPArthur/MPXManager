@@ -28,9 +28,12 @@ private:
     bool dock = 0;
     /// 1 iff override_redirect flag set
     bool overrideRedirect = 0;
+    /// i iff input only window
     bool inputOnly = 0;
     /// the window type was not set explicitly
-    bool implictType = 0;
+    bool implicitType = 0;
+    /// the window won't/cannot be fully managed
+    bool notManageable = 0;
     /**xcb_atom representing the window type*/
     uint32_t type = 0;
 
@@ -147,11 +150,16 @@ public:
         setTilingOverrideEnabled(1 << 4, 1);
         tilingOverride.border = 0;
     }
+    /// sets a flag indicating the window cannot be managed
+    void setNotManageable(bool b = 1) {notManageable = b;}
+    /// returns whether or not a window can/should be managed
+    /// If this returns false, then nothing should automatically happen to this window
+    bool isNotManageable()const {return notManageable;}
 
     /// sets that the window type was not explicitly set
-    void setImplictType(bool b) {implictType = b;}
+    void setImplicitType(bool b) {implicitType = b;}
     /// @return 1 iff window type was not explicitly set
-    bool isImplictType() {return implictType;}
+    bool isImplicitType() {return implicitType;}
 
     /// @return the masks to grab
     uint32_t getEventMasks() {return eventMasks;}
