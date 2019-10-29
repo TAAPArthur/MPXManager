@@ -24,8 +24,7 @@
     ewmh->_NET_WM_ACTION_MINIMIZE,\
     ewmh->_NET_WM_ACTION_STICK,\
     ewmh->_NET_WM_ACTION_MOVE,\
-    ewmh->_NET_WM_ACTION_RESIZE,\
-    ewmh->_NET_WM_ALLOWED_ACTIONS
+    ewmh->_NET_WM_ACTION_RESIZE
 
 /// list of supported states
 #define SUPPORTED_STATES\
@@ -330,6 +329,12 @@ void loadSavedAtomState(WindowInfo* winInfo);
  * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
  */
 void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action);
+/**
+ * Sets the WM_ACTIONS supported for this given window (which is the same for all of them)
+ *
+ * @param winInfo
+ */
+void setAllowedActions(WindowInfo* winInfo);
 /**
  * Sync EWMH global properties with our internal state
  */

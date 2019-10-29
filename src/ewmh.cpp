@@ -48,8 +48,6 @@ void broadcastEWMHCompilence() {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
-    xcb_atom_t actions[] = {SUPPORTED_ACTIONS};
-    xcb_ewmh_set_wm_allowed_actions_checked(ewmh, root, LEN(actions), actions);
     SET_SUPPORTED_OPERATIONS(ewmh);
     xcb_ewmh_set_wm_pid(ewmh, root, getpid());
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
@@ -57,6 +55,11 @@ void broadcastEWMHCompilence() {
     // Not strictly needed
     updateWorkspaceNames();
     LOG(LOG_LEVEL_DEBUG, "Complied with EWMH/ICCCM specs\n");
+}
+
+void setAllowedActions(WindowInfo* winInfo) {
+    static xcb_atom_t actions[] = {SUPPORTED_ACTIONS};
+    xcb_ewmh_set_wm_allowed_actions_checked(ewmh, winInfo->getID(), LEN(actions), actions);
 }
 
 void updateEWMHClientList() {
@@ -111,6 +114,7 @@ void addEWMHRules(AddFlag flag) {
     getBatchEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
     getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(setAllowedActions));
 }
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {
     WorkspaceID workspaceIndex = 0;
