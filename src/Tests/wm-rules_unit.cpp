@@ -225,6 +225,21 @@ MPX_TEST("test_property_update", {
     waitUntilIdle();
     assert(getWindowInfo(win)->getTitle() == title);
 });
+MPX_TEST("test_property_update_other", {
+    WindowID win = mapWindow(createNormalWindow());
+    waitUntilIdle();
+    setWindowClass(win, "clazz", "Clazz");
+    waitUntilIdle();
+});
+MPX_TEST("test_property_update_urgent", {
+    WindowID win = mapWindow(createNormalWindow());
+    waitUntilIdle();
+    xcb_icccm_wm_hints_t hints;
+    xcb_icccm_wm_hints_set_urgency(&hints);
+    xcb_icccm_set_wm_hints(dis, win, &hints);
+    waitUntilIdle();
+    assert(getWindowInfo(win)->hasMask(URGENT_MASK));
+});
 
 MPX_TEST("test_map_windows", {
     WindowID win = createUnmappedWindow();

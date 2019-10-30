@@ -119,17 +119,19 @@ MPX_TEST("load_protocols", {
 MPX_TEST("test_window_extra_property_loading", {
     WindowID win = createUnmappedWindow();
     int groupLead = createUnmappedWindow();
-    int trasientForWindow = createUnmappedWindow();
+    int transientForWindow = createUnmappedWindow();
     WindowInfo* winInfo = new WindowInfo(win);
     xcb_icccm_wm_hints_t hints;
     xcb_icccm_wm_hints_set_window_group(&hints, groupLead);
+    xcb_icccm_wm_hints_set_urgency(&hints);
     xcb_icccm_set_wm_hints(dis, win, &hints);
-    xcb_icccm_set_wm_transient_for(dis, win, trasientForWindow);
+    xcb_icccm_set_wm_transient_for(dis, win, transientForWindow);
     flush();
     addWindowInfo(winInfo);
     loadWindowProperties(winInfo);
     assert(winInfo->getGroup() == groupLead);
-    assert(winInfo->getTransientFor() == trasientForWindow);
+    assert(winInfo->getTransientFor() == transientForWindow);
+    assert(winInfo->hasMask(URGENT_MASK));
 });
 MPX_TEST("ignore_small_window", {
     WindowID win = mapArbitraryWindow();

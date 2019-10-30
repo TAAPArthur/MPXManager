@@ -28,6 +28,9 @@ extern xcb_atom_t WM_TAKE_FOCUS;
 /// predecessor to _NET_WM_NAME
 extern xcb_atom_t WM_NAME;
 
+/// used to convery inital mapping_state and urgency
+extern xcb_atom_t WM_HINTS;
+
 /**
  * WM_DELETE_WINDOW atom
  * Used to send client messages to delete the window

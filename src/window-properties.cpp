@@ -87,6 +87,9 @@ bool loadWindowType(WindowInfo* winInfo) {
 void loadWindowHints(WindowInfo* winInfo) {
     xcb_icccm_wm_hints_t hints;
     if(xcb_icccm_get_wm_hints_reply(dis, xcb_icccm_get_wm_hints(dis, winInfo->getID()), &hints, NULL)) {
+        if(xcb_icccm_wm_hints_get_urgency(&hints)) {
+            winInfo->addMask(URGENT_MASK);
+        }
         winInfo->setGroup(hints.window_group);
         if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
             winInfo->addMask(MAPPABLE_MASK);

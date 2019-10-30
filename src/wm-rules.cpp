@@ -185,9 +185,12 @@ void onFocusOutEvent(void) {
 void onPropertyEvent(void) {
     xcb_property_notify_event_t* event = (xcb_property_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
-    if(winInfo) {
+    // only reload properties if a window is mapped
+    if(winInfo && winInfo->isMappable()) {
         if(event->atom == ewmh->_NET_WM_NAME || event->atom == WM_NAME)
             loadWindowTitle(winInfo);
+        else if(event->atom == WM_HINTS)
+            loadWindowHints(winInfo);
         else if(event->atom == ewmh->_NET_WM_USER_TIME);
         else {
             LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(&event->atom, 1));
