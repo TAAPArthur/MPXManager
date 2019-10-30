@@ -124,6 +124,10 @@ void loadCustomState(void) {
     loadSavedWorkspaceWindows();
     loadSavedMasterWindows();
     loadSavedActiveMaster();
+    for(Master* master : getAllMasters()) {
+        if(master->getFocusedWindow())
+            setBorderColor(master->getFocusedWindow()->getID(), master->getFocusColor());
+    }
 }
 void saveCustomState(void) {
     int layoutOffsets[getNumberOfWorkspaces()];
