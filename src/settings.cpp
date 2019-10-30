@@ -203,7 +203,7 @@ void onStartup(void) {
         addDefaultBorderRule();
         addFloatRule();
         addPrintStatusRule();
-        //addIgnoreSmallWindowRule();
+        addIgnoreSmallWindowRule();
         addUnknownInputOnlyWindowIgnoreRule();
         //addResumeCustomStateRules();
     }

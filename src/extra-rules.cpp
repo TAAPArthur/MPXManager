@@ -31,7 +31,7 @@ static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
 }
 
 void addIgnoreSmallWindowRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 128) ? unregisterWindow(winInfo) : 0;},
+    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 5) ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 void (*printStatusMethod)();
