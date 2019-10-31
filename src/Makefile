@@ -127,7 +127,10 @@ correctness.out: unitTest
 	touch $@
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 
-%_code_coverage.out: %.cpp | unitTest
+Extensions/Tests/%: Tests/Extensions/%
+	@true
+
+%_code_coverage.out: %.cpp Tests/%_unit.cpp | unitTest
 	rm -f $@ *gcda
 	TEST_FILE=$(patsubst %.o,%.cpp, $(call TEST_FILES, $<)) $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
 	[ -s  $$(basename -a $<).gcov ]
