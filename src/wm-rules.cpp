@@ -191,7 +191,6 @@ void onPropertyEvent(void) {
             loadWindowTitle(winInfo);
         else if(event->atom == WM_HINTS)
             loadWindowHints(winInfo);
-        else if(event->atom == ewmh->_NET_WM_USER_TIME);
         else {
             LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(&event->atom, 1));
             //loadWindowProperties(winInfo);

@@ -228,3 +228,14 @@ int loadDockProperties(WindowInfo* winInfo) {
         resizeAllMonitorsToAvoidAllDocks();
     return 1;
 }
+
+uint32_t getUserTime(WindowID win) {
+    uint32_t timestamp = 1;
+    xcb_ewmh_get_wm_user_time_window_reply(ewmh, xcb_ewmh_get_wm_user_time_window(ewmh, win), &win, NULL);
+    xcb_ewmh_get_wm_user_time_reply(ewmh, xcb_ewmh_get_wm_user_time(ewmh, win), &timestamp, NULL);
+    return timestamp;
+}
+
+void setUserTime(WindowID win, uint32_t time) {
+    xcb_ewmh_set_wm_user_time_checked(ewmh, win, time);
+}

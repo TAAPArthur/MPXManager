@@ -162,6 +162,7 @@ MPX_TEST_ITER("test_auto_focus", 4, {
 
     focusWindow(focusHolder);
     Window win = mapArbitraryWindow();
+    setUserTime(win, 1);
     registerWindow(win, root);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     xcb_map_notify_event_t event = {0};

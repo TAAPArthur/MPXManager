@@ -177,4 +177,18 @@ RectWithBorder getRealGeometry(WindowID id) ;
 static inline RectWithBorder getRealGeometry(WindowInfo* winInfo) {
     return getRealGeometry(winInfo->getID());
 }
+
+/**
+ * @param win
+ *
+ * @return the _NET_USER_TIME property of win or 0 if unset
+ */
+uint32_t getUserTime(WindowID win);
+/**
+ * Sets the _NET_USER_TIME property on win to time
+ *
+ * @param win
+ * @param time
+ */
+void setUserTime(WindowID win, uint32_t time);
 #endif

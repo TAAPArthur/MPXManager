@@ -247,3 +247,18 @@ MPX_TEST_ITER("docks", 4 * 2, {
     assertEquals(prop[i * 2 + 4], start);
     assertEquals(prop[i * 2 + 5], end);
 });
+
+MPX_TEST_ITER("user_time", 2, {
+    WindowID win = createNormalWindow();
+    assertEquals(getUserTime(win), 1);
+    TimeStamp time = getTime();
+    if(_i)
+        setUserTime(win, time);
+    else {
+        WindowID win2 = createNormalWindow();
+        setUserTime(win2, time);
+        assert(!catchError(xcb_ewmh_set_wm_user_time_checked(ewmh, win2, time)));
+        assert(!catchError(xcb_ewmh_set_wm_user_time_window_checked(ewmh, win, win2)));
+    }
+    assertEquals(getUserTime(win), time);
+});

@@ -53,6 +53,7 @@ MPX_TEST("auto_window_map", {
 MPX_TEST("auto_focus", {
     lock();
     WindowID win = mapArbitraryWindow();
+    setUserTime(win, 1);
     unlock();
     waitUntilIdle();
     WindowInfo* winInfo = getWindowInfo(win);
@@ -180,7 +181,7 @@ static void multiMonitorSetup() {
     getActiveMaster()->setWorkspaceIndex(3);
     unlock();
     for(int i = 0; i < 10; i++)
-        mapArbitraryWindow();
+        setUserTime(mapArbitraryWindow(), i + 1);
     waitUntilIdle();
 }
 SET_ENV(multiMonitorSetup, fullCleanup);

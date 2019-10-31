@@ -77,6 +77,7 @@
                 ewmh->_NET_SHOWING_DESKTOP,\
                ewmh->_NET_DESKTOP_NAMES,\
                ewmh->_NET_DESKTOP_VIEWPORT,\
+            ewmh->_NET_WM_USER_TIME_WINDOW,ewmh->_NET_WM_USER_TIME,\
            SUPPORTED_ACTIONS,\
            ewmh->_NET_DESKTOP_GEOMETRY,ewmh->_NET_DESKTOP_VIEWPORT,ewmh->_NET_WORKAREA\
            };\

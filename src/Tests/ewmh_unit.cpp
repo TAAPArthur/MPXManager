@@ -183,6 +183,28 @@ MPX_TEST_ITER_ERR("test_client_close_window", 2, 1, {
     assert(xcb_connection_has_error(dis));
     exit(1);
 });
+MPX_TEST("client_list", {
+    xcb_get_property_cookie_t cookie = xcb_ewmh_get_client_list(ewmh, defaultScreenNumber);
+    xcb_get_property_reply_t* reply;
+    reply = xcb_get_property_reply(dis, cookie, NULL);
+    assert(reply);
+    auto size = xcb_get_property_value_length(reply) / sizeof(int);
+    assertEquals(size, getAllWindows().size());
+    for(uint32_t i = 0; i <  size; i++)
+        assertEquals(((int*)xcb_get_property_value(reply))[i], getAllWindows()[i]->getID());
+    free(reply);
+    // we get focus out event before destroy
+    CRASH_ON_ERRORS = 0;
+    setLogLevel(LOG_LEVEL_NONE);
+    for(WindowInfo* winInfo : getAllWindows()) {
+        assert(!destroyWindow(winInfo->getID()));
+    }
+    waitUntilIdle();
+    cookie = xcb_ewmh_get_client_list(ewmh, defaultScreenNumber);
+    reply = xcb_get_property_reply(dis, cookie, NULL);
+    size = xcb_get_property_value_length(reply) / sizeof(int);
+    assertEquals(size, 0);
+});
 
 MPX_TEST_ITER("test_client_activate_window", 2, {
     for(WindowInfo* winInfo : getAllWindows()) {
