@@ -2,7 +2,7 @@
 
 
 pkgname='mpxmanager'
-pkgver='0.9.9'
+pkgver='1.0.0'
 _language='en-US'
 pkgrel=1
 pkgdesc='My Personal XWindow Manager'
@@ -10,9 +10,9 @@ pkgdesc='My Personal XWindow Manager'
 arch=('any')
 license=('MIT')
 options=(staticlibs !strip)
-depends=('xorg-server' 'libx11' 'libxcb')
+depends=('xorg-server' 'libx11' 'libxcb' 'xcb-util-wm' )
 optdepends=('xorg-server-xvfb' 'xorg-xinput' 'xsane-xrandr' 'check')
-makedepends=('git')
+makedepends=('git' 'help2man')
 md5sums=('SKIP')
 
 source=("git+https://github.com/TAAPArthur/MPXManager.git")
