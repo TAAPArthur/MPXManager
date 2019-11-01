@@ -354,8 +354,8 @@ void masterPane(LayoutState* state) {
     int dimIndex = state->getArgs()->getDimIndex();
     int dim = values[dimIndex];
     values[dimIndex] = MAX(dim * state->getArgs()->arg, 1);
-    configureWindow(state, state->stack[0], values);
+    int offset = splitEven(state, 0, values, state->getArgs()->getOtherDimIndex(), 1, 0);
     values[dimIndexToPos(dimIndex)] += values[dimIndex];
     values[dimIndex] = dim - values[dimIndex];
-    splitEven(state, 1, values, state->getArgs()->getOtherDimIndex(), size - 1, 1);
+    splitEven(state, offset, values, state->getArgs()->getOtherDimIndex(), size - 1, 1);
 }

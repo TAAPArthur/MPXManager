@@ -116,6 +116,28 @@ MPX_TEST_ITER("test_layouts", NUMBER_OF_LAYOUT_FAMILIES, {
         rects.clear();
     }
 });
+MPX_TEST_ITER("test_layouts_unmapped_windows", NUMBER_OF_LAYOUT_FAMILIES, {
+    DEFAULT_BORDER_WIDTH = 0;
+    Monitor* m = getAllMonitors()[0];
+    m->setBase({0, 0, 600, 60});
+    m->setViewport({0, 0, 60, 120});
+    createUnmappedWindow();
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    createUnmappedWindow();
+    scan(root);
+    setActiveLayout(&LAYOUT_FAMILIES[_i]);
+    assertEquals(getAllWindows().size(), 4);
+    int area = 0;
+    for(WindowInfo* winInfo : getAllWindows())
+        winInfo->moveToWorkspace(getActiveWorkspaceIndex());
+    retile();
+    for(WindowInfo* winInfo : getAllWindows())
+        if(winInfo->isTileable()) {
+            area += getRealGeometry(winInfo).getArea();
+        }
+    assertEquals(area, (_i ? 1 : 2) * m->getViewport().getArea());
+});
 MPX_TEST_ITER("default_layouts", getRegisteredLayouts().size(), {
     DEFAULT_BORDER_WIDTH = 0;
     Monitor* m = getAllMonitors()[0];
