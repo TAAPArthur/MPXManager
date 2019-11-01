@@ -5,6 +5,10 @@
 `make install`
 
 `mpxmanager`
+
+See `man mpxmanager` or `mpxmanager --help` for details on arguments
+
+Just run `make` if you want to use it without installing
 # Intro
 MPX Manager is a X11, tiling window manager with [MPX (multiple pointer x)](https://wiki.archlinux.org/index.php/Multi-pointer_X) support.
 
@@ -13,18 +17,17 @@ MPX Manager started off as a project to fill void of MPX aware window managers. 
 
 # Features
 ## Full MPX Support
-MPX Manager was designed from the ground up to support a variable number of master devices. By default master devices operate independently and do not interfere with each other whenever possible.
+MPX Manager was designed from the ground up to support a variable number of master devices. By default master devices operate independently and do not interfere with each other whenever possible. However, there is no true isolation by default (an optional extension may be developed later). Master device can interfer with by deliberate action like switching workspaces.
 
 ## Configurable
-We strived to make as few assumptions as possible while still be compliant with the EWMH/ICCCM spec. The assumptions we made fo user convenience can be toggled in the configuration file and/or from the command line. For the changes we did account, the code base is well documented to make hacks as painless as possible. And hacks, no matter how pointless are encouraged. The goal is for users to be able to do whatever they want.
-
-## Multi monitor support
-We support having multiple monitors that each will hold one workspace.
+We strived to make as few assumptions as possible while still be compliant with the EWMH/ICCCM spec. The assumptions we made fo user convenience can be toggled in the configuration file. For the changes we did account for, the code base is well documented to make hacks as painless as possible. And hacks, no matter how pointless are encouraged. The goal is for users to be able to do whatever they want.
 
 ##  EWMH/ICCCM compliment (mainly)
-There is no intention to support `_NET_WM_MOVERESIZE,_NET_DESKTOP_GEOMETRY,_NET_DESKTOP_VIEWPORT,_NET_WORKAREA`
 There is currently no support for  `_NET_CLIENT_LIST_STACKING`
 There is currently no support for window gravity
+
+## Multi monitor support
+Each Workspace maps to at most 1 monitors.
 
 ## Key/mouse bindings
 Key/mouse press/release/motion bindings.  We also support chain bindings.
@@ -38,69 +41,27 @@ Users can run custom commands upon any arbitrary X11 event being detected. Users
    * Alt-tab window cycling
    * Default dock detection
    * Auto-float dialog windows
+   * Always on top/bottom windows
+   * Sticky windows
 
 ## Scriptable
-MPXManager creates and reads from a named pipe to allow arbitary clients to affect that state in addition to regular EWMH/ICCCM methods
+MPXManager creates and reads from a named pipe to allow arbitrary clients to affect that state in addition to regular EWMH/ICCCM methods
 
-## Documentation?
-All structs/vars/methods/files have Doxygen documentation. But there is no tutorial. The code base had around ~4000 lines of useable C.
+## Documentation
+All structs/vars/methods/files have Doxygen documentation. But there is no tutorial. The code base had around ~6000 lines of useable CPP (including header files).
 
-
-
-
-# Code Overview
-
-## BoundFunction
-Stores a function ptr and arguments to pass into the function. This is used to trigger an arbitary function on a given set of conditions. There is a `BIND` macro to easily create a BoundFunction.
-
-## Rule
-Used to select a window given a string. The string can be interpreted as a class, title, type, etc  of the window and be matched case sensitive and/or via regex. When there is a match, a [BoundFunction](BoundFunction) is called.
-
-## Binding
-Takes a modifier mask, a key/mouse button and a [BoundFunction](BoundFunction). When a key/button is pressed/release we scan through a list of bindings and if the mask and key/button match, we call the BoundFunction. There are options to customize on which device events will cause the button to be triggered.
-## Master
-This struct holds info related to a [master device pair][1] device.
-## Window
-Represents an X11 with with some [masks](WindowMask)
-## Workspace
-A collection a windows associated with 0 or 1 [Monitors](#Monitor)
-## Monitor
-Represents an XRANDR monitor and is associated with 0 or 1 [Workspaces](#Workspace). The bounds of the monitor represent the region tileable windows in a workspace will be tiled in.
-[1]:https://wiki.archlinux.org/index.php/Multi-pointer_X
-## WindowStack
-Every [Workspace](#Workspace) has a window stack, but so does every [Master](#Master).
-### Workspace Window Stack
-Lists all the windows in the workspace. Will be used to tile windows and determines which windows will be mapped on the screen.
-### Master window Stack
-Lists all the windows the Master has focused. Used to determine what window is focused for that Master (usually the head of the stack). Also used first when trying to find a window via findOrRaise
-## WindowMask
-Windows have masks that describe how they should be treated. They corrospond to many the [_NET_WM_STATE](https://standards.freedesktop.org/wm-spec/wm-spec-latest.html#idm140200472615568) options, generic window state like if the client wants it to be mapped and some user defined state like if it is floating
+# Key Terms/Classes
+* BoundFunction -- fancy function pointer
+* Binding   -- triggers a specified BoundFunction when a set of modifer and specific key/button is pressed/release or a mouse is moved.
+* WindowStack -- a collection of windows
+  * Workspace Stack - list of windows in a workspace
+  * Master Stack - list of windows a master has focused
+* WindowMask -- describe how windows should be treated. Many correspond to many the [_NET_WM_STATE](https://standards.freedesktop.org/wm-spec/wm-spec-latest.html#idm140200472615568) options, generic window state like if the client wants it to be mapped and some user defined state like if it is floating
 
 # Examples
 You would put the following code in your config file which is located by default in $HOME/.mpxmanager/
 You want some window to always be above the others. You found the window class, C, by using the `--dump` command ( or used a tool like xprop, xwininfo etc).
 
-```
-// Create a rule to match our target window
-// We want a case-insensitive, literal match of the class
-// We could get by without RESOURCE, but its similar to class and could easily be mistaken for it, so lets leave it in
-static Rule targetWindowRule={C,CLASS|RESOURCE};
-
-// Now always on top is not implemented in X11 so we have to be creative
-// First we create a rule that will match every rule besides our target window 
-(note the NEGATE mask). The call back function (findAndRaiseLazy) is what we 
-will use to raise our target. The function searches for the first window to match
- a given rule and raises it. We pass in the targetWindowRule to match out desired
-window
-
-static Rule alwaysOnTopRuleRule={NULL,0, BIND(findAndRaiseLazy,&targetWindowRule)};
-
-// We want this Rule to be applied everytime a window is raised. Any time a window's
- size, position or stacking order change (or when it is first detected), all onWindowMove
-rules are triggered, so lets add our rule there.
-
-appendRule(onWindowMove,&targetWindowRule);
-```
 For more examples see settings.c for all the defaults
 
 # License
