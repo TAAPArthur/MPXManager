@@ -27,7 +27,7 @@ void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
     auto sizeHints = getWindowSizeHints(winInfo);
     return sizeHints && (sizeHints->flags & XCB_ICCCM_SIZE_HINT_P_SIZE) &&
-        sizeHints->base_width * sizeHints->base_height <= area;
+        sizeHints->width * sizeHints->height <= area;
 }
 
 void addIgnoreSmallWindowRule(AddFlag flag) {
