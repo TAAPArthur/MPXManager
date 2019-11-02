@@ -301,7 +301,7 @@ public:
      * @return true if the window can receive focus
      */
     bool isActivatable() const {
-        return hasMask(MAPPABLE_MASK) && hasPartOfMask(WM_TAKE_FOCUS_MASK | INPUT_MASK) &&
+        return hasMask(MAPPABLE_MASK) && hasMask(INPUT_MASK) &&
             !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
     }
 
