@@ -71,17 +71,17 @@ template<class T>
 struct ArrayList: std::vector<T> {
     /// Enable if T or *T (if pointer) is convertible to an int
     template<typename U = T, typename V = int>
-    using EnableIf = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value, V >  ;
+    using EnableIf = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value, V > ;
     /// Enable if T is a pointer
     template<typename U = T, typename V = int>
-    using EnableIfPointer = typename std::enable_if_t<std::is_pointer<U>::value, V>  ;
+    using EnableIfPointer = typename std::enable_if_t<std::is_pointer<U>::value, V> ;
     /// Enable if T is not a pointer
     template<typename U = T, typename V = int>
-    using EnableIfNotPointer = typename std::enable_if_t < !std::is_pointer<U>::value, V >  ;
+    using EnableIfNotPointer = typename std::enable_if_t < !std::is_pointer<U>::value, V > ;
     /// Enable if *T is convertible to an int
     template<typename U = T, typename V = int>
     using EnableIfPointerAndInt = typename std::enable_if_t < std::is_convertible<std::remove_pointer_t<U>, int>::value &&
-        std::is_pointer<U>::value, V >  ;
+        std::is_pointer<U>::value, V > ;
 
     /// Constructs an empty list
     ArrayList() {}
@@ -200,7 +200,7 @@ struct ArrayList: std::vector<T> {
      * @param value
      * @return the first element whose memory starts with value
      */
-    T find(const T  value)const {
+    T find(const T value)const {
         int index = indexOf(value);
         return index != -1 ? (*this)[index] : (T)0;
     }
@@ -210,7 +210,7 @@ struct ArrayList: std::vector<T> {
      * @return the first element whose memory starts with value
      */
     template<typename U = T>
-    EnableIf<U, T> find(uint32_t  value) const {
+    EnableIf<U, T> find(uint32_t value) const {
         int index = indexOf(value);
         return index != -1 ? (*this)[index] : NULL;
     }
@@ -218,7 +218,7 @@ struct ArrayList: std::vector<T> {
      * @param value
      * @return the first element whose memory starts with value
      */
-    bool contains(const T  value)const {
+    bool contains(const T value)const {
         return indexOf(value) != -1;
     }
 
@@ -227,7 +227,7 @@ struct ArrayList: std::vector<T> {
      * @return the first element whose memory starts with value
      */
     template<typename U = T>
-    EnableIf<U, bool> contains(uint32_t  value) const {
+    EnableIf<U, bool> contains(uint32_t value) const {
         return indexOf(value) != -1;
     }
     /**
@@ -259,7 +259,7 @@ struct ArrayList: std::vector<T> {
      * @copydoc removeElement
      */
     template<typename U = T>
-    EnableIf<U, T> removeElement(uint32_t  element) {
+    EnableIf<U, T> removeElement(uint32_t element) {
         int index = indexOf(element);
         return index != -1 ? this->remove(index) : NULL;
     }
@@ -298,7 +298,7 @@ struct ArrayList: std::vector<T> {
      * @copydoc indexOf
      */
     template<typename U = T>
-    EnableIfPointerAndInt<U, int> indexOf(uint32_t value)const  {
+    EnableIfPointerAndInt<U, int> indexOf(uint32_t value)const {
         for(int i = this->size() - 1; i >= 0; i--)
             if((uint32_t)(*(*this)[i]) == value)
                 return i;
@@ -307,8 +307,8 @@ struct ArrayList: std::vector<T> {
     /**
      * Returns the element at index current + delta if the array list where to wrap around
      * For example:
-     *   getNextIndex(0,-1) returns size-1
-     *   getNextIndex(size-1,1) returns 0
+     * getNextIndex(0,-1) returns size-1
+     * getNextIndex(size-1,1) returns 0
      * @param current
      * @param delta
      */

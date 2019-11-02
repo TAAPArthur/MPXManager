@@ -140,7 +140,7 @@ struct RectWithBorder : Rect {
      * @param h
      * @param b
      */
-    RectWithBorder(short x, short y, uint16_t w, uint16_t  h, uint16_t b = 0): Rect(x, y, w, h), border(b) {}
+    RectWithBorder(short x, short y, uint16_t w, uint16_t h, uint16_t b = 0): Rect(x, y, w, h), border(b) {}
     /**
      * Copies the values of this rect into arr
      *

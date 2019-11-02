@@ -127,7 +127,7 @@ public:
      * @param layoutFunction the underlying layout function
      * @param args
      */
-    Layout(std::string name,  void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}): name(name),
+    Layout(std::string name, void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}): name(name),
         layoutFunction(layoutFunction), args(args), refArgs(args) {
     }
 

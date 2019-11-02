@@ -17,7 +17,7 @@
 #define KEYBOARD_MASKS (XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE)
 
 /// all masks referring to pointer/mouse events
-#define POINTER_MASKS  (XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION)
+#define POINTER_MASKS (XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE | XCB_INPUT_XI_EVENT_MASK_MOTION)
 
 
 ///The modifier that will match any other modifier
@@ -67,7 +67,7 @@ extern bool STEAL_WM_SELECTION;
 /// the path of the lib to preload
 extern std::string LD_PRELOAD_PATH;
 
-///  File path of config file dictating ideal master(s)/slaves configuration
+/// File path of config file dictating ideal master(s)/slaves configuration
 extern std::string MASTER_INFO_PATH;
 
 

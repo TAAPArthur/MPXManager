@@ -13,7 +13,7 @@
  * IE if a window is in a Workspace then that Workspace contains that window
  * If asserts are enabled, the program will crash if this method fails
  *
- * @return  1 if everything is valid
+ * @return 1 if everything is valid
  */
 bool validate();
 /**
@@ -21,7 +21,7 @@ bool validate();
  * IE if a window has a MappedMask, then it is actually Mapped
  * If asserts are enabled, the program will crash if this method fails
  *
- * @return  1 if everything is valid
+ * @return 1 if everything is valid
  */
 bool validateX();
 /**

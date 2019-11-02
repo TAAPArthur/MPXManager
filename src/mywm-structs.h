@@ -80,7 +80,7 @@ template<class T>
 std::ostream& operator<<(std::ostream& stream, const ArrayList<T>& list) {
     stream << "{ ";
     for(uint32_t i = 0; i < list.size(); i++)
-        stream  << (i ? ", " : "") << list[i];
+        stream << (i ? ", " : "") << list[i];
     stream << " }";
     return stream;
 }
@@ -97,7 +97,7 @@ template<class T>
 std::ostream& operator<<(std::ostream& stream, const ArrayList<T*>& list) {
     stream << "{ ";
     for(uint32_t i = 0; i < list.size(); i++)
-        stream  << (i ? ", " : "") << *list[i];
+        stream << (i ? ", " : "") << *list[i];
     stream << " }";
     return stream;
 }
@@ -115,7 +115,7 @@ std::enable_if_t < std::is_convertible<T, int>::value, std::ostream& >
 operator>>(std::ostream& stream, const ArrayList<T*>& list) {
     stream << "{ ";
     for(uint32_t i = 0; i < list.size(); i++)
-        stream  << (i ? ", " : "") << (int)*list[i];
+        stream << (i ? ", " : "") << (int)*list[i];
     stream << " }";
     return stream;
 }
@@ -133,7 +133,7 @@ std::enable_if_t < std::is_convertible<T, std::string>::value, std::ostream& >
 operator>>(std::ostream& stream, const ArrayList<T*>& list) {
     stream << "{ ";
     for(uint32_t i = 0; i < list.size(); i++)
-        stream  << (i ? ", " : "") << (std::string)*list[i];
+        stream << (i ? ", " : "") << (std::string)*list[i];
     stream << " }";
     return stream;
 }

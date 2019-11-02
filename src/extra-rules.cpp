@@ -45,7 +45,7 @@ void addDesktopRule(AddFlag flag) {
     getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) {
             winInfo->addMask(NO_ACTIVATE_MASK | NO_RECORD_FOCUS | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
-                BELOW_MASK |        STICKY_MASK);
+                BELOW_MASK | STICKY_MASK);
             winInfo->setTilingOverrideEnabled(3);
         }
     },

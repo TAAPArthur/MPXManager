@@ -56,7 +56,7 @@ public:
      */
     void setMasterID(MasterID id);
     /**
-      @return  the name of the slave
+      @return the name of the slave
      */
     std::string getName(void)const {return name;}
     /**

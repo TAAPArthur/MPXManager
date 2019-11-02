@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& strm, const Workspace& w) {
         w.windows;
     if(w.getActiveLayout())
         strm << ", Layout: " << *w.getActiveLayout() ;
-    return  strm << " }";
+    return strm << " }";
 }
 
 void addWorkspaces(int num) {

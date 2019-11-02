@@ -254,8 +254,8 @@ void closeConnection(void) {
     }
 }
 
-#define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return  #TYPE
-#define _ADD_GE_EVENT_TYPE_CASE(TYPE) case GENERIC_EVENT_OFFSET+TYPE: return  #TYPE
+#define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return #TYPE
+#define _ADD_GE_EVENT_TYPE_CASE(TYPE) case GENERIC_EVENT_OFFSET+TYPE: return #TYPE
 
 const char* eventTypeToString(int type) {
     switch(type) {
@@ -418,7 +418,7 @@ static inline xcb_generic_event_t* getNextEvent() {
         unlock();
         LOG(LOG_LEVEL_INFO, "Idle %d\n", idle);
         if(!isShuttingDown())
-            event =  waitForEvent();
+            event = waitForEvent();
     }
     return event;
 }
@@ -457,7 +457,7 @@ void* runEventLoop(void* arg __attribute__((unused))) {
     return NULL;
 }
 int loadGenericEvent(xcb_ge_generic_event_t* event) {
-    LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d  seq %d\n",
+    LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d seq %d\n",
         event->extension, event->response_type, event->event_type, event->sequence);
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode) {
         int type = event->event_type + GENERIC_EVENT_OFFSET;

@@ -24,7 +24,7 @@ Layout FULL = {.name = "Full", .layoutFunction = full, .args = {.noBorder = 1, .
        TWO_COL = {.name = "2 Col", .layoutFunction = column, .args = {.dim = 0, .arg = {2}}},
        TWO_ROW = {.name = "2 Row", .layoutFunction = column, .args = {.dim = 1, .arg = {2}}},
        TWO_PANE = {.name = "2 Pane", .layoutFunction = column, .args = {.limit = 2, .dim = 0, .raiseFocused = 1, .arg = {2}}},
-       TWO_HPLANE = {.name = "2 HPane", .layoutFunction = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1,  .arg = {2} }},
+       TWO_HPLANE = {.name = "2 HPane", .layoutFunction = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = {2} }},
        MASTER = {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}, .argStep = {.1}}};
 static ArrayList<Layout*> registeredLayouts = {&FULL, &GRID, &TWO_ROW, &TWO_COL, &TWO_PANE, &TWO_HPLANE, &MASTER};
 

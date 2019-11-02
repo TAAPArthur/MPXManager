@@ -133,7 +133,7 @@ static inline xcb_atom_t getAtom(std::string name) {
  * Note that an atom can have multiple names and this method just returns one of them
  *
  * @param atom the atom whose name is wanted
- * @return  the name of the atom
+ * @return the name of the atom
  */
 std::string getAtomName(xcb_atom_t atom);
 /**

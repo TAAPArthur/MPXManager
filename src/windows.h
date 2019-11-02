@@ -283,7 +283,7 @@ public:
         return hasMask(MAPPABLE_MASK);
     }
     /**
-     * @return true if the user can interact (focus,type etc)  with the window
+     * @return true if the user can interact (focus,type etc) with the window
      * For this to be true the window would have to be mapped and not hidden
      */
     bool isInteractable() const {
@@ -297,11 +297,11 @@ public:
         return hasMask(MAPPABLE_MASK) && !hasPartOfMask(ALL_NO_TILE_MASKS);
     }
     /**
-     * A window is activatable if it is MAPPABLE and not HIDDEN  and does not have the NO_ACTIVATE_MASK set
+     * A window is activatable if it is MAPPABLE and not HIDDEN and does not have the NO_ACTIVATE_MASK set
      * @return true if the window can receive focus
      */
     bool isActivatable() const {
-        return  hasMask(MAPPABLE_MASK) && hasPartOfMask(WM_TAKE_FOCUS_MASK | INPUT_MASK) &&
+        return hasMask(MAPPABLE_MASK) && hasPartOfMask(WM_TAKE_FOCUS_MASK | INPUT_MASK) &&
             !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
     }
 
@@ -310,27 +310,27 @@ public:
      * @return 1 iff external resize requests should be granted
      */
     bool isExternallyResizable() const {
-        return  hasMask(EXTERNAL_RESIZE_MASK) || !isMappable();
+        return hasMask(EXTERNAL_RESIZE_MASK) || !isMappable();
     }
 
     /**
      * @return 1 iff external move requests should be granted
      */
     bool isExternallyMoveable() const {
-        return  hasMask(EXTERNAL_MOVE_MASK) || !isMappable();
+        return hasMask(EXTERNAL_MOVE_MASK) || !isMappable();
     }
 
     /**
      * @return 1 iff external border requests should be granted
      */
     bool isExternallyBorderConfigurable() const {
-        return  hasMask(EXTERNAL_BORDER_MASK) || !isMappable();
+        return hasMask(EXTERNAL_BORDER_MASK) || !isMappable();
     }
     /**
      * @return 1 iff external raise requests should be granted
      */
     bool isExternallyRaisable() const {
-        return  hasMask(EXTERNAL_RAISE_MASK) || !isMappable();
+        return hasMask(EXTERNAL_RAISE_MASK) || !isMappable();
     }
     /**
      * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
@@ -338,7 +338,7 @@ public:
      * @return
      */
     bool allowRequestFromSource(int source) {
-        return  hasMask(1 << (source + SRC_INDICATION_OFFSET));
+        return hasMask(1 << (source + SRC_INDICATION_OFFSET));
     }
     /**
      *

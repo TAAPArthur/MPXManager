@@ -25,7 +25,7 @@ void passiveUngrab(WindowID window);
 /**
  *
  * Grabs the keyboard or mouse
- * @param deviceID    a (non-special) device to grab
+ * @param deviceID a (non-special) device to grab
  * @param maskValue mask of the events to grab
  * @return 0 on success
  * @see XIGrabDevice
@@ -34,7 +34,7 @@ int grabDevice(MasterID deviceID, uint32_t maskValue);
 /**
  * Ungrabs the keyboard or mouse
  * Note that id has to be a real (non-special) device id
- * @param id    id of the device to ungrab
+ * @param id id of the device to ungrab
  * @return 0 on success
  */
 int ungrabDevice(MasterID id);
@@ -99,7 +99,7 @@ static inline bool isKeyboardMask(int mask) {
 /**
  * @param id
  *
- * @return  1 iff id is 0 or 1
+ * @return 1 iff id is 0 or 1
  */
 static inline bool isSpecialID(MasterID id) {
     return id == XIAllMasterDevices || id == XIAllDevices;

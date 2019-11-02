@@ -4,7 +4,7 @@
 #include "globals.h"
 
 bool LD_PRELOAD_INJECTION = 0;
-//  TODO start up option
+// TODO start up option
 bool RUN_AS_WM = 1;
 bool STEAL_WM_SELECTION = 0;
 std::string LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
@@ -17,7 +17,7 @@ uint32_t CRASH_ON_ERRORS = 0;
 uint32_t DEFAULT_BORDER_COLOR = 0x0;
 uint32_t DEFAULT_BORDER_WIDTH = 1;
 uint32_t DEFAULT_MOD_MASK = Mod4Mask;
-//  TODO start up option
+// TODO start up option
 uint32_t DEFAULT_NUMBER_OF_WORKSPACES = 10;
 uint32_t DEFAULT_UNFOCUS_BORDER_COLOR = 0xDDDDDD;
 uint32_t EVENT_PERIOD = 100;

@@ -19,7 +19,7 @@
  * don't match, we consider the workspaces to have changed
  */
 struct WorkspaceState {
-    ///representing  the view port of the workspaces' monitors
+    ///representing the view port of the workspaces' monitors
     Rect monitorViewport = {0, 0, 0, 0};
     /// if the workspace is known to be visible
     bool visible = 0;
@@ -42,7 +42,7 @@ struct WorkspaceState {
 std::ostream& operator<<(std::ostream& strm, const WorkspaceState& state) {
     strm << "{" << state.monitorViewport << " Visible:" << state.visible << " Size:" << state.size;
     for(int i = 0; i < state.size; i++)
-        strm << " (" << state.windowIds[i] << " " << state.windowMasks[i]  << ")";
+        strm << " (" << state.windowIds[i] << " " << state.windowMasks[i] << ")";
     return strm << " }";
 }
 
@@ -106,10 +106,10 @@ static WorkspaceState* computeState() {
 
 static inline void _printStateComparison(WorkspaceState* currentState, WorkspaceID i) {
     if(currentState[i].size || i < numberOfRecordedWorkspaces && savedStates[i].size) {
-        std::cout << "Index:  " << i << "\n";
+        std::cout << "Index: " << i << "\n";
         std::cout << "Current:" << currentState[i] << "\n";
         if(i < numberOfRecordedWorkspaces)
-            std::cout << "Saved:  " << savedStates[i] << "\n";
+            std::cout << "Saved: " << savedStates[i] << "\n";
     }
 }
 

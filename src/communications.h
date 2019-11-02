@@ -31,7 +31,7 @@ struct GenericOptionFunctionWrapper {
      */
     virtual bool isNumeric() const {return 0;};
     /**
-     * @return  1 iff this function takes no args
+     * @return 1 iff this function takes no args
      */
     virtual bool isVoid()const {return 0;}
     /**

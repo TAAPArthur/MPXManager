@@ -93,7 +93,7 @@ void initCurrentMasters() {
     for(int i = 0; i < ndevices; i++) {
         device = &devices[i];
         switch(device->use) {
-            case  XIMasterPointer:
+            case XIMasterPointer:
                 continue;
             case XISlaveKeyboard:
             case XISlavePointer :
@@ -215,7 +215,7 @@ void clearFakeMonitors() {
 }
 void createFakeMonitor(Rect bounds) {
     char buffer[255];
-    sprintf(buffer, "xsane-xrandr add-monitor %d %d %d %d  &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
+    sprintf(buffer, "xsane-xrandr add-monitor %d %d %d %d &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
     if(waitForChild(spawn(buffer))) {
         LOG(LOG_LEVEL_WARN, "Failed to create monitor\n");
     }

@@ -33,7 +33,7 @@ static int endsWith(const std::string& s, const char* suffix) {
     const char* str = s.c_str();
     size_t lenstr = strlen(str);
     size_t lensuffix = strlen(suffix);
-    if(lensuffix >  lenstr)
+    if(lensuffix > lenstr)
         return 0;
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }

@@ -246,7 +246,7 @@ void registerForEvents() {
     for(Binding* binding : list) {
         binding->grab();
     }
-    LOG(LOG_LEVEL_DEBUG, "listening for device event;  masks: %d\n", ROOT_DEVICE_EVENT_MASKS);
+    LOG(LOG_LEVEL_DEBUG, "listening for device event; masks: %d\n", ROOT_DEVICE_EVENT_MASKS);
     if(ROOT_DEVICE_EVENT_MASKS)
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     registerForMonitorChange();

@@ -32,7 +32,7 @@ bool isMPXManagerRunning(void) {
 void broadcastEWMHCompilence() {
     LOG(LOG_LEVEL_DEBUG, "Complying with EWMH\n");
     //functionless window required by EWMH spec
-    //we set its class to input only and set override redirect so we (and anyone else  ignore it)
+    //we set its class to input only and set override redirect so we (and anyone else ignore it)
     if(!STEAL_WM_SELECTION) {
         xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
                     WM_SELECTION_ATOM), NULL);

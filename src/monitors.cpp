@@ -89,7 +89,7 @@ void removeDuplicateMonitors(void) {
         for(uint32_t n = i + 1; n < getAllMonitors().size(); n++) {
             Monitor* m2 = getAllMonitors()[n];
             bool dup =
-                (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && (m1->getBase() == m2->getBase())  ||
+                (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && (m1->getBase() == m2->getBase()) ||
                 (MONITOR_DUPLICATION_POLICY & INTERSECTS) && m1->getBase().intersects(m2->getBase()) ||
                 (MONITOR_DUPLICATION_POLICY & CONTAINS) && (m1->getBase().contains(m2->getBase()) ||
                     m2->getBase().contains(m1->getBase()));

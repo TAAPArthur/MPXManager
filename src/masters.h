@@ -29,7 +29,7 @@ ArrayList<Master*>& getAllMasters();
 Master* getActiveMaster(void);
 /**
  * The active master should be set whenever the user interacts with the
- * wm (key/mouse  binding, mouse press etc)
+ * wm (key/mouse binding, mouse press etc)
  * @param master the new active master
  */
 void setActiveMaster(Master* master);
@@ -67,14 +67,14 @@ private:
 
 public:
     /**
-     * @param keyboardID  the id of the master device.
-     * @param pointerID  the id of the associated master pointer
+     * @param keyboardID the id of the master device.
+     * @param pointerID the id of the associated master pointer
      * @param name the name of the master keyboard
      * @param focusColor
      */
     Master(MasterID keyboardID, MasterID pointerID, std::string name,
         int focusColor = 0x00FF00): WMStruct(keyboardID),
-        pointerID(pointerID), name(name),        focusColor(focusColor) {
+        pointerID(pointerID), name(name), focusColor(focusColor) {
         assert(keyboardID > 1 && pointerID > 1);
     }
     ~Master();
@@ -114,7 +114,7 @@ public:
     /// @return the name of this device
     std::string getName(void)const {return name;}
     /**
-     * @return  whether of not the master window stack will be updated on focus change
+     * @return whether of not the master window stack will be updated on focus change
     */
     int isFocusStackFrozen(void)const {
         return freezeFocusStack;
@@ -244,7 +244,7 @@ static inline WindowInfo* getFocusedWindow() {return getActiveMaster()->getFocus
 
 /**
  * @param name
- * @return  the master with the given name
+ * @return the master with the given name
  */
 Master* getMasterByName(std::string name) ;
 /**

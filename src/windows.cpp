@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     if(winInfo.getTransientFor())
         stream << " Transient For: " << winInfo.getTransientFor();
     stream << " Title '" << winInfo.getTitle() << "'" ;
-    stream << " Class '" << winInfo.getClassName()  << "' '" << winInfo.getInstanceName() << "'";
+    stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
     stream << " Type '" << winInfo.getTypeName() << "'";
     stream << " Masks: " << winInfo.getMask();
     if(winInfo.getWorkspace())

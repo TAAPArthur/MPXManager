@@ -25,7 +25,7 @@ int grabDevice(MasterID deviceID, uint32_t maskValue) {
     assert(!isSpecialID(deviceID));
     XIEventMask eventMask = {deviceID, 4, (unsigned char*)& maskValue};
     LOG(LOG_LEVEL_INFO, "Grabbing device %d with mask %d\n", deviceID, maskValue);
-    return XIGrabDevice(dpy, deviceID,  root, CurrentTime, None, GrabModeAsync,
+    return XIGrabDevice(dpy, deviceID, root, CurrentTime, None, GrabModeAsync,
             GrabModeAsync, 1, &eventMask);
 }
 int ungrabDevice(MasterID id) {

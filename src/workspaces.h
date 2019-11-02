@@ -89,7 +89,7 @@ public:
      * and name with the string conversion of its id
      *
      */
-    Workspace(): WMStruct(getNumberOfWorkspaces()), name(std::to_string(id + 1)) {  }
+    Workspace(): WMStruct(getNumberOfWorkspaces()), name(std::to_string(id + 1)) { }
     /**
      * @return the monitor associate with the given workspace if any
      */
@@ -145,7 +145,7 @@ public:
     Layout* getActiveLayout(void)const {return activeLayout;}
     /**
      * @param mask
-     * @return true if there exists at least one window  in workspace with the given mask
+     * @return true if there exists at least one window in workspace with the given mask
      */
     bool hasWindowWithMask(WindowMask mask) ;
 

@@ -12,7 +12,7 @@
 /// The last supported standard x event
 #define GENERIC_EVENT_OFFSET (LASTEvent-1)
 /// max value of supported X events (not total events)
-#define LAST_REAL_EVENT  (GENERIC_EVENT_OFFSET+XI_LASTEVENT+1)
+#define LAST_REAL_EVENT (GENERIC_EVENT_OFFSET+XI_LASTEVENT+1)
 
 //TODO consistent naming
 enum {
@@ -28,8 +28,8 @@ enum {
     /// Windows that circumvent MapRequest and go straight to MapNotify are implicitly allowed to be mapped
     ClientMapAllow,
     /**
-     *  Called before the newly created window has been added to our internal lists
-     *  If the result of these rules is 0, then the window won't be added to out list
+     * Called before the newly created window has been added to our internal lists
+     * If the result of these rules is 0, then the window won't be added to out list
      */
     PreRegisterWindow,
     /// Called after the newly created window has been added to our internal lists

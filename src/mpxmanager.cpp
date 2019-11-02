@@ -203,7 +203,7 @@ int _main(int argc, char* const* argv) {
         onStartup();
     if(RUN_EVENT_LOOP)
         runEventLoop(NULL);
-    else  {
+    else {
         if(hasOutStandingMessages()) {
             LOG(LOG_LEVEL_TRACE, "waiting for send receipts\n");
             bool wasMPXManagerRunning = isMPXManagerRunning();
@@ -228,7 +228,7 @@ int _main(int argc, char* const* argv) {
  *
  * @return
  */
-int __attribute__((weak)) main(int argc, char* const  argv[])   {
+int __attribute__((weak)) main(int argc, char* const argv[]) {
     _main(argc, argv);
     quit(0);
 }

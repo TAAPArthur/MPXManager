@@ -30,8 +30,8 @@
 #define _startCycleWindowChainBinding(M,K) new Chain(M,K,{ \
             Binding{Mod1Mask, XK_Tab, {cycleWindows,DOWN}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsDown"}, \
             Binding{Mod1Mask | ShiftMask, XK_Tab, {cycleWindows,UP}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsUp"}, \
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endCycleWindows"  },\
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endChain"  },\
+            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endCycleWindows" },\
+            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endChain" },\
             Binding {WILDCARD_MODIFIER, 0, {},{.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "absorbCycleWindows"},\
             },{},XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE,"cycleWindows")
 
@@ -70,9 +70,9 @@ void addChainDefaultBindings() {
  * @param N the workspace to switch to/act on
  */
 #define WORKSPACE_OPERATION(K,N) \
-    {DEFAULT_MOD_MASK,             K, +[](){switchToWorkspace(N); ;}}, \
-    {DEFAULT_MOD_MASK|ShiftMask,   K, +[](WindowInfo*winInfo){winInfo->moveToWorkspace(N);}}, \
-    {DEFAULT_MOD_MASK|ControlMask,   K, +[](){swapMonitors(getActiveWorkspaceIndex(),N);}}
+    {DEFAULT_MOD_MASK, K, +[](){switchToWorkspace(N); ;}}, \
+    {DEFAULT_MOD_MASK|ShiftMask, K, +[](WindowInfo*winInfo){winInfo->moveToWorkspace(N);}}, \
+    {DEFAULT_MOD_MASK|ControlMask, K, +[](){swapMonitors(getActiveWorkspaceIndex(),N);}}
 
 /**
  * Creates a set of bindings related to the windowStack
@@ -82,10 +82,10 @@ void addChainDefaultBindings() {
  * @param KEY_RIGHT
  */
 #define STACK_OPERATION(KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT) \
-    {DEFAULT_MOD_MASK,             KEY_UP, +[](){swapPosition(UP);}}, \
-    {DEFAULT_MOD_MASK,             KEY_DOWN, +[](){swapPosition(DOWN);}}, \
-    {DEFAULT_MOD_MASK,             KEY_LEFT, +[](){shiftFocus(UP);}}, \
-    {DEFAULT_MOD_MASK,             KEY_RIGHT, +[](){shiftFocus(DOWN);}}
+    {DEFAULT_MOD_MASK, KEY_UP, +[](){swapPosition(UP);}}, \
+    {DEFAULT_MOD_MASK, KEY_DOWN, +[](){swapPosition(DOWN);}}, \
+    {DEFAULT_MOD_MASK, KEY_LEFT, +[](){shiftFocus(UP);}}, \
+    {DEFAULT_MOD_MASK, KEY_RIGHT, +[](){shiftFocus(DOWN);}}
 /// add default bindings
 void addDefaultBindings() {
     Binding DEFAULT_BINDINGS[] = {
@@ -102,8 +102,8 @@ void addDefaultBindings() {
         STACK_OPERATION(XK_Up, XK_Down, XK_Left, XK_Right),
         STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
 
-        {WILDCARD_MODIFIER, Button1, activateWorkspaceUnderMouse, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1,  .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-        {WILDCARD_MODIFIER, Button1, activateWindow, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1,  .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+        {WILDCARD_MODIFIER, Button1, activateWorkspaceUnderMouse, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+        {WILDCARD_MODIFIER, Button1, activateWindow, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, XK_c, killClientOfWindow, {.noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindow, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK, Button1, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},

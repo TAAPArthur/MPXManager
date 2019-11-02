@@ -146,7 +146,7 @@ struct WindowMask {
      */
     WindowMask(uint32_t m = 0): mask(m) {}
     /**
-     * @return  bit mask
+     * @return bit mask
      */
     operator uint32_t() const {return mask;}
     /**

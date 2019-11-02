@@ -107,7 +107,7 @@ void loadWindowTitle(WindowInfo* winInfo) ;
 
 /**
  * Sets the border color for the given window
- * @param win   the window in question
+ * @param win the window in question
  * @param color the new window border color
  */
 void setBorderColor(WindowID win, unsigned int color);
@@ -142,7 +142,7 @@ void setWorkspaceNames(char* names[], int numberOfNames);
 
 /**
  * Focuses the given window
- * @param win   the window to focus
+ * @param win the window to focus
  * @param master the master who gets the focus
  * @return 1 iff no error was detected
  */

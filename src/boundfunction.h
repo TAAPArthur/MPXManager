@@ -312,14 +312,14 @@ struct BoundFunction {
     template <typename R, typename P>
     BoundFunction(R(*_func)(P), P value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>([ = ]() {return _func(value);}))),
-    passThrough(passThrough),    name(name) {    }
+    passThrough(passThrough), name(name) { }
     template <typename R>
     BoundFunction(R(*_func)(std::string), const char* value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): BoundFunction(_func, std::string(value), name, passThrough) {}
     template <typename P>
     BoundFunction(void(*_func)(P), P value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(std::function<void()>([ = ]() {_func(value);}))),
-    passThrough(passThrough),  name(name) {    }
+    passThrough(passThrough), name(name) { }
     /// @}
 
     /// @{
@@ -338,11 +338,11 @@ struct BoundFunction {
     template <typename R, typename P1, typename P2>
     BoundFunction(R(*_func)(P1, P2), P2 value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, P1>(std::function<R(P1)>([ = ](
-                            P1 p) {return _func(p, value);}))), passThrough(passThrough),  name(name) {    }
+                            P1 p) {return _func(p, value);}))), passThrough(passThrough), name(name) { }
     template <typename P1, typename P2>
     BoundFunction(void(*_func)(P1, P2), P2 value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P1>(std::function<void(P1)>([ = ](
-                            P1 p) {_func(p, value);}))), passThrough(passThrough),   name(name) {    }
+                            P1 p) {_func(p, value);}))), passThrough(passThrough), name(name) { }
     /// @}
 
     /**
