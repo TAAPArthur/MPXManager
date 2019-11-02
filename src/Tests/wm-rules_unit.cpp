@@ -182,11 +182,15 @@ MPX_TEST("test_reparent_windows", {
     WindowID child = createNormalSubWindow(win);
     WindowID parent = createNormalWindow();
     waitUntilIdle();
+    assert(getWindowInfo(win));
+    assert(getWindowInfo(parent));
+    assert(!getWindowInfo(child));
     xcb_reparent_window_checked(dis, child, root, 0, 0);
     xcb_reparent_window_checked(dis, win, parent, 0, 0);
     waitUntilIdle();
     assertEquals(root, getWindowInfo(child)->getParent());
     assertEquals(parent, getWindowInfo(win)->getParent());
+    xcb_reparent_window_checked(dis, win, parent, 0, 0);
 });
 
 MPX_TEST("test_delete_windows", {

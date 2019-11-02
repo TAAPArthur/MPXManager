@@ -201,6 +201,7 @@ void onStartup(void) {
         addAlwaysOnTopBottomRules();
         addKeepTransientsOnTopRule();
         addDefaultBorderRule();
+        addIgnoreNonTopLevelWindowsRule();
         addFloatRule();
         addPrintStatusRule();
         addIgnoreSmallWindowRule();

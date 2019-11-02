@@ -66,4 +66,11 @@ void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag = ADD_UNIQUE) ;
 void addIgnoreKeyRepeat(AddFlag flag = PREPEND_UNIQUE);
 void addKeepTransientsOnTopRule();
 void addDefaultBorderRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds a XCB_REPARENT_NOTIFY rule to unregister a window if it is no longer a
+ * direct child of the root window
+ *
+ * @param flag
+ */
+void addIgnoreNonTopLevelWindowsRule(AddFlag flag = ADD_UNIQUE);
 #endif

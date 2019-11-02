@@ -274,3 +274,18 @@ MPX_TEST_ITER("border_for_transients", 2, {
         assertEquals(getRealGeometry(win).border, DEFAULT_BORDER_WIDTH);
     }
 });
+MPX_TEST("ignore_non_top_level_windows", {
+    addIgnoreNonTopLevelWindowsRule();
+    WindowID win = createNormalWindow();
+    WindowID parent = createNormalWindow();
+    startWM();
+    waitUntilIdle();
+    assert(getWindowInfo(win));
+    assert(getWindowInfo(parent));
+    xcb_reparent_window_checked(dis, win, parent, 0, 0);
+    waitUntilIdle();
+    assert(!getWindowInfo(win));
+    xcb_reparent_window_checked(dis, win, root, 0, 0);
+    waitUntilIdle();
+    assert(getWindowInfo(win));
+});
