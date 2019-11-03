@@ -96,9 +96,9 @@ static void enforceAlwaysOnTop() {
     if(nonAlwaysOnTopOrBottomWindowMoved) {
         for(WindowInfo* winInfo : getAllWindows()) {
             if(winInfo->hasMask(ALWAYS_ON_BOTTOM))
-                lowerWindowInfo(winInfo);
+                lowerWindow(winInfo->getID());
             else if(winInfo->hasMask(ALWAYS_ON_TOP))
-                raiseWindowInfo(winInfo);
+                raiseWindow(winInfo->getID());
         }
         nonAlwaysOnTopOrBottomWindowMoved = 0;
     }
@@ -113,14 +113,14 @@ void addShutdownOnIdleRule(AddFlag flag) {
 void keepTransientsOnTop(WindowInfo* winInfo) {
     if(!winInfo->hasMask(ALWAYS_ON_TOP)) {
         WindowID id = winInfo->getID();
-        for(WindowInfo* winInfo : getAllWindows()) {
-            if(winInfo->isInteractable() && winInfo->getTransientFor() == id)
-                raiseWindowInfo(winInfo);
+        for(WindowInfo* winInfo2 : getAllWindows()) {
+            if(winInfo2->isInteractable() && winInfo2->getTransientFor() == id)
+                raiseWindow(winInfo2->getID(), id);
         }
     }
 }
-void addKeepTransientsOnTopRule() {
-    getEventRules(onWindowMove).add(DEFAULT_EVENT(keepTransientsOnTop));
+void addKeepTransientsOnTopRule(AddFlag flag) {
+    getEventRules(onWindowMove).add(DEFAULT_EVENT(keepTransientsOnTop), flag);
 }
 
 void autoFocus() {
@@ -133,7 +133,7 @@ void autoFocus() {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             if(focusWindow(winInfo)) {
                 LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
-                raiseWindowInfo(winInfo);
+                raiseWindow(winInfo->getID());
                 getActiveMaster()->onWindowFocus(winInfo->getID());
             }
         }
@@ -159,8 +159,8 @@ void addIgnoreKeyRepeat(AddFlag flag) {
     getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey), flag);
 }
 static void setDefaultBorderWidth(WindowInfo* winInfo) {
-    if(!winInfo->isInputOnly() && DEFAULT_BORDER_WIDTH && winInfo->getWorkspace())
-        configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, (int*)&DEFAULT_BORDER_WIDTH);
+    if(!winInfo->isInputOnly() && winInfo->getWorkspace())
+        configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &DEFAULT_BORDER_WIDTH);
 }
 void addDefaultBorderRule(AddFlag flag) {
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(setDefaultBorderWidth), flag);

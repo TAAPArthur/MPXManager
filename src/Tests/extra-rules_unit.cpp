@@ -110,9 +110,9 @@ MPX_TEST("test_always_on_top_bottom", {
     getWindowInfo(bottom2)->addMask(ALWAYS_ON_BOTTOM);
     getWindowInfo(top)->addMask(ALWAYS_ON_TOP);
     getWindowInfo(top2)->addMask(ALWAYS_ON_TOP);
-    assert(raiseWindowInfo(getWindowInfo(normal)));
-    assert(raiseWindowInfo(getWindowInfo(bottom)));
-    assert(lowerWindowInfo(getWindowInfo(top)));
+    raiseWindow(normal);
+    raiseWindow(bottom);
+    lowerWindow(top);
     setActiveLayout(NULL);
     flush();
     startWM();
@@ -237,6 +237,7 @@ MPX_TEST("test_transient_windows_always_above", {
     addKeepTransientsOnTopRule();
     WindowID win = mapArbitraryWindow();
     WindowID win2 = mapArbitraryWindow();
+    WindowID win3 = mapArbitraryWindow();
     setWindowTransientFor(win2, win);
     registerWindow(win, root);
     registerWindow(win2, root);
@@ -249,11 +250,15 @@ MPX_TEST("test_transient_windows_always_above", {
     winInfo2->moveToWorkspace(getActiveWorkspaceIndex());
     assert(winInfo->isActivatable()&& winInfo2->isActivatable());
     assert(winInfo2->isInteractable());
-    WindowID stack[] = {win, win2};
+    WindowID stack[] = {win, win2, win3};
     startWM();
-    for(int i = 0; i < 2; i++) {
+    waitUntilIdle();
+    for(int i = 0; i < 4; i++) {
         assert(checkStackingOrder(stack, 2));
-        activateWindow(winInfo);
+        if(i % 2)
+            activateWindow(winInfo);
+        else
+            activateWindow(winInfo2);
         waitUntilIdle(1);
     }
 });

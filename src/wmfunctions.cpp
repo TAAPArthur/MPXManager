@@ -260,7 +260,8 @@ void switchToWorkspace(int workspaceIndex) {
 }
 
 WindowID activateWindow(WindowInfo* winInfo) {
-    if(winInfo && raiseWindowInfo(winInfo) && winInfo->isActivatable()) {
+    if(winInfo && winInfo->isActivatable()) {
+        raiseWindow(winInfo->getID());
         LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d\n", winInfo->getID(), winInfo->getWorkspaceIndex());
         if(winInfo->getWorkspaceIndex() != NO_WORKSPACE) {
             switchToWorkspace(winInfo->getWorkspaceIndex());
@@ -273,7 +274,7 @@ WindowID activateWindow(WindowInfo* winInfo) {
 }
 
 
-void configureWindow(WindowID win, uint32_t mask, int values[7]) {
+void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
     LOG(LOG_LEVEL_INFO, "Config %d: mask %d %d\n", win, mask, __builtin_popcount(mask));
     if(mask)
@@ -285,7 +286,7 @@ void configureWindow(WindowID win, uint32_t mask, int values[7]) {
 #endif
 }
 void setWindowPosition(WindowID win, const RectWithBorder geo) {
-    int values[5];
+    uint32_t values[5];
     geo.copyTo(values);
     uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
         XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
@@ -306,7 +307,7 @@ void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2) {
     setWindowPosition(winInfo2->getID(), getRealGeometry(winInfo1->getID()));
     setWindowPosition(winInfo1->getID(), geo);
 }
-static inline int filterConfigValues(int* filteredArr, const WindowInfo* winInfo, const short values[5],
+static inline int filterConfigValues(uint32_t* filteredArr, const WindowInfo* winInfo, const short values[5],
     WindowID sibling,
     int stackMode, int configMask) {
     int i = 0;
@@ -337,7 +338,7 @@ static inline int filterConfigValues(int* filteredArr, const WindowInfo* winInfo
 int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask) {
     assert(configMask);
     LOG(LOG_LEVEL_DEBUG, "processing configure request window %d\n", win);
-    int actualValues[7];
+    uint32_t actualValues[7];
     WindowInfo* winInfo = getWindowInfo(win);
     if(!winInfo) {
         WindowInfo fake = WindowInfo(0, 0);
@@ -374,17 +375,18 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
     return mask;
 }
 void removeBorder(WindowID win) {
-    int i = 0;
+    uint32_t i = 0;
     configureWindow(win, XCB_CONFIG_WINDOW_BORDER_WIDTH, &i);
 }
-bool raiseWindowInfo(WindowInfo* winInfo, bool above) {
-    assert(winInfo);
-    int values[] = {above ? XCB_STACK_MODE_ABOVE : XCB_STACK_MODE_BELOW};
+void raiseWindow(WindowID win, WindowID sibling, bool above) {
+    uint32_t values[] = {sibling, above ? XCB_STACK_MODE_ABOVE : XCB_STACK_MODE_BELOW};
     int mask = XCB_CONFIG_WINDOW_STACK_MODE;
-    return !catchError(xcb_configure_window(dis, winInfo->getID(), mask, values));
+    if(sibling)
+        mask |= XCB_CONFIG_WINDOW_SIBLING;
+    configureWindow(win, mask, &values[!sibling]);
 }
-bool lowerWindowInfo(WindowInfo* winInfo) {
-    return raiseWindowInfo(winInfo, 0);
+void lowerWindow(WindowID win, WindowID sibling) {
+    raiseWindow(win, sibling, 0);
 }
 RectWithBorder getRealGeometry(WindowID id) {
     RectWithBorder rect;

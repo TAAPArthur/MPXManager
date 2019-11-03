@@ -19,7 +19,7 @@ MPX_TEST("rect_[]", {
         assertEquals(baseArr[i], r[i]);
 });
 MPX_TEST("rect_copy_to", {
-    int p2[4];
+    uint32_t p2[4];
     RectWithBorder r = RectWithBorder(baseArr);
     r.copyTo(p2);
     for(int i = 0; i < LEN(baseArr); i++)

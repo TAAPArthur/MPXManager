@@ -252,7 +252,7 @@ static inline int getNumberOfWindowsToTile(Workspace* w) {
  * @param m
  * @param config the config that will be modified
  */
-void transformConfig(LayoutArgs* args, const Monitor* m, int config[CONFIG_LEN]);
+void transformConfig(LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]);
 /**
  * Configures the winInfo using values as reference points and apply various properties of winInfo's mask and set configuration which will override values
  * @param state

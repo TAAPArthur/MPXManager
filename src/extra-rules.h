@@ -64,7 +64,18 @@ void addScanChildrenRule(AddFlag flag = ADD_UNIQUE);
  */
 void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag = ADD_UNIQUE) ;
 void addIgnoreKeyRepeat(AddFlag flag = PREPEND_UNIQUE);
-void addKeepTransientsOnTopRule();
+/**
+ * Best-effort attempt to keep transients on top of the window they are transient for
+ *
+ * @param flag
+ */
+void addKeepTransientsOnTopRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds a border of size DEFAULT_BORDER_WIDTH to all non-INPUT_ONLY windows
+ * in a workspace
+ *
+ * @param flag
+ */
 void addDefaultBorderRule(AddFlag flag = ADD_UNIQUE);
 /**
  * Adds a XCB_REPARENT_NOTIFY rule to unregister a window if it is no longer a

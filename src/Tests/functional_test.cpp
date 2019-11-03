@@ -123,7 +123,7 @@ MPX_TEST("test_always_on_top_bottom_conflicting_masks", {
     getWindowInfo(wins[1])->addMask(ALWAYS_ON_BOTTOM | ABOVE_MASK);
     getWindowInfo(wins[3])->addMask(ALWAYS_ON_TOP | BELOW_MASK);
     for(WindowID win : wins) {
-        assert(lowerWindowInfo(getWindowInfo(win)));
+        lowerWindow(win);
     }
     unlock();
     waitUntilIdle();

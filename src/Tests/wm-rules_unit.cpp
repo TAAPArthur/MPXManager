@@ -305,6 +305,7 @@ MPX_TEST("test_focus_update", {
         focusWindow(win);
         flush();
         waitUntilIdle();
+        assert(getFocusedWindow());
         assert(getFocusedWindow()->getID() == win);
     }
 });

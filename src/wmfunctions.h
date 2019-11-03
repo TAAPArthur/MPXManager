@@ -142,7 +142,7 @@ WindowID activateWindow(WindowInfo* winInfo);
 /**
  * @see xcb_configure_window
  */
-void configureWindow(WindowID win, uint32_t mask, int values[7]);
+void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]);
 
 /**
  * Sets the window position to be geo.
@@ -181,13 +181,15 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
 void removeBorder(WindowID win);
 /**
  * Raises or lowers the winInfo depending on above.
- * @param winInfo
+ * @param win
+ * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
  * @param above whether to raise or lower the window
  */
-bool raiseWindowInfo(WindowInfo* winInfo, bool above = 1);
+void raiseWindow(WindowID win, WindowID sibling = 0, bool above = 1);
 /**
- * @param winInfo
+ * @param win
+ * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
  * @see raiseWindowInfo
  */
-bool lowerWindowInfo(WindowInfo* winInfo);
+void lowerWindow(WindowID win, WindowID sibling = 0);
 #endif

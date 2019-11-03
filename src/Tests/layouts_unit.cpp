@@ -221,7 +221,7 @@ MPX_TEST_ITER("test_identity_transform_config", TRANSFORM_LEN * 2, {
     _i /= 2;
     Rect view = {.x = d, .y = d, .width = n, .height = n};
     Monitor monitor = Monitor(1, view);
-    int config[CONFIG_LEN] = {d, d, n, n};
+    uint32_t config[CONFIG_LEN] = {d, d, n, n};
     int correctConfig[4] = {d, d, n, n};
     LayoutArgs prop = {.transform = (Transform)_i};
     transformConfig(&prop, &monitor, config);
@@ -231,7 +231,7 @@ MPX_TEST_ITER("test_simple_transform_config", TRANSFORM_LEN, {
     DEFAULT_BORDER_WIDTH = 0;
     Monitor monitor = Monitor(1, {0, 0, 0, 0});
     for(int i = 1; i < 5; i++) {
-        int config[TRANSFORM_LEN] = {i % 2, i / 2, 0, 0};
+        uint32_t config[TRANSFORM_LEN] = {i % 2, i / 2, 0, 0};
         const int correctConfig[TRANSFORM_LEN][2] = {
             [NONE] = {config[0], config[1]},
             [ROT_180] = {-config[0], -config[1]},
@@ -306,7 +306,7 @@ MPX_TEST("test_tile_windows", {
         winInfo->moveToWorkspace(getActiveWorkspaceIndex());
         winInfo->addMask(masks[i]);
         stackingOrder[i] = win;
-        lowerWindowInfo(winInfo);
+        lowerWindow(winInfo->getID());
     }
     retile();
     flush();

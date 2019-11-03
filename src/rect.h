@@ -75,7 +75,7 @@ struct Rect {
      *
      * @param arr
      */
-    void copyTo(int* arr)const {
+    void copyTo(uint32_t* arr)const {
         for(int i = 0; i < 4; i++)
             arr[i] = (*this)[i];
     }
@@ -146,7 +146,7 @@ struct RectWithBorder : Rect {
      *
      * @param arr
      */
-    void copyTo(int* arr)const {
+    void copyTo(uint32_t* arr)const {
         for(int i = 0; i < 5; i++)
             arr[i] = (*this)[i];
     }

@@ -60,13 +60,15 @@ static bool applyAction(WindowInfo* winInfo, WindowAction action) {
     switch(action) {
         default:
         case ACTION_RAISE:
-            return raiseWindowInfo(winInfo);
+            raiseWindow(winInfo->getID());
+            return 1;
         case ACTION_FOCUS:
             return focusWindow(winInfo);
         case ACTION_ACTIVATE:
             return activateWindow(winInfo);
         case ACTION_LOWER:
-            return lowerWindowInfo(winInfo);
+            lowerWindow(winInfo->getID());
+            return 1;
     }
 }
 static ArrayList<WindowID>* getWindowCache(Master* m) {

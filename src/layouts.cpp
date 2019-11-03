@@ -110,7 +110,7 @@ int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, LayoutArgs* ar
             size++;
     return size;
 }
-void transformConfig(LayoutArgs* args, const Monitor* m, int config[CONFIG_LEN]) {
+void transformConfig(LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]) {
     if(args) {
         int endX = m->getViewport().x * 2 + m->getViewport().width;
         int endY = m->getViewport().y * 2 + m->getViewport().height;
@@ -130,7 +130,7 @@ void transformConfig(LayoutArgs* args, const Monitor* m, int config[CONFIG_LEN])
         }
     }
 }
-static void applyMasksToConfig(const Monitor* m, int* values, WindowInfo* winInfo) {
+static void applyMasksToConfig(const Monitor* m, uint32_t* values, WindowInfo* winInfo) {
     if(winInfo->hasMask(ROOT_FULLSCREEN_MASK)) {
         values[CONFIG_INDEX_X] = 0;
         values[CONFIG_INDEX_Y] = 0;
@@ -149,7 +149,7 @@ static void applyMasksToConfig(const Monitor* m, int* values, WindowInfo* winInf
     }
 }
 
-static int adjustBorders(LayoutState* state, WindowInfo* winInfo, int config[CONFIG_LEN], int mask) {
+static int adjustBorders(LayoutState* state, WindowInfo* winInfo, uint32_t config[CONFIG_LEN], int mask) {
     if(winInfo->isInputOnly()) {
         mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
         for(int i = CONFIG_INDEX_BORDER; i < CONFIG_LEN - 1; i++)
@@ -177,7 +177,7 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
         XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
         XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
-    int config[CONFIG_LEN] = {0};
+    uint32_t config[CONFIG_LEN] = {0};
     config[CONFIG_INDEX_STACK] = state->getArgs() &&
         state->getArgs()->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
@@ -234,16 +234,16 @@ void tileWorkspace(WorkspaceID index) {
                 configureWindow(&dummy, winInfo, config);
             }
             else if(!winInfo->isInputOnly()) {
-                int border = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
+                uint32_t border = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
                     winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
                     DEFAULT_BORDER_WIDTH;
                 configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &border);
             }
         if(winInfo->hasMask(BELOW_MASK))
-            lowerWindowInfo(winInfo);
+            lowerWindow(winInfo->getID());
         winInfo = list[list.size() - i - 1];
         if(winInfo->hasMask(ABOVE_MASK))
-            raiseWindowInfo(winInfo);
+            raiseWindow(winInfo->getID());
     }
 }
 
@@ -276,7 +276,7 @@ void applyLayout(Workspace* workspace) {
         for(uint32_t i = 0; i < getActiveMaster()->getWindowStack().size(); i++) {
             WindowInfo* winInfo = getActiveMaster()->getWindowStack()[i];
             if(winInfo->getWorkspace() == workspace)
-                raiseWindowInfo(winInfo);
+                raiseWindow(winInfo->getID());
         }
     }
 }

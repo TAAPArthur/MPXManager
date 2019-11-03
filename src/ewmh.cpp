@@ -77,7 +77,7 @@ static void updateEWMHWorkspaceProperties() {
     int i = 0;
     for(Workspace* w : getAllWorkspaces()) {
         if(w->isVisible())
-            w->getMonitor()->getViewport().copyTo(((int*)&workAreas[i]));
+            w->getMonitor()->getViewport().copyTo(((uint32_t*)&workAreas[i]));
         i++;
     }
     // top left point of each desktop
@@ -142,7 +142,7 @@ void setShowingDesktop(int value) {
     LOG(LOG_LEVEL_INFO, "setting showing desktop %d\n", value);
     for(WindowInfo* winInfo : getAllWindows())
         if(winInfo->isInteractable() && winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
-            raiseWindowInfo(winInfo, value);
+            raiseWindow(winInfo->getID(), 0, value);
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
 }
 

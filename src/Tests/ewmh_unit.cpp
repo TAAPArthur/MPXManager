@@ -140,7 +140,7 @@ MPX_TEST("test_toggle_show_desktop", {
     WindowID stackingOrder[] = {desktop, win, desktop};
     flush();
     scan(root);
-    raiseWindowInfo(getWindowInfo(win));
+    raiseWindow(win);
     assert(checkStackingOrder(stackingOrder, 2));
     setShowingDesktop(1);
     flush();
@@ -318,7 +318,7 @@ MPX_TEST("test_client_request_restack", {
     WindowInfo* winInfo2 = getAllWindows()[1];
     winInfo2->moveToWorkspace(0);
     WindowID stackingOrder[] = {winInfo->getID(), winInfo2->getID(), winInfo->getID()};
-    assert(raiseWindowInfo(winInfo2));
+    raiseWindow(winInfo2->getID());
     assert(checkStackingOrder(stackingOrder, 2));
     winInfo->addMask(EXTERNAL_RAISE_MASK);
     //processConfigureRequest(winInfo->getID(), NULL, winInfo2->getID(), XCB_STACK_MODE_ABOVE,  XCB_CONFIG_WINDOW_STACK_MODE|XCB_CONFIG_WINDOW_SIBLING);

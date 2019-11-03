@@ -305,16 +305,29 @@ MPX_TEST("test_raise_window", {
     registerForWindowEvents(bottom, XCB_EVENT_MASK_VISIBILITY_CHANGE);
     registerForWindowEvents(top, XCB_EVENT_MASK_VISIBILITY_CHANGE);
     scan(root);
-    WindowInfo* infoBottom = getWindowInfo(bottom);
-    WindowInfo* infoTop = getWindowInfo(top);
-    assert(raiseWindowInfo(infoBottom));
+    raiseWindow(bottom);
     flush();
     WindowID stackingOrder[] = {top, bottom, top};
     assert(checkStackingOrder(stackingOrder, 2));
-    assert(raiseWindowInfo(infoTop));
+    raiseWindow(top);
     assert(checkStackingOrder(stackingOrder + 1, 2));
-    assert(lowerWindowInfo(infoTop));
+    lowerWindow(top);
     assert(checkStackingOrder(stackingOrder, 2));
+});
+MPX_TEST("test_raise_window_sibling", {
+    //windows are in same spot
+    WindowID bottom = mapArbitraryWindow();
+    WindowID top = mapArbitraryWindow();
+    WindowID sibling = mapArbitraryWindow();
+    scan(root);
+    lowerWindow(bottom);
+    raiseWindow(top);
+    raiseWindow(bottom, sibling);
+    WindowID stackingOrder[] = {sibling, bottom, top};
+    assert(checkStackingOrder(stackingOrder, 2));
+    assert(checkStackingOrder(stackingOrder, 3));
+    lowerWindow(sibling, bottom);
+    assert(checkStackingOrder(stackingOrder, 3));
 });
 
 static void createWMEnv(void) {
@@ -377,7 +390,7 @@ MPX_TEST("test_configure_windows", {
         winInfo->addMask(mask);
     }
     for(WindowID win : list) {
-        int defaultValues[] = {10, 10, 10, 10, 10};
+        uint32_t defaultValues[] = {10, 10, 10, 10, 10};
         for(int i = 0; i < LEN(masks); i++) {
             configureWindow(win, allSizeMasks, defaultValues);
             processConfigureRequest(win, values, 0, 0, masks[i]);
@@ -402,7 +415,7 @@ MPX_TEST("test_configure_windows", {
 MPX_TEST("remove_border", {
     WindowID win = createNormalWindow();
     scan(root);
-    int border = 10;
+    uint32_t border = 10;
     configureWindow(win, XCB_CONFIG_WINDOW_BORDER_WIDTH, &border);
     assertEquals(getRealGeometry(win).border, border);
     removeBorder((win));
@@ -418,7 +431,7 @@ MPX_TEST("test_auto_focus_delete", {
         loadWindowProperties(winInfo);
         winInfo->moveToWorkspace(0);
         getActiveMaster()->onWindowFocus(winInfo->getID());
-        raiseWindowInfo(winInfo);
+        raiseWindow(winInfo->getID());
     }
     getActiveWorkspace()->setActiveLayout(NULL);
     WindowInfo* head = getAllWindows()[0];
