@@ -163,7 +163,7 @@ void onClientMessage(void) {
     else if(message == ewmh->_NET_ACTIVE_WINDOW) {
         //data: source,timestamp,current active window
         WindowInfo* winInfo = getWindowInfo(win);
-        if(winInfo->allowRequestFromSource(data.data32[0])) {
+        if(winInfo && winInfo->allowRequestFromSource(data.data32[0])) {
             Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
             if(m)
                 setActiveMaster(m);
@@ -187,7 +187,7 @@ void onClientMessage(void) {
     else if(message == ewmh->_NET_RESTACK_WINDOW) {
         WindowInfo* winInfo = getWindowInfo(win);
         LOG(LOG_LEVEL_TRACE, "Restacking Window %d sibling %d detail %d\n\n", win, data.data32[1], data.data32[2]);
-        if(winInfo->allowRequestFromSource(data.data32[0]))
+        if(winInfo && winInfo->allowRequestFromSource(data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
                 XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
     }
@@ -203,7 +203,7 @@ void onClientMessage(void) {
         for(int i = 1; i <= 4; i++)
             values[i - 1] = data.data32[i];
         WindowInfo* winInfo = getWindowInfo(win);
-        if(winInfo->allowRequestFromSource(source)) {
+        if(winInfo && winInfo->allowRequestFromSource(source)) {
             processConfigureRequest(win, values, 0, 0, mask);
         }
     }

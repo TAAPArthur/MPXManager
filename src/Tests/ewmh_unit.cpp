@@ -220,6 +220,14 @@ MPX_TEST_ITER("test_client_activate_window", 2, {
         assertEquals(getFocusedWindow(), winInfo);
     }
 });
+MPX_TEST("test_client_activate_window_bad", {
+    activateWindow(getAllWindows()[0]);
+    //don't crash
+    sendActivateWindowRequest(0);
+    sendActivateWindowRequest(1);
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), getAllWindows()[0]->getID());
+});
 
 MPX_TEST("test_client_change_desktop", {
     for(int i = 0; i < getNumberOfWorkspaces(); i++) {
@@ -329,6 +337,10 @@ MPX_TEST("test_client_request_restack", {
     waitUntilIdle();
     assert(checkStackingOrder(stackingOrder + 1, 2));
 });
+MPX_TEST("test_client_request_restack_bad", {
+    xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, 0, 0, XCB_STACK_MODE_ABOVE);
+    waitUntilIdle();
+});
 
 MPX_TEST_ITER("test_client_ping", 2, {
     WindowID win = _i ? getPrivateWindow() : root;
@@ -343,6 +355,10 @@ MPX_TEST_ITER("test_client_ping", 2, {
         xcb_ewmh_send_wm_ping(ewmh, winInfo->getID(), 0);
     flush();
     WAIT_UNTIL_TRUE(winInfo->getPingTimeStamp());
+    waitUntilIdle();
+});
+MPX_TEST("test_client_ping_bad", {
+    xcb_ewmh_send_wm_ping(ewmh, 0, 0);
     waitUntilIdle();
 });
 
@@ -380,6 +396,10 @@ MPX_TEST_ITER("wm_move_resize_window", 4, {
     waitUntilIdle();
     assertEquals(rect, getRealGeometry(winInfo->getID()));
     consumeEvents();
+});
+MPX_TEST("wm_move_resize_window_bad", {
+    sendWMMoveResizeRequest(0, 0, 0, XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT, 1);
+    waitUntilIdle();
 });
 MPX_TEST("wm_move_resize_window_invert", {
     movePointer(20, 40);
