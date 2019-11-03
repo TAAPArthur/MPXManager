@@ -283,7 +283,7 @@ public:
         return hasMask(MAPPABLE_MASK);
     }
     /**
-     * @return true if the user can interact (focus,type etc) with the window
+     * @return true if the user can interact (focus, type etc) with the window
      * For this to be true the window would have to be mapped and not hidden
      */
     bool isInteractable() const {
