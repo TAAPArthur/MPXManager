@@ -54,6 +54,8 @@ uint32_t getMaxNumberOfDevices(bool force) {
             maxNumDevices = *(int*)xcb_get_property_value(reply);
             free(reply);
         }
+        else
+            xcb_change_property(dis, XCB_PROP_MODE_REPLACE, root, MAX_DEVICES, XCB_ATOM_INTEGER, 32, 1, &maxNumDevices);
     }
     return maxNumDevices;
 }
