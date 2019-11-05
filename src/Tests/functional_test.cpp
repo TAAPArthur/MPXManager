@@ -93,9 +93,36 @@ MPX_TEST("test_monitor_detection", {
         assert(w->isVisible() == (w->getID() == 1));
 });
 MPX_TEST("default_active_layout", {
-
     for(Workspace* w : getAllWorkspaces())
         assert(w->getActiveLayout());
+});
+MPX_TEST_ITER("auto_fullscreen", 4, {
+    getAllMonitors()[0]->setViewport({10, 10, 10, 10});
+    getAllMonitors()[0]->setBase({1, 2, 1000, 2000});
+    static Window win = 0;
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {if(winInfo->getID() == win)winInfo->addMask(FULLSCREEN_MASK);}));
+    switch(_i) {
+        case 0:
+            mapArbitraryWindow();
+            waitUntilIdle();
+            win = mapArbitraryWindow();
+            break;
+        case 1:
+            win = mapArbitraryWindow();
+            break;
+        case 2:
+            win = mapArbitraryWindow();
+            mapArbitraryWindow();
+            break;
+        case 3:
+            getEventRules(Idle).add(DEFAULT_EVENT(+[]() {getWindowInfo(win)->addMask(MAPPABLE_MASK);}));
+            win = createNormalWindow();
+            waitUntilIdle();
+            mapWindow(win);
+            break;
+    }
+    waitUntilIdle();
+    assertEquals(getRealGeometry(win), getAllMonitors()[0]->getBase());
 });
 MPX_TEST("click_to_focus", {
     setActiveLayout(GRID);

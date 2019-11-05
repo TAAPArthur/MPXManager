@@ -228,7 +228,7 @@ void tileWorkspace(WorkspaceID index) {
     LayoutState dummy = {.monitor = workspace->getMonitor(), .stack = list};
     for(uint32_t i = 0; i < list.size(); i++) {
         WindowInfo* winInfo = list[i];
-        if(winInfo->isInteractable() && !winInfo->isTileable())
+        if(!winInfo->isTileable())
             if(winInfo->hasPartOfMask(MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)) {
                 short config[CONFIG_LEN] = {0};
                 configureWindow(&dummy, winInfo, config);

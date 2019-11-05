@@ -90,12 +90,10 @@ static WorkspaceState* computeState() {
             states[i].windowIds = new WindowID[size];
             states[i].windowMasks = new WindowMask[size];
             for(WindowInfo* winInfo : w->getWindowStack()) {
-                if(winInfo->isTileable()) {
+                if(winInfo->hasPartOfMask(RETILE_MASKS)) {
                     states[i].windowIds[j] = winInfo->getEffectiveID();
                     states[i].windowMasks[j] = winInfo->hasPartOfMask(RETILE_MASKS);
                     j++;
-                    if(j == size)
-                        break;
                 }
             }
         }

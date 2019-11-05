@@ -263,11 +263,12 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values
 
 /**
  * Tiles the specified workspace.
- * First the windows in the NORMAL_LAYER are tiled according to the active layout's layoutFunction
- * (if sett) or the conditionFunction is not true then the windows are left as in.
- * Afterwards the remaining layers are tiled in ascending order
+ * First the windows in the tileable windows are tiled according to the active layout's layoutFunction
+ *
+ * For un-tileable windows:
+ * It will raise/lower window with the ABOVE_MASK/BELOW_MASK
+ * If will will change the size and posibly position of windows with MAXIMIZED_MASK/FULLSCREEN_MASK/ROOT_FULLSCREEN_MASK
  * @param index the index of the workspace to tile
- * @see tileLowerLayers, tileUpperLayers
  */
 void tileWorkspace(WorkspaceID index);
 
