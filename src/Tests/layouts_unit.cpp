@@ -286,9 +286,9 @@ MPX_TEST("floating_windows", {
     int customBorder = 5;
     getWindowInfo(win3)->setTilingOverride({0, 0, 0, 0, customBorder});
     retile();
-    assertEquals(getRealGeometry(getWindowInfo(win3)).border, customBorder);
-    assertEquals(getRealGeometry(getWindowInfo(win2)).border, 0);
     assertEquals(getRealGeometry(getWindowInfo(win)).border, DEFAULT_BORDER_WIDTH);
+    assertEquals(getRealGeometry(getWindowInfo(win2)).border, 0);
+    assertEquals(getRealGeometry(getWindowInfo(win3)).border, customBorder);
 });
 
 MPX_TEST("test_tile_windows", {
@@ -314,37 +314,40 @@ MPX_TEST("test_tile_windows", {
 });
 
 
-MPX_TEST_ITER("test_privileged_windows_size", 5, {
+MPX_TEST_ITER("test_privileged_windows_size", 6 * 2, {
+    WindowMask extra = _i % 2 ? NO_MASK : NO_TILE_MASK;
+    _i /= 2;
     Monitor* m = getAllMonitors()[0];
     assert(m);
-    Rect view = {10, 20, 30, 40};
+    RectWithBorder view = {10, 20, 30, 40};
     m->setViewport(view);
     WindowInfo* winInfo = new WindowInfo(mapWindow(createNormalWindow()));
     addWindowInfo(winInfo);
     winInfo->moveToWorkspace(getActiveWorkspaceIndex());
-    static RectWithBorder baseConfig = {20, 30, 40, 50};
+    static RectWithBorder baseConfig = extra == NO_MASK ? RectWithBorder{20, 30, 40, 50}: view;
     void (*dummyLayout)(LayoutState * state) = [](LayoutState * state) {
         configureWindow(state, state->stack[0], baseConfig);
     };
     Layout l = {"", .layoutFunction = dummyLayout, {.noBorder = 1}};
     setActiveLayout(&l);
+
     struct{
         WindowMask mask;
         const Rect dims;
     } arr[] = {
         {0, baseConfig},
-        {X_MAXIMIZED_MASK, {baseConfig.x, baseConfig.y, m->getViewport().width, baseConfig.height}},
-        {Y_MAXIMIZED_MASK, {baseConfig.x, baseConfig.y, baseConfig.width, m->getViewport().height}},
-        {FULLSCREEN_MASK, m->getBase()},
-        {ROOT_FULLSCREEN_MASK, {0, 0, getRootWidth(), getRootHeight()}},
+        {X_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, baseConfig.height}},
+        {Y_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, baseConfig.width, m->getViewport().height}},
+        {MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, m->getViewport().height}},
+        {FULLSCREEN_MASK | extra, m->getBase()},
+        {ROOT_FULLSCREEN_MASK | extra, {0, 0, getRootWidth(), getRootHeight()}},
     };
     int baseMask = MAPPABLE_MASK | MAPPED_MASK;
-    int i = _i;
     winInfo->removeMask(-1);
-    winInfo->addMask(baseMask | arr[i].mask);
+    winInfo->addMask(baseMask | arr[_i].mask);
     retile();
     Rect rect = getRealGeometry(winInfo);
-    assertEquals(arr[i].dims, rect);
+    assertEquals(arr[_i].dims, rect);
 });
 
 MPX_TEST("find_layout_by_name", {
