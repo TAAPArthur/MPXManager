@@ -46,7 +46,6 @@ enum LayoutArgIndex {
     LAYOUT_NO_ADJUST_FOR_BORDERS,
     LAYOUT_DIM,
     LAYOUT_RAISE_FOCUSED,
-    LAYOUT_LOWER_WINDOWS,
     LAYOUT_TRANSFORM,
     LAYOUT_ARG,
 } ;
@@ -70,8 +69,6 @@ struct LayoutArgs {
     bool dim;
     /// will raise the focused window
     bool raiseFocused;
-    /// whether to raise or lower windows when tiling
-    bool lowerWindows;
     /// the transformation (about the center of the monitor) to apply to all window positions
     Transform transform;
     /// generic argument
@@ -271,12 +268,6 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values
  * @param index the index of the workspace to tile
  */
 void tileWorkspace(WorkspaceID index);
-
-/**
- * Apply the workspace's active layout on the given workspace
- * @param workspace
- */
-void applyLayout(Workspace* workspace);
 
 /**
  * Windows will be the size of the monitor view port

@@ -82,9 +82,6 @@ void increaseLayoutArg(int index, int step, Layout* l) {
             case LAYOUT_RAISE_FOCUSED:
                 l->getArgs().raiseFocused = !l->getArgs().raiseFocused;
                 break;
-            case LAYOUT_LOWER_WINDOWS:
-                l->getArgs().lowerWindows = !l->getArgs().lowerWindows;
-                break;
             case LAYOUT_TRANSFORM:
                 l->getArgs().transform = (Transform)((l->getArgs().transform + step % TRANSFORM_LEN + TRANSFORM_LEN) % TRANSFORM_LEN) ;
                 break;
@@ -130,6 +127,21 @@ void transformConfig(LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_
         }
     }
 }
+static int adjustBorders(LayoutState* state, WindowInfo* winInfo, uint32_t config[CONFIG_LEN], int mask) {
+    if(winInfo->isInputOnly()) {
+        mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
+        for(int i = CONFIG_INDEX_BORDER; i < CONFIG_LEN - 1; i++)
+            config[i] = config[i + 1];
+    }
+    else if(state->getArgs()) {
+        config[CONFIG_INDEX_BORDER] = state->getArgs()->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
+        if(!state->getArgs()->noAdjustForBorders) {
+            config[CONFIG_INDEX_WIDTH] -= config[CONFIG_INDEX_BORDER] * 2;
+            config[CONFIG_INDEX_HEIGHT] -= config[CONFIG_INDEX_BORDER] * 2;
+        }
+    }
+    return mask;
+}
 static void applyMasksToConfig(const Monitor* m, uint32_t* values, WindowInfo* winInfo) {
     if(winInfo->hasMask(ROOT_FULLSCREEN_MASK)) {
         values[CONFIG_INDEX_X] = 0;
@@ -149,43 +161,18 @@ static void applyMasksToConfig(const Monitor* m, uint32_t* values, WindowInfo* w
     }
 }
 
-static int adjustBorders(LayoutState* state, WindowInfo* winInfo, uint32_t config[CONFIG_LEN], int mask) {
-    if(winInfo->isInputOnly()) {
-        mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
-        for(int i = CONFIG_INDEX_BORDER; i < CONFIG_LEN - 1; i++)
-            config[i] = config[i + 1];
-    }
-    else if(state->getArgs()) {
-        config[CONFIG_INDEX_BORDER] = state->getArgs()->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
-        if(!state->getArgs()->noAdjustForBorders) {
-            config[CONFIG_INDEX_WIDTH] -= config[CONFIG_INDEX_BORDER] * 2;
-            config[CONFIG_INDEX_HEIGHT] -= config[CONFIG_INDEX_BORDER] * 2;
-        }
-    }
-    return mask;
-}
-static Rect getMonitorBoundsForWindow(WindowInfo* winInfo, const Monitor* m) {
-    if(winInfo->hasMask(ROOT_FULLSCREEN_MASK))
-        return (Rect) {0, 0, getRootWidth(), getRootHeight()};
-    else if(winInfo->hasMask(FULLSCREEN_MASK))
-        return m->getBase();
-    else
-        return m->getViewport();
-}
 void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values[CONFIG_LEN]) {
     assert(winInfo);
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
         XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-        XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
+        XCB_CONFIG_WINDOW_BORDER_WIDTH ;
     uint32_t config[CONFIG_LEN] = {0};
-    config[CONFIG_INDEX_STACK] = state->getArgs() &&
-        state->getArgs()->lowerWindows ? XCB_STACK_MODE_BELOW : XCB_STACK_MODE_ABOVE;
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
         config[i] = values[i];
     transformConfig(state->getArgs(), state->monitor, config);
     applyMasksToConfig(state->monitor, config, winInfo);
     mask = adjustBorders(state, winInfo, config, mask);
-    Rect bounds = getMonitorBoundsForWindow(winInfo, state->monitor);
+    Rect bounds = state->monitor->getViewport();
     RectWithBorder tilingOverride = winInfo->getTilingOverride();
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++) {
         if(winInfo->isTilingOverrideEnabledAtIndex(i)) {
@@ -211,7 +198,47 @@ void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values
     configureWindow(winInfo->getID(), mask, config);
 }
 
+static void arrangeNonTileableWindows(const Monitor* monitor, const ArrayList<WindowInfo*>& stack) {
+    const int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
+        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
+    for(WindowInfo* winInfo : stack) {
+        if(!winInfo->isTileable())
+            if(winInfo->hasPartOfMask(MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)) {
+                uint32_t config[CONFIG_LEN] = {0};
+                monitor->getViewport().copyTo(config);
+                applyMasksToConfig(monitor, config, winInfo);
+                configureWindow(winInfo->getID(), mask, config);
+            }
+            else if(!winInfo->isInputOnly()) {
+                uint32_t border = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
+                    winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
+                    DEFAULT_BORDER_WIDTH;
+                configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &border);
+            }
+    }
+}
 
+static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
+    WindowID currentAbove = 0;
+    WindowID currentBelow = 0;
+    WindowID lowestAbove = 0;
+    for(WindowInfo* winInfo : list) {
+        if(winInfo->hasMask(ABOVE_MASK)) {
+            if(!currentAbove) {
+                raiseWindow(winInfo->getID());
+                lowestAbove =  currentAbove;
+            }
+            else
+                lowerWindow(winInfo->getID(), currentAbove);
+            currentAbove = winInfo->getID();
+        }
+        else if(winInfo->hasMask(BELOW_MASK)) {
+            lowerWindow(winInfo->getID(), currentBelow);
+            currentBelow = winInfo->getID();
+        }
+    }
+    return lowestAbove;
+}
 
 void retile(void) {
     tileWorkspace(getActiveWorkspaceIndex());
@@ -223,36 +250,6 @@ void tileWorkspace(WorkspaceID index) {
     if(!workspace->getMonitor() ||
         !applyEventRules(TileWorkspace, !workspace->getWindowStack().empty() ? workspace->getWindowStack()[0] : NULL))
         return;
-    applyLayout(workspace);
-    ArrayList<WindowInfo*>& list = workspace->getWindowStack();
-    LayoutState dummy = {.monitor = workspace->getMonitor(), .stack = list};
-    for(uint32_t i = 0; i < list.size(); i++) {
-        WindowInfo* winInfo = list[i];
-        if(!winInfo->isTileable())
-            if(winInfo->hasPartOfMask(MAXIMIZED_MASK | FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK)) {
-                short config[CONFIG_LEN] = {0};
-                configureWindow(&dummy, winInfo, config);
-            }
-            else if(!winInfo->isInputOnly()) {
-                uint32_t border = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
-                    winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
-                    DEFAULT_BORDER_WIDTH;
-                configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &border);
-            }
-        if(winInfo->hasMask(BELOW_MASK))
-            lowerWindow(winInfo->getID());
-        winInfo = list[list.size() - i - 1];
-        if(winInfo->hasMask(ABOVE_MASK))
-            raiseWindow(winInfo->getID());
-    }
-}
-
-void applyLayout(Workspace* workspace) {
-    Layout* layout = workspace->getActiveLayout();
-    if(!layout) {
-        LOG(LOG_LEVEL_TRACE, "workspace %d does not have a layout; skipping \n", workspace->getID());
-        return;
-    }
     Monitor* m = workspace->getMonitor();
     assert(m);
     ArrayList<WindowInfo*>& windowStack = workspace->getWindowStack();
@@ -260,23 +257,34 @@ void applyLayout(Workspace* workspace) {
         LOG(LOG_LEVEL_TRACE, "no windows in workspace\n");
         return;
     }
-    int size = getNumberOfWindowsToTile(windowStack, &layout->getArgs());
-    LayoutState state = {.args = &layout->getArgs(), .monitor = m, .numWindows = size, .stack = windowStack};
-    if(size)
-        if(layout->getFunc()) {
-            LOG(LOG_LEVEL_DEBUG, "using '%s' layout: num win %d (max %d)\n", layout->getName().c_str(), size,
-                layout->getArgs().limit);
-            layout->apply(&state);
-        }
+    Layout* layout = workspace->getActiveLayout();
+    if(layout) {
+        int size = getNumberOfWindowsToTile(windowStack, &layout->getArgs());
+        LayoutState state = {.args = &layout->getArgs(), .monitor = m, .numWindows = size, .stack = windowStack};
+        if(size)
+            if(layout->getFunc()) {
+                LOG(LOG_LEVEL_DEBUG, "using '%s' layout: num win %d (max %d)\n", layout->getName().c_str(), size,
+                    layout->getArgs().limit);
+                layout->apply(&state);
+            }
+            else
+                LOG(LOG_LEVEL_WARN, "WARNING there is not a set layout function\n");
         else
-            LOG(LOG_LEVEL_WARN, "WARNING there is not a set layout function\n");
-    else
-        LOG(LOG_LEVEL_TRACE, "there are no windows to tile\n");
-    if(layout->getArgs().raiseFocused) {
-        for(uint32_t i = 0; i < getActiveMaster()->getWindowStack().size(); i++) {
-            WindowInfo* winInfo = getActiveMaster()->getWindowStack()[i];
-            if(winInfo->getWorkspace() == workspace)
-                raiseWindow(winInfo->getID());
+            LOG(LOG_LEVEL_TRACE, "there are no windows to tile\n");
+    }
+    else if(!layout)
+        LOG(LOG_LEVEL_TRACE, "workspace %d does not have a layout; skipping \n", workspace->getID());
+    arrangeNonTileableWindows(m, windowStack);
+    WindowID lowestAbove = applyAboveBelowMask(windowStack);
+    if(layout && layout->getArgs().raiseFocused) {
+        for(WindowInfo* winInfo : getActiveMaster()->getWindowStack()) {
+            if(winInfo->getWorkspace() == workspace) {
+                if(lowestAbove)
+                    lowerWindow(winInfo->getID(), lowestAbove);
+                else
+                    raiseWindow(winInfo->getID());
+                lowestAbove =  winInfo->getID();
+            }
         }
     }
 }
@@ -302,7 +310,6 @@ static uint32_t splitEven(LayoutState* state, int offset, short const* baseValue
     }
     if(last) {
         LayoutState copy = *state;
-        copy.args->lowerWindows = !state->getArgs()->lowerWindows;
         for(; i < state->stack.size(); i++) {
             WindowInfo* winInfo = state->stack[i];
             if(winInfo->isTileable())
