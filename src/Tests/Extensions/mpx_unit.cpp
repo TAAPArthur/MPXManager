@@ -22,6 +22,45 @@
 #define DIRNAME  "/tmp"
 #define BASENAME "._dummy_mpx_info.txt"
 static const char* ABS_PATH = DIRNAME "/" BASENAME;
+
+
+
+SET_ENV(createXSimpleEnv, cleanupXServer);
+MPX_TEST("test_slave_swapping_same_device", {
+    getAllMasters().add(new Master(-1, -2, ""));
+    setActiveMaster(getMasterByID(-1));
+    //will error due to no Xserver if it doesn't check for equality first
+    swapDeviceID(getActiveMaster(), getActiveMaster());
+});
+
+MPX_TEST("test_slave_swapping", {
+    createMasterDevice("test");
+    initCurrentMasters();
+    assert(getAllMasters().size() == 2);
+    auto filter = [](const ArrayList<Slave*>& ref) {
+        ArrayList<SlaveID>list;
+        for(int i = ref.size() - 1; i >= 0; i--)
+            list.add(ref[i]->getID());
+        return list;
+    };
+    Master* master1 = getAllMasters()[ 0];
+    Master* master2 = getAllMasters()[1];
+    attachSlaveToMaster(getAllSlaves()[0], master2);
+    initCurrentMasters();
+    ArrayList<SlaveID> slaves1 = filter((master1->getSlaves()));
+    ArrayList<SlaveID> slaves2 = filter((master2->getSlaves()));
+    assert(!slaves1.empty());
+    assert(!slaves2.empty());
+    swapDeviceID(master1, master2);
+    initCurrentMasters();
+    ArrayList<SlaveID> slavesNew1 = filter((master1->getSlaves()));
+    ArrayList<SlaveID> slavesNew2 = filter((master2->getSlaves()));
+    assert(slaves1.size() == slavesNew2.size());
+    assert(slaves2.size() == slavesNew1.size());
+    assert(slaves1 == slavesNew2);
+    assert(slaves2 == slavesNew1);
+});
+
 static void mpxStartup(void) {
     MASTER_INFO_PATH = ABS_PATH;
     remove(ABS_PATH);
@@ -132,12 +171,6 @@ MPX_TEST("auto_resume", {
     assertEquals(getAllMasters().size(), 3);
 });
 static void setup() {
-    onSimpleStartup();
-    startWM();
-    waitUntilIdle();
-}
-SET_ENV(setup, fullCleanup);
-MPX_TEST_ITER("test_split_master", 2, {
     static auto injectSlaveID = []() {
         xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
         if(event->event_type == XCB_INPUT_MOTION) {
@@ -147,18 +180,30 @@ MPX_TEST_ITER("test_split_master", 2, {
         if(event->deviceid == event->sourceid)
             return;
         Master* m;
-        if(m = getMasterByID(event->deviceid, 1))
-            event->sourceid = m->getSlaves()[1]->getID();
-        else if(m = getMasterByID(event->deviceid, 0))
-            event->sourceid = m->getSlaves()[0]->getID();
+        if(m = getMasterByID(event->deviceid, 1)) {
+            if(m->getSlaves().size())
+                event->sourceid = m->getSlaves()[1]->getID();
+        }
+        else if(m = getMasterByID(event->deviceid, 0)) {
+            if(m->getSlaves().size())
+                event->sourceid = m->getSlaves()[0]->getID();
+        }
         assert(m);
     };
     getEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(injectSlaveID), PREPEND_UNIQUE);
+    onSimpleStartup();
+    startWM();
+    waitUntilIdle();
+}
+SET_ENV(setup, fullCleanup);
+
+MPX_TEST_ITER("test_split_master", 2, {
     Master* m = getActiveMaster();
     assertEquals(getAllMasters().size(), 1);
     assertEquals(m->getSlaves().size(), 2);
     assertEquals(getAllSlaves().size(), 2);
-    splitMaster();
+    startSplitMaster();
+    getEventRules(ProcessDeviceEvent).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
     sendKeyPress(getKeyCode(XK_A));
     if(_i)
         sendButtonPress(1);
@@ -169,5 +214,36 @@ MPX_TEST_ITER("test_split_master", 2, {
     waitUntilIdle();
     assertEquals(getAllMasters().size(), 2);
     assertEquals(m->getSlaves().size(), 0);
+    assertEquals(getAllMasters()[1]->getSlaves().size(), 2);
+    endSplitMaster();
+});
+MPX_TEST("attachActiveSlaveToMaster_bad", {
+    createMasterDevice("test");
+    initCurrentMasters();
+    getEventRules(ProcessDeviceEvent).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
+    grabKeyboard();
+    sendKeyPress(getKeyCode(XK_A), getAllMasters()[1]->getID());
+    waitUntilIdle();
+})
+MPX_TEST("cycle_slaves", {
+    createMasterDevice("test");
+    initCurrentMasters();
+    getEventRules(ProcessDeviceEvent).add({cycleSlave, UP, "cycleSlaves"});
+    grabKeyboard();
+    sendKeyPress(getKeyCode(XK_A));
+    waitUntilIdle();
+    assertEquals(getAllMasters().size(), 2);
+    assertEquals(getAllMasters()[0]->getSlaves().size(), 1);
+    assertEquals(getAllMasters()[1]->getSlaves().size(), 1);
+});
+MPX_TEST("swap_slaves", {
+    createMasterDevice("test");
+    initCurrentMasters();
+    getEventRules(ProcessDeviceEvent).add({swapSlaves, UP, "swapSlaves"});
+    grabKeyboard();
+    sendKeyPress(getKeyCode(XK_A));
+    waitUntilIdle();
+    assertEquals(getAllMasters().size(), 2);
+    assertEquals(getAllMasters()[0]->getSlaves().size(), 0);
     assertEquals(getAllMasters()[1]->getSlaves().size(), 2);
 });

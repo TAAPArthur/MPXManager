@@ -315,6 +315,17 @@ struct ArrayList: std::vector<T> {
     uint32_t getNextIndex(int current, int delta)const {
         return ((current + delta) % (ssize_t)this->size() + this->size()) % this->size();
     }
+    /**
+     * Returns the value at the next index
+     *
+     * @param current
+     * @param delta
+     *
+     * @return
+     */
+    T getNextValue(int current, int delta)const {
+        return (*this)[getNextIndex(current, delta)];
+    }
     /// returns the number of elements in the list
     uint32_t size()const {return std::vector<T>::size();};
     /**
