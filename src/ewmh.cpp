@@ -131,7 +131,7 @@ void setSavedWorkspaceIndex(WindowInfo* winInfo) {
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), winInfo->getWorkspaceIndex());
 }
 void autoResumeWorkspace(WindowInfo* winInfo) {
-    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isNotManageable() && !winInfo->isDock()) {
+    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isSpecial()) {
         WorkspaceID w = getSavedWorkspaceIndex(winInfo->getID());
         LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d\n", winInfo->getID(), w);
         winInfo->moveToWorkspace(w);
