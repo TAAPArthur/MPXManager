@@ -156,6 +156,9 @@ public:
     /// If this returns false, then nothing should automatically happen to this window
     bool isNotManageable()const {return notManageable;}
 
+    /// @return 1 if the window has any flags sets
+    bool isSpecial() const {return isNotManageable() || isInputOnly() || isOverrideRedirectWindow() || isDock();}
+
     /// sets that the window type was not explicitly set
     void setImplicitType(bool b) {implicitType = b;}
     /// @return 1 iff window type was not explicitly set
@@ -272,7 +275,7 @@ public:
      * @return 1 iff the window supports being focused
      */
     bool isFocusAllowed() const {
-        return hasPartOfMask(INPUT_MASK | WM_TAKE_FOCUS_MASK) ? 1 : 0;
+        return !isNotManageable() && hasPartOfMask(INPUT_MASK | WM_TAKE_FOCUS_MASK) ? 1 : 0;
     }
 
     /**
@@ -301,7 +304,7 @@ public:
      * @return true if the window can receive focus
      */
     bool isActivatable() const {
-        return hasMask(MAPPABLE_MASK) && hasMask(INPUT_MASK) &&
+        return !isNotManageable() && hasMask(MAPPABLE_MASK) && hasMask(INPUT_MASK) &&
             !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
     }
 

@@ -129,7 +129,7 @@ void autoFocus() {
     if(!winInfo || !getUserTime(winInfo->getID()))
         return;
     long delta = getTime() - winInfo->getCreationTime();
-    if(!winInfo->isNotManageable() && winInfo->hasMask(INPUT_MASK)) {
+    if(!winInfo->isSpecial() && winInfo->hasMask(INPUT_MASK)) {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             if(focusWindow(winInfo)) {
                 LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
