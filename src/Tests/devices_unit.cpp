@@ -6,6 +6,7 @@
 #include "tester.h"
 
 #include "../devices.h"
+#include "../window-properties.h"
 #include "../bindings.h"
 #include "../globals.h"
 #include "../xsession.h"
@@ -92,6 +93,12 @@ MPX_TEST("master_by_name", {
     destroyAllNonDefaultMasters();
 });
 
+MPX_TEST("get_active_focus", {
+    assert(getActiveFocus());
+    focusWindow(root);
+    assertEquals(getActiveFocus(), root);
+})
+
 
 MPX_TEST("test_set_active_master_by_id", {
     createMasterDevice("test1");
@@ -137,40 +144,6 @@ MPX_TEST("test_get_client_pointer_unknown", {
     getAllMasters().removeElement(newMaster);
     assert(newMaster->getPointerID() == getClientPointerForWindow(win));
     delete newMaster;
-});
-MPX_TEST("test_slave_swapping_same_device", {
-    getAllMasters().add(new Master(-1, -2, ""));
-    setActiveMaster(getMasterByID(-1));
-    //will error due to no Xserver if it doesn't check for equality first
-    swapDeviceID(getActiveMaster(), getActiveMaster());
-});
-
-MPX_TEST("test_slave_swapping", {
-    createMasterDevice("test");
-    initCurrentMasters();
-    assert(getAllMasters().size() == 2);
-    auto filter = [](const ArrayList<Slave*>& ref) {
-        ArrayList<SlaveID>list;
-        for(int i = ref.size() - 1; i >= 0; i--)
-            list.add(ref[i]->getID());
-        return list;
-    };
-    Master* master1 = getAllMasters()[ 0];
-    Master* master2 = getAllMasters()[1];
-    attachSlaveToMaster(getAllSlaves()[0], master2);
-    initCurrentMasters();
-    ArrayList<SlaveID> slaves1 = filter((master1->getSlaves()));
-    ArrayList<SlaveID> slaves2 = filter((master2->getSlaves()));
-    assert(!slaves1.empty());
-    assert(!slaves2.empty());
-    swapDeviceID(master1, master2);
-    initCurrentMasters();
-    ArrayList<SlaveID> slavesNew1 = filter((master1->getSlaves()));
-    ArrayList<SlaveID> slavesNew2 = filter((master2->getSlaves()));
-    assert(slaves1.size() == slavesNew2.size());
-    assert(slaves2.size() == slavesNew1.size());
-    assert(slaves1 == slavesNew2);
-    assert(slaves2 == slavesNew1);
 });
 
 

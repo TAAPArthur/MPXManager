@@ -187,28 +187,6 @@ WindowID getActiveFocus(MasterID id) {
     }
     return win;
 }
-void swapDeviceID(Master* master1, Master* master2) {
-    if(master1 == master2)
-        return;
-    LOG(LOG_LEVEL_DEBUG, "Swapping %d(%d) with %d (%d)\n",
-        master1->getID(), master1->getPointerID(), master2->getID(), master2->getPointerID());
-    //swap keyboard focus
-    xcb_input_xi_set_focus(dis, getActiveFocus(master1->getID()), 0, master2->getID());
-    xcb_input_xi_set_focus(dis, getActiveFocus(master2->getID()), 0, master2->getID());
-    short pos1[2];
-    short pos2[2];
-    if(getMousePosition(master1->getPointerID(), root, pos1) && getMousePosition(master2->getPointerID(), root, pos2)) {
-        movePointer(master2->getPointerID(), root, pos1[0], pos1[1]);
-        movePointer(master1->getPointerID(), root, pos2[0], pos2[1]);
-    }
-    for(Slave* slave : master1->getSlaves()) {
-        attachSlaveToMaster(slave, master2);
-    }
-    for(Slave* slave : master2->getSlaves()) {
-        attachSlaveToMaster(slave, master1);
-    }
-    flush();
-}
 void clearFakeMonitors() {
     waitForChild(spawn("xsane-xrandr clear &>/dev/null"));
     detectMonitors();

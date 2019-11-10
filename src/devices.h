@@ -103,15 +103,6 @@ static inline bool getMousePosition(int16_t result[2]) {
     return getMousePosition(getActiveMasterPointerID(), root, result);
 }
 
-/**
- * Swap the ids of master devices backed by master1 and master2
- * There is no easy way in X to accomplish this task so every other aspect of the
- * master devices (pointer position, window focus, slaves devices etc) are switched and we update our
- * internal state as if just the ids switched
- * @param master1
- * @param master2
- */
-void swapDeviceID(Master* master1, Master* master2);
 
 /**
  * Sets the client pointer for the given window to the active master

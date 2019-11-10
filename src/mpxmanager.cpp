@@ -53,13 +53,6 @@ ArrayList<Mode>modes = {
     {"mpx-stop", +[](){getEventRules(onXConnection).add(stopMPX);}, 0},
     {"mpx-restart", +[](){getEventRules(onXConnection).add(restartMPX);}, 0},
     {"mpx-restore", +[](){getEventRules(onXConnection).add(restoreMPX);}, 0},
-    {
-        "mpx-split", +[]() {
-            addAutoMPXRules();
-            getEventRules(onXConnection).add(splitMaster);
-            addDieOnIdleRule();
-        }
-    },
 
 #endif
 };

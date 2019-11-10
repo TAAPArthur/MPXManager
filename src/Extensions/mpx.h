@@ -43,12 +43,13 @@ int saveMPXMasterInfo(void);
  */
 int loadMPXMasterInfo(void);
 /**
- * Creates a new master and moves all active slaves (slaves that are firing events) to the newly
- * created master
- * This method adds a Idle event that will serve as a callback to stop moving active slaves
- * @return the id of the newly created master
+ * Creates a new master and marks it
  */
-int splitMaster(void);
+void startSplitMaster(void);
+/**
+ * Attaches the slave that triggered the current device event to the marked master if it is not null
+ */
+void attachActiveSlaveToMarkedMaster() ;
 /**
  * Removes all the event rules created by splitMaster()
  */
@@ -61,4 +62,26 @@ void endSplitMaster(void);
  */
 Master* getMasterForSlave(const char* slaveName);
 
+/**
+ * Swap the ids of master devices backed by master1 and master2
+ * There is no easy way in X to accomplish this task so every other aspect of the
+ * master devices (pointer position, window focus, slaves devices etc) are switched and we update our
+ * internal state as if just the ids switched
+ * @param master1
+ * @param master2
+ */
+void swapDeviceID(Master* master1, Master* master2);
+/**
+ * Swaps slaves with the master dir indexes away from the active master
+ *
+ * @param master
+ * @param dir
+ */
+void swapSlaves(Master* master, int dir) ;
+/**
+ * Attaches the slave that triggered the current device event to the master dir away from the active master
+ *
+ * @param dir
+ */
+void cycleSlave(int dir) ;
 #endif
