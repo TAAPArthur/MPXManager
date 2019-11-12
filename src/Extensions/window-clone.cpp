@@ -45,25 +45,19 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     assert(winInfo);
     LOG(LOG_LEVEL_DEBUG, "Cloning window %d\n", winInfo->getID());
     uint32_t values[1] = {winInfo->isOverrideRedirectWindow()};
-    WindowID window = xcb_generate_id(dis);
     parent = parent ? parent : winInfo->getParent();
-    xcb_void_cookie_t cookie = xcb_create_window_checked(dis,
-            XCB_COPY_FROM_PARENT, window, parent,
-            0, 0, 10, 10, 0,
-            winInfo->isInputOnly() ? XCB_WINDOW_CLASS_INPUT_ONLY : XCB_WINDOW_CLASS_INPUT_OUTPUT,
-            screen->root_visual,
-            XCB_CW_OVERRIDE_REDIRECT, values);
-    catchError(cookie);
+    WindowID win = createWindow(parent, winInfo->isInputOnly() ? XCB_WINDOW_CLASS_INPUT_ONLY :
+            XCB_WINDOW_CLASS_INPUT_OUTPUT, XCB_CW_OVERRIDE_REDIRECT, values);
     xcb_icccm_wm_hints_t hints = {.input = winInfo->hasMask(INPUT_MASK), .initial_state = XCB_ICCCM_WM_STATE_NORMAL };
-    catchError(xcb_icccm_set_wm_hints_checked(dis, window, &hints));
-    WindowInfo* clone = new WindowInfo(window, parent, winInfo->getID());
+    catchError(xcb_icccm_set_wm_hints_checked(dis, win, &hints));
+    WindowInfo* clone = new WindowInfo(win, parent, winInfo->getID());
     syncPropertiesWithParent(clone, winInfo);
     clone->addMask(winInfo->getUserMask());
     clone->addEventMasks(NON_ROOT_EVENT_MASKS | XCB_EVENT_MASK_EXPOSURE);
     if(winInfo->getWorkspace())
         clone->moveToWorkspace(winInfo->getWorkspaceIndex());
     if(winInfo->hasMask(MAPPED_MASK))
-        attemptToMapWindow(clone->getID());
+        mapWindow(clone->getID());
     if(!registerWindow(clone))
         return NULL;
     passiveGrab(clone->getID(), NON_ROOT_DEVICE_EVENT_MASKS | XCB_INPUT_XI_EVENT_MASK_ENTER);

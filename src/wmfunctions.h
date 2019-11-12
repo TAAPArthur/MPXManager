@@ -82,15 +82,6 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed = 0) ;
  * @return 0 on success or the error
  */
 int killClientOfWindow(WindowID win);
-/**
- * Destroys win but not the underlying client.
- * The underlying client may choose to die if win is closed.
- *
- * @param win
- *
- * @return 0 on success or the error
- */
-int destroyWindow(WindowID win);
 
 /**
  * Sends a WM_DELETE_WINDOW message or sends a kill requests
@@ -98,13 +89,6 @@ int destroyWindow(WindowID win);
  * @see killWindow();
  */
 void killClientOfWindowInfo(WindowInfo* winInfo);
-
-/**
- * Maps the window specified by id if it is allowed to be mapped (ie if it is in a visible workspace and is mappable)
- * @param id
- * @return 0 if the attempt was successful
- */
-int attemptToMapWindow(WindowID id);
 
 /**
  * Updates the map state of the window to be in sync with its workspace.

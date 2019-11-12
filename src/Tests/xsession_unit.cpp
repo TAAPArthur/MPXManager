@@ -74,6 +74,19 @@ MPX_TEST("reopen_display", {
     openXDisplay();
 });
 
+MPX_TEST("create_destroy_window", {
+    assert(!destroyWindow(createWindow()));
+});
+
+MPX_TEST("attempToMapWindow", {
+    WindowID win = createWindow();
+    assert(!isWindowMapped(win));
+    mapWindow(win);
+    assert(isWindowMapped(win));
+    unmapWindow(win);
+    assert(!isWindowMapped(win));
+});
+
 MPX_TEST("private_window", {
     xcb_window_t win = getPrivateWindow();
     assert(win == getPrivateWindow());

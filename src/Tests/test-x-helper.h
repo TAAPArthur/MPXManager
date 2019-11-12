@@ -26,31 +26,12 @@ static void inline saveXSession() {
     static auto _ewmh = ewmh;
     assert(_dpy && _dis && _ewmh);
 }
-static inline int createWindow(int parent, int mapped, int ignored, int userIgnored, uint32_t input, int clazz) {
+static inline int createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input, xcb_window_class_t clazz) {
     assert(ignored < 2);
     assert(dis);
-    xcb_window_t window = xcb_generate_id(dis);
-    xcb_void_cookie_t c = xcb_create_window_checked(dis,                   /* Connection          */
-            XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
-            window,                        /* window Id           */
-            parent,                  /* parent window       */
-            0, 0,                          /* x, y                */
-            150, 150,                      /* width, height       */
-            0,                            /* border_width        */
-            clazz, /* class               */
-            screen->root_visual,           /* visual              */
-            XCB_CW_OVERRIDE_REDIRECT, &ignored);                     /* masks, not used yet */
-    xcb_generic_error_t* e = xcb_request_check(dis, c);
-    if(e) {
-        logError(e);
-        err(1, "could not create window\n");
-    }
+    WindowID window = createWindow(parent,clazz, XCB_CW_OVERRIDE_REDIRECT, &ignored);
     xcb_icccm_wm_hints_t hints = {.input = input, .initial_state = mapped};
-    e = xcb_request_check(dis, xcb_icccm_set_wm_hints_checked(dis, window, &hints));
-    if(e) {
-        err(1, "could not set hints for window on creation\n");
-    }
-    flush();
+    catchError(xcb_icccm_set_wm_hints_checked(dis, window, &hints));
     if(!userIgnored && !ignored)
         catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &ewmh->_NET_WM_WINDOW_TYPE_NORMAL));
     return window;
@@ -80,11 +61,6 @@ static inline WindowID createNormalSubWindow(int parent) {
 }
 static inline WindowID  createUnmappedWindow(void) {
     return createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
-}
-static inline WindowID mapWindow(int win) {
-    assert(xcb_request_check(dis, xcb_map_window_checked(dis, win)) == NULL);
-    flush();
-    return win;
 }
 static inline WindowID mapArbitraryWindow() {return mapWindow(createNormalWindow());}
 static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bool adj = 0) {

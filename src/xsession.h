@@ -12,6 +12,7 @@
 #include <string>
 #include "mywm-structs.h"
 #include "window-masks.h"
+#include "rect.h"
 
 /// the default screen index
 extern const int defaultScreenNumber;
@@ -295,4 +296,36 @@ uint32_t getMaxNumberOfMasterDevices(bool force = 0);
  * @return the maximum number of devices X can handle
  */
 uint32_t getMaxNumberOfDevices(bool force = 0);
+/**
+ * @param parent
+ * @param clazz
+ * @param mask
+ * @param valueList
+ * @param dims starting dimension of the new window
+ *
+ * @return the id of the newly created window
+ */
+WindowID createWindow(WindowID parent = root, xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_OUTPUT,
+    uint32_t mask = 0, uint32_t* valueList = NULL, const RectWithBorder& dims = {0, 0, 150, 150, 0});
+
+/**
+ * Maps the window
+ * @param id
+ * @return id
+ */
+WindowID mapWindow(WindowID id);
+/**
+ * Unmaps the window
+ * @param id
+ */
+void unmapWindow(WindowID id);
+/**
+ * Destroys win but not the underlying client.
+ * The underlying client may choose to die if win is closed.
+ *
+ * @param win
+ *
+ * @return 0 on success or the error
+ */
+int destroyWindow(WindowID win);
 #endif /* XSESSION_H_ */
