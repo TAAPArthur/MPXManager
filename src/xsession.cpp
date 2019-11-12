@@ -50,12 +50,12 @@ uint32_t getMaxNumberOfDevices(bool force) {
         xcb_get_property_reply_t* reply;
         LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
         cookie = xcb_get_property(dis, 0, root, MAX_DEVICES, XCB_ATOM_INTEGER, 0, sizeof(int));
-        if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply)) {
+        if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply))
             maxNumDevices = *(int*)xcb_get_property_value(reply);
-            free(reply);
-        }
         else
             xcb_change_property(dis, XCB_PROP_MODE_REPLACE, root, MAX_DEVICES, XCB_ATOM_INTEGER, 32, 1, &maxNumDevices);
+        if(reply)
+            free(reply);
     }
     return maxNumDevices;
 }
