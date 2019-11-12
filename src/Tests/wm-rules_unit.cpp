@@ -262,13 +262,20 @@ MPX_TEST("test_map_windows", {
 });
 
 MPX_TEST("test_unmap", {
+    addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
     WindowID win = createUnmappedWindow();
+    WindowID winOR = mapWindow(createIgnoredWindow());
     waitUntilIdle();
     xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .window = win};
     catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
     flush();
     waitUntilIdle();
-    assert(!getWindowInfo(win)->hasMask(MAPPED_MASK));
+    assert(!getWindowInfo(win)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
+    assert(getWindowInfo(winOR)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
+    unmapWindow(winOR);
+    waitUntilIdle();
+    assert(!getWindowInfo(win)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
+    assert(!getWindowInfo(winOR)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
 });
 
 MPX_TEST("test_device_event", {
