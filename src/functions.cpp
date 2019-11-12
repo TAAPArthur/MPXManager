@@ -139,7 +139,7 @@ bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass, bool silent) 
         auto c = getenv(s.substr(1).c_str());
         s = c ? c : "";
     }
-    const BoundFunction f = {matchOnClass ? matchesClass : matchesTitle, s, "raiseOrRunCheck"};
+    const BoundFunction f = {matchOnClass ? matchesClass : matchesTitle, s, "raiseOrRunCheck",  PASSTHROUGH_IF_TRUE};
     if(!findAndRaise(f)) {
         spawn(cmd.c_str(), silent);
         return 0;

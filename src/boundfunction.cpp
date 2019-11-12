@@ -56,7 +56,7 @@ int applyEventRules(int type, WindowInfo* winInfo, Master* m) {
     incrementBatchEventRuleCounter(type);
     return applyRules(getEventRules(type), winInfo, m);
 }
-int BoundFunction::execute(WindowInfo* winInfo, Master* master)const {
+bool BoundFunction::execute(WindowInfo* winInfo, Master* master)const {
     return shouldPassThrough(passThrough, call(winInfo, master));
 }
 int BoundFunction::call(WindowInfo* winInfo, Master* master)const {

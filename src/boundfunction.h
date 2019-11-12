@@ -255,7 +255,7 @@ struct BoundFunction {
     /**
      * Determines if the caller should proceed after calling this function
      */
-    const PassThrough passThrough = ALWAYS_PASSTHROUGH;
+    const PassThrough passThrough = PASSTHROUGH_IF_TRUE;
     /**
      * The human readable name of this function.
      * Each BoundFunction should have a unique name.
@@ -266,7 +266,7 @@ struct BoundFunction {
      *
      * @param passThrough
      */
-    BoundFunction(PassThrough passThrough = ALWAYS_PASSTHROUGH): passThrough(passThrough) {}
+    BoundFunction(PassThrough passThrough = PASSTHROUGH_IF_TRUE): passThrough(passThrough) {}
 
     /// @{
     /**
@@ -279,19 +279,20 @@ struct BoundFunction {
      */
     template <typename R, typename P>
     BoundFunction(R(*_func)(P), std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper(_func)), passThrough(passThrough), name(name) {}
+        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper(_func)), passThrough(passThrough),
+        name(name) {}
     template <typename R>
     BoundFunction(R(*_func)(), std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>(_func))),
+        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper<R, void>(std::function<R()>(_func))),
         passThrough(passThrough),
         name(name) {}
     template <typename P>
     BoundFunction(void(*_func)(P), std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P>(std::function<void(P)>(_func))),
+        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper<void, P>(std::function<void(P)>(_func))),
         passThrough(passThrough),
         name(name) {}
     BoundFunction(void(*_func)(), std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(_func)), passThrough(passThrough),
+        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper<void, void>(_func)), passThrough(passThrough),
         name(name) {}
     /// @}
 
@@ -353,7 +354,7 @@ struct BoundFunction {
      *
      * @return 1 iff the caller should proceed
      */
-    int execute(WindowInfo* w = NULL, Master* m = NULL)const;
+    bool execute(WindowInfo* w = NULL, Master* m = NULL)const;
     /**
      * Calls the underlying function and returns the result
      *
@@ -367,7 +368,7 @@ struct BoundFunction {
     int call(WindowInfo* winInfo = NULL, Master* master = NULL)const;
     /// @copydoc call
     int operator()(WindowInfo* winInfo = NULL, Master* master = NULL)const {
-        return call(winInfo, master);
+        return execute(winInfo, master);
     }
     /**
      * @param boundFunction
