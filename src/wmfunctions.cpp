@@ -173,11 +173,6 @@ static void* waitForWindowToDie(void* p) {
     return NULL;
 }
 
-int destroyWindow(WindowID win) {
-    assert(win);
-    LOG(LOG_LEVEL_DEBUG, "Destroying window %d\n", win);
-    return catchError(xcb_destroy_window_checked(dis, win));
-}
 int killClientOfWindow(WindowID win) {
     assert(win);
     LOG(LOG_LEVEL_DEBUG, "Killing window %d\n", win);
@@ -195,24 +190,14 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
     }
 }
 
-
-int attemptToMapWindow(WindowID id) {
-    WindowInfo* winInfo = getWindowInfo(id);
-    LOG(LOG_LEVEL_TRACE, "Attempting to map window %d\n", id);
-    if(!winInfo || winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable())
-        return catchError(xcb_map_window_checked(dis, id));
-    LOG(LOG_LEVEL_TRACE, "Failed to map window %d\n", id);
-    return -1;
-}
-
 void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
     Workspace* w = winInfo->getWorkspace();
     assert(w);
     LOG_RUN(LOG_LEVEL_VERBOSE,
         std::cout << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " " <<
         *winInfo << "\n";);
-    if(w->isVisible()) {
-        attemptToMapWindow(winInfo->getID());
+    if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
+        mapWindow(winInfo->getID());
     }
     else {
         if(winInfo->hasMask(STICKY_MASK)) {
@@ -225,7 +210,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
                 winInfo->moveToWorkspace(w->getID());
             return;
         }
-        catchError(xcb_unmap_window_checked(dis, winInfo->getID()));
+        unmapWindow(winInfo->getID());
         if(updateFocus) {
             for(Master* master : getAllMasters()) {
                 if(master->getFocusedWindow() == winInfo)
@@ -266,8 +251,10 @@ WindowID activateWindow(WindowInfo* winInfo) {
         if(winInfo->getWorkspaceIndex() != NO_WORKSPACE) {
             switchToWorkspace(winInfo->getWorkspaceIndex());
         }
-        if(!winInfo->hasMask(MAPPED_MASK))
-            attemptToMapWindow(winInfo->getID());
+        if(!winInfo->hasMask(MAPPED_MASK)) {
+            assert(winInfo->hasMask(MAPPABLE_MASK));
+            mapWindow(winInfo->getID());
+        }
         return focusWindow(winInfo) ? winInfo->getID() : 0;
     }
     return 0;

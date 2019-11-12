@@ -139,7 +139,7 @@ void onMapRequestEvent(void) {
         if(winInfo->getWorkspace())
             return;
     }
-    attemptToMapWindow(event->window);
+    mapWindow(event->window);
 }
 void onUnmapEvent(void) {
     xcb_unmap_notify_event_t* event = (xcb_unmap_notify_event_t*)getLastEvent();

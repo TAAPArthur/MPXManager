@@ -134,6 +134,36 @@ std::string getAtomName(xcb_atom_t atom) {
     }
     return str;
 }
+
+WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, uint32_t* valueList,
+    const RectWithBorder& dims) {
+    WindowID win = xcb_generate_id(dis);
+    xcb_void_cookie_t c = xcb_create_window_checked(dis,
+            XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
+            win,
+            parent,
+            dims.x, dims.y,
+            dims.width, dims.height,
+            dims.border,
+            clazz,
+            screen->root_visual,
+            mask, valueList);
+    catchError(c);
+    return win;
+}
+int destroyWindow(WindowID win) {
+    assert(win);
+    LOG(LOG_LEVEL_DEBUG, "Destroying window %d\n", win);
+    return catchError(xcb_destroy_window_checked(dis, win));
+}
+WindowID mapWindow(WindowID id) {
+    xcb_map_window(dis, id);
+    return id;
+}
+void unmapWindow(WindowID id) {
+    xcb_unmap_window(dis, id);
+}
+
 int catchError(xcb_void_cookie_t cookie) {
     xcb_generic_error_t* e = xcb_request_check(dis, cookie);
     int errorCode = 0;

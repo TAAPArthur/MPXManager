@@ -138,18 +138,6 @@ MPX_TEST("test_window_scan", {
     assertEquals(getAllWindows().size(), 4);
 });
 
-
-MPX_TEST("attempToMapWindow", {
-    WindowInfo* winInfo = new WindowInfo(createNormalWindow());
-    WindowInfo* winInfo2 = new WindowInfo(createNormalWindow());
-    getAllWindows().add(winInfo);
-    getAllWindows().add(winInfo2);
-    winInfo->addMask(MAPPABLE_MASK);
-    assert(attemptToMapWindow(winInfo->getID()) == 0);
-    assert(isWindowMapped(winInfo->getID()));
-    assert(attemptToMapWindow(winInfo2->getID()));
-    assert(!isWindowMapped(winInfo2->getID()));
-});
 MPX_TEST_ITER("syncMappedState", 2, {
     WindowInfo* winInfo = new WindowInfo(createNormalWindow());
     getAllWindows().add(winInfo);
