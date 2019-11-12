@@ -87,6 +87,14 @@ MPX_TEST("external_end", {
     endActiveChain();
     assert(!getActiveChain());
 });
+MPX_TEST_ITER("chain_start_auto_passthrough", 2, {
+    PassThrough p = _i ? ALWAYS_PASSTHROUGH : NO_PASSTHROUGH;
+    static Chain sampleChain = {0, 0, {p}, {{0, 0, incrementCount}}};
+    assertEquals(_i, sampleChain.start({0}));
+    assertEquals(getCount(), _i);
+    if(_i)
+        endActiveChain();
+});
 
 MPX_TEST("test_chain_bindings", {
     static int count = 0;
