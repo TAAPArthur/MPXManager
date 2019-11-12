@@ -156,13 +156,12 @@ MPX_TEST("test_focus_follows_mouse", {
     }
 });
 
-MPX_TEST_ITER("test_auto_focus", 4, {
+MPX_TEST_ITER("test_auto_focus", 5, {
     addAutoFocusRule();
     WindowID focusHolder = mapArbitraryWindow();
 
     focusWindow(focusHolder);
     Window win = mapArbitraryWindow();
-    setUserTime(win, 1);
     registerWindow(win, root);
     assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
     xcb_map_notify_event_t event = {0};
@@ -171,10 +170,10 @@ MPX_TEST_ITER("test_auto_focus", 4, {
 
     auto autoFocus = []() {
         getAllWindows().back()->addMask(INPUT_MASK | MAPPABLE_MASK | MAPPED_MASK);
-        loadWindowProperties(getAllWindows().back());
         applyEventRules(XCB_MAP_NOTIFY, NULL);
     };
     bool autoFocused = 1;
+    Master* master = getActiveMaster();
     switch(_i) {
         case 0:
             AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
@@ -191,9 +190,16 @@ MPX_TEST_ITER("test_auto_focus", 4, {
             autoFocused = 0;
             event.window = 0;
             break;
+        case 4:
+            AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
+            createMasterDevice("test");
+            initCurrentMasters();
+            master = getAllMasters()[1];
+            setClientPointerForWindow(win, master->getID());
+            break;
     }
     autoFocus();
-    assert(autoFocused == (getAllWindows().back()->getID() == getActiveFocus(getActiveMasterKeyboardID())));
+    assert(autoFocused == (win == getActiveFocus(master->getID())));
 });
 MPX_TEST_ITER("ignore_small_window", 3, {
     addIgnoreSmallWindowRule();
