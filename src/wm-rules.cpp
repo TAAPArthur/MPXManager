@@ -148,7 +148,7 @@ void onUnmapEvent(void) {
     if(winInfo) {
         winInfo->removeMask(FULLY_VISIBLE | MAPPED_MASK);
         // used to indicate that the window is no longer mappable
-        if(isSyntheticEvent())
+        if(isSyntheticEvent() || winInfo->isOverrideRedirectWindow())
             winInfo->removeMask(MAPPABLE_MASK);
     }
 }
