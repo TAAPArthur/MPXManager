@@ -130,20 +130,23 @@ MPX_TEST("get_mouse_pos", {
     assert(result[0] == 100 && result[1] == 200);
 });
 
-MPX_TEST("test_set_client_pointer", {
+MPX_TEST("test_default_client_pointer", {
     WindowID win = createNormalWindow();
-    setClientPointerForWindow(win);
     assert(getActiveMaster() == getClientMaster(win));
 });
-MPX_TEST("test_get_client_pointer_unknown", {
+MPX_TEST_ITER("test_get_client_pointer", 2, {
     createMasterDevice("test");
     initCurrentMasters();
     Master* newMaster = getAllMasters()[1];
     WindowID win = createNormalWindow();
     setClientPointerForWindow(win, newMaster->getID());
-    getAllMasters().removeElement(newMaster);
+    if(_i)
+        getAllMasters().removeElement(newMaster);
+    else
+        assert(newMaster == getClientMaster(win));
     assert(newMaster->getPointerID() == getClientPointerForWindow(win));
-    delete newMaster;
+    if(_i)
+        delete newMaster;
 });
 
 
