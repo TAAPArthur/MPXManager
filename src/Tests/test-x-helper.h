@@ -26,15 +26,19 @@ static void inline saveXSession() {
     static auto _ewmh = ewmh;
     assert(_dpy && _dis && _ewmh);
 }
-static inline int createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input, xcb_window_class_t clazz) {
+static inline int createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input,
+    xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_ONLY, xcb_atom_t type = ewmh->_NET_WM_WINDOW_TYPE_NORMAL) {
     assert(ignored < 2);
     assert(dis);
-    WindowID window = createWindow(parent,clazz, XCB_CW_OVERRIDE_REDIRECT, &ignored);
+    WindowID window = createWindow(parent, clazz, XCB_CW_OVERRIDE_REDIRECT, &ignored);
     xcb_icccm_wm_hints_t hints = {.input = input, .initial_state = mapped};
     catchError(xcb_icccm_set_wm_hints_checked(dis, window, &hints));
     if(!userIgnored && !ignored)
-        catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &ewmh->_NET_WM_WINDOW_TYPE_NORMAL));
+        catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &type));
     return window;
+}
+static inline WindowID  createWindowWithType(xcb_atom_t atom) {
+    return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, atom);
 }
 static inline WindowID  createInputOnlyWindow(void) {
     return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
