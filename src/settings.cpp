@@ -204,6 +204,7 @@ void onStartup(void) {
         addDefaultBorderRule();
         addIgnoreNonTopLevelWindowsRule();
         addFloatRule();
+        addMoveNonTileableWindowsToWorkspaceBounds();
         addPrintStatusRule();
         addIgnoreSmallWindowRule();
         addUnknownInputOnlyWindowIgnoreRule();

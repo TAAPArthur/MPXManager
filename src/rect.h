@@ -8,6 +8,29 @@
 #include <iostream>
 #include <assert.h>
 /**
+ * Helper class for Rect
+ */
+struct Point {
+    /// x coordinate
+    const int32_t x;
+    /// y coordinate
+    const int32_t y;
+    /**
+     * @param p
+     * @return a new Point with the sum of this and p
+     */
+    Point operator+(const Point p) {
+        return {x + p.x, y + p.y};
+    }
+    /**
+     * @param p
+     * @return a new Point with the delta between this and p
+     */
+    Point operator-(const Point p) {
+        return {x - p.x, y - p.y};
+    }
+};
+/**
  * holds top-left coordinates and width/height of the bounding box
  */
 struct Rect {
@@ -32,6 +55,13 @@ struct Rect {
      * @param h
      */
     Rect(short x, short y, uint16_t w, uint16_t h): x(x), y(y), width(w), height(h) {}
+
+    /**
+     * @return returns the top left point of bounded by this rect
+     */
+    const Point getTopLeftCorner() const {
+        return {x, y};
+    }
     /**
      * Allows access to this struct as if it was a short*
      *
@@ -107,6 +137,21 @@ struct Rect {
      * @return 1 iff this completely contains arg
      */
     bool containsProper(Rect arg)const;
+
+    /**
+     * @return  1 iff x and y are 0
+     */
+    bool isAtOrigin() const {
+        return x == 0 && y == 0;
+    }
+    /**
+     * Computes the delta between our position and currentRef and adds it to newRef
+     * and sets this as our new position
+     *
+     * @param currentRef
+     * @param newRef
+     */
+    void translate(const Point currentRef, const Point newRef);
 };
 /**
  * Prints Rect

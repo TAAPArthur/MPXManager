@@ -300,3 +300,24 @@ MPX_TEST("ignore_non_top_level_windows", {
     waitUntilIdle();
     assert(getWindowInfo(win));
 });
+MPX_TEST("moveNonTileableWindowsToWorkspaceBounds", {
+    addEWMHRules();
+    addFloatRule();
+    addMoveNonTileableWindowsToWorkspaceBounds();
+    getActiveMaster()->setWorkspaceIndex(0);
+    Monitor* m = getAllMonitors()[0];
+    Rect dims = m->getBase();
+    dims.x += m->getBase().width;
+    Monitor* m2 = new Monitor(1, dims);
+    getAllMonitors().add(m2);
+    m2->assignWorkspace(getWorkspace(1));
+    startWM();
+    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
+    waitUntilIdle();
+    assert(getRealGeometry(win).isAtOrigin());
+    getActiveMaster()->setWorkspaceIndex(1);
+    WindowID win2 = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
+    waitUntilIdle();
+    assert(getRealGeometry(win) != getRealGeometry(win2));
+    assert(dims.intersects(getRealGeometry(win2)) || dims.contains(getRealGeometry(win2)));
+});

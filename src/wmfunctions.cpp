@@ -271,11 +271,12 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     xcb_configure_window(dis, win, mask, values);
 #endif
 }
-void setWindowPosition(WindowID win, const RectWithBorder geo) {
+void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition) {
     uint32_t values[5];
     geo.copyTo(values);
-    uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-        XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
+    uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+    if(!onlyPosition)
+        mask |= XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
     configureWindow(win, mask, values);
 }
 
