@@ -73,3 +73,8 @@ MPX_TEST("rect_intersection", {
     assert(rect.intersects({ offsetX, offsetY + 1, offsetX, dimY}));
     assert(rect.intersects({ offsetX + dimX / 2, offsetY + dimY / 2, 0, 0}));
 });
+MPX_TEST("translate", {
+    Rect rect = {0, 0, 100, 100};
+    rect.translate({0, 0}, {100, 200});
+    assertEquals(rect, Rect(100, 200, 100, 100));
+});

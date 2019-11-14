@@ -135,8 +135,9 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]);
  *
  * @param win
  * @param geo
+ * @param onlyPosition if true, then only x,y position will be modified
  */
-void setWindowPosition(WindowID win, const RectWithBorder geo);
+void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition = 0);
 /**
  * Swaps the workspaces and positions in said workspaces between the two windows
  * @param winInfo1

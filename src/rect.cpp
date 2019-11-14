@@ -28,6 +28,10 @@ bool Rect::containsProper(Rect arg)const {
     return (x < arg.x && arg.x + arg.width < x + width &&
             y < arg.y && arg.y + arg.height < y + height);
 }
+void Rect::translate(const Point currentOrigin, const Point newOrigin) {
+    x = x - currentOrigin.x + newOrigin.x;
+    y = y - currentOrigin.y + newOrigin.y;
+}
 std::ostream& operator<<(std::ostream& strm, const Rect& rect) {
     return strm << "{x:" << rect.x << ", y:" << rect.y << ", width:" << rect.width << ", height: " << rect.height << "}";
 }

@@ -126,4 +126,10 @@ void addDefaultBorderRule(AddFlag flag = ADD_UNIQUE);
  * @param flag
  */
 void addIgnoreNonTopLevelWindowsRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Non-tileable windows that are at the origin will be moved to the origin of the Workspace's monitor if any
+ *
+ * Windows left at the origin are assumed to still be at their creation time position which is believed to be arbitrary.
+ */
+void addMoveNonTileableWindowsToWorkspaceBounds() ;
 #endif

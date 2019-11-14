@@ -178,3 +178,19 @@ static bool unregisterNonTopLevelWindows() {
 void addIgnoreNonTopLevelWindowsRule(AddFlag flag) {
     getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(unregisterNonTopLevelWindows), flag);
 }
+
+static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
+    if(!winInfo->isTileable()) {
+        RectWithBorder rect = getRealGeometry(winInfo);
+        if(rect.isAtOrigin()) {
+            Workspace* w = winInfo->getWorkspace();
+            if(w && w->isVisible()) {
+                rect.translate({0, 0}, w->getMonitor()->getViewport().getTopLeftCorner());
+                setWindowPosition(winInfo->getID(), rect);
+            }
+        }
+    }
+}
+void addMoveNonTileableWindowsToWorkspaceBounds() {
+    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
+}
