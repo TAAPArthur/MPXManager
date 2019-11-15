@@ -246,10 +246,14 @@ int loadGenericEvent(xcb_ge_generic_event_t* event);
  */
 void setLastEvent(void* event);
 /**
- * Retries the last event received
+ * Retrieves the last event received
  * @see getLastEvent
  */
-void* getLastEvent(void);
+xcb_generic_event_t* getLastEvent(void);
+/**
+ * @return the sequence number of the last event that started being processed
+ */
+uint16_t getCurrentSequenceNumber(void);
 /**
  *
  *

@@ -44,7 +44,6 @@ bool Option::matches(std::string str, bool empty, bool isNumeric) const {
 void Option::operator()(std::string value)const {
     LOG(LOG_LEVEL_DEBUG, "calling option %s(%s)\n", name.c_str(), value.c_str());
     func->call(value);
-    LOG_RUN(LOG_LEVEL_TRACE, std::cout << "After: " << *this << "\n");
 }
 #define _OPTION(VAR) Option(std::string(#VAR),&VAR)
 
@@ -143,7 +142,7 @@ void receiveClientMessage(void) {
             value = getAtomName(valueAtom);
         const Option* option = findOption(name, value);
         if(option) {
-            LOG_RUN(LOG_LEVEL_DEBUG, std::cout << *option << "\n";);
+            logger.debug() << *option << std::endl;
             int childPID;
             if(option->flags & CONFIRM_EARLY) {
                 LOG(LOG_LEVEL_TRACE, "sending early confirmation\n");

@@ -478,12 +478,13 @@ void* runEventLoop(void* arg __attribute__((unused))) {
         setLastEvent(event);
         type = type < LASTEvent ? type : type == xrandrFirstEvent ? onScreenChange : ExtraEvent;
         applyEventRules(type, NULL);
-        unlock();
+        setLastEvent(NULL);
         free(event);
+        unlock();
 #ifdef DEBUG
         XSync(dpy, 0);
 #endif
-        LOG(LOG_LEVEL_VERBOSE, "event processed\n");
+        LOG(LOG_LEVEL_TRACE, "event processed\n");
     }
     LOG(LOG_LEVEL_INFO, "Exited event loop\n");
     return NULL;
@@ -498,10 +499,13 @@ int loadGenericEvent(xcb_ge_generic_event_t* event) {
     return 0;
 }
 ///Last registered event
-static void* lastEvent;
+static xcb_generic_event_t* lastEvent;
 void setLastEvent(void* event) {
-    lastEvent = event;
+    lastEvent = (xcb_generic_event_t*)event;
 }
-void* getLastEvent(void) {
+xcb_generic_event_t* getLastEvent(void) {
     return lastEvent;
+}
+uint16_t getCurrentSequenceNumber(void) {
+    return lastEvent ? lastEvent->sequence : 0;
 }

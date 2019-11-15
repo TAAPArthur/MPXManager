@@ -104,10 +104,10 @@ static WorkspaceState* computeState() {
 
 static inline void _printStateComparison(WorkspaceState* currentState, WorkspaceID i) {
     if(currentState[i].size || i < numberOfRecordedWorkspaces && savedStates[i].size) {
-        std::cout << "Index: " << i << "\n";
-        std::cout << "Current:" << currentState[i] << "\n";
+        logger.debug() << "Index:  " << i << "\n" <<
+                          "Current:" << currentState[i] << "\n";
         if(i < numberOfRecordedWorkspaces)
-            std::cout << "Saved: " << savedStates[i] << "\n";
+            logger.debug() << "Saved: " << savedStates[i] << "\n";
     }
 }
 

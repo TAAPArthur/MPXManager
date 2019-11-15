@@ -4,18 +4,12 @@
 #include "slaves.h"
 #include "windows.h"
 #include "workspaces.h"
+#include "xsession.h"
 #include <execinfo.h>
 
-#ifndef INIT_LOG_LEVEL
-#define INIT_LOG_LEVEL LOG_LEVEL_INFO
-#endif
-
-static int LOG_LEVEL = INIT_LOG_LEVEL;
+static int LOG_LEVEL = LOG_LEVEL_INFO;
 
 
-__attribute__((constructor)) static void set_autoflush() {
-    std::cout << std::unitbuf;
-}
 int getLogLevel() {
     return LOG_LEVEL;
 }
@@ -50,10 +44,26 @@ void dumpWindowStack() {
         std::cout << *winInfo << std::endl;
 }
 
+Logger logger;
 void printStackTrace(void) {
     void* array[32];
     // get void*'s for all entries on the stack
     size_t size = backtrace(array, 32);
     // print out all the frames to stderr
     backtrace_symbols_fd(array, size, LOG_FD);
+}
+
+ArrayList<std::string> contexts;
+void pushContext(std::string context) {
+    contexts.add(context);
+}
+void popContext() {
+    contexts.pop();
+}
+std::string getContextString() {
+    std::string result = std::to_string(getCurrentSequenceNumber()) + "|" + std::to_string(
+            getLastDetectedEventSequenceNumber()) + "|" + std::to_string(getIdleCount());
+    for(auto s : contexts)
+        result += "[" + s + "]";
+    return result + " ";
 }

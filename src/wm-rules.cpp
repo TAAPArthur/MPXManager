@@ -91,9 +91,9 @@ bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
 }
 void onCreateEvent(void) {
     xcb_create_notify_event_t* event = (xcb_create_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_VERBOSE, "Detected create event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected create event for Window %d\n", event->window);
     if(getWindowInfo(event->window)) {
-        LOG(LOG_LEVEL_VERBOSE, "Window %d is already in our records; Ignoring create event\n", event->window);
+        LOG(LOG_LEVEL_TRACE, "Window %d is already in our records; Ignoring create event\n", event->window);
         return;
     }
     if(registerWindow(event->window, event->parent)) {
@@ -104,7 +104,7 @@ void onCreateEvent(void) {
 }
 void onDestroyEvent(void) {
     xcb_destroy_notify_event_t* event = (xcb_destroy_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_VERBOSE, "Detected destroy event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected destroy event for Window %d\n", event->window);
     unregisterWindow(getWindowInfo(event->window), 1);
 }
 void onVisibilityEvent(void) {
@@ -122,7 +122,7 @@ void onVisibilityEvent(void) {
 }
 void onMapEvent(void) {
     xcb_map_notify_event_t* event = (xcb_map_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_VERBOSE, "Detected map event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected map event for Window %d\n", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         if(!winInfo->hasMask(MAPPABLE_MASK))
@@ -143,7 +143,7 @@ void onMapRequestEvent(void) {
 }
 void onUnmapEvent(void) {
     xcb_unmap_notify_event_t* event = (xcb_unmap_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_VERBOSE, "Detected unmap event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected unmap event for Window %d\n", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         winInfo->removeMask(FULLY_VISIBLE | MAPPED_MASK);
@@ -210,7 +210,7 @@ void addApplyBindingsRule(AddFlag flag) {
 }
 void onDeviceEvent(void) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_VERBOSE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
+    LOG(LOG_LEVEL_TRACE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
         event->root, event->event, event->child);
     setActiveMasterByDeviceID(event->deviceid);
