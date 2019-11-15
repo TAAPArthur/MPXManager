@@ -193,9 +193,8 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
 void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
     Workspace* w = winInfo->getWorkspace();
     assert(w);
-    LOG_RUN(LOG_LEVEL_VERBOSE,
-        std::cout << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " " <<
-        *winInfo << "\n";);
+    logger.trace()  << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " "
+        << *winInfo << "\n";
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
         mapWindow(winInfo->getID());
     }
@@ -265,7 +264,7 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
     LOG(LOG_LEVEL_INFO, "Config %d: mask %d %d\n", win, mask, __builtin_popcount(mask));
     if(mask)
-        LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7), "\n"));
+        LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));
 #ifndef NDEBUG
     catchError(xcb_configure_window_checked(dis, win, mask, values));
 #else
@@ -357,7 +356,7 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
     }
     else {
         LOG(LOG_LEVEL_INFO, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
-        LOG_RUN(LOG_LEVEL_INFO, std::cout << *winInfo << "\n");
+        logger.info() << *winInfo << std::endl;
     }
     return mask;
 }

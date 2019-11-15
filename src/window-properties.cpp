@@ -134,7 +134,7 @@ void loadWindowTitle(WindowInfo* winInfo) {
     winInfo->setTitle(getWindowTitle(winInfo->getID()));
 }
 void loadWindowProperties(WindowInfo* winInfo) {
-    LOG(LOG_LEVEL_VERBOSE, "loading window properties %d\n", winInfo->getID());
+    LOG(LOG_LEVEL_TRACE, "loading window properties %d\n", winInfo->getID());
     loadClassInfo(winInfo->getID(), &winInfo->className, &winInfo->instanceName);
     loadWindowTitle(winInfo);
     xcb_window_t prop;

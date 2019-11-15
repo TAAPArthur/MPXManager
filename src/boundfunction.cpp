@@ -30,11 +30,15 @@ void incrementBatchEventRuleCounter(int i) {
 }
 static int applyRules(ArrayList<BoundFunction*>& rules, WindowInfo* winInfo, Master* m = NULL) {
     for(BoundFunction* func : rules) {
-        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << "Running func: " << func->getName() << "\n");
+        logger.debug() << "Running func (" << (m ? m->getID() : 0) << ", " << (winInfo ? winInfo->getID() : 0) << "):" <<
+            func->getName() << std::endl;
+        pushContext(func->getName());
         if(!func->execute(winInfo, m)) {
-            LOG_RUN(LOG_LEVEL_INFO, std::cout << "Rules aborted early due to: " << func->getName() << "\n");
+            popContext();
+            logger.info() << "Rules aborted early due to: " << func->getName() << std::endl;
             return 0;
         }
+        popContext();
     }
     return 1;
 }
@@ -46,7 +50,9 @@ void applyBatchEventRules(void) {
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
             LOG(LOG_LEVEL_INFO, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
                 eventTypeToString(i), getBatchEventRules(i).size());
+            pushContext(eventTypeToString(i));
             applyRules(getBatchEventRules(i), NULL);
+            popContext();
             batchEventRules[i].counter = 0;
         }
 }
@@ -54,13 +60,16 @@ int applyEventRules(int type, WindowInfo* winInfo, Master* m) {
     LOG(LOG_LEVEL_INFO, "Event detected %d %s number of rules: %d parameters WindowID: %d MasterID: %d\n",
         type, eventTypeToString(type), getEventRules(type).size(), winInfo ? winInfo->getID() : 0, m ? m->getID() : 0);
     incrementBatchEventRuleCounter(type);
-    return applyRules(getEventRules(type), winInfo, m);
+    pushContext(eventTypeToString(type));
+    int result = applyRules(getEventRules(type), winInfo, m);
+    popContext();
+    return result;
 }
 bool BoundFunction::execute(WindowInfo* winInfo, Master* master)const {
     return shouldPassThrough(passThrough, call(winInfo, master));
 }
 int BoundFunction::call(WindowInfo* winInfo, Master* master)const {
-    LOG(LOG_LEVEL_VERBOSE, "Calling func with %p %p\n", winInfo, master);
+    LOG(LOG_LEVEL_TRACE, "Calling func with %p %p\n", winInfo, master);
     return func ? func->call(winInfo, master) : 1;
 }
 bool BoundFunction::operator==(const BoundFunction& boundFunction)const {

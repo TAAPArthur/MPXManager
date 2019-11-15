@@ -16,49 +16,20 @@
 
 
 
+/// The FD to log to
+#define LOG_FD STDOUT_FILENO
+
 /**
  * Prints the element in arr space separated. Arr is treated like an array of ints
  *
  * @param label some prefix
  * @param arr
  * @param size the number of elements
- * @param suffix some suffix
  *
  * @return
  */
-#define PRINT_ARR(label,arr,size,suffix){LOG(LOG_LEVEL_INFO,label " Arr:");for(int _n=0;_n<size;_n++)LOG(LOG_LEVEL_INFO,"%d ",(arr)[_n]);LOG(LOG_LEVEL_INFO,suffix);}
+#define PRINT_ARR(label,arr,size){auto& info = logger.info() <<label << " Arr: ";for(int _n=0;_n<size;_n++)info<<(arr)[_n]<< " ";info<<std::endl;}
 
-
-
-enum {
-    /// spam
-    LOG_LEVEL_VERBOSE,
-    /// used to debug specific problems
-    LOG_LEVEL_TRACE,
-    /// used for debug problems
-    LOG_LEVEL_DEBUG,
-    /// general infomation
-    LOG_LEVEL_INFO,
-    /// for unexpected behavior that is recoverable
-    LOG_LEVEL_WARN,
-    /// for error messages
-    LOG_LEVEL_ERROR,
-    /// no logging
-    LOG_LEVEL_NONE
-};
-
-
-/// the init log level
-#ifndef INIT_LOG_LEVEL
-#define INIT_LOG_LEVEL LOG_LEVEL_INFO
-#endif
-/// if false then all logging will be disabled
-#ifndef LOGGING
-#define LOGGING 1
-#endif
-
-/// The FD to log to
-#define LOG_FD STDOUT_FILENO
 
 /**
  * If i >= getLogLevel(), the print str
@@ -67,7 +38,13 @@ enum {
  * @param str
  *
  */
-#define LOG(i,str...) LOG_RUN(i, std::printf(str))
+#define LOG(i,str...) do{if(isLogging(i)) { \
+    size_t needed = snprintf(NULL, 0, str) + 1; \
+    char  *buffer = (char*)malloc(needed); \
+    sprintf(buffer, str); \
+    logger.log(i) << buffer; \
+    free(buffer); }}while(0)\
+
 
 /**
  * if i>= getLogLevel(), run code
@@ -78,6 +55,28 @@ enum {
  */
 #define LOG_RUN(i,code...) \
     do{if(isLogging(i)){code;}}while(0)
+
+/// various logging levels
+enum LogLevel {
+    /// used to debug specific problems
+    LOG_LEVEL_TRACE,
+    /// used for debug problems
+    LOG_LEVEL_DEBUG,
+    /// general information
+    LOG_LEVEL_INFO,
+    /// for unexpected behavior that is recoverable
+    LOG_LEVEL_WARN,
+    /// for error messages
+    LOG_LEVEL_ERROR,
+    /// no logging
+    LOG_LEVEL_NONE
+};
+
+
+/// if false then all logging will be disabled
+#ifndef LOGGING
+#define LOGGING 1
+#endif
 
 /**
  * @return the current log level
@@ -98,6 +97,54 @@ void setLogLevel(uint32_t level);
 static inline int isLogging(int i) {
     return LOGGING && i >= getLogLevel();
 }
+/**
+ * Adds to a list of messages that will be appending to all logging messages
+ *
+ * @param context name of the context
+ */
+void pushContext(std::string context);
+/**
+ * Removes the last context pushed via pushContext
+ */
+void popContext();
+/**
+ *
+ *
+ * @return a string representation of everything on the context stack
+ */
+std::string getContextString();
+/**
+ * Logging class
+ */
+class Logger {
+    /// @cond
+    struct : std::streambuf { int overflow(int c) { return c; } } nullBuffer;
+    /// @endcond
+    std::ostream nullStream = std::ostream(&nullBuffer);
+    std::ostream& logStream = std::cout;
+
+public:
+    /**
+     * @param level
+     *
+     * @return  either nullStream or logSteam depening on level
+     */
+    std::ostream& log(int level) {
+        return (isLogging(level) ? logStream : nullStream) << getContextString().c_str();
+    }
+
+    /// @{ @see LogLevel
+    std::ostream& trace() { return log(LOG_LEVEL_TRACE);}
+    std::ostream& info() { return log(LOG_LEVEL_INFO);}
+    std::ostream& debug() { return log(LOG_LEVEL_DEBUG);}
+    std::ostream& warn() { return log(LOG_LEVEL_WARN);}
+    std::ostream& err() { return log(LOG_LEVEL_ERROR);}
+    std::ostream& always() { return log(LOG_LEVEL_NONE);}
+    /// @}
+};
+/// global logger variable
+extern Logger logger;
+
 /**
  * Prints every window in the active Workspace
  */
@@ -124,4 +171,5 @@ void dumpWindow(WindowMask filterMask = 0);
  * @param match
  */
 void dumpWindow(std::string match);
+
 #endif /* LOGGER_H_ */

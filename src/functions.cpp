@@ -56,19 +56,21 @@ void endCycleWindows(Master* master) {
 
 
 
-static bool applyAction(WindowInfo* winInfo, WindowAction action) {
+static void applyAction(WindowInfo* winInfo, WindowAction action) {
     switch(action) {
         default:
         case ACTION_RAISE:
             raiseWindow(winInfo->getID());
-            return 1;
+            break;
         case ACTION_FOCUS:
-            return focusWindow(winInfo);
+            focusWindow(winInfo);
+            break;
         case ACTION_ACTIVATE:
-            return activateWindow(winInfo);
+            activateWindow(winInfo);
+            break;
         case ACTION_LOWER:
             lowerWindow(winInfo->getID());
-            return 1;
+            break;
     }
 }
 static ArrayList<WindowID>* getWindowCache(Master* m) {
@@ -117,10 +119,8 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool ch
     else LOG(LOG_LEVEL_DEBUG, "found window locally\n");
     if(target) {
         assert(rule(target));
-        LOG_RUN(LOG_LEVEL_DEBUG, std::cout << *target << "\n");
-        LOG(LOG_LEVEL_DEBUG, "Applying action %d\n", action);
-        bool result = applyAction(target, action);
-        LOG(LOG_LEVEL_DEBUG, "Action completed %ssuccessfully\n", result ? "" : "un");
+        logger.debug() << "Applying action " << action << " to " << *target << std::endl;
+        applyAction(target, action);
         if(windowsToIgnore)
             windowsToIgnore->add(target->getID());
     }
