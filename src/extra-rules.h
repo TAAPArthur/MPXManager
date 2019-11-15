@@ -14,8 +14,16 @@
 void addAlwaysOnTopBottomRules(AddFlag flag = ADD_UNIQUE);
 /**
  * Adds rules to have windows avoid docks (default)
+ * @param flag
  */
 void addAvoidDocksRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds a rule for the PRIMARY_MONITOR_MASK to have any effect
+ *
+ * @param flag
+ */
+void addStickyPrimaryMonitorRule(AddFlag flag = ADD_UNIQUE);
+
 
 /**
  * Adds rules to strip docks of INPUT_MASK on PropertyLoad so they won't be able to be focused (non-default)

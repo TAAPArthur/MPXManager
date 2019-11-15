@@ -128,6 +128,36 @@ MPX_TEST("test_always_on_top_bottom", {
     msleep(POLL_COUNT* POLL_INTERVAL * 2);
     assert(consumeEvents() == 0);
 });
+
+MPX_TEST_ITER("primary_monitor_windows", 3, {
+    addAutoTileRules();
+    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}), PREPEND_ALWAYS);
+    addStickyPrimaryMonitorRule();
+    addFakeMonitor({100, 100, 200, 200});
+    addFakeMonitor({300, 100, 100, 100});
+    Monitor* realMonitor = getAllMonitors()[0];
+    Monitor* m = getAllMonitors()[1];
+    m->setPrimary(1);
+    detectMonitors();
+    assert(m->getWorkspace());
+    WindowID win = mapWindow(createNormalWindow());
+    startWM();
+    waitUntilIdle();
+    WindowInfo* winInfo = getWindowInfo(win);
+    if(_i == 1) {
+        winInfo->moveToWorkspace(realMonitor->getWorkspace()->getID());
+        winInfo->addMask(NO_TILE_MASK);
+    }
+    else if(_i == 2) {
+        winInfo->setTilingOverrideEnabled(-1);
+        winInfo->setTilingOverride({0, 0, 100, 100});
+    }
+
+    mapWindow(createNormalWindow());
+    waitUntilIdle();
+    assert(m->getBase().contains(getRealGeometry(win)));
+});
+
 MPX_TEST("test_focus_follows_mouse", {
     addEWMHRules();
     addFocusFollowsMouseRule();

@@ -103,6 +103,40 @@ static void enforceAlwaysOnTop() {
         nonAlwaysOnTopOrBottomWindowMoved = 0;
     }
 }
+void addAlwaysOnTopBottomRules(AddFlag flag) {
+    getEventRules(onWindowMove).add(DEFAULT_EVENT(markAlwaysOnTop), flag);
+    getBatchEventRules(onWindowMove).add(DEFAULT_EVENT(enforceAlwaysOnTop), flag);
+}
+
+static void stickyPrimaryMonitor() {
+    Monitor* primary = getPrimaryMonitor();
+    if(primary)
+        for(WindowInfo* winInfo : getAllWindows()) {
+            if(winInfo->hasMask(PRIMARY_MONITOR_MASK))
+                if(winInfo->getWorkspace() && primary->getWorkspace() && primary->getWorkspace() != winInfo->getWorkspace())
+                    winInfo->moveToWorkspace(primary->getWorkspace()->getID());
+                else if(winInfo->getTilingOverrideMask())
+                    arrangeNonTileableWindow(winInfo, primary);
+                else {
+                    RectWithBorder rect = winInfo->getGeometry();
+                    if(primary->getBase().contains(rect))
+                        continue;
+                    for(Monitor* container : getAllMonitors())
+                        if(container->getBase().intersects(rect)) {
+                            logger.debug() << "Container: " << container << std::endl;
+                            rect.translate(container->getBase(), primary->getBase());
+                            setWindowPosition(winInfo->getID(), rect);
+                            break;
+                        }
+                }
+        }
+}
+void addStickyPrimaryMonitorRule(AddFlag flag) {
+    getBatchEventRules(ClientMapAllow).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
+    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
+}
+
+
 void addDieOnIdleRule(AddFlag flag) {
     getEventRules(TrueIdle).add(DEFAULT_EVENT(+[]() {quit(0);}), flag);
 }
@@ -144,10 +178,6 @@ void autoFocus() {
 }
 void addAutoFocusRule(AddFlag flag) {
     getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(autoFocus), flag);
-}
-void addAlwaysOnTopBottomRules(AddFlag flag) {
-    getEventRules(onWindowMove).add(DEFAULT_EVENT(markAlwaysOnTop), flag);
-    getBatchEventRules(onWindowMove).add(DEFAULT_EVENT(enforceAlwaysOnTop), flag);
 }
 void addScanChildrenRule(AddFlag flag) {
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(scan), flag);

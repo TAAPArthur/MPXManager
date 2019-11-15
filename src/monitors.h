@@ -126,6 +126,10 @@ extern uint32_t MONITOR_DUPLICATION_RESOLUTION;
 enum DockTypes {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} ;
 
 
+/**
+ * @return  the primary monitor or NULL
+ */
+Monitor* getPrimaryMonitor() ;
 
 
 

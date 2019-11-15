@@ -318,7 +318,8 @@ void addBasicRules(AddFlag flag) {
     addDoNotManageOverrideRedirectWindowsRule(flag);
     getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
     addApplyBindingsRule(flag);
-    getEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
+    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
+    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), flag);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }
