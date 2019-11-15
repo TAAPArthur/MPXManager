@@ -83,6 +83,26 @@ MPX_TEST_ITER("test_avoid_docks", 4 * 2 + 2, {
     assert(bounds[notFull][index][0] == monitor->getViewport());
     assert(bounds[notFull][index][1] == otherMonitor->getViewport());
 });
+MPX_TEST_ITER("avoid_docks_ignore", 2, {
+    addWorkspaces(2);
+    int properties[4] = {1, 1, 1, 1};
+    WindowInfo* winInfo = new WindowInfo(1);
+    assert(addWindowInfo(winInfo));
+    winInfo->setDock();
+    winInfo->setDockProperties(properties, 4);
+    if(_i)
+        winInfo->moveToWorkspace(1);
+    else
+        winInfo->addMask(PRIMARY_MONITOR_MASK);
+    const short dim = 100;
+    static Rect base = {0, 0, dim, dim};
+    uint16_t rootBounds[2] = {dim * 2, dim * 2};
+    setRootDims(rootBounds);
+    static Monitor* monitor = new Monitor(1, base);
+    monitor->assignWorkspace(0);
+    assert(!monitor->resizeToAvoidDock(winInfo));
+    assertEquals(monitor->getBase(), monitor->getViewport());
+});
 
 
 MPX_TEST("get_set_base", {
@@ -118,6 +138,23 @@ MPX_TEST("test_monitor_add_remove",{
 );
 */
 
+MPX_TEST("monitor_primary", {
+    assert(!getPrimaryMonitor());
+    Monitor* m = new Monitor(2, {1, 1, 1, 1});
+    Monitor* m2 = new Monitor(3, {1, 1, 1, 1});
+    getAllMonitors().add(m);
+    assert(!getPrimaryMonitor());
+    m->setPrimary();
+    assertEquals(getPrimaryMonitor(), m);
+    assert(m->isPrimary());
+    getAllMonitors().add(m2);
+    assertEquals(getPrimaryMonitor(), m);
+    m2->setPrimary();
+    assertEquals(getPrimaryMonitor(), m2);
+    assert(!m->isPrimary());
+    assert(m2->isPrimary());
+});
+
 
 MPX_TEST_ITER("test_monitor_dup_resolution", 5, {
     int masks[] = {TAKE_PRIMARY, TAKE_LARGER, TAKE_SMALLER, TAKE_PRIMARY, 0};
@@ -139,8 +176,7 @@ MPX_TEST_ITER("test_monitor_dup_resolution", 5, {
 
     assert(getAllMonitors().size() == 1);
     assert(getAllMonitors()[0] == (_i < LEN(masks) / 2 ? larger : smaller));
-}
-);
+});
 MPX_TEST_ITER("test_monitor_intersection", 12, {
     int id = 2;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;

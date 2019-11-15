@@ -230,5 +230,4 @@ void detectMonitors(void) {
 #endif
     removeDuplicateMonitors();
     assignUnusedMonitorsToWorkspaces();
-    resizeAllMonitorsToAvoidAllDocks();
 }

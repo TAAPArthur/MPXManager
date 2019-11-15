@@ -45,6 +45,9 @@ bool Monitor::resizeToAvoidAllDocks() {
 
 bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     assert(winInfo && winInfo->isDock());
+    if(winInfo->getWorkspace() && winInfo->getWorkspace()->getMonitor() != this ||
+        !winInfo->getWorkspace() && winInfo->hasMask(PRIMARY_MONITOR_MASK) && !isPrimary())
+        return 0;
     bool changed = 0;
     auto properties = winInfo->getDockProperties();
     for(int i = 0; i < 4; i++) {
@@ -142,6 +145,10 @@ static MonitorID primaryMonitor = 0;
 void setPrimary(Monitor* monitor) {
     primaryMonitor = monitor ? monitor->getID() : 0;
 }
+Monitor* getPrimaryMonitor() {
+    return getAllMonitors().find(primaryMonitor);
+}
+
 void Monitor::setPrimary(bool primary) {
     if(isPrimary() != primary)
         ::setPrimary(primary ? this : NULL);

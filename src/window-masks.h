@@ -110,8 +110,13 @@ enum WindowMasks {
     /**Marks the window as urgent*/
     URGENT_MASK =           1 << 24,
 
-    /// Window is effectively associated with its monitor instead of its workspace
-    /// (it is move dded between workspaces to stay on its monitor)
+    /// if the window is not in a workspace it should be positioned relative to the primary monitor if anny
+    /// if the window is in a workspace it will be move should be moved to always be in the workspace of the primary monitor if any
+    PRIMARY_MONITOR_MASK =   1 << 25,
+    /**
+     * Window is effectively associated with its monitor instead of its workspace
+     * (it is move added between workspaces to stay on its monitor)
+     */
     STICKY_MASK =   1 << 26,
 
     /// Workspace masks will be ignored
@@ -176,6 +181,7 @@ struct WindowMask {
         _PRINT_MASK(ABOVE_MASK);
         _PRINT_MASK(NO_TILE_MASK);
         _PRINT_MASK(STICKY_MASK);
+        _PRINT_MASK(PRIMARY_MONITOR_MASK);
         _PRINT_MASK(HIDDEN_MASK);
         _PRINT_MASK(FLOATING_MASK);
         _PRINT_MASK(EXTERNAL_CONFIGURABLE_MASK);

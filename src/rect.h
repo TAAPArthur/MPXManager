@@ -66,6 +66,12 @@ struct Rect {
     const Point getTopLeftCorner() const {
         return {x, y};
     }
+
+    /// @return getTopLeftCorner()
+    operator const Point() const {
+        return getTopLeftCorner();
+    }
+
     /**
      * Allows access to this struct as if it was a short*
      *
