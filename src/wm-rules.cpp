@@ -66,6 +66,8 @@ void onConfigureNotifyEvent(void) {
         winInfo->setGeometry(&event->x);
         applyEventRules(onWindowMove, winInfo);
     }
+    if(event->window == root)
+        applyEventRules(onScreenChange);
 }
 void onConfigureRequestEvent(void) {
     xcb_configure_request_event_t* event = (xcb_configure_request_event_t*)getLastEvent();
@@ -249,7 +251,6 @@ void registerForEvents() {
     LOG(LOG_LEVEL_DEBUG, "listening for device event; masks: %d\n", ROOT_DEVICE_EVENT_MASKS);
     if(ROOT_DEVICE_EVENT_MASKS)
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
-    registerForMonitorChange();
 }
 bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     if(winInfo->isNotManageable())

@@ -127,20 +127,3 @@ MPX_TEST("test_unregister_events", {
     assert(attr->your_event_mask == 0);
     free(attr);
 });
-SET_ENV(createXSimpleEnv, fullCleanup);
-#ifndef NO_XRANDR
-MPX_TEST("test_monitors", {
-    registerForWindowEvents(root, ROOT_EVENT_MASKS);
-    runInNewThread(runEventLoop, NULL, "event-loop");
-    registerForMonitorChange();
-    static volatile int monitorRuleApplied = 0;
-    void (*onMonitorDetectionTest)(void) = []() {monitorRuleApplied++;};
-    BoundFunction f = DEFAULT_EVENT(onMonitorDetectionTest);
-    getEventRules(onScreenChange).add(f);
-    Rect bounds = {0, 0, 1, 1};
-    createFakeMonitor(bounds);
-    clearFakeMonitors();
-    startWM();
-    WAIT_UNTIL_TRUE(monitorRuleApplied);
-});
-#endif

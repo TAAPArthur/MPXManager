@@ -139,11 +139,12 @@ WindowID getActiveFocus(MasterID id = getActiveMasterKeyboardID());
  * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitrary monitor
  *
  * @param bounds the position of the new monitor
+ * @param name
  */
-void createFakeMonitor(Rect bounds);
+Monitor* addFakeMonitor(Rect bounds, std::string name = "");
 /**
  * Clears all fake monitors
  */
-void clearFakeMonitors();
+void removeAllFakeMonitors();
 
 #endif /* DEVICES_H_ */

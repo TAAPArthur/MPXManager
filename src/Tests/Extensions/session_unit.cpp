@@ -21,6 +21,7 @@ const ArrayList<long>serializeState(uint8_t mask) {
     ArrayList<const ArrayList<WindowInfo*>*> listsOfStacks;
     if(mask & 1) {
         list.add(getAllMasters().size());
+        list.add(getActiveMaster()->getID());
         for(Master* master : getAllMasters()) {
             list.add(master->getID());
             listsOfStacks.add(&master->getWindowStack());
@@ -29,6 +30,7 @@ const ArrayList<long>serializeState(uint8_t mask) {
     if(mask & 2) {
         list.add(getNumberOfWorkspaces());
         for(Workspace* workspace : getAllWorkspaces()) {
+            list.add(-1);
             list.add(workspace->getID());
             list.add(workspace->getMonitor() ? workspace->getMonitor()->getID() : 0);
             list.add(workspace->getLayoutOffset());
@@ -67,10 +69,8 @@ MPX_TEST_ITER("test_restore_state", 16, {
     initCurrentMasters();
     MONITOR_DUPLICATION_POLICY = 0;
     Monitor* ref = getActiveWorkspace()->getMonitor();
-    createFakeMonitor(ref->getBase());
-    createFakeMonitor(ref->getBase());
-    // clear current monitors to ensure we load everything in the correct order
-    getAllMonitors().deleteElements();
+    addFakeMonitor({0, 20, 100, 100});
+    addFakeMonitor(ref->getBase());
     detectMonitors();
     swapMonitors(0, 2);
     swapMonitors(1, 4);
@@ -104,22 +104,34 @@ MPX_TEST_ITER("test_restore_state", 16, {
         // reapply onXConnect rules
         ewmh = NULL;
         onSimpleStartup();
-        loadCustomState();
         const auto& list2 = serializeState(mask);
         for(int i = 0; i < list.size(); i++) {
             if(list[i] != list2[i])
                 std::cout << i << " " << list[i] << " " << list2[i] << "\n";
         }
         assertEquals(list.size(), list2.size());
-        assert(list == list2);
+        assertEquals(list, list2);
+        saveCustomState();
+        const auto& list3 = serializeState(mask);
+        assertEquals(list, list3);
         fullCleanup();
         quit(0);
     }
     assertEquals(waitForChild(0), 0);
-    destroyAllNonDefaultMasters();
-    clearFakeMonitors();
-    initCurrentMasters();
-    detectMonitors();
-    loadCustomState();
+});
+MPX_TEST("test_restore_state_monitor_change", {
+    addResumeCustomStateRules();
+    CRASH_ON_ERRORS = -1;
+    Rect bounds1 = {0, 20, 100, 100};
+    Rect bounds2 = {0, 40, 100, 100};
+    addFakeMonitor(bounds1);
+    addFakeMonitor(bounds2);
     saveCustomState();
+    getAllMonitors().deleteElements();
+    assertEquals(getAllMonitors().size(), 0);
+    addFakeMonitor({0, 0, 1, 1});
+    loadCustomState();
+    assertEquals(getAllMonitors().size(), 2);
+    assertEquals(getAllMonitors()[0]->getBase(), bounds1);
+    assertEquals(getAllMonitors()[1]->getBase(), bounds2);
 });

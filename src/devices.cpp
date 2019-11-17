@@ -187,16 +187,19 @@ WindowID getActiveFocus(MasterID id) {
     }
     return win;
 }
-void clearFakeMonitors() {
-    waitForChild(spawn("xsane-xrandr clear &>/dev/null"));
-    detectMonitors();
+void removeAllFakeMonitors() {
+    for(int i = getAllMonitors().size() - 1; i >= 0; i--)
+        if(getAllMonitors()[i]->isFake())
+            delete getAllMonitors().remove(i);
 }
-void createFakeMonitor(Rect bounds) {
-    char buffer[255];
-    sprintf(buffer, "xsane-xrandr add-monitor %d %d %d %d &>/dev/null", bounds.x, bounds.y, bounds.width, bounds.height);
-    if(waitForChild(spawn(buffer))) {
-        LOG(LOG_LEVEL_WARN, "Failed to create monitor\n");
-    }
+Monitor* addFakeMonitor(Rect bounds, std::string name) {
+    MonitorID id;
+    for(id = 2;; id++)
+        if(!getAllMonitors().find(id))
+            break;
+    Monitor* m = new Monitor(id, bounds, 0, name, 1);
+    getAllMonitors().add(m);
+    return m;
 }
 void detectMonitors(void) {
 #ifdef NO_XRANDR
@@ -225,7 +228,7 @@ void detectMonitors(void) {
     LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors\n", monitorNames.size());
     free(monitors);
     for(int i = getAllMonitors().size() - 1; i >= 0; i--)
-        if(!monitorNames.find(getAllMonitors()[i]->getID()))
+        if(!getAllMonitors()[i]->isFake() && !monitorNames.find(getAllMonitors()[i]->getID()))
             delete getAllMonitors().remove(i);
 #endif
     removeDuplicateMonitors();

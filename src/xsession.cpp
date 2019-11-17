@@ -22,20 +22,21 @@
 #include <iostream>
 
 
-xcb_atom_t WM_TAKE_FOCUS;
+xcb_atom_t WM_ACTIVE_MASTER;
 xcb_atom_t WM_DELETE_WINDOW;
-xcb_atom_t WM_NAME;
+xcb_atom_t WM_FAKE_MONITORS;
 xcb_atom_t WM_HINTS;
+xcb_atom_t WM_INTERPROCESS_COM;
+xcb_atom_t WM_MASTER_WINDOWS;
+xcb_atom_t WM_NAME;
+xcb_atom_t WM_SELECTION_ATOM;
 xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
-xcb_atom_t WM_SELECTION_ATOM;
-xcb_atom_t WM_INTERPROCESS_COM;
+xcb_atom_t WM_TAKE_FOCUS;
+xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
 xcb_atom_t WM_WORKSPACE_MONITORS;
 xcb_atom_t WM_WORKSPACE_WINDOWS;
-xcb_atom_t WM_MASTER_WINDOWS;
-xcb_atom_t WM_ACTIVE_MASTER;
-xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 static xcb_atom_t MAX_DEVICES;
 
 
@@ -66,7 +67,6 @@ WindowID root;
 xcb_ewmh_connection_t* ewmh;
 xcb_screen_t* screen;
 const int defaultScreenNumber = 0;
-static int xrandrFirstEvent = -1;
 
 /**
  * Window created by us to show to the world that an EWMH compliant WM is active
@@ -235,27 +235,25 @@ void openXDisplay(void) {
     dis = XGetXCBConnection(dpy);
     assert(!xcb_connection_has_error(dis));
     xcb_intern_atom_cookie_t* cookie;
-#ifndef NO_XRANDR
-    xrandrFirstEvent = xcb_get_extension_data(dis, &xcb_randr_id)->first_event;
-#endif
     bool applyRule = ewmh == NULL;
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
-    _CREATE_ATOM(WM_TAKE_FOCUS);
+    _CREATE_ATOM(MAX_DEVICES);
+    _CREATE_ATOM(WM_ACTIVE_MASTER);
     _CREATE_ATOM(WM_DELETE_WINDOW);
-    _CREATE_ATOM(WM_NAME);
+    _CREATE_ATOM(WM_FAKE_MONITORS);
     _CREATE_ATOM(WM_HINTS);
+    _CREATE_ATOM(WM_INTERPROCESS_COM);
+    _CREATE_ATOM(WM_MASTER_WINDOWS);
+    _CREATE_ATOM(WM_NAME);
     _CREATE_ATOM(WM_STATE_NO_TILE);
     _CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
-    _CREATE_ATOM(WM_INTERPROCESS_COM);
+    _CREATE_ATOM(WM_TAKE_FOCUS);
+    _CREATE_ATOM(WM_WORKSPACE_LAYOUT_INDEXES);
     _CREATE_ATOM(WM_WORKSPACE_LAYOUT_NAMES);
     _CREATE_ATOM(WM_WORKSPACE_MONITORS);
-    _CREATE_ATOM(WM_WORKSPACE_LAYOUT_INDEXES);
     _CREATE_ATOM(WM_WORKSPACE_WINDOWS);
-    _CREATE_ATOM(WM_MASTER_WINDOWS);
-    _CREATE_ATOM(WM_ACTIVE_MASTER);
-    _CREATE_ATOM(MAX_DEVICES);
     screen = ewmh->screens[0];
     setRootDims(&screen->width_in_pixels);
     root = screen->root;
@@ -463,7 +461,6 @@ int isSyntheticEvent() {
 
 void* runEventLoop(void* arg __attribute__((unused))) {
     xcb_generic_event_t* event;
-    LOG(LOG_LEVEL_INFO, "starting event loop; xrandr event %d\n", xrandrFirstEvent);
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
         if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
@@ -476,7 +473,7 @@ void* runEventLoop(void* arg __attribute__((unused))) {
         lock();
         // TODO pre event processing rule
         setLastEvent(event);
-        type = type < LASTEvent ? type : type == xrandrFirstEvent ? onScreenChange : ExtraEvent;
+        type = type < LASTEvent ? type : ExtraEvent;
         applyEventRules(type, NULL);
         setLastEvent(NULL);
         free(event);

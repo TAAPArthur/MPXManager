@@ -28,19 +28,23 @@ private:
     bool primary;
     /// human readable name given by the XServer
     std::string name;
+    bool fake;
 public:
     /**
      * @param id the X unique id of the monitor
      * @param base the bounds the monitor occupies
      * @param primary 1 iff it is the primary monitor
      * @param name
+     * @param fake
      *
      */
-    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = ""): WMStruct(id), base(base), view(base),
-        primary(primary),
-        name(name) {}
+    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = "", bool fake = 0): WMStruct(id), base(base),
+        view(base),
+        primary(primary), name(name), fake(fake) {}
 
     ~Monitor();
+    /// @return true if the monitor isn't backed by X
+    bool isFake()const { return fake;}
     /**
      * Returns the workspace currently displayed by the monitor or null
 

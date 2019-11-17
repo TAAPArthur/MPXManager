@@ -125,6 +125,7 @@ void setClientMasterEnvVar(void) {
         if(m) {
             setEnvRect("VIEW", m->getViewport());
             setEnvRect("MON", m->getBase());
+            setenv("MONITOR_NAME", m->getName().c_str(), 1);
         }
         const Rect rootBounds = {0, 0, getRootWidth(), getRootHeight()};
         setEnvRect("ROOT", rootBounds);

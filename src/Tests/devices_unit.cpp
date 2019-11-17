@@ -170,6 +170,16 @@ MPX_TEST("test_detect_monitors", {
     for(Monitor* m : getAllMonitors())
         assert(m->getName() != "");
 });
+MPX_TEST("test_monitor_add_remove", {
+    addWorkspaces(2);
+    Monitor* monitor = addFakeMonitor({0, 0, 100, 100});
+    detectMonitors();
+    Workspace* w = monitor->getWorkspace();
+    delete getAllMonitors().removeElement(monitor);
+    monitor = addFakeMonitor({0, 0, 100, 100});
+    detectMonitors();
+    assertEquals(w, monitor->getWorkspace());
+});
 MPX_TEST("test_create_monitor", {
     MONITOR_DUPLICATION_POLICY = CONTAINS | INTERSECTS;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_SMALLER;
@@ -177,15 +187,25 @@ MPX_TEST("test_create_monitor", {
     assert(getAllMonitors().size() == 1);
     Monitor* m = getAllMonitors()[0];
     Rect bounds = {1, 1, 100, 100};
-    createFakeMonitor(bounds);
+    addFakeMonitor(bounds);
     detectMonitors();
     assert(getAllMonitors().size() == 1);
     Monitor* newMonitor = getAllMonitors()[0];
     assert(m != newMonitor);
     assertEquals(newMonitor->getBase(), bounds);
-    clearFakeMonitors();
+    removeAllFakeMonitors();
     detectMonitors();
     assert(getAllMonitors().size() == 1);
     assert(getAllMonitors()[0]->getBase() != bounds);
+});
+MPX_TEST("test_create_monitor_persists", {
+    MONITOR_DUPLICATION_POLICY = 0;
+    detectMonitors();
+    assert(getAllMonitors().size() == 1);
+    Rect bounds = {1, 1, 100, 100};
+    addFakeMonitor(bounds);
+    addFakeMonitor(bounds);
+    detectMonitors();
+    assertEquals(getAllMonitors().size(), 3);
 });
 #endif
