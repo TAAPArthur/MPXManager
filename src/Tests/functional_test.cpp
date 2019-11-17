@@ -96,6 +96,19 @@ MPX_TEST("default_active_layout", {
     for(Workspace* w : getAllWorkspaces())
         assert(w->getActiveLayout());
 });
+MPX_TEST_ITER("default_layout", getRegisteredLayouts().size(), {
+    DEFAULT_BORDER_WIDTH = 0;
+    setActiveLayout(getRegisteredLayouts()[_i]);
+    for(int i=0; i<3;i++){
+        mapArbitraryWindow();
+    }
+    waitUntilIdle();
+    int area =0;
+    for(WindowInfo*winInfo:getAllWindows())
+        if(winInfo->isVisible())
+            area+=getRealGeometry(winInfo->getID()).getArea();
+    assertEquals(area, getActiveWorkspace()->getMonitor()->getViewport().getArea());
+});
 MPX_TEST_ITER("auto_fullscreen", 4, {
     getAllMonitors()[0]->setViewport({10, 10, 10, 10});
     getAllMonitors()[0]->setBase({1, 2, 1000, 2000});
@@ -201,20 +214,23 @@ static void multiMonitorSetup() {
     MONITOR_DUPLICATION_POLICY = 0;
     setup();
     lock();
-    createFakeMonitor({100, 100, 100, 100});
-    createFakeMonitor({100, 100, 100, 100});
+    createFakeMonitor({100, 0, 100, 100});
+    createFakeMonitor({100, 0, 100, 100});
     detectMonitors();
     assertEquals(getAllMonitors().size(), 3);
     getActiveMaster()->setWorkspaceIndex(3);
     unlock();
-    for(int i = 0; i < 10; i++)
-        setUserTime(mapArbitraryWindow(), i + 1);
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        mapArbitraryWindow();
+    waitUntilIdle();
+    assertEquals(getActiveMaster()->getWorkspace()->getWindowStack().size(), getAllWindows().size());
+    lock();
+    for(int i = 0; i < getNumberOfWorkspaces(); i++)
+        getAllWindows()[i]->moveToWorkspace(i);
+    unlock();
     waitUntilIdle();
 }
 SET_ENV(multiMonitorSetup, fullCleanup);
-MPX_TEST("defaultWorkspace", {
-    assertEquals(getActiveMaster()->getWorkspace()->getWindowStack().size(), getAllWindows().size());
-});
 MPX_TEST("switchWorkspace", {
     int count = 0;
     for(Workspace* w : getAllWorkspaces())
@@ -229,6 +245,27 @@ MPX_TEST("switchWorkspace", {
         }
     clearFakeMonitors();
 });
+
+MPX_TEST("userEnv", {
+    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
+    setDockProperties(win, DOCK_TOP, 100);
+    for(int i = 0; i < 4; i++) {
+        WindowID win2 = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK));
+        setDockProperties(win2, i, 100);
+    }
+    waitUntilIdle();
+    getWindowInfo(win)->addMask(STICKY_MASK | ALWAYS_ON_BOTTOM);
+    mapWindow(win);
+    mapArbitraryWindow();
+    waitUntilIdle();
+    for(WindowInfo* winInfo : getAllWindows()) {
+        raiseWindow(winInfo->getID());
+    }
+    waitUntilIdle();
+    msleep(100);
+    assert(!consumeEvents());
+});
+
 static void bindingsSetup() {
     ROOT_DEVICE_EVENT_MASKS = 0;
     setup();

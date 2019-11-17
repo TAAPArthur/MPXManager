@@ -90,11 +90,25 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
     }
     free(reply);
     if(counter != num) {
-        LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Window Stack  ", children, numberOfChildren, "\n"));
-        LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Expected Stack", stackingOrder, num, "\n"));
+        LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Window Stack  ", children, numberOfChildren));
+        LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Expected Stack", stackingOrder, num));
         LOG(LOG_LEVEL_DEBUG, "%d vs %d\n", counter, num);
     }
     return counter == num;
+}
+static inline WindowID setDockProperties(WindowID win, int i, int size, bool full = 0, int start = 0, int end = 0) {
+    assert(i >= 0);
+    assert(i < 4);
+    int strut[12] = {0};
+    strut[i] = size;
+    strut[i * 2 + 4] = start;
+    strut[i * 2 + 4 + 1] = end;
+    //strut[i*2+4+1]=0;
+    xcb_void_cookie_t cookie = full ?
+        xcb_ewmh_set_wm_strut_partial_checked(ewmh, win, *((xcb_ewmh_wm_strut_partial_t*)strut)) :
+        xcb_ewmh_set_wm_strut_checked(ewmh, win, strut[0], strut[1], strut[2], strut[3]);
+    assert(xcb_request_check(dis, cookie) == NULL);
+    return win;
 }
 
 static inline int consumeEvents() {

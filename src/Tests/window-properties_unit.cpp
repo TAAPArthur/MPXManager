@@ -207,21 +207,6 @@ MPX_TEST("test_focus_window_bad", {
     assert(focusWindow(createNormalWindow()) == 0);
 });
 
-static inline WindowID setDock(WindowID win, int i, int size, bool full = 0, int start = 0, int end = 0) {
-    assert(i >= 0);
-    assert(i < 4);
-    int strut[12] = {0};
-    strut[i] = size;
-    strut[i * 2 + 4] = start;
-    strut[i * 2 + 4 + 1] = end;
-    //strut[i*2+4+1]=0;
-    xcb_void_cookie_t cookie = full ?
-        xcb_ewmh_set_wm_strut_partial_checked(ewmh, win, *((xcb_ewmh_wm_strut_partial_t*)strut)) :
-        xcb_ewmh_set_wm_strut_checked(ewmh, win, strut[0], strut[1], strut[2], strut[3]);
-    assert(xcb_request_check(dis, cookie) == NULL);
-    setWindowType(win, ewmh->_NET_WM_WINDOW_TYPE_DOCK);
-    return win;
-}
 MPX_TEST_ITER("docks", 4 * 2, {
     WindowID win = createNormalWindow();
     int i = _i / 2;
@@ -239,7 +224,8 @@ MPX_TEST_ITER("docks", 4 * 2, {
         for(int i = 0; i < 4; i++)
             assert(prop[i] == 0);
     }
-    setDock(win, i, size, full, start, end);
+    setDockProperties(win, i, size, full, start, end);
+    setWindowType(win, ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     loadWindowProperties(winInfo);
     prop = getWindowInfo(win)->getDockProperties();
     assert(prop);

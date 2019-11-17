@@ -109,7 +109,7 @@ T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
 TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
-functionalTest: Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp $(BASE_SRCS:.cpp=.o) |libmpx-patch.so
+functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp |libmpx-patch.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functional.out: PRELOAD := $$(pwd)/libmpx-patch.so
