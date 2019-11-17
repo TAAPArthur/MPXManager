@@ -50,6 +50,25 @@ static void loadSavedLayoutOffsets() {
             getWorkspace(i)->setLayoutOffset(((int*)xcb_get_property_value(reply))[i]);
     free(reply);
 }
+static void loadSavedFakeMonitor() {
+    xcb_get_property_cookie_t cookie;
+    xcb_get_property_reply_t* reply;
+    LOG(LOG_LEVEL_TRACE, "Loading fake monitor mappings\n");
+    cookie = xcb_get_property(dis, 0, root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
+    if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / (sizeof(short) * 5) ; i++) {
+            short* values = (short*) & (((char*)xcb_get_property_value(reply))[i * sizeof(short) * 5]);
+            MonitorID id = values[0];
+            values++;
+            Monitor* m = getAllMonitors().find(id);
+            if(m)
+                m->setBase(values);
+            else
+                getAllMonitors().add(new Monitor(id, values, 0, "", 1));
+        }
+        free(reply);
+    }
+}
 static void loadSavedMonitorWorkspaceMapping() {
     xcb_get_property_cookie_t cookie;
     xcb_get_property_reply_t* reply;
@@ -57,12 +76,19 @@ static void loadSavedMonitorWorkspaceMapping() {
     cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
     if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
-            Monitor* m = getAllMonitors().find(((MonitorID*)xcb_get_property_value(reply))[i]);
+            MonitorID id = ((MonitorID*)xcb_get_property_value(reply))[i];
+            if(!id)
+                continue;
+            Monitor* m = getAllMonitors().find(id);
             if(m) {
                 Workspace* w = m->getWorkspace();
                 if(w)
                     swapMonitors(i, w->getID());
+                else
+                    getWorkspace(i)->setMonitor(m);
             }
+            else
+                logger.info() << "Could not find monitor " << id << std::endl;
         }
         free(reply);
     }
@@ -120,6 +146,7 @@ static void loadSavedActiveMaster() {
 void loadCustomState(void) {
     loadSavedLayouts();
     loadSavedLayoutOffsets();
+    loadSavedFakeMonitor();
     loadSavedMonitorWorkspaceMapping();
     loadSavedWorkspaceWindows();
     loadSavedMasterWindows();
@@ -132,9 +159,11 @@ void loadCustomState(void) {
 void saveCustomState(void) {
     int layoutOffsets[getNumberOfWorkspaces()];
     int monitors[getNumberOfWorkspaces()];
+    short fakeMonitors[getAllMonitors().size() * 5];
     WindowID windows[getAllWindows().size() + 2 * getNumberOfWorkspaces()];
     WindowID masterWindows[(getAllWindows().size() + 2) * getAllMasters().size()];
     int numWindows = 0;
+    int numFakeMonitors = 0;
     int numMasterWindows = 0;
     int len = 0;
     int bufferSize = 64;
@@ -146,6 +175,12 @@ void saveCustomState(void) {
         for(auto p = master->getWindowStack().rbegin(); p != master->getWindowStack().rend(); ++p)
             masterWindows[numMasterWindows++] = (*p)->getID();
     }
+    for(MonitorID i = 0; i < getAllMonitors().size(); i++)
+        if(getAllMonitors()[i]->isFake()) {
+            fakeMonitors[numFakeMonitors++] = getAllMonitors()[i]->getID();
+            for(int n = 0; n < 4; n++)
+                fakeMonitors[numFakeMonitors++] = getAllMonitors()[i]->getBase()[n];
+        }
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack()) {
             windows[numWindows++] = winInfo->getID();
@@ -170,8 +205,10 @@ void saveCustomState(void) {
         layoutOffsets);
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, 32, numWindows, windows);
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, 32, LEN(monitors), monitors);
+    xcb_change_property(dis, REPLACE, root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, 16, numFakeMonitors, fakeMonitors);
     xcb_change_property(dis, REPLACE, root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, 32, numMasterWindows, masterWindows);
-    xcb_change_property(dis, REPLACE, root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, 32, 1, getActiveMaster());
+    MasterID masterID = getActiveMaster()->getID();
+    xcb_change_property(dis, REPLACE, root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, 32, 1, &masterID);
     free(activeLayoutNames);
     flush();
 }

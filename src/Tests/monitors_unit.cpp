@@ -113,30 +113,6 @@ MPX_TEST("get_set_base", {
     getAllMonitors().add(m);
 });
 
-/*TODO move to functional test
-MPX_TEST("test_monitor_add_remove",{
-    addFakeMaster(1, 1);
-    int size = getNumberOfWorkspaces();
-    for(int n = 0; n < 2; n++){
-        for(int i = 1; i <= size + 1; i++){
-            updateMonitor(i, (Rect){0, 0, 100, 100}, 1);
-            Workspace* w = getWorkspaceFromMonitor(getAllMonitors().find( &i);
-            if(i > size)
-                assert(!w);
-            else assert(w);
-        }
-        assert(getAllMonitors().size() == size + 1);
-    }
-    //for(int i=0;i<getNumberOfWorkspaces();i++)
-    //assert(getWorkspaceByIndex(i)->monitor==NULL);
-    while(isNotEmpty(getAllMonitors()))
-        assert(removeMonitor(((Monitor*)getLast(getAllMonitors()))->id));
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        assert(getWorkspaceByIndex(i)->monitor == NULL);
-    assert(!removeMonitor(0));
-}
-);
-*/
 
 MPX_TEST("monitor_primary", {
     assert(!getPrimaryMonitor());

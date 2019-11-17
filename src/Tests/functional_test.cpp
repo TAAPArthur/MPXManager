@@ -73,25 +73,6 @@ MPX_TEST("test_dock_detection", {
     assert(winInfo->isDock());
 });
 
-MPX_TEST("test_monitor_detection", {
-    POLL_COUNT = 0;
-    MONITOR_DUPLICATION_POLICY = 0;
-    lock();
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        createFakeMonitor({100, 100, 100, 100});
-    unlock();
-    waitUntilIdle();
-    assert(getNumberOfWorkspaces() + 1 == getAllMonitors().size());
-    for(Workspace* w : getAllWorkspaces())
-        assert(w->isVisible());
-    lock();
-    swapMonitors(0, 1);
-    clearFakeMonitors();
-    unlock();
-    waitUntilIdle();
-    for(Workspace* w : getAllWorkspaces())
-        assert(w->isVisible() == (w->getID() == 1));
-});
 MPX_TEST("default_active_layout", {
     for(Workspace* w : getAllWorkspaces())
         assert(w->getActiveLayout());
@@ -99,14 +80,14 @@ MPX_TEST("default_active_layout", {
 MPX_TEST_ITER("default_layout", getRegisteredLayouts().size(), {
     DEFAULT_BORDER_WIDTH = 0;
     setActiveLayout(getRegisteredLayouts()[_i]);
-    for(int i=0; i<3;i++){
+    for(int i = 0; i < 3; i++) {
         mapArbitraryWindow();
     }
     waitUntilIdle();
-    int area =0;
-    for(WindowInfo*winInfo:getAllWindows())
+    int area = 0;
+    for(WindowInfo* winInfo : getAllWindows())
         if(winInfo->isVisible())
-            area+=getRealGeometry(winInfo->getID()).getArea();
+            area += getRealGeometry(winInfo->getID()).getArea();
     assertEquals(area, getActiveWorkspace()->getMonitor()->getViewport().getArea());
 });
 MPX_TEST_ITER("auto_fullscreen", 4, {
@@ -214,8 +195,8 @@ static void multiMonitorSetup() {
     MONITOR_DUPLICATION_POLICY = 0;
     setup();
     lock();
-    createFakeMonitor({100, 0, 100, 100});
-    createFakeMonitor({100, 0, 100, 100});
+    addFakeMonitor({100, 0, 100, 100});
+    addFakeMonitor({100, 0, 100, 100});
     detectMonitors();
     assertEquals(getAllMonitors().size(), 3);
     getActiveMaster()->setWorkspaceIndex(3);
@@ -243,7 +224,6 @@ MPX_TEST("switchWorkspace", {
             switchToWorkspace(w->getID());
             waitUntilIdle(1);
         }
-    clearFakeMonitors();
 });
 
 static void  userEnvSetup() {

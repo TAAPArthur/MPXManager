@@ -54,11 +54,6 @@ int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboa
     else
         return XIUngrabKeycode(dpy, deviceID, detail, root, 2, modifiers);
 }
-void registerForMonitorChange() {
-#ifndef NO_XRANDR
-    catchError(xcb_randr_select_input_checked(dis, root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE));
-#endif
-}
 int registerForWindowEvents(WindowID window, int mask) {
     xcb_void_cookie_t cookie;
     cookie = xcb_change_window_attributes_checked(dis, window, XCB_CW_EVENT_MASK, &mask);

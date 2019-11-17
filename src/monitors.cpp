@@ -25,8 +25,11 @@ uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
 
 std::ostream& operator<<(std::ostream& strm, const Monitor& m) {
-    return strm << "{id:" << m.getID() << ", name:" << m.getName() << ", base:" << m.getBase() << ", viewport: " <<
-        m.getViewport() << "}";
+    strm << "{id:" << m.getID() << ", name:" << m.getName() << ", base:" << m.getBase();
+    if(m.getBase() != m.getViewport()) {
+        strm << ", viewport: " << m.getViewport();
+    }
+    return strm  << "}";
 }
 
 
@@ -119,7 +122,7 @@ void removeDuplicateMonitors(void) {
 
 void Monitor::assignWorkspace(Workspace* workspace) {
     if(!workspace && !getAllWorkspaces().empty()) {
-        Workspace* base = getActiveMaster()->getWorkspace() ? getActiveMaster()->getWorkspace() : ::getWorkspace(0);
+        Workspace* base = ::getWorkspace(0);
         if(base->isVisible()) {
             workspace = base->getNextWorkspace(1, HIDDEN | NON_EMPTY);
             if(!workspace)

@@ -278,6 +278,15 @@ MPX_TEST("test_unmap", {
     assert(!getWindowInfo(winOR)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
 });
 
+MPX_TEST("test_screen_configure", {
+    waitForChild(spawn("xrandr --noprimary &> /dev/null"));
+    waitUntilIdle(1);
+    assert(!getAllMonitors()[0]->isPrimary());
+    waitForChild(spawn("xrandr --output $MONITOR_NAME --primary &> /dev/null"));
+    waitUntilIdle();
+    assert(getAllMonitors()[0]->isPrimary());
+});
+
 MPX_TEST("test_device_event", {
     getDeviceBindings().add({0, 1, incrementCount, {}, "incrementCount"});
     assertEquals(getDeviceBindings().size(), 1);

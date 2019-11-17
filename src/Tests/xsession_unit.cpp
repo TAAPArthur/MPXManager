@@ -190,7 +190,6 @@ MPX_TEST("test_regular_events", {
     ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
     registerForWindowEvents(root, ROOT_EVENT_MASKS);
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
-    registerForMonitorChange();
     startWM();
     uint32_t lastSeqNumber = 0;
 

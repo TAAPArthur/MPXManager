@@ -112,14 +112,6 @@ static inline bool isSpecialID(MasterID id) {
  */
 int registerForWindowEvents(WindowID window, int mask);
 
-
-
-/**
- * Request to be notified when info related to the monitor/screen changes
- * This method does nothing if compiled without XRANDR support
- */
-void registerForMonitorChange();
-
 /**
  * Undoes registerForMonitorChange
  *

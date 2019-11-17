@@ -64,6 +64,8 @@ extern xcb_atom_t WM_INTERPROCESS_COM;
 extern xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
 /// Atom to store an array of the paired monitor for each workspace so the state can be restored
 extern xcb_atom_t WM_WORKSPACE_MONITORS;
+/// Atom to store fake monitors
+extern xcb_atom_t WM_FAKE_MONITORS;
 /// Atom to store an array of the layout offset for each workspace so the state can be restored
 extern xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 /// Atom to store an array of each window for every workspace so the state can be restored
