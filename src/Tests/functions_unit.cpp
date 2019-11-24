@@ -32,10 +32,16 @@ static void functionSetup() {
 
 SET_ENV(functionSetup, fullCleanup);
 
-MPX_TEST("cycle_window", {
+MPX_TEST_ITER("cycle_window", 2, {
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     startWM();
     waitUntilIdle();
+    if(_i) {
+        addAutoTileRules();
+        middle->moveToWorkspace(1);
+        top->moveToWorkspace(2);
+        waitUntilIdle();
+    }
     WindowID stack[] = {middle->getID(), top->getID(), bottom->getID()};
     for(WindowID active : stack) {
         ATOMIC(cycleWindows(DOWN));

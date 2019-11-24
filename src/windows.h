@@ -291,7 +291,7 @@ public:
      * For this to be true the window would have to be mapped and not hidden
      */
     bool isInteractable() const {
-        return hasMask(MAPPED_MASK) && !hasMask(HIDDEN_MASK);
+        return hasMask(MAPPABLE_MASK) && !hasMask(HIDDEN_MASK);
     }
     /**
      * Determines if a window should be tiled given its mapState and masks

@@ -43,7 +43,7 @@ bool hasInteractiveWindow(const ArrayList<WindowInfo*>& stack) {
 void cycleWindows(int delta) {
     Master* master = getActiveMaster();
     master->setFocusStackFrozen(1);
-    int index = getNextIndexInStack(master->getWindowStack(), -delta, master->getFocusedWindow());
+    int index = getNextIndexInStack(master->getWindowStack(), -delta, 1, master->getFocusedWindow());
     if(index >= 0)
         activateWindow(master->getWindowStack()[index]);
 }
@@ -157,7 +157,7 @@ int focusTop(const ArrayList<WindowInfo*>& stack) {
 }
 void shiftTop(ArrayList<WindowInfo*>& stack) {
     if(hasInteractiveWindow(stack))
-        stack.shiftToHead(getNextIndexInStack(stack, 0));
+        stack.shiftToHead(getNextIndexInStack(stack, stack[0] == getFocusedWindow()));
 }
 void swapWithTop(ArrayList<WindowInfo*>& stack) {
     if(hasInteractiveWindow(stack))

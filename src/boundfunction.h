@@ -32,6 +32,14 @@
  */
 #define DEFAULT_EVENT_NAME(F) "_" #F
 /**
+ * Creates a BoundFunction with a name based on F
+ *
+ * @param F the function to call
+ *
+ * @return
+ */
+#define USER_EVENT(F){F, "_" #F,PASSTHROUGH_IF_TRUE}
+/**
  * Like DEFAULT_EVENT but the passThrough is p
  * @param F
  * @param P
