@@ -119,7 +119,7 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool ch
     else LOG(LOG_LEVEL_DEBUG, "found window locally\n");
     if(target) {
         assert(rule(target));
-        logger.debug() << "Applying action " <<action<< " to "<< *target << std::endl;
+        logger.debug() << "Applying action " << action << " to " << *target << std::endl;
         applyAction(target, action);
         if(windowsToIgnore)
             windowsToIgnore->add(target->getID());
