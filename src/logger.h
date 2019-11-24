@@ -149,6 +149,11 @@ extern Logger logger;
  * Prints every window in the active Workspace
  */
 void dumpWindowStack() ;
+/**
+ * Prints just win if it is registered
+ * @param win
+ */
+void dumpSingleWindow(WindowID win) ;
 
 /**
  * Prints the stack strace
@@ -171,5 +176,11 @@ void dumpWindow(WindowMask filterMask = 0);
  * @param match
  */
 void dumpWindow(std::string match);
+/**
+ * Dumps info on master. If master == null, info on the active master will be printed
+ *
+ * @param master
+ */
+void dumpMaster(Master* master) ;
 
 #endif /* LOGGER_H_ */

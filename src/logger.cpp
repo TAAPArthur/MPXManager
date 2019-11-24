@@ -31,12 +31,30 @@ void dumpWindow(WindowMask filterMask) {
             std::cout << *winInfo << std::endl;
     }
 }
+void dumpMaster(Master* master) {
+    if(!master)
+        master = getActiveMaster();
+    std::cout << "Dumping:" << *master << std::endl;
+    std::cout << master->getSlaves() << std::endl;
+    for(WindowInfo* winInfo : master->getWindowStack()) {
+        std::cout << *winInfo << std::endl;
+    }
+}
 void dumpWindow(std::string match) {
     std::cout << "Dumping:" << std::endl;
     for(WindowInfo* winInfo : getAllWindows()) {
         if(winInfo->getClassName() == match || winInfo->getInstanceName() == match)
             std::cout << *winInfo << std::endl;
     }
+}
+void dumpSingleWindow(WindowID win) {
+    WindowInfo* winInfo = getWindowInfo(win);
+    if(!winInfo) {
+        std::cout << "No window with id " << win << std::endl;
+        return;
+    }
+    std::cout << "Dumping:" << std::endl;
+    std::cout << *winInfo << std::endl;
 }
 void dumpWindowStack() {
     std::cout << "Dumping Window Stack:" << std::endl;
