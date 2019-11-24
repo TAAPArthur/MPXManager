@@ -108,48 +108,51 @@ void addStartXMouseControlRule() {
 }
 
 #define PAIR(MASK,KEY,KP,A1,KR,A2)\
-    {MASK,KEY,{KP,A1},{.mask=XCB_INPUT_XI_EVENT_MASK_KEY_PRESS}},\
-    {MASK,KEY,{KR,A2},{.mask=XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}}
+    {MASK, KEY, {KP, A1, DEFAULT_EVENT_NAME(KP)}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_PRESS}}, \
+    {MASK, KEY, {KR, A2, DEFAULT_EVENT_NAME(KR)}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}}
 
+#define BINDING(MASK, KEY, BUTTON_MASK)\
+    PAIR(MASK, KEY, addXMouseControlMask, BUTTON_MASK, removeXMouseControlMask, BUTTON_MASK)
 
 void addDefaultXMouseControlBindings(uint32_t mask) {
     Binding bindings[] = {
         // Directional control with WASD.
-        PAIR(mask,	XK_w, addXMouseControlMask, SCROLL_UP_MASK, removeXMouseControlMask, SCROLL_UP_MASK),
-        PAIR(mask,	XK_a, addXMouseControlMask, SCROLL_LEFT_MASK, removeXMouseControlMask, SCROLL_LEFT_MASK),
-        PAIR(mask,	XK_s, addXMouseControlMask, SCROLL_DOWN_MASK, removeXMouseControlMask, SCROLL_DOWN_MASK),
-        PAIR(mask,	XK_d, addXMouseControlMask, SCROLL_RIGHT_MASK, removeXMouseControlMask, SCROLL_RIGHT_MASK),
+        BINDING(mask, XK_w, SCROLL_UP_MASK),
+        BINDING(mask, XK_a, SCROLL_LEFT_MASK),
+        BINDING(mask, XK_s, SCROLL_DOWN_MASK),
+        BINDING(mask, XK_d, SCROLL_RIGHT_MASK),
+        BINDING(mask, XK_Up, MOVE_UP_MASK),
+        BINDING(mask, XK_Left, MOVE_LEFT_MASK),
+        BINDING(mask, XK_Down, MOVE_DOWN_MASK),
+        BINDING(mask, XK_Right, MOVE_RIGHT_MASK),
 
-        PAIR(mask,	XK_Up, addXMouseControlMask, MOVE_UP_MASK, removeXMouseControlMask, MOVE_UP_MASK),
-        PAIR(mask,	XK_Left, addXMouseControlMask, MOVE_LEFT_MASK, removeXMouseControlMask, MOVE_LEFT_MASK),
-        PAIR(mask,	XK_Down, addXMouseControlMask, MOVE_DOWN_MASK, removeXMouseControlMask, MOVE_DOWN_MASK),
-        PAIR(mask,	XK_Right, addXMouseControlMask, MOVE_RIGHT_MASK, removeXMouseControlMask, MOVE_RIGHT_MASK),
-
-        PAIR(mask,	XK_KP_Up, addXMouseControlMask, MOVE_UP_MASK, removeXMouseControlMask, MOVE_UP_MASK),
-        PAIR(mask,	XK_KP_Left, addXMouseControlMask, MOVE_LEFT_MASK, removeXMouseControlMask, MOVE_LEFT_MASK),
-        PAIR(mask,	XK_KP_Down, addXMouseControlMask, MOVE_DOWN_MASK, removeXMouseControlMask, MOVE_DOWN_MASK),
-        PAIR(mask,	XK_KP_Right, addXMouseControlMask, MOVE_RIGHT_MASK, removeXMouseControlMask, MOVE_RIGHT_MASK),
+        BINDING(mask, XK_k, SCROLL_UP_MASK),
+        BINDING(mask, XK_l, SCROLL_RIGHT_MASK),
+        BINDING(mask, XK_j, SCROLL_DOWN_MASK),
+        BINDING(mask, XK_h, SCROLL_LEFT_MASK),
+        BINDING(mask | ShiftMask, XK_k, MOVE_UP_MASK),
+        BINDING(mask | ShiftMask, XK_l, MOVE_RIGHT_MASK),
+        BINDING(mask | ShiftMask, XK_j, MOVE_DOWN_MASK),
+        BINDING(mask | ShiftMask, XK_h, MOVE_LEFT_MASK),
 
         {mask, XK_Hyper_L, {removeXMouseControlMask, -1}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
 
         {mask,	XK_e, {adjustScrollSpeed, 2}},
         {mask | ShiftMask,	XK_e, {adjustScrollSpeed, -2}},
         {mask | Mod1Mask,	XK_e, {adjustSpeed, 0}},
-        {mask,	XK_r, {adjustScrollSpeed, 2}},
-        {mask | ShiftMask,	XK_r, {adjustScrollSpeed, -2}},
-        {mask | Mod1Mask,	XK_r, {adjustSpeed, 0}},
+        {mask,	XK_semicolon, {adjustScrollSpeed, 2}},
+        {mask | ShiftMask,	XK_semicolon, {adjustScrollSpeed, -2}},
+        {mask | Mod1Mask,	XK_semicolon, {adjustSpeed, 0}},
         {mask,	XK_q, resetXMouseControl},
 
         {mask, XK_c, {clickButton, Button2}},
         {mask, XK_x, {clickButton, Button3}},
         {mask, XK_space, {clickButton, Button1}},
-        {mask, XK_Insert, {clickButton, Button2}},
-        {mask, XK_space, {clickButton, Button1}},
-        {mask | ShiftMask,	XK_space, {clickButton, Button1}},
-        {mask,	XK_Insert, {clickButton, Button2}},
+        {mask, XK_Return, {clickButton, Button2}},
+        {mask | ShiftMask,	XK_space, {clickButton, Button3}},
 
-        {mask,	XK_Return, grabKeyboard},
-        {mask | ShiftMask,	XK_Return, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},
+        {mask,	XK_Tab, grabKeyboard},
+        {mask | ShiftMask,	XK_Tab, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},
     };
     for(Binding& b : bindings)
         getDeviceBindings().add(b);
