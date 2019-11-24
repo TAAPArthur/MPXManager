@@ -116,10 +116,11 @@ void cycleWindows(int delta);
  * @param rule
  * @param searchList
  * @param ignoreList can be NULL
+ * @param includeNonActivatable
  * @return the first window that matches rule or NULL
  */
 WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& searchList,
-    ArrayList<WindowID>* ignoreList = NULL);
+    ArrayList<WindowID>* ignoreList = NULL, bool includeNonActivatable = 0);
 
 
 /**
@@ -177,4 +178,10 @@ int focusTop(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
  * @see getLastKnownMasterPosition()
  */
 void activateWorkspaceUnderMouse(void);
+/**
+ * Moves the active pointer so that is is the center of winInfo
+ *
+ * @param winInfo
+ */
+void centerMouseInWindow(WindowInfo* winInfo);
 #endif

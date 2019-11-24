@@ -10,6 +10,7 @@
 #include "masters.h"
 #include "monitors.h"
 #include "system.h"
+#include "test-functions.h"
 #include "window-properties.h"
 #include "windows.h"
 #include "wmfunctions.h"
@@ -43,7 +44,7 @@ bool hasInteractiveWindow(const ArrayList<WindowInfo*>& stack) {
 void cycleWindows(int delta) {
     Master* master = getActiveMaster();
     master->setFocusStackFrozen(1);
-    int index = getNextIndexInStack(master->getWindowStack(), -delta, master->getFocusedWindow());
+    int index = getNextIndexInStack(master->getWindowStack(), -delta, 1, master->getFocusedWindow());
     if(index >= 0)
         activateWindow(master->getWindowStack()[index]);
 }
@@ -79,9 +80,10 @@ static ArrayList<WindowID>* getWindowCache(Master* m) {
 }
 
 WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& searchList,
-    ArrayList<WindowID>* ignoreList) {
+    ArrayList<WindowID>* ignoreList, bool includeNonActivatable) {
     for(WindowInfo* winInfo : searchList)
-        if((!ignoreList || !ignoreList->find(winInfo->getID())) && winInfo->isMappable() && rule(winInfo))
+        if((!ignoreList || !ignoreList->find(winInfo->getID())) && (includeNonActivatable || winInfo->isActivatable()) &&
+            rule(winInfo))
             return winInfo;
     return NULL;
 }
@@ -157,7 +159,7 @@ int focusTop(const ArrayList<WindowInfo*>& stack) {
 }
 void shiftTop(ArrayList<WindowInfo*>& stack) {
     if(hasInteractiveWindow(stack))
-        stack.shiftToHead(getNextIndexInStack(stack, 0));
+        stack.shiftToHead(getNextIndexInStack(stack, stack[0] == getFocusedWindow()));
 }
 void swapWithTop(ArrayList<WindowInfo*>& stack) {
     if(hasInteractiveWindow(stack))
@@ -176,6 +178,11 @@ void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name) {
     Workspace* w = getWorkspaceByName(name);
     if(w)
         winInfo->moveToWorkspace(w->getID());
+}
+void centerMouseInWindow(WindowInfo* winInfo) {
+    Rect dims = winInfo->getGeometry();
+    if(getFocusedWindow())
+        movePointer(dims.width / 2, dims.height / 2, winInfo->getID());
 }
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
