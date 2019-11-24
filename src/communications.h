@@ -168,6 +168,8 @@ struct Option {
 
     /// @return name
     std::string getName() const {return name;}
+    /// @return flags
+    uint8_t getFlags() const {return flags;}
     /**
      * @param str
      * @param empty

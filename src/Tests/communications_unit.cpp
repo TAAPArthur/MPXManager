@@ -34,6 +34,14 @@ MPX_TEST("test_send_receive_self", {
     assert(POLL_COUNT == 0);
     assert(!hasOutStandingMessages());
 });
+MPX_TEST("touch_fork_options", {
+    CRASH_ON_ERRORS = 0;
+    suppressOutput();
+    for(Option* option : getOptions()) {
+        if((option->getFlags() & CONFIRM_EARLY) == 0)
+            option->call("1");
+    }
+});
 
 MPX_TEST("test_send_receive", {
     POLL_COUNT = 10;
