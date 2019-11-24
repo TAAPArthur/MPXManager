@@ -22,9 +22,15 @@
  *
  * @param F the function to call
  *
- * @return
  */
-#define DEFAULT_EVENT(F){F, "_" #F,PASSTHROUGH_IF_TRUE}
+#define DEFAULT_EVENT(F){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE}
+
+/**
+ * Macro to get the default name for a BoundFunction backed by F
+ * @param F the function to call
+ *
+ */
+#define DEFAULT_EVENT_NAME(F) "_" #F
 /**
  * Like DEFAULT_EVENT but the passThrough is p
  * @param F
