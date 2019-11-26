@@ -150,6 +150,7 @@ static inline void generateMotionEvents(int num = 100000) {
         movePointerRelative(1, 1);
         movePointerRelative(-1, -1);
     }
+    flush();
 }
 namespace TestGrabs {
 #define ALL_MASKS KEYBOARD_MASKS|POINTER_MASKS

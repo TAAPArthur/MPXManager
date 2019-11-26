@@ -169,6 +169,7 @@ void onFocusInEvent(void) {
     xcb_input_focus_in_event_t* event = (xcb_input_focus_in_event_t*)getLastEvent();
     setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
+    LOG(LOG_LEVEL_DEBUG, "Window %d was focused\n", event->event);
     if(winInfo) {
         if(!winInfo->hasMask(NO_RECORD_FOCUS))
             getActiveMaster()->onWindowFocus(winInfo->getID());
@@ -180,6 +181,7 @@ void onFocusOutEvent(void) {
     xcb_input_focus_out_event_t* event = (xcb_input_focus_out_event_t*)getLastEvent();
     setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
+    LOG(LOG_LEVEL_DEBUG, "Window %d was unfocused\n", event->event);
     if(winInfo)
         resetBorder(winInfo->getID());
 }

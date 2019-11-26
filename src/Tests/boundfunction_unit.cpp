@@ -47,7 +47,7 @@ static void test() {
         {+[](uint32_t i) {incrementCount(); assertEquals(fakeWinInfo->getID(), i);}},
         {+[](uint32_t i)->int{incrementCount(); assertEquals(fakeWinInfo->getID(), i); return i;}},
         {+[](WindowInfo * winInfo) { incrementCount(); assertEquals(fakeWinInfo, winInfo);}},
-        {+[](int i){incrementCount(); assertEquals(i, 123);}, 123},
+        {+[](int i) {incrementCount(); assertEquals(i, 123);}, 123},
         {+[](int i)->int{incrementCount(); assertEquals(i, 123); return 1;}, 123},
         {+[](std::string s)->void{incrementCount(); assertEquals(s, "123");}, "123"},
         {+[](std::string s)->int{incrementCount(); assertEquals(s, "123"); return 1;}, "123"},

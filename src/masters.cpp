@@ -47,7 +47,7 @@ void Master::onWindowFocus(WindowID win) {
     if(!winInfo)
         return;
     int pos = getWindowStack().indexOf(winInfo);
-    LOG(LOG_LEVEL_DEBUG, "updating focus for win %d at position %d out of%d\n", win, pos, getWindowStack().size());
+    LOG(LOG_LEVEL_DEBUG, "updating focus for win %d at position %d out of %d\n", win, pos, getWindowStack().size());
     if(! isFocusStackFrozen()) {
         if(pos == -1)
             windowStack.add(winInfo);

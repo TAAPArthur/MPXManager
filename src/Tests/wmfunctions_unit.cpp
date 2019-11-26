@@ -37,9 +37,7 @@ MPX_TEST("unregister_focus_transfer", {
     WindowID win = mapArbitraryWindow();
     WindowID win2 = mapArbitraryWindow();
     WindowID win3 = mapArbitraryWindow();
-    assert(registerWindow(win, root));
-    assert(registerWindow(win2, root));
-    assert(registerWindow(win3, root));
+    scan(root);
     for(WindowInfo* winInfo : getAllWindows()) {
         winInfo->addMask(INPUT_MASK);
         winInfo->moveToWorkspace(0);
@@ -99,15 +97,10 @@ MPX_TEST("filter_window", {
     assert(getWindowInfo(win2));
     assert(!getWindowInfo(win));
 });
-MPX_TEST_ITER("detect_mapped_windows", 2, {
+MPX_TEST("detect_mapped_windows", {
     WindowID win = createNormalWindow();
     WindowID win2 = mapArbitraryWindow();
-    if(_i)
-        scan(root);
-    else {
-        registerWindow(win, root);
-        registerWindow(win2, root);
-    }
+    scan(root);
     assert(!getWindowInfo(win)->hasMask(MAPPED_MASK));
     assert(getWindowInfo(win2)->hasMask(MAPPED_MASK));
 });

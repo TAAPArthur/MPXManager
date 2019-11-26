@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "globals.h"
 #include "masters.h"
 #include "mywm-structs.h"

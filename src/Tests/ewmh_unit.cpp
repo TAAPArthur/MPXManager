@@ -64,13 +64,16 @@ MPX_TEST("test_set_workspace_names", {
     updateWorkspaceNames();
 });
 
+MPX_TEST("test_private_window_properties", {
+    assert("" != getWindowTitle(getPrivateWindow()));
+});
+
 MPX_TEST("ewmh_hooks", {
     addEWMHRules();
     addShutdownOnIdleRule();
     createNormalWindow();
     focusWindow(mapWindow(createNormalWindow()));
     runEventLoop(NULL);
-
 });
 MPX_TEST("test_sync_state", {
     addWorkspaces(2);
@@ -157,6 +160,7 @@ static void clientMessageSetup() {
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);}));
     addEWMHRules();
     onSimpleStartup();
+    addAutoTileRules();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
     startWM();
@@ -184,26 +188,23 @@ MPX_TEST_ITER_ERR("test_client_close_window", 2, 1, {
     exit(1);
 });
 MPX_TEST("client_list", {
-    xcb_get_property_cookie_t cookie = xcb_ewmh_get_client_list(ewmh, defaultScreenNumber);
-    xcb_get_property_reply_t* reply;
-    reply = xcb_get_property_reply(dis, cookie, NULL);
-    assert(reply);
-    auto size = xcb_get_property_value_length(reply) / sizeof(int);
+    xcb_ewmh_get_windows_reply_t reply;
+    assert(xcb_ewmh_get_client_list_reply(ewmh, xcb_ewmh_get_client_list(ewmh, defaultScreenNumber), &reply, nullptr));
+    auto size = reply.windows_len;
     assertEquals(size, getAllWindows().size());
     for(uint32_t i = 0; i <  size; i++)
-        assertEquals(((int*)xcb_get_property_value(reply))[i], getAllWindows()[i]->getID());
-    free(reply);
-    // we get focus out event before destroy
+        assertEquals(reply.windows[i], getAllWindows()[i]->getID());
+    xcb_ewmh_get_windows_reply_wipe(&reply);
+    // we get focus out event before destroy event
     CRASH_ON_ERRORS = 0;
     setLogLevel(LOG_LEVEL_NONE);
     for(WindowInfo* winInfo : getAllWindows()) {
         assert(!destroyWindow(winInfo->getID()));
     }
     waitUntilIdle();
-    cookie = xcb_ewmh_get_client_list(ewmh, defaultScreenNumber);
-    reply = xcb_get_property_reply(dis, cookie, NULL);
-    size = xcb_get_property_value_length(reply) / sizeof(int);
-    assertEquals(size, 0);
+    assert(xcb_ewmh_get_client_list_reply(ewmh, xcb_ewmh_get_client_list(ewmh, defaultScreenNumber), &reply, nullptr));
+    assertEquals(reply.windows_len, 0);
+    xcb_ewmh_get_windows_reply_wipe(&reply);
 });
 
 MPX_TEST_ITER("test_client_activate_window", 2, {
@@ -358,7 +359,7 @@ MPX_TEST_ITER("test_client_ping", 2, {
     waitUntilIdle();
 });
 MPX_TEST("test_client_ping_bad", {
-    xcb_ewmh_send_wm_ping(ewmh, 0, 0);
+    ATOMIC(xcb_ewmh_send_wm_ping(ewmh, destroyWindow(createNormalWindow()), 0));
     waitUntilIdle();
 });
 
@@ -441,8 +442,9 @@ MPX_TEST("wm_move_resize_window_no_change", {
 });
 MPX_TEST("wm_move_resize_window_zero", {
     WindowInfo* winInfo = getAllWindows()[0];
-    RectWithBorder rect = getRealGeometry(winInfo->getID());
     lock();
+    setWindowPosition(winInfo->getID(), {0, 0, 150, 150});
+    RectWithBorder rect = getRealGeometry(winInfo->getID());
     movePointer(rect.width, rect.height);
     startWindowMoveResize(winInfo, 0);
     movePointer(0, 0);

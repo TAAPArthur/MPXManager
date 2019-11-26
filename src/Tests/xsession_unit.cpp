@@ -128,7 +128,7 @@ MPX_TEST_ITER("catch_error_silient", 2, {
     CRASH_ON_ERRORS = 0;
     suppressOutput();
     if(_i) {
-        grabDevice(1000, 0);
+        grabDevice(100, 0);
         XSync(dpy, 0);
         return;
     }
@@ -140,7 +140,7 @@ MPX_TEST_ITER_ERR("crash_on_error", 2, 1, {
     CRASH_ON_ERRORS = -1;
     suppressOutput();
     if(_i) {
-        grabDevice(1000, 0);
+        grabDevice(100, 0);
         XSync(dpy, 0);
         assert(0);
     }
@@ -268,6 +268,15 @@ MPX_TEST("spam_mouse_motion", {
     startWM();
     waitUntilIdle();
     assert(!consumeEvents());
+});
+MPX_TEST("free_events_on_exit", {
+    addDefaultMaster();
+    grabPointer();
+    generateMotionEvents(10000);
+    getEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(requestShutdown));
+    startWM();
+    waitForAllThreadsToExit();
+    assert(consumeEvents());
 });
 MPX_TEST("true_idle", {
     POLL_COUNT = 1;

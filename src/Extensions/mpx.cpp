@@ -40,7 +40,7 @@ void attachActiveSlaveToMarkedMaster() {
     LOG(LOG_LEVEL_DEBUG, "device event %d %d %d %d\n", event->event_type, event->deviceid, event->sourceid, event->flags);
     Master* master = getMasterByID(markedMasterID);
     if(!master) {
-        LOG(LOG_LEVEL_WARN, "could not find master");
+        LOG(LOG_LEVEL_WARN, "could not find master %d\n", markedMasterID);
         return;
     }
     Slave* slave = getAllSlaves().find(event->sourceid);
@@ -51,6 +51,7 @@ void attachActiveSlaveToMarkedMaster() {
 }
 
 void startSplitMaster(void) {
+    LOG(LOG_LEVEL_INFO, "Started splitting master\n");
     passiveGrab(root, XCB_INPUT_XI_EVENT_MASK_HIERARCHY | XCB_INPUT_XI_EVENT_MASK_KEY_PRESS |
         XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_MOTION);
     std::string name = "dummy" + std::to_string(getTime());
@@ -60,6 +61,7 @@ void startSplitMaster(void) {
 }
 
 void endSplitMaster(void) {
+    LOG(LOG_LEVEL_INFO, "Finished splitting master\n");
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     markMaster(0);
 }

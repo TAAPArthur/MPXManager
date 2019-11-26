@@ -26,7 +26,7 @@ SRCS := ${BASE_SRCS} config.cpp
 
 PRELOAD := $$(pwd)/libmpx-test.so
 CHECK_TEST_COVERAGE = (gcov -mr $(1) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 ".cpp" && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#")
-RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 1 -a $(if $(QUICK) , valgrind -q --leak-check=full --error-exitcode=123 $(1),$(1))
+RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 1 -a $(if $(QUICK) , valgrind -q --leak-check=full --error-exitcode=123 $(1) 20,$(1))
 
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
@@ -103,7 +103,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out correctness.out arg_test.out functional.out format doc-check preinstall
+test: libmpx-test.so code_coverage.out arg_test.out functional.out format doc-check correctness.out preinstall
 
 T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
 TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))
@@ -170,5 +170,5 @@ doc-check:
 .DELETE_ON_ERROR:
 
 clean:
-	rm -f unitTest *gc?? mpxmanager libmpxmanager*.a libmpxmanager*.so mpxmanager-autocomplete.sh mpxmanager.sh
+	rm -f unitTest vgcore* *gc?? mpxmanager libmpxmanager*.a libmpxmanager*.so mpxmanager-autocomplete.sh mpxmanager.sh
 	find . \( -name "*.orig" -o -name "*.gc??" -o -name "*.out" -o -name "*.o" \) -exec rm -f {} \;

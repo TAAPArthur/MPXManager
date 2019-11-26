@@ -11,9 +11,10 @@ void breakFork(int i) {
     sprintf(strValue, "%d", i);
     setenv("BREAK_FORK", strValue, 1);
 }
+static int TIMEOUT = 5;
 void* timer(void* f) {
     const volatile int* flag = (int*)f;
-    for(int i = 0; *flag && i < 500; i++) {
+    for(int i = 0; *flag && i < TIMEOUT * 100; i++) {
         msleep(10);
     }
     int pid = *flag;
@@ -21,7 +22,7 @@ void* timer(void* f) {
         printf("Timeout %d\n", pid);
         printf("Sending signal to print stacktrace%d\n", pid);
         kill(pid, SIGUSR2);
-        msleep(100);
+        msleep(1000);
         if(kill(pid, SIGKILL)) {
             LOG(LOG_LEVEL_ERROR, "killing failed %s\n", strerror(errno));
         }
@@ -80,11 +81,30 @@ void printResults(int signal = 0) {
     if(signal)
         exit(exitCode);
 }
-int main(void) {
+bool runTest(Test* t, int i) {
+    if(!t->runTest(i)) {
+        failedTests.push_back({t, i});
+        return 0;
+    }
+    else passedCount++;
+    return 1;
+}
+int main(int argc, char* const* argv) {
     assert(tests.size());
     char* startingFrom = getenv("STARTING_FROM");
     char* file = getenv("TEST_FILE");
     char* func = getenv("TEST_FUNC");
+    char* index = func ? strchr(func, '.') : NULL;
+    if(index) {
+        *index = 0;
+        index++;
+    }
+    char* timeout = getenv("TIMEOUT");
+    if(timeout)
+        TIMEOUT = atoi(timeout);
+    if(argc >= 2) {
+        TIMEOUT = atoi(argv[1]);
+    }
     char* strictStr = getenv("STRICT");;
     bool strict = strictStr ? std::string(strictStr) != "0" : 0;
     bool veryStrict = strict && strictStr ? std::string(strictStr) != "1" : 0;
@@ -99,13 +119,12 @@ int main(void) {
             (!startingFrom || strcmp(startingFrom, t->fileName) == 0 || strcmp(startingFrom, t->name) == 0 || passedCount ||
                 failedTests.size())
         ) {
-            for(int i = 0; i < t->end; i++)
-                if(!t->runTest(i)) {
-                    failedTests.push_back({t, i});
-                    if(veryStrict)
+            if(index)
+                runTest(t, atoi(index));
+            else
+                for(int i = 0; i < t->end; i++)
+                    if(!runTest(t, i) && veryStrict)
                         break;
-                }
-                else passedCount++;
             if(strict && failedTests.size())
                 break;
             if(failedTests.size() >= maxFails)

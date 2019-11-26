@@ -396,8 +396,8 @@ static inline bool addEventToBuffer(xcb_generic_event_t* event) {
 }
 static inline void enqueueEvents(xcb_generic_event_t* event) {
     while(addEventToBuffer(xcb_poll_for_queued_event(dis)));
-    if(event)
-        lastDetectedEventSequence = (bufferIndexWrite ? eventBuffer[bufferIndexWrite - 1] : event)->sequence;
+    assert(event);
+    lastDetectedEventSequence = (bufferIndexWrite ? eventBuffer[bufferIndexWrite - 1] : event)->sequence;
     LOG(LOG_LEVEL_DEBUG, "Size of event queue is now %d \n", bufferIndexWrite);
 }
 static inline xcb_generic_event_t* pollForEvent() {
@@ -464,7 +464,9 @@ void* runEventLoop(void* arg __attribute__((unused))) {
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
         if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
-            if(event)free(event);
+            do
+                free(event);
+            while(event = getEventFromBuffer());
             if(isShuttingDown())
                 LOG(LOG_LEVEL_INFO, "shutting down\n");
             break;

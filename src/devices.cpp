@@ -24,6 +24,8 @@ using namespace std;
 #pragma GCC diagnostic ignored "-Wnarrowing"
 
 void createMasterDevice(std::string name) {
+    if(getAllMasters().size() * 4 + getAllSlaves().size() >= getMaxNumberOfDevices())
+        logger.warn() << "This action may cause the max number of devices to be exceeded" << std::endl;
     XIAddMasterInfo add = {.type = XIAddMaster, .name = (char*)name.c_str(), .send_core = 1, .enable = 1};
     XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&add, 1);
     //xcb_input_xi_change_hierarchy(c, num_changes, changes);

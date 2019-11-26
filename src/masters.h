@@ -10,8 +10,6 @@
 #include "workspaces.h"
 #include "slaves.h"
 #include "globals.h"
-#include <string.h>
-#include <string>
 
 /// will match any mode
 #define ANY_MODE ((uint32_t)-1)

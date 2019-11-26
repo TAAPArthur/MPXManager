@@ -122,7 +122,7 @@ static int compareState() {
             workspaceIDs.add(w->getID());
     assert(workspaceIDs.size() == getNumberOfWorkspaces());
     for(WorkspaceID i : workspaceIDs) {
-        LOG_RUN(LOG_LEVEL_DEBUG, _printStateComparison(currentState, i));
+        LOG_RUN(LOG_LEVEL_TRACE, _printStateComparison(currentState, i));
         if(currentState[i].forceRetile || (savedStates || currentState[i].size) &&
             (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
                 memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||

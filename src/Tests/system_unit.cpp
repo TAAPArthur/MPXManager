@@ -93,8 +93,8 @@ MPX_TEST("reset_pipe", {
     waitForChild(0);
 });
 MPX_TEST_ITER("spawn", 2, {
-    const char* value = "string";
-    char buffer[256];
+    const char value[] = "string";
+    char buffer[LEN(value)] = {0};
 
     if(!spawnPipe(NULL)) {
         if(!spawn(NULL, _i)) {
@@ -105,6 +105,7 @@ MPX_TEST_ITER("spawn", 2, {
         exit(0);
     }
     int result = read(STATUS_FD_READ, buffer, LEN(buffer));
+    assert(result != -1);
     if(_i)
         assertEquals(result, 0);
     else
