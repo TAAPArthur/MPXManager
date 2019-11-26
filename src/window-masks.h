@@ -168,9 +168,9 @@ struct WindowMask {
      * @return a string representation of mask
      */
     operator std::string() const {
-#define _PRINT_MASK(str) if( (str & M)||(str==0 &&M==0)){s+=#str " ";M&=~str;}
+#define _PRINT_MASK(windowMask) if( windowMask != 0 && (windowMask & M) == windowMask || windowMask==0 && M==0){s+=#windowMask " ";M&=~windowMask;}
         uint32_t M = mask;
-        std::string s = std::to_string(mask ? __builtin_popcount(mask) : 0) + ":";
+        std::string s = std::to_string(mask ? __builtin_popcount(mask) : 0) + " bits: ";
         _PRINT_MASK(NO_MASK);
         _PRINT_MASK(MAXIMIZED_MASK);
         _PRINT_MASK(X_MAXIMIZED_MASK);
@@ -207,6 +207,7 @@ struct WindowMask {
         _PRINT_MASK(MAPPABLE_MASK);
         _PRINT_MASK(MAPPED_MASK);
         _PRINT_MASK(URGENT_MASK);
+        assert(!M);
         return s;
     }
 };
