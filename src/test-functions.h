@@ -79,10 +79,10 @@ void typeKey(int keycode, MasterID id = getActiveMasterKeyboardID(), WindowID wi
  * relativeWindow is none the mouse will be moved relative to its current position
  * @param x
  * @param y
- * @param id
  * @param relativeWindow
+ * @param id
  */
-void movePointer(short x, short y, MasterID id = getActiveMasterPointerID(), WindowID relativeWindow = root);
+void movePointer(short x, short y, WindowID relativeWindow = root, MasterID id = getActiveMasterPointerID());
 /**
  * Moves the mouse specified by id x,y units relative to its current position
  * @param x horizontal displacement

@@ -38,9 +38,9 @@ void typeKey(int keycode, MasterID id, WindowID win) {
 
 
 void movePointerRelative(short x, short y, MasterID id) {
-    movePointer(x, y, id, XCB_NONE);
+    movePointer(x, y, XCB_NONE, id);
 }
-void movePointer(short x, short y, MasterID id, WindowID relativeWindow) {
+void movePointer(short x, short y, WindowID relativeWindow, MasterID id) {
     LOG(LOG_LEVEL_TRACE, "moving pointer : id %d to %d, %d relative to %d \n", id, x, y, relativeWindow);
     xcb_input_xi_warp_pointer(dis, None, relativeWindow, 0, 0, 0, 0, x << 16, y << 16, id);
 }

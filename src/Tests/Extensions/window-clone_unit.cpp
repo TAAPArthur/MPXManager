@@ -118,8 +118,8 @@ MPX_TEST("focus_clone", {
     assertEquals(getFocusedWindow(), winInfo);
 });
 MPX_TEST("mouse_enter", {
-    movePointer(1, 1, getActiveMasterPointerID(), winInfo->getID());
-    movePointer(1, 1, getActiveMasterPointerID(), cloneInfo->getID());
+    movePointer(1, 1, winInfo->getID());
+    movePointer(1, 1, cloneInfo->getID());
     waitUntilIdle();
     short pos[2];
     getMousePosition(pos);

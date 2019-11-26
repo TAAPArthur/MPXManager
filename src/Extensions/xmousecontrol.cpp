@@ -91,7 +91,7 @@ void xmousecontrolUpdate(void) {
             if(_IS_SET(info, MOVE_UP_MASK, MOVE_DOWN_MASK))
                 deltaY = info->mask & MOVE_DOWN_MASK ? info->vScale : -info->vScale;
             if(deltaX || deltaY)
-                movePointer(deltaX, deltaY, info->pointerId, None);
+                movePointerRelative(deltaX, deltaY, info->pointerId);
         }
     }
     flush();

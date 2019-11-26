@@ -208,7 +208,7 @@ MPX_TEST("test_activate_workspace_with_mouse", {
     Monitor* m = new Monitor(2, bounds);
     getAllMonitors().add(m);
     m->assignWorkspace();
-    movePointer(getActiveMasterPointerID(), root, bounds.x, bounds.y);
+    movePointer(bounds.x, bounds.y);
     flush();
     activateWorkspaceUnderMouse();
     assertEquals(m, getActiveWorkspace()->getMonitor());

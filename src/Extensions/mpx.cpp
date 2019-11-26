@@ -97,8 +97,8 @@ void swapDeviceID(Master* master1, Master* master2) {
     short pos1[2];
     short pos2[2];
     if(getMousePosition(master1->getPointerID(), root, pos1) && getMousePosition(master2->getPointerID(), root, pos2)) {
-        movePointer(master2->getPointerID(), root, pos1[0], pos1[1]);
-        movePointer(master1->getPointerID(), root, pos2[0], pos2[1]);
+        movePointer(pos1[0], pos1[1], root, master2->getPointerID());
+        movePointer(pos2[0], pos2[1], root, master1->getPointerID());
     }
     swapSlaves(master1, master2);
     flush();
