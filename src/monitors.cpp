@@ -25,7 +25,10 @@ uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
 
 std::ostream& operator<<(std::ostream& strm, const Monitor& m) {
-    strm << "{id:" << m.getID() << ", name:" << m.getName() << ", base:" << m.getBase();
+    strm << "{id:" << m.getID() << (m.isPrimary() ? "*" : "") << ", name:" << m.getName();
+    if(m.getWorkspace())
+        strm << ", Workspace:" << m.getWorkspace()->getID();
+    strm << ", base:" << m.getBase();
     if(m.getBase() != m.getViewport()) {
         strm << ", viewport: " << m.getViewport();
     }
@@ -156,7 +159,7 @@ void Monitor::setPrimary(bool primary) {
     if(isPrimary() != primary)
         ::setPrimary(primary ? this : NULL);
 }
-bool Monitor::isPrimary() {
+bool Monitor::isPrimary() const {
     return primaryMonitor == getID();
 }
 
@@ -167,7 +170,7 @@ void Monitor::setBase(Rect rect) {
     base = rect;
     reset();
 }
-Workspace* Monitor::getWorkspace(void) {
+Workspace* Monitor::getWorkspace(void) const {
     for(Workspace* workspace : getAllWorkspaces())
         if(workspace->getMonitor() == this)
             return workspace;

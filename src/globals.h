@@ -41,7 +41,7 @@
 /**
  * Window Manager name used to comply with EWMH
  */
-#define WINDOW_MANAGER_NAME "MPX Manager"
+#define WINDOW_MANAGER_NAME "MPXManager"
 
 
 /// if true, then preload LD_PRELOAD_PATH

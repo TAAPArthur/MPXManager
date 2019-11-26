@@ -79,14 +79,6 @@ static inline int grabPointer(MasterID id = getActiveMasterPointerID()) {
 }
 
 
-/**
- * grabs all master devices
- */
-int grabAllMasterDevices(void);
-/**
- * ungrabs all master devices (keyboards and mice)
- */
-int ungrabAllMasterDevices(void);
 
 /**
  * If the masks should go with a keyboard device

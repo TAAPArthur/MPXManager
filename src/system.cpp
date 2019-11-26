@@ -118,10 +118,9 @@ void setClientMasterEnvVar(void) {
         if(getFocusedWindow()) {
             sprintf(strValue, "%d", getFocusedWindow()->getID());
             setenv("_WIN_ID", strValue, 1);
-        }
-        Monitor* m = getActiveWorkspace()->getMonitor();
-        if(getFocusedWindow())
             setEnvRect("WIN", getFocusedWindow()->getGeometry());
+        }
+        Monitor* m = getActiveMonitor();
         if(m) {
             setEnvRect("VIEW", m->getViewport());
             setEnvRect("MON", m->getBase());

@@ -71,6 +71,9 @@ MPX_TEST("test_workspace_window_add", {
     removeWorkspaces(1);
 });
 MPX_TEST("test_workspace_window_has_mask", {
+    WindowMask M = MAPPABLE_MASK;
+    WindowMask windowMask = MAPPABLE_MASK;
+    assert(windowMask != 0 && (windowMask & M) == windowMask || windowMask == 0 && M == 0);
     getAllWindows().add(new WindowInfo(1));
     getAllWindows().add(new WindowInfo(2));
     addWorkspaces(2);

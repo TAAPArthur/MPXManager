@@ -49,7 +49,8 @@ void broadcastEWMHCompilence() {
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
     SET_SUPPORTED_OPERATIONS(ewmh);
-    xcb_ewmh_set_wm_pid(ewmh, root, getpid());
+    xcb_ewmh_set_wm_pid(ewmh, getPrivateWindow(), getpid());
+    setWindowClass(getPrivateWindow(), numPassedArguments ? passedArguments[0] : WINDOW_MANAGER_NAME, WINDOW_MANAGER_NAME);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
     // Not strictly needed
@@ -104,17 +105,17 @@ void addEWMHRules(AddFlag flag) {
         mappedOrder.removeElement(winInfo->getID());
     },
     "_unrecordWindow"}, flag);
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
-    getEventRules(UnregisteringWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
-    getEventRules(onXConnection).add(DEFAULT_EVENT(broadcastEWMHCompilence), flag);
-    getEventRules(WindowWorkspaceMove).add(DEFAULT_EVENT(setSavedWorkspaceIndex), flag);
-    getEventRules(TrueIdle).add(DEFAULT_EVENT(setActiveProperties), flag);
-    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
-    getBatchEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
-    getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(setAllowedActions));
+    getEventRules(TrueIdle).add(DEFAULT_EVENT(setActiveProperties), flag);
+    getEventRules(WindowWorkspaceMove).add(DEFAULT_EVENT(setSavedWorkspaceIndex), flag);
+    getEventRules(onXConnection).add(DEFAULT_EVENT(broadcastEWMHCompilence), flag);
+    getEventRules(onXConnection).add(DEFAULT_EVENT(syncState));
+    getBatchEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
+    getBatchEventRules(PostRegisterWindow).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
+    getBatchEventRules(UnregisteringWindow).add(DEFAULT_EVENT(updateEWMHClientList), flag);
+    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
 }
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {
     WorkspaceID workspaceIndex = 0;

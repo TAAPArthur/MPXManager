@@ -11,7 +11,7 @@ arch=('any')
 license=('MIT')
 options=(staticlibs !strip)
 depends=('xorg-server' 'libx11' 'libxcb' 'xcb-util-wm' )
-optdepends=('xorg-server-xvfb' 'xorg-xinput' 'xsane-xrandr' 'check')
+optdepends=('xorg-server-xvfb')
 makedepends=('git' 'help2man')
 md5sums=('SKIP')
 
@@ -20,5 +20,5 @@ _srcDir="MPXManager"
 
 package() {
   cd "$_srcDir"
-  make DESTDIR=$pkgdir install
+  make DESTDIR=$pkgdir install -j 8
 }

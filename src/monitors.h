@@ -50,7 +50,7 @@ public:
 
      * @return
      */
-    Workspace* getWorkspace(void);
+    Workspace* getWorkspace(void) const;
     /// @return the human readable name
     const std::string& getName() const {return name;}
     /// @param str the new name of the monitor
@@ -73,7 +73,7 @@ public:
     /**
      * @return True if the monitor is marked as primary
      */
-    bool isPrimary();
+    bool isPrimary() const;
     /**
      * Marks this monitor as the primary. There can only be 1 primary monitor, so the current primary monitor will lose its status
      *
@@ -134,8 +134,19 @@ enum DockTypes {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} ;
  * @return  the primary monitor or NULL
  */
 Monitor* getPrimaryMonitor() ;
-
-
+/**
+ * @return  the workspace of the primary monitor or NULL
+ */
+static inline Workspace* getPrimaryWorkspace() {
+    Monitor* m = getPrimaryMonitor();
+    return m ? m->getWorkspace() : NULL;
+}
+/**
+ * @return  the workspace of the primary monitor or NULL
+ */
+static inline Monitor* getActiveMonitor() {
+    return getActiveWorkspace() ? getActiveWorkspace()->getMonitor() : NULL;
+}
 
 /**
  * Reads (one of) the struct property to loads the info into properties and
