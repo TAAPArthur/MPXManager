@@ -153,7 +153,8 @@ void addDefaultBindings() {
 
 
 void defaultPrintFunction(void) {
-    dprintf(STATUS_FD, "%d ", getActiveMaster()->getCurrentMode());
+    if(getActiveMaster()->getCurrentMode())
+        dprintf(STATUS_FD, "%d ", getActiveMaster()->getCurrentMode());
     for(Workspace* w : getAllWorkspaces()) {
         const char* color;
         if(w->isVisible())
