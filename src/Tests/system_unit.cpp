@@ -213,14 +213,21 @@ MPX_TEST_ITER_ERR("spawn_fail", 2, 1, {
 MPX_TEST_ERR("seg_fault", SIGSEGV, {
     kill(getpid(), SIGSEGV);
 });
-MPX_TEST_ERR("seg_fault_recursive", SIGSEGV, {
-    Master* p = (Master*)0xDEADBEEF;
-    getAllMasters().add(p);
-    kill(getpid(), SIGSEGV);
-});
 MPX_TEST_ERR("sig_term", SIGTERM, {
     kill(getpid(), SIGTERM);
 });
 MPX_TEST_ERR("assert_fail", SIGABRT, {
     assert(0);
+});
+MPX_TEST_ERR("seg_fault_recursive", SIGSEGV, {
+    getAllMasters().add((Master*)0xDEADBEEF);
+    getAllWindows().add((WindowInfo*)0xDEADBEEF);
+    printSummary();
+});
+MPX_TEST_ERR("abort_recursive", SIGABRT, {
+    WindowInfo* winInfo = new WindowInfo(1);
+    WindowInfo* winInfo2 = new WindowInfo(1);
+    getAllWindows().add(winInfo);
+    getAllWindows().add(winInfo2);
+    assert(!validate());
 });
