@@ -200,6 +200,7 @@ public:
      * @param enable
      */
     void setTilingOverrideEnabled(unsigned int mask, bool enable = 1) {
+        mask &= (1 << 5) - 1;
         if(enable)
             tilingOverrideEnabled |= mask;
         else
@@ -212,7 +213,7 @@ public:
      *
      * @return true iff tiling override is enabled
      */
-    bool isTilingOverrideEnabledAtIndex(int index) {
+    bool isTilingOverrideEnabledAtIndex(int index) const {
         return tilingOverrideEnabled & (1 << index);
     }
     /**

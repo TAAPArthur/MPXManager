@@ -198,20 +198,58 @@ MPX_TEST("raise_focused", {
     assert(checkStackingOrder(stack, LEN(stack)));
 });
 
-MPX_TEST_ITER("test_fixed_position_windows", NUMBER_OF_LAYOUT_FAMILIES, {
+MPX_TEST_ITER("test_fixed_position_windows", NUMBER_OF_LAYOUT_FAMILIES + 1, {
     DEFAULT_BORDER_WIDTH = 0;
     mapArbitraryWindow();
     flush();
     scan(root);
     RectWithBorder config = {1, 2, 3, 4, 5};
     WindowInfo* winInfo = getAllWindows()[0];
+    if(_i == NUMBER_OF_LAYOUT_FAMILIES)
+        floatWindow(winInfo);
     winInfo->moveToWorkspace(0);
     winInfo->setTilingOverrideEnabled(-1, 1);
     winInfo->setTilingOverride(config);
-    setActiveLayout(&LAYOUT_FAMILIES[_i]);
+    setActiveLayout(&LAYOUT_FAMILIES[_i % NUMBER_OF_LAYOUT_FAMILIES ]);
     tileWorkspace(getActiveWorkspaceIndex());
     RectWithBorder actualConfig = getRealGeometry(winInfo);;
     assertEquals(config, actualConfig);
+});
+MPX_TEST("test_fixed_position_windows_relative", {
+    DEFAULT_BORDER_WIDTH = 0;
+    getWorkspace(0)->getMonitor()->setBase({100, 200, 300, 400});
+    mapArbitraryWindow();
+    flush();
+    scan(root);
+    RectWithBorder config = {-1, 0, 0, -1};
+    WindowInfo* winInfo = getAllWindows()[0];
+    floatWindow(winInfo);
+    winInfo->moveToWorkspace(0);
+    winInfo->setTilingOverrideEnabled(-1, 1);
+    winInfo->setTilingOverride(config);
+    retile();
+    RectWithBorder actualConfig = getRealGeometry(winInfo);;
+    Rect bounds = getWorkspace(0)->getMonitor()->getViewport();
+    Rect expectedConfig = {bounds.x + bounds.width + config.x, bounds.y, bounds.width, bounds.height + config.height};
+    assertEquals(expectedConfig, actualConfig);
+});
+
+MPX_TEST("test_maximized_floating_window", {
+    DEFAULT_BORDER_WIDTH = 0;
+    mapArbitraryWindow();
+    flush();
+    scan(root);
+    WindowInfo* winInfo = getAllWindows()[0];
+    floatWindow(winInfo);
+    winInfo->addMask(X_MAXIMIZED_MASK);
+    winInfo->moveToWorkspace(0);
+    RectWithBorder bounds = {1, 2, 3, 4};
+    setWindowPosition(winInfo->getID(), bounds);
+    setActiveLayout(FULL);
+    tileWorkspace(getActiveWorkspaceIndex());
+    RectWithBorder expectedConfig = bounds;
+    expectedConfig.width = getWorkspace(0)->getMonitor()->getViewport().width;
+    assertEquals(expectedConfig, getRealGeometry(winInfo));
 });
 
 MPX_TEST_ITER("test_identity_transform_config", TRANSFORM_LEN * 2, {
@@ -323,8 +361,10 @@ MPX_TEST_ITER("test_privileged_windows_size", 6 * 2, {
     m->setViewport(view);
     WindowInfo* winInfo = new WindowInfo(mapWindow(createNormalWindow()));
     addWindowInfo(winInfo);
+    RectWithBorder startingPos = {0, 10, 150, 200};
+    setWindowPosition(winInfo->getID(), startingPos);
     winInfo->moveToWorkspace(getActiveWorkspaceIndex());
-    static RectWithBorder baseConfig = extra == NO_MASK ? RectWithBorder{20, 30, 40, 50}: view;
+    static RectWithBorder baseConfig = extra == NO_MASK ? RectWithBorder{20, 30, 40, 50}: startingPos;
     void (*dummyLayout)(LayoutState * state) = [](LayoutState * state) {
         configureWindow(state, state->stack[0], baseConfig);
     };

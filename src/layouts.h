@@ -96,7 +96,7 @@ struct LayoutState {
     /// the stack of windows
     const ArrayList<WindowInfo*>& stack;
     /// @return layout args
-    LayoutArgs* getArgs() {return args;}
+    const LayoutArgs* getArgs() const {return args;}
 } ;
 
 ///holds meta data to to determine what tiling function to call and when/how to call it
@@ -233,7 +233,7 @@ void retile(void);
  * @param args can control the max number of windows tiled (args->limit)
  * @return the number of windows that will be tiled
  */
-int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, LayoutArgs* args);
+int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, const LayoutArgs* args);
 /**
  * @param w
  * @return the number of windows that will be tilled for the given workspace
@@ -249,15 +249,23 @@ static inline int getNumberOfWindowsToTile(Workspace* w) {
  * @param m
  * @param config the config that will be modified
  */
-void transformConfig(LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]);
+void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]);
 /**
  * Configures the winInfo using values as reference points and apply various properties of winInfo's mask and set configuration which will override values
  * @param state
  * @param winInfo the window to tile
  * @param values where the layout wants to position the window
  */
-void configureWindow(LayoutState* state, WindowInfo* winInfo, const short values[CONFIG_LEN]);
+void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const short values[CONFIG_LEN]);
 
+/**
+ * "Tiles" untileable windows
+ * This involves applying layout-related masks and tiling override config
+ *
+ * @param winInfo
+ * @param monitor
+ */
+void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor) ;
 /**
  * Tiles the specified workspace.
  * First the windows in the tileable windows are tiled according to the active layout's layoutFunction
