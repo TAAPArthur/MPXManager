@@ -153,7 +153,16 @@ MPX_TEST_ITER("test_get_client_pointer", 2, {
 #ifndef NO_XRANDR
 MPX_TEST("test_detect_at_least_one_monitor", {
     detectMonitors();
-    assert(getAllMonitors().size() == 1);
+    assertEquals(getAllMonitors().size(), 1);
+});
+MPX_TEST("test_sorted_monitors", {
+    addFakeMonitor({2, 0, 100, 100});
+    addFakeMonitor({0, 0, 100, 100});
+    addFakeMonitor({1, 0, 100, 100});
+    detectMonitors();
+    delete getAllMonitors().remove(0);
+    for(int i = 0; i < 3; i++)
+        assertEquals(getAllMonitors()[i]->getBase().x, i);
 });
 MPX_TEST("test_detect_monitors", {
     close(2);
