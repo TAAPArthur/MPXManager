@@ -346,6 +346,13 @@ struct ArrayList: std::vector<T> {
             (*this)[i] = (*this)[i - 1];
         (*this)[0] = newHead;
     }
+    void sort() {
+        for(int i = 0; i < size(); i++)
+            for(int n = i; n > 0; n--)
+                if(*(*this)[n] < * (*this)[n - 1])
+                    swap(n, n - 1);
+                else break;
+    }
     /**
      * Swaps the element at index1 with index2
      * @param index1
