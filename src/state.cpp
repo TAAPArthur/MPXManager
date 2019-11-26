@@ -65,13 +65,6 @@ static void destroyCurrentState() {
     savedStates = NULL;
 }
 
-static inline Rect getMonitorLocationFromWorkspace(Workspace* workspace) {
-    assert(workspace);
-    Monitor* m = workspace->getMonitor();
-    if(!m)
-        return (Rect) {0};
-    return m->getViewport();
-}
 static WorkspaceState* computeState() {
     WorkspaceState* states = new WorkspaceState[getNumberOfWorkspaces()];
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {

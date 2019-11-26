@@ -44,10 +44,14 @@ struct Rect {
     uint16_t height = 0;
     /**
      * Reads the first 4 values and uses them to construct the rect
-     *
      * @param p
      */
     Rect(const short* p): x(p[0]), y(p[1]), width(p[2]), height(p[3]) {}
+    /**
+     * Reads the first 4 values and uses them to construct the rect
+     * @param p
+     */
+    Rect(const uint32_t* p): x(p[0]), y(p[1]), width(p[2]), height(p[3]) {}
     /**
      * @param x
      * @param y
