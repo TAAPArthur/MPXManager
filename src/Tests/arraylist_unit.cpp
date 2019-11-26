@@ -60,6 +60,15 @@ MPX_TEST_ITER("init_list", 2, {
         list = {new Temp{1}, new Temp{2}, new Temp{3}};
     list.deleteElements();
 });
+MPX_TEST("sort", {
+    ArrayList<int*> list;
+    for(int i = 10; i >= 0; i--)
+        list.add(new int(i));
+    list.sort();
+    for(int i = 0; i < list.size(); i++)
+        assertEquals(*list[i], i);
+    list.deleteElements();
+});
 
 SET_ENV(setup, teardown);
 

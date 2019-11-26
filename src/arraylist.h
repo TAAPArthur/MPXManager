@@ -347,6 +347,16 @@ struct ArrayList: std::vector<T> {
         (*this)[0] = newHead;
     }
     /**
+     * Sort the members of this list in ascending order using the '<' operator
+     */
+    void sort() {
+        for(auto i = 0U; i < size(); i++)
+            for(int n = i; n > 0; n--)
+                if(*(*this)[n] < * (*this)[n - 1])
+                    swap(n, n - 1);
+                else break;
+    }
+    /**
      * Swaps the element at index1 with index2
      * @param index1
      * @param index2
