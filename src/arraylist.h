@@ -212,7 +212,7 @@ struct ArrayList: std::vector<T> {
     template<typename U = T>
     EnableIf<U, T> find(uint32_t value) const {
         int index = indexOf(value);
-        return index != -1 ? (*this)[index] : NULL;
+        return index != -1 ? (*this)[index] : (T)0;
     }
     /**
      * @param value
