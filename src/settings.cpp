@@ -200,6 +200,7 @@ void onStartup(void) {
         addAvoidDocksRule();
         addNoDockFocusRule();
         addAlwaysOnTopBottomRules();
+        addStickyPrimaryMonitorRule();
         addKeepTransientsOnTopRule();
         addDefaultBorderRule();
         addIgnoreNonTopLevelWindowsRule();
