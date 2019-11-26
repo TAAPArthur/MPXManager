@@ -63,7 +63,7 @@ MPX_TEST_ITER("test_all_button", 8, {
 });
 
 
-MPX_TEST_ITER("test_click_button", 3, {
+MPX_TEST("test_click_button", {
     clickButton(mouseDetail);
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_PRESS, mouseDetail));
     WAIT_UNTIL_TRUE(checkDeviceEventMatchesType(getNextDeviceEvent(), XCB_INPUT_BUTTON_RELEASE, mouseDetail));

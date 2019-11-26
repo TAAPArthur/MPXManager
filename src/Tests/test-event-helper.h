@@ -77,14 +77,14 @@ static inline void fullCleanup() {
 }
 static inline void triggerBinding(Binding* b, WindowID win = root) {
     if(b->getMask() & XCB_INPUT_XI_EVENT_MASK_MOTION) {
-        movePointer(10, 10, getActiveMasterPointerID(), win);
-        movePointer(0, 0, getActiveMasterPointerID(), win);
+        movePointer(10, 10, win);
+        movePointer(0, 0, win);
         return;
     }
     if(getKeyboardMask(b->getMask()))
-        typeKey(b->getDetail(), 0, win);
+        typeKey(b->getDetail(), win);
     else
-        clickButton(b->getDetail(), 0, win);
+        clickButton(b->getDetail(), win);
 }
 static inline void triggerAllBindings(int mask, WindowID win = root) {
     flush();

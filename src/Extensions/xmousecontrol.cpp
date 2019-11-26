@@ -92,7 +92,7 @@ void xmousecontrolUpdate(void) {
             if(_IS_SET(info, MOVE_UP_MASK, MOVE_DOWN_MASK))
                 deltaY = info->mask & MOVE_DOWN_MASK ? info->vScale : -info->vScale;
             if(deltaX || deltaY)
-                movePointer(deltaX, deltaY, info->pointerId, None);
+                movePointerRelative(deltaX, deltaY, info->pointerId);
         }
     }
     flush();
@@ -115,6 +115,7 @@ void addStartXMouseControlRule() {
 #define BINDING(MASK, KEY, BUTTON_MASK)\
     PAIR(MASK, KEY, addXMouseControlMask, BUTTON_MASK, removeXMouseControlMask, BUTTON_MASK)
 
+#define CLICK(BTN) {[](){clickButton(BTN);}, "click_" # BTN}
 void addDefaultXMouseControlBindings(uint32_t mask) {
     Binding bindings[] = {
         // Directional control with WASD.
@@ -146,11 +147,11 @@ void addDefaultXMouseControlBindings(uint32_t mask) {
         {mask | Mod1Mask,	XK_semicolon, {adjustSpeed, 0}},
         {mask,	XK_q, resetXMouseControl},
 
-        {mask, XK_c, {clickButton, Button2}},
-        {mask, XK_x, {clickButton, Button3}},
-        {mask, XK_space, {clickButton, Button1}},
-        {mask, XK_Return, {clickButton, Button2}},
-        {mask | ShiftMask,	XK_space, {clickButton, Button3}},
+        {mask, XK_c, CLICK(Button2)},
+        {mask, XK_x, CLICK(Button3)},
+        {mask, XK_space, CLICK(Button1)},
+        {mask, XK_Return, CLICK(Button2)},
+        {mask | ShiftMask,	XK_space, CLICK(Button3)},
 
         {mask,	XK_Tab, grabKeyboard},
         {mask | ShiftMask,	XK_Tab, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},

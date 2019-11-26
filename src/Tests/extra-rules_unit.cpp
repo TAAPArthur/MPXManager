@@ -171,7 +171,7 @@ MPX_TEST("test_focus_follows_mouse", {
     WindowID id1 = winInfo->getID();
     WindowID id2 = winInfo2->getID();
     focusWindow(id1);
-    movePointer(0, 0, getActiveMasterPointerID(), id1);
+    movePointer(0, 0, id1);
     flush();
     startWM();
     WAIT_UNTIL_TRUE(getActiveFocus(getActiveMaster()->getID()) == id1);
@@ -179,7 +179,7 @@ MPX_TEST("test_focus_follows_mouse", {
         int id = (i % 2 ? id1 : id2);
         int n = 0;
         WAIT_UNTIL_TRUE(getActiveFocus(getActiveMaster()->getID()) == id,
-            movePointer(n, n, getActiveMasterPointerID(), id);
+            movePointer(n, n, id);
             n = !n;
             flush()
         );

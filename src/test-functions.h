@@ -29,27 +29,21 @@ void sendDeviceAction(MasterID id, int detail, int type, WindowID win = root);
  * @param id the Master pointer id
  * @param win the window to send the event to
  */
-void sendButtonPress(int button, MasterID id = getActiveMasterPointerID(), WindowID win = root);
+void sendButtonPress(int button, WindowID win = root, MasterID id = getActiveMasterPointerID());
 /**
  * Simulates a button released
  * @param button the button that was released
  * @param id the Master pointer id
  * @param win the window to send the event to
  */
-void sendButtonRelease(int button, MasterID id = getActiveMasterPointerID(), WindowID win = root);
+void sendButtonRelease(int button, WindowID win = root, MasterID id = getActiveMasterPointerID());
 /**
  * Sends a button press followed by a button release
  * @param button
  * @param id the Master pointer id
  * @param win the window to send the event to
  */
-void clickButton(int button, MasterID id, WindowID win = root);
-/**
- * Sends a button press from the active master
- *
- * @param button
- */
-static inline void clickButton(int button) {return clickButton(button, getActiveMasterPointerID());}
+void clickButton(int button, WindowID win = root, MasterID id = getActiveMasterPointerID());
 
 /**
  * Simulates a key press
@@ -57,21 +51,21 @@ static inline void clickButton(int button) {return clickButton(button, getActive
  * @param id the Master keyboard id
  * @param win the window to send the event to
  */
-void sendKeyPress(int keycode, MasterID id = getActiveMasterKeyboardID(), WindowID win = root);
+void sendKeyPress(int keycode, WindowID win = root, MasterID id = getActiveMasterKeyboardID());
 /**
  * Simulates a key release
  * @param keycode keycode of key to simulate
  * @param id the Master keyboard id
  * @param win the window to send the event to
  */
-void sendKeyRelease(int keycode, MasterID id = getActiveMasterKeyboardID(), WindowID win = root);
+void sendKeyRelease(int keycode, WindowID win = root, MasterID id = getActiveMasterKeyboardID());
 /**
  * Sends a keypress followed by a key release
  * @param keycode
  * @param id the Master keyboard id
  * @param win the window to send the event to
  */
-void typeKey(int keycode, MasterID id = getActiveMasterKeyboardID(), WindowID win = root);
+void typeKey(int keycode, WindowID win = root, MasterID id = getActiveMasterKeyboardID());
 
 
 /**
@@ -79,10 +73,10 @@ void typeKey(int keycode, MasterID id = getActiveMasterKeyboardID(), WindowID wi
  * relativeWindow is none the mouse will be moved relative to its current position
  * @param x
  * @param y
- * @param id
  * @param relativeWindow
+ * @param id
  */
-void movePointer(short x, short y, MasterID id = getActiveMasterPointerID(), WindowID relativeWindow = root);
+void movePointer(short x, short y, WindowID relativeWindow = root, MasterID id = getActiveMasterPointerID());
 /**
  * Moves the mouse specified by id x,y units relative to its current position
  * @param x horizontal displacement

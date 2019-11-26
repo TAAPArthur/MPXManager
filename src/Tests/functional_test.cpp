@@ -123,7 +123,7 @@ MPX_TEST("click_to_focus", {
     WindowID wins[] = {mapArbitraryWindow(), mapArbitraryWindow()};
     waitUntilIdle();
     for(WindowID win : wins) {
-        movePointer(1, 1, getActiveMasterPointerID(), win);
+        movePointer(1, 1, win);
         clickButton(1);
         waitUntilIdle();
         assert(getFocusedWindow());
@@ -286,7 +286,7 @@ MPX_TEST_ITER("move_window", 2, {
         rect.width++;
         rect.height++;
     }
-    movePointer(1, 1, getActiveMasterPointerID(), win);
+    movePointer(1, 1, win);
     sendButtonPress(move ? Button1 : Button3);
     waitUntilIdle();
 
