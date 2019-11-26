@@ -232,5 +232,6 @@ void detectMonitors(void) {
             delete getAllMonitors().remove(i);
 #endif
     removeDuplicateMonitors();
+    getAllMonitors().sort();
     assignUnusedMonitorsToWorkspaces();
 }

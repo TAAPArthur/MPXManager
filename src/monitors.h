@@ -43,6 +43,18 @@ public:
         primary(primary), name(name), fake(fake) {}
 
     ~Monitor();
+    /**
+     * Used to deterministically sort monitors
+     * @param p
+     * @return
+     */
+    bool operator<(const Monitor& p) {
+        if(base.y == p.base.y)
+            if(base.x == p.base.x)
+                return id < p.id;
+            else return base.x < p.base.x;
+        return base.y < p.base.y;
+    }
     /// @return true if the monitor isn't backed by X
     bool isFake()const { return fake;}
     /**

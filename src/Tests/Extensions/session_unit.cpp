@@ -93,6 +93,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     setActiveLayout(&l);
     switchToWorkspace(1);
     setActiveLayout(NULL);
+    getAllMonitors().sort();
     const auto& list = serializeState(mask);
     saveCustomState();
     flush();
@@ -104,6 +105,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
         // reapply onXConnect rules
         ewmh = NULL;
         onSimpleStartup();
+        getAllMonitors().sort();
         const auto& list2 = serializeState(mask);
         for(int i = 0; i < list.size(); i++) {
             if(list[i] != list2[i])
