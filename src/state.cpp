@@ -98,7 +98,7 @@ static WorkspaceState* computeState() {
 static inline void _printStateComparison(WorkspaceState* currentState, WorkspaceID i) {
     if(currentState[i].size || i < numberOfRecordedWorkspaces && savedStates[i].size) {
         logger.debug() << "Index:  " << i << "\n" <<
-                          "Current:" << currentState[i] << "\n";
+            "Current:" << currentState[i] << "\n";
         if(i < numberOfRecordedWorkspaces)
             logger.debug() << "Saved: " << savedStates[i] << "\n";
     }

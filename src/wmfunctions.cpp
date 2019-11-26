@@ -262,9 +262,10 @@ WindowID activateWindow(WindowInfo* winInfo) {
 
 void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
-    LOG(LOG_LEVEL_INFO, "Config %d: mask %d %d\n", win, mask, __builtin_popcount(mask));
-    if(mask)
+    if(mask) {
+        LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)\n", win, mask, __builtin_popcount(mask));
         LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));
+    }
 #ifndef NDEBUG
     catchError(xcb_configure_window_checked(dis, win, mask, values));
 #else
