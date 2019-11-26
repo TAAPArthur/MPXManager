@@ -127,7 +127,7 @@ MPX_TEST_ITER("catch_error_silient", 2, {
     CRASH_ON_ERRORS = 0;
     suppressOutput();
     if(_i) {
-        grabDevice(1000, 0);
+        grabDevice(100, 0);
         XSync(dpy, 0);
         return;
     }
@@ -139,7 +139,7 @@ MPX_TEST_ITER_ERR("crash_on_error", 2, 1, {
     CRASH_ON_ERRORS = -1;
     suppressOutput();
     if(_i) {
-        grabDevice(1000, 0);
+        grabDevice(100, 0);
         XSync(dpy, 0);
         assert(0);
     }
