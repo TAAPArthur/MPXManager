@@ -213,6 +213,19 @@ MPX_TEST("test_activate_workspace_with_mouse", {
     activateWorkspaceUnderMouse();
     assertEquals(m, getActiveWorkspace()->getMonitor());
 });
+MPX_TEST("test_center_mouse", {
+    setActiveLayout(GRID);
+    retile();
+    short pos[2];
+    movePointer(0, 0);
+    Master* master = getActiveMaster();
+    for(WindowInfo* winInfo : getActiveWindowStack()) {
+        centerMouseInWindow(winInfo);
+        assert(getMousePosition(master->getPointerID(), root, pos));
+        winInfo->setGeometry(getRealGeometry(winInfo->getID()));
+        assert(getRealGeometry(winInfo->getID()).contains({pos[0], pos[1], 1, 1}));
+    }
+});
 
 MPX_TEST("test_send_to_workspace_by_name", {
 

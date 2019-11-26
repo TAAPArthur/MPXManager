@@ -177,4 +177,10 @@ int focusTop(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
  * @see getLastKnownMasterPosition()
  */
 void activateWorkspaceUnderMouse(void);
+/**
+ * Moves the active pointer so that is is the center of winInfo
+ *
+ * @param winInfo
+ */
+void centerMouseInWindow(WindowInfo* winInfo);
 #endif

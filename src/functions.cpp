@@ -10,6 +10,7 @@
 #include "masters.h"
 #include "monitors.h"
 #include "system.h"
+#include "test-functions.h"
 #include "window-properties.h"
 #include "windows.h"
 #include "wmfunctions.h"
@@ -176,6 +177,11 @@ void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name) {
     Workspace* w = getWorkspaceByName(name);
     if(w)
         winInfo->moveToWorkspace(w->getID());
+}
+void centerMouseInWindow(WindowInfo* winInfo) {
+    Rect dims = winInfo->getGeometry();
+    if(getFocusedWindow())
+        movePointer(dims.width / 2, dims.height / 2, winInfo->getID());
 }
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
