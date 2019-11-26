@@ -9,7 +9,6 @@
 #include "boundfunction.h"
 #include "user-events.h"
 
-static bool validating = 0;
 #define assertEquals(A,B)do{auto __A=A; auto __B =B; int __result=(__A==__B); if(!__result){valid=0;std::cout<<__LINE__<<":"<<__A<<"!="<<__B<<"\n";assert(0 && #A "!=" #B);}}while(0)
 
 bool isWindowMapped(WindowID win) {
@@ -20,9 +19,6 @@ bool isWindowMapped(WindowID win) {
     return result;
 }
 bool validate() {
-    if(validating)
-        return 0;
-    validating = 1;
     bool valid = 1;
     for(WindowInfo* winInfo : getAllWindows()) {
         assertEquals(getWindowInfo(winInfo->getID()), winInfo);
@@ -54,7 +50,6 @@ bool validate() {
         if(m->getWorkspace())
             assertEquals(m->getWorkspace()->getMonitor(), m);
     }
-    validating = 0;
     LOG(LOG_LEVEL_DEBUG, "validation result: %d\n", valid);
     return valid;
 }
@@ -65,4 +60,3 @@ void dieOnIntegrityCheckFail() {
 void addDieOnIntegrityCheckFailRule() {
     getEventRules(TrueIdle).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), PREPEND_UNIQUE);
 }
-

@@ -229,9 +229,14 @@ void quit(int exitCode) {
     exit(exitCode);
 }
 
+static bool caughtError = 0;
 static void handler(int sig) {
     LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
     printStackTrace();
+    if(caughtError) {
+        exit(sig);
+    }
+    caughtError = sig;
     printSummary();
     validate();
     if(sig == SIGSEGV || sig == SIGABRT)
