@@ -92,19 +92,19 @@ MPX_TEST("test_mouse_remove", {
 SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST("test_scroll_scale", {
     addXMouseControlMask(SCROLL_UP_MASK);
-    int scaleFactor = 100;
+    int scaleFactor = 4;
     adjustScrollSpeed(0);
     xmousecontrolUpdate();
-    int num = consumeEvents();
+    int num = consumeEvents() / 2;
     assert(num);
     adjustScrollSpeed(scaleFactor);
     xmousecontrolUpdate();
-    int num2 = consumeEvents();
-    assert(num2 >= num* scaleFactor / 2);
+    int num2 = consumeEvents() / 2;
+    assertEquals(num2, num + scaleFactor);
     adjustScrollSpeed(-scaleFactor);
     xmousecontrolUpdate();
-    int num3 = consumeEvents();
-    assert(num3 <= num* scaleFactor / 2);
+    int num3 = consumeEvents() / 2;
+    assertEquals(num3, num);
 });
 MPX_TEST("test_move_scale", {
     grabPointer();
@@ -135,6 +135,29 @@ MPX_TEST("test_move_scale", {
     getMousePosition(getActiveMasterPointerID(), root, result2);
     assertEquals(result2[0] - result[0], displacement * (1 + scaleFactor));
     assertEquals(result2[1] - result[1], displacement * (1 + scaleFactor));
+});
+MPX_TEST_ITER("test_mpx_aware", 3 * 2, {
+    createMasterDevice("test");
+    initCurrentMasters();
+    startWM();
+    waitUntilIdle();
+    static Master* targetMaster = getAllMasters()[_i % getAllMasters().size()];
+    getEventRules(ProcessDeviceEvent).add({[]() {incrementCount(); assertEquals(*targetMaster, *getActiveMaster());}, "_masterCheck"});
+    setActiveMaster(targetMaster);
+    bool move = _i % 2;
+    if(move)
+        addXMouseControlMask(MOVE_DOWN_MASK | MOVE_RIGHT_MASK);
+    else
+        addXMouseControlMask(SCROLL_UP_MASK);
+    setActiveMaster(getAllMasters()[0]);
+    passiveGrab(root, POINTER_MASKS);
+    ATOMIC(xmousecontrolUpdate());
+    waitUntilIdle();
+    if(move)
+        assertEquals(getCount(), 1);
+    else
+        assertEquals(getCount(), 4);
+    assertEquals(*getActiveMaster(), *targetMaster);
 });
 MPX_TEST("warm_bindings", {
     addDefaultXMouseControlBindings();
