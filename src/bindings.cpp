@@ -63,9 +63,9 @@ bool Binding::matches(const UserEvent& event) {
         (event.master->allowsMode(flags.mode)) ;
 }
 std::ostream& operator<<(std::ostream& stream, const UserEvent& userEvent) {
-    stream << "{" << userEvent.mod << " " << userEvent.detail << " " << userEvent.mask << " " << userEvent.keyRepeat;
-    stream << "Master:" << (userEvent.master ? userEvent.master->getID() : 0);
-    stream << "Window:" << (userEvent.winInfo ? userEvent.winInfo->getID() : 0);
+    stream << "{ Mod:" << userEvent.mod << " Detail:" << userEvent.detail << " Mask:" << userEvent.mask << " KR:" << userEvent.keyRepeat;
+    stream << " Master:" << (userEvent.master ? userEvent.master->getID() : 0);
+    stream << " Window:" << (userEvent.winInfo ? userEvent.winInfo->getID() : 0);
     return stream << "}";
 }
 

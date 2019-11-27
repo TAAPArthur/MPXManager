@@ -32,13 +32,13 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;
     if(winInfo.isNotManageable())
         stream << " Not Manageable";
-    if(winInfo.isOverrideRedirectWindow())
-        stream << " OverrideRedirect";
     if(winInfo.isInputOnly())
         stream << " InputOnly";
     if(winInfo.isDock())
         stream << " Dock";
-    if(winInfo.getTilingOverrideMask())
+    if(winInfo.isOverrideRedirectWindow())
+        stream << " OverrideRedirect";
+    else if(winInfo.getTilingOverrideMask())
         stream << " Tiling override: " << winInfo.getTilingOverrideMask() << winInfo.getTilingOverride();
     stream << " Geometry " << winInfo.getGeometry();
     return stream << "}";

@@ -154,7 +154,9 @@ void addDefaultBindings() {
 
 void defaultPrintFunction(void) {
     if(getActiveMaster()->getCurrentMode())
-        dprintf(STATUS_FD, "%d ", getActiveMaster()->getCurrentMode());
+        dprintf(STATUS_FD, "%d: ", getActiveMaster()->getCurrentMode());
+    if(getAllMasters().size() > 1)
+        dprintf(STATUS_FD, "%dM %dA ", getAllMasters().size(), getActiveMasterKeyboardID());
     for(Workspace* w : getAllWorkspaces()) {
         const char* color;
         if(w->isVisible())
