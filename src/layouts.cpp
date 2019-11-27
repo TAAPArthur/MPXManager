@@ -228,7 +228,6 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
     if(winInfo->hasMask(Y_MAXIMIZED_MASK))
         mask |= XCB_CONFIG_WINDOW_HEIGHT;
     if(mask) {
-        PRINT_ARR("Arr", config, 7);
         LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)\n", winInfo->getID(), mask, __builtin_popcount(mask));
         uint32_t finalConfig[CONFIG_LEN] = {0};
         for(int i = 0, counter = 0; i < CONFIG_LEN; i++) {
