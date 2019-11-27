@@ -5,7 +5,7 @@ DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS := -g -rdynamic -O3
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
+IGNORED_FLAGS := -Wno-sign-compare -Wno-parentheses -Wno-missing-field-initializers
 ERROR_FLAGS := -Werror -Wall -Wextra
 CPPFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
