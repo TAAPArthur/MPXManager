@@ -3,13 +3,14 @@
 #include <X11/keysym.h>
 
 #include "../bindings.h"
-#include "../devices.h"
 #include "../device-grab.h"
+#include "../devices.h"
 #include "../ext.h"
 #include "../globals.h"
+#include "../logger.h"
 #include "../masters.h"
-#include "../test-functions.h"
 #include "../system.h"
+#include "../test-functions.h"
 #include "../time.h"
 #include "../xsession.h"
 #include "xmousecontrol.h"
@@ -58,18 +59,19 @@ void removeXMouseControlMask(int mask) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->mask &= ~mask;
 }
-void adjustScrollSpeed(int multiplier) {
+void adjustScrollSpeed(int diff) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
-    info->scrollScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
-    if(info->scrollScale < 1e-6)
-        info->scrollScale = 1;
+    info->scrollScale = diff == 0? 0:info->scrollScale + diff;
+    info->scrollScale = std::max(1, std::min(info->scrollScale, 8));
+    logger.info() << "scrollScale is now "<<info->scrollScale << "Master "<< info->id<<std::endl;
+
 }
 
 void adjustSpeed(int multiplier) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->vScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
-    if(info->vScale < 1e-6)
-        info->vScale = 1;
+    info->vScale = std::max(1, info->scrollScale);
+    logger.info() << "vScale is now "<<info->scrollScale << "Master "<< info->id<<std::endl;
 }
 
 #define _IS_SET(info,A,B)\
@@ -137,8 +139,8 @@ void addDefaultXMouseControlBindings(uint32_t mask) {
 
         {mask, XK_Hyper_L, {removeXMouseControlMask, -1}, {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
 
-        {mask,	XK_e, {adjustScrollSpeed, 2}},
-        {mask | ShiftMask,	XK_e, {adjustScrollSpeed, -2}},
+        {mask,	XK_e, {adjustScrollSpeed, 1}},
+        {mask | ShiftMask,	XK_e, {adjustScrollSpeed, -1}},
         {mask | Mod1Mask,	XK_e, {adjustSpeed, 0}},
         {mask,	XK_semicolon, {adjustScrollSpeed, 2}},
         {mask | ShiftMask,	XK_semicolon, {adjustScrollSpeed, -2}},
