@@ -57,6 +57,8 @@ enum {
     /// These calls should not affect the XState
     TrueIdle,
     /// max value of supported events
-    MPX_LAST_EVENT
+    NUMBER_OF_MPX_EVENTS
 };
+/// The number of events that have batch rules
+#define NUMBER_OF_BATCHABLE_EVENTS Periodic
 #endif

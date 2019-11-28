@@ -13,19 +13,20 @@ struct BatchEventList {
 } ;
 
 /// Holds an Arraylist of rules that will be applied in response to various conditions
-static UniqueArrayList<BoundFunction*> eventRules[MPX_LAST_EVENT];
-static BatchEventList batchEventRules[MPX_LAST_EVENT];
+static UniqueArrayList<BoundFunction*> eventRules[NUMBER_OF_MPX_EVENTS];
+static BatchEventList batchEventRules[NUMBER_OF_MPX_EVENTS];
 
 ArrayList<BoundFunction*>& getEventRules(int i) {
-    assert(i < MPX_LAST_EVENT);
+    assert(i < LEN(eventRules));
     return eventRules[i];
 }
 
 ArrayList<BoundFunction*>& getBatchEventRules(int i) {
-    assert(i < MPX_LAST_EVENT);
+    assert(i < LEN(batchEventRules));
     return batchEventRules[i].list;
 }
 void incrementBatchEventRuleCounter(int i) {
+    assert(i < LEN(batchEventRules));
     batchEventRules[i].counter++;
 }
 static int applyRules(ArrayList<BoundFunction*>& rules, WindowInfo* winInfo, Master* m = NULL) {
@@ -46,7 +47,7 @@ int getNumberOfEventsTriggerSinceLastIdle(int type) {
     return batchEventRules[type].counter;
 }
 void applyBatchEventRules(void) {
-    for(int i = 0; i < MPX_LAST_EVENT; i++)
+    for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
             LOG(LOG_LEVEL_INFO, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
                 eventTypeToString(i), getBatchEventRules(i).size());
@@ -80,8 +81,8 @@ std::ostream& operator<<(std::ostream& stream, const BoundFunction& boundFunctio
     return stream << boundFunction.getName();
 }
 void deleteAllRules() {
-    for(int i = 0; i < MPX_LAST_EVENT; i++) {
-        getEventRules(i).deleteElements();
+    for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
         getBatchEventRules(i).deleteElements();
-    }
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
+        getEventRules(i).deleteElements();
 }

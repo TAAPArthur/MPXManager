@@ -152,14 +152,14 @@ MPX_TEST_ITER("check_binding_target", 4, {
     }
 });
 MPX_TEST("event_rules", {
-    for(int i = 0; i < MPX_LAST_EVENT; i++) {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
         getEventRules(i).add(new BoundFunction(incrementCount));
         assert(applyEventRules(i, NULL));
         getBatchEventRules(i).add(new BoundFunction(incrementCount));
         assert(getCount() == i + 1);
     }
     applyBatchEventRules();
-    assert(getCount() == MPX_LAST_EVENT * 2);
+    assert(getCount() == NUMBER_OF_BATCHABLE_EVENTS + NUMBER_OF_MPX_EVENTS);
 });
 MPX_TEST("event_rules_abort", {
     getEventRules(0).add(new BoundFunction(incrementCount, "test", NO_PASSTHROUGH));

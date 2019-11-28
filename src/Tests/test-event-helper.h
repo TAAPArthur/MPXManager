@@ -64,7 +64,7 @@ static inline void fullCleanup() {
     LOG(LOG_LEVEL_DEBUG, "validating state\n");
     validate();
     getDeviceBindings().deleteElements();
-    for(int i = 0; i < MPX_LAST_EVENT; i++) {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
         for(const BoundFunction* b : getEventRules(i))
             if(b->func)
                 assert(b->getName() != "");

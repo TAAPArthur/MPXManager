@@ -30,7 +30,7 @@ MPX_TEST("boundFunction_eq", {
     list.deleteElements();
 });
 ///Test to make sure callBoundedFunction() actually calls the right function
-static void test() {
+MPX_TEST("test_call_bounded_function", {
     createSimpleEnv();
     getAllMonitors().add(new Monitor(1, {0, 0, 1, 1}));
     getAllMonitors()[0]->assignWorkspace(getActiveMaster()->getWorkspace());
@@ -63,9 +63,6 @@ static void test() {
     delete fakeWinInfo;
     getEventRules(0).deleteElements();
     simpleCleanup();
-}
-MPX_TEST("test_call_bounded_function", {
-    test();
 });
 MPX_TEST("test_call_bounded_function_null_window", {
     static WindowInfo* fakeWinInfo = NULL;
@@ -82,6 +79,12 @@ MPX_TEST("test_call_bounded_function_null_window", {
     };
     for(BoundFunction& b : funcs)
         b.execute(fakeWinInfo, fakeMaster);
+});
+MPX_TEST_ITER("apply_rules", 2, {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
+        applyEventRules(i);
+    if(_i)
+        applyBatchEventRules();
 });
 MPX_TEST("apply_rules_passthrough", {
     getEventRules(0).add(new BoundFunction {NO_PASSTHROUGH});
@@ -102,7 +105,7 @@ MPX_TEST("apply_rules_counter", {
     static int counter2 = -1;
     static BoundFunction b = {[]() {counter++;}};
     static BoundFunction b2 = {[]() {counter2++;}};
-    for(int i = 0; i < MPX_LAST_EVENT; i++) {
+    for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++) {
         getEventRules(i).add(b);
         assert(applyEventRules(i, NULL));
         assertEquals(counter, i);
@@ -112,6 +115,6 @@ MPX_TEST("apply_rules_counter", {
     assertEquals(counter2, -1);
     applyBatchEventRules();
     assertEquals(counter, counter2);
-    for(int i = 0; i < MPX_LAST_EVENT; i++)
+    for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
         assert(getNumberOfEventsTriggerSinceLastIdle(i) == 0);
 });

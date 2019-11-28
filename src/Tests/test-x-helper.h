@@ -131,7 +131,7 @@ static inline int consumeEvents() {
 }
 static inline void cleanupXServer() {
     destroyAllNonDefaultMasters();
-    for(int i = 0; i < MPX_LAST_EVENT; i++) {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
         getEventRules(i).deleteElements();
         getBatchEventRules(i).deleteElements();
     }

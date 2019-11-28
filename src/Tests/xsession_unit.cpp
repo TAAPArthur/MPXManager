@@ -95,7 +95,7 @@ MPX_TEST("private_window", {
 });
 
 MPX_TEST("event_names", {
-    for(int i = 0; i < MPX_LAST_EVENT; i++)
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
         assert(eventTypeToString(i));
 });
 MPX_TEST("event_attributes", {

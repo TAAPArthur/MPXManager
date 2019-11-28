@@ -432,8 +432,8 @@ static inline xcb_generic_event_t* getNextEvent() {
     if(!event && !xcb_connection_has_error(dis)) {
         periodCounter = 0;
         lock();
-        applyBatchEventRules();
         applyEventRules(Periodic, NULL);
+        applyBatchEventRules();
         if(applyEventRules(Idle, NULL)) {
             flush();
             event = pollForEvent();
