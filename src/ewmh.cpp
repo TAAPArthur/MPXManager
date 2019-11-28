@@ -52,6 +52,7 @@ void broadcastEWMHCompilence() {
     xcb_ewmh_set_wm_pid(ewmh, getPrivateWindow(), getpid());
     setWindowClass(getPrivateWindow(), numPassedArguments ? passedArguments[0] : WINDOW_MANAGER_NAME, WINDOW_MANAGER_NAME);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
+    xcb_ewmh_set_supporting_wm_check(ewmh, getPrivateWindow(), getPrivateWindow());
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
     // Not strictly needed
     updateWorkspaceNames();
