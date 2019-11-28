@@ -38,7 +38,7 @@ WindowInfo* Binding::getWindowToActOn(const UserEvent& event)const {
     switch(target ? TARGET_WINDOW : getWindowTarget()) {
         default:
         case DEFAULT_WINDOW:
-            return isKeyboardMask(getMask()) ? event.master->getFocusedWindow() : event.winInfo;
+            return getKeyboardMask(getMask()) ? event.master->getFocusedWindow() : event.winInfo;
         case FOCUSED_WINDOW:
             return event.master->getFocusedWindow();
         case TARGET_WINDOW:
@@ -94,7 +94,7 @@ int Binding::grab() {
 }
 int Binding::ungrab() {
     if(!isNotGrabbable() && getDetail())
-        return ungrabDetail(getTargetID(), getDetail(), mod, isKeyboardMask(getMask()));
+        return ungrabDetail(getTargetID(), getDetail(), mod, getKeyboardMask(getMask()));
     return -1;
 }
 

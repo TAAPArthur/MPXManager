@@ -81,12 +81,20 @@ static inline int grabPointer(MasterID id = getActiveMasterPointerID()) {
 
 
 /**
- * If the masks should go with a keyboard device
+ * Returns the mask that relates to a keyboard devices
  * @param mask
- * @return 1 iff the mask contains XCB_INPUT_XI_EVENT_MASK_KEY_PRESS or XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE
+ * @return mask & KEYBOARD_MASKS
  */
-static inline bool isKeyboardMask(int mask) {
-    return mask & (KEYBOARD_MASKS) ? 1 : 0;
+static inline uint8_t getKeyboardMask(int mask) {
+    return mask & KEYBOARD_MASKS;
+}
+/**
+ * Returns the mask that relates to a pointer devices
+ * @param mask
+ * @return mask & POINTER_MASKS
+ */
+static inline uint8_t getPointerMask(int mask) {
+    return mask & POINTER_MASKS;
 }
 /**
  * @param id

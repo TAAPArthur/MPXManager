@@ -15,6 +15,7 @@ static Binding* autoGrabBinding = new Binding {0, Button1};
 static Binding* nonAutoGrabBinding = new Binding {0, Button1, {incrementCount}, {.noGrab = 1}};
 static Binding* nonAutoGrabBindingAbort = new Binding {0, Button2, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}};
 static Chain sampleChain = {0, Button2, {}, {autoGrabBinding, nonAutoGrabBinding, nonAutoGrabBindingAbort}, {}, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS };
+static Chain sampleGlobalChain = {0, Button2, BoundFunction(NO_PASSTHROUGH), {}, {.passThrough = NO_PASSTHROUGH}, GLOBAL_CHAIN | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS };
 static UserEvent eventNoPassthrough;
 
 static void setup() {
@@ -48,6 +49,24 @@ MPX_TEST_ITER("auto_grab_device", 3, {
     waitToReceiveInput(mask);
 });
 
+MPX_TEST_ITER("test_chain_grab", 3, {
+    int32_t masks[] = {POINTER_MASKS, KEYBOARD_MASKS, POINTER_MASKS | KEYBOARD_MASKS};
+    auto mask = masks[_i];
+    static Chain* binding = new Chain(0, Button2, {}, {.passThrough = NO_PASSTHROUGH }, mask);
+    binding->start({});
+    if(!fork()) {
+        saveXSession();
+        openXDisplay();
+        if(mask != POINTER_MASKS)
+            assert(grabKeyboard());
+        if(mask != KEYBOARD_MASKS)
+            assert(grabPointer());
+        quit(0);
+    }
+    assertEquals(waitForChild(0), 0);
+    endActiveChain();
+    assert(!getActiveChain());
+});
 MPX_TEST_ITER("test_start_end_grab", 2, {
     saveXSession();
     sampleChain.start(eventNoPassthrough);
@@ -79,11 +98,29 @@ MPX_TEST_ITER("triple_start", 2, {
             sampleChain.start(eventNoPassthrough);
         else
             sampleChain.trigger(eventNoPassthrough);
-    assertEquals(getActiveChains().size(), 3);
+    assertEquals(getNumberOfActiveChains(), 3);
 });
-MPX_TEST("external_end", {
-    sampleChain.start(eventNoPassthrough);
+MPX_TEST_ITER("external_end", 2, {
+    if(_i)
+        sampleChain.start(eventNoPassthrough);
+    else
+        sampleGlobalChain.start(eventNoPassthrough);
     assert(getActiveChain());
+    endActiveChain();
+    assert(!getActiveChain());
+});
+MPX_TEST_ITER("chain_isolation", 2, {
+    createMasterDevice("test");
+    initCurrentMasters();
+    setActiveMaster(getAllMasters()[0]);
+    bool localChain = _i;
+    if(localChain)
+        sampleChain.start(eventNoPassthrough);
+    else
+        sampleGlobalChain.start(eventNoPassthrough);
+    assert(getActiveChain());
+    setActiveMaster(getAllMasters()[1]);
+    assertEquals(!getActiveChain(), localChain);
     endActiveChain();
     assert(!getActiveChain());
 });
@@ -128,7 +165,7 @@ MPX_TEST("test_chain_bindings", {
     assert(getActiveChain() == NULL);
     //enter first chain & second chain
     assertEquals(checkBindings({0, 1}), 0);
-    assertEquals(getActiveChains().size(), 2);
+    assertEquals(getNumberOfActiveChains(), 2);
     assert(getActiveChain());
     assertEquals(count, 4);
     assertEquals(checkAllChainBindings({0, dangerDetail}), 0);
@@ -137,13 +174,13 @@ MPX_TEST("test_chain_bindings", {
     assertEquals(count, 6);
     //exit second chain
     assertEquals(checkAllChainBindings({0, exitDetail}), 0);
-    assertEquals(getActiveChains().size(), 1);
+    assertEquals(getNumberOfActiveChains(), 1);
     assert(getActiveChain());
     assertEquals(count, 5);
     //exit fist chain
     assertEquals(checkAllChainBindings({outerChainEndMod, 0}), 0);
     assertEquals(count, 3);
-    assertEquals(getActiveChains().size(), 0);
+    assertEquals(getNumberOfActiveChains(), 0);
     assert(getActiveChain() == NULL);
     getDeviceBindings().deleteElements();
 });

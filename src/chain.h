@@ -6,6 +6,9 @@
 
 #include "bindings.h"
 #include "arraylist.h"
+
+/// Can be added to a chain mask to indicate that this chain should be applied to all masters
+#define GLOBAL_CHAIN 1
 /**
  * When triggered, the members are checked to see if they can also be triggered
  * The chain will also be added to the stack of active chains.
@@ -21,7 +24,9 @@ private:
     /// members of the chain
     ArrayList<Binding*>members;
     /**
-     * if non 0, the Master device(s) will be grabbed with this mask for the duration of the chain
+     * if 0, no device will be grabbed
+     * if 1, no device will be grabbed and the chain will be global
+     * else, the Master device(s) will be grabbed with this mask for the duration of the chain
      * used only for chain bindings;
      */
     uint32_t chainMask = 0 ;
@@ -58,6 +63,10 @@ public:
         members.deleteElements();
     }
     /**
+     * @return 1 iff this chain will be active for all masters instead of a just the one that triggered it
+     */
+    bool isGlobalChain() const { return chainMask & 1;}
+    /**
      * Starts a chain binding
      * The chain binding indicated by the boundFunction is add the stack
      * of active bindings for the active master.
@@ -87,9 +96,11 @@ public:
  */
 const Chain* getActiveChain(Master* m = getActiveMaster());
 /**
- * Returns the list of chains the active master is currently triggering
+ * @param master
+ *
+ * @return the number of global active chains and chains active for just this master
  */
-ArrayList<const Chain*>& getActiveChains(Master* m = getActiveMaster());
+uint32_t getNumberOfActiveChains(Master* master = getActiveMaster());
 /**
  * Iterates over the active chain stack and calls check.
  * This method is short-circuitable
@@ -98,7 +109,7 @@ ArrayList<const Chain*>& getActiveChains(Master* m = getActiveMaster());
  *
  * @return
  */
-bool checkAllChainBindings(const UserEvent& userEvent);
+bool checkAllChainBindings(const UserEvent& userEvent = getLastUserEvent());
 /**
  * Adds a ProcessDevice Rule that will process active chains before normal bindings
  *

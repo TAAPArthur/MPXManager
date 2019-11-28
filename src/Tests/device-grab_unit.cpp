@@ -54,7 +54,7 @@ MPX_TEST("passive_regrab", {
     passiveGrab(root, POINTER_MASKS);
     for(int i = 0; i < 2; i++) {
         for(Binding* b : getDeviceBindings())
-            if(isKeyboardMask(b->getMask()) == i)
+            if(getKeyboardMask(b->getMask()) == i)
                 triggerBinding(b);
         if(i == 0)
             waitToReceiveInput(POINTER_MASKS, 0);

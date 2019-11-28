@@ -37,8 +37,8 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
     XIEventMask eventMask = {deviceID, 2, (unsigned char*)& maskValue};
     XIGrabModifiers modifiers[2] = {{mod}, {mod | IGNORE_MASK}};
     LOG(LOG_LEVEL_DEBUG, "Grabbing device:%d detail:%d mod:%d mask: %d %d\n",
-        deviceID, detail, mod, maskValue, isKeyboardMask(maskValue));
-    if(!isKeyboardMask(maskValue))
+        deviceID, detail, mod, maskValue, getKeyboardMask(maskValue));
+    if(!getKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,
                 XIGrabModeAsync, XIGrabModeAsync, 1, &eventMask, 2, modifiers);
     else

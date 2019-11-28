@@ -81,7 +81,7 @@ static inline void triggerBinding(Binding* b, WindowID win = root) {
         movePointer(0, 0, getActiveMasterPointerID(), win);
         return;
     }
-    if(isKeyboardMask(b->getMask()))
+    if(getKeyboardMask(b->getMask()))
         typeKey(b->getDetail(), 0, win);
     else
         clickButton(b->getDetail(), 0, win);
@@ -215,7 +215,7 @@ static inline void testGrabDetailExclusive(int _i, bool binding) {
             else if(binding)
                 assert(!b.ungrab());
             else
-                assert(!ungrabDetail(id, detail, mod, isKeyboardMask(mask)));
+                assert(!ungrabDetail(id, detail, mod, getKeyboardMask(mask)));
             flush();
             if(!fork()) {
                 openXDisplay();
@@ -225,7 +225,7 @@ static inline void testGrabDetailExclusive(int _i, bool binding) {
                     if(binding)
                         assert(!b.ungrab());
                     else
-                        assert(!ungrabDetail(id, detail, mod, isKeyboardMask(mask)));
+                        assert(!ungrabDetail(id, detail, mod, getKeyboardMask(mask)));
                 }
                 closeConnection();
                 exit(0);
