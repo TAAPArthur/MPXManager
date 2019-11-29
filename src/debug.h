@@ -28,7 +28,7 @@ bool validateX();
  * @param win
  * @return 1 iff the window is currently mapped
  */
-bool isWindowMapped(WindowID win) ;
+bool isWindowMapped(WindowID win);
 /**
  * Adds a TrueIdle rule that will crash the program if an invariant check fails
  */

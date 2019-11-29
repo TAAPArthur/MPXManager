@@ -204,8 +204,8 @@ struct WindowMask {
         _PRINT_MASK(ALWAYS_ON_BOTTOM);
         _PRINT_MASK(FULLY_VISIBLE);
         _PRINT_MASK(PARTIALLY_VISIBLE);
-        _PRINT_MASK(MAPPABLE_MASK);
         _PRINT_MASK(MAPPED_MASK);
+        _PRINT_MASK(MAPPABLE_MASK);
         _PRINT_MASK(URGENT_MASK);
         assert(!M);
         return s;

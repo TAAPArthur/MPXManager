@@ -18,6 +18,7 @@ bool isWindowMapped(WindowID win) {
     free(reply);
     return result;
 }
+
 bool validate() {
     bool valid = 1;
     for(WindowInfo* winInfo : getAllWindows()) {

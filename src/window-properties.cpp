@@ -91,7 +91,7 @@ void loadWindowHints(WindowInfo* winInfo) {
             winInfo->addMask(URGENT_MASK);
         }
         winInfo->setGroup(hints.window_group);
-        if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
+        if(!winInfo->isNotManageable() && hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
             winInfo->addMask(MAPPABLE_MASK);
         if(hints.input)
             winInfo->addMask(INPUT_MASK);

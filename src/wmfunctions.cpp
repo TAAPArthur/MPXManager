@@ -55,7 +55,7 @@ bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr
             winInfo->markAsOverrideRedirect();
         if(attr->_class == XCB_WINDOW_CLASS_INPUT_ONLY)
             winInfo->markAsInputOnly();
-        if(attr->map_state)
+        if(attr->map_state != XCB_MAP_STATE_UNMAPPED)
             winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
         if(freeAttr)
             free(attr);
