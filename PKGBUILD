@@ -1,24 +1,18 @@
-# Maintainer: Arthur Williams <taaparthur@gmail.com>
-
-
+# Maintainer: Arthur Williams <taaparthur at gmail dot com>
 pkgname='mpxmanager'
-pkgver='1.0.0'
-_language='en-US'
+pkgver='1.1.0'
 pkgrel=1
 pkgdesc='My Personal XWindow Manager'
-
 arch=('any')
 license=('MIT')
 options=(staticlibs !strip)
-depends=('xorg-server' 'libx11' 'libxcb' 'xcb-util-wm' )
-optdepends=('xorg-server-xvfb')
+depends=('xorg-server' 'libxi' 'libx11' 'libxcb' 'xcb-util-wm' )
+makedepends=('git' 'help2man')
+optdepends=('xorg-server-xvfb: testing')
 makedepends=('git' 'help2man')
 md5sums=('SKIP')
-
 source=("git+https://github.com/TAAPArthur/MPXManager.git")
-_srcDir="MPXManager"
-
 package() {
-  cd "$_srcDir"
+  cd "MPXManager"
   make DESTDIR=$pkgdir install -j 8
 }

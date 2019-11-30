@@ -46,7 +46,7 @@
 set -e
 [ -z "$DEBUG" ] || set -xe
 
-VERSION=1.0.0
+VERSION=1.1.0
 GIT_HASH=
 CC=
 CPPFLAGS=
