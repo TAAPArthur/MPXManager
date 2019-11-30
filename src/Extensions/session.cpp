@@ -165,9 +165,6 @@ void saveCustomState(void) {
     int numWindows = 0;
     int numFakeMonitors = 0;
     int numMasterWindows = 0;
-    int len = 0;
-    int bufferSize = 64;
-    char* activeLayoutNames = (char*) malloc(bufferSize);
     for(int i = getAllMasters().size() - 1; i >= 0; i--) {
         Master* master = getAllMasters()[i];
         masterWindows[numMasterWindows++] = 0;
@@ -181,6 +178,7 @@ void saveCustomState(void) {
             for(int n = 0; n < 4; n++)
                 fakeMonitors[numFakeMonitors++] = getAllMonitors()[i]->getBase()[n];
         }
+    StringJoiner joiner;
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack()) {
             windows[numWindows++] = winInfo->getID();
@@ -190,17 +188,11 @@ void saveCustomState(void) {
         monitors[i] = m ? m->getID() : 0;
         layoutOffsets[i] = getWorkspace(i)->getLayoutOffset();
         Layout* layout = getWorkspace(i)->getActiveLayout();
-        std::string name = layout ? layout->getName() : "";
-        const int requiredSize = len + (name.length()) + 2;
-        if(bufferSize < requiredSize) {
-            bufferSize = requiredSize * 2;
-            activeLayoutNames = (char*)realloc(activeLayoutNames, bufferSize);
-        }
-        strcpy(&activeLayoutNames[len], name.c_str());
-        len += (name.length()) + 1;
+        joiner.add(layout ? layout->getName() : "");
     }
     xcb_atom_t REPLACE = XCB_PROP_MODE_REPLACE;
-    xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, 8, len, activeLayoutNames);
+    xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, 8, joiner.getSize(),
+        joiner.getBuffer());
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, 32,  LEN(layoutOffsets),
         layoutOffsets);
     xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, 32, numWindows, windows);
@@ -209,7 +201,6 @@ void saveCustomState(void) {
     xcb_change_property(dis, REPLACE, root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, 32, numMasterWindows, masterWindows);
     MasterID masterID = getActiveMaster()->getID();
     xcb_change_property(dis, REPLACE, root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, 32, 1, &masterID);
-    free(activeLayoutNames);
     flush();
 }
 void addResumeCustomStateRules(AddFlag flag) {

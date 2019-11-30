@@ -60,8 +60,21 @@ MPX_TEST("test_lose_fake_selection", {
     }
     assert(waitForChild(0) != 20);
 });
-MPX_TEST("test_set_workspace_names", {
+
+MPX_TEST_ITER("test_set_workspace_names", 2, {
+    if(_i) {
+        addWorkspaces(10);
+        getWorkspace(1)->setName("Really_long name with some special characters !@#$%$&%");
+    }
     updateWorkspaceNames();
+    xcb_ewmh_get_utf8_strings_reply_t  names;
+    assert(xcb_ewmh_get_desktop_names_reply(ewmh, xcb_ewmh_get_desktop_names(ewmh, defaultScreenNumber), &names, NULL));
+    int index = 0;
+    for(Workspace* w : getAllWorkspaces()) {
+        assertEquals(w->getName(), &names.strings[index]);
+        index += w->getName().length() + 1;
+    }
+    xcb_ewmh_get_utf8_strings_reply_wipe(&names);
 });
 
 MPX_TEST("test_private_window_properties", {

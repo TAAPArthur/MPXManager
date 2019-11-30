@@ -6,11 +6,14 @@
 #ifndef MPX_EWMH_H_
 #define MPX_EWMH_H_
 
-#include "mywm-structs.h"
-#include <xcb/xcb_ewmh.h>
-#include "xsession.h"
 #include "masters.h"
+#include "mywm-structs.h"
 #include "windows.h"
+#include "xsession.h"
+#include <string.h>
+#include <string>
+#include <xcb/xcb_ewmh.h>
+
 
 /// List of supported actions
 #define SUPPORTED_ACTIONS\
@@ -85,6 +88,49 @@
             sizeof(net_atoms) / sizeof(xcb_atom_t) , net_atoms);\
         }
 
+/**
+ * Helper class to concate strings (along with the null pointer) so that they
+ * can be posted as a window property
+ */
+struct StringJoiner {
+private:
+    char* buffer;
+    int bufferSize;
+    int usedBufferSize;
+public:
+    StringJoiner() {
+        bufferSize = 64;
+        usedBufferSize = 0;
+        buffer = (char*)malloc(bufferSize);
+    }
+    ~StringJoiner() {
+        free(buffer);
+    }
+    /**
+     * Adds a string (with its null terminator) to the end of the buffer
+     *
+     * @param str the string to be added
+     */
+    void add(std::string str) {
+        const int requiredSize = usedBufferSize + (str.length()) + 1;
+        if(bufferSize < requiredSize) {
+            bufferSize = requiredSize * 2;
+            buffer = (char*)realloc(buffer, bufferSize);
+        }
+        strcpy(&buffer[usedBufferSize], str.c_str());
+        usedBufferSize += (str.length()) + 1;
+    }
+    /**
+     *
+     *
+     * @return the concatenation of every string added along with each null terminator
+     */
+    char* getBuffer() { return buffer; }
+    /**
+     * @return the length (including null terminator) of every string added
+     */
+    int getSize() { return usedBufferSize; }
+};
 
 /**
  *

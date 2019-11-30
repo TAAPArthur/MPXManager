@@ -90,12 +90,10 @@ static void updateEWMHWorkspaceProperties() {
     xcb_ewmh_set_desktop_geometry(ewmh, defaultScreenNumber, getRootWidth(), getRootHeight());
 }
 void updateWorkspaceNames() {
-    const char* names[getNumberOfWorkspaces()];
-    int i = 0;
+    StringJoiner joiner;
     for(Workspace* w : getAllWorkspaces())
-        names[i++] = w->getName().c_str();
-    if(ewmh && RUN_AS_WM)
-        xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), (char*)names);
+        joiner.add(w->getName());
+    xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, joiner.getSize(), joiner.getBuffer());
 }
 void addEWMHRules(AddFlag flag) {
     getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), flag);
