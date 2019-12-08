@@ -33,7 +33,6 @@ private:
 public:
     /**
      *
-     *
      * @param mod
      * @param buttonOrKey
      * @param boundFunction
@@ -44,6 +43,20 @@ public:
      */
     Chain(unsigned int mod, int buttonOrKey, const BoundFunction boundFunction = {}, const ArrayList<Binding*>& members = {},
         const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(mod, buttonOrKey, boundFunction,
+                flags, name),
+        members(members), chainMask(chainMask) { }
+    /**
+     *
+     * @param keyBindings
+     * @param boundFunction
+     * @param members
+     * @param flags
+     * @param chainMask
+     * @param name
+     */
+    Chain(const ArrayList<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const ArrayList<Binding*>&
+        members = {},
+        const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(keyBindings, boundFunction,
                 flags, name),
         members(members), chainMask(chainMask) { }
     /**
@@ -81,6 +94,7 @@ public:
      */
     bool end()const;
     virtual bool trigger(const UserEvent& event)const override;
+    std::string getName()const override {return Binding::getName() + (isGlobalChain() ? "*" : "");}
 
     /**
      * Calls checkBindings with its members

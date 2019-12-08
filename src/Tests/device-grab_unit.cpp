@@ -19,7 +19,7 @@ using namespace TestGrabs;
 SET_ENV(testBiningSetup, cleanupXServer);
 MPX_TEST_ITER("test_init_binding", NUM_BINDINGS, {
     Binding& binding = getBinding(_i);
-    assert(binding.getDetail() || binding.getButtonOrKey() == 0);
+    assert(binding.getKeyBindings()[0].getDetail() || binding.getKeyBindings()[0].getButtonOrKey() == 0);
 });
 
 MPX_TEST_ITER("test_passive_grab_ungrab", 2, {

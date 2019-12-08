@@ -50,17 +50,19 @@ bool Binding::trigger(const UserEvent& event)const {
     return shouldPassThrough(getPassThrough(), boundFunction(getWindowToActOn(event), event.master));
 }
 std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
-    return stream << "{ Name:'" << binding.getName() << "' " << binding.mod << " " << binding.detail << " Func:'" <<
+    return stream << "{ Name:'" << binding.getName() << "' " << binding.keyBindings << " Func:'" <<
         binding.boundFunction << "' " << binding.getMask()
         << "}" ;
 }
 bool Binding::matches(const UserEvent& event) {
-    return
-        (mod == WILDCARD_MODIFIER || mod == (event.mod & ~IGNORE_MASK)) &&
-        (getDetail() == 0 || getDetail() == event.detail) &&
-        (event.mask == 0 || getMask() & event.mask) &&
-        (!event.keyRepeat || event.keyRepeat == !flags.noKeyRepeat) &&
-        (event.master->allowsMode(flags.mode)) ;
+    for(KeyBinding key : keyBindings)
+        if((key.getMod() == WILDCARD_MODIFIER || key.getMod() == (event.mod & ~IGNORE_MASK)) &&
+            (key.getDetail() == 0 || key.getDetail() == event.detail) &&
+            (event.mask == 0 || getMask() & event.mask) &&
+            (!event.keyRepeat || event.keyRepeat == !flags.noKeyRepeat) &&
+            (event.master->allowsMode(flags.mode)))
+            return 1;
+    return 0;
 }
 std::ostream& operator<<(std::ostream& stream, const UserEvent& userEvent) {
     stream << "{ Mod:" << userEvent.mod << " Detail:" << userEvent.detail << " Mask:" << userEvent.mask << " KR:" <<
@@ -87,18 +89,21 @@ ArrayList<Binding*>& getDeviceBindings() {
 }
 
 
-int Binding::grab() {
-    if(!isNotGrabbable() && getDetail())
-        return grabDetail(getTargetID(), getDetail(), mod, getMask());
-    return -1;
-}
-int Binding::ungrab() {
-    if(!isNotGrabbable() && getDetail())
-        return ungrabDetail(getTargetID(), getDetail(), mod, getKeyboardMask(getMask()));
+int Binding::grab(bool ungrab) {
+    bool result = 0;
+    if(!isNotGrabbable()) {
+        for(KeyBinding key : keyBindings)
+            if(key.getDetail())
+                if(!ungrab)
+                    result |= grabDetail(getTargetID(), key.getDetail(), key.getMod(), getMask());
+                else
+                    result |= ungrabDetail(getTargetID(), key.getDetail(), key.getMod(), getKeyboardMask(getMask()));
+        return result;
+    }
     return -1;
 }
 
-uint32_t Binding::getDetail() {
+uint32_t KeyBinding::getDetail() {
     if(detail == 0 && buttonOrKey != 0) {
         detail = getButtonDetailOrKeyCode(buttonOrKey);
         assert(detail);
@@ -106,6 +111,12 @@ uint32_t Binding::getDetail() {
     return detail;
 }
 bool Binding::operator==(const Binding& binding)const {
-    return name == binding.name && mod == binding.mod && buttonOrKey == binding.buttonOrKey &&
+    return name == binding.name && keyBindings == binding.keyBindings &&
         flags.mask == binding.flags.mask && flags.mode == binding.flags.mode;
+}
+bool KeyBinding::operator==(const KeyBinding& binding)const {
+    return mod == binding.mod && buttonOrKey == binding.buttonOrKey;
+}
+std::ostream& operator<<(std::ostream& stream, const KeyBinding& binding) {
+    return stream << "{ " << binding.mod << " " << binding.buttonOrKey << "}" ;
 }

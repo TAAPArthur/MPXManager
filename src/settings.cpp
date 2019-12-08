@@ -27,19 +27,16 @@
 #include "wmfunctions.h"
 #include "workspaces.h"
 
-#define _startCycleWindowChainBinding(M,K) new Chain(M,K,{ \
-            Binding{Mod1Mask, XK_Tab, {cycleWindows,DOWN}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsDown"}, \
-            Binding{Mod1Mask | ShiftMask, XK_Tab, {cycleWindows,UP}, {.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "cycleWindowsUp"}, \
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endCycleWindows" },\
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = ALWAYS_PASSTHROUGH,.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "endChain" },\
-            Binding {WILDCARD_MODIFIER, 0, {},{.passThrough = NO_PASSTHROUGH,.noGrab = 1}, "absorbCycleWindows"},\
-            },{},XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE,"cycleWindows")
-
 /// Add default chain bindings
 void addChainDefaultBindings() {
     Chain* DEFAULT_CHAIN_BINDINGS[] = {
-        _startCycleWindowChainBinding(Mod1Mask, XK_Tab),
-        _startCycleWindowChainBinding(Mod1Mask | ShiftMask, XK_Tab),
+        new Chain({{Mod1Mask, XK_Tab}, {Mod1Mask | ShiftMask, XK_Tab}}, {}, {
+            Binding{Mod1Mask, XK_Tab, {cycleWindows, DOWN}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_cycleWindowsDown"}, \
+            Binding{Mod1Mask | ShiftMask, XK_Tab, {cycleWindows, UP}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_cycleWindowsUp"}, \
+            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "_endCycleWindows" }, \
+            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "_endChain" }, \
+            Binding {WILDCARD_MODIFIER, 0, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_absorbCycleWindows"}, \
+        }, {}, XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE, "_cycleWindows"),
         new Chain{
             DEFAULT_MOD_MASK, Button1, +[](WindowInfo * winInfo){startWindowMoveResize(winInfo, 1);},
             {

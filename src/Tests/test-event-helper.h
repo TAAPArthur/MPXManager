@@ -82,9 +82,9 @@ static inline void triggerBinding(Binding* b, WindowID win = root) {
         return;
     }
     if(getKeyboardMask(b->getMask()))
-        typeKey(b->getDetail(), win);
+        typeKey(b->getKeyBindings()[0].getDetail(), win);
     else
-        clickButton(b->getDetail(), win);
+        clickButton(b->getKeyBindings()[0].getDetail(), win);
 }
 static inline void triggerAllBindings(int mask, WindowID win = root) {
     flush();
@@ -187,22 +187,22 @@ static inline void testBiningSetup() {
 }
 static inline void testGrabDetail(int _i, bool binding) {
     Binding& b = getBinding(_i);
-    if(!b.getDetail())
+    if(!b.getKeyBindings()[0].getDetail())
         return;
     int id = b.getTargetID();
     if(binding)
         assert(!b.grab());
     else
-        assert(!grabDetail(id, b.getDetail(), 0, b.getMask()));
+        assert(!grabDetail(id, b.getKeyBindings()[0].getDetail(), 0, b.getMask()));
     triggerBinding(&b);
     waitToReceiveInput(b.getMask(), 0);
 }
 static inline void testGrabDetailExclusive(int _i, bool binding) {
     Binding& b = getBinding(_i);
-    if(!b.getDetail())
+    if(!b.getKeyBindings()[0].getDetail())
         return;
     int mask = b.getMask();
-    int detail = b.getDetail();
+    int detail = b.getKeyBindings()[0].getDetail();
     int id = b.getTargetID();
     saveXSession();
     for(int mod = 0; mod < 3; mod++)
@@ -219,9 +219,9 @@ static inline void testGrabDetailExclusive(int _i, bool binding) {
             flush();
             if(!fork()) {
                 openXDisplay();
-                bool success = !(binding ? b.grab() : grabDetail(id, detail, mod, mask));
-                assertEquals(i, success);
-                if(success) {
+                bool failure = (binding ? b.grab() : grabDetail(id, detail, mod, mask));
+                assertEquals(!i, failure);
+                if(!failure) {
                     if(binding)
                         assert(!b.ungrab());
                     else

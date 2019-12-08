@@ -79,25 +79,59 @@ struct BindingFlags {
     /// Binding will be triggered in the active master is in a compatible mode
     unsigned int mode = 0;
 };
+/// holds a modifier and button/key
+struct KeyBinding {
+private:
+    /**Modifier to match on*/
+    unsigned int mod;
+    /**Either Button or KeySym to match**/
+    uint32_t buttonOrKey;
+    /**Converted detail of key bindings. Should not be set manually*/
+    int detail = 0;
+public:
+    /**
+     * @param mod
+     * @param buttonOrKey
+     */
+    KeyBinding(uint32_t mod, uint32_t buttonOrKey): mod(mod), buttonOrKey(buttonOrKey) {}
+    /// @return the button or key code used to initiate grabs
+    uint32_t getDetail();
+    /// @return the button or key sym used to generate the detail
+    uint32_t getButtonOrKey() const {return buttonOrKey;}
+    /// @return the modifier
+    uint32_t getMod() const {return mod;}
+    /// @return 1 iff the bindings are
+    bool operator==(const KeyBinding& binding)const;
+    /**
+     * @param stream
+     * @param binding
+     * @return
+     */
+    friend std::ostream& operator<<(std::ostream& stream, const KeyBinding& binding);
+};
 
 /// Wildcard mask
 #define ANY_MASK (-1)
 ///used for key/mouse bindings
 struct Binding {
 protected:
-    /**Modifier to match on*/
-    unsigned int mod;
-    /**Either Button or KeySym to match**/
-    int buttonOrKey;
+    /// list of keybinds that will cause this to be triggered
+    ArrayList<KeyBinding> keyBindings;
     /**Function to call on match**/
     const BoundFunction boundFunction;
     /// extra optional flags
     BindingFlags flags;
     /// user specified name to be used for debugging
     std::string name;
-    /**Converted detail of key bindings. Should not be set manually*/
-    int detail = 0;
 
+private:
+    /// init the flags.mask if it was initially 0
+    void init() {
+        if(flags.mask == 0)
+            this->flags.mask = keyBindings[0].getButtonOrKey() == 0 ? ANY_MASK : isButton(keyBindings[0].getButtonOrKey()) ?
+                XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
+                XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
+    }
 public:
     /**
      * Note that flags.mask is inferred from buttonOrKey if set to the default value of 0.
@@ -108,11 +142,22 @@ public:
      * @param name
      */
     Binding(uint32_t mod, uint32_t buttonOrKey, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
-        std::string name = ""): mod(mod), buttonOrKey(buttonOrKey), boundFunction(boundFunction), flags(flags), name(name) {
-        if(flags.mask == 0)
-            this->flags.mask = buttonOrKey == 0 ? ANY_MASK : isButton(buttonOrKey) ? XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
-                XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
+        std::string name = ""): keyBindings({{mod, buttonOrKey}}), boundFunction(boundFunction), flags(flags), name(name) {
+        init();
     }
+
+    /**
+     * Note that flags.mask is inferred from buttonOrKey if set to the default value of 0.
+     * @param keyBindings a list of keyBindings
+     * @param boundFunction the function to call when this binding is triggered
+     * @param flags
+     * @param name
+     */
+    Binding(ArrayList<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
+        std::string name = ""): keyBindings(keyBindings), boundFunction(boundFunction), flags(flags), name(name) {
+        init();
+    }
+
 
 
     virtual ~Binding() = default;
@@ -166,24 +211,22 @@ public:
      * @return 1 iff this Binding matches event
      */
     bool matches(const UserEvent& event);
-    /// @return the button or key sym used to compute detail
-    uint32_t getButtonOrKey() {return buttonOrKey;}
-    /// @return the button or key code used to initiate grabs
-    uint32_t getDetail();
+    /// @return a list of keyBindings this struct should match with
+    ArrayList<KeyBinding>& getKeyBindings() {return keyBindings;}
     /// @return the id of the device to grab
     int getTargetID() const {return flags.targetID;}
     /**
      * Wrapper around grabDetail()
      * @return 0 iff the grab was successful
      */
-    int grab();
+    int grab(bool ungrab = 0);
     /**
      * Wrapper around ungrab()
      * @return 0 iff the grab was successful
      */
-    int ungrab();
+    int ungrab() { return grab(1);}
     /// @return name
-    std::string getName()const {return name;}
+    virtual std::string getName()const {return name;}
 } ;
 
 
