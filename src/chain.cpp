@@ -53,7 +53,7 @@ bool Chain::start(const UserEvent& event)const {
     return boundFunction(getWindowToActOn(event)) && check(event);
 }
 bool Chain::end()const {
-    LOG(LOG_LEVEL_INFO, "ending chain\n");
+    LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d\n", isGlobalChain());
     if(isGlobalChain())
         globalChain.removeElement(this);
     else
@@ -81,6 +81,6 @@ bool checkAllChainBindings(const UserEvent& userEvent) {
     return 1;
 }
 void addApplyChainBindingsRule(AddFlag flag) {
-    getEventRules(ProcessDeviceEvent).add({[]() {checkAllChainBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkAllChainBindings)},
-    flag);
+    getEventRules(ProcessDeviceEvent).add(BoundFunction{+[]{return checkAllChainBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkAllChainBindings), PASSTHROUGH_IF_TRUE},
+        flag);
 }

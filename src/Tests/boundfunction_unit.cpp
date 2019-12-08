@@ -86,10 +86,16 @@ MPX_TEST_ITER("apply_rules", 2, {
     if(_i)
         applyBatchEventRules();
 });
-MPX_TEST("apply_rules_passthrough", {
-    getEventRules(0).add(new BoundFunction {NO_PASSTHROUGH});
-    getEventRules(0).add(new BoundFunction{[]() {exit(10);}});
-    getBatchEventRules(0).add(new BoundFunction{incrementCount});
+MPX_TEST_ITER("apply_rules_passthrough", 2, {
+    if(_i == 2) {
+        getEventRules(0).add(new BoundFunction {NO_PASSTHROUGH});
+    }
+    else {
+        static int returnValue = !_i;
+        getEventRules(0).add(BoundFunction(+[] { return returnValue;}, "", _i ? PASSTHROUGH_IF_TRUE : PASSTHROUGH_IF_FALSE));
+    }
+    getEventRules(0).add({[]() {exit(10);}});
+    getBatchEventRules(0).add({incrementCount});
     assert(!applyEventRules(0, NULL));
     assert(getCount() == 0);
     applyBatchEventRules();

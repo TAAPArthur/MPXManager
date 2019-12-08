@@ -168,7 +168,7 @@ void defaultPrintFunction(void) {
             w->getActiveLayout() ? w->getActiveLayout()->getName().c_str() : "");
     }
     if(getActiveChain())
-        dprintf(STATUS_FD, "[%s] ", getActiveChain()->getName().c_str());
+        dprintf(STATUS_FD, "[%s (%d)] ", getActiveChain()->getName().c_str(), getNumberOfActiveChains());
     if(getActiveMaster()->getCurrentMode())
         dprintf(STATUS_FD, "{%d} ", getActiveMaster()->getCurrentMode());
     if(getFocusedWindow() && getFocusedWindow()->isNotInInvisibleWorkspace()) {

@@ -132,6 +132,14 @@ MPX_TEST_ITER("chain_start_auto_passthrough", 2, {
     if(_i)
         endActiveChain();
 });
+MPX_TEST("chain_passthrough", {
+    addBasicRules();
+    addApplyChainBindingsRule();
+    sampleChain.start(eventNoPassthrough);
+    setLastUserEvent(eventNoPassthrough);
+    getDeviceBindings().add({WILDCARD_MODIFIER, 0, {[]{assert(0);}}});
+    applyEventRules(ProcessDeviceEvent, NULL);
+});
 
 MPX_TEST("test_chain_bindings", {
     static int count = 0;

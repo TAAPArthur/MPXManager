@@ -260,16 +260,24 @@ static void bindingsSetup() {
     setup();
 }
 SET_ENV(bindingsSetup, fullCleanup);
-MPX_TEST("cycle_window", {
+MPX_TEST_ITER("cycle_window", 3, {
     mapArbitraryWindow();
     waitUntilIdle();
     sendKeyPress(getKeyCode(XK_Alt_L));
-    sendKeyPress(getKeyCode(XK_Tab));
-    waitUntilIdle();
-    assert(getActiveChain());
+    if(_i == 2) {
+        sendKeyPress(getKeyCode(XK_Shift_L));
+    }
+    for(int i = 0; i <= _i; i++) {
+        typeKey(getKeyCode(XK_Tab));
+        waitUntilIdle();
+        assert(getActiveChain());
+        assertEquals(getNumberOfActiveChains(), 1);
+    }
+    assert(getActiveMaster()->isFocusStackFrozen());
     sendKeyRelease(getKeyCode(XK_Tab));
     sendKeyRelease(getKeyCode(XK_Alt_L));
     waitUntilIdle();
+    assert(!getActiveMaster()->isFocusStackFrozen());
     assert(!getActiveChain());
 });
 MPX_TEST_ITER("move_window", 2, {

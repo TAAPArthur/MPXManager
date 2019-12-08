@@ -210,8 +210,8 @@ static WindowInfo* getTargetWindow(int root, int event, int child) {
     return getWindowInfo(list[i]);
 }
 void addApplyBindingsRule(AddFlag flag) {
-    getEventRules(ProcessDeviceEvent).add({[]() {checkBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkBindings)},
-    flag);
+    getEventRules(ProcessDeviceEvent).add({+[]{return checkBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkBindings)},
+        flag);
 }
 void onDeviceEvent(void) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();

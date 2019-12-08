@@ -109,7 +109,7 @@ uint32_t getNumberOfActiveChains(Master* master = getActiveMaster());
  *
  * @return
  */
-bool checkAllChainBindings(const UserEvent& userEvent = getLastUserEvent());
+bool checkAllChainBindings(const UserEvent& userEvent = getLastUserEvent())__attribute__((warn_unused_result)) ;
 /**
  * Adds a ProcessDevice Rule that will process active chains before normal bindings
  *
