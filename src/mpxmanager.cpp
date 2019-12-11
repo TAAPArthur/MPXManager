@@ -48,11 +48,11 @@ ArrayList<Mode>modes = {
     {"xmousecontrol", addStartXMouseControlRule},
 #endif
 #if MPX_EXT_ENABLED
-    {"mpx", +[]() {addAutoMPXRules(); getEventRules(onXConnection).add(startMPX);}},
-    {"mpx-start", +[](){getEventRules(onXConnection).add(startMPX);}, 0},
-    {"mpx-stop", +[](){getEventRules(onXConnection).add(stopMPX);}, 0},
-    {"mpx-restart", +[](){getEventRules(onXConnection).add(restartMPX);}, 0},
-    {"mpx-restore", +[](){getEventRules(onXConnection).add(restoreMPX);}, 0},
+    {"mpx", +[]() {addAutoMPXRules(); getEventRules(X_CONNECTION).add(startMPX);}},
+    {"mpx-start", +[](){getEventRules(X_CONNECTION).add(startMPX);}, 0},
+    {"mpx-stop", +[](){getEventRules(X_CONNECTION).add(stopMPX);}, 0},
+    {"mpx-restart", +[](){getEventRules(X_CONNECTION).add(restartMPX);}, 0},
+    {"mpx-restore", +[](){getEventRules(X_CONNECTION).add(restoreMPX);}, 0},
 
 #endif
 };

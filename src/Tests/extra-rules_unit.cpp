@@ -27,7 +27,7 @@ MPX_TEST("test_print_method", {
     printStatusMethod = incrementCount;
     // set to an open FD
     STATUS_FD = 1;
-    applyEventRules(Idle, NULL);
+    applyEventRules(IDLE, NULL);
     assert(getCount());
 });
 
@@ -106,10 +106,10 @@ MPX_TEST("test_always_on_top_bottom", {
     WindowID top = createNormalWindow();
     WindowID top2 = createNormalWindow();
     scan(root);
-    getWindowInfo(bottom)->addMask(ALWAYS_ON_BOTTOM);
-    getWindowInfo(bottom2)->addMask(ALWAYS_ON_BOTTOM);
-    getWindowInfo(top)->addMask(ALWAYS_ON_TOP);
-    getWindowInfo(top2)->addMask(ALWAYS_ON_TOP);
+    getWindowInfo(bottom)->addMask(ALWAYS_ON_BOTTOM_MASK);
+    getWindowInfo(bottom2)->addMask(ALWAYS_ON_BOTTOM_MASK);
+    getWindowInfo(top)->addMask(ALWAYS_ON_TOP_MASK);
+    getWindowInfo(top2)->addMask(ALWAYS_ON_TOP_MASK);
     raiseWindow(normal);
     raiseWindow(bottom);
     lowerWindow(top);
@@ -131,7 +131,7 @@ MPX_TEST("test_always_on_top_bottom", {
 
 MPX_TEST_ITER("primary_monitor_windows", 3, {
     addAutoTileRules();
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}), PREPEND_ALWAYS);
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}), PREPEND_ALWAYS);
     addStickyPrimaryMonitorRule();
     addFakeMonitor({100, 100, 200, 200});
     addFakeMonitor({300, 100, 100, 100});

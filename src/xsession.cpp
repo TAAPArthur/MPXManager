@@ -84,8 +84,8 @@ WindowID getPrivateWindow(void) {
 }
 
 
-static std::unordered_map<uint32_t, WindowMasks> atomStateToMask;
-static std::unordered_map<uint32_t, WindowMasks> atomActionToMask;
+static std::unordered_map<uint32_t, WindowMask> atomStateToMask;
+static std::unordered_map<uint32_t, WindowMask> atomActionToMask;
 static void createMaskAtomMapping() {
     atomStateToMask[ewmh->_NET_WM_STATE_ABOVE] = ABOVE_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_BELOW] = BELOW_MASK;
@@ -107,8 +107,8 @@ static void createMaskAtomMapping() {
     atomActionToMask[ewmh->_NET_WM_ACTION_MAXIMIZE_HORZ] = X_MAXIMIZED_MASK;
     atomActionToMask[ewmh->_NET_WM_ACTION_MAXIMIZE_VERT] = Y_MAXIMIZED_MASK;
 }
-WindowMasks getMaskFromAtom(xcb_atom_t atom) {
-    return atomStateToMask.count(atom) ? atomStateToMask[atom] : NO_MASK;
+WindowMask getMaskFromAtom(xcb_atom_t atom) {
+    return atomStateToMask.count(atom) ? atomStateToMask[atom] : WindowMask(NO_MASK);
 }
 void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action) {
     for(auto pair : (action ? atomActionToMask : atomStateToMask))
@@ -272,7 +272,7 @@ void openXDisplay(void) {
     compliantWindowManagerIndicatorWindow = 0;
     createMaskAtomMapping();
     if(applyRule)
-        applyEventRules(onXConnection, NULL);
+        applyEventRules(X_CONNECTION, NULL);
 }
 
 void closeConnection(void) {
@@ -316,21 +316,23 @@ const char* eventTypeToString(int type) {
             _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_IN);
             _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_FOCUS_OUT);
             _ADD_GE_EVENT_TYPE_CASE(XCB_INPUT_HIERARCHY);
-            _ADD_EVENT_TYPE_CASE(ExtraEvent);
-            _ADD_EVENT_TYPE_CASE(onXConnection);
-            _ADD_EVENT_TYPE_CASE(ClientMapAllow);
-            _ADD_EVENT_TYPE_CASE(PreRegisterWindow);
-            _ADD_EVENT_TYPE_CASE(PostRegisterWindow);
-            _ADD_EVENT_TYPE_CASE(UnregisteringWindow);
-            _ADD_EVENT_TYPE_CASE(MonitorWorkspaceChange);
-            _ADD_EVENT_TYPE_CASE(WindowWorkspaceMove);
-            _ADD_EVENT_TYPE_CASE(onScreenChange);
-            _ADD_EVENT_TYPE_CASE(ProcessDeviceEvent);
-            _ADD_EVENT_TYPE_CASE(onWindowMove);
-            _ADD_EVENT_TYPE_CASE(TileWorkspace);
-            _ADD_EVENT_TYPE_CASE(Periodic);
-            _ADD_EVENT_TYPE_CASE(Idle);
-            _ADD_EVENT_TYPE_CASE(TrueIdle);
+            _ADD_EVENT_TYPE_CASE(EXTRA_EVENT);
+            _ADD_EVENT_TYPE_CASE(X_CONNECTION);
+            _ADD_EVENT_TYPE_CASE(PRE_REGISTER_WINDOW);
+            _ADD_EVENT_TYPE_CASE(POST_REGISTER_WINDOW);
+            _ADD_EVENT_TYPE_CASE(UNREGISTER_WINDOW);
+            _ADD_EVENT_TYPE_CASE(DEVICE_EVENT);
+            _ADD_EVENT_TYPE_CASE(CLIENT_MAP_ALLOW);
+            _ADD_EVENT_TYPE_CASE(PROPERTY_LOAD);
+            _ADD_EVENT_TYPE_CASE(WINDOW_WORKSPACE_CHANGE);
+            _ADD_EVENT_TYPE_CASE(MONITOR_WORKSPACE_CHANGE);
+            _ADD_EVENT_TYPE_CASE(SCREEN_CHANGE);
+            _ADD_EVENT_TYPE_CASE(WINDOW_MOVE);
+            _ADD_EVENT_TYPE_CASE(TILE_WORKSPACE);
+            _ADD_EVENT_TYPE_CASE(POSSIBLE_STATE_CHANGE);
+            _ADD_EVENT_TYPE_CASE(PERIODIC);
+            _ADD_EVENT_TYPE_CASE(IDLE);
+            _ADD_EVENT_TYPE_CASE(TRUE_IDLE);
         case 0:
             return "Error";
         default:
@@ -425,7 +427,7 @@ static inline xcb_generic_event_t* waitForEvent() {
 static inline xcb_generic_event_t* getNextEvent() {
     if(EVENT_PERIOD && ++periodCounter > EVENT_PERIOD) {
         periodCounter = 0;
-        applyEventRules(Periodic, NULL);
+        applyEventRules(PERIODIC, NULL);
     }
     static xcb_generic_event_t* event;
     event = getEventFromBuffer();
@@ -434,9 +436,9 @@ static inline xcb_generic_event_t* getNextEvent() {
     if(!event && !xcb_connection_has_error(dis)) {
         periodCounter = 0;
         lock();
-        applyEventRules(Periodic, NULL);
+        applyEventRules(PERIODIC, NULL);
         applyBatchEventRules();
-        if(applyEventRules(Idle, NULL)) {
+        if(applyEventRules(IDLE, NULL)) {
             flush();
             event = pollForEvent();
             if(event) {
@@ -444,7 +446,7 @@ static inline xcb_generic_event_t* getNextEvent() {
                 return event;
             }
         }
-        applyEventRules(TrueIdle, NULL);
+        applyEventRules(TRUE_IDLE, NULL);
         idle++;
         flush();
         unlock();
@@ -477,7 +479,7 @@ void* runEventLoop(void* arg __attribute__((unused))) {
         lock();
         // TODO pre event processing rule
         setLastEvent(event);
-        type = type < LASTEvent ? type : ExtraEvent;
+        type = type < LASTEvent ? type : EXTRA_EVENT;
         applyEventRules(type, NULL);
         setLastEvent(NULL);
         free(event);

@@ -160,6 +160,7 @@ static int compareState() {
                 }
         }
     }
+    applyEventRules(POSSIBLE_STATE_CHANGE);
     LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);
     unmarkState();
     if(savedStates)

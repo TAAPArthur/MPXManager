@@ -7,7 +7,7 @@
 #include "mywm-structs.h"
 
 /**
- * Adds rules to enforce ALWAYS_ON_TOP and ALWAYS_ON_BOTTOM
+ * Adds rules to enforce ALWAYS_ON_TOP_MASK and ALWAYS_ON_BOTTOM_MASK
  *
  * @param flag
  */
@@ -57,7 +57,7 @@ void addDesktopRule(AddFlag flag = ADD_UNIQUE);
 void autoAddToWorkspace(WindowInfo* winInfo);
 
 /**
- * Calls printStatusMethod if set (and pipe is setup) on Idle events
+ * Calls printStatusMethod if set (and pipe is setup) on IDLE events
  */
 void addPrintStatusRule(AddFlag flag = ADD_UNIQUE);
 /**
@@ -67,7 +67,7 @@ void addPrintStatusRule(AddFlag flag = ADD_UNIQUE);
 extern void (*printStatusMethod)();
 /**
  * Float all non-normal type windows
- * PostRegisterWindow rule
+ * POST_REGISTER_WINDOW rule
  */
 void addFloatRule(AddFlag flag = ADD_UNIQUE);
 /**
@@ -75,13 +75,13 @@ void addFloatRule(AddFlag flag = ADD_UNIQUE);
  */
 void addDieOnIdleRule(AddFlag flag = ADD_UNIQUE);
 /**
- * Calls requestShutdown when the WM is not Idle
+ * Calls requestShutdown when the WM is not IDLE
  *
  * @param flag
  */
 void addShutdownOnIdleRule(AddFlag flag = ADD_UNIQUE);
 /**
- * Adds a ClientMapAllow rule to auto focus a window
+ * Adds a CLIENT_MAP_ALLOW rule to auto focus a window
  *
  * Focuses a window when it is mapped and:
  * it was created within AUTO_FOCUS_NEW_WINDOW_TIMEOUT ms from now
@@ -97,7 +97,7 @@ void addAutoFocusRule(AddFlag flag = ADD_UNIQUE) ;
  */
 void addIgnoreSmallWindowRule(AddFlag flag = ADD_UNIQUE) ;
 /**
- * Adds a PostRegisterWindow rule to scan children of the current window
+ * Adds a POST_REGISTER_WINDOW rule to scan children of the current window
  * and register them
  *
  * @param flag
@@ -141,7 +141,7 @@ void addIgnoreNonTopLevelWindowsRule(AddFlag flag = ADD_UNIQUE);
  */
 void addMoveNonTileableWindowsToWorkspaceBounds() ;
 /**
- * Converts masks that don't make since for non-manageable window (like ABOVE/BELOW mask) into a more suitable target (ALWAYS_ON_TOP/BOTTOM)
+ * Converts masks that don't make since for non-manageable window (like ABOVE/BELOW mask) into a more suitable target (ALWAYS_ON_TOP_MASK/BOTTOM)
  */
 void addConvertNonManageableWindowMask();
 #endif

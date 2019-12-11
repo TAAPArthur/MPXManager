@@ -138,7 +138,7 @@ MPX_TEST("chain_passthrough", {
     sampleChain.start(eventNoPassthrough);
     setLastUserEvent(eventNoPassthrough);
     getDeviceBindings().add({WILDCARD_MODIFIER, 0, {[]{assert(0);}}});
-    applyEventRules(ProcessDeviceEvent, NULL);
+    applyEventRules(DEVICE_EVENT, NULL);
 });
 
 MPX_TEST("test_chain_bindings", {

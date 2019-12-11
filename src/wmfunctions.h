@@ -22,9 +22,9 @@ static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveMa
  *
  * if newlyCreated is true, then a createEvent should have been detected for this window.
  * The window's creation time will be set to the current time
- * Else hints are loaded for this window. If this window is currently in the MappedState, then we set the appropriate masks, loadProperties and run ClientMapAllow
+ * Else hints are loaded for this window. If this window is currently in the MappedState, then we set the appropriate masks, loadProperties and run CLIENT_MAP_ALLOW
  *
- * If the function hasn't short circuited, then PostRegisterWindow rules are triggered
+ * If the function hasn't short circuited, then POST_REGISTER_WINDOW rules are triggered
  *
  * @param winInfo
  * @param newlyCreated
@@ -50,7 +50,7 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
  * @param parent
  * @param attr
  *
- * @return the result of PostRegisterWindow or 0 if it was never called
+ * @return the result of POST_REGISTER_WINDOW or 0 if it was never called
  */
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr = NULL);
 /**

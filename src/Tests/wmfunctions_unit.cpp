@@ -27,8 +27,8 @@ MPX_TEST("register_unregister", {
     WindowID win = createInputOnlyWindow();
     assertEquals(getAllWindows().size(), 0);
     assert(registerWindow(win, root) == 1);
-    assertEquals(getNumberOfEventsTriggerSinceLastIdle(PreRegisterWindow), 1);
-    assertEquals(getNumberOfEventsTriggerSinceLastIdle(PostRegisterWindow), 1);
+    assertEquals(getNumberOfEventsTriggerSinceLastIdle(PRE_REGISTER_WINDOW), 1);
+    assertEquals(getNumberOfEventsTriggerSinceLastIdle(POST_REGISTER_WINDOW), 1);
     assertEquals(getAllWindows().size(), 1);
     assert(unregisterWindow(getWindowInfo(win)) == 1);
     assertEquals(getAllWindows().size(), 0);
@@ -65,7 +65,7 @@ MPX_TEST_ITER("register_bad_window", 2, {
     assert(unregisterWindow(getWindowInfo(win)) == 0);
 });
 MPX_TEST("preregister_fail", {
-    getEventRules(PreRegisterWindow).add(NO_PASSTHROUGH);
+    getEventRules(PRE_REGISTER_WINDOW).add(NO_PASSTHROUGH);
     assert(registerWindow(createNormalWindow(), root) == 0);
     assert(getAllWindows().size() == 0);
 });
@@ -82,8 +82,8 @@ MPX_TEST("filter_window", {
     static auto type = ewmh->_NET_WM_WINDOW_TYPE_TOOLTIP;
     WindowID win = mapWindow(createNormalWindowWithType(type));
     WindowID win2 = mapWindow(createNormalWindow());
-    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(incrementCount));
-    getEventRules(ClientMapAllow).add({
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(CLIENT_MAP_ALLOW).add({
         +[](WindowInfo * winInfo) {
             if(winInfo->getType() == type) {
                 unregisterWindow(winInfo);

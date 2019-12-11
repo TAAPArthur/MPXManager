@@ -81,6 +81,6 @@ bool checkAllChainBindings(const UserEvent& userEvent) {
     return 1;
 }
 void addApplyChainBindingsRule(AddFlag flag) {
-    getEventRules(ProcessDeviceEvent).add(BoundFunction{+[]{return checkAllChainBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkAllChainBindings), PASSTHROUGH_IF_TRUE},
+    getEventRules(DEVICE_EVENT).add(BoundFunction{+[]{return checkAllChainBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkAllChainBindings), PASSTHROUGH_IF_TRUE},
         flag);
 }

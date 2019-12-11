@@ -94,7 +94,7 @@ MPX_TEST_ITER("auto_fullscreen", 4, {
     getAllMonitors()[0]->setViewport({10, 10, 10, 10});
     getAllMonitors()[0]->setBase({1, 2, 1000, 2000});
     static Window win = 0;
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {if(winInfo->getID() == win)winInfo->addMask(FULLSCREEN_MASK);}));
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {if(winInfo->getID() == win)winInfo->addMask(FULLSCREEN_MASK);}));
     switch(_i) {
         case 0:
             mapArbitraryWindow();
@@ -109,7 +109,7 @@ MPX_TEST_ITER("auto_fullscreen", 4, {
             mapArbitraryWindow();
             break;
         case 3:
-            getEventRules(Idle).add(DEFAULT_EVENT(+[]() {getWindowInfo(win)->addMask(MAPPABLE_MASK);}));
+            getEventRules(IDLE).add(DEFAULT_EVENT(+[]() {getWindowInfo(win)->addMask(MAPPABLE_MASK);}));
             win = createNormalWindow();
             waitUntilIdle();
             mapWindow(win);
@@ -140,9 +140,9 @@ MPX_TEST("test_always_on_top_bottom_conflicting_masks", {
         createNormalWindow(),
     };
     scan(root);
-    getWindowInfo(wins[0])->addMask(ALWAYS_ON_BOTTOM | ALWAYS_ON_TOP);
-    getWindowInfo(wins[1])->addMask(ALWAYS_ON_BOTTOM | ABOVE_MASK);
-    getWindowInfo(wins[3])->addMask(ALWAYS_ON_TOP | BELOW_MASK);
+    getWindowInfo(wins[0])->addMask(ALWAYS_ON_BOTTOM_MASK | ALWAYS_ON_TOP_MASK);
+    getWindowInfo(wins[1])->addMask(ALWAYS_ON_BOTTOM_MASK | ABOVE_MASK);
+    getWindowInfo(wins[3])->addMask(ALWAYS_ON_TOP_MASK | BELOW_MASK);
     for(WindowID win : wins) {
         lowerWindow(win);
     }
@@ -236,7 +236,7 @@ static void  userEnvSetup() {
     }
     createIgnoredWindow();
     waitUntilIdle();
-    getWindowInfo(win)->addMask(STICKY_MASK | ALWAYS_ON_BOTTOM);
+    getWindowInfo(win)->addMask(STICKY_MASK | ALWAYS_ON_BOTTOM_MASK);
     mapWindow(win);
     mapArbitraryWindow();
     switchToWorkspace(0);

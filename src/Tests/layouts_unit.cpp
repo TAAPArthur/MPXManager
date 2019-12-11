@@ -36,9 +36,9 @@ MPX_TEST("tile_worskspace_event", {
     scan(root);
     getAllWindows()[0]->moveToWorkspace(0);
     getAllWindows()[1]->moveToWorkspace(1);
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {assertEquals(winInfo, getAllWindows()[0]); return 0;}));
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {assertEquals(winInfo, getAllWindows()[0]); return 0;}));
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
     tileWorkspace(0);
     assertEquals(getCount(), 1);
 });
@@ -89,7 +89,7 @@ MPX_TEST_ITER("test_layouts", NUMBER_OF_LAYOUT_FAMILIES, {
         registerWindow(win, root);
         WindowInfo* winInfo = getWindowInfo(win);
         winInfo->moveToWorkspace(0);
-        winInfo->addMask(FULLY_VISIBLE);
+        winInfo->addMask(FULLY_VISIBLE_MASK);
         assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) >= i);
         retile();
         flush();

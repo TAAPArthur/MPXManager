@@ -142,7 +142,7 @@ MPX_TEST_ITER("test_mpx_aware", 3 * 2, {
     startWM();
     waitUntilIdle();
     static Master* targetMaster = getAllMasters()[_i % getAllMasters().size()];
-    getEventRules(ProcessDeviceEvent).add({[]() {incrementCount(); assertEquals(*targetMaster, *getActiveMaster());}, "_masterCheck"});
+    getEventRules(DEVICE_EVENT).add({[]() {incrementCount(); assertEquals(*targetMaster, *getActiveMaster());}, "_masterCheck"});
     setActiveMaster(targetMaster);
     bool move = _i % 2;
     if(move)

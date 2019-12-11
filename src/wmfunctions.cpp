@@ -34,10 +34,10 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
     if(winInfo->hasMask(MAPPABLE_MASK)) {
         LOG(LOG_LEVEL_DEBUG, "Window is mappable %d\n", winInfo->getID());
         loadWindowProperties(winInfo);
-        if(!applyEventRules(ClientMapAllow, winInfo))
+        if(!applyEventRules(CLIENT_MAP_ALLOW, winInfo))
             return 0;
     }
-    return applyEventRules(PostRegisterWindow, winInfo);
+    return applyEventRules(POST_REGISTER_WINDOW, winInfo);
 }
 
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr) {
@@ -65,7 +65,7 @@ bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr
         delete winInfo;
         return 0;
     }
-    if(!applyEventRules(PreRegisterWindow, winInfo)) {
+    if(!applyEventRules(PRE_REGISTER_WINDOW, winInfo)) {
         delete winInfo;
         return 0;
     }
@@ -125,7 +125,7 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     for(Master* master : getAllMasters())
         if(master->getFocusedWindow() == winInfo)
             mastersFocusedOnWindow.add(master);
-    applyEventRules(UnregisteringWindow, winInfo);
+    applyEventRules(UNREGISTER_WINDOW, winInfo);
     bool result = getAllWindows().removeElement(winInfo) ? 1 : 0;
     if(winInfo)
         delete winInfo;

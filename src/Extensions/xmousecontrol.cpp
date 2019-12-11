@@ -105,7 +105,7 @@ void* runXMouseControl(void* c __attribute__((unused))) {
     return NULL;
 }
 void addStartXMouseControlRule() {
-    getEventRules(onXConnection).add({[]() {runInNewThread(runXMouseControl, NULL, "xmousecontrol");}, FUNC_NAME});
+    getEventRules(X_CONNECTION).add({[]() {runInNewThread(runXMouseControl, NULL, "xmousecontrol");}, FUNC_NAME});
 }
 
 #define PAIR(MASK,KEY,KP,A1,KR,A2)\

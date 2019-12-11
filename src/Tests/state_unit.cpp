@@ -53,7 +53,7 @@ static void setup() {
     assert(getWorkspace(0)->isVisible());
     markState();
     updateState();
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
 }
 SET_ENV(setup, fullCleanup);
 MPX_TEST("test_state_change_num_windows", {
@@ -75,7 +75,7 @@ MPX_TEST("test_mask_change", {
     winInfo->addMask(FULLSCREEN_MASK);
     assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
 
-    winInfo->addMask(FULLY_VISIBLE);
+    winInfo->addMask(FULLY_VISIBLE_MASK);
     markState();
     assert(!updateState());
 });

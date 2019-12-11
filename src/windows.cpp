@@ -71,7 +71,7 @@ void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
     }
     removeFromWorkspace();
     ::getWorkspace(destIndex)->getWindowStack().add(this);
-    applyEventRules(WindowWorkspaceMove, this);
+    applyEventRules(WINDOW_WORKSPACE_CHANGE, this);
 }
 
 

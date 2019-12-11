@@ -64,10 +64,10 @@ void onConfigureNotifyEvent(void) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         winInfo->setGeometry(&event->x);
-        applyEventRules(onWindowMove, winInfo);
+        applyEventRules(WINDOW_MOVE, winInfo);
     }
     if(event->window == root)
-        applyEventRules(onScreenChange);
+        applyEventRules(SCREEN_CHANGE);
 }
 void onConfigureRequestEvent(void) {
     xcb_configure_request_event_t* event = (xcb_configure_request_event_t*)getLastEvent();
@@ -79,13 +79,13 @@ void onConfigureRequestEvent(void) {
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
 bool addDoNotManageOverrideRedirectWindowsRule(AddFlag flag) {
-    return getEventRules(PreRegisterWindow).add({
+    return getEventRules(PRE_REGISTER_WINDOW).add({
         +[](WindowInfo * winInfo) {if(winInfo->isOverrideRedirectWindow())winInfo->setNotManageable();},
         FUNC_NAME,
     }, flag);
 }
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
-    return getEventRules(PreRegisterWindow).add({
+    return getEventRules(PRE_REGISTER_WINDOW).add({
         +[](WindowInfo * winInfo) {return !winInfo->isOverrideRedirectWindow();},
         FUNC_NAME,
         PASSTHROUGH_IF_TRUE
@@ -101,7 +101,7 @@ void onCreateEvent(void) {
     if(registerWindow(event->window, event->parent)) {
         WindowInfo* winInfo = getWindowInfo(event->window);
         winInfo->setGeometry(&event->x);
-        applyEventRules(onWindowMove, winInfo);
+        applyEventRules(WINDOW_MOVE, winInfo);
     }
 }
 void onDestroyEvent(void) {
@@ -114,12 +114,12 @@ void onVisibilityEvent(void) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo)
         if(event->state == XCB_VISIBILITY_FULLY_OBSCURED)
-            winInfo->removeMask(FULLY_VISIBLE);
+            winInfo->removeMask(FULLY_VISIBLE_MASK);
         else if(event->state == XCB_VISIBILITY_UNOBSCURED)
-            winInfo->addMask(FULLY_VISIBLE);
+            winInfo->addMask(FULLY_VISIBLE_MASK);
         else {
-            winInfo->removeMask(FULLY_VISIBLE);
-            winInfo->addMask(PARTIALLY_VISIBLE);
+            winInfo->removeMask(FULLY_VISIBLE_MASK);
+            winInfo->addMask(PARTIALLY_VISIBLE_MASK);
         }
 }
 void onMapEvent(void) {
@@ -128,7 +128,7 @@ void onMapEvent(void) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         if(!winInfo->hasMask(MAPPABLE_MASK))
-            applyEventRules(ClientMapAllow, winInfo);
+            applyEventRules(CLIENT_MAP_ALLOW, winInfo);
         winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
     }
 }
@@ -137,7 +137,7 @@ void onMapRequestEvent(void) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         winInfo->addMask(MAPPABLE_MASK);
-        applyEventRules(ClientMapAllow, winInfo);
+        applyEventRules(CLIENT_MAP_ALLOW, winInfo);
         if(winInfo->getWorkspace())
             return;
     }
@@ -148,7 +148,7 @@ void onUnmapEvent(void) {
     LOG(LOG_LEVEL_TRACE, "Detected unmap event for Window %d\n", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
-        winInfo->removeMask(FULLY_VISIBLE | MAPPED_MASK);
+        winInfo->removeMask(FULLY_VISIBLE_MASK | MAPPED_MASK);
         // used to indicate that the window is no longer mappable
         if(isSyntheticEvent() || winInfo->isOverrideRedirectWindow())
             winInfo->removeMask(MAPPABLE_MASK);
@@ -161,7 +161,7 @@ void onReparentEvent(void) {
         winInfo->setParent(event->parent);
     else if(registerWindow(event->window, event->parent)) {
         WindowInfo* winInfo = getWindowInfo(event->window);
-        applyEventRules(onWindowMove, winInfo);
+        applyEventRules(WINDOW_MOVE, winInfo);
     }
 }
 
@@ -171,7 +171,7 @@ void onFocusInEvent(void) {
     WindowInfo* winInfo = getWindowInfo(event->event);
     LOG(LOG_LEVEL_DEBUG, "Window %d was focused\n", event->event);
     if(winInfo) {
-        if(!winInfo->hasMask(NO_RECORD_FOCUS))
+        if(!winInfo->hasMask(NO_RECORD_FOCUS_MASK))
             getActiveMaster()->onWindowFocus(winInfo->getID());
         setBorder(winInfo->getID());
     }
@@ -210,7 +210,7 @@ static WindowInfo* getTargetWindow(int root, int event, int child) {
     return getWindowInfo(list[i]);
 }
 void addApplyBindingsRule(AddFlag flag) {
-    getEventRules(ProcessDeviceEvent).add({+[]{return checkBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkBindings)},
+    getEventRules(DEVICE_EVENT).add({+[]{return checkBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkBindings)},
         flag);
 }
 void onDeviceEvent(void) {
@@ -223,7 +223,7 @@ void onDeviceEvent(void) {
             (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
             .winInfo = getTargetWindow(event->root, event->event, event->child),
         });
-    applyEventRules(ProcessDeviceEvent, NULL);
+    applyEventRules(DEVICE_EVENT, NULL);
 }
 
 void onGenericEvent(void) {
@@ -270,18 +270,18 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 }
 
 void addAutoTileRules(AddFlag flag) {
-    int events[] = {ClientMapAllow, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
+    int events[] = {CLIENT_MAP_ALLOW, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
             XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
             XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
             XCB_CLIENT_MESSAGE,
-            WindowWorkspaceMove, MonitorWorkspaceChange,
-            onScreenChange,
+            WINDOW_WORKSPACE_CHANGE, MONITOR_WORKSPACE_CHANGE,
+            SCREEN_CHANGE,
         };
     for(auto event : events)
         getEventRules(event).add(DEFAULT_EVENT(markState), flag);
-    getBatchEventRules(onXConnection).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
-    getEventRules(Periodic).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(unmarkState), flag);
+    getBatchEventRules(X_CONNECTION).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
+    getEventRules(PERIODIC).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(unmarkState), flag);
 }
 void assignDefaultLayoutsToWorkspace() {
     for(Workspace* w : getAllWorkspaces())
@@ -309,21 +309,20 @@ void addBasicRules(AddFlag flag) {
     getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusInEvent), flag);
     getEventRules(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusOutEvent), flag);
     getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), flag);
-    getEventRules(onXConnection).add(DEFAULT_EVENT(onXConnect), flag);
-    getEventRules(onXConnection).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
-    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadWindowProperties), flag);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(onXConnect), flag);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadWindowProperties), flag);
     // From the ICCCM spec,
     // "The user will not be able to move, resize, restack, or transfer the input
     // focus to override-redirect windows, since the window manager is not managing them"
     // so it seems like a bug for a OR window to have INPUT_MASK set
-    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}),
-    flag);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}), flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     addDoNotManageOverrideRedirectWindowsRule(flag);
-    getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
+    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
     addApplyBindingsRule(flag);
-    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(detectMonitors), flag);
-    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), flag);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors), flag);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), flag);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
     }

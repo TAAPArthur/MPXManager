@@ -114,7 +114,7 @@ static void autoAttachSlave(void) {
 void addAutoMPXRules(void) {
     ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
     getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_HIERARCHY).add(DEFAULT_EVENT(autoAttachSlave));
-    getEventRules(onXConnection).add(DEFAULT_EVENT(restoreMPX));
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(restoreMPX));
 }
 
 Master* getMasterForSlave(std::string slaveName) {

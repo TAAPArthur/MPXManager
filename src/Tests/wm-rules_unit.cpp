@@ -90,11 +90,11 @@ MPX_TEST("auto_grab_bindings", {
 });
 
 MPX_TEST("test_auto_tile", {
-    getEventRules(onXConnection).add(DEFAULT_EVENT(mapArbitraryWindow));
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(mapArbitraryWindow));
     addBasicRules();
-    getEventRules(TileWorkspace).deleteElements();
-    getEventRules(TileWorkspace).add(DEFAULT_EVENT(incrementCount));
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoResumeWorkspace));
+    getEventRules(TILE_WORKSPACE).deleteElements();
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(autoResumeWorkspace));
     addAutoTileRules();
     createSimpleEnv();
     openXDisplay();
@@ -133,7 +133,7 @@ static inline void createWMEnvWithRunningWM() {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;
     onSimpleStartup();
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());}));
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());}));
     startWM();
     assert(getDeviceBindings().size() == 0);
     waitUntilIdle();
@@ -354,9 +354,9 @@ MPX_TEST("steal_other_selection", {
 
 
 static void clientSetup() {
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);}));
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}));
-    getEventRules(PreRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return !winInfo->isInputOnly();}));
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);}));
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}));
+    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return !winInfo->isInputOnly();}));
     onSimpleStartup();
     addAutoTileRules();
     startWM();

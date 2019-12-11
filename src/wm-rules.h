@@ -120,12 +120,12 @@ void onGenericEvent(void);
 
 /**
  * Adds rules to various events that may indicate that the state has changed. (markState)
- * When any of these are called, we check the state via a Periodic hook. If it indeed has, we retile the workspace.
+ * When any of these are called, we check the state via a PERIODIC hook. If it indeed has, we retile the workspace.
  * We unmark the state if for any reason, a workspace has been retiled
  */
 void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
 /**
- * Adds a PreRegisterWindow rule to ignore override redirect windows
+ * Adds a PRE_REGISTER_WINDOW rule to ignore override redirect windows
  *
  * This method is enabled by default although it reduces functionality.
  *
@@ -133,7 +133,7 @@ void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
  * "The user will not be able to move, resize, restack, or transfer the input
  * focus to override-redirect windows, since the window manager is not managing them"
  * This is interrupted it as it being safe to simply ignore such windows. However,
- * there are cases where one may want apply rules like ALWAYS_ON_TOP to these windows.
+ * there are cases where one may want apply rules like ALWAYS_ON_TOP_MASK to these windows.
  * For such reasons, there are other rule in addBasicRules that will help keep sane
  * behavior even if this rule is removed.
  * @param flag
@@ -142,7 +142,7 @@ void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
  */
 bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
 /**
- * Adds a PreRegisterWindow rule indicating that override redirect windows should not be managed.
+ * Adds a PRE_REGISTER_WINDOW rule indicating that override redirect windows should not be managed.
  * This should prevent them from being automatically added to workspaces/auto focused
  *
  * @param flag
@@ -151,7 +151,7 @@ bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
  */
 bool addDoNotManageOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE) ;
 /**
- * Adds ProcessDeviceEvent rule to trigger any of getDeviceBindings() using getLastUserEvent
+ * Adds DEVICE_EVENT rule to trigger any of getDeviceBindings() using getLastUserEvent
  *
  * @see checkBindings()
  * @param flag

@@ -204,8 +204,8 @@ void saveCustomState(void) {
     flush();
 }
 void addResumeCustomStateRules(AddFlag flag) {
-    getEventRules(onXConnection).add(DEFAULT_EVENT(loadCustomState), flag);
-    getBatchEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(saveCustomState), flag);
-    getBatchEventRules(TileWorkspace).add(DEFAULT_EVENT(saveCustomState), flag);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadCustomState), flag);
+    getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(saveCustomState), flag);
+    getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(saveCustomState), flag);
 }
 

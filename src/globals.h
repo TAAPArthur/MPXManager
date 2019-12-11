@@ -9,6 +9,7 @@
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 #include <string>
+#include "window-masks.h"
 
 /// Sets of masks that only a WM should have
 #define WM_MASKS (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_STRUCTURE_NOTIFY)
@@ -133,7 +134,7 @@ extern uint32_t ROOT_EVENT_MASKS;
 /**
  * A bit mask of WindowMasks that determine which of a Window's masks will be synced with its WM_STATE
  */
-extern uint32_t MASKS_TO_SYNC;
+extern WindowMask MASKS_TO_SYNC;
 /**
  * Masks to determine which src WM_STATE can be changed from. Defaults to all
  * 1 other

@@ -264,7 +264,7 @@ uint16_t getCurrentSequenceNumber(void);
  *
  * @return the WindowMask(s) this atom represents
  */
-WindowMasks getMaskFromAtom(xcb_atom_t atom) ;
+WindowMask getMaskFromAtom(xcb_atom_t atom) ;
 /**
  *
  *

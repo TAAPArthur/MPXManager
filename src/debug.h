@@ -30,7 +30,7 @@ bool validateX();
  */
 bool isWindowMapped(WindowID win);
 /**
- * Adds a TrueIdle rule that will crash the program if an invariant check fails
+ * Adds a TRUE_IDLE rule that will crash the program if an invariant check fails
  */
 void addDieOnIntegrityCheckFailRule();
 #endif

@@ -43,16 +43,6 @@ MPX_TEST("test_mask_add_remove_toggle", {
     delete winInfo;
 });
 
-MPX_TEST("test_mask_reset", {
-    WindowInfo* winInfo = new WindowInfo(1);
-    addWindowInfo(winInfo);
-    winInfo->addMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK | ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK);
-    int nonUserMask = MAPPED_MASK | PARTIALLY_VISIBLE;
-    winInfo->addMask(nonUserMask);
-    winInfo->resetUserMask();
-    assert(winInfo->getUserMask() == 0);
-    assert(winInfo->getMask() == nonUserMask);
-});
 MPX_TEST("test_window_workspace_masks", {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);

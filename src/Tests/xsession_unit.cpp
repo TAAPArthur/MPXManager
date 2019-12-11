@@ -196,7 +196,7 @@ MPX_TEST("test_regular_events", {
     void (*func)(void) = []() {
         assertEquals(batchCount, -count);
         count++;
-        if(i == ExtraEvent)
+        if(i == EXTRA_EVENT)
             return;
         assert(i == (((xcb_generic_event_t*)getLastEvent())->response_type & 127));
         if(i > 2 && i < XCB_GE_GENERIC)
@@ -215,7 +215,7 @@ MPX_TEST("test_regular_events", {
         getEventRules(i).add(DEFAULT_EVENT(func));
         getBatchEventRules(i).add(DEFAULT_EVENT((i % 2 == 0 ? batchFuncEven : batchFuncOdd)));
         switch(i) {
-            case ExtraEvent:
+            case EXTRA_EVENT:
                 event.response_type = -1;
                 xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
                 break;
@@ -249,8 +249,8 @@ MPX_TEST("test_event_spam", {
     EVENT_PERIOD = 5;
     POLL_COUNT = 100;
     POLL_INTERVAL = 10;
-    getEventRules(Periodic).add(DEFAULT_EVENT(requestShutdown));
-    getEventRules(Idle).add(DEFAULT_EVENT(exitFailure));
+    getEventRules(PERIODIC).add(DEFAULT_EVENT(requestShutdown));
+    getEventRules(IDLE).add(DEFAULT_EVENT(exitFailure));
     startWM();
     while(!isShuttingDown()) {
         lock();
@@ -282,9 +282,9 @@ MPX_TEST("true_idle", {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;
     registerForWindowEvents(root, ROOT_EVENT_MASKS);
-    getEventRules(TrueIdle).add(DEFAULT_EVENT(requestShutdown));
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown));
     static int counter = 0;
-    getEventRules(Idle).add({(void(*)())[]() {if(++counter < 10)createNormalWindow();}, "_spam"});
+    getEventRules(IDLE).add({(void(*)())[]() {if(++counter < 10)createNormalWindow();}, "_spam"});
     startWM();
     WAIT_UNTIL_TRUE(isShuttingDown());
     assertEquals(counter, 10);

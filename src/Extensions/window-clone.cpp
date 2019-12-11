@@ -52,7 +52,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     catchError(xcb_icccm_set_wm_hints_checked(dis, win, &hints));
     WindowInfo* clone = new WindowInfo(win, parent, winInfo->getID());
     syncPropertiesWithParent(clone, winInfo);
-    clone->addMask(winInfo->getUserMask());
+    clone->addMask(winInfo->getMask() & EXTERNAL_MASKS);
     clone->addEventMasks(NON_ROOT_EVENT_MASKS | XCB_EVENT_MASK_EXPOSURE);
     if(winInfo->getWorkspace())
         clone->moveToWorkspace(winInfo->getWorkspaceIndex());

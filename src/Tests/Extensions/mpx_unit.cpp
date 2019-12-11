@@ -162,7 +162,7 @@ MPX_TEST("auto_resume", {
     unlock();
     consumeEvents();
     lock();
-    applyEventRules(onXConnection);
+    applyEventRules(X_CONNECTION);
     assertEquals(getAllSlaves()[0]->getMaster(), getMasterByName(names[0]));
     createMasterDevice(names[1]);
     unlock();
@@ -190,7 +190,7 @@ static void setup() {
         }
         assert(m);
     };
-    getEventRules(ProcessDeviceEvent).add(DEFAULT_EVENT(injectSlaveID), PREPEND_UNIQUE);
+    getEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(injectSlaveID), PREPEND_UNIQUE);
     onSimpleStartup();
     startWM();
     waitUntilIdle();
@@ -203,7 +203,7 @@ MPX_TEST_ITER("test_split_master", 2, {
     assertEquals(m->getSlaves().size(), 2);
     assertEquals(getAllSlaves().size(), 2);
     startSplitMaster();
-    getEventRules(ProcessDeviceEvent).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
+    getEventRules(DEVICE_EVENT).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
     sendKeyPress(getKeyCode(XK_A));
     if(_i)
         sendButtonPress(1);
@@ -220,7 +220,7 @@ MPX_TEST_ITER("test_split_master", 2, {
 MPX_TEST("attachActiveSlaveToMaster_bad", {
     createMasterDevice("test");
     initCurrentMasters();
-    getEventRules(ProcessDeviceEvent).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
+    getEventRules(DEVICE_EVENT).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
     grabKeyboard();
     sendKeyPress(getKeyCode(XK_A), getAllMasters()[1]->getID());
     waitUntilIdle();
@@ -228,7 +228,7 @@ MPX_TEST("attachActiveSlaveToMaster_bad", {
 MPX_TEST("cycle_slaves", {
     createMasterDevice("test");
     initCurrentMasters();
-    getEventRules(ProcessDeviceEvent).add({cycleSlave, UP, "cycleSlaves"});
+    getEventRules(DEVICE_EVENT).add({cycleSlave, UP, "cycleSlaves"});
     grabKeyboard();
     sendKeyPress(getKeyCode(XK_A));
     waitUntilIdle();
@@ -239,7 +239,7 @@ MPX_TEST("cycle_slaves", {
 MPX_TEST("swap_slaves", {
     createMasterDevice("test");
     initCurrentMasters();
-    getEventRules(ProcessDeviceEvent).add({swapSlaves, UP, "swapSlaves"});
+    getEventRules(DEVICE_EVENT).add({swapSlaves, UP, "swapSlaves"});
     grabKeyboard();
     sendKeyPress(getKeyCode(XK_A));
     waitUntilIdle();

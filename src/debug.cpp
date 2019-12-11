@@ -58,6 +58,6 @@ void dieOnIntegrityCheckFail() {
     if(!validate())
         quit(3);
 }
-void addDieOnIntegrityCheckFailRule() {
-    getEventRules(TrueIdle).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), PREPEND_UNIQUE);
+void addDieOnIntegrityCheckFailRule(AddFlag flag) {
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), flag);
 }

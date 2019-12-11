@@ -11,120 +11,107 @@
 /// Max number of window masks
 #define NUM_WINDOW_MASKS  32
 
+/// no special properties
+#define NO_MASK 	(0)
+/**The window's X size will equal the size of the monitor's viewport*/
+#define X_MAXIMIZED_MASK 	(1U << 0)
+/**The window's Y size will equal the size of the monitor's viewport*/
+#define Y_MAXIMIZED_MASK 	(1U << 1)
+/// X & Y MAXIMIZED MASK
+#define MAXIMIZED_MASK 	(Y_MAXIMIZED_MASK | X_MAXIMIZED_MASK)
+/**The window's size will equal the size of the monitor (not viewport)     */
+#define FULLSCREEN_MASK 	(1U << 2)
+/**The window's size will equal the size of the screen (union of all monitors)*/
+#define ROOT_FULLSCREEN_MASK 	(1U << 3)
+
+///windows will be below normal windows unless ABOVE_MASK is set is set
+#define BELOW_MASK 	(1U << 4)
+///windows will be above other windows
+#define ABOVE_MASK 	(1U << 5)
+///Window will not be tiled
+#define NO_TILE_MASK 	(1U << 6)
+
+///The window will be treated as unmapped until this mask is removed
+#define HIDDEN_MASK 	(1U << 7)
+
+/// or of all masks that will cause the layout function to skip a window
+#define ALL_NO_TILE_MASKS 	(FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | BELOW_MASK | ABOVE_MASK | NO_TILE_MASK | HIDDEN_MASK)
+
+
+/**Marks the window as urgent*/
+#define URGENT_MASK 	(1U << 8)
 /**
- * Various flags that detail how a window should be treated.
- *
+ * Window is effectively associated with its monitor instead of its workspace
+ * (it is move added between workspaces to stay on its monitor)
  */
-enum WindowMasks {
-    /// no special properties
-    NO_MASK = 0,
-    /**The window's X size will equal the size of the monitor's viewport*/
-    X_MAXIMIZED_MASK =      1 << 0,
-    /**The window's Y size will equal the size of the monitor's viewport*/
-    Y_MAXIMIZED_MASK =      1 << 1,
-    /// X & Y MAXIMIZED MASK
-    MAXIMIZED_MASK =     Y_MAXIMIZED_MASK | X_MAXIMIZED_MASK,
-    /**The window's size will equal the size of the monitor (not viewport)     */
-    FULLSCREEN_MASK =       1 << 2,
-    /**The window's size will equal the size of the screen (union of all monitors)*/
-    ROOT_FULLSCREEN_MASK =  1 << 3,
+#define STICKY_MASK 	(1U << 9)
 
-    ///windows will be below normal windows unless ABOVE_MASK is set is set
-    BELOW_MASK =            1 << 4,
-    ///windows will be above other windows
-    ABOVE_MASK =            1 << 5,
-    ///Window will not be tiled
-    NO_TILE_MASK =          1 << 6,
+/**
+ * Best effort will be made to place all windows with this mask above any other window without it.
+ * One particular flaw the implementation is that if a window with this mask is lowered, it will not automatically be re-raised
+ * This mask is implemented via a WINDOW_MOVE Rule
+ */
+#define ALWAYS_ON_TOP_MASK 	(1U << 10)
+/**
+ * Best effort will be made to place all windows with this mask below any other window without it.
+ * One particular flaw the implementation is that if a window with this mask is raised, it will not automatically be re-lowered
+ * This mask is implemented via a WINDOW_MOVE Rule
+ */
+#define ALWAYS_ON_BOTTOM_MASK 	(1U << 11)
 
+/// Will not update our internal focus representation when a window with this mask is focused
+/// Intended for Desktop windows
+#define NO_RECORD_FOCUS_MASK 	(1U << 16)
+/// Windows with this mask will not be activatable
+/// Intended for Desktop windows
+#define NO_ACTIVATE_MASK 	(1U << 17)
 
-    /**The window's size will equal the size of the monitor (not viewport)     */
-    TRUE_FULLSCREEN_MASK =       FULLSCREEN_MASK | ABOVE_MASK,
-    /**The window's size will equal the size of the screen (union of all monitors)*/
-    TRUE_ROOT_FULLSCREEN_MASK =  ROOT_FULLSCREEN_MASK | ABOVE_MASK,
+/// if the window is not in a workspace it should be positioned relative to the primary monitor if anny
+/// if the window is in a workspace it will be move should be moved to always be in the workspace of the primary monitor if any
+#define PRIMARY_MONITOR_MASK 	(1U << 18)
 
-    ///The window will be treated as unmapped until this mask is removed
-    HIDDEN_MASK =        1 << 7,
+/// Workspace masks will be ignored
+#define IGNORE_WORKSPACE_MASKS_MASK 	(1U << 19)
 
-    /// or of all masks that will cause the layout function to skip a window
-    ALL_NO_TILE_MASKS = FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | BELOW_MASK | ABOVE_MASK | NO_TILE_MASK | HIDDEN_MASK,
-    USER_MASKS = ((1 << 8) - 1),
+/// Window can be externally resized (configure requests are allowed)
+#define EXTERNAL_RESIZE_MASK 	(1U << 20)
+/// Window can be externally moved (configure requests are allowed)
+#define EXTERNAL_MOVE_MASK 	(1U << 21)
+/// Window border size can be externally changed
+#define EXTERNAL_BORDER_MASK 	(1U << 22)
+/// Window cannot be externally raised/lowered (configure requests are blocked)
+#define EXTERNAL_RAISE_MASK 	(1U << 23)
+/// Window won't be tiled and can be freely moved like by external programs/mouse
+#define EXTERNAL_CONFIGURABLE_MASK 	(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK)
+/// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
+#define FLOATING_MASK 	(NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK)
 
-    /// Window can be externally resized (configure requests are allowed)
-    EXTERNAL_RESIZE_MASK =  1 << 8,
-    /// Window can be externally moved (configure requests are allowed)
-    EXTERNAL_MOVE_MASK =    1 << 9,
-    /// Window border size can be externally changed
-    EXTERNAL_BORDER_MASK =    1 << 10,
-    /// Window cannot be externally raised/lowered (configure requests are blocked)
-    EXTERNAL_RAISE_MASK =   1 << 11,
-    /// Window won't be tiled and can be freely moved like by external programs/mouse
-    EXTERNAL_CONFIGURABLE_MASK =            EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
-    /// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
-    FLOATING_MASK =            NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
+/**The window can receive input focus*/
+#define INPUT_MASK 	(1U << 24)
 
-    /**The window can receive input focus*/
-    INPUT_MASK =           1 << 15,
+/**The WM send a client message after focusing the window*/
+#define WM_TAKE_FOCUS_MASK 	(1U << 25)
 
-    /**The WM send a client message after focusing the window*/
-    WM_TAKE_FOCUS_MASK =    1 << 16,
+/**The WM will not forcibly delete windows immediately but request the application dies*/
+#define WM_DELETE_WINDOW_MASK 	(1U << 26)
+/**Used in conjunction with WM_DELETE_WINDOW_MASK to kill the window */
+#define WM_PING_MASK 	(1U << 27)
 
-    /**The WM will not forcibly delete windows immediately but request the application dies*/
-    WM_DELETE_WINDOW_MASK = 1 << 17,
-    /**Used in conjunction with WM_DELETE_WINDOW_MASK to kill the window */
-    WM_PING_MASK =          1 << 18,
+///Keeps track on the visibility state of the window
+#define PARTIALLY_VISIBLE_MASK 	(1U << 28)
+///Keeps track on the visibility state of the window
+#define FULLY_VISIBLE_MASK 	(1U << 29 | PARTIALLY_VISIBLE_MASK)
+///Indicates the window is not withdrawn
+#define MAPPABLE_MASK 	(1U << 30)
+///the window is currently mapped
+#define MAPPED_MASK 	(1U << 31)
 
-    /**
-     * Best effort will be made to place all windows with this mask above any other window without it.
-     * One particular flaw the implementation is that if a window with this mask is lowered, it will not automatically be re-raised
-     * This mask is implemented via a onWindowMove Rule
-     */
-    ALWAYS_ON_TOP = 1 << 20,
-    /**
-     * Best effort will be made to place all windows with this mask below any other window without it.
-     * One particular flaw the implementation is that if a window with this mask is raised, it will not automatically be re-lowered
-     * This mask is implemented via a onWindowMove Rule
-     */
-    ALWAYS_ON_BOTTOM = 1 << 21,
-    //
-    /// Will not update our internal focus representation when a window with this mask is focused
-    /// Intended for Desktop windows
-    NO_RECORD_FOCUS =      1 << 22,
-    /// Windows with this mask will not be activatable
-    /// Intended for Desktop windows
-    NO_ACTIVATE_MASK =      1 << 23,
-
-    /**Marks the window as urgent*/
-    URGENT_MASK =           1 << 24,
-
-    /// if the window is not in a workspace it should be positioned relative to the primary monitor if anny
-    /// if the window is in a workspace it will be move should be moved to always be in the workspace of the primary monitor if any
-    PRIMARY_MONITOR_MASK =   1 << 25,
-    /**
-     * Window is effectively associated with its monitor instead of its workspace
-     * (it is move added between workspaces to stay on its monitor)
-     */
-    STICKY_MASK =   1 << 26,
-
-    /// Workspace masks will be ignored
-    IGNORE_WORKSPACE_MASKS_MASK = 1 << 27,
-
-    ///Keeps track on the visibility state of the window
-    PARTIALLY_VISIBLE =     1 << 28,
-    ///Keeps track on the visibility state of the window
-    FULLY_VISIBLE =         1 << 29 | PARTIALLY_VISIBLE,
-    ///Indicates the window is not withdrawn
-    MAPPABLE_MASK =           1 << 30,
-    ///the window is currently mapped
-    MAPPED_MASK =           1 << 31,
-
-    RETILE_MASKS =           USER_MASKS | MAPPABLE_MASK,
-    /// set all masks
-    ALL_MASK =              -1
-
-} ;
-
-/// typeof WindowInfo::mask
-// typedef unsigned int WindowMask;
+/// These masks indicate state beyond our control and should not be arbitrarily set
+#define EXTERNAL_MASKS 	(INPUT_MASK|WM_TAKE_FOCUS_MASK|WM_DELETE_WINDOW_MASK|WM_PING_MASK|FULLY_VISIBLE_MASK|MAPPABLE_MASK|MAPPED_MASK)
+/// A change in these masks may cause windows to be retiled
+#define RETILE_MASKS 	(MAXIMIZED_MASK | ALL_NO_TILE_MASKS | MAPPABLE_MASK)
+/// set all masks
+#define ALL_MASK        (-1)
 
 /**
  * Contains an bitwise or of WindowMasks
@@ -163,13 +150,13 @@ struct WindowMask {
         _PRINT_MASK(Y_MAXIMIZED_MASK);
         _PRINT_MASK(FULLSCREEN_MASK);
         _PRINT_MASK(ROOT_FULLSCREEN_MASK);
+        _PRINT_MASK(FLOATING_MASK);
         _PRINT_MASK(BELOW_MASK);
         _PRINT_MASK(ABOVE_MASK);
         _PRINT_MASK(NO_TILE_MASK);
         _PRINT_MASK(STICKY_MASK);
         _PRINT_MASK(PRIMARY_MONITOR_MASK);
         _PRINT_MASK(HIDDEN_MASK);
-        _PRINT_MASK(FLOATING_MASK);
         _PRINT_MASK(EXTERNAL_CONFIGURABLE_MASK);
         _PRINT_MASK(EXTERNAL_RESIZE_MASK);
         _PRINT_MASK(EXTERNAL_MOVE_MASK);
@@ -177,15 +164,15 @@ struct WindowMask {
         _PRINT_MASK(EXTERNAL_RAISE_MASK);
         _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK);
         _PRINT_MASK(INPUT_MASK);
-        _PRINT_MASK(NO_RECORD_FOCUS);
+        _PRINT_MASK(NO_RECORD_FOCUS_MASK);
         _PRINT_MASK(NO_ACTIVATE_MASK);
         _PRINT_MASK(WM_TAKE_FOCUS_MASK);
         _PRINT_MASK(WM_DELETE_WINDOW_MASK);
         _PRINT_MASK(WM_PING_MASK);
-        _PRINT_MASK(ALWAYS_ON_TOP);
-        _PRINT_MASK(ALWAYS_ON_BOTTOM);
-        _PRINT_MASK(FULLY_VISIBLE);
-        _PRINT_MASK(PARTIALLY_VISIBLE);
+        _PRINT_MASK(ALWAYS_ON_TOP_MASK);
+        _PRINT_MASK(ALWAYS_ON_BOTTOM_MASK);
+        _PRINT_MASK(FULLY_VISIBLE_MASK);
+        _PRINT_MASK(PARTIALLY_VISIBLE_MASK);
         _PRINT_MASK(MAPPED_MASK);
         _PRINT_MASK(MAPPABLE_MASK);
         _PRINT_MASK(URGENT_MASK);
@@ -235,19 +222,6 @@ struct HasMask {
      */
     bool hasMask(WindowMask mask) const {
         return hasPartOfMask(mask) == mask;
-    }
-    /**
-     * Returns the subset of mask that refers to user set masks
-     */
-    WindowMask getUserMask() const {
-        return hasPartOfMask(USER_MASKS);
-    }
-
-    /**
-     * Resets the user controlled state to the defaults
-     */
-    void resetUserMask() {
-        mask &= ~USER_MASKS;
     }
 
     /**

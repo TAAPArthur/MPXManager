@@ -268,7 +268,7 @@ void tileWorkspace(WorkspaceID index) {
     Workspace* workspace = getWorkspace(index);
     LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d\n", index);
     if(!workspace->getMonitor() ||
-        !applyEventRules(TileWorkspace, !workspace->getWindowStack().empty() ? workspace->getWindowStack()[0] : NULL))
+        !applyEventRules(TILE_WORKSPACE, !workspace->getWindowStack().empty() ? workspace->getWindowStack()[0] : NULL))
         return;
     Monitor* m = workspace->getMonitor();
     assert(m);

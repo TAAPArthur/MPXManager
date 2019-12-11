@@ -21,7 +21,7 @@
 
 
 void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->isImplicitType() && winInfo->isInputOnly() ? unregisterWindow(winInfo) : 0;},
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->isImplicitType() && winInfo->isInputOnly() ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
@@ -31,20 +31,20 @@ static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
 }
 
 void addIgnoreSmallWindowRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 5) ? unregisterWindow(winInfo) : 0;},
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 5) ? unregisterWindow(winInfo) : 0;},
     FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
 }
 void (*printStatusMethod)();
 void addPrintStatusRule(AddFlag flag) {
-    getEventRules(Idle).add(new BoundFunction(+[]() {
+    getEventRules(IDLE).add(new BoundFunction(+[]() {
         if(printStatusMethod && STATUS_FD)
             printStatusMethod();
     }, FUNC_NAME), flag);
 }
 void addDesktopRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) {
-            winInfo->addMask(NO_ACTIVATE_MASK | NO_RECORD_FOCUS | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
+            winInfo->addMask(NO_ACTIVATE_MASK | NO_RECORD_FOCUS_MASK | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
                 BELOW_MASK | STICKY_MASK);
             winInfo->setTilingOverrideEnabled(3);
         }
@@ -52,13 +52,13 @@ void addDesktopRule(AddFlag flag) {
     FUNC_NAME), flag);
 }
 void addFloatRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() != ewmh->_NET_WM_WINDOW_TYPE_NORMAL) floatWindow(winInfo);
     }, FUNC_NAME), flag);
 }
 
 void addAvoidDocksRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) {
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
         assert(winInfo->getType());
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
             LOG(LOG_LEVEL_DEBUG, "Marking window as dock\n");
@@ -71,7 +71,7 @@ void addAvoidDocksRule(AddFlag flag) {
     }, FUNC_NAME), flag);
 }
 void addNoDockFocusRule(AddFlag flag) {
-    getEventRules(ClientMapAllow).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK | WM_TAKE_FOCUS_MASK);},
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK | WM_TAKE_FOCUS_MASK);},
     FUNC_NAME), flag);
 }
 void addFocusFollowsMouseRule(AddFlag flag) {
@@ -89,23 +89,23 @@ void focusFollowMouse() {
 }
 static int nonAlwaysOnTopOrBottomWindowMoved;
 static void markAlwaysOnTop(WindowInfo* winInfo) {
-    if(!winInfo->hasPartOfMask(ALWAYS_ON_TOP | ALWAYS_ON_BOTTOM))
+    if(!winInfo->hasPartOfMask(ALWAYS_ON_TOP_MASK | ALWAYS_ON_BOTTOM_MASK))
         nonAlwaysOnTopOrBottomWindowMoved = 1;
 }
 static void enforceAlwaysOnTop() {
     if(nonAlwaysOnTopOrBottomWindowMoved) {
         for(WindowInfo* winInfo : getAllWindows()) {
-            if(winInfo->hasMask(ALWAYS_ON_BOTTOM))
+            if(winInfo->hasMask(ALWAYS_ON_BOTTOM_MASK))
                 lowerWindow(winInfo->getID());
-            else if(winInfo->hasMask(ALWAYS_ON_TOP))
+            else if(winInfo->hasMask(ALWAYS_ON_TOP_MASK))
                 raiseWindow(winInfo->getID());
         }
         nonAlwaysOnTopOrBottomWindowMoved = 0;
     }
 }
 void addAlwaysOnTopBottomRules(AddFlag flag) {
-    getEventRules(onWindowMove).add(DEFAULT_EVENT(markAlwaysOnTop), flag);
-    getBatchEventRules(onWindowMove).add(DEFAULT_EVENT(enforceAlwaysOnTop), flag);
+    getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(markAlwaysOnTop), flag);
+    getBatchEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(enforceAlwaysOnTop), flag);
 }
 
 static void stickyPrimaryMonitor() {
@@ -132,20 +132,20 @@ static void stickyPrimaryMonitor() {
         }
 }
 void addStickyPrimaryMonitorRule(AddFlag flag) {
-    getBatchEventRules(ClientMapAllow).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
-    getBatchEventRules(onScreenChange).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
+    getBatchEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
 }
 
 
 void addDieOnIdleRule(AddFlag flag) {
-    getEventRules(TrueIdle).add(DEFAULT_EVENT(+[]() {quit(0);}), flag);
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(+[]() {quit(0);}), flag);
 }
 void addShutdownOnIdleRule(AddFlag flag) {
-    getEventRules(TrueIdle).add(DEFAULT_EVENT(requestShutdown), flag);
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), flag);
 }
 
 void keepTransientsOnTop(WindowInfo* winInfo) {
-    if(!winInfo->hasMask(ALWAYS_ON_TOP)) {
+    if(!winInfo->hasMask(ALWAYS_ON_TOP_MASK)) {
         WindowID id = winInfo->getID();
         for(WindowInfo* winInfo2 : getAllWindows()) {
             if(winInfo2->isInteractable() && winInfo2->getTransientFor() == id)
@@ -154,7 +154,7 @@ void keepTransientsOnTop(WindowInfo* winInfo) {
     }
 }
 void addKeepTransientsOnTopRule(AddFlag flag) {
-    getEventRules(onWindowMove).add(DEFAULT_EVENT(keepTransientsOnTop), flag);
+    getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(keepTransientsOnTop), flag);
 }
 
 void autoFocus() {
@@ -180,7 +180,7 @@ void addAutoFocusRule(AddFlag flag) {
     getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(autoFocus), flag);
 }
 void addScanChildrenRule(AddFlag flag) {
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(scan), flag);
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(scan), flag);
 }
 static bool isNotRepeatedKey() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
@@ -194,7 +194,7 @@ static void setDefaultBorderWidth(WindowInfo* winInfo) {
         configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &DEFAULT_BORDER_WIDTH);
 }
 void addDefaultBorderRule(AddFlag flag) {
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(setDefaultBorderWidth), flag);
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultBorderWidth), flag);
 }
 static bool unregisterNonTopLevelWindows() {
     xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
@@ -222,15 +222,15 @@ static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
     }
 }
 void addMoveNonTileableWindowsToWorkspaceBounds() {
-    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
 }
 static void convertNonManageableWindowMask(WindowInfo* winInfo) {
     if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_NORMAL && winInfo->isNotManageable())
         if(winInfo->hasMask(BELOW_MASK))
-            winInfo->addMask(ALWAYS_ON_BOTTOM);
+            winInfo->addMask(ALWAYS_ON_BOTTOM_MASK);
         else if(winInfo->hasMask(ABOVE_MASK))
-            winInfo->addMask(ALWAYS_ON_TOP);
+            winInfo->addMask(ALWAYS_ON_TOP_MASK);
 }
 void addConvertNonManageableWindowMask() {
-    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(convertNonManageableWindowMask));
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(convertNonManageableWindowMask));
 }

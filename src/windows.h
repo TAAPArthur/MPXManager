@@ -266,10 +266,10 @@ public:
 
     WindowMask hasPartOfMask(WindowMask mask)const override ;
     /**
-     * @return 1 iff the window is PARTIALLY_VISIBLE or VISIBLE
+     * @return 1 iff the window is PARTIALLY_VISIBLE_MASK or VISIBLE
      */
     bool isVisible() const {
-        return hasMask(PARTIALLY_VISIBLE);
+        return hasMask(PARTIALLY_VISIBLE_MASK);
     }
     /**
      *

@@ -107,7 +107,7 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, Button3, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, {.passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, XK_t, sinkWindow},
-        {DEFAULT_MOD_MASK | ControlMask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(ALWAYS_ON_TOP);}},
+        {DEFAULT_MOD_MASK | ControlMask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(ALWAYS_ON_TOP_MASK);}},
         {DEFAULT_MOD_MASK | Mod1Mask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(STICKY_MASK);}},
 
         {0, XF86XK_AudioPlay, +[]() {toggleLayout(FULL);}},
