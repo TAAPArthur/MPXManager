@@ -270,12 +270,12 @@ WindowMasks getMaskFromAtom(xcb_atom_t atom) ;
  *
  * @param masks
  * @param arr an sufficiently large array used to store the atoms retrieved from masks
+ * @param action whether to return ACTION or STATE atoms
  *
  * @see getMaskFromAtom
  *
- * @return the number of atoms written to arr
  */
-int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) ;
+void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action = 0);
 
 
 /**

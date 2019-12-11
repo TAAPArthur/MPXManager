@@ -6,88 +6,14 @@
 #ifndef MPX_EWMH_H_
 #define MPX_EWMH_H_
 
-#include "masters.h"
-#include "mywm-structs.h"
-#include "windows.h"
-#include "xsession.h"
 #include <string.h>
 #include <string>
 #include <xcb/xcb_ewmh.h>
 
-
-/// List of supported actions
-#define SUPPORTED_ACTIONS\
-    ewmh->_NET_WM_ACTION_ABOVE, \
-    ewmh->_NET_WM_ACTION_BELOW,\
-    ewmh->_NET_WM_ACTION_CHANGE_DESKTOP,\
-    ewmh->_NET_WM_ACTION_CLOSE,\
-    ewmh->_NET_WM_ACTION_FULLSCREEN,\
-    ewmh->_NET_WM_ACTION_MAXIMIZE_HORZ,\
-    ewmh->_NET_WM_ACTION_MAXIMIZE_VERT,\
-    ewmh->_NET_WM_ACTION_MINIMIZE,\
-    ewmh->_NET_WM_ACTION_STICK,\
-    ewmh->_NET_WM_ACTION_MOVE,\
-    ewmh->_NET_WM_ACTION_RESIZE
-
-/// list of supported states
-#define SUPPORTED_STATES\
-       ewmh->_NET_WM_STATE_ABOVE,\
-       ewmh->_NET_WM_STATE_BELOW,\
-       ewmh->_NET_WM_STATE_DEMANDS_ATTENTION,\
-       ewmh->_NET_WM_STATE_FULLSCREEN,\
-       ewmh->_NET_WM_STATE_HIDDEN,\
-       ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,\
-       ewmh->_NET_WM_STATE_MAXIMIZED_VERT,\
-       ewmh->_NET_WM_STATE_STICKY,\
-       WM_STATE_ROOT_FULLSCREEN,\
-       WM_STATE_NO_TILE,\
-/// List of all supported types
-#define SUPPORTED_TYPES \
-       ewmh->_NET_WM_WINDOW_TYPE_NORMAL,\
-       ewmh->_NET_WM_WINDOW_TYPE_DOCK,\
-       ewmh->_NET_WM_WINDOW_TYPE_DIALOG,\
-       ewmh->_NET_WM_WINDOW_TYPE_UTILITY,\
-       ewmh->_NET_WM_WINDOW_TYPE_TOOLBAR,\
-       ewmh->_NET_WM_WINDOW_TYPE_SPLASH,\
-       ewmh->_NET_WM_WINDOW_TYPE_MENU,\
-       ewmh->_NET_WM_WINDOW_TYPE_DROPDOWN_MENU,\
-       ewmh->_NET_WM_WINDOW_TYPE_POPUP_MENU,\
-       ewmh->_NET_WM_WINDOW_TYPE_NOTIFICATION,
-/**
- * Sets all the ewmh we support.
- *
- * Note that by default we don't support large desktops
- *
- * We don't currently support _NET_CLIENT_LIST_STACKING because it is a pain to properly implement
- */
-#define SET_SUPPORTED_OPERATIONS(ewmh){\
-    xcb_atom_t net_atoms[] = { \
-           ewmh->_NET_SUPPORTED,\
-           ewmh->_NET_SUPPORTING_WM_CHECK,\
-           ewmh->_NET_WM_NAME,\
-           \
-           ewmh->_NET_CLIENT_LIST,\
-           \
-           ewmh->_NET_WM_STRUT, ewmh->_NET_WM_STRUT_PARTIAL,\
-           ewmh->_NET_WM_STATE,\
-               SUPPORTED_STATES\
-           ewmh->_NET_WM_WINDOW_TYPE,\
-               SUPPORTED_TYPES\
-           ewmh->_NET_ACTIVE_WINDOW,ewmh->_NET_CLOSE_WINDOW,\
-           ewmh->_NET_WM_DESKTOP,\
-               ewmh->_NET_NUMBER_OF_DESKTOPS,\
-               ewmh->_NET_CURRENT_DESKTOP,\
-                ewmh->_NET_SHOWING_DESKTOP,\
-               ewmh->_NET_DESKTOP_NAMES,\
-               ewmh->_NET_DESKTOP_VIEWPORT,\
-            ewmh->_NET_WM_USER_TIME_WINDOW,ewmh->_NET_WM_USER_TIME,\
-           SUPPORTED_ACTIONS,\
-           ewmh->_NET_DESKTOP_GEOMETRY,ewmh->_NET_DESKTOP_VIEWPORT,ewmh->_NET_WORKAREA\
-           };\
-           xcb_ewmh_set_supported_checked(ewmh, defaultScreenNumber,\
-            sizeof(net_atoms) / sizeof(xcb_atom_t) , net_atoms);\
-        }
-
+#include "masters.h"
+#include "mywm-structs.h"
+#include "windows.h"
+#include "xsession.h"
 /**
  * Helper class to concate strings (along with the null pointer) so that they
  * can be posted as a window property
@@ -145,6 +71,14 @@ bool isMPXManagerRunning(void);
  * unsupported values from the root window
  */
 void broadcastEWMHCompilence();
+/**
+ * Sets all the ewmh we support.
+ *
+ * Note that by default we don't support large desktops
+ *
+ * We don't currently support _NET_CLIENT_LIST_STACKING because it is a pain to properly implement
+ */
+void setSupportedActions();
 
 /**
  * Updates the root window with a list of windows we are managing
@@ -366,6 +300,11 @@ void setXWindowStateFromMask(WindowInfo* winInfo);
  * @see setWindowStateFromAtomInfo
  */
 void loadSavedAtomState(WindowInfo* winInfo);
+
+/**
+ * Updates WM_STATE for all MAPPABLE windows where MASKS_TO_SYNC has changed
+ */
+void updateXWindowStateForAllWindows();
 
 /**
  * Sets the window state based on a list of atoms

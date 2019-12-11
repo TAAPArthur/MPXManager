@@ -48,7 +48,6 @@ void broadcastEWMHCompilence() {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
-    SET_SUPPORTED_OPERATIONS(ewmh);
     xcb_ewmh_set_wm_pid(ewmh, getPrivateWindow(), getpid());
     setWindowClass(getPrivateWindow(), numPassedArguments ? passedArguments[0] : WINDOW_MANAGER_NAME, WINDOW_MANAGER_NAME);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
@@ -56,12 +55,51 @@ void broadcastEWMHCompilence() {
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
     // Not strictly needed
     updateWorkspaceNames();
+    setSupportedActions();
     LOG(LOG_LEVEL_DEBUG, "Complied with EWMH/ICCCM specs\n");
 }
 
+void setSupportedActions() {
+    ArrayList<xcb_atom_t> net_atoms = {
+        ewmh->_NET_SUPPORTED,
+        ewmh->_NET_SUPPORTING_WM_CHECK,
+        ewmh->_NET_WM_NAME,
+        ewmh->_NET_CLIENT_LIST,
+        ewmh->_NET_WM_STRUT, ewmh->_NET_WM_STRUT_PARTIAL,
+        ewmh->_NET_WM_STATE,
+        ewmh->_NET_WM_WINDOW_TYPE,
+        ewmh->_NET_WM_WINDOW_TYPE_NORMAL,
+        ewmh->_NET_WM_WINDOW_TYPE_DOCK,
+        ewmh->_NET_WM_WINDOW_TYPE_DIALOG,
+        ewmh->_NET_WM_WINDOW_TYPE_UTILITY,
+        ewmh->_NET_WM_WINDOW_TYPE_TOOLBAR,
+        ewmh->_NET_WM_WINDOW_TYPE_SPLASH,
+        ewmh->_NET_WM_WINDOW_TYPE_MENU,
+        ewmh->_NET_WM_WINDOW_TYPE_DROPDOWN_MENU,
+        ewmh->_NET_WM_WINDOW_TYPE_POPUP_MENU,
+        ewmh->_NET_WM_WINDOW_TYPE_NOTIFICATION,
+        ewmh->_NET_ACTIVE_WINDOW, ewmh->_NET_CLOSE_WINDOW,
+        ewmh->_NET_WM_DESKTOP, ewmh->_NET_NUMBER_OF_DESKTOPS,
+        ewmh->_NET_CURRENT_DESKTOP, ewmh->_NET_SHOWING_DESKTOP,
+        ewmh->_NET_DESKTOP_NAMES, ewmh->_NET_DESKTOP_VIEWPORT,
+        ewmh->_NET_WM_USER_TIME_WINDOW, ewmh->_NET_WM_USER_TIME,
+        ewmh->_NET_WM_ACTION_ABOVE, ewmh->_NET_WM_ACTION_BELOW,
+        ewmh->_NET_WM_ACTION_CHANGE_DESKTOP,
+        ewmh->_NET_WM_ACTION_CLOSE, ewmh->_NET_WM_ACTION_STICK,
+        ewmh->_NET_WM_ACTION_FULLSCREEN, ewmh->_NET_WM_ACTION_MINIMIZE,
+        ewmh->_NET_WM_ACTION_MAXIMIZE_HORZ, ewmh->_NET_WM_ACTION_MAXIMIZE_VERT,
+        ewmh->_NET_WM_ACTION_MOVE, ewmh->_NET_WM_ACTION_RESIZE,
+        ewmh->_NET_DESKTOP_GEOMETRY, ewmh->_NET_DESKTOP_VIEWPORT, ewmh->_NET_WORKAREA
+    };
+    getAtomsFromMask(MASKS_TO_SYNC, net_atoms);
+    xcb_ewmh_set_supported_checked(ewmh, defaultScreenNumber, net_atoms.size(), net_atoms.data());
+}
 void setAllowedActions(WindowInfo* winInfo) {
-    static xcb_atom_t actions[] = {SUPPORTED_ACTIONS};
-    xcb_ewmh_set_wm_allowed_actions_checked(ewmh, winInfo->getID(), LEN(actions), actions);
+    ArrayList<xcb_atom_t> actions = {
+        ewmh->_NET_WM_ACTION_CHANGE_DESKTOP, ewmh->_NET_WM_ACTION_CLOSE,
+    };
+    getAtomsFromMask(MASKS_TO_SYNC, actions, 1);
+    xcb_ewmh_set_wm_allowed_actions_checked(ewmh, winInfo->getID(), actions.size(), actions.data());
 }
 
 void updateEWMHClientList() {
@@ -104,8 +142,9 @@ void addEWMHRules(AddFlag flag) {
         mappedOrder.removeElement(winInfo->getID());
     },
     "_unrecordWindow"}, flag);
+    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(loadSavedAtomState));
+    getEventRules(PossibleStateChange).add(DEFAULT_EVENT(updateXWindowStateForAllWindows));
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(loadSavedAtomState));
     getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(setAllowedActions));
     getEventRules(TrueIdle).add(DEFAULT_EVENT(setActiveProperties), flag);
     getEventRules(WindowWorkspaceMove).add(DEFAULT_EVENT(setSavedWorkspaceIndex), flag);
@@ -151,6 +190,14 @@ bool isShowingDesktop(void) {
     xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
     return value;
 }
+/**
+ * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
+ * @param source
+ * @return
+ */
+static bool allowRequestFromSource(int source) {
+    return SRC_INDICATION & (1 << (source));
+}
 
 void onClientMessage(void) {
     xcb_client_message_event_t* event = (xcb_client_message_event_t*)getLastEvent();
@@ -163,7 +210,7 @@ void onClientMessage(void) {
     else if(message == ewmh->_NET_ACTIVE_WINDOW) {
         //data: source,timestamp,current active window
         WindowInfo* winInfo = getWindowInfo(win);
-        if(winInfo && winInfo->allowRequestFromSource(data.data32[0])) {
+        if(winInfo && allowRequestFromSource(data.data32[0])) {
             Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
             if(m)
                 setActiveMaster(m);
@@ -180,14 +227,14 @@ void onClientMessage(void) {
         WindowInfo* winInfo = getWindowInfo(win);
         if(!winInfo)
             killClientOfWindow(win);
-        else if(winInfo->allowRequestFromSource(data.data32[0])) {
+        else if(allowRequestFromSource(data.data32[0])) {
             killClientOfWindowInfo(winInfo);
         }
     }
     else if(message == ewmh->_NET_RESTACK_WINDOW) {
         WindowInfo* winInfo = getWindowInfo(win);
         LOG(LOG_LEVEL_TRACE, "Restacking Window %d sibling %d detail %d\n\n", win, data.data32[1], data.data32[2]);
-        if(winInfo && winInfo->allowRequestFromSource(data.data32[0]))
+        if(winInfo && allowRequestFromSource(data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
                 XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
     }
@@ -203,14 +250,14 @@ void onClientMessage(void) {
         for(int i = 1; i <= 4; i++)
             values[i - 1] = data.data32[i];
         WindowInfo* winInfo = getWindowInfo(win);
-        if(winInfo && winInfo->allowRequestFromSource(source)) {
+        if(winInfo && allowRequestFromSource(source)) {
             processConfigureRequest(win, values, 0, 0, mask);
         }
     }
     else if(message == ewmh->_NET_WM_MOVERESIZE) {
         // x,y, direction, button, src
         WindowInfo* winInfo = getWindowInfo(win);
-        if(winInfo && winInfo->allowRequestFromSource(data.data32[4])) {
+        if(winInfo && allowRequestFromSource(data.data32[4])) {
             int dir = data.data32[2];
             bool allowMoveX = XCB_EWMH_WM_MOVERESIZE_SIZE_TOP != dir && XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOM != dir ;
             bool allowMoveY = XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT != dir && XCB_EWMH_WM_MOVERESIZE_SIZE_LEFT != dir ;
@@ -228,7 +275,7 @@ void onClientMessage(void) {
         WorkspaceID destIndex = data.data32[0];
         if(!(destIndex == NO_WORKSPACE || destIndex < getNumberOfWorkspaces()))
             destIndex = getNumberOfWorkspaces() - 1;
-        if(winInfo && winInfo->allowRequestFromSource(data.data32[1])) {
+        if(winInfo && allowRequestFromSource(data.data32[1])) {
             LOG(LOG_LEVEL_DEBUG, "Changing window workspace %d %d\n\n", destIndex, data.data32[0]);
             winInfo->moveToWorkspace(destIndex);
         }
@@ -241,8 +288,10 @@ void onClientMessage(void) {
         LOG(LOG_LEVEL_INFO, "Got request to change window state from %d\n", data.data32[3]);
         LOG_RUN(LOG_LEVEL_INFO, dumpAtoms(&data.data32[1], num));
         if(winInfo) {
-            if(winInfo->allowRequestFromSource(data.data32[3]))
+            if(allowRequestFromSource(data.data32[3])) {
                 setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
+                setXWindowStateFromMask(winInfo);
+            }
             else
                 LOG(LOG_LEVEL_INFO, "Client message denied\n");
         }
@@ -390,6 +439,20 @@ void updateWindowMoveResize(Master* m) {
     }
 }
 
+void updateXWindowStateForAllWindows() {
+    static std::unordered_map<WindowID, uint32_t> savedWindowMasks;
+    for(WindowInfo* winInfo : getAllWindows()) {
+        if(winInfo->hasMask(MAPPABLE_MASK))
+            if(!savedWindowMasks.count(winInfo->getID()) ||
+                winInfo->getMask() & MASKS_TO_SYNC != savedWindowMasks[winInfo->getID()]) {
+                setXWindowStateFromMask(winInfo);
+            }
+    }
+    savedWindowMasks.clear();
+    for(WindowInfo* winInfo : getAllWindows())
+        if(winInfo->hasMask(MAPPABLE_MASK))
+            savedWindowMasks[winInfo->getID()] = winInfo->getMask() & MASKS_TO_SYNC;
+}
 void loadSavedAtomState(WindowInfo* winInfo) {
     xcb_ewmh_get_atoms_reply_t reply;
     if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL)) {
@@ -398,27 +461,21 @@ void loadSavedAtomState(WindowInfo* winInfo) {
     }
 }
 void setXWindowStateFromMask(WindowInfo* winInfo) {
-    LOG(LOG_LEVEL_INFO, "Setting X State for window %d from masks %d\n", winInfo->getID(), (int)winInfo->getMask());
-    xcb_atom_t supportedStates[] = {SUPPORTED_STATES};
+    logger.info() << "Setting X State for window " << winInfo->getID() << " from masks " << winInfo->getMask() << std::endl;
     xcb_ewmh_get_atoms_reply_t reply;
-    int count = 0;
     bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL);
-    xcb_atom_t windowState[LEN(supportedStates) + (hasState ? reply.atoms_len : 0)];
+    ArrayList<xcb_atom_t> windowState;
     if(hasState) {
+        LOG(LOG_LEVEL_DEBUG, "Window currently has %d states\n", reply.atoms_len);
         for(uint32_t i = 0; i < reply.atoms_len; i++) {
-            char isSupportedState = 0;
-            for(uint32_t n = 0; n < LEN(supportedStates); n++)
-                if(supportedStates[n] == reply.atoms[i]) {
-                    isSupportedState = 1;
-                    break;
-                }
-            if(!isSupportedState)
-                windowState[count++] = reply.atoms[i];
+            if((getMaskFromAtom(reply.atoms[i]) & MASKS_TO_SYNC) == 0)
+                windowState.add(reply.atoms[i]);
         }
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
-    count += getAtomsFromMask(winInfo->getMask(), windowState + count);
-    xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), count, windowState);
+    getAtomsFromMask(winInfo->getMask() & MASKS_TO_SYNC, windowState);
+    xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), windowState.size(), windowState.data());
+    LOG(LOG_LEVEL_DEBUG, "Set %d states\n", windowState.size());
 }
 
 void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
@@ -427,13 +484,10 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
     for(unsigned int i = 0; i < numberOfAtoms; i++) {
         mask |= getMaskFromAtom(atoms[i]);
     }
-    if(action == XCB_EWMH_WM_STATE_TOGGLE) {
-        if(winInfo->hasMask(mask))
-            action = XCB_EWMH_WM_STATE_REMOVE;
-        else
-            action = XCB_EWMH_WM_STATE_ADD;
-    }
-    if(action == XCB_EWMH_WM_STATE_REMOVE)
+    mask &= MASKS_TO_SYNC;
+    if(action == XCB_EWMH_WM_STATE_TOGGLE)
+        winInfo->toggleMask(mask);
+    else if(action == XCB_EWMH_WM_STATE_REMOVE)
         winInfo->removeMask(mask);
     else
         winInfo->addMask(mask);

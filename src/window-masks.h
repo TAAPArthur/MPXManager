@@ -8,13 +8,9 @@
 #include <string>
 #include "mywm-structs.h"
 
+/// Max number of window masks
+#define NUM_WINDOW_MASKS  32
 
-/**
- * Offset for SRC_INDICATION_* masks
- * These masks specify which type of external sources are allowed to modify the window
- * Adding [0,2] and raising 2 to that power yields OTHER,APP and PAGER SRC_INDICATION_ masks respectively
- */
-#define SRC_INDICATION_OFFSET 12
 /**
  * Various flags that detail how a window should be treated.
  *
@@ -65,16 +61,6 @@ enum WindowMasks {
     EXTERNAL_CONFIGURABLE_MASK =            EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK,
     /// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
     FLOATING_MASK =            NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK,
-
-    ///Allow client requests from older clients who don't specify what they are
-    SRC_INDICATION_OTHER =   1 << SRC_INDICATION_OFFSET,
-    ///Allow client requests from normal applications
-    SRC_INDICATION_APP =     1 << (SRC_INDICATION_OFFSET + 1),
-    ///Allow client requests from pagers
-    SRC_INDICATION_PAGER =   1 << (SRC_INDICATION_OFFSET + 2),
-    /// allow from any source
-    SRC_ANY =                SRC_INDICATION_OTHER | SRC_INDICATION_APP | SRC_INDICATION_PAGER,
-
 
     /**The window can receive input focus*/
     INPUT_MASK =           1 << 15,
@@ -189,10 +175,6 @@ struct WindowMask {
         _PRINT_MASK(EXTERNAL_MOVE_MASK);
         _PRINT_MASK(EXTERNAL_BORDER_MASK);
         _PRINT_MASK(EXTERNAL_RAISE_MASK);
-        _PRINT_MASK(SRC_ANY);
-        _PRINT_MASK(SRC_INDICATION_OTHER);
-        _PRINT_MASK(SRC_INDICATION_APP);
-        _PRINT_MASK(SRC_INDICATION_PAGER);
         _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK);
         _PRINT_MASK(INPUT_MASK);
         _PRINT_MASK(NO_RECORD_FOCUS);

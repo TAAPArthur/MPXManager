@@ -62,7 +62,18 @@ All structs/vars/methods/files have Doxygen documentation. But there is no tutor
 You would put the following code in your config file which is located by default in $HOME/.mpxmanager/
 You want some window to always be above the others. You found the window class, C, by using the `--dump` command ( or used a tool like xprop, xwininfo etc).
 
-For more examples see settings.c for all the defaults
+For more examples see settings.cpp for all the defaults
+
+# Troubleshooting
+## Cannot enter/leave fullscreen in application X
+Some applications don't differentiate between application level fullscreen (hiding tabs/tools bars) from WM level full screen (taking up the entire screen). MPXManager by default does and denies applications that wish to change the WM_STATE. This can cause applications like Firefox, to subsequently ignore users who are trying to enter fullscreen (like through F11 or by trying to fullscreen a video).
+If you agree with us, then fix, the application. For firefox, this is as simple as full-screen-api.ignore-widgets field in about:config to true.
+
+If you don't, add `MASKS_TO_SYNC |= FULLSCREEN_MASK` to your config file. This causes FULLSCREEN_MASK to be in sync with _NET_WM_STATE_FULLSCREEN. So causing the application to be "full screen" will likely cause the window to actually take up the entire screen automatically. Alternatively you remove the ewmh rules thus making other applications not known their is a EWMH compliant WM running and they won't try and ask us. This is not recommended as it can cause other random problems, see below.
+
+## Applications X steals focus overtime a use a key binding
+This problem has been reported in Chromium, when ewmh rules are not set. The application doesn't know there isn't a EWMH complainant WM running (because we don't tell anyone) so some applications will steal focus. By default we call `addEWMHRules()` so this problem shouldn't occur (or its a bug in that application) unless the user explicitly removed it.
+
 
 # License
 MIT

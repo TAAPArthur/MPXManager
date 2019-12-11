@@ -337,14 +337,6 @@ public:
         return hasMask(EXTERNAL_RAISE_MASK) || !isMappable();
     }
     /**
-     * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
-     * @param source
-     * @return
-     */
-    bool allowRequestFromSource(int source) {
-        return hasMask(1 << (source + SRC_INDICATION_OFFSET));
-    }
-    /**
      *
      * @return the workspace index the window is in or NO_WORKSPACE
      */

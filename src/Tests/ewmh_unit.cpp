@@ -168,9 +168,25 @@ MPX_TEST("test_toggle_show_desktop", {
     assert(checkStackingOrder(stackingOrder, 2));
 });
 
+MPX_TEST("test_sync_window_state", {
+    assert(MASKS_TO_SYNC);
+    assert(!getAllWindows().size());
+    WindowID win = mapWindow(createNormalWindow());
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    winInfo->addMask(MASKS_TO_SYNC);
+    setXWindowStateFromMask(winInfo);
+    unregisterWindow(winInfo);
+    scan(root);
+    winInfo = getWindowInfo(win);
+    loadSavedAtomState(winInfo);
+    assertEquals(winInfo->getMask()&MASKS_TO_SYNC, MASKS_TO_SYNC);
+});
+
 static void clientMessageSetup() {
     CRASH_ON_ERRORS = -1;
-    getEventRules(PostRegisterWindow).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(SRC_ANY);}));
+    SRC_INDICATION = -1;
+    MASKS_TO_SYNC = -1;
     addEWMHRules();
     onSimpleStartup();
     addAutoTileRules();
@@ -290,17 +306,16 @@ MPX_TEST("test_client_set_window_unknown_state", {
     catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo->getID(), 1, &ewmh->MANAGER));
     setXWindowStateFromMask(winInfo);
     xcb_ewmh_get_atoms_reply_t reply;
-    if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL)) {
-        assertEquals(reply.atoms[0], ewmh->MANAGER);
-        xcb_ewmh_get_atoms_reply_wipe(&reply);
-    }
-
+    assert(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL));
+    assertEquals(reply.atoms_len, 1);
+    assertEquals(reply.atoms[0], ewmh->MANAGER);
+    xcb_ewmh_get_atoms_reply_wipe(&reply);
 });
 MPX_TEST_ITER("test_client_set_window_state", 2, {
     WindowInfo* winInfo = getAllWindows()[0];
     bool allowRequest = _i;
     if(!allowRequest)
-        winInfo->removeMask(SRC_ANY);
+        SRC_INDICATION = 0;
     xcb_ewmh_wm_state_action_t states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
     WindowID ignoredWindow = createIgnoredWindow();
     for(int i = 0; i < LEN(states); i++) {
@@ -318,6 +333,30 @@ MPX_TEST_ITER("test_client_set_window_state", 2, {
         assert(fakeWinInfo.hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK) == (i % 2 == 0));
     }
 });
+MPX_TEST_ITER("test_handle_unsync_requests", 2, {
+    MASKS_TO_SYNC = HIDDEN_MASK | URGENT_MASK;
+    bool add = _i;
+
+    WindowInfo* winInfo = getAllWindows()[0];
+    if(!add) {
+        MASKS_TO_SYNC |= FULLSCREEN_MASK;
+        winInfo->addMask(FULLSCREEN_MASK);
+    }
+    sendChangeWindowStateRequest(winInfo->getID(), XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_FULLSCREEN);
+    waitUntilIdle();
+    assertEquals(!add, winInfo->hasMask(FULLSCREEN_MASK));
+
+    xcb_ewmh_get_atoms_reply_t reply;
+    assert(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL));
+    assertEquals(reply.atoms_len, !add);
+    xcb_ewmh_get_atoms_reply_wipe(&reply);
+    if(!add) {
+        sendChangeWindowStateRequest(winInfo->getID(), XCB_EWMH_WM_STATE_REMOVE, ewmh->_NET_WM_STATE_FULLSCREEN);
+        assert(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL));
+        assertEquals(reply.atoms_len, 1);
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+})
 
 MPX_TEST("test_client_show_desktop", {
     xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 1);

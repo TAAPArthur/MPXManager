@@ -84,34 +84,36 @@ WindowID getPrivateWindow(void) {
 }
 
 
-static std::unordered_map<WindowMasks, uint32_t> maskToAtom;
+static std::unordered_map<uint32_t, WindowMasks> atomStateToMask;
+static std::unordered_map<uint32_t, WindowMasks> atomActionToMask;
 static void createMaskAtomMapping() {
-    maskToAtom[ABOVE_MASK] = ewmh->_NET_WM_STATE_ABOVE;
-    maskToAtom[BELOW_MASK] = ewmh->_NET_WM_STATE_BELOW;
-    maskToAtom[FULLSCREEN_MASK] = ewmh->_NET_WM_STATE_FULLSCREEN;
-    maskToAtom[HIDDEN_MASK] = ewmh->_NET_WM_STATE_HIDDEN;
-    maskToAtom[NO_TILE_MASK] = WM_STATE_NO_TILE;
-    maskToAtom[ROOT_FULLSCREEN_MASK] = WM_STATE_ROOT_FULLSCREEN;
-    maskToAtom[STICKY_MASK] = ewmh->_NET_WM_STATE_STICKY;
-    maskToAtom[URGENT_MASK] = ewmh->_NET_WM_STATE_DEMANDS_ATTENTION;
-    maskToAtom[WM_DELETE_WINDOW_MASK] = WM_DELETE_WINDOW;
-    maskToAtom[WM_TAKE_FOCUS_MASK] = WM_TAKE_FOCUS;
-    maskToAtom[X_MAXIMIZED_MASK] = ewmh->_NET_WM_STATE_MAXIMIZED_HORZ;
-    maskToAtom[Y_MAXIMIZED_MASK] = ewmh->_NET_WM_STATE_MAXIMIZED_VERT;
-    maskToAtom[URGENT_MASK] = ewmh->_NET_WM_STATE_DEMANDS_ATTENTION;
+    atomStateToMask[ewmh->_NET_WM_STATE_ABOVE] = ABOVE_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_BELOW] = BELOW_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_FULLSCREEN] = FULLSCREEN_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_HIDDEN] = HIDDEN_MASK;
+    atomStateToMask[WM_STATE_NO_TILE] = NO_TILE_MASK;
+    atomStateToMask[WM_STATE_ROOT_FULLSCREEN] = ROOT_FULLSCREEN_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_STICKY] = STICKY_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_DEMANDS_ATTENTION] = URGENT_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_MAXIMIZED_HORZ] = X_MAXIMIZED_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_MAXIMIZED_VERT] = Y_MAXIMIZED_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_ABOVE] = ABOVE_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_BELOW] = BELOW_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_FULLSCREEN] = FULLSCREEN_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_MINIMIZE] = HIDDEN_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_MOVE] = EXTERNAL_MOVE_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_RESIZE] = EXTERNAL_RESIZE_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_STICK] = STICKY_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_MAXIMIZE_HORZ] = X_MAXIMIZED_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_MAXIMIZE_VERT] = Y_MAXIMIZED_MASK;
 }
 WindowMasks getMaskFromAtom(xcb_atom_t atom) {
-    for(auto pair : maskToAtom)
-        if(pair.second == atom)
-            return pair.first;
-    return NO_MASK;
+    return atomStateToMask.count(atom) ? atomStateToMask[atom] : NO_MASK;
 }
-int getAtomsFromMask(WindowMask masks, xcb_atom_t* arr) {
-    int count = 0;
-    for(auto pair : maskToAtom)
-        if(pair.first & masks)
-            arr[count++] = pair.second;
-    return count;
+void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action) {
+    for(auto pair : (action ? atomActionToMask : atomStateToMask))
+        if(pair.second & masks)
+            arr.add(pair.first);
 }
 
 xcb_atom_t getAtom(const char* name) {

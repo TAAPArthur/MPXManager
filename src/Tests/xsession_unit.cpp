@@ -290,16 +290,20 @@ MPX_TEST("true_idle", {
     assertEquals(counter, 10);
 });
 MPX_TEST("atom_mask_mapping", {
+    int count = 0;
     for(int i = 0; i < 32; i++) {
         WindowMask mask = 1 << i;
-        xcb_atom_t atom;
-        int count = getAtomsFromMask(mask, &atom);
-        if(count) {
-            assert(atom);
-            assertEquals(getMaskFromAtom(atom), mask);
+        ArrayList<xcb_atom_t> atom;
+        getAtomsFromMask(mask, atom);
+        if(atom.size()) {
+            assertEquals(getMaskFromAtom(atom[0]), mask);
+            count++;
         }
     }
-    assert(!getAtomsFromMask(0, NULL));
+    assert(count);
+    ArrayList<xcb_atom_t> s;
+    getAtomsFromMask(0, s);
+    assert(!s.size());
     assertEquals(getMaskFromAtom(0), NO_MASK);
 
 });

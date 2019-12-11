@@ -130,5 +130,16 @@ extern uint32_t ROOT_DEVICE_EVENT_MASKS;
 /**Mask of all events we listen for on the root window*/
 extern uint32_t ROOT_EVENT_MASKS;
 
+/**
+ * A bit mask of WindowMasks that determine which of a Window's masks will be synced with its WM_STATE
+ */
+extern uint32_t MASKS_TO_SYNC;
+/**
+ * Masks to determine which src WM_STATE can be changed from. Defaults to all
+ * 1 other
+ * 2 APP
+ * 4 Pager
+ */
+extern uint32_t SRC_INDICATION;
 
 #endif
