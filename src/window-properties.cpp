@@ -132,6 +132,25 @@ static void loadProtocols(WindowInfo* winInfo) {
 void loadWindowTitle(WindowInfo* winInfo) {
     winInfo->setTitle(getWindowTitle(winInfo->getID()));
 }
+std::shared_ptr<xcb_get_property_reply_t> loadPropertyFromAtom(WindowID win, xcb_atom_t atom, xcb_atom_t type) {
+    xcb_get_property_reply_t* reply;
+    std::shared_ptr<xcb_get_property_reply_t> result = NULL;
+    xcb_get_property_cookie_t cookie = xcb_get_property(dis, 0, win, atom, type, 0, -1);
+    if((reply = xcb_get_property_reply(dis, cookie, NULL)))
+        if(xcb_get_property_value_length(reply))
+            result = std::shared_ptr<xcb_get_property_reply_t>(reply, free);
+        else free(reply);
+    return result;
+}
+void setWindowRole(WindowID wid, std::string s) {
+    xcb_change_property(dis, XCB_PROP_MODE_REPLACE, wid, WM_WINDOW_ROLE, XCB_ATOM_STRING, 8, s.length() + 1, s.c_str());
+}
+void loadWindowRole(WindowInfo* winInfo) {
+    auto reply = loadPropertyFromAtom(winInfo->getID(), WM_WINDOW_ROLE, XCB_ATOM_STRING);
+    if(reply)
+        winInfo->setRole((char*) xcb_get_property_value(&*reply));
+}
+
 void loadWindowProperties(WindowInfo* winInfo) {
     LOG(LOG_LEVEL_TRACE, "loading window properties %d\n", winInfo->getID());
     loadClassInfo(winInfo->getID(), &winInfo->className, &winInfo->instanceName);
@@ -142,6 +161,7 @@ void loadWindowProperties(WindowInfo* winInfo) {
     loadProtocols(winInfo);
     loadWindowHints(winInfo);
     loadWindowSizeHints(winInfo);
+    loadWindowRole(winInfo);
     if(winInfo->isDock())
         loadDockProperties(winInfo);
     bool result = !loadWindowType(winInfo);

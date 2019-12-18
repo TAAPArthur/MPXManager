@@ -29,6 +29,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     stream << " Title '" << winInfo.getTitle() << "'" ;
     stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
     stream << " Type '" << winInfo.getTypeName() << "'";
+    stream << " Role '" << winInfo.getRole() << "'";
     stream << " Masks: " << winInfo.getMask();
     if(winInfo.getWorkspace())
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;

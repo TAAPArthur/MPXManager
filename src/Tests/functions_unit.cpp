@@ -108,7 +108,7 @@ MPX_TEST_ITER("find_and_raise_local", 2, {
     else
         assert(winInfo != winInfo2);
 });
-MPX_TEST_ITER("raiseOrRun", 8, {
+MPX_TEST_ITER("raiseOrRun", 16, {
     WindowInfo* winInfo = getAllWindows()[1];
     std::string s = "_unique";
     std::string cmd = "exit 1";
@@ -116,8 +116,12 @@ MPX_TEST_ITER("raiseOrRun", 8, {
     bool run = _i ? 1 : 0;
     bool env = _i % 2;
     bool title = _i & 4;
+    bool role = _i & 8;
+    auto type =  role ? MATCHES_ROLE  : title ? MATCHES_TITLE : MATCHES_CLASS;
     if(!run)
-        if(title)
+        if(role)
+            winInfo->setRole(s);
+        else if(title)
             winInfo->setTitle(s);
         else {
             setWindowClass(winInfo->getID(), s, s);
@@ -127,7 +131,7 @@ MPX_TEST_ITER("raiseOrRun", 8, {
         setenv(envVar.c_str(), s.c_str(), 1);
         s = "$" + envVar;
     }
-    assertEquals(!run, raiseOrRun(s, cmd, !title));
+    assertEquals(!run, raiseOrRun(s, cmd, type));
     if(run)
         assertEquals(waitForChild(0), 1);
 });

@@ -136,12 +136,26 @@ bool matchesClass(WindowInfo* winInfo, std::string str) {
 bool matchesTitle(WindowInfo* winInfo, std::string str) {
     return winInfo->getTitle() == str;
 }
-bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass, bool silent) {
+bool matchesRole(WindowInfo* winInfo, std::string str) {
+    return winInfo->getRole() == str;
+}
+static inline auto getMatchType(RaiseOrRunType matchType) {
+    switch(matchType) {
+        default:
+        case MATCHES_CLASS:
+            return matchesClass;
+        case MATCHES_TITLE:
+            return matchesTitle;
+        case MATCHES_ROLE:
+            return matchesRole;
+    }
+}
+bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType, bool silent) {
     if(s[0] == '$') {
         auto c = getenv(s.substr(1).c_str());
         s = c ? c : "";
     }
-    const BoundFunction f = {matchOnClass ? matchesClass : matchesTitle, s, "raiseOrRunCheck",  PASSTHROUGH_IF_TRUE};
+    const BoundFunction f = {getMatchType(matchType), s, "raiseOrRunCheck",  PASSTHROUGH_IF_TRUE};
     if(!findAndRaise(f)) {
         spawn(cmd.c_str(), silent);
         return 0;

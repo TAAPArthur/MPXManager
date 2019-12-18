@@ -30,11 +30,11 @@ xcb_atom_t WM_SELECTION_ATOM;
 xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
 xcb_atom_t WM_TAKE_FOCUS;
+xcb_atom_t WM_WINDOW_ROLE;
 xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
 xcb_atom_t WM_WORKSPACE_MONITORS;
 xcb_atom_t WM_WORKSPACE_WINDOWS;
-
 
 static int maxNumDevices;
 uint32_t getMaxNumberOfMasterDevices(bool force) {
@@ -254,6 +254,7 @@ void openXDisplay(void) {
     _CREATE_ATOM(WM_WORKSPACE_LAYOUT_NAMES);
     _CREATE_ATOM(WM_WORKSPACE_MONITORS);
     _CREATE_ATOM(WM_WORKSPACE_WINDOWS);
+    _CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
     setRootDims(&screen->width_in_pixels);
     root = screen->root;

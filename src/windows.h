@@ -45,6 +45,8 @@ private:
     std::string instanceName = "";
     /**title of window*/
     std::string title = "";
+    /** Application specified role of the window*/
+    std::string role = "";
 
     ///time the window was last pinged
     TimeStamp pingTimeStamp = 0;
@@ -122,7 +124,11 @@ public:
     /// @param str sets the new title of the window
     void setTitle(std::string str) {title = str;}
     /// @return the title of the window
-    std::string getTitle()const {return title ;}
+    std::string getTitle()const {return title;}
+    /// @return the role of the window
+    std::string getRole()const {return role;}
+    /// @param str sets the new role of the window
+    void setRole(std::string str) {role = str;}
     /**
      * @return true iff this window has the override_redirect bit set
      */

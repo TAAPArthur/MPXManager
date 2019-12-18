@@ -50,6 +50,15 @@ MPX_TEST("get_set_class", {
     assertEquals(clazz, clazzNew);
     assertEquals(instanceName, instanceNameNew);
 });
+MPX_TEST("get_set_role", {
+    WindowID win = createNormalWindow();
+    string role = "Role";
+    setWindowRole(win, role);
+    WindowInfo* winInfo = new WindowInfo(win);
+    getAllWindows().add(winInfo);
+    loadWindowRole(winInfo);
+    assertEquals(role, winInfo->getRole());
+});
 MPX_TEST_ITER("get_set_type", 4, {
     WindowID win = createTypelessInputOnlyWindow();
     bool normal = _i / 2;

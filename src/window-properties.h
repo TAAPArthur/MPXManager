@@ -7,13 +7,14 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-#include "xsession.h"
-#include "mywm-structs.h"
-#include "window-masks.h"
-#include "user-events.h"
+#include <memory>
+#include <string>
 #include "device-grab.h"
 #include "ewmh.h"
-#include <string>
+#include "mywm-structs.h"
+#include "user-events.h"
+#include "window-masks.h"
+#include "xsession.h"
 
 /**
  * Sets the win to be a transient for transientTo
@@ -79,6 +80,19 @@ std::string getWindowTitle(WindowID win);
  * @return 1 the window type was set for the window
  */
 bool loadWindowType(WindowInfo* winInfo) ;
+
+/**
+ * Loads and returns info for an X11 property
+ *
+ * Wraps xcb_get_property and related methods
+ *
+ * @param win the window the property is stored on
+ * @param atom the atom we want
+ * @param type the type of atom (ie XCB_ATOM_STRING)
+ *
+ * @return xcb_get_property_reply_t or NULL
+ */
+std::shared_ptr<xcb_get_property_reply_t> loadPropertyFromAtom(WindowID win, xcb_atom_t atom, xcb_atom_t type);
 /**
  * Load various window properties
  * This should be called when a window is requested to be mapped
@@ -100,6 +114,19 @@ void loadWindowHints(WindowInfo* winInfo);
  */
 void loadWindowTitle(WindowInfo* winInfo) ;
 
+/**
+ * Sets WM_WINDOW_ROLE to role on wid
+ *
+ * @param wid
+ * @param role
+ */
+void setWindowRole(WindowID wid, std::string role);
+/**
+ * Reads WM_WINDOW_ROLE from the approriate window and updates winInfo
+ *
+ * @param winInfo
+ */
+void loadWindowRole(WindowInfo* winInfo);
 
 /**
  * Sets the border color for the given window

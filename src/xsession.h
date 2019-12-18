@@ -67,6 +67,8 @@ extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
  * Used to send client messages to direct focus of an application
 */
 extern xcb_atom_t WM_TAKE_FOCUS;
+/// Some windows have a applications specified role, (like browser) stored in this atom
+extern xcb_atom_t WM_WINDOW_ROLE;
 /// Atom to store an array of the layout offset for each workspace so the state can be restored
 extern xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 /// Atom to store an array of the active layout's for each workspace so the state can be restored

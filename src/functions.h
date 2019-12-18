@@ -47,6 +47,13 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION
  * @return the window found or NULL
  */
 static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, 0, 0);}
+
+/// Determines what WindowInfo field to match on
+enum RaiseOrRunType {
+    MATCHES_TITLE,
+    MATCHES_CLASS,
+    MATCHES_ROLE,
+} ;
 /**
  * @param winInfo
  * @param str
@@ -66,12 +73,12 @@ bool matchesTitle(WindowInfo* winInfo, std::string str);
  *
  * @param s
  * @param cmd command to spawn
- * @param matchOnClass whether to use matchesClass or matchesTitle
+ * @param matchType whether to use matchesClass or matchesTitle
  * @param silent if 1 redirect stderr and out of child process to /dev/null
  *
  * @return 1 iff a window was found
  */
-bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass = 0, bool silent = 1);
+bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCHES_CLASS, bool silent = 1);
 /**
  * Tries to raise a window with class (or resource) name equal to s.
  * If not it spawns s
@@ -81,7 +88,7 @@ bool raiseOrRun(std::string s, std::string cmd, bool matchOnClass = 0, bool sile
  * @return 0 iff the program was spawned
  */
 static inline bool raiseOrRun(std::string s) {
-    return raiseOrRun(s, s, 1);
+    return raiseOrRun(s, s, MATCHES_CLASS);
 }
 /**
  * Tries to raise a window with class (or resource) name equal to s.
@@ -93,7 +100,7 @@ static inline bool raiseOrRun(std::string s) {
  * @return 0 iff the program was spawned
  */
 static inline bool raiseOrRun(std::string s, bool silent) {
-    return raiseOrRun(s, s, 1, silent);
+    return raiseOrRun(s, s, MATCHES_CLASS, silent);
 }
 /**
  * Call to stop cycling windows
