@@ -16,7 +16,7 @@
 
 enum {
     /**
-     * X11 events that are >= LASTEvent but not the first XRANDR event.
+     * X11 events that are >= LASTEvent
      * In other words events that are unknown/unaccounted for.
      * The value 1 is safe to use because is reserved for X11 replies
      */

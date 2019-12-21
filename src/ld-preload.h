@@ -6,7 +6,6 @@
 #define _GNU_SOURCE
 #endif
 #include <dlfcn.h>
-
 #include <stdlib.h>
 
 #define BASE_NAME(SymbolName) base_ ## SymbolName

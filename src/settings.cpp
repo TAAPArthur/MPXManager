@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 
-#include <X11/XF86keysym.h>
 #include <X11/keysym.h>
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
@@ -107,13 +106,13 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, Button3, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, {.passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, XK_t, sinkWindow},
-        {DEFAULT_MOD_MASK | ControlMask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(ALWAYS_ON_TOP_MASK);}},
-        {DEFAULT_MOD_MASK | Mod1Mask, XK_t, +[](WindowInfo * winInfo) {winInfo->toggleMask(STICKY_MASK);}},
+        {DEFAULT_MOD_MASK | ControlMask, XK_t, {toggleMask, ALWAYS_ON_TOP_MASK}},
+        {DEFAULT_MOD_MASK | Mod1Mask, XK_t, {toggleMask, STICKY_MASK}},
 
-        {0, XF86XK_AudioPlay, +[]() {toggleLayout(FULL);}},
         {DEFAULT_MOD_MASK, XK_F11, +[]() {toggleLayout(FULL);}},
-        {DEFAULT_MOD_MASK, XF86XK_AudioPlay, +[](WindowInfo * winInfo) {winInfo->toggleMask(FULLSCREEN_MASK);}},
-        {DEFAULT_MOD_MASK | ShiftMask, XF86XK_AudioPlay, +[](WindowInfo * winInfo) {winInfo->toggleMask(ROOT_FULLSCREEN_MASK);}},
+        {DEFAULT_MOD_MASK, XK_F, {toggleMask, FULLSCREEN_MASK}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_F, {toggleMask, ROOT_FULLSCREEN_MASK}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_F11, {toggleMask, FULLSCREEN_MASK}},
 
         {DEFAULT_MOD_MASK, XK_space, +[]() {cycleLayouts(DOWN);}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_space, +[]() {cycleLayouts(UP);}},
@@ -126,7 +125,6 @@ void addDefaultBindings() {
 
         {DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_q, requestShutdown},
         {DEFAULT_MOD_MASK | ShiftMask, XK_q, restart},
-        //{DEFAULT_MOD_MASK, XK_q, saveCustomState, {.passThrough = ALWAYS_PASSTHROUGH}},
         {DEFAULT_MOD_MASK, XK_q, +[]() {if(waitForChild(spawn("mpxmanager --recompile -g")) == 0)restart();}},
 
         {DEFAULT_MOD_MASK, XK_F1, +[](){getActiveMaster()->setCurrentMode(0);}, {.mode = ANY_MODE}},
@@ -150,6 +148,9 @@ void addDefaultBindings() {
 
 
 void defaultPrintFunction(void) {
+    if(isLogging(LOG_LEVEL_DEBUG)) {
+        dprintf(STATUS_FD, "[%d]: ", getIdleCount());
+    }
     if(getActiveMaster()->getCurrentMode())
         dprintf(STATUS_FD, "%d: ", getActiveMaster()->getCurrentMode());
     if(getAllMasters().size() > 1)

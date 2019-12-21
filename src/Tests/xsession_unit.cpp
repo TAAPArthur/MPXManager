@@ -1,18 +1,12 @@
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <X11/keysym.h>
-#include <string>
-
-#include "tester.h"
-#include "test-x-helper.h"
-#include "test-event-helper.h"
-
-#include "../user-events.h"
-#include "../globals.h"
-#include "../xsession.h"
-#include "../system.h"
-#include "../logger.h"
 #include "../device-grab.h"
+#include "../globals.h"
+#include "../logger.h"
+#include "../system.h"
+#include "../user-events.h"
+#include "../xsession.h"
+#include "test-event-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 MPX_TEST_ERR("no_display", 1, {
     suppressOutput();

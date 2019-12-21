@@ -18,7 +18,6 @@
 #include "system.h"
 #include "windows.h"
 #include "workspaces.h"
-#include "workspaces.h"
 
 int statusPipeFD[4] = {0};
 int numPassedArguments;
@@ -144,7 +143,7 @@ void suppressOutput(void) {
 }
 
 static int _spawn(const char* command, bool spawnPipe, bool silent = 0) {
-    LOG(LOG_LEVEL_INFO, "running command %s\n", command);
+    LOG(LOG_LEVEL_INFO, "spawning command %s\n", command);
     if(spawnPipe) {
         resetPipe();
         pipe(statusPipeFD);

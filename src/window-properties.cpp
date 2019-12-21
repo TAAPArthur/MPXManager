@@ -1,10 +1,8 @@
-
 #include <string>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-
 
 #include "bindings.h"
 #include "device-grab.h"
@@ -20,6 +18,7 @@
 #include "window-properties.h"
 #include "windows.h"
 #include "xsession.h"
+
 using namespace std;
 void setWindowTransientFor(WindowID win, WindowID transientTo) {
     xcb_icccm_set_wm_transient_for(dis, win, transientTo);
@@ -173,13 +172,6 @@ void resetBorder(WindowID win) {
     if(master)
         setBorderColor(win, master->getFocusColor());
     setBorderColor(win, DEFAULT_UNFOCUS_BORDER_COLOR);
-}
-
-void floatWindow(WindowInfo* winInfo) {
-    winInfo->addMask(FLOATING_MASK);
-}
-void sinkWindow(WindowInfo* winInfo) {
-    winInfo->removeMask(ALL_NO_TILE_MASKS);
 }
 
 xcb_size_hints_t* getWindowSizeHints(WindowInfo* winInfo) {

@@ -5,8 +5,8 @@
 #ifndef MPX_DEVICE_GRAB_H_
 #define MPX_DEVICE_GRAB_H_
 
-#include "mywm-structs.h"
 #include "masters.h"
+#include "mywm-structs.h"
 
 /**
  * Establishes a passive grab on the given window for events indicated by mask.

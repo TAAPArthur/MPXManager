@@ -407,6 +407,10 @@ struct BoundFunction {
 } ;
 
 /**
+ * Deletes all normal and batch event rules
+ */
+void clearAllRules();
+/**
  * @param i index of eventRules
  * @return the specified event list
  */

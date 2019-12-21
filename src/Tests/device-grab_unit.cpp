@@ -1,17 +1,15 @@
-#include <math.h>
-#include <X11/keysym.h>
 #include "test-x-helper.h"
 #include "tester.h"
 #include "test-event-helper.h"
 
-#include "../devices.h"
-#include "../device-grab.h"
 #include "../bindings.h"
+#include "../device-grab.h"
+#include "../devices.h"
 #include "../globals.h"
-#include "../xsession.h"
 #include "../logger.h"
-#include "../windows.h"
 #include "../test-functions.h"
+#include "../windows.h"
+#include "../xsession.h"
 
 using namespace TestGrabs;
 

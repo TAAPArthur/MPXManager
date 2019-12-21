@@ -2,10 +2,10 @@
 #include <xcb/xcb_ewmh.h>
 
 #include "arraylist.h"
-#include "ext.h"
 #include "bindings.h"
 #include "devices.h"
 #include "ewmh.h"
+#include "ext.h"
 #include "globals.h"
 #include "logger.h"
 #include "system.h"
@@ -155,7 +155,7 @@ void addEWMHRules(AddFlag flag) {
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
 }
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {
-    WorkspaceID workspaceIndex = 0;
+    WorkspaceID workspaceIndex = getActiveWorkspaceIndex();
     if((xcb_ewmh_get_wm_desktop_reply(ewmh,
                 xcb_ewmh_get_wm_desktop(ewmh, win), &workspaceIndex, NULL))) {
         if(workspaceIndex != NO_WORKSPACE && workspaceIndex >= getNumberOfWorkspaces()) {
@@ -232,7 +232,7 @@ void onClientMessage(void) {
     }
     else if(message == ewmh->_NET_RESTACK_WINDOW) {
         WindowInfo* winInfo = getWindowInfo(win);
-        LOG(LOG_LEVEL_TRACE, "Restacking Window %d sibling %d detail %d\n\n", win, data.data32[1], data.data32[2]);
+        LOG(LOG_LEVEL_DEBUG, "Restacking Window %d sibling %d detail %d\n\n", win, data.data32[1], data.data32[2]);
         if(winInfo && allowRequestFromSource(data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
                 XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);

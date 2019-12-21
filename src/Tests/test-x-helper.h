@@ -26,7 +26,7 @@ static void inline saveXSession() {
     static auto _ewmh = ewmh;
     assert(_dpy && _dis && _ewmh);
 }
-static inline int createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input,
+static inline int _createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input = 1,
     xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_ONLY, xcb_atom_t type = ewmh->_NET_WM_WINDOW_TYPE_NORMAL) {
     assert(ignored < 2);
     assert(dis);
@@ -37,34 +37,26 @@ static inline int createWindow(int parent, int mapped, uint32_t ignored, int use
         catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, window, 1, &type));
     return window;
 }
-static inline WindowID  createWindowWithType(xcb_atom_t atom) {
-    return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, atom);
-}
-static inline WindowID  createInputOnlyWindow(void) {
-    return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
-}
-static inline WindowID  createInputWindow(int input) {
-    return createWindow(root, 1, 0, 0, input, XCB_WINDOW_CLASS_INPUT_OUTPUT);
-}
-static inline WindowID createTypelessInputOnlyWindow(void) {
-    return createWindow(root, 0, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
-}
-static inline WindowID createIgnoredWindow(void) {
-    return createWindow(root, 1, 1, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+static inline WindowID createWindowWithType(xcb_atom_t atom) {
+    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, atom);
 }
 static inline WindowID createNormalWindow(void) {
-    return createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
-static inline WindowID createNormalWindowWithType(xcb_atom_t type) {
-    Window win = createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
-    assert(!catchError(xcb_ewmh_set_wm_window_type_checked(ewmh, win, 1, &type)));
-    return win;
+static inline WindowID createInputOnlyWindow(void) {
+    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
+}
+static inline WindowID createTypelessInputOnlyWindow(void) {
+    return _createWindow(root, 1, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
+}
+static inline WindowID createOverrideRedirectWindow(void) {
+    return _createWindow(root, 1, 1, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 static inline WindowID createNormalSubWindow(int parent) {
-    return createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    return _createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 static inline WindowID  createUnmappedWindow(void) {
-    return createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    return _createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
 static inline WindowID mapArbitraryWindow() {return mapWindow(createNormalWindow());}
 static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bool adj = 0) {

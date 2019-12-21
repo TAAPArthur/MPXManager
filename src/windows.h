@@ -162,7 +162,7 @@ public:
     /// sets that the window type was not explicitly set
     void setImplicitType(bool b) {implicitType = b;}
     /// @return 1 iff window type was not explicitly set
-    bool isImplicitType() {return implicitType;}
+    bool isImplicitType()const {return implicitType;}
 
     /// @return the masks to grab
     uint32_t getEventMasks() {return eventMasks;}
@@ -389,5 +389,21 @@ public:
  */
 static inline WindowInfo* getWindowInfo(WindowID win) {
     return getAllWindows().find(win);
+}
+/**
+ * @param winInfo
+ * @param mask
+ */
+static inline void toggleMask(WindowInfo* winInfo, uint32_t mask) {
+    winInfo->toggleMask(mask);
+}
+/**
+ * @param winInfo
+ * @param mask
+ *
+ * @return
+ */
+static inline bool hasMask(WindowInfo* winInfo, uint32_t mask) {
+    return winInfo->hasMask(mask);
 }
 #endif

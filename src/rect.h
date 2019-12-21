@@ -177,9 +177,13 @@ struct RectWithBorder : Rect {
     /// The border of this rect
     short border;
     /**
-     * Crates an empty rect
+     * Creates an empty rect
      */
     RectWithBorder(): Rect(0, 0, 0, 0), border(0) {}
+    /**
+     * Copy-construct r with a border of size 0
+     */
+    RectWithBorder(const Rect& r): Rect(r), border(0) {}
     /**
      *
      *

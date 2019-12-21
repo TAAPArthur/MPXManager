@@ -1,9 +1,8 @@
-
 #include <stdlib.h>
 
 #include "../boundfunction.h"
-#include "test-mpx-helper.h"
 #include "test-event-helper.h"
+#include "test-mpx-helper.h"
 #include "tester.h"
 
 SET_ENV(NULL, deleteAllRules);
@@ -79,6 +78,13 @@ MPX_TEST("test_call_bounded_function_null_window", {
     };
     for(BoundFunction& b : funcs)
         b.execute(fakeWinInfo, fakeMaster);
+});
+MPX_TEST("clear_rules", {
+    getEventRules(0).add({exitFailure});
+    getBatchEventRules(0).add({exitFailure});
+    clearAllRules();
+    applyEventRules(0);
+    applyBatchEventRules();
 });
 MPX_TEST_ITER("apply_rules", 2, {
     for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)

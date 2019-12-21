@@ -1,11 +1,11 @@
-#include "../monitors.h"
-#include "tester.h"
-#include "test-mpx-helper.h"
 #include "../logger.h"
-#include "../system.h"
-#include "../mywm-structs.h"
 #include "../masters.h"
+#include "../monitors.h"
+#include "../mywm-structs.h"
+#include "../system.h"
 #include "../windows.h"
+#include "test-mpx-helper.h"
+#include "tester.h"
 
 #include <iostream>
 // we do a lot of short arthimatic which get promoted to an int

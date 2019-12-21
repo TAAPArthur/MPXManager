@@ -3,15 +3,15 @@
 #include <string.h>
 
 
+#include "bindings.h"
+#include "layouts.h"
 #include "logger.h"
 #include "monitors.h"
 #include "state.h"
-#include "layouts.h"
-#include "windows.h"
-#include "workspaces.h"
-#include "wmfunctions.h"
 #include "user-events.h"
-#include "bindings.h"
+#include "windows.h"
+#include "wmfunctions.h"
+#include "workspaces.h"
 
 /**
  * Holds metadata about all the workspaces

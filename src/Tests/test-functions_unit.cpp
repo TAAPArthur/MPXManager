@@ -1,17 +1,16 @@
-#include "test-x-helper.h"
-#include "test-event-helper.h"
-#include "tester.h"
-#include "../system.h"
 #include "../arraylist.h"
+#include "../device-grab.h"
+#include "../devices.h"
 #include "../globals.h"
 #include "../logger.h"
-
+#include "../system.h"
 #include "../test-functions.h"
-#include "../xsession.h"
-#include "../globals.h"
-#include "../devices.h"
-#include "../device-grab.h"
 #include "../user-events.h"
+#include "../xsession.h"
+#include "test-event-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
+
 #include <xcb/xcb.h>
 #include <xcb/xinput.h>
 #include <xcb/xcb_ewmh.h>

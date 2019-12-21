@@ -1,19 +1,11 @@
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-
-#include "tester.h"
-#include "test-x-helper.h"
-#include "test-event-helper.h"
-#include "../state.h"
-#include "../wm-rules.h"
 #include "../layouts.h"
-#include "../wmfunctions.h"
+#include "../state.h"
 #include "../window-properties.h"
+#include "../wm-rules.h"
+#include "../wmfunctions.h"
+#include "test-event-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 static WindowInfo* addVisibleWindow(int i = getActiveWorkspaceIndex()) {
     WindowInfo* winInfo = new WindowInfo(createNormalWindow());

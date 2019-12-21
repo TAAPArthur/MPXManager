@@ -7,10 +7,10 @@
 
 
 #include "arraylist.h"
+#include "boundfunction.h"
 #include "masters.h"
 #include "user-events.h"
 #include "xsession.h"
-#include "boundfunction.h"
 
 /**
  * Details which window to act on for Bindings

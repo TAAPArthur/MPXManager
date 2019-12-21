@@ -1,11 +1,14 @@
+#include <execinfo.h>
+
+#include "boundfunction.h"
 #include "logger.h"
 #include "masters.h"
 #include "monitors.h"
 #include "slaves.h"
+#include "user-events.h"
 #include "windows.h"
 #include "workspaces.h"
 #include "xsession.h"
-#include <execinfo.h>
 
 static int LOG_LEVEL = LOG_LEVEL_INFO;
 
@@ -15,6 +18,14 @@ int getLogLevel() {
 }
 void setLogLevel(uint32_t level) {
     LOG_LEVEL = level;
+}
+void dumpRules(void) {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
+        if(!getEventRules(i).empty())
+            std::cout << eventTypeToString(i) << ": " << getEventRules(i) << std::endl;
+    for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
+        if(!getBatchEventRules(i).empty())
+            std::cout << eventTypeToString(i) << "(Batch): " << getBatchEventRules(i) << std::endl;
 }
 void printSummary(void) {
     std::cout << "Summary:" << std::endl;

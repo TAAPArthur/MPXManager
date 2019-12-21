@@ -9,20 +9,19 @@
 #include <xcb/xcb_icccm.h>
 #include <xcb/xinput.h>
 
-
-#include "system.h"
 #include "bindings.h"
 #include "globals.h"
 #include "logger.h"
 #include "masters.h"
-#include "windows.h"
-#include "window-properties.h"
-#include "wmfunctions.h"
 #include "monitors.h"
+#include "system.h"
+#include "time.h"
+#include "user-events.h"
+#include "window-properties.h"
+#include "windows.h"
+#include "wmfunctions.h"
 #include "workspaces.h"
 #include "xsession.h"
-#include "user-events.h"
-#include "time.h"
 
 
 

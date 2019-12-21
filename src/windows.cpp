@@ -3,6 +3,7 @@
 
 #include "boundfunction.h"
 #include "ext.h"
+#include "logger.h"
 #include "masters.h"
 #include "user-events.h"
 #include "windows.h"
@@ -32,7 +33,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     if(winInfo.getWorkspace())
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;
     if(winInfo.isNotManageable())
-        stream << " Not Manageable";
+        stream << " NotManageable";
     if(winInfo.isInputOnly())
         stream << " InputOnly";
     if(winInfo.isDock())
@@ -40,7 +41,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     if(winInfo.isOverrideRedirectWindow())
         stream << " OverrideRedirect";
     else if(winInfo.getTilingOverrideMask())
-        stream << " Tiling override: " << winInfo.getTilingOverrideMask() << winInfo.getTilingOverride();
+        stream << " TilingOverride: (" << (int)winInfo.getTilingOverrideMask() << ")" << winInfo.getTilingOverride();
     stream << " Geometry " << winInfo.getGeometry();
     return stream << "}";
 }

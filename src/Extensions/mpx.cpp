@@ -2,14 +2,14 @@
 #include <string.h>
 
 #include "../bindings.h"
+#include "../device-grab.h"
 #include "../devices.h"
 #include "../globals.h"
-#include "../test-functions.h"
 #include "../logger.h"
 #include "../masters.h"
-#include "../xsession.h"
-#include "../device-grab.h"
+#include "../test-functions.h"
 #include "../time.h"
+#include "../xsession.h"
 #include "mpx.h"
 
 #if MPX_EXT_ENABLED

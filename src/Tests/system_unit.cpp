@@ -2,14 +2,13 @@
 #include <signal.h>
 #include <pthread.h>
 
-#include "../system.h"
-#include "../masters.h"
 #include "../arraylist.h"
 #include "../globals.h"
 #include "../logger.h"
-
-#include "tester.h"
+#include "../masters.h"
+#include "../system.h"
 #include "test-mpx-helper.h"
+#include "tester.h"
 
 MPX_TEST("get_time", {
     unsigned int time = getTime();

@@ -1,15 +1,15 @@
 #include "tester.h"
 #include "test-mpx-helper.h"
 
-#include "../user-events.h"
 #include "../globals.h"
-#include "../system.h"
-#include "../logger.h"
-#include "../workspaces.h"
 #include "../layouts.h"
-#include "../windows.h"
-#include "../monitors.h"
+#include "../logger.h"
 #include "../masters.h"
+#include "../monitors.h"
+#include "../system.h"
+#include "../user-events.h"
+#include "../windows.h"
+#include "../workspaces.h"
 
 static void addFakeMonitor(MonitorID n) {
     getAllMonitors().add(new Monitor(n, {0, 0, 1, 1}));

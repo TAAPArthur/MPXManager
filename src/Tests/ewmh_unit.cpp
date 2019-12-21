@@ -1,27 +1,12 @@
-#include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-
-#include "../devices.h"
+#include "../ewmh.h"
+#include "../extra-rules.h"
+#include "../globals.h"
+#include "../layouts.h"
 #include "../logger.h"
 #include "../window-properties.h"
-#include "../wmfunctions.h"
-#include "../ewmh.h"
-#include "../globals.h"
-#include "../xsession.h"
-#include "../layouts.h"
 #include "../wm-rules.h"
-#include "../extra-rules.h"
-
+#include "../wmfunctions.h"
+#include "../xsession.h"
 
 #include "tester.h"
 #include "test-event-helper.h"
@@ -152,7 +137,7 @@ MPX_TEST_ITER("auto_resume_workspace", 2, {
 MPX_TEST("test_toggle_show_desktop", {
     addBasicRules();
     WindowID win = mapWindow(createNormalWindow());
-    WindowID desktop = mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    WindowID desktop = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
     WindowID stackingOrder[] = {desktop, win, desktop};
     flush();
     scan(root);
@@ -210,7 +195,7 @@ MPX_TEST_ITER_ERR("test_client_close_window", 2, 1, {
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     suppressOutput();
     addIgnoreOverrideRedirectWindowsRule();
-    sendCloseWindowRequest(_i ? createIgnoredWindow() : getAllWindows()[0]->getID());
+    sendCloseWindowRequest(_i ? createOverrideRedirectWindow() : getAllWindows()[0]->getID());
     flush();
     waitForAllThreadsToExit();
     assert(xcb_connection_has_error(dis));
@@ -317,7 +302,7 @@ MPX_TEST_ITER("test_client_set_window_state", 2, {
     if(!allowRequest)
         SRC_INDICATION = 0;
     xcb_ewmh_wm_state_action_t states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
-    WindowID ignoredWindow = createIgnoredWindow();
+    WindowID ignoredWindow = createOverrideRedirectWindow();
     for(int i = 0; i < LEN(states); i++) {
         WindowInfo fakeWinInfo = {.id = ignoredWindow};
         sendChangeWindowStateRequest(fakeWinInfo.getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,

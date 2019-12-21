@@ -1,15 +1,15 @@
-#include "tester.h"
-#include "test-mpx-helper.h"
-#include "test-x-helper.h"
-#include "test-event-helper.h"
+#include "../devices.h"
 #include "../globals.h"
 #include "../layouts.h"
+#include "../monitors.h"
+#include "../state.h"
 #include "../window-properties.h"
 #include "../windows.h"
 #include "../wmfunctions.h"
-#include "../monitors.h"
-#include "../state.h"
-#include "../devices.h"
+#include "test-event-helper.h"
+#include "test-mpx-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 using namespace std;
 SET_ENV(createXSimpleEnv, cleanupXServer);

@@ -1,28 +1,23 @@
 #ifndef MPX_TEST_EVENT_HELPER
 #define MPX_TEST_EVENT_HELPER
 
-#include <xcb/xcb.h>
-
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-
 #include <assert.h>
-#include <err.h>
-#include <math.h>
+#include "../bindings.h"
+#include "../debug.h"
+#include "../device-grab.h"
+#include "../globals.h"
+#include "../logger.h"
+#include "../masters.h"
+#include "../system.h"
+#include "../test-functions.h"
+#include "../user-events.h"
+#include "../wm-rules.h"
+#include "../xsession.h"
+#include "../time.h"
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
-#include "../globals.h"
-#include "../bindings.h"
-#include "../test-functions.h"
-#include "../logger.h"
-#include "../xsession.h"
-#include "../system.h"
-#include "../masters.h"
-#include "../wm-rules.h"
-#include "../device-grab.h"
-#include "../user-events.h"
-#include "../debug.h"
+#include "tester.h"
+
 static inline void waitUntilIdle(bool safe = 0) {
     flush();
     static int idleCount;

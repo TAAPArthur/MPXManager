@@ -1,5 +1,5 @@
-#include "tester.h"
 #include "../arraylist.h"
+#include "tester.h"
 
 
 int* createStruct(int i) {

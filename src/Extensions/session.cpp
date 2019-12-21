@@ -2,11 +2,6 @@
 #include <assert.h>
 #include <string.h>
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-
-
-#include "session.h"
 #include "../bindings.h"
 #include "../devices.h"
 #include "../layouts.h"
@@ -19,6 +14,7 @@
 #include "../wmfunctions.h"
 #include "../workspaces.h"
 #include "../xsession.h"
+#include "session.h"
 
 
 static void loadSavedLayouts() {
@@ -172,11 +168,11 @@ void saveCustomState(void) {
         for(auto p = master->getWindowStack().rbegin(); p != master->getWindowStack().rend(); ++p)
             masterWindows[numMasterWindows++] = (*p)->getID();
     }
-    for(MonitorID i = 0; i < getAllMonitors().size(); i++)
-        if(getAllMonitors()[i]->isFake()) {
-            fakeMonitors[numFakeMonitors++] = getAllMonitors()[i]->getID();
+    for(Monitor* monitor : getAllMonitors())
+        if(monitor->isFake()) {
+            fakeMonitors[numFakeMonitors++] = monitor->getID();
             for(int n = 0; n < 4; n++)
-                fakeMonitors[numFakeMonitors++] = getAllMonitors()[i]->getBase()[n];
+                fakeMonitors[numFakeMonitors++] = monitor->getBase()[n];
         }
     StringJoiner joiner;
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {

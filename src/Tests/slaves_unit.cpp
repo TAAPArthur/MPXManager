@@ -1,10 +1,10 @@
-#include "tester.h"
-#include "test-mpx-helper.h"
 #include "../logger.h"
-#include "../system.h"
-#include "../mywm-structs.h"
 #include "../masters.h"
+#include "../mywm-structs.h"
+#include "../system.h"
 #include "../windows.h"
+#include "test-mpx-helper.h"
+#include "tester.h"
 
 static Slave* getSlaveByName(std::string name) {
     for(Slave* slave : getAllSlaves())

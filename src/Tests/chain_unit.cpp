@@ -5,8 +5,8 @@
 
 #include "../bindings.h"
 #include "../chain.h"
-#include "../extra-rules.h"
 #include "../devices.h"
+#include "../extra-rules.h"
 #include "../globals.h"
 
 #include <stdlib.h>

@@ -1,26 +1,20 @@
 #include <assert.h>
 #include <string.h>
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_icccm.h>
-#include <xcb/xtest.h>
-
-#include "../ext.h"
 #include "../bindings.h"
-#include "../xsession.h"
-#include "../wm-rules.h"
 #include "../devices.h"
+#include "../ext.h"
 #include "../globals.h"
 #include "../logger.h"
 #include "../state.h"
 #include "../system.h"
+#include "../time.h"
+#include "../user-events.h"
+#include "../window-properties.h"
 #include "../windows.h"
+#include "../wm-rules.h"
 #include "../wmfunctions.h"
 #include "../xsession.h"
-#include "../user-events.h"
-#include "../globals.h"
-#include "../time.h"
-#include "../window-properties.h"
 #include "window-clone.h"
 
 

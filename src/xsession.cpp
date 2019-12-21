@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <string.h>
-#include <strings.h>
 
 #ifndef NO_XRANDR
 #include <xcb/randr.h>
@@ -9,19 +8,17 @@
 #include <xcb/xcb_ewmh.h>
 #include <X11/Xlib-xcb.h>
 
-
-#include "logger.h"
 #include "bindings.h"
-#include "xsession.h"
-#include "system.h"
-#include "user-events.h"
 #include "globals.h"
-#include "time.h"
+#include "logger.h"
 #include "monitors.h"
-#include <string>
-#include <iostream>
+#include "system.h"
+#include "time.h"
+#include "user-events.h"
+#include "xsession.h"
 
 
+xcb_atom_t MAX_DEVICES;
 xcb_atom_t WM_ACTIVE_MASTER;
 xcb_atom_t WM_DELETE_WINDOW;
 xcb_atom_t WM_FAKE_MONITORS;
@@ -37,7 +34,6 @@ xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
 xcb_atom_t WM_WORKSPACE_MONITORS;
 xcb_atom_t WM_WORKSPACE_WINDOWS;
-static xcb_atom_t MAX_DEVICES;
 
 
 static int maxNumDevices;
@@ -159,10 +155,12 @@ int destroyWindow(WindowID win) {
     return catchError(xcb_destroy_window_checked(dis, win));
 }
 WindowID mapWindow(WindowID id) {
+    logger.trace() << "Mapping " << id << std::endl;
     xcb_map_window(dis, id);
     return id;
 }
 void unmapWindow(WindowID id) {
+    logger.trace() << "UnMapping " << id << std::endl;
     xcb_unmap_window(dis, id);
 }
 
@@ -402,7 +400,7 @@ static inline void enqueueEvents(xcb_generic_event_t* event) {
     while(addEventToBuffer(xcb_poll_for_queued_event(dis)));
     assert(event);
     lastDetectedEventSequence = (bufferIndexWrite ? eventBuffer[bufferIndexWrite - 1] : event)->sequence;
-    LOG(LOG_LEVEL_DEBUG, "Size of event queue is now %d \n", bufferIndexWrite);
+    LOG(LOG_LEVEL_TRACE, "Size of event queue is now %d\n", bufferIndexWrite);
 }
 static inline xcb_generic_event_t* pollForEvent() {
     xcb_generic_event_t* event;
@@ -419,8 +417,10 @@ static inline xcb_generic_event_t* pollForEvent() {
 }
 static inline xcb_generic_event_t* waitForEvent() {
     xcb_generic_event_t* event = xcb_wait_for_event(dis);
+    lock();
     if(event)
         enqueueEvents(event);
+    unlock();
     return event;
 }
 

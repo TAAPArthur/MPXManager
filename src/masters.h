@@ -6,10 +6,10 @@
 #define MASTERS_H
 
 #include "arraylist.h"
-#include "mywm-structs.h"
-#include "workspaces.h"
-#include "slaves.h"
 #include "globals.h"
+#include "mywm-structs.h"
+#include "slaves.h"
+#include "workspaces.h"
 
 /// will match any mode
 #define ANY_MODE ((uint32_t)-1)
@@ -151,9 +151,10 @@ public:
         focusColor = color;
     }
     /**
-     * Only bindings whose mode & this->mode || mode == ANY_MODE will be triggered by this master
+     * Only bindings whose mode == this->mode || mode == ANY_MODE will be triggered by this master
      *
      * @param mode
+     * @see allowsMode
      */
     void setCurrentMode(int mode) {bindingMode = mode;}
     /**
@@ -162,7 +163,7 @@ public:
      *
      * @return true if the mode is currently allowed by this master
      */
-    bool allowsMode(uint32_t mode) {
+    bool allowsMode(uint32_t mode) const {
         return mode == ANY_MODE || bindingMode == mode;
     }
     /**
@@ -170,7 +171,7 @@ public:
      *
      * @return
      */
-    int getCurrentMode(void) {
+    int getCurrentMode(void) const {
         return bindingMode;
     }
     /**

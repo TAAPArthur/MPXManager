@@ -1,20 +1,20 @@
 #include <assert.h>
 
-#include "mywm-structs.h"
 #include "bindings.h"
-#include "wm-rules.h"
 #include "devices.h"
 #include "globals.h"
 #include "layouts.h"
 #include "logger.h"
 #include "masters.h"
 #include "monitors.h"
+#include "mywm-structs.h"
 #include "state.h"
 #include "system.h"
 #include "time.h"
 #include "user-events.h"
 #include "window-properties.h"
 #include "windows.h"
+#include "wm-rules.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
 #include "xsession.h"
@@ -271,11 +271,8 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 
 void addAutoTileRules(AddFlag flag) {
     int events[] = {CLIENT_MAP_ALLOW, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
-            XCB_INPUT_KEY_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_KEY_RELEASE + GENERIC_EVENT_OFFSET,
-            XCB_INPUT_BUTTON_PRESS + GENERIC_EVENT_OFFSET, XCB_INPUT_BUTTON_RELEASE + GENERIC_EVENT_OFFSET,
-            XCB_CLIENT_MESSAGE,
-            WINDOW_WORKSPACE_CHANGE, MONITOR_WORKSPACE_CHANGE,
-            SCREEN_CHANGE,
+            DEVICE_EVENT, XCB_CLIENT_MESSAGE, WINDOW_WORKSPACE_CHANGE,
+            MONITOR_WORKSPACE_CHANGE, SCREEN_CHANGE,
         };
     for(auto event : events)
         getEventRules(event).add(DEFAULT_EVENT(markState), flag);

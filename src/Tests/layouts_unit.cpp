@@ -1,13 +1,12 @@
-
-#include "tester.h"
-#include "test-mpx-helper.h"
-#include "test-x-helper.h"
-#include "test-event-helper.h"
+#include "../devices.h"
 #include "../layouts.h"
+#include "../monitors.h"
 #include "../window-properties.h"
 #include "../wmfunctions.h"
-#include "../monitors.h"
-#include "../devices.h"
+#include "test-event-helper.h"
+#include "test-mpx-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 #define _LAYOUT_FAMILY(S)Layout{.name=""#S,.layoutFunction=S}
 // we do a lot of short arthimatic which get promoted to an int
@@ -370,15 +369,16 @@ MPX_TEST_ITER("test_privileged_windows_size", 6 * 2, {
     };
     Layout l = {"", .layoutFunction = dummyLayout, {.noBorder = 1}};
     setActiveLayout(&l);
+    DEFAULT_BORDER_WIDTH = 1;
 
     struct{
         WindowMask mask;
-        const Rect dims;
+        const RectWithBorder dims;
     } arr[] = {
         {0, baseConfig},
-        {X_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, baseConfig.height}},
-        {Y_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, baseConfig.width, m->getViewport().height}},
-        {MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, m->getViewport().height}},
+        {X_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, baseConfig.height, DEFAULT_BORDER_WIDTH }},
+        {Y_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, baseConfig.width, m->getViewport().height, DEFAULT_BORDER_WIDTH}},
+        {MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, m->getViewport().height, DEFAULT_BORDER_WIDTH}},
         {FULLSCREEN_MASK | extra, m->getBase()},
         {ROOT_FULLSCREEN_MASK | extra, {0, 0, getRootWidth(), getRootHeight()}},
     };

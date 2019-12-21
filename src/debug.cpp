@@ -1,13 +1,13 @@
-
+#include "boundfunction.h"
+#include "debug.h"
+#include "logger.h"
+#include "monitors.h"
 #include "mywm-structs.h"
 #include "system.h"
-#include "logger.h"
+#include "user-events.h"
 #include "windows.h"
 #include "workspaces.h"
-#include "monitors.h"
 #include "xsession.h"
-#include "boundfunction.h"
-#include "user-events.h"
 
 #define assertEquals(A,B)do{auto __A=A; auto __B =B; int __result=(__A==__B); if(!__result){valid=0;std::cout<<__LINE__<<":"<<__A<<"!="<<__B<<"\n";assert(0 && #A "!=" #B);}}while(0)
 
@@ -60,4 +60,8 @@ void dieOnIntegrityCheckFail() {
 }
 void addDieOnIntegrityCheckFailRule(AddFlag flag) {
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), flag);
+}
+void addAllDebugRules(AddFlag flag) {
+    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {logger.info() << *winInfo << std::endl;}, "WindowDump"}, flag);
+    addDieOnIntegrityCheckFailRule(flag);
 }

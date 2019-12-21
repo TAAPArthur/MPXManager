@@ -10,9 +10,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#include <cstdio>
+
 #include "mywm-structs.h"
 #include "window-masks.h"
-#include <cstdio>
 
 
 
@@ -163,6 +165,10 @@ void printStackTrace(void);
  * Prints a summary of the state of the WM
  */
 void printSummary(void);
+/**
+ * Prints all set rules
+ */
+void dumpRules(void);
 /**
  * Prints all with that have filterMask (if filterMask is 0, print all windows)
  *

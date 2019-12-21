@@ -8,14 +8,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "communications.h"
-#include "system.h"
 #include "bindings.h"
+#include "communications.h"
 #include "globals.h"
 #include "logger.h"
+#include "system.h"
 #include "window-properties.h"
-#include "wmfunctions.h"
 #include "windows.h"
+#include "wmfunctions.h"
 #include "xsession.h"
 
 std::ostream& operator<<(std::ostream& strm, const Option& option) {
@@ -55,6 +55,7 @@ static UniqueArrayList<Option*> options = {
     {"dump-master", +[]() {dumpMaster(getActiveMaster());}, FORK_ON_RECEIVE},
     {"dump-master", +[](MasterID id) {dumpMaster(getMasterByID(id));}, FORK_ON_RECEIVE},
     {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
+    {"dump-rules", dumpRules, FORK_ON_RECEIVE},
     {"dump-stack", dumpWindowStack, FORK_ON_RECEIVE},
     {"dump-win", +[](WindowID win) {dumpSingleWindow(win);}, FORK_ON_RECEIVE},
     {"focus", +[](WindowID id) {focusWindow(id);}},

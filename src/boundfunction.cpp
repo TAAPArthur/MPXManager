@@ -1,6 +1,6 @@
-#include "user-events.h"
 #include "boundfunction.h"
 #include "logger.h"
+#include "user-events.h"
 #include "xsession.h"
 
 
@@ -16,6 +16,12 @@ struct BatchEventList {
 static UniqueArrayList<BoundFunction*> eventRules[NUMBER_OF_MPX_EVENTS];
 static BatchEventList batchEventRules[NUMBER_OF_MPX_EVENTS];
 
+void clearAllRules() {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
+        getEventRules(i).deleteElements();
+        getBatchEventRules(i).deleteElements();
+    }
+}
 ArrayList<BoundFunction*>& getEventRules(int i) {
     assert(i < LEN(eventRules));
     return eventRules[i];
@@ -51,7 +57,7 @@ void applyBatchEventRules(void) {
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
             LOG(LOG_LEVEL_INFO, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
                 eventTypeToString(i), getBatchEventRules(i).size());
-            pushContext(eventTypeToString(i));
+            pushContext("BATCH_" + std::string(eventTypeToString(i)));
             applyRules(getBatchEventRules(i), NULL);
             popContext();
             batchEventRules[i].counter = 0;

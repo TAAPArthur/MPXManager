@@ -5,9 +5,10 @@
 #ifndef MONITORS_H_
 #define MONITORS_H_
 
-#include "mywm-structs.h"
-#include "masters.h"
 #include <string>
+
+#include "masters.h"
+#include "mywm-structs.h"
 #include "rect.h"
 
 /**

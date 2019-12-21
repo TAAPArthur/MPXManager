@@ -7,13 +7,13 @@
 #ifndef LAYOUTS_H_
 #define LAYOUTS_H_
 
+#include "masters.h"
 #include "mywm-structs.h"
 #include "wmfunctions.h"
-#include "masters.h"
 #include "workspaces.h"
 
 /// size of config parameters
-#define CONFIG_LEN 6
+#define CONFIG_LEN 7
 enum {CONFIG_INDEX_X = 0, CONFIG_INDEX_Y = 1, CONFIG_INDEX_WIDTH, CONFIG_INDEX_HEIGHT, CONFIG_INDEX_BORDER, CONFIG_INDEX_STACK};
 
 /// Number of transformations

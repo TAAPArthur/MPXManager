@@ -2,15 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-#include <iostream>
-
 #include "globals.h"
 #include "logger.h"
-#include "monitors.h"
-#include "workspaces.h"
-#include "windows.h"
 #include "masters.h"
+#include "monitors.h"
+#include "windows.h"
+#include "workspaces.h"
 
 ///list of all monitors
 static ArrayList<Monitor*> monitors;

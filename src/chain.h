@@ -4,8 +4,8 @@
 #ifndef MPX_CHAIN_BINDINGS_H_
 #define MPX_CHAIN_BINDINGS_H_
 
-#include "bindings.h"
 #include "arraylist.h"
+#include "bindings.h"
 
 /// Can be added to a chain mask to indicate that this chain should be applied to all masters
 #define GLOBAL_CHAIN 1

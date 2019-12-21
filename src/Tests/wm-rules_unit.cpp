@@ -1,23 +1,15 @@
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-
-#include "tester.h"
-#include "test-event-helper.h"
-#include "../state.h"
+#include "../bindings.h"
+#include "../devices.h"
 #include "../extra-rules.h"
+#include "../globals.h"
+#include "../layouts.h"
+#include "../logger.h"
+#include "../state.h"
 #include "../window-properties.h"
 #include "../wm-rules.h"
-#include "../logger.h"
-#include "../globals.h"
 #include "../wmfunctions.h"
-#include "../layouts.h"
-#include "../devices.h"
-#include "../bindings.h"
+#include "test-event-helper.h"
+#include "tester.h"
 
 /*
 static Layout* startingLayout = &DEFAULT_LAYOUTS[FULL];
@@ -158,7 +150,7 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
     unlock();
     waitUntilIdle();
     assertEquals(getActiveWindowStack().size(), 2);
-    createIgnoredWindow();
+    createOverrideRedirectWindow();
     WindowID win3 = createUnmappedWindow();
     waitUntilIdle();
     assert(getAllWindows().find(win) &&
@@ -169,9 +161,9 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
 });
 MPX_TEST("test_detect_new_override_redirect_windows", {
     assert(!addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE));
-    createIgnoredWindow();
-    createIgnoredWindow();
-    createIgnoredWindow();
+    createOverrideRedirectWindow();
+    createOverrideRedirectWindow();
+    createOverrideRedirectWindow();
     waitUntilIdle();
     assertEquals(getActiveWindowStack().size(), 3);
     for(WindowInfo* winInfo : getAllWindows())
@@ -264,7 +256,7 @@ MPX_TEST("test_map_windows", {
 MPX_TEST("test_unmap", {
     addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
     WindowID win = createUnmappedWindow();
-    WindowID winOR = mapWindow(createIgnoredWindow());
+    WindowID winOR = mapWindow(createOverrideRedirectWindow());
     waitUntilIdle();
     xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .window = win};
     catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
@@ -376,7 +368,7 @@ static void clientSetup() {
 SET_ENV(clientSetup, fullCleanup);
 
 MPX_TEST_ITER("test_map_request", 2, {
-    mapWindow(_i ? createUnmappedWindow() : createIgnoredWindow());
+    mapWindow(_i ? createUnmappedWindow() : createOverrideRedirectWindow());
     flush();
     waitForNormalEvent(XCB_MAP_NOTIFY);
 });
@@ -392,7 +384,7 @@ MPX_TEST("test_configure_request", {
         XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
         XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     for(int i = 0; i < 2; i++) {
-        WindowID win = i ? createUnmappedWindow() : createIgnoredWindow();
+        WindowID win = i ? createUnmappedWindow() : createOverrideRedirectWindow();
         assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
     }

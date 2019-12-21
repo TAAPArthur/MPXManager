@@ -31,6 +31,13 @@ bool validateX();
 bool isWindowMapped(WindowID win);
 /**
  * Adds a TRUE_IDLE rule that will crash the program if an invariant check fails
+ * @param flag
  */
-void addDieOnIntegrityCheckFailRule();
+void addDieOnIntegrityCheckFailRule(AddFlag flag = ADD_UNIQUE);
+/**
+ * Adds a series of rules to make detecting and debugging problems easier
+ *
+ * @param flag
+ */
+void addAllDebugRules(AddFlag flag = ADD_UNIQUE);
 #endif

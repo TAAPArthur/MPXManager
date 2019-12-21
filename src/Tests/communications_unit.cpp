@@ -1,17 +1,8 @@
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-#include <fcntl.h>
-
-#include "../logger.h"
-#include "../globals.h"
-#include "../wmfunctions.h"
-#include "../extra-rules.h"
 #include "../communications.h"
+#include "../extra-rules.h"
+#include "../globals.h"
+#include "../logger.h"
+#include "../wmfunctions.h"
 
 #include "tester.h"
 #include "test-event-helper.h"

@@ -1,17 +1,18 @@
 #include <math.h>
 #include <X11/keysym.h>
+
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
 #include "test-event-helper.h"
 #include "tester.h"
 
-#include "../devices.h"
-#include "../window-properties.h"
 #include "../bindings.h"
+#include "../devices.h"
 #include "../globals.h"
-#include "../xsession.h"
 #include "../logger.h"
 #include "../test-functions.h"
+#include "../window-properties.h"
+#include "../xsession.h"
 
 
 SET_ENV(createXSimpleEnv, cleanupXServer);
@@ -37,7 +38,12 @@ MPX_TEST_ITER("test_create_destroy_master", 2, {
     assertEquals(getAllMasters().size(), 1);
     assertEquals(numSlaves, getAllSlaves().size());
 });
-MPX_TEST("test_create_excessive_masters", {
+MPX_TEST_ITER("test_create_excessive_masters", 2, {
+
+    if(_i) {
+        int maxNumDevices = 8;
+        xcb_change_property(dis, XCB_PROP_MODE_REPLACE, root, MAX_DEVICES, XCB_ATOM_INTEGER, 32, 1, &maxNumDevices);
+    }
     CRASH_ON_ERRORS = 0;
     setLogLevel(LOG_LEVEL_NONE);
     for(int i = 0; i < getMaxNumberOfMasterDevices() * 128; i++) {

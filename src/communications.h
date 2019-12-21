@@ -5,9 +5,10 @@
 #ifndef MPXMANAGER_COMMUTNICATE_H_
 #define MPXMANAGER_COMMUTNICATE_H_
 
-#include "bindings.h"
-#include "boundfunction.h"
 #include <typeinfo>
+
+#include "boundfunction.h"
+#include "bindings.h"
 
 /**
  *

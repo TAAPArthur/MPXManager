@@ -5,8 +5,9 @@
 
 #ifndef MPXManager_SESSION_H_
 #define MPXManager_SESSION_H_
-#include "../mywm-structs.h"
+
 #include <xcb/xcb.h>
+#include "../mywm-structs.h"
 
 /**
  * Loads global MPX state that has been save via saveCustomState()

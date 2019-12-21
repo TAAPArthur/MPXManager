@@ -1,25 +1,17 @@
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-
-#include "tester.h"
-#include "test-event-helper.h"
-#include "../state.h"
-#include "../wm-rules.h"
-#include "../extra-rules.h"
-#include "../logger.h"
-#include "../ewmh.h"
-#include "../globals.h"
-#include "../window-properties.h"
-#include "../wmfunctions.h"
-#include "../extra-rules.h"
-#include "../layouts.h"
-#include "../devices.h"
 #include "../bindings.h"
+#include "../devices.h"
+#include "../ewmh.h"
+#include "../extra-rules.h"
+#include "../extra-rules.h"
+#include "../globals.h"
+#include "../layouts.h"
+#include "../logger.h"
+#include "../state.h"
+#include "../window-properties.h"
+#include "../wm-rules.h"
+#include "../wmfunctions.h"
+#include "test-event-helper.h"
+#include "tester.h"
 
 SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST("test_print_method", {
@@ -47,7 +39,7 @@ MPX_TEST("shutdown_on_idle", {
 MPX_TEST("test_desktop_rule", {
     addDesktopRule();
     Monitor* m = getActiveWorkspace()->getMonitor();
-    WindowID win = mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
     setActiveLayout(GRID);
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
@@ -61,9 +53,9 @@ MPX_TEST("test_desktop_rule", {
 });
 MPX_TEST("test_float_rule", {
     addFloatRule();
-    mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
-    mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
-    mapWindow(createNormalWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_SPLASH));
+    mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
+    mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_SPLASH));
     scan(root);
     for(WindowInfo* winInfo : getAllWindows())
         assert(winInfo->hasMask(FLOATING_MASK));
@@ -74,7 +66,8 @@ MPX_TEST_ITER("test_ignored_windows", 2, {
         createTypelessInputOnlyWindow();
     else
         mapWindow(createTypelessInputOnlyWindow());
-    scan(root);
+    startWM();
+    waitUntilIdle();
     assertEquals(getAllWindows().size(), _i);
 });
 
@@ -359,7 +352,7 @@ MPX_TEST_ITER("unmanaged_windows_above", 2, {
     addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
     startWM();
     waitUntilIdle();
-    WindowID win = createIgnoredWindow();
+    WindowID win = createOverrideRedirectWindow();
     sendChangeWindowStateRequest(win, XCB_EWMH_WM_STATE_ADD, above ? ewmh->_NET_WM_STATE_ABOVE : ewmh->_NET_WM_STATE_BELOW);
     waitUntilIdle();
     mapWindow(win);

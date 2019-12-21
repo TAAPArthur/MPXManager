@@ -1,30 +1,8 @@
-#include <X11/extensions/XInput2.h>
-#include <X11/extensions/XI.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
-
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-
-#include "../devices.h"
-#include "../wm-rules.h"
-#include "../logger.h"
-#include "../wmfunctions.h"
 #include "../window-properties.h"
-#include "../functions.h"
-#include "../ewmh.h"
-#include "../chain.h"
-#include "../globals.h"
-#include "../layouts.h"
-#include "../xsession.h"
 
 #include "tester.h"
 #include "test-event-helper.h"
+
 WindowID win;
 static void setup() {
     LD_PRELOAD_INJECTION = 1;

@@ -7,17 +7,17 @@
 #include <xcb/randr.h>
 #endif
 
-#include "monitors.h"
 #include "arraylist.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
 #include "masters.h"
-#include "test-functions.h"
-#include "xsession.h"
+#include "monitors.h"
 #include "monitors.h"
 #include "system.h"
+#include "test-functions.h"
 #include "time.h"
+#include "xsession.h"
 using namespace std;
 
 

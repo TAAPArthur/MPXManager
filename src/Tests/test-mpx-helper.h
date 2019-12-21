@@ -1,17 +1,14 @@
 #ifndef MPX_TEST_MPX_HELPER
 #define MPX_TEST_MPX_HELPER
 
-#include <assert.h>
-#include <err.h>
-#include "tester.h"
-#include "../logger.h"
-#include "../system.h"
-#include "../mywm-structs.h"
-#include "../monitors.h"
-#include "../windows.h"
-#include "../masters.h"
-#include "../workspaces.h"
 #include "../debug.h"
+#include "../logger.h"
+#include "../masters.h"
+#include "../monitors.h"
+#include "../mywm-structs.h"
+#include "../system.h"
+#include "../windows.h"
+#include "../workspaces.h"
 
 static inline void createSimpleEnv(void) {
     addDefaultMaster();

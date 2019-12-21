@@ -1,13 +1,13 @@
-#include "../layouts.h"
-#include "../wmfunctions.h"
-#include "../functions.h"
 #include "../devices.h"
+#include "../functions.h"
+#include "../layouts.h"
 #include "../masters.h"
 #include "../window-properties.h"
-#include "tester.h"
-#include "test-mpx-helper.h"
+#include "../wmfunctions.h"
 #include "test-event-helper.h"
+#include "test-mpx-helper.h"
 #include "test-x-helper.h"
+#include "tester.h"
 
 
 static WindowInfo* top;

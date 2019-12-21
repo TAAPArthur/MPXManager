@@ -6,9 +6,9 @@
 #include "globals.h"
 #include "logger.h"
 #include "masters.h"
-#include "windows.h"
 #include "mywm-structs.h"
 #include "time.h"
+#include "windows.h"
 
 ///the active master
 static Master* master;

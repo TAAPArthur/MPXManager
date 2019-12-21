@@ -1,23 +1,9 @@
-
-#include <X11/Xatom.h>
-#include <X11/Xlib-xcb.h>
-#include <X11/Xlib.h>
-#include <X11/Xproto.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/XI.h>
-#include <X11/extensions/XInput2.h>
-#include <X11/keysym.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_ewmh.h>
-#include <xcb/xcb_icccm.h>
-
 #include "../globals.h"
-#include "../state.h"
 #include "../logger.h"
+#include "../state.h"
 #include "../window-properties.h"
 #include "../wmfunctions.h"
 #include "../xsession.h"
-
 
 #include "tester.h"
 #include "test-event-helper.h"
@@ -80,7 +66,7 @@ MPX_TEST_ITER("detect_input_only_window", 2, {
 });
 MPX_TEST("filter_window", {
     static auto type = ewmh->_NET_WM_WINDOW_TYPE_TOOLTIP;
-    WindowID win = mapWindow(createNormalWindowWithType(type));
+    WindowID win = mapWindow(createWindowWithType(type));
     WindowID win2 = mapWindow(createNormalWindow());
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(incrementCount));
     getEventRules(CLIENT_MAP_ALLOW).add({
@@ -106,7 +92,7 @@ MPX_TEST("detect_mapped_windows", {
 });
 MPX_TEST("test_window_scan", {
     addIgnoreOverrideRedirectWindowsRule();
-    WindowID win = createIgnoredWindow();
+    WindowID win = createOverrideRedirectWindow();
     scan(root);
     assert(!getWindowInfo(win));
 });
@@ -115,7 +101,7 @@ MPX_TEST("test_window_scan", {
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
     WindowID win3 = createUnmappedWindow();
-    WindowID win4 = createIgnoredWindow();
+    WindowID win4 = createOverrideRedirectWindow();
     assert(!isWindowMapped(win));
     assert(!isWindowMapped(win2));
     assert(!isWindowMapped(win3));

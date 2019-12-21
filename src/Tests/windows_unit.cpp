@@ -1,6 +1,5 @@
-
-#include "../logger.h"
 #include "../globals.h"
+#include "../logger.h"
 #include "../windows.h"
 
 #include "tester.h"

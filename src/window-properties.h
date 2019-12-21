@@ -70,10 +70,6 @@ bool loadClassInfo(WindowID win, std::string* className, std::string* instanceNa
  * @return
  */
 std::string getWindowTitle(WindowID win);
-/**
- * Loads title for a given window
- */
-std::string loadTitleInfo();
 
 /**
  * Loads type name and atom value for a given window
@@ -127,11 +123,15 @@ void resetBorder(WindowID win);
 /**
  * Adds the FLOATING_MASK to a given window
  */
-void floatWindow(WindowInfo* win);
+static inline void floatWindow(WindowInfo* winInfo) {
+    winInfo->addMask(FLOATING_MASK);
+}
 /**
  * Removes any all all masks that would cause the window to not be tiled
  */
-void sinkWindow(WindowInfo* win);
+static inline void sinkWindow(WindowInfo* winInfo) {
+    winInfo->removeMask(ALL_NO_TILE_MASKS);
+}
 
 /**
  * Assigns names to the first n workspaces
