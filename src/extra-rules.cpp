@@ -224,3 +224,13 @@ static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
 void addMoveNonTileableWindowsToWorkspaceBounds() {
     getEventRules(ClientMapAllow).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
 }
+static void convertNonManageableWindowMask(WindowInfo* winInfo) {
+    if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_NORMAL && winInfo->isNotManageable())
+        if(winInfo->hasMask(BELOW_MASK))
+            winInfo->addMask(ALWAYS_ON_BOTTOM);
+        else if(winInfo->hasMask(ABOVE_MASK))
+            winInfo->addMask(ALWAYS_ON_TOP);
+}
+void addConvertNonManageableWindowMask() {
+    getEventRules(ClientMapAllow).add(DEFAULT_EVENT(convertNonManageableWindowMask));
+}

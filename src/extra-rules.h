@@ -140,4 +140,8 @@ void addIgnoreNonTopLevelWindowsRule(AddFlag flag = ADD_UNIQUE);
  * Windows left at the origin are assumed to still be at their creation time position which is believed to be arbitrary.
  */
 void addMoveNonTileableWindowsToWorkspaceBounds() ;
+/**
+ * Converts masks that don't make since for non-manageable window (like ABOVE/BELOW mask) into a more suitable target (ALWAYS_ON_TOP/BOTTOM)
+ */
+void addConvertNonManageableWindowMask();
 #endif

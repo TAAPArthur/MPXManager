@@ -243,7 +243,11 @@ static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
     WindowID currentBelow = 0;
     WindowID lowestAbove = 0;
     for(WindowInfo* winInfo : list) {
-        if(winInfo->hasMask(ABOVE_MASK)) {
+        if(winInfo->hasMask(BELOW_MASK)) {
+            lowerWindow(winInfo->getID(), currentBelow);
+            currentBelow = winInfo->getID();
+        }
+        else if(winInfo->hasMask(ABOVE_MASK)) {
             if(!currentAbove) {
                 raiseWindow(winInfo->getID());
                 lowestAbove =  currentAbove;
@@ -251,10 +255,6 @@ static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
             else
                 lowerWindow(winInfo->getID(), currentAbove);
             currentAbove = winInfo->getID();
-        }
-        else if(winInfo->hasMask(BELOW_MASK)) {
-            lowerWindow(winInfo->getID(), currentBelow);
-            currentBelow = winInfo->getID();
         }
     }
     return lowestAbove;

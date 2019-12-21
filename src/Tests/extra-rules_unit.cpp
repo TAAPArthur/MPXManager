@@ -351,3 +351,18 @@ MPX_TEST("moveNonTileableWindowsToWorkspaceBounds", {
     assert(getRealGeometry(win) != getRealGeometry(win2));
     assert(dims.intersects(getRealGeometry(win2)) || dims.contains(getRealGeometry(win2)));
 });
+MPX_TEST_ITER("unmanaged_windows_above", 2, {
+    MASKS_TO_SYNC |= ABOVE_MASK | BELOW_MASK;
+    bool above = _i;
+    addEWMHRules();
+    addConvertNonManageableWindowMask();
+    addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
+    startWM();
+    waitUntilIdle();
+    WindowID win = createIgnoredWindow();
+    sendChangeWindowStateRequest(win, XCB_EWMH_WM_STATE_ADD, above ? ewmh->_NET_WM_STATE_ABOVE : ewmh->_NET_WM_STATE_BELOW);
+    waitUntilIdle();
+    mapWindow(win);
+    waitUntilIdle();
+    assert(getWindowInfo(win)->hasMask(above ? ALWAYS_ON_TOP_MASK : ALWAYS_ON_BOTTOM_MASK));
+});

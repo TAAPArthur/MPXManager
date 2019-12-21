@@ -209,6 +209,7 @@ void onStartup(void) {
         addPrintStatusRule();
         addIgnoreSmallWindowRule();
         addUnknownInputOnlyWindowIgnoreRule();
+        addConvertNonManageableWindowMask();
         //addResumeCustomStateRules();
     }
     if(!RUN_AS_WM)
