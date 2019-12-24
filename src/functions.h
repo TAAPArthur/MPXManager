@@ -21,9 +21,19 @@
 /// arguments to findAndRaise
 enum WindowAction {
     /// @{ performs the specified action
-    ACTION_RAISE, ACTION_FOCUS, ACTION_ACTIVATE, ACTION_LOWER
+    ACTION_NONE, ACTION_RAISE, ACTION_FOCUS, ACTION_ACTIVATE, ACTION_LOWER
     /// @}
-} ;
+};
+
+/// Flags to findAndRaise
+struct FindAndRaiseArg {
+    /// checkLocalFirst checks the master window stack before checking all windows
+    bool checkLocalFirst = 1;
+    /// cache ignores recently chosen windows. The cache is cleared if the focused window doesn't match rule or a window cannot be found otherwise
+    bool cache = 1;
+    /// only consider activatable windows
+    bool includeNonActivatable = 0;
+};
 /**
  * Attempts to find a that rule matches a managed window.
  * First the active Master's window& stack is checked ignoring the master's window cache.
@@ -31,13 +41,12 @@ enum WindowAction {
  * and finally the master's window complete window& stack is checked
  * @param rule
  * @param action
- * @param checkLocalFirst checks the master window stack before checking all windows
- * @param cache ignores recently chosen windows. The cache is cleared if the focused window doesn't match rule or a window cannot be found otherwise
+ * @param arg
  * @param master
  * @return 1 if a matching window was found
  */
-WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_ACTIVATE, bool checkLocalFirst = 1,
-    bool cache = 1, Master* master = getActiveMaster());
+WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_ACTIVATE, FindAndRaiseArg arg = {},
+    Master* master = getActiveMaster());
 
 /**
  * Tries to find a window by checking all the managed windows, and if it finds one it activates it
@@ -46,7 +55,7 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION
  *
  * @return the window found or NULL
  */
-static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, 0, 0);}
+static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, {.checkLocalFirst = 0, .cache = 0}, 0);}
 
 /// Determines what WindowInfo field to match on
 enum RaiseOrRunType {
@@ -115,6 +124,21 @@ void endCycleWindows(Master* m = getActiveMaster());
 void cycleWindows(int delta);
 
 
+/**
+ * Activates a window with URGENT_MASK
+ *
+ * @param action
+ *
+ * @return 1 iff there was an urgent window
+ */
+bool activateNextUrgentWindow(WindowAction action = ACTION_ACTIVATE);
+/**
+ * Removes HIDDEN_MASK from a recent hidden window
+ * @param action
+ *
+ * @return 1 a window was found and changed
+ */
+bool popHiddenWindow(WindowAction action = ACTION_ACTIVATE);
 
 //////Run or Raise code
 

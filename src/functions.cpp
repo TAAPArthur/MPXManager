@@ -59,18 +59,19 @@ void endCycleWindows(Master* master) {
 
 static void applyAction(WindowInfo* winInfo, WindowAction action) {
     switch(action) {
-        default:
-        case ACTION_RAISE:
-            raiseWindow(winInfo->getID());
+        case ACTION_ACTIVATE:
+            activateWindow(winInfo);
             break;
         case ACTION_FOCUS:
             focusWindow(winInfo);
             break;
-        case ACTION_ACTIVATE:
-            activateWindow(winInfo);
-            break;
         case ACTION_LOWER:
             lowerWindow(winInfo->getID());
+            break;
+        case ACTION_NONE:
+            break;
+        case ACTION_RAISE:
+            raiseWindow(winInfo->getID());
             break;
     }
 }
@@ -87,11 +88,10 @@ WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& 
             return winInfo;
     return NULL;
 }
-WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool checkLocalFirst, bool cache,
-    Master* master) {
-    ArrayList<WindowID>* windowsToIgnore = cache ? getWindowCache(getActiveMaster()) : NULL;
+WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, FindAndRaiseArg arg, Master* master) {
+    ArrayList<WindowID>* windowsToIgnore = arg.cache ? getWindowCache(master) : NULL;
     if(windowsToIgnore)
-        if(cache && windowsToIgnore && master->getFocusedWindow())
+        if(arg.cache && windowsToIgnore && master->getFocusedWindow())
             if(!rule(master->getFocusedWindow())) {
                 LOG(LOG_LEVEL_DEBUG, "clearing window cache\n");
                 windowsToIgnore->clear();
@@ -101,17 +101,16 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, bool ch
                 windowsToIgnore->add(master->getFocusedWindow()->getID());
                 LOG(LOG_LEVEL_DEBUG, "clearing window cache and adding focused window\n");
             }
-    WindowInfo* target = checkLocalFirst ? findWindow(rule, master->getWindowStack(), windowsToIgnore) : NULL;
+    WindowInfo* target = arg.checkLocalFirst ? findWindow(rule, master->getWindowStack(), windowsToIgnore,
+            arg.includeNonActivatable) : NULL;
     if(!target) {
-        target = findWindow(rule, getAllWindows(), windowsToIgnore);
+        target = findWindow(rule, getAllWindows(), windowsToIgnore, arg.includeNonActivatable);
         if(!target && windowsToIgnore && !windowsToIgnore->empty()) {
-            for(WindowID win : *windowsToIgnore) {
-                WindowInfo* winInfo = getWindowInfo(win);
-                if(winInfo && winInfo->isMappable() && rule(winInfo)) {
-                    target = winInfo;
-                    break;
-                }
-            }
+            ArrayList<WindowInfo*> list;
+            for(WindowID win : *windowsToIgnore)
+                if(getWindowInfo(win))
+                    list.add(getWindowInfo(win));
+            target = findWindow(rule,  list, NULL, arg.includeNonActivatable);
             windowsToIgnore->clear();
             LOG(LOG_LEVEL_DEBUG, "found window by bypassing ignore list\n");
         }
@@ -210,4 +209,17 @@ void activateWorkspaceUnderMouse(void) {
             }
         }
     }
+}
+bool activateNextUrgentWindow(WindowAction action) {
+    const BoundFunction f = {hasMask, URGENT_MASK, "_activateNextUrgent",  PASSTHROUGH_IF_TRUE};
+    return findAndRaise(f, action);
+}
+bool popHiddenWindow(WindowAction action) {
+    const BoundFunction f = {hasMask, HIDDEN_MASK, "_activateHidden",  PASSTHROUGH_IF_TRUE};
+    WindowInfo* winInfo = findAndRaise(f, ACTION_NONE, {.includeNonActivatable = 1});
+    if(winInfo) {
+        winInfo->removeMask(HIDDEN_MASK);
+        applyAction(winInfo, action);
+    }
+    return winInfo ? 1 : 0;
 }

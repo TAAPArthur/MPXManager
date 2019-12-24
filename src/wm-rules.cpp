@@ -173,6 +173,7 @@ void onFocusInEvent(void) {
     if(winInfo && winInfo->isFocusAllowed()) {
         if(!winInfo->hasMask(NO_RECORD_FOCUS_MASK))
             getActiveMaster()->onWindowFocus(winInfo->getID());
+        winInfo->removeMask(URGENT_MASK);
         setBorder(winInfo->getID());
     }
 }
@@ -313,7 +314,8 @@ void addBasicRules(AddFlag flag) {
     // "The user will not be able to move, resize, restack, or transfer the input
     // focus to override-redirect windows, since the window manager is not managing them"
     // so it seems like a bug for a OR window to have INPUT_MASK set
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}), flag);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}),
+    flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     addDoNotManageOverrideRedirectWindowsRule(flag);
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);

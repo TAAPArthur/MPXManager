@@ -72,7 +72,7 @@ MPX_TEST("find_window", {
     assert(!findWindow(noMatches, getAllWindows(), &ignore));
     assert(!findWindow(noMatches, getAllWindows(), NULL));
 });
-MPX_TEST_ITER("find_and_raise_basic", 4, {
+MPX_TEST_ITER("find_and_raise_basic", 5, {
     static std::string titles[] = {"a", "c", "d"};
     int i = 0;
     int (*matches)() = []()->int{return 0;};
@@ -91,8 +91,8 @@ MPX_TEST_ITER("find_and_raise_cache", 2, {
     int (*matches)() = []()->int{return 1;};
     bool cache = _i;
     assert(getFocusedWindow());
-    WindowInfo* winInfo = findAndRaise(matches, ACTION_RAISE, 1, cache);
-    WindowInfo* winInfo2 = findAndRaise(matches, ACTION_RAISE, 1, cache);
+    WindowInfo* winInfo = findAndRaise(matches, ACTION_RAISE, {.cache = cache});
+    WindowInfo* winInfo2 = findAndRaise(matches, ACTION_RAISE, {.cache = cache});
     if(cache)
         assert(winInfo != winInfo2);
     else
@@ -102,7 +102,7 @@ MPX_TEST_ITER("find_and_raise_local", 2, {
     WindowInfo* winInfo = getAllWindows()[1];
     getActiveMaster()->onWindowFocus(winInfo->getID());
     int (*matches)() = []()->int{return 1;};
-    WindowInfo* winInfo2 = findAndRaise(matches, ACTION_RAISE, _i, 0);
+    WindowInfo* winInfo2 = findAndRaise(matches, ACTION_RAISE, {.checkLocalFirst = (bool)_i, .cache = 0});
     if(_i)
         assertEquals(winInfo, winInfo2);
     else
@@ -245,3 +245,17 @@ MPX_TEST("test_send_to_workspace_by_name", {
 });
 
 
+MPX_TEST("pop_hidden", {
+    WindowInfo* winInfo = getAllWindows()[0];
+    winInfo->addMask(HIDDEN_MASK);
+    assert(popHiddenWindow());
+    assert(!winInfo->hasMask(HIDDEN_MASK));
+});
+MPX_TEST("activate_urgent", {
+    focusWindow(top);
+    startWM();
+    waitUntilIdle();
+    bottom->addMask(URGENT_MASK);
+    assert(activateNextUrgentWindow());
+    assertEquals(getActiveFocus(), bottom->getID());
+});

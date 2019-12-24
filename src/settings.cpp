@@ -108,6 +108,9 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, XK_t, sinkWindow},
         {DEFAULT_MOD_MASK | ControlMask, XK_t, {toggleMask, ALWAYS_ON_TOP_MASK}},
         {DEFAULT_MOD_MASK | Mod1Mask, XK_t, {toggleMask, STICKY_MASK}},
+        {DEFAULT_MOD_MASK, XK_u, +[]{activateNextUrgentWindow();}},
+        {DEFAULT_MOD_MASK, XK_y, +[]{popHiddenWindow();}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_y, {toggleMask, HIDDEN_MASK}},
 
         {DEFAULT_MOD_MASK, XK_F11, +[]() {toggleLayout(FULL);}},
         {DEFAULT_MOD_MASK, XK_F, {toggleMask, FULLSCREEN_MASK}},
