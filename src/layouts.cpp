@@ -148,10 +148,12 @@ static void applyMasksToConfig(const WindowInfo* winInfo, const Monitor* m, uint
         values[CONFIG_INDEX_Y] = 0;
         values[CONFIG_INDEX_WIDTH] = getRootWidth();
         values[CONFIG_INDEX_HEIGHT] = getRootHeight();
+        values[CONFIG_INDEX_BORDER] = 0;
     }
     else if(winInfo->hasMask(FULLSCREEN_MASK)) {
         for(int i = 0; i < 4; i++)
             values[CONFIG_INDEX_X + i] = m->getBase()[i];
+        values[CONFIG_INDEX_BORDER] = 0;
     }
     else {
         if(winInfo->hasMask(X_MAXIMIZED_MASK))
@@ -208,21 +210,18 @@ void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const 
 
 void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor) {
     uint32_t config[CONFIG_LEN] = {0};
+    config[CONFIG_INDEX_BORDER] = DEFAULT_BORDER_WIDTH;
     monitor->getViewport().copyTo(config);
     applyMasksToConfig(winInfo, monitor, config);
     applyTilingOverrideToConfig(winInfo, monitor, config);
     uint32_t mask = winInfo->getTilingOverrideMask();
     if(winInfo->hasPartOfMask(FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK))
-        mask |= XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
-    else if(!winInfo->isInputOnly()) {
-        config[CONFIG_INDEX_BORDER] = winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER) ?
-            winInfo->getTilingOverride()[CONFIG_INDEX_BORDER] :
-            DEFAULT_BORDER_WIDTH;
-        mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    }
-    if(winInfo->isInputOnly()) {
+        mask |= XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+            XCB_CONFIG_WINDOW_BORDER_WIDTH;
+    if(winInfo->isInputOnly())
         mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    }
+    else
+        mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
     if(winInfo->hasMask(X_MAXIMIZED_MASK))
         mask |= XCB_CONFIG_WINDOW_WIDTH;
     if(winInfo->hasMask(Y_MAXIMIZED_MASK))

@@ -7,6 +7,7 @@
 #include "../layouts.h"
 #include "../logger.h"
 #include "../window-properties.h"
+#include "../windows.h"
 #include "../wm-rules.h"
 #include "../wmfunctions.h"
 #include "../xsession.h"
@@ -238,6 +239,13 @@ MPX_TEST_ITER("unmapped_override_redirect_windows", 2, {
     for(WindowInfo* winInfo : getAllWindows())
         if(winInfo->isOverrideRedirectWindow() && !isWindowMapped(winInfo->getID()))
             assert(!winInfo->isActivatable() && !winInfo->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
+});
+MPX_TEST_ITER("borderless_fullscreen", 2, {
+    auto mask = _i ? FULLSCREEN_MASK : ROOT_FULLSCREEN_MASK;
+    getEventRules(CLIENT_MAP_ALLOW).add({toggleMask, mask, "toggleMask"});
+    WindowID win = mapArbitraryWindow();
+    waitUntilIdle();
+    assertEquals(0, getRealGeometry(win).border);
 });
 MPX_TEST("focus_unfocusable_window", {
     getEventRules(CLIENT_MAP_ALLOW).add({toggleMask, INPUT_MASK, "toggleMask"});
