@@ -170,7 +170,7 @@ void onFocusInEvent(void) {
     setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
     LOG(LOG_LEVEL_DEBUG, "Window %d was focused\n", event->event);
-    if(winInfo) {
+    if(winInfo && winInfo->isFocusAllowed()) {
         if(!winInfo->hasMask(NO_RECORD_FOCUS_MASK))
             getActiveMaster()->onWindowFocus(winInfo->getID());
         setBorder(winInfo->getID());

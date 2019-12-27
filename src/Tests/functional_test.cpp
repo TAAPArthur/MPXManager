@@ -239,6 +239,13 @@ MPX_TEST_ITER("unmapped_override_redirect_windows", 2, {
         if(winInfo->isOverrideRedirectWindow() && !isWindowMapped(winInfo->getID()))
             assert(!winInfo->isActivatable() && !winInfo->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
 });
+MPX_TEST("focus_unfocusable_window", {
+    getEventRules(CLIENT_MAP_ALLOW).add({toggleMask, INPUT_MASK, "toggleMask"});
+    WindowID win = mapArbitraryWindow();
+    waitUntilIdle();
+    assert(!getWindowInfo(win)->isFocusAllowed());
+    assertEquals(0, getRealGeometry(win).border);
+});
 
 static void bindingsSetup() {
     ROOT_DEVICE_EVENT_MASKS = 0;
