@@ -60,7 +60,7 @@ displayHelp(){
 }
 
 run(){
-    exec $path/$fileName $@
+    exec $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME $@
 }
 displayVersion(){
     echo $VERSION
@@ -69,8 +69,9 @@ displayHash(){
     echo $GIT_HASH
 }
 
-fileName=$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))
-path=$HOME/.mpxmanager
+MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))}
+MPXMANAGER_HOME=${MPXMANAGER_HOME:-$HOME/.config/mpxmanager}
+MPXMANAGER_CONFIG=${MPXMANAGER_CONFIG:-$MPXMANAGER_HOME/config.cpp}
 optspec=":vhs-:"
 
 
@@ -79,7 +80,7 @@ getopts "$optspec" optchar || run $@
         -)
             case "${OPTARG}" in
                 force-restart)
-                    pid=$(pgrep $fileName)
+                    pid=$(pgrep $MPXMANAGER_BIN_NAME)
                     kill $pid;
                     while kill -0 $pid; do
                         sleep 1
@@ -91,11 +92,11 @@ getopts "$optspec" optchar || run $@
                     run "--send=restart"
                     ;;
                 recompile)
-                    mkdir -p $path
-                    [ -f $path/config.cpp ] || cp /usr/share/mpxmanager/sample-config.cpp $path/config.cpp
+                    mkdir -p $MPXMANAGER_HOME
+                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
                     shift
-                    echo $CC $path/config.cpp -o $path/$fileName -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
-                    $CC $path/config.cpp -o $path/$fileName -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
+                    echo $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
+                    $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
                     ;;
                 hash)
                     displayHash
@@ -107,10 +108,10 @@ getopts "$optspec" optchar || run $@
                     displayVersion
                     ;;
                 name)
-                    echo $fileName
+                    echo $MPXMANAGER_BIN_NAME
                     ;;
                 path)
-                    echo $path
+                    echo $MPXMANAGER_HOME
                     ;;
                 quit)
                     run "--send=quit"
