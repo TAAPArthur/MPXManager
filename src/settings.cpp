@@ -206,7 +206,6 @@ void onStartup(void) {
         addAlwaysOnTopBottomRules();
         addStickyPrimaryMonitorRule();
         addKeepTransientsOnTopRule();
-        addDefaultBorderRule();
         addIgnoreNonTopLevelWindowsRule();
         addFloatRule();
         addMoveNonTileableWindowsToWorkspaceBounds();

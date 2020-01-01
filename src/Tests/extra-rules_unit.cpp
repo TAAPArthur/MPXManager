@@ -291,19 +291,21 @@ MPX_TEST("test_transient_windows_always_above", {
         waitUntilIdle(1);
     }
 });
-MPX_TEST_ITER("border_for_transients", 2, {
+MPX_TEST_ITER("border_for_floating", 2, {
     DEFAULT_BORDER_WIDTH = 1;
+    addAutoTileRules();
+    addFloatRule();
     addEWMHRules();
-    addDefaultBorderRule();
-    WindowID win = createNormalWindow();
-    removeBorder(win);
-    mapWindow(win);
-    registerWindow(win, root);
-    flush();
+    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
+    startWM();
+    waitUntilIdle();
     if(_i)
         assertEquals(getRealGeometry(win).border, DEFAULT_BORDER_WIDTH);
     else {
         floatWindow(getWindowInfo(win));
+        mapArbitraryWindow();
+        startWM();
+        waitUntilIdle();
         retile();
         assertEquals(getRealGeometry(win).border, DEFAULT_BORDER_WIDTH);
     }

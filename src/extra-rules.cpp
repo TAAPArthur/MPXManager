@@ -189,13 +189,6 @@ static bool isNotRepeatedKey() {
 void addIgnoreKeyRepeat(AddFlag flag) {
     getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey), flag);
 }
-static void setDefaultBorderWidth(WindowInfo* winInfo) {
-    if(!winInfo->isInputOnly() && winInfo->getWorkspace())
-        configureWindow(winInfo->getID(), XCB_CONFIG_WINDOW_BORDER_WIDTH, &DEFAULT_BORDER_WIDTH);
-}
-void addDefaultBorderRule(AddFlag flag) {
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultBorderWidth), flag);
-}
 static bool unregisterNonTopLevelWindows() {
     xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);

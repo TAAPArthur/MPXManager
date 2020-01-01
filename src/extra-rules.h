@@ -121,13 +121,6 @@ void addIgnoreKeyRepeat(AddFlag flag = PREPEND_UNIQUE);
  */
 void addKeepTransientsOnTopRule(AddFlag flag = ADD_UNIQUE);
 /**
- * Adds a border of size DEFAULT_BORDER_WIDTH to all non-INPUT_ONLY windows
- * in a workspace
- *
- * @param flag
- */
-void addDefaultBorderRule(AddFlag flag = ADD_UNIQUE);
-/**
  * Adds a XCB_REPARENT_NOTIFY rule to unregister a window if it is no longer a
  * direct child of the root window
  *
