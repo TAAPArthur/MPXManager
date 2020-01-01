@@ -47,7 +47,7 @@ WindowInfo* Binding::getWindowToActOn(const UserEvent& event)const {
 }
 bool Binding::trigger(const UserEvent& event)const {
     logger.info() << "Triggering " << *this << std::endl;
-    return shouldPassThrough(getPassThrough(), boundFunction(getWindowToActOn(event), event.master));
+    return shouldPassThrough(getPassThrough(), boundFunction({getWindowToActOn(event), event.master}));
 }
 std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
     return stream << "{ Name:'" << binding.getName() << "' " << binding.keyBindings << " Func:'" <<

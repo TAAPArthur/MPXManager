@@ -88,6 +88,12 @@ static inline bool shouldPassThrough(PassThrough passThrough, int result) {
             return !result;
     }
 }
+struct BoundFunctionArg {
+    WindowInfo* winInfo = NULL;
+    Master* master = getActiveMaster();
+    Workspace* workspace = NULL;
+    Monitor* monitor = NULL;
+};
 
 /**
  * Holds a generic function
@@ -115,7 +121,7 @@ struct GenericFunctionWrapper {
      *
      * @return the result of the function
      */
-    virtual int call(WindowInfo* winInfo = NULL, Master* master = NULL)const = 0;
+    virtual int call(const BoundFunctionArg& arg)const = 0;
 };
 
 /**
@@ -140,30 +146,29 @@ struct FunctionWrapper: GenericFunctionWrapper {
      */
     FunctionWrapper(R(*func)(P)): func(func) {}
 
-    int call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return _call(winInfo, master);
+    int call(const BoundFunctionArg& arg)const override {
+        return _call(arg);
     }
 
     template<typename V = P>
-    EnableIfWinInfo<V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
-        return winInfo ? func(winInfo) : 0;
+    EnableIfWinInfo<V> _call(const BoundFunctionArg& arg) const {
+        return arg.winInfo ? func(arg.winInfo) : 0;
     }
     template<typename V = P>
-    EnableIfWin<V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
-        return winInfo ? func(winInfo->getID()) : 0;
+    EnableIfWin<V> _call(const BoundFunctionArg& arg) const {
+        return arg.winInfo ? func(arg.winInfo->getID()) : 0;
     }
     template<typename V = P>
-    EnableIfMaster<V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
-        return master ? func(master) : 0;
+    EnableIfMaster<V> _call(const BoundFunctionArg& arg) const {
+        return arg.master ? func(arg.master) : 0;
     }
     template<typename V = P>
-    EnableIfWorkspace<V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
-        return master && master->getWorkspace() ? func(master->getWorkspace()) : 0;
+    EnableIfWorkspace<V> _call(const BoundFunctionArg& arg) const {
+        return arg.workspace ? func(arg.workspace) : 0;
     }
     template<typename V = P>
-    EnableIfMonitor <V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
-        return master && master->getWorkspace() &&
-            master->getWorkspace()->getMonitor() ? func(master->getWorkspace()->getMonitor()) : 0;
+    EnableIfMonitor <V> _call(const BoundFunctionArg& arg) const {
+        return arg.monitor ? func(arg.monitor) : 0;
     }
 };
 /**
@@ -179,38 +184,38 @@ struct FunctionWrapper<void, P>: GenericFunctionWrapper {
      * @param func
      */
     FunctionWrapper(std::function<void(P)>func): func(func) {}
-    int call(WindowInfo* winInfo = NULL, Master* master = NULL)const override {
-        return _call(winInfo, master);
+    int call(const BoundFunctionArg& arg)const override {
+        return _call(arg);
     }
     template<typename V = P>
-    EnableIfWinInfo<V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
-        if(winInfo)
-            func(winInfo);
-        return winInfo ? 1 : 0;
+    EnableIfWinInfo<V> _call(const BoundFunctionArg& arg) const {
+        if(arg.winInfo)
+            func(arg.winInfo);
+        return arg.winInfo ? 1 : 0;
     }
     template<typename V = P>
-    EnableIfWin<V> _call(WindowInfo* winInfo = NULL, Master* master __attribute__((unused)) = NULL) const {
-        if(winInfo)
-            func(winInfo->getID());
-        return winInfo ? 1 : 0;
+    EnableIfWin<V> _call(const BoundFunctionArg& arg) const {
+        if(arg.winInfo)
+            func(arg.winInfo->getID());
+        return arg.winInfo ? 1 : 0;
     }
     template<typename V = P>
-    EnableIfMaster<V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
-        if(master)
-            func(master);
-        return master ? 1 : 0;
+    EnableIfMaster<V> _call(const BoundFunctionArg& arg) const {
+        if(arg.master)
+            func(arg.master);
+        return arg.master ? 1 : 0;
     }
     template<typename V = P>
-    EnableIfWorkspace<V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
-        if(master && master->getWorkspace())
-            func(master->getWorkspace());
-        return master ? 1 : 0;
+    EnableIfWorkspace<V> _call(const BoundFunctionArg& arg) const {
+        if(arg.workspace)
+            func(arg.workspace);
+        return arg.workspace ? 1 : 0;
     }
     template<typename V = P>
-    EnableIfMonitor <V> _call(WindowInfo* winInfo __attribute__((unused)) = NULL, Master* master = NULL) const {
-        if(master && master->getWorkspace() && master->getWorkspace()->getMonitor())
-            func(master->getWorkspace()->getMonitor());
-        return master ? 1 : 0;
+    EnableIfMonitor <V> _call(const BoundFunctionArg& arg) const {
+        if(arg.monitor)
+            func(arg.monitor);
+        return arg.monitor ? 1 : 0;
     }
 };
 /**
@@ -225,8 +230,7 @@ struct FunctionWrapper<R, void>: GenericFunctionWrapper {
      * @param func the function to call
      */
     FunctionWrapper(std::function<R()>func): func(func) {}
-    int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
-        Master* master __attribute__((unused)) = NULL) const override {
+    int call(const BoundFunctionArg& arg __attribute__((unused))) const override {
         return func();
     }
 };
@@ -241,8 +245,7 @@ struct FunctionWrapper<void, void>: GenericFunctionWrapper {
      * @param func the function to call
      */
     FunctionWrapper(std::function<void()>func): func(func) {}
-    int call(WindowInfo* winInfo __attribute__((unused)) = NULL,
-        Master* master __attribute__((unused)) = NULL) const override {
+    int call(const BoundFunctionArg& arg __attribute__((unused))) const override {
         func();
         return 1;
     }
@@ -368,7 +371,7 @@ struct BoundFunction {
      *
      * @return 1 iff the caller should proceed
      */
-    bool execute(WindowInfo* w = NULL, Master* m = NULL)const;
+    bool execute(const BoundFunctionArg& arg)const;
     /**
      * Calls the underlying function and returns the result
      *
@@ -379,10 +382,13 @@ struct BoundFunction {
      *
      * @return
      */
-    int call(WindowInfo* winInfo = NULL, Master* master = NULL)const;
+    int call(const BoundFunctionArg& arg)const;
     /// @copydoc call
-    int operator()(WindowInfo* winInfo = NULL, Master* master = NULL)const {
-        return execute(winInfo, master);
+    int operator()(const BoundFunctionArg& arg)const {
+        return execute(arg);
+    }
+    int operator()(WindowInfo* winInfo, Master* master = NULL)const {
+        return (*this)({winInfo = winInfo, .master = master});
     }
     /**
      * @param boundFunction
@@ -456,5 +462,8 @@ int getNumberOfEventsTriggerSinceLastIdle(int type);
  * @param m
  * @return the result
  */
-int applyEventRules(int type, WindowInfo* winInfo = NULL, Master* m = getActiveMaster());
+int applyEventRules(int type, const BoundFunctionArg& arg = {});
+static inline int applyEventRules(int type, WindowInfo* winInfo, Master* master = getActiveMaster()) {
+    return applyEventRules(type, {.winInfo = winInfo, .master = master});
+}
 #endif

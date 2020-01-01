@@ -50,7 +50,7 @@ bool Chain::start(const UserEvent& event)const {
         globalChain.add(this);
     else
         getActiveChains().add(this);
-    return boundFunction(getWindowToActOn(event)) && check(event);
+    return boundFunction({getWindowToActOn(event)})&& check(event);
 }
 bool Chain::end()const {
     LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d\n", isGlobalChain());
