@@ -148,10 +148,10 @@ void addEWMHRules(AddFlag flag) {
     getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
     getBatchEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), flag);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadSavedAtomState), flag);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(recordWindow), flag);
     getEventRules(POSSIBLE_STATE_CHANGE).add(DEFAULT_EVENT(updateXWindowStateForAllWindows), flag);
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setAllowedActions), flag);
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(setActiveProperties), flag);
     getEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(unrecordWindow), flag);
