@@ -290,14 +290,14 @@ public:
      * @return the window map state either UNMAPPED(0) or MAPPED(1)
      */
     bool isMappable() const {
-        return hasMask(MAPPABLE_MASK);
+        return hasMask(MAPPABLE_MASK) && !hasMask(HIDDEN_MASK);
     }
     /**
      * @return true if the user can interact (focus, type etc) with the window
      * For this to be true the window would have to be mapped and not hidden
      */
-    bool isInteractable() const {
-        return hasMask(MAPPABLE_MASK) && !hasMask(HIDDEN_MASK);
+    bool isCyclable() const {
+        return isMappable() && !hasMask(SPECIAL_MASK);
     }
     /**
      * Determines if a window should be tiled given its mapState and masks

@@ -176,7 +176,7 @@ void setSavedWorkspaceIndex(WindowInfo* winInfo) {
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->getID(), winInfo->getWorkspaceIndex());
 }
 void autoResumeWorkspace(WindowInfo* winInfo) {
-    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isSpecial()) {
+    if(winInfo->getWorkspaceIndex() == NO_WORKSPACE && !winInfo->isNotManageable()) {
         WorkspaceID w = getSavedWorkspaceIndex(winInfo->getID());
         LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d\n", winInfo->getID(), w);
         winInfo->moveToWorkspace(w);
@@ -186,7 +186,7 @@ void autoResumeWorkspace(WindowInfo* winInfo) {
 void setShowingDesktop(int value) {
     LOG(LOG_LEVEL_INFO, "setting showing desktop %d\n", value);
     for(WindowInfo* winInfo : getAllWindows())
-        if(winInfo->isInteractable() && winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
+        if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
             raiseWindow(winInfo->getID(), 0, value);
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
 }

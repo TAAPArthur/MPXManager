@@ -148,7 +148,7 @@ void keepTransientsOnTop(WindowInfo* winInfo) {
     if(!winInfo->hasMask(ALWAYS_ON_TOP_MASK)) {
         WindowID id = winInfo->getID();
         for(WindowInfo* winInfo2 : getAllWindows()) {
-            if(winInfo2->isInteractable() && winInfo2->getTransientFor() == id)
+            if(winInfo2->getTransientFor() == id)
                 raiseWindow(winInfo2->getID(), id);
         }
     }
@@ -163,7 +163,7 @@ void autoFocus() {
     if(!winInfo || !getUserTime(winInfo->getID()) || !winInfo->isNotInInvisibleWorkspace())
         return;
     long delta = getTime() - winInfo->getCreationTime();
-    if(!winInfo->isSpecial() && winInfo->hasMask(INPUT_MASK)) {
+    if(!winInfo->isNotManageable() && winInfo->hasMask(INPUT_MASK)) {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             Master* master = getClientMaster(winInfo->getID());
             if(master && focusWindow(winInfo, master)) {

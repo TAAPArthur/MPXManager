@@ -135,7 +135,7 @@ void focusParent(void) {
     WindowInfo* winInfo = getWindowInfo(event->event);
     if(winInfo) {
         WindowInfo* origin = getWindowInfo(winInfo->getEffectiveID());
-        if(origin && origin != winInfo && origin->isInteractable())
+        if(origin && origin != winInfo && origin->isMappable())
             focusWindow(origin);
     }
 }

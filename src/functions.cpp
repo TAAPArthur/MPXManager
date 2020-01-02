@@ -26,7 +26,7 @@ static int getNextIndexInStack(const ArrayList<WindowInfo*>& stack, int delta, b
     int dir = delta == 0 ? 0 : delta > 0 ? 1 : -1;
     for(int i = stack.size() - 1; i >= 0; i--) {
         int n = stack.getNextIndex(index, delta);
-        if(stack[n]->isInteractable() && (!filter || stack[n]->isActivatable())) {
+        if(stack[n]->isCyclable() && (!filter || stack[n]->isActivatable())) {
             return n;
         }
         delta += dir;
@@ -36,7 +36,7 @@ static int getNextIndexInStack(const ArrayList<WindowInfo*>& stack, int delta, b
 
 bool hasInteractiveWindow(const ArrayList<WindowInfo*>& stack) {
     for(WindowInfo* winInfo : stack)
-        if(winInfo->isInteractable())
+        if(winInfo->isCyclable())
             return 1;
     return 0;
 }

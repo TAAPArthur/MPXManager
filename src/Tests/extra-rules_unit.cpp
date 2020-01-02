@@ -278,7 +278,7 @@ MPX_TEST("test_transient_windows_always_above", {
     assert(winInfo2->getTransientFor() == winInfo->getID());
     winInfo2->moveToWorkspace(getActiveWorkspaceIndex());
     assert(winInfo->isActivatable()&& winInfo2->isActivatable());
-    assert(winInfo2->isInteractable());
+    assert(winInfo2->isMappable());
     WindowID stack[] = {win, win2, win3};
     startWM();
     waitUntilIdle();

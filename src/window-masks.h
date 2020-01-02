@@ -58,6 +58,8 @@
  * This mask is implemented via a WINDOW_MOVE Rule
  */
 #define ALWAYS_ON_BOTTOM_MASK 	(1U << 11)
+/// will cause WindowInfo::isSpecial to return 1
+#define SPECIAL_MASK 	(1U << 12)
 
 /// Will not update our internal focus representation when a window with this mask is focused
 /// Intended for Desktop windows
