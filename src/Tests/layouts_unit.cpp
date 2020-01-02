@@ -38,7 +38,7 @@ MPX_TEST("tile_worskspace_event", {
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {assertEquals(winInfo, getAllWindows()[0]); return 0;}));
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
-    tileWorkspace(0);
+    retile();
     assertEquals(getCount(), 1);
 });
 
@@ -192,7 +192,7 @@ MPX_TEST("raise_focused", {
         winInfo->moveToWorkspace(0);
     getActiveMaster()->onWindowFocus(ids[2]);
     getActiveMaster()->onWindowFocus(ids[1]);
-    tileWorkspace(0);
+    retile();
     WindowID stack[] = {ids[0], ids[2], ids[1]};
     assert(checkStackingOrder(stack, LEN(stack)));
 });
@@ -210,7 +210,7 @@ MPX_TEST_ITER("test_fixed_position_windows", NUMBER_OF_LAYOUT_FAMILIES + 1, {
     winInfo->setTilingOverrideEnabled(-1, 1);
     winInfo->setTilingOverride(config);
     setActiveLayout(&LAYOUT_FAMILIES[_i % NUMBER_OF_LAYOUT_FAMILIES ]);
-    tileWorkspace(getActiveWorkspaceIndex());
+    retile();
     RectWithBorder actualConfig = getRealGeometry(winInfo);;
     assertEquals(config, actualConfig);
 });
@@ -245,7 +245,7 @@ MPX_TEST("test_maximized_floating_window", {
     RectWithBorder bounds = {1, 2, 3, 4};
     setWindowPosition(winInfo->getID(), bounds);
     setActiveLayout(FULL);
-    tileWorkspace(getActiveWorkspaceIndex());
+    retile();
     RectWithBorder expectedConfig = bounds;
     expectedConfig.width = getWorkspace(0)->getMonitor()->getViewport().width;
     assertEquals(expectedConfig, getRealGeometry(winInfo));
@@ -301,11 +301,11 @@ MPX_TEST("test_empty_layout", {
     for(int i = 0; i < 2; i++) {
         setActiveLayout(NULL);
         consumeEvents();
-        tileWorkspace(getActiveWorkspaceIndex());
+        retile();
         assert(!xcb_poll_for_event(dis));
         Layout l = {"", NULL};
         setActiveLayout(&l);
-        tileWorkspace(getActiveWorkspaceIndex());
+        retile();
         assert(!xcb_poll_for_event(dis));
         getAllWindows()[0]->moveToWorkspace(getActiveWorkspaceIndex());
     }

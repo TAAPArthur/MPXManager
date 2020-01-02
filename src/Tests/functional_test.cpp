@@ -47,12 +47,7 @@ MPX_TEST("auto_focus", {
     assertEquals(getFocusedWindow(), winInfo);
 });
 MPX_TEST("test_dock_detection", {
-    lock();
-    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
-    scan(root);
-    unlock();
-    waitUntilIdle();
-    mapWindow(win);
+    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK));
     waitUntilIdle();
     WindowInfo* winInfo = getWindowInfo(win);
     assert(winInfo);
@@ -96,9 +91,7 @@ MPX_TEST_ITER("auto_fullscreen", 4, {
             break;
         case 3:
             getEventRules(IDLE).add(DEFAULT_EVENT(+[]() {getWindowInfo(win)->addMask(MAPPABLE_MASK);}));
-            win = createNormalWindow();
-            waitUntilIdle();
-            mapWindow(win);
+            win = mapArbitraryWindow();
             break;
     }
     waitUntilIdle();

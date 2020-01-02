@@ -28,10 +28,10 @@ static std::string newTitle = "test2";
 static void setup() {
     POLL_COUNT = 1;
     CRASH_ON_ERRORS = -1;
+    onSimpleStartup();
     addCloneRules();
     addAutoTileRules();
     addEWMHRules();
-    onSimpleStartup();
     switchToWorkspace(0);
     setActiveLayout(GRID);
     WindowID win = mapArbitraryWindow();
@@ -130,20 +130,19 @@ MPX_TEST("mouse_enter", {
 MPX_TEST("swap_on_unmap", {
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     winInfo->moveToWorkspace(1);
-    waitUntilIdle();
+    waitUntilIdle(1);
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     assertEquals(cloneInfo->getWorkspaceIndex(), 1);
-    switchToWorkspace(1);
-    /// wake WM
-    createNormalWindow();
-    waitUntilIdle();
+    ATOMIC(switchToWorkspace(1));
+    waitUntilIdle(1);
     assertEquals(winInfo->getWorkspaceIndex(), 1);
     assertEquals(cloneInfo->getWorkspaceIndex(), 0);
-
-    switchToWorkspace(0);
-    /// wake WM
-    createNormalWindow();
-    waitUntilIdle();
+    ATOMIC(switchToWorkspace(2));
+    waitUntilIdle(1);
+    assert(!winInfo->hasMask(MAPPED_MASK));
+    assert(!cloneInfo->hasMask(MAPPED_MASK));
+    ATOMIC(switchToWorkspace(0));
+    waitUntilIdle(1);
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     assertEquals(cloneInfo->getWorkspaceIndex(), 1);
 });

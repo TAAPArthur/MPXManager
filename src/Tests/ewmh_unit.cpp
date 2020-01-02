@@ -360,6 +360,7 @@ MPX_TEST("test_client_request_frame_extents", {
 });
 
 MPX_TEST("test_client_request_restack", {
+    setActiveLayout(NULL);
     WindowInfo* winInfo = getAllWindows()[0];
     WindowInfo* winInfo2 = getAllWindows()[1];
     winInfo2->moveToWorkspace(0);

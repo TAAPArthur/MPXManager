@@ -149,7 +149,7 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
         scan(root);
     unlock();
     waitUntilIdle();
-    assertEquals(getActiveWindowStack().size(), 2);
+    assertEquals(getAllWindows().size(), 2);
     createOverrideRedirectWindow();
     WindowID win3 = createUnmappedWindow();
     waitUntilIdle();
@@ -157,7 +157,7 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
         getAllWindows().find(win2) &&
         getAllWindows().find(win3));
     assert(!getAllWindows().find(child));
-    assert(getActiveWindowStack().size() == 3);
+    assertEquals(getAllWindows().size(), 3);
 });
 MPX_TEST("test_detect_new_override_redirect_windows", {
     assert(!addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE));
@@ -165,7 +165,7 @@ MPX_TEST("test_detect_new_override_redirect_windows", {
     createOverrideRedirectWindow();
     createOverrideRedirectWindow();
     waitUntilIdle();
-    assertEquals(getActiveWindowStack().size(), 3);
+    assertEquals(getAllWindows().size(), 3);
     for(WindowInfo* winInfo : getAllWindows())
         assert(winInfo->isOverrideRedirectWindow());
 });
@@ -241,16 +241,18 @@ MPX_TEST("test_map_windows", {
     WindowID win = createUnmappedWindow();
     WindowID win2 = createUnmappedWindow();
     WindowID win3 = createUnmappedWindow();
+    waitUntilIdle();
+    assertEquals(getAllWindows().size(), 3);
     mapWindow(win3);
     mapWindow(win2);
-    //wait for all to be in list
-    WAIT_UNTIL_TRUE(getAllWindows().find(win)&&
-        getAllWindows().find(win2)&&
-        getAllWindows().find(win3));
-    //WAIT_UNTIL_TRUE(!isWindowMapped(win)&&isWindowMapped(win2)&&isWindowMapped(win3));
+    waitUntilIdle();
+    assert(getWindowInfo(win2)->hasMask(MAPPED_MASK));
+    assert(getWindowInfo(win3)->hasMask(MAPPED_MASK));
+    assert(!getWindowInfo(win)->hasMask(MAPPED_MASK));
     mapWindow(win);
-    //wait for all to be mapped
-    WAIT_UNTIL_TRUE(isWindowMapped(win)&& isWindowMapped(win2)&& isWindowMapped(win3));
+    waitUntilIdle();
+    for(WindowInfo* winInfo : getAllWindows())
+        assert(winInfo->hasMask(MAPPED_MASK));
 });
 
 MPX_TEST("test_unmap", {

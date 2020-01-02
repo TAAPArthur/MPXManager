@@ -87,6 +87,7 @@ void pushContext(std::string context) {
     contexts.add(context);
 }
 void popContext() {
+    assert(contexts.size());
     contexts.pop();
 }
 std::string getContextString() {
