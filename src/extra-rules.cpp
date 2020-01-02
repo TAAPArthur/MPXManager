@@ -160,7 +160,7 @@ void addKeepTransientsOnTopRule(AddFlag flag) {
 void autoFocus() {
     xcb_map_notify_event_t* event = (xcb_map_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
-    if(!winInfo || !getUserTime(winInfo->getID()))
+    if(!winInfo || !getUserTime(winInfo->getID()) || !winInfo->isNotInInvisibleWorkspace())
         return;
     long delta = getTime() - winInfo->getCreationTime();
     if(!winInfo->isSpecial() && winInfo->hasMask(INPUT_MASK)) {
