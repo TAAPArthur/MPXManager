@@ -103,6 +103,22 @@ MPX_TEST_ITER("avoid_docks_ignore", 2, {
     assert(!monitor->resizeToAvoidDock(winInfo));
     assertEquals(monitor->getBase(), monitor->getViewport());
 });
+MPX_TEST("large_dock", {
+    const short dim = 100;
+    int properties[4] = {dim, 0, 0, 0};
+    WindowInfo* winInfo = new WindowInfo(1);
+    assert(addWindowInfo(winInfo));
+    winInfo->setDock();
+    winInfo->setDockProperties(properties, 4);
+    uint16_t rootBounds[2] = {dim, dim };
+    setRootDims(rootBounds);
+    static Rect base = {0, 0, dim, dim};
+    static Monitor* monitor = new Monitor(1, base);
+    monitor->resizeToAvoidDock(winInfo);
+    assert(monitor->getViewport().width);
+    assert(monitor->getViewport().height);
+    assert(monitor->getBase() != monitor->getViewport());
+});
 
 
 MPX_TEST("get_set_base", {

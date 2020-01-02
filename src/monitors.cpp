@@ -76,6 +76,8 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
             (&view.x)[offset] + (&view.width)[offset] - values[offset];
         assert(intersectionWidth > 0);
         (&view.width)[offset] -= intersectionWidth;
+        if((&view.width)[offset] == 0)
+            (&view.width)[offset] = 1;
         if(fromPositiveSide)
             (&view.x)[offset] = dim;
         changed = 1;
