@@ -127,9 +127,10 @@ void onMapEvent(void) {
     LOG(LOG_LEVEL_TRACE, "Detected map event for Window %d\n", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
-        if(!winInfo->hasMask(MAPPABLE_MASK))
-            applyEventRules(CLIENT_MAP_ALLOW, winInfo);
+        bool alreadlyMapped = winInfo->hasMask(MAPPABLE_MASK);
         winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
+        if(!alreadlyMapped)
+            applyEventRules(CLIENT_MAP_ALLOW, winInfo);
     }
 }
 void onMapRequestEvent(void) {
