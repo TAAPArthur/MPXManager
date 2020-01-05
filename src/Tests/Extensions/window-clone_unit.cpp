@@ -67,7 +67,7 @@ MPX_TEST("test_seemless_swap_with_original", {
     updateState();
     swapWindows(winInfo, cloneInfo);
     markState();
-    assert(updateState() == WINDOW_CHANGE);
+    assert(!updateState());
     unlock();
 });
 

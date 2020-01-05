@@ -112,7 +112,7 @@ static inline void _printStateComparison(WorkspaceState* currentState, Workspace
 static int compareState() {
     WorkspaceState* currentState = computeState();
     assert(currentState);
-    int changed = NO_CHANGE;
+    int changed = 0;
     ArrayList<WorkspaceID>workspaceIDs;
     for(Workspace* w : getAllWorkspaces())
         if(w->isVisible())
@@ -121,6 +121,7 @@ static int compareState() {
         if(!w->isVisible())
             workspaceIDs.add(w->getID());
     assert(workspaceIDs.size() == getNumberOfWorkspaces());
+    applyEventRules(POSSIBLE_STATE_CHANGE);
     for(WorkspaceID i : workspaceIDs) {
         LOG_RUN(LOG_LEVEL_TRACE, _printStateComparison(currentState, i));
         if(currentState[i].forceRetile || (savedStates || currentState[i].size) &&
@@ -134,7 +135,7 @@ static int compareState() {
             )
         ) {
             if(currentState[i].visible || !currentState[i].forceRetile) {
-                changed |= WORKSPACE_WINDOW_CHANGE;
+                changed = 1;
             }
             if(currentState[i].visible) {
                 LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
@@ -142,25 +143,7 @@ static int compareState() {
             }
             currentState[i].forceRetile = !currentState[i].visible;
         }
-        if((savedStates || currentState[i].visible) &&
-            (i >= numberOfRecordedWorkspaces ||
-                savedStates[i].visible != currentState[i].visible)) {
-            changed |= WORKSPACE_MONITOR_CHANGE;
-            LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_MONITOR_CHANGE %d\n", i);
-            syncMappedState(i);
-        }
-        else {
-            Workspace* w = getWorkspace(i);
-            for(WindowInfo* winInfo : w->getWindowStack())
-                if(winInfo->hasMask(MAPPABLE_MASK) && (w->isVisible() ^ winInfo->hasMask(MAPPED_MASK))) {
-                    LOG(LOG_LEVEL_DEBUG, "Detected WINDOW_CHANGE Workspace: %d (Visible %d) for %d \n", i, w->isVisible(),
-                        winInfo->getID());
-                    updateWindowWorkspaceState(winInfo);
-                    changed |= WINDOW_CHANGE ;
-                }
-        }
     }
-    applyEventRules(POSSIBLE_STATE_CHANGE);
     LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);
     unmarkState();
     if(savedStates)
@@ -170,10 +153,8 @@ static int compareState() {
     return changed;
 }
 
-
-
 int updateState() {
     if(!isStateMarked())
         LOG(LOG_LEVEL_TRACE, "State could not have changed \n");
-    return isStateMarked() ? (StateChangeType) compareState() : NO_CHANGE;
+    return isStateMarked() ? compareState() : 0;
 }

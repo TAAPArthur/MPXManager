@@ -44,16 +44,20 @@ void addPrintStatusRule(AddFlag flag) {
 void addDesktopRule(AddFlag flag) {
     getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) {
-            winInfo->addMask(NO_ACTIVATE_MASK | NO_RECORD_FOCUS_MASK | IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
+            winInfo->addMask(IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
                 BELOW_MASK | STICKY_MASK);
-            winInfo->setTilingOverrideEnabled(3);
+            winInfo->setTilingOverrideEnabled(1 | 2 | 16);
         }
-    },
-    FUNC_NAME), flag);
+    }, FUNC_NAME), flag);
+    getEventRules(WINDOW_WORKSPACE_CHANGE).add(new BoundFunction(+[](WindowInfo * winInfo) {
+        if(winInfo->hasMask(STICKY_MASK) && winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
+            updateFocusForAllMasters(winInfo);
+    }, "_desktopTransferFocus"), flag);
 }
 void addFloatRule(AddFlag flag) {
     getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
-        if(winInfo->getType() != ewmh->_NET_WM_WINDOW_TYPE_NORMAL) floatWindow(winInfo);
+        if(winInfo->getType() != ewmh->_NET_WM_WINDOW_TYPE_NORMAL &&
+            winInfo->getType()  != ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) floatWindow(winInfo);
     }, FUNC_NAME), flag);
 }
 

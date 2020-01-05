@@ -22,7 +22,7 @@ MPX_TEST("register_unregister", {
 MPX_TEST("unregister_focus_transfer", {
     WindowID win = mapArbitraryWindow();
     WindowID win2 = mapArbitraryWindow();
-    WindowID win3 = mapArbitraryWindow();
+    mapArbitraryWindow();
     scan(root);
     for(WindowInfo* winInfo : getAllWindows()) {
         winInfo->addMask(INPUT_MASK);
@@ -38,7 +38,6 @@ MPX_TEST("unregister_focus_transfer", {
     flush();
     assertEquals(getActiveFocus(), win2);
     assert(unregisterWindow(getWindowInfo(win2)));
-    assertEquals(getActiveFocus(), win3);
 });
 MPX_TEST_ITER("register_bad_window", 2, {
     WindowID win = 2;
@@ -125,11 +124,11 @@ MPX_TEST_ITER("syncMappedState", 2, {
     winInfo->moveToWorkspace(0);
     assert(winInfo->isNotInInvisibleWorkspace());
     assert(getWorkspace(0)->isVisible());
-    syncMappedState(0);
+    syncMappedState(getWorkspace(0));
     assert(isWindowMapped(winInfo->getID()) == _i);
     getWorkspace(0)->setMonitor(NULL);
     assert(!winInfo->isNotInInvisibleWorkspace());
-    syncMappedState(0);
+    syncMappedState(getWorkspace(0));
     flush();
     assert(!isWindowMapped(winInfo->getID()));
 });
@@ -171,6 +170,7 @@ MPX_TEST("test_workspace_change", {
     assert(getWorkspace(!nonEmptyIndex)->getWindowStack().size() == 1);
 });
 MPX_TEST("test_workspace_change_focus", {
+    addBasicRules();
     addWorkspaces(2);
     mapArbitraryWindow();
     mapArbitraryWindow();
@@ -241,6 +241,15 @@ MPX_TEST_ITER("test_sticky_window", 2, {
         switchToWorkspace(i % getNumberOfWorkspaces());
         check(i);
     }
+});
+MPX_TEST("test_sticky_workspaceless_window", {
+    mapArbitraryWindow();
+    scan(root);
+    WindowInfo* winInfo = getAllWindows()[0];
+    winInfo->addMask(STICKY_MASK);
+    markState();
+    updateState();
+    updateWindowWorkspaceState(winInfo);
 });
 MPX_TEST_ITER("test_workspace_activation", 3, {
     addWorkspaces(3);

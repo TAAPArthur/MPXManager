@@ -266,7 +266,7 @@ void retile(void) {
 void tileWorkspace(WorkspaceID index) {
     Workspace* workspace = getWorkspace(index);
     LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d\n", index);
-    if(!workspace->getMonitor() || !applyEventRules(TILE_WORKSPACE, {.workspace = workspace}))
+    if(!workspace->getMonitor())
         return;
     Monitor* m = workspace->getMonitor();
     assert(m);
@@ -308,6 +308,7 @@ void tileWorkspace(WorkspaceID index) {
             }
         }
     }
+    applyEventRules(TILE_WORKSPACE, {.workspace = workspace});
 }
 
 static uint32_t splitEven(LayoutState* state, int offset, short const* baseValues, int dim, int num,

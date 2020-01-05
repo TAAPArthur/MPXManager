@@ -39,7 +39,10 @@ MPX_TEST("shutdown_on_idle", {
 MPX_TEST("test_desktop_rule", {
     addDesktopRule();
     Monitor* m = getActiveWorkspace()->getMonitor();
+    WindowID stackingOrder[3] = {0, mapArbitraryWindow(), mapArbitraryWindow()};
     WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    stackingOrder[0] = win;
+
     setActiveLayout(GRID);
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
@@ -49,12 +52,41 @@ MPX_TEST("test_desktop_rule", {
     m->setViewport({10, 20, 100, 100});
     retile();
     flush();
-    assertEquals(m->getViewport(), getRealGeometry(winInfo->getID()));
+    assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
+    assertEquals(RectWithBorder(m->getViewport()), getRealGeometry(winInfo->getID()));
+    focusWindow(winInfo);
+    assertEquals(getActiveFocus(), win);
+});
+MPX_TEST_ITER("desktop_focus_transfer", 2, {
+    assert(getAllMonitors().size() == 1);
+    addEWMHRules();
+    addDesktopRule();
+    startWM();
+    WindowID normalWin;
+    if(_i)
+        normalWin = mapArbitraryWindow();
+    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    if(!_i)
+        normalWin = mapArbitraryWindow();
+    waitUntilIdle();
+    assert(focusWindow(win));
+    assert(focusWindow(normalWin));
+    waitUntilIdle();
+    Workspace* emptyWorkspace = getActiveWorkspace()->getNextWorkspace(1, EMPTY);
+    assert(emptyWorkspace);
+    auto index = getActiveWorkspaceIndex();
+    ATOMIC(switchToWorkspace(*emptyWorkspace));
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), win);
+    assertEquals(getFocusedWindow(), getWindowInfo(win));
+    ATOMIC(switchToWorkspace(index));
+    waitUntilIdle();
+    assertEquals(*getFocusedWindow(), normalWin);
 });
 MPX_TEST("test_float_rule", {
     addFloatRule();
     mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
-    mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_NOTIFICATION));
     mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_SPLASH));
     scan(root);
     for(WindowInfo* winInfo : getAllWindows())

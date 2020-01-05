@@ -213,6 +213,7 @@ void onStartup(void) {
         addIgnoreSmallWindowRule();
         addUnknownInputOnlyWindowIgnoreRule();
         addConvertNonManageableWindowMask();
+        addDesktopRule();
         //addResumeCustomStateRules();
     }
     if(!RUN_AS_WM)

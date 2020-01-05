@@ -290,6 +290,17 @@ void assignDefaultLayoutsToWorkspace() {
             w->setActiveLayout(getRegisteredLayouts()[0]);
         }
 }
+void updateMapState(Workspace* w) {
+    for(WindowInfo* winInfo : w->getWindowStack())
+        if((winInfo->isMappable() && (winInfo->getWorkspace()->isVisible() ^ winInfo->hasMask(MAPPED_MASK))))
+            updateWindowWorkspaceState(winInfo);
+}
+
+void addSyncMapStateRules(AddFlag flag) {
+    getEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(syncMappedState), flag);
+    getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateWindowWorkspaceState), flag);
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateMapState), flag);
+}
 
 void addBasicRules(AddFlag flag) {
     getEventRules(0).add(DEFAULT_EVENT(onError), flag);
@@ -317,6 +328,7 @@ void addBasicRules(AddFlag flag) {
     // so it seems like a bug for a OR window to have INPUT_MASK set
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}),
     flag);
+    addSyncMapStateRules(flag);
     addIgnoreOverrideRedirectWindowsRule(flag);
     addDoNotManageOverrideRedirectWindowsRule(flag);
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);

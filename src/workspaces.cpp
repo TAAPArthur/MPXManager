@@ -39,7 +39,7 @@ void removeAllWorkspaces() {
 
 void Workspace::setMonitor(Monitor* m) {
     monitor = m;
-    applyEventRules(MONITOR_WORKSPACE_CHANGE, getWindowStack().empty() ? NULL : getWindowStack()[0]);
+    applyEventRules(MONITOR_WORKSPACE_CHANGE, {.workspace = this, .monitor = m});
 };
 uint32_t getNumberOfWorkspaces() {
     return getAllWorkspaces().size();

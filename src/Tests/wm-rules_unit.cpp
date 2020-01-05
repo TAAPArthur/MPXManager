@@ -271,6 +271,24 @@ MPX_TEST("test_unmap", {
     assert(!getWindowInfo(win)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
     assert(!getWindowInfo(winOR)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
 });
+MPX_TEST("test_switch_workspace_with_sticky_window", {
+    switchToWorkspace(0);
+    addAutoTileRules();
+    addEWMHRules();
+    WindowID stickyWin = mapArbitraryWindow();
+    WindowID normalWin = mapArbitraryWindow();
+    waitUntilIdle();
+    getWindowInfo(stickyWin)->addMask(STICKY_MASK);
+    focusWindow(stickyWin);
+    focusWindow(normalWin);
+    waitUntilIdle();
+    ATOMIC(switchToWorkspace(1));
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), stickyWin);
+    ATOMIC(switchToWorkspace(0));
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), stickyWin);
+});
 
 MPX_TEST("test_screen_configure", {
     waitForChild(spawn("xrandr --noprimary &> /dev/null"));

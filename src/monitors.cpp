@@ -188,7 +188,11 @@ uint16_t getRootHeight(void) {
     return rootDim ? rootDim[1] : 0;
 }
 void swapMonitors(WorkspaceID index1, WorkspaceID index2) {
-    Monitor* temp = getWorkspace(index1)->getMonitor();
-    getWorkspace(index1)->setMonitor(getWorkspace(index2)->getMonitor());
-    getWorkspace(index2)->setMonitor(temp);
+    Monitor* monitor1 = getWorkspace(index1)->getMonitor();
+    Monitor* monitor2 = getWorkspace(index2)->getMonitor();
+    if(monitor2)
+        getWorkspace(index1)->setMonitor(monitor2);
+    getWorkspace(index2)->setMonitor(monitor1);
+    if(!monitor2)
+        getWorkspace(index1)->setMonitor(monitor2);
 }

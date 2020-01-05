@@ -97,14 +97,22 @@ void killClientOfWindowInfo(WindowInfo* winInfo);
  * @param winInfo
  * @param updateFocus
  */
-void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus = 1);
+void updateWindowWorkspaceState(WindowInfo* winInfo);
 /**
  * If the workspace is visible, map all MAPPABLE windows
  * Else unmap all windows
  *
- * @param index
+ * @param workspace
  */
-void syncMappedState(WorkspaceID index);
+void syncMappedState(Workspace* workspace);
+/**
+ * For all masters focused on winInfoToIgnore, the focus will be shifted to the
+ * first focusable window in the window stack not including winInfoToIgnore.
+ * If there is no such window, focus will be transferred to defaultWinInfo instead.
+ *
+ * @param winInfo
+ */
+void updateFocusForAllMasters(WindowInfo* winInfo);
 
 /**
  * Make the active workspace the one designated by workspaceIndex and make it visible.

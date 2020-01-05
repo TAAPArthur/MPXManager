@@ -103,14 +103,17 @@ void scan(xcb_window_t baseWindow) {
     }
 }
 
-static bool focusNextVisibleWindow(Master* master, WindowInfo* defaultWinInfo = NULL) {
-    for(WindowInfo* winInfo : master->getWindowStack()) {
-        if(winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo))
+static bool focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
+    for(WindowInfo* winInfo : master->getWindowStack())
+        if(winInfo != ignore && winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo))
             return 1;
-    };
-    if(defaultWinInfo)
-        focusWindow(defaultWinInfo);
     return 0;
+}
+void updateFocusForAllMasters(WindowInfo* winInfo) {
+    for(Master* master : getAllMasters())
+        if(master->getFocusedWindow() == winInfo)
+            if(!focusNextVisibleWindow(master, winInfo))
+                LOG(LOG_LEVEL_DEBUG, "Could not find window to update focus to\n");
 }
 
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
@@ -120,19 +123,11 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     LOG(LOG_LEVEL_DEBUG, "window %d has been removed\n", winToRemove);
     if(!destroyed)
         unregisterForWindowEvents(winInfo->getID());
-    ArrayList<Master*> mastersFocusedOnWindow ;
-    for(Master* master : getAllMasters())
-        if(master->getFocusedWindow() == winInfo)
-            mastersFocusedOnWindow.add(master);
-    applyEventRules(UNREGISTER_WINDOW, winInfo);
+    if(applyEventRules(UNREGISTER_WINDOW, winInfo))
+        updateFocusForAllMasters(winInfo);
     bool result = getAllWindows().removeElement(winInfo) ? 1 : 0;
     if(winInfo)
         delete winInfo;
-    ArrayList<WindowInfo*>& windowStack = getActiveMaster()->getWorkspace()->getWindowStack();
-    WindowInfo* defaultWinInfo = windowStack.empty() ? NULL : windowStack[0];
-    if(defaultWinInfo)
-        for(Master* master : mastersFocusedOnWindow)
-            focusNextVisibleWindow(master, defaultWinInfo);
     return result;
 }
 
@@ -189,10 +184,11 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
     }
 }
 
-void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
+void updateWindowWorkspaceState(WindowInfo* winInfo) {
     Workspace* w = winInfo->getWorkspace();
-    assert(w);
-    logger.trace()  << "updating window workspace state: " << w->isVisible() << " ; updating focus " << updateFocus << " "
+    if(!w)
+        return;
+    logger.trace()  << "updating window workspace state: " << w->isVisible() << "; "
         << *winInfo << "\n";
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
         mapWindow(winInfo->getID());
@@ -202,25 +198,22 @@ void updateWindowWorkspaceState(WindowInfo* winInfo, bool updateFocus) {
             Workspace* w = getActiveWorkspace();
             if(!w->isVisible())
                 w = getActiveMaster()->getWorkspace()->getNextWorkspace(1, VISIBLE);
-            assert(w);
-            LOG(LOG_LEVEL_DEBUG, "Moving sticky window %d to workspace %d\n", winInfo->getID(), w->getID());
             if(w)
                 winInfo->moveToWorkspace(w->getID());
             return;
         }
+        updateFocusForAllMasters(winInfo);
         unmapWindow(winInfo->getID());
-        if(updateFocus) {
-            for(Master* master : getAllMasters()) {
-                if(master->getFocusedWindow() == winInfo)
-                    if(focusNextVisibleWindow(master))
-                        LOG(LOG_LEVEL_DEBUG, "Could not find window to update focus to\n");
-            }
-        }
     }
 }
-void syncMappedState(WorkspaceID index) {
-    for(WindowInfo* winInfo : getWorkspace(index)->getWindowStack())
-        updateWindowWorkspaceState(winInfo, 1);
+void syncMappedState(Workspace* workspace) {
+    logger.debug()  << "Syncing map state: " << *workspace << "\n";
+    for(WindowInfo* winInfo : workspace->getWindowStack())
+        if(winInfo->hasMask(STICKY_MASK))
+            updateWindowWorkspaceState(winInfo);
+    for(WindowInfo* winInfo : workspace->getWindowStack())
+        if(!winInfo->hasMask(STICKY_MASK))
+            updateWindowWorkspaceState(winInfo);
 }
 
 void switchToWorkspace(int workspaceIndex) {

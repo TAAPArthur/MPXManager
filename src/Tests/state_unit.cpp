@@ -17,7 +17,7 @@ static WindowInfo* addVisibleWindow(int i = getActiveWorkspaceIndex()) {
 SET_ENV(createXSimpleEnv, fullCleanup);
 MPX_TEST("init", {
     markState();
-    assert(updateState() == WORKSPACE_MONITOR_CHANGE);
+    assert(!updateState());
 });
 MPX_TEST("print", {
     setLogLevel(0);
@@ -31,7 +31,7 @@ MPX_TEST("print", {
 });
 MPX_TEST("test_no_state_change", {
     markState();
-    assert(updateState() == WORKSPACE_MONITOR_CHANGE);
+    assert(!updateState());
     assert(!updateState());
     markState();
     assert(!updateState());
@@ -52,7 +52,7 @@ MPX_TEST("test_state_change_num_windows", {
     for(int i = getCount(); i < 10; i++) {
         addVisibleWindow(getActiveWorkspaceIndex());
         markState();
-        assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+        assertEquals(updateState(), 1);
         assertEquals(getCount(), i + 1);
     }
 });
@@ -61,11 +61,11 @@ MPX_TEST("test_mask_change", {
     winInfo->addMask(MAPPED_MASK);
 
     markState();
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
 
     markState();
     winInfo->addMask(FULLSCREEN_MASK);
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
 
     winInfo->addMask(FULLY_VISIBLE_MASK);
     markState();
@@ -77,10 +77,10 @@ MPX_TEST("test_layout_change", {
     Layout l = {"", NULL};
     getActiveWorkspace()->setActiveLayout(&l);
     markState();
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
     getActiveWorkspace()->setActiveLayout(NULL);
     markState();
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
 });
 
 MPX_TEST_ITER("test_num_workspaces_grow", 2, {
@@ -95,7 +95,7 @@ MPX_TEST_ITER("test_num_workspaces_grow", 2, {
     else removeWorkspaces(size / 2);
     assert(num != getNumberOfWorkspaces());
     //detect change only when growing
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE | WORKSPACE_MONITOR_CHANGE);
+    assertEquals(updateState(), 1);
 });
 
 MPX_TEST("test_on_workspace_change", {
@@ -110,7 +110,7 @@ MPX_TEST("test_on_workspace_change", {
     markState();
     int count = getCount();
     // windows in invisible workspaces will be unmapped
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE | WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
     assertEquals(getCount(), ++count);
     startWM();
     waitUntilIdle();
@@ -128,13 +128,13 @@ MPX_TEST("test_on_workspace_change", {
         switchToWorkspace(i);
         markState();
         //workspace hasn't been tiled yet
-        ATOMIC(assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE | WORKSPACE_MONITOR_CHANGE));
+        ATOMIC(assertEquals(updateState(), 1));
         waitUntilIdle();
     }
     for(int i = 0; i < size; i++) {
         switchToWorkspace(i);
         markState();
-        ATOMIC(assertEquals(updateState(), WORKSPACE_MONITOR_CHANGE));
+        ATOMIC(assert(!updateState()));
         waitUntilIdle();
     }
 });
@@ -159,7 +159,7 @@ MPX_TEST("test_on_invisible_workspace_window_add", {
     switchToWorkspace(1);
     markState();
     mask |= updateState();
-    assert(mask & (WINDOW_CHANGE | WORKSPACE_WINDOW_CHANGE));
+    assert(mask);
 });
 
 MPX_TEST("test_tile_limit", {
@@ -168,10 +168,10 @@ MPX_TEST("test_tile_limit", {
     addVisibleWindow()->getID();
     WindowID win2 = addVisibleWindow()->getID();
     markState();
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
     WindowID win3 = addVisibleWindow()->getID();
     assertEquals(getNumberOfWindowsToTile(getActiveWorkspace()), 2);
     markState();
-    assertEquals(updateState(), WORKSPACE_WINDOW_CHANGE);
+    assertEquals(updateState(), 1);
     assertEquals(getRealGeometry(win3), getRealGeometry(win2));
 });

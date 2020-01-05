@@ -49,7 +49,7 @@ enum {
      * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. The other being that the WindowInfo object will be passed in when the rule is applied.
      */
     WINDOW_MOVE,
-    /// Called when a non-empty workspace is tilled.
+    /// Called after workspace is tilled.
     TILE_WORKSPACE,
     /// Called when the state may have changed
     /// @see markState

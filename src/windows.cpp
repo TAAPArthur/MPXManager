@@ -71,9 +71,12 @@ void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
         addMask(STICKY_MASK);
         destIndex = getActiveMaster()->getWorkspaceIndex();
     }
-    removeFromWorkspace();
-    ::getWorkspace(destIndex)->getWindowStack().add(this);
-    applyEventRules(WINDOW_WORKSPACE_CHANGE, this);
+    if(destIndex != getWorkspaceIndex()) {
+        LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d from %d\n", getID(), destIndex, getWorkspaceIndex());
+        removeFromWorkspace();
+        ::getWorkspace(destIndex)->getWindowStack().add(this);
+        applyEventRules(WINDOW_WORKSPACE_CHANGE, {.winInfo = this, .workspace = getWorkspace()});
+    }
 }
 void WindowInfo::swapWorkspaceWith(WindowInfo* winInfo) {
     Workspace* w1 = getWorkspace();
