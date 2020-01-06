@@ -273,9 +273,9 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
  * For un-tileable windows:
  * It will raise/lower window with the ABOVE_MASK/BELOW_MASK
  * If will will change the size and posibly position of windows with MAXIMIZED_MASK/FULLSCREEN_MASK/ROOT_FULLSCREEN_MASK
- * @param index the index of the workspace to tile
+ * @param workspace the workspace to tile
  */
-void tileWorkspace(WorkspaceID index);
+void tileWorkspace(Workspace* workspace);
 
 /**
  * Windows will be the size of the monitor view port

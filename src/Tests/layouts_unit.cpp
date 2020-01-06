@@ -59,7 +59,7 @@ MPX_TEST("tile", {
     setActiveLayout(&l);
     retile();
     assert(count == 1);
-    tileWorkspace(2);
+    tileWorkspace(getWorkspace(2));
     assert(count == 1);
 });
 
@@ -331,8 +331,8 @@ MPX_TEST("floating_windows", {
 MPX_TEST("test_tile_windows", {
     setActiveLayout(NULL);
     //retile empty workspace
-    for(int i = 0; i < getNumberOfWorkspaces(); i++)
-        tileWorkspace(i);
+    for(Workspace* w : getAllWorkspaces())
+        tileWorkspace(w);
     //bottom to top stacking order;
     WindowID stackingOrder[3] = {0};
     int masks[] = {BELOW_MASK, 0, ABOVE_MASK};

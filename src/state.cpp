@@ -139,7 +139,7 @@ static int compareState() {
             }
             if(currentState[i].visible) {
                 LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
-                tileWorkspace(i);
+                tileWorkspace(getWorkspace(i));
             }
             currentState[i].forceRetile = !currentState[i].visible;
         }

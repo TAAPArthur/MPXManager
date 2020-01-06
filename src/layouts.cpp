@@ -260,12 +260,12 @@ static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
 }
 
 void retile(void) {
-    tileWorkspace(getActiveWorkspaceIndex());
+    tileWorkspace(getActiveWorkspace());
 }
 
-void tileWorkspace(WorkspaceID index) {
-    Workspace* workspace = getWorkspace(index);
-    LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d\n", index);
+void tileWorkspace(Workspace* workspace) {
+    assert(workspace);
+    LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d\n", workspace->getID());
     if(!workspace->getMonitor())
         return;
     Monitor* m = workspace->getMonitor();
