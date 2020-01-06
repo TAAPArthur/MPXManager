@@ -166,6 +166,22 @@ MPX_TEST("moveWorkspaces", {
         if(i == 1)i++;
     }
 });
+MPX_TEST("swapWorkspaceWith", {
+    addWorkspaces(2);
+    for(int i = 0; i < 2; i++)
+        getAllWindows().add(new WindowInfo(i));
+    getAllWindows()[0]->swapWorkspaceWith(getAllWindows()[1]);
+    assert(!getAllWindows()[0]->getWorkspace());
+    assert(!getAllWindows()[1]->getWorkspace());
+    getAllWindows()[0]->moveToWorkspace(1);
+    getAllWindows()[0]->swapWorkspaceWith(getAllWindows()[1]);
+    assertEquals(getAllWindows()[1]->getWorkspaceIndex(), 1);
+    assert(!getAllWindows()[0]->getWorkspace());
+    getAllWindows()[0]->moveToWorkspace(0);
+    getAllWindows()[0]->swapWorkspaceWith(getAllWindows()[1]);
+    assertEquals(getAllWindows()[0]->getWorkspaceIndex(), 1);
+    assertEquals(getAllWindows()[1]->getWorkspaceIndex(), 0);
+});
 MPX_TEST("test_window_in_visible_worspace", {
     addRootMonitor();
     WindowInfo* winInfo = new WindowInfo(1);

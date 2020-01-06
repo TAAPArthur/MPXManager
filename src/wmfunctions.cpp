@@ -282,14 +282,7 @@ void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition
 
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2) {
     LOG(LOG_LEVEL_TRACE, "swapping windows %d %d\n", winInfo1->getID(), winInfo2->getID());
-    Workspace* w1 = winInfo1->getWorkspace();
-    Workspace* w2 = winInfo2->getWorkspace();
-    int index1 = w1 ? w1->getWindowStack().indexOf(winInfo1) : -1;
-    int index2 = w2 ? w2->getWindowStack().indexOf(winInfo2) : -1;
-    if(index1 != -1)
-        w1->getWindowStack()[index1] = winInfo2;
-    if(index2 != -1)
-        w2->getWindowStack()[index2] = winInfo1;
+    winInfo1->swapWorkspaceWith(winInfo2);
     RectWithBorder geo = getRealGeometry(winInfo2->getID());
     setWindowPosition(winInfo2->getID(), getRealGeometry(winInfo1->getID()));
     setWindowPosition(winInfo1->getID(), geo);

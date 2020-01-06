@@ -75,7 +75,18 @@ void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
     ::getWorkspace(destIndex)->getWindowStack().add(this);
     applyEventRules(WINDOW_WORKSPACE_CHANGE, this);
 }
-
+void WindowInfo::swapWorkspaceWith(WindowInfo* winInfo) {
+    Workspace* w1 = getWorkspace();
+    Workspace* w2 = winInfo->getWorkspace();
+    int index1 = w1 ? w1->getWindowStack().indexOf(this) : -1;
+    int index2 = w2 ? w2->getWindowStack().indexOf(winInfo) : -1;
+    if(index1 != -1)
+        w1->getWindowStack()[index1] = winInfo;
+    if(index2 != -1)
+        w2->getWindowStack()[index2] = this;
+    applyEventRules(WINDOW_WORKSPACE_CHANGE, {.winInfo = winInfo, .workspace = w1});
+    applyEventRules(WINDOW_WORKSPACE_CHANGE, {.winInfo = this, .workspace = getWorkspace()});
+}
 
 WorkspaceID WindowInfo::getWorkspaceIndex()const {
     Workspace* w = getWorkspace();

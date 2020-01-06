@@ -368,6 +368,13 @@ public:
      * @param destIndex
      */
     void moveToWorkspace(WorkspaceID destIndex);
+    /**
+     * Swaps posistion in the Workspace stack with winInfo's workspace
+     * If either is not in a workspace, then the other will just be removed from its workspace
+     *
+     * @param winInfo
+     */
+    void swapWorkspaceWith(WindowInfo* winInfo);
 
     /**
      *
