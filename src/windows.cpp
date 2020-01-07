@@ -26,10 +26,12 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
         stream << " Group: " << winInfo.getGroup();
     if(winInfo.getTransientFor())
         stream << " Transient For: " << winInfo.getTransientFor();
-    stream << " Title '" << winInfo.getTitle() << "'" ;
-    stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
-    stream << " Type '" << winInfo.getTypeName() << "'";
-    stream << " Role '" << winInfo.getRole() << "'";
+    if(winInfo.getType()) {
+        stream << " Title '" << winInfo.getTitle() << "'" ;
+        stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
+        stream << " Type " << (winInfo.isImplicitType()?"?":"") << "'" << winInfo.getTypeName() << "'";
+        stream << " Role '" << winInfo.getRole() << "'";
+    }
     stream << " Masks: " << winInfo.getMask();
     if(winInfo.getWorkspace())
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;
