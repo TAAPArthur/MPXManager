@@ -247,6 +247,16 @@ MPX_TEST("focus_unfocusable_window", {
     assert(!getWindowInfo(win)->isFocusAllowed());
     assertEquals(0, getRealGeometry(win).border);
 });
+MPX_TEST_ITER("remove_all_monitors", 2, {
+    getAllMonitors().deleteElements();
+    if(_i)
+        getActiveWorkspace()->getWindowStack()[0]->addMask(STICKY_MASK);
+    for(Workspace* w : getAllWorkspaces()) {
+        ATOMIC(switchToWorkspace(w->getID()));
+        mapArbitraryWindow();
+        waitUntilIdle();
+    }
+});
 
 static void bindingsSetup() {
     ROOT_DEVICE_EVENT_MASKS = 0;
