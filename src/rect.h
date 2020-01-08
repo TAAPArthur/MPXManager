@@ -163,11 +163,6 @@ struct Rect {
      */
     void translate(const Point currentRef, const Point newRef);
 };
-/**
- * Prints Rect
- * @return
- */
-std::ostream& operator<<(std::ostream&, const Rect&);
 
 /**
  * holds top-left coordinates and width/height of the bounding box along with a border
@@ -210,4 +205,14 @@ struct RectWithBorder : Rect {
             arr[i] = (*this)[i];
     }
 };
+/**
+ * Prints Rect
+ * @return
+ */
+std::ostream& operator<<(std::ostream&, const RectWithBorder& );
+/**
+ * Prints Rect
+ * @return
+ */
+std::ostream& operator<<(std::ostream&, const Rect&);
 #endif

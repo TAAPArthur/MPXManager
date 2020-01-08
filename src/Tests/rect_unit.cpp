@@ -7,7 +7,7 @@ static short baseArr[] = {1, 2, 3, 4};
 MPX_TEST("print", {
     suppressOutput();
     Rect r = Rect(baseArr);
-    std::cout << r;
+    std::cout << r << RectWithBorder(r);
 });
 MPX_TEST("rect_==", {
     Rect rects[] = {Rect(baseArr), Rect(baseArr[0], baseArr[1], baseArr[2], baseArr[3])};
