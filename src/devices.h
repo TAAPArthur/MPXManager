@@ -135,17 +135,18 @@ Master* getClientMaster(WindowID win) ;
 WindowID getActiveFocus(MasterID id = getActiveMasterKeyboardID());
 
 /**
- * Creates a new X11 monitor with the given bounds.
+ * Makes the output primary
+ * Wraps xcb_randr_set_output_primary
  *
- * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitrary monitor
- *
- * @param bounds the position of the new monitor
- * @param name
+ * @param output
  */
-Monitor* addFakeMonitor(Rect bounds, std::string name = "");
+void setPrimaryOutput(uint32_t output);
 /**
- * Clears all fake monitors
+ * Makes the monitor primary. If monitor is NULL, then there will be no primary monitor
+ * This is different than Monitor::setPrimary in that in changes the X11 state instead of our local state
+ *
+ * @param monitor a valid monitor or NULL
  */
-void removeAllFakeMonitors();
+void setPrimary(const Monitor* monitor);
 
 #endif /* DEVICES_H_ */

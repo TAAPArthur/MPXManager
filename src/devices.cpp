@@ -8,11 +8,11 @@
 #endif
 
 #include "arraylist.h"
+#include "debug.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
 #include "masters.h"
-#include "monitors.h"
 #include "monitors.h"
 #include "system.h"
 #include "test-functions.h"
@@ -189,20 +189,14 @@ WindowID getActiveFocus(MasterID id) {
     }
     return win;
 }
-void removeAllFakeMonitors() {
-    for(int i = getAllMonitors().size() - 1; i >= 0; i--)
-        if(getAllMonitors()[i]->isFake())
-            delete getAllMonitors().remove(i);
+#ifndef NO_XRANDR
+void setPrimaryOutput(uint32_t output) {
+    xcb_randr_set_output_primary(dis, root, output);
 }
-Monitor* addFakeMonitor(Rect bounds, std::string name) {
-    MonitorID id;
-    for(id = 2;; id++)
-        if(!getAllMonitors().find(id))
-            break;
-    Monitor* m = new Monitor(id, bounds, 0, name, 1);
-    getAllMonitors().add(m);
-    return m;
+void setPrimary(const Monitor* monitor) {
+    setPrimaryOutput(monitor ? monitor->getOutput() : 0);
 }
+#endif
 void detectMonitors(void) {
 #ifdef NO_XRANDR
     addRootMonitor();
@@ -224,10 +218,13 @@ void detectMonitors(void) {
         else m->setBase(*(Rect*)&monitorInfo->x);
         m->setName(getAtomName(monitorInfo->name));
         m->setPrimary(monitorInfo->primary);
+        m->setOutput(monitorInfo->nOutput ? xcb_randr_monitor_info_outputs(monitorInfo)[0] : 0);
         monitorNames.add(monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
     LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors\n", monitorNames.size());
+    if(getPrimaryMonitor())
+        logger.debug() << "Primary is " << *getPrimaryMonitor() << std::endl;
     free(monitors);
     for(int i = getAllMonitors().size() - 1; i >= 0; i--)
         if(!getAllMonitors()[i]->isFake() && !monitorNames.find(getAllMonitors()[i]->getID()))

@@ -22,6 +22,11 @@ MPX_TEST("test_constructor", {
     assertEquals(winInfo->getEffectiveID(), 3);
     addWindowInfo(winInfo);
 });
+MPX_TEST("win_print", {
+    WindowInfo* winInfo = new WindowInfo(1, 2, 3);
+    winInfo->setType(1);
+    addWindowInfo(winInfo);
+});
 MPX_TEST("test_mask_add_remove_toggle", {
     WindowInfo* winInfo = new WindowInfo(1);
     assert(winInfo->getMask() == 0);

@@ -168,11 +168,31 @@ MPX_TEST_ITER("test_get_client_pointer", 2, {
         delete newMaster;
 });
 
-
 #ifndef NO_XRANDR
-MPX_TEST("test_detect_at_least_one_monitor", {
+static void createMonitorLessEnv() {
+    createXSimpleEnv();
+    getAllMonitors().deleteElements();
+}
+SET_ENV(createMonitorLessEnv, cleanupXServer);
+MPX_TEST("test_detect_one_monitor", {
     detectMonitors();
     assertEquals(getAllMonitors().size(), 1);
+});
+MPX_TEST("test_preserve_fake_monitors", {
+    MONITOR_DUPLICATION_POLICY = 0;
+    addRootMonitor();
+    detectMonitors();
+    assertEquals(getAllMonitors().size(), 2);
+});
+MPX_TEST("test_primary_monitor", {
+    for(int i = 0; i < 2; i++) {
+        setPrimary(NULL);
+        detectMonitors();
+        assert(!getPrimaryMonitor());
+        setPrimary(getAllMonitors()[0]);
+        detectMonitors();
+        assert(getPrimaryMonitor());
+    }
 });
 MPX_TEST("test_sorted_monitors", {
     addFakeMonitor({2, 0, 100, 100});
@@ -185,18 +205,21 @@ MPX_TEST("test_sorted_monitors", {
 });
 MPX_TEST("test_detect_monitors", {
     close(2);
-    waitForChild(spawn("xsane-xrandr --auto split-monitor W 3 &>/dev/null"));
     MONITOR_DUPLICATION_POLICY = 0;
+    waitForChild(spawn("xsane-xrandr --auto split-monitor W 3 &>/dev/null"));
     detectMonitors();
-    int num = getAllMonitors().size();
-    assert(num);
-    addRootMonitor();
-    assert(getAllMonitors().size() == num + 1);
-    detectMonitors();
-    assert(getAllMonitors().size() == num);
-    assert(num == 3);
     for(Monitor* m : getAllMonitors())
         assert(m->getName() != "");
+});
+MPX_TEST("test_detect_removed_monitors", {
+    close(2);
+    MONITOR_DUPLICATION_POLICY = 0;
+    waitForChild(spawn("xsane-xrandr add-monitor 0 0 10 10 &>/dev/null"));
+    detectMonitors();
+    assertEquals(getAllMonitors().size(), 2);
+    waitForChild(spawn("xsane-xrandr clear"));
+    detectMonitors();
+    assertEquals(getAllMonitors().size(), 1);
 });
 MPX_TEST("test_monitor_add_remove", {
     addWorkspaces(2);

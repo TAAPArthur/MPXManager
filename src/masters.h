@@ -70,7 +70,7 @@ public:
      * @param name the name of the master keyboard
      * @param focusColor
      */
-    Master(MasterID keyboardID, MasterID pointerID, std::string name,
+    Master(MasterID keyboardID, MasterID pointerID, std::string name = "",
         int focusColor = 0x00FF00): WMStruct(keyboardID),
         pointerID(pointerID), name(name), focusColor(focusColor) {
         assert(keyboardID > 1 && pointerID > 1);

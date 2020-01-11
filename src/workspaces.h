@@ -105,7 +105,7 @@ public:
      * @param mask species a filter for workspaces @see WorkspaceFilter
      * @return the next workspace in the given direction that matches the criteria
      */
-    Workspace* getNextWorkspace(int dir, int mask);
+    Workspace* getNextWorkspace(int dir, int mask) const;
     /**
      * @return 1 iff the workspace has been assigned a monitor
      */

@@ -29,7 +29,8 @@ private:
     bool primary;
     /// human readable name given by the XServer
     std::string name;
-    bool fake;
+    bool fake = 0;
+    uint32_t output = 0;
 public:
     /**
      * @param id the X unique id of the monitor
@@ -39,7 +40,8 @@ public:
      * @param fake
      *
      */
-    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = "", bool fake = 0): WMStruct(id), base(base),
+    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = "", bool fake = 0): WMStruct(id),
+        base(base),
         view(base),
         primary(primary), name(name), fake(fake) {}
 
@@ -58,9 +60,12 @@ public:
     }
     /// @return true if the monitor isn't backed by X
     bool isFake()const { return fake;}
+    /// @return the first backing output or 0
+    uint32_t getOutput()const { return output;}
+    /// @return the first backing output or 0
+    void setOutput(uint32_t output) { this->output = output;}
     /**
      * Returns the workspace currently displayed by the monitor or null
-
      * @return
      */
     Workspace* getWorkspace(void) const;
@@ -228,4 +233,17 @@ uint16_t getRootHeight(void);
  * @param index2
  */
 void swapMonitors(WorkspaceID index1, WorkspaceID index2 = getActiveMaster()->getWorkspaceIndex());
+/**
+ * Creates a new X11 monitor with the given bounds.
+ *
+ * This method was designed to emulate a picture-in-picture(pip) experience, but can be used to create any arbitrary monitor
+ *
+ * @param bounds the position of the new monitor
+ * @param name
+ */
+Monitor* addFakeMonitor(Rect bounds, std::string name = "");
+/**
+ * Clears all fake monitors
+ */
+void removeAllFakeMonitors();
 #endif

@@ -46,7 +46,7 @@ uint32_t getNumberOfWorkspaces() {
 }
 //workspace methods
 
-Workspace* Workspace::getNextWorkspace(int dir, int mask) {
+Workspace* Workspace::getNextWorkspace(int dir, int mask) const {
     int empty = ((mask >> 2) & 3) - 1;
     int hidden = (mask & 3) - 1;
     int index = id;

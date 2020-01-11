@@ -23,12 +23,21 @@ MPX_TEST("addRootMonitor", {
     setRootDims(rootBounds);
     addRootMonitor();
     assert(getAllMonitors().size() == 1);
+    assert(getAllMonitors()[0]->isFake());
     assert(getAllMonitors()[0]->getBase().height == rootBounds[1]);
     assert(getAllMonitors()[0]->getBase().width == rootBounds[0]);
     assert(getAllMonitors()[0]->getBase().x == 0);
     assert(getAllMonitors()[0]->getBase().y == 0);
     // should be able to call more than once
     addRootMonitor();
+});
+MPX_TEST("addFakeMonitor", {
+    addFakeMonitor({0, 0, 1, 1});
+    addFakeMonitor({0, 0, 1, 1});
+    assertEquals(getAllMonitors().size(), 2);
+    addRootMonitor();
+    removeAllFakeMonitors();
+    assertEquals(getAllMonitors().size(), 0);
 });
 
 MPX_TEST_ITER("test_avoid_docks", 4 * 2 + 2, {
@@ -233,12 +242,28 @@ MPX_TEST("test_auto_assign_workspace", {
         int count = 0;
         for(int i = 0; i < getNumberOfWorkspaces(); i++)
             count += getWorkspace(i)->isVisible();
-        assert(count == n);
+        assertEquals(count, n);
         for(int i = 0; i < n && i < getNumberOfWorkspaces(); i++)
             assert(getWorkspace(i)->isVisible());
         for(int i = n; i < getNumberOfWorkspaces(); i++)
             assert(!getWorkspace(i)->isVisible());
     }
+});
+MPX_TEST("test_auto_assign_workspace_active_first", {
+    addWorkspaces(3);
+    getAllMasters().add(new Master(4, 5));
+    getAllMasters()[0]->setWorkspaceIndex(2);
+    getAllMasters()[1]->setWorkspaceIndex(1);
+    setActiveMaster(getAllMasters()[1]);
+    getAllMonitors().deleteElements();
+    getAllMonitors().add(new Monitor(2, {0, 0, 1, 1}));
+    assert(!getWorkspace(1)->isVisible());
+    assignUnusedMonitorsToWorkspaces();
+    assert(getWorkspace(1)->isVisible());
+    getAllMonitors().add(new Monitor(3, {0, 0, 1, 1}));
+    assignUnusedMonitorsToWorkspaces();
+    assert(getAllMasters()[0]->getWorkspace()->isVisible());
+    assert(getAllMasters()[1]->getWorkspace()->isVisible());
 });
 MPX_TEST("monitor_cleanup", {
     addWorkspaces(2);

@@ -135,6 +135,17 @@ static inline void createWMEnvWithRunningWM() {
 
 SET_ENV(createWMEnvWithRunningWM, fullCleanup);
 
+MPX_TEST("test_detect_primary_change", {
+    getEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(incrementCount));
+    setPrimary(NULL);
+    setPrimary(getAllMonitors()[0]);
+    waitUntilIdle();
+    assert(getPrimaryMonitor());
+    setPrimary(NULL);
+    waitUntilIdle();
+    assert(!getPrimaryMonitor());
+    assertEquals(getCount(), 2);
+});
 
 
 MPX_TEST_ITER("test_detect_new_windows", 2, {

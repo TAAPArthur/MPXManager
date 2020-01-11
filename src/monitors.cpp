@@ -22,7 +22,7 @@ uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
 
 std::ostream& operator<<(std::ostream& strm, const Monitor& m) {
-    strm << "{id:" << m.getID() << (m.isPrimary() ? "*" : "") << ", name:" << m.getName();
+    strm << "{id:" << m.getID() << (m.isPrimary() ? "*" : "") << (m.isFake() ? "?" : "") << ", name:" << m.getName();
     if(m.getWorkspace())
         strm << ", Workspace:" << m.getWorkspace()->getID();
     strm << ", base:" << m.getBase();
@@ -51,6 +51,7 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     if(winInfo->getWorkspace() && winInfo->getWorkspace()->getMonitor() != this ||
         !winInfo->getWorkspace() && winInfo->hasMask(PRIMARY_MONITOR_MASK) && !isPrimary())
         return 0;
+    logger.debug() << "Attempting to resize Monitor " << getID() << " because of " << winInfo->getID() << std::endl;
     bool changed = 0;
     auto properties = winInfo->getDockProperties();
     for(int i = 0; i < 4; i++) {
@@ -85,7 +86,7 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     return changed;
 }
 void addRootMonitor() {
-    getAllMonitors().add(new Monitor(1, {0, 0, getRootWidth(), getRootHeight()}, 0), ADD_UNIQUE);
+    getAllMonitors().add(new Monitor(1, {0, 0, getRootWidth(), getRootHeight()}, 0, "ROOT", 1), ADD_UNIQUE);
 }
 void removeDuplicateMonitors(void) {
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION) {
@@ -121,17 +122,22 @@ void removeDuplicateMonitors(void) {
         }
     }
 }
-
+static inline Workspace* findWorkspace() {
+    if(!getActiveWorkspace()->isVisible())
+        return getActiveWorkspace();
+    for(Master* master : getAllMasters())
+        if(!master->getWorkspace()->isVisible())
+            return master->getWorkspace();
+    const Workspace* base = ::getWorkspace(getNumberOfWorkspaces() - 1);
+    auto* workspace = base->getNextWorkspace(1, HIDDEN | NON_EMPTY);
+    if(!workspace)
+        workspace = base->getNextWorkspace(1, HIDDEN);
+    return workspace;
+}
 void Monitor::assignWorkspace(Workspace* workspace) {
-    if(!workspace && !getAllWorkspaces().empty()) {
-        Workspace* base = ::getWorkspace(0);
-        if(base->isVisible()) {
-            workspace = base->getNextWorkspace(1, HIDDEN | NON_EMPTY);
-            if(!workspace)
-                workspace = base->getNextWorkspace(1, HIDDEN);
-        }
-        else workspace = base;
-    }
+    assert(!getWorkspace());
+    if(!workspace)
+        workspace = findWorkspace();
     if(workspace)
         workspace->setMonitor(this);
 }
@@ -147,16 +153,13 @@ Monitor::~Monitor() {
 }
 
 static MonitorID primaryMonitor = 0;
-void setPrimary(Monitor* monitor) {
-    primaryMonitor = monitor ? monitor->getID() : 0;
-}
 Monitor* getPrimaryMonitor() {
     return getAllMonitors().find(primaryMonitor);
 }
 
 void Monitor::setPrimary(bool primary) {
     if(isPrimary() != primary)
-        ::setPrimary(primary ? this : NULL);
+        primaryMonitor = primary ? getID() : 0;
 }
 bool Monitor::isPrimary() const {
     return primaryMonitor == getID();
@@ -195,4 +198,18 @@ void swapMonitors(WorkspaceID index1, WorkspaceID index2) {
     getWorkspace(index2)->setMonitor(monitor1);
     if(!monitor2)
         getWorkspace(index1)->setMonitor(monitor2);
+}
+void removeAllFakeMonitors() {
+    for(int i = getAllMonitors().size() - 1; i >= 0; i--)
+        if(getAllMonitors()[i]->isFake())
+            delete getAllMonitors().remove(i);
+}
+Monitor* addFakeMonitor(Rect bounds, std::string name) {
+    MonitorID id;
+    for(id = 2;; id++)
+        if(!getAllMonitors().find(id))
+            break;
+    Monitor* m = new Monitor(id, bounds, 0, name, 1);
+    getAllMonitors().add(m);
+    return m;
 }
