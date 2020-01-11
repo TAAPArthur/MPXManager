@@ -88,24 +88,11 @@ getopts "$optspec" optchar || run $@
                     shift
                     run $@
                     ;;
-                restart)
-                    run "--send=restart"
-                    ;;
-                recompile)
-                    mkdir -p $MPXMANAGER_HOME
-                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
-                    shift
-                    echo $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
-                    $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
-                    ;;
                 hash)
                     displayHash
                     ;;
                 help)
                     displayHelp
-                    ;;
-                version)
-                    displayVersion
                     ;;
                 name)
                     echo $MPXMANAGER_BIN_NAME
@@ -115,6 +102,19 @@ getopts "$optspec" optchar || run $@
                     ;;
                 quit)
                     run "--send=quit"
+                    ;;
+                recompile)
+                    mkdir -p $MPXMANAGER_HOME
+                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
+                    shift
+                    echo $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
+                    $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
+                    ;;
+                restart)
+                    run "--send=restart"
+                    ;;
+                version)
+                    displayVersion
                     ;;
                 *)
                     run $@
