@@ -22,7 +22,7 @@ static void setup() {
     addDieOnIntegrityCheckFailRule();
     _main(2, (char* const*)args);
     startWM();
-    waitUntilIdle();
+    waitUntilIdle(1);
 }
 SET_ENV(setup, fullCleanup);
 MPX_TEST("auto_window_map", {
@@ -227,6 +227,19 @@ MPX_TEST_ITER("stable", 2, {
         raiseWindow(winInfo->getID(), 0, _i);
     waitUntilIdle();
     assert(!consumeEvents());
+});
+MPX_TEST("restart", {
+    fullCleanup();
+    STEAL_WM_SELECTION = 1;
+    ewmh = NULL;
+    dpy = NULL;
+    setup();
+    for(WindowInfo* winInfo : getAllWindows())
+        if(winInfo->isDock()) {
+            assertEquals(getRealGeometry(winInfo).border, 0);
+            assert(!winInfo->getWorkspace());
+            assert(winInfo->hasMask(MAPPABLE_MASK | MAPPED_MASK));
+        }
 });
 MPX_TEST_ITER("unmapped_override_redirect_windows", 2, {
     for(WindowInfo* winInfo : getAllWindows())

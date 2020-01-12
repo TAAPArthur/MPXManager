@@ -62,7 +62,7 @@ void addFloatRule(AddFlag flag) {
 }
 
 void addAvoidDocksRule(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
+    getEventRules(PROPERTY_LOAD).add(new BoundFunction(+[](WindowInfo * winInfo) {
         assert(winInfo->getType());
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
             LOG(LOG_LEVEL_DEBUG, "Marking window as dock\n");
