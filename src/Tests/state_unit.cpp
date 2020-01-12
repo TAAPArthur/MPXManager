@@ -45,7 +45,7 @@ static void setup() {
     assert(getWorkspace(0)->isVisible());
     markState();
     updateState();
-    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount), PREPEND_UNIQUE);
 }
 SET_ENV(setup, fullCleanup);
 MPX_TEST("test_state_change_num_windows", {

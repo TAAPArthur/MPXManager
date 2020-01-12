@@ -6,12 +6,6 @@
 #include "test-mpx-helper.h"
 #include "tester.h"
 
-static Slave* getSlaveByName(std::string name) {
-    for(Slave* slave : getAllSlaves())
-        if(slave->getName() == name)
-            return slave;
-    return NULL;
-}
 SET_ENV(addDefaultMaster, simpleCleanup);
 MPX_TEST("slaves", {
     std::string keyboardName = "K";

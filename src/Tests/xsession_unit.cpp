@@ -24,6 +24,7 @@ MPX_TEST("open_xdisplay", {
     assert(WM_DELETE_WINDOW);
     assert(WM_TAKE_FOCUS);
     assert(!xcb_connection_has_error(dis));
+    assert(!consumeEvents());
 });
 MPX_TEST("get_key_code", {
     assert(dis);
@@ -145,16 +146,16 @@ MPX_TEST("load_unknown_generic_events", {
     xcb_ge_generic_event_t event = {0};
     assert(loadGenericEvent(&event) == 0);
 });
-MPX_TEST("load_unknown_generic_events", {
+MPX_TEST("load_generic_events", {
     addDefaultMaster();
     grabPointer();
     clickButton(1);
     xcb_generic_event_t* event;
     event = xcb_wait_for_event(dis);
-    assert(loadGenericEvent((xcb_ge_generic_event_t*)event) == GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS);
+    assertEquals(loadGenericEvent((xcb_ge_generic_event_t*)event), GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS);
     free(event);
     event = xcb_wait_for_event(dis);
-    assert(loadGenericEvent((xcb_ge_generic_event_t*)event) == GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE);
+    assertEquals(loadGenericEvent((xcb_ge_generic_event_t*)event), GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE);
     free(event);
 });
 MPX_TEST_ITER("getButtonOrKey", 2, {

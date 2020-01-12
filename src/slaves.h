@@ -65,4 +65,16 @@ public:
      */
     static bool isTestDevice(std::string name);
 };
+
+/**
+ * @param name
+ *
+ * @return The first slave with name matching name or null
+ */
+static inline Slave* getSlaveByName(std::string name) {
+    for(Slave* slave: getAllSlaves())
+        if(slave->getName() == name)
+            return slave;
+    return NULL;
+}
 #endif

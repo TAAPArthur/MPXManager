@@ -500,6 +500,7 @@ int loadGenericEvent(xcb_ge_generic_event_t* event) {
         int type = event->event_type + GENERIC_EVENT_OFFSET;
         return type;
     }
+    LOG(LOG_LEVEL_WARN, "Could not process generic event");
     return 0;
 }
 ///Last registered event

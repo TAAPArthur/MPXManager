@@ -18,8 +18,8 @@ MPX_TEST("print", {
     std::cout << b;
 });
 MPX_TEST("binding_eq", {
-    assert(Binding(1, 2, {}, {}, "test") == Binding(1, 2, {}, {}, "test"));
-    assert(Binding(1, 2, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test"));
+    assertEquals(Binding(1, 2, {}, {}, "test"), Binding(1, 2, {}, {}, "test"));
+    assertEquals(Binding(1, 2, incrementCount, {}, "test"), Binding(1, 2, incrementCount, {}, "test"));
     assert(!(Binding(1, 3, incrementCount, {}, "test") == Binding(1, 2, {}, {}, "test")));
     assert(!(Binding(1, 3, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test")));
     assert(!(Binding(3, 2, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test")));
@@ -45,7 +45,7 @@ MPX_TEST("test_binding_mode_match", {
 });
 
 MPX_TEST_ITER("check_bindings", NO_PASSTHROUGH, {
-    PassThrough passThrough = (PassThrough) _i;
+    const PassThrough passThrough = (PassThrough) _i;
     static int count = 0;
     static void (*funcNoArg)() = []() {
         count++;

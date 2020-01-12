@@ -72,10 +72,10 @@ bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr
     return postRegisterWindow(winInfo, newlyCreated);
 }
 void scan(xcb_window_t baseWindow) {
-    LOG(LOG_LEVEL_TRACE, "Scanning children of %d\n", baseWindow);
+    assert(baseWindow);
+    LOG(LOG_LEVEL_TRACE, "Scanning children of window %d\n", baseWindow);
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, baseWindow), 0);
-    assert(reply && "could not query tree");
     if(reply) {
         xcb_get_window_attributes_reply_t* attr;
         int numberOfChildren = xcb_query_tree_children_length(reply);

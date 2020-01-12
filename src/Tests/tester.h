@@ -18,6 +18,7 @@
 #define WAIT_UNTIL_TRUE(COND,EXPR...) do{msleep(10);EXPR;}while(!(COND))
 
 
+#define assertAndDelete(X) do {auto* _x=X;assert(_x); delete _x;} while(0)
 #define assertEquals(A,B)do{auto __A=A; auto __B =B; int __result=(__A==__B); if(!__result){std::cout<<__A<<"!="<<__B<<"\n";assert(0 && #A "!=" #B);}}while(0)
 
 #define MPX_TEST(name,body...) MPX_TEST_ITER(name,1,body)
@@ -27,14 +28,14 @@
 
 #define SET_ENV(env...) static Env _CAT(e,__LINE__) __attribute__((unused))= Env(env,__FILE__)
 
-static void(*_setup)(void);
-static void(*_teardown)(void);
+static void(*_setup)(void) = NULL;
+static void(*_teardown)(void) = NULL;
+static const char* _file = "";
 struct Env {
-    static const char* file;
     Env(void(*setup)(void), void(*teardown)(void), const char* f) {
         _setup = setup;
         _teardown = teardown;
-        file = f;
+        _file = f;
     }
 };
 
@@ -55,7 +56,7 @@ struct Test {
         const int lineNumber): name(name), func(func), end(end), exitCode(exitCode), fileName(fileName),
         lineNumber(lineNumber), testNumber(tests.size()) {
         tests.push_back(this);
-        if(strcmp(fileName, Env::file) == 0) {
+        if(strcmp(fileName, _file) == 0) {
             testSetup = _setup;
             testTeardown = _teardown;
         }

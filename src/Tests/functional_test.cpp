@@ -209,9 +209,10 @@ static void  userEnvSetup() {
     multiMonitorSetup();
     WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     setDockProperties(win, DOCK_TOP, 100);
-    for(int i = 0; i < 4; i++) {
-        WindowID win2 = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK));
+    for(int i = 0; i < 1; i++) {
+        WindowID win2 = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
         setDockProperties(win2, i, 100);
+        mapWindow(win2);
     }
     createOverrideRedirectWindow();
     waitUntilIdle();

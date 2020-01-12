@@ -29,6 +29,10 @@ static inline void waitUntilIdle(bool safe = 0) {
     WAIT_UNTIL_TRUE(idleCount != getIdleCount());
     idleCount = getIdleCount();
 }
+static inline void wakeupWM() {
+    createNormalWindow();
+    flush();
+}
 static inline void onSimpleStartup() {
     addDieOnIntegrityCheckFailRule();
     addBasicRules();
@@ -51,9 +55,7 @@ static inline void fullCleanup() {
     requestShutdown();
     if(getNumberOfThreads() && ewmh) {
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
-        //wake up other thread
-        createNormalWindow();
-        flush();
+        wakeupWM();
     }
     waitForAllThreadsToExit();
     LOG(LOG_LEVEL_DEBUG, "validating state\n");

@@ -65,7 +65,6 @@ void Test::printSummary(int i) {
 }
 struct FailedTest {Test* t; int index;};
 
-const char* Env::file = "";
 std::vector<Test*>tests;
 std::vector<FailedTest>failedTests;
 size_t passedCount = 0;
