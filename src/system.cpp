@@ -241,7 +241,8 @@ static void handler(int sig) {
         exit(sig);
     quit(sig);
 }
-
+static const char* restartCounterString = "MPX_RESTART_COUNTER";
+int RESTART_COUNTER = 0;
 __attribute__((constructor)) static void set_handlers() {
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
@@ -249,4 +250,7 @@ __attribute__((constructor)) static void set_handlers() {
     signal(SIGPIPE, [](int) {resetPipe();});
     signal(SIGUSR1, [](int) {restart();});
     signal(SIGUSR2, [](int) {printStackTrace();});
+    char* counter = getenv(restartCounterString);
+    RESTART_COUNTER = counter ? strtol(counter, NULL, 10) + 1 : 0;
+    setenv(restartCounterString, std::to_string(RESTART_COUNTER).c_str(), 1);
 }

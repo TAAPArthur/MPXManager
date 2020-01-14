@@ -32,6 +32,8 @@
 /// The other end of STATUS_FD_READ
 #define STATUS_FD_EXTERNAL_WRITE statusPipeFD[3]
 
+/// Used to track how many times this program has been restarted
+extern int RESTART_COUNTER;
 ///Returns the field descriptors used to communicate WM status to an external program
 extern int statusPipeFD[4];
 

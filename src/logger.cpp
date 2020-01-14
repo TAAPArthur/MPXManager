@@ -5,6 +5,7 @@
 #include "masters.h"
 #include "monitors.h"
 #include "slaves.h"
+#include "system.h"
 #include "user-events.h"
 #include "windows.h"
 #include "workspaces.h"
@@ -91,7 +92,8 @@ void popContext() {
     contexts.pop();
 }
 std::string getContextString() {
-    std::string result = std::to_string(getCurrentSequenceNumber()) + "|" + std::to_string(
+    std::string result;
+    result = std::to_string(RESTART_COUNTER) + "|" + std::to_string(getCurrentSequenceNumber()) + "|" + std::to_string(
             getLastDetectedEventSequenceNumber()) + "|" + std::to_string(getIdleCount());
     for(auto s : contexts)
         result += "[" + s + "]";
