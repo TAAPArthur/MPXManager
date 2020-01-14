@@ -32,7 +32,6 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
         loadWindowHints(winInfo);
     if(winInfo->hasMask(MAPPABLE_MASK)) {
         LOG(LOG_LEVEL_DEBUG, "Window is mappable %d\n", winInfo->getID());
-        loadWindowProperties(winInfo);
         if(!applyEventRules(CLIENT_MAP_ALLOW, winInfo))
             return 0;
     }

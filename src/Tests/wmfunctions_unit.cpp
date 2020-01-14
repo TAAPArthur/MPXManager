@@ -64,21 +64,19 @@ MPX_TEST_ITER("detect_input_only_window", 2, {
     assert(getWindowInfo(win)->isInputOnly());
 });
 MPX_TEST("filter_window", {
-    static auto type = ewmh->_NET_WM_WINDOW_TYPE_TOOLTIP;
-    WindowID win = mapWindow(createWindowWithType(type));
+    static WindowID win = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(incrementCount));
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(incrementCount));
     getEventRules(CLIENT_MAP_ALLOW).add({
         +[](WindowInfo * winInfo) {
-            if(winInfo->getType() == type) {
+            auto returnVal = win != *winInfo;
+            if(win == *winInfo)
                 unregisterWindow(winInfo);
-                return 0;
-            }
-            return 1;
+            return returnVal;
         }, "filter", PASSTHROUGH_IF_TRUE});
     scan(root);
-
-    assertEquals(getCount(), 2);
+    assertEquals(getCount(), 3);
     assert(getWindowInfo(win2));
     assert(!getWindowInfo(win));
 });
