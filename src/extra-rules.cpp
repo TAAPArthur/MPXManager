@@ -115,25 +115,13 @@ void addAlwaysOnTopBottomRules(AddFlag flag) {
 static void stickyPrimaryMonitor() {
     Monitor* primary = getPrimaryMonitor();
     if(primary)
-        for(WindowInfo* winInfo : getAllWindows()) {
-            if(winInfo->hasMask(PRIMARY_MONITOR_MASK))
-                if(winInfo->getWorkspace() && primary->getWorkspace() && primary->getWorkspace() != winInfo->getWorkspace())
+        for(WindowInfo* winInfo : getAllWindows())
+            if(winInfo->hasMask(PRIMARY_MONITOR_MASK)) {
+                if(winInfo->getWorkspace() && primary->getWorkspace())
                     winInfo->moveToWorkspace(primary->getWorkspace()->getID());
-                else if(winInfo->getTilingOverrideMask())
+                if(winInfo->getTilingOverrideMask())
                     arrangeNonTileableWindow(winInfo, primary);
-                else {
-                    RectWithBorder rect = winInfo->getGeometry();
-                    if(primary->getBase().contains(rect))
-                        continue;
-                    for(Monitor* container : getAllMonitors())
-                        if(container->getBase().intersects(rect)) {
-                            logger.debug() << "Container: " << container << std::endl;
-                            rect.translate(container->getBase(), primary->getBase());
-                            setWindowPosition(winInfo->getID(), rect);
-                            break;
-                        }
-                }
-        }
+            }
 }
 void addStickyPrimaryMonitorRule(AddFlag flag) {
     getBatchEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);

@@ -154,33 +154,41 @@ MPX_TEST("test_always_on_top_bottom", {
     assert(consumeEvents() == 0);
 });
 
-MPX_TEST_ITER("primary_monitor_windows", 3, {
+MPX_TEST_ITER("primary_monitor_windows", 2, {
     addAutoTileRules();
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}), PREPEND_ALWAYS);
     addStickyPrimaryMonitorRule();
     addFakeMonitor({100, 100, 200, 200});
     addFakeMonitor({300, 100, 100, 100});
     Monitor* realMonitor = getAllMonitors()[0];
-    Monitor* m = getAllMonitors()[1];
-    m->setPrimary(1);
+    getAllMonitors()[1]->setPrimary();
     detectMonitors();
-    assert(m->getWorkspace());
+    assert(getPrimaryMonitor()->getWorkspace());
     WindowID win = mapWindow(createNormalWindow());
     startWM();
     waitUntilIdle();
     WindowInfo* winInfo = getWindowInfo(win);
-    if(_i == 1) {
-        winInfo->moveToWorkspace(realMonitor->getWorkspace()->getID());
+    bool inWorkspace = _i;
+    if(inWorkspace) {
         winInfo->addMask(NO_TILE_MASK);
+        winInfo->moveToWorkspace(realMonitor->getWorkspace()->getID());
     }
-    else if(_i == 2) {
+    else {
         winInfo->setTilingOverrideEnabled(-1);
         winInfo->setTilingOverride({0, 0, 100, 100});
     }
 
     mapWindow(createNormalWindow());
     waitUntilIdle();
-    assert(m->getBase().contains(getRealGeometry(win)));
+    if(inWorkspace)
+        assertEquals(*winInfo->getWorkspace()->getMonitor(), *getPrimaryMonitor());
+    else {
+        assert(getPrimaryMonitor()->getBase().contains(getRealGeometry(win)));
+        Rect geo = winInfo->getTilingOverride();
+        geo.x += getPrimaryMonitor()->getViewport().x;
+        geo.y += getPrimaryMonitor()->getViewport().y;
+        assertEquals(getRealGeometry(winInfo), geo);
+    }
 });
 
 MPX_TEST("test_focus_follows_mouse", {

@@ -250,6 +250,19 @@ MPX_TEST("test_maximized_floating_window", {
     expectedConfig.width = getWorkspace(0)->getMonitor()->getViewport().width;
     assertEquals(expectedConfig, getRealGeometry(winInfo));
 });
+MPX_TEST("test_configure_dock", {
+    mapArbitraryWindow();
+    flush();
+    scan(root);
+    WindowInfo* winInfo = getAllWindows()[0];
+    winInfo->setTilingOverrideEnabled(3);
+    winInfo->setDock();
+    Monitor* monitor = getAllMonitors()[0];
+    monitor->setViewport({1,2,3,4});
+    arrangeNonTileableWindow(winInfo, monitor);
+    assertEquals(monitor->getBase().x, getRealGeometry(winInfo).x);
+    assertEquals(monitor->getBase().y, getRealGeometry(winInfo).y);
+});
 
 MPX_TEST_ITER("test_identity_transform_config", TRANSFORM_LEN * 2, {
     DEFAULT_BORDER_WIDTH = 0;

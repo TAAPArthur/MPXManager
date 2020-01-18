@@ -166,7 +166,7 @@ static void applyMasksToConfig(const WindowInfo* winInfo, const Monitor* m, uint
 static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor* m, uint32_t* config) {
     RectWithBorder tilingOverride = winInfo->getTilingOverride();
     Rect bounds = m->getViewport();
-    if(!winInfo->getWorkspace() || winInfo->hasPartOfMask(ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
+    if(winInfo->isDock() || !winInfo->getWorkspace() || winInfo->hasPartOfMask(ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
         bounds = config;
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++) {
         if(winInfo->isTilingOverrideEnabledAtIndex(i)) {
@@ -211,7 +211,10 @@ void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const 
 void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor) {
     uint32_t config[CONFIG_LEN] = {0};
     config[CONFIG_INDEX_BORDER] = DEFAULT_BORDER_WIDTH;
-    monitor->getViewport().copyTo(config);
+    if(winInfo->isDock() || !winInfo->getWorkspace())
+        monitor->getBase().copyTo(config);
+    else
+        monitor->getViewport().copyTo(config);
     applyMasksToConfig(winInfo, monitor, config);
     applyTilingOverrideToConfig(winInfo, monitor, config);
     uint32_t mask = winInfo->getTilingOverrideMask();
