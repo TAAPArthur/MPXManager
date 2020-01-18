@@ -71,6 +71,8 @@ void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
     assert(destIndex < getNumberOfWorkspaces() || destIndex == NO_WORKSPACE);
     if(destIndex == NO_WORKSPACE) {
         addMask(STICKY_MASK);
+        if(!getWorkspace())
+            return;
         destIndex = getActiveMaster()->getWorkspaceIndex();
     }
     if(destIndex != getWorkspaceIndex()) {

@@ -199,9 +199,14 @@ MPX_TEST("test_window_in_visible_worspace", {
     getWorkspace(0)->setMonitor(NULL);
     assert(!winInfo->isNotInInvisibleWorkspace());
 });
-MPX_TEST("test_sticky_window_add", {
+MPX_TEST_ITER("test_sticky_window_add", 2, {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);
+    bool notInAnyWorkpace = _i;
+    if(!notInAnyWorkpace)
+        winInfo->moveToWorkspace(0);
+
     winInfo->moveToWorkspace(-1);
     assert(winInfo->hasMask(STICKY_MASK));
+    assertEquals(!winInfo->getWorkspace(), notInAnyWorkpace);
 });
