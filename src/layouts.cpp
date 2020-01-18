@@ -220,7 +220,7 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
             XCB_CONFIG_WINDOW_BORDER_WIDTH;
     if(winInfo->isInputOnly())
         mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    else
+    else if(winInfo->isFocusAllowed())
         mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
     if(winInfo->hasMask(X_MAXIMIZED_MASK))
         mask |= XCB_CONFIG_WINDOW_WIDTH;
