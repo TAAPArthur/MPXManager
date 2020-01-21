@@ -2,91 +2,99 @@
 #include "tester.h"
 
 
-int* createStruct(int i) {
-    return new int(i);
-}
-static ArrayList<int*> list;
-const int size = 32;
-void setup(void) {
-    assert(list.size() == 0);
-    for(int i = 0; i < size; i++)
-        list.push_back(createStruct(i));
-    assert(list.size() == size);
-}
-void teardown(void) {
-    list.deleteElements();
-}
-struct Temp {
-    int i = 0;
-    operator int()const {return i;}
-    bool operator ==(Temp& t)const {return this->i == t.i;}
-};
-struct TempEquals: Temp {
-    bool operator ==(TempEquals& t)const {return this->i == t.i;}
-};
-static_assert(std::is_convertible<Temp, int>::value, "not an int");
-static_assert(std::is_convertible<std::remove_pointer<Temp>::type, int>::value);
-static_assert(std::is_convertible<std::remove_pointer<Temp*>::type, int>::value);
-static_assert(std::is_convertible<std::remove_pointer_t<Temp*>, int>::value);
-
 MPX_TEST("enable_if", {
     ArrayList<int> list;
     list.add(1);
     list.add(2);
     assert(list.find(1));
     assert(list.find(2));
-});
-MPX_TEST("enable_if_struct", {
-    ArrayList<Temp*> list;
-    list.add(new Temp{1});
-    list.add(new Temp{2});
-    assert(list.find(1));
-    assert(list.find(2));
-    list.deleteElements();
-});
-MPX_TEST("enable_if_struct_equals", {
-    ArrayList<TempEquals*> list;
-    list.add(new TempEquals{1});
-    list.add(new TempEquals{2});
-    assert(list.find(1));
-    assert(list.find(2));
-    list.deleteElements();
+    assert(!list.find(3));
 });
 MPX_TEST_ITER("init_list", 2, {
-    ArrayList<Temp*> list;
+    ArrayList<int*> list;
     if(_i == 0)
-        list = ArrayList<Temp*>({{1}, {2}, {3}});
+        list = ArrayList<int*>({1, 2, 3});
     else if(_i == 1)
-        list = {new Temp{1}, new Temp{2}, new Temp{3}};
+        list = {new int{1}, new int{2}, new int{3}};
     list.deleteElements();
+});
+MPX_TEST("_just_for_code_coverage", {
+#define _TOUCH(T){ T L;L.begin();L.end();L.rbegin();L.rend();}
+    _TOUCH(ArrayList<int>);
+    _TOUCH(ArrayList<int*>);
 });
 MPX_TEST("sort", {
     ArrayList<int*> list;
+    list.add(new int(-1));
     for(int i = 10; i >= 0; i--)
         list.add(new int(i));
     list.sort();
-    for(int i = 0; i < list.size(); i++)
+    for(int i = -1; i < list.size(); i++)
         assertEquals(*list[i], i);
     list.deleteElements();
 });
-
-SET_ENV(setup, teardown);
-
 MPX_TEST("template_int", {
-    static ArrayList<unsigned int>intList;
-    auto lambda = [](int i) {intList.add(i);};
-    for(int i = 0; i < size; i++)
-        lambda(i * 3);
-    for(int i = 0; i < size; i++)
-        assert(intList[i] == i * 3);
+    ArrayList<int>intList;
+    for(int i = 0; i < 3; i++)
+        intList.add(i * 3);
+    int i = 0;
+    for(auto n : intList)
+        assertEquals(n, i++ * 3);
+});
+MPX_TEST("equality_pointer", {
+    ArrayList<int*> list1;
+    ArrayList<int*> list2;
+    list1.add(new int(1));
+    assert(list1 != list2);
+    list2.add(new int(1));
+    assertEquals(list1, list2);
+    list1.deleteElements();
+    list2.deleteElements();
+});
+MPX_TEST("equality_nonpointer", {
+    ArrayList<int> list1;
+    ArrayList<int> list2;
+    list1.add(1);
+    assert(list1 != list2);
+    list2.add(1);
+    assertEquals(list1, list2);
 });
 
-MPX_TEST("init", {assert(list.size() == size);})
+int* createStruct(int i) {
+    return new int(i);
+}
+ArrayList<int*> list;
+const int size = 32;
+void setup(void) {
+    assertEquals(list.size(), 0);
+    for(int i = 0; i < size; i++)
+        list.push_back(createStruct(i));
+    assertEquals(list.size(), size);
+}
+void teardown(void) {
+    list.deleteElements();
+}
+SET_ENV(setup, teardown);
+
+MPX_TEST("equals_ptr", {
+    ArrayList<int*> list2(list);
+    assertEquals(list2, list);
+    list2.add(new int(1));
+    assert(list2 != list);
+    assertAndDelete(list2.pop());
+    assertEquals(list2, list);
+    list2.pop();
+    assert(list2 != list);
+    list2.add(new int(-11));
+    assert(list2 != list);
+    assertAndDelete(list2.pop());
+})
+
 MPX_TEST("add", {
     for(int n = 0; n < 10; n++) {
-        assert(list.size() == size + n);
+        assertEquals(list.size(), size + n);
         list.add(createStruct(n));
-        assert(*list[size + n] == n);
+        assertEquals(*list[size + n], n);
     }
 });
 MPX_TEST("add_flag", {
@@ -94,18 +102,47 @@ MPX_TEST("add_flag", {
     int* p = createStruct(1);
     assert(list.add(*p, ADD_ALWAYS));
     assert(list.add(*p, ADD_ALWAYS));
+    assert(list.add(*p, PREPEND_ALWAYS));
+    assertEquals(list.size(), 3);
+    assert(!list.add(*p, ADD_TOGGLE));
     assertEquals(list.size(), 2);
     assert(!list.add(*p, ADD_UNIQUE));
+    assert(!list.add(*p, PREPEND_UNIQUE));
+    assertEquals(list.size(), 2);
     assert(!list.add(*p, ADD_REMOVE));
+    assertEquals(list.size(), 1);
     assert(!list.add(*p, ADD_REMOVE));
     assertEquals(list.size(), 0);
     assert(list.add(*p, ADD_UNIQUE));
     assert(!list.add(*p, ADD_TOGGLE));
     assert(list.add(*p, ADD_TOGGLE));
     assert(list.size() == 1);
+    assert(!list.add(*p, ADD_TOGGLE));
+    assert(list.size() == 0);
+    assert(list.add(*p, PREPEND_UNIQUE));
     list.deleteElements();
     delete p;
 });
+MPX_TEST("add_flag2", {
+    list.deleteElements();
+    assert(list.add(2, ADD_ALWAYS));
+    assert(list.add(1, PREPEND_UNIQUE));
+    assert(list.add(3, ADD_UNIQUE));
+
+    assert(list.add(1, ADD_ALWAYS));
+    assert(!list.add(1, ADD_REMOVE));
+
+    assert(list.add(4, PREPEND_ALWAYS));
+    assert(!list.add(4, PREPEND_TOGGLE));
+    assert(list.add(4, ADD_TOGGLE));
+
+    assert(list.add(0, PREPEND_TOGGLE));
+    assert(!list.add(0, PREPEND_TOGGLE));
+    assert(list.add(0, ADD_REMOVE));
+    for(int i = 0; i < list.size(); i++)
+        assertEquals(*list[i], i + 1);
+    list.deleteElements();
+})
 MPX_TEST("add_unique", {
     list.deleteElements();
     int* p = createStruct(1);
@@ -222,4 +259,18 @@ MPX_TEST("swap", {
         list.swap(i, maxIndex);
         assert(list.indexOf(&i) == i);
     }
+});
+MPX_TEST("iter", {
+    int i = *list[0];
+    ReverseArrayList<int*> rList;
+    for(auto p : list) {
+        assertEquals(*p, i++);
+        rList.add(p);
+    }
+    for(auto p : rList)
+        assertEquals(*p, --i);
+    for(auto iter = rList.rbegin(); iter != rList.rend(); ++iter)
+        assertEquals(**iter, i++);
+});
+MPX_TEST("add_flags", {
 });

@@ -2,8 +2,8 @@
  * @file arraylist.h
  * @brief ArrayList implementation
  */
-#ifndef MYWM_UTIL
-#define MYWM_UTIL
+#ifndef ARRAY_LIST_H
+#define ARRAY_LIST_H
 
 /// Returns the length of the array
 #define LEN(X) (sizeof X / sizeof X[0])
@@ -86,10 +86,7 @@ struct ArrayList: std::vector<T> {
     /// Constructs an empty list
     ArrayList() {}
     /// Constructs a list with the specified elements
-    ArrayList(std::initializer_list<T> __l) {
-        for(T t : __l)
-            this->add(t);
-    }
+    ArrayList(std::initializer_list<T> __l) : std::vector<T>(__l){}
     /**
      * Copies the members onto the heap and adds them to the list
      */
@@ -130,7 +127,8 @@ struct ArrayList: std::vector<T> {
     /**
      * Adds/removes value to list according to flag.
      * If value is not added to the list, it is deleted. If an element is removed from the list it is deleted.
-     * @return 1 iff element was not freed
+     * For ADD_REMOVE, the value will also be deleted
+     * @return 1 iff element was not freed or if flag == ADD_REMOVE, if value was not present in list
      */
     template<typename U = T>
     EnableIfPointer<U, bool>add(T value, AddFlag flag) {
@@ -401,20 +399,20 @@ struct ArrayList: std::vector<T> {
 template<class T>
 struct ReverseArrayList: ArrayList<T> {
     /// Returns an iterator from end to start
-    virtual Iterator<T> begin() const override {
-        return Iterator(this->data() + this->size() - 1, 1);
+    Iterator<T> begin() const override {
+        return ArrayList<T>::rbegin();
     }
     /// counterpart of begin
-    virtual Iterator<T> end() const override {
-        return this->data() - 1;
+    Iterator<T> end() const override {
+        return ArrayList<T>::rend();
     }
     /// Returns start to end
-    virtual Iterator<T> rbegin() const override {
-        return Iterator(this->data());
+    Iterator<T> rbegin() const override {
+        return ArrayList<T>::begin();
     }
     /// counterpart of end
-    virtual Iterator<T> rend() const override {
-        return this->data() + this->size();
+    Iterator<T> rend() const override {
+        return ArrayList<T>::end();
     }
 };
 /**
