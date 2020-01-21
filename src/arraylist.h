@@ -367,6 +367,33 @@ struct ArrayList: std::vector<T> {
         (*this)[index1] = (*this)[index2];
         (*this)[index2] = temp;
     }
+
+    /**
+     * Deep equality check used when T is a pointer
+     * @tparam U
+     * @param list
+     *
+     * @return 1 if the elements all point to equivalent structures
+     */
+    template<typename U = T>
+    EnableIfPointer<U, bool>operator ==(const ArrayList<T>& list)const {
+        if(size() != list.size())
+            return 0;
+        for(int i = 0; i < list.size(); i++)
+            if(!(*(*this)[i] == *list[i]))
+                return 0;
+        return 1;
+    }
+
+
+    /**
+     * @param list
+     *
+     * @return true if not equal to list
+     */
+    bool operator !=(const ArrayList<T>& list)const {
+        return !(*this == list);
+    }
 };
 /**
  * Subclass of ArrayList that iterates in the reverse order
