@@ -20,9 +20,6 @@ void* timer(void* f) {
     int pid = *flag;
     if(pid) {
         printf("Timeout %d\n", pid);
-        printf("Sending signal to print stacktrace%d\n", pid);
-        kill(pid, SIGUSR2);
-        msleep(1000);
         if(kill(pid, SIGKILL)) {
             LOG(LOG_LEVEL_ERROR, "killing failed %s\n", strerror(errno));
         }

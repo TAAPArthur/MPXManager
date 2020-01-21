@@ -9,7 +9,7 @@ IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
 ERROR_FLAGS := -Werror -Wall -Wextra
 CPPFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
-TESTFLAGS := ${CPPFLAGS} -Wno-sign-compare ${DEBUGGING_FLAGS} --coverage
+TESTFLAGS := ${CPPFLAGS} -Wno-sign-compare ${DEBUGGING_FLAGS} --coverage -D_GLIBCXX_DEBUG
 NON_X_LDFLAGS := -lm -lpthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lm -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
@@ -25,8 +25,9 @@ BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.cpp
 
 PRELOAD := $$(pwd)/libmpx-test.so
-CHECK_TEST_COVERAGE = (gcov -mr $(1) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 ".cpp" && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#")
-RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 1 -a $(if $(QUICK) , valgrind -q --leak-check=full --error-exitcode=123 $(1) 20,$(1))
+CHECK_TEST_COVERAGE = (gcov -mr $(2) $(1) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 $(1) && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#" && echo "$$((100 - $$(grep -c '\#\#\#\#' $$(basename -a $(1)).gcov)*100/$$(wc -l $$(basename -a $(1)).gcov | cut -d' ' -f1)))%")
+
+RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 0 -a $(if $(QUICK) , valgrind -q  --error-exitcode=123 $(1) 20,$(1))
 
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
@@ -105,9 +106,6 @@ libmpx-test.so: Tests/test-preload.c
 
 test: libmpx-test.so code_coverage.out arg_test.out functional.out format doc-check correctness.out preinstall
 
-T1 = $(patsubst %.cpp,Tests/%_unit.o, $(1))
-TEST_FILES = $(patsubst %.h,Tests/%_unit.o, $(call T1, $(1)))
-
 functionalTest: CPPFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp |libmpx-patch.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
@@ -119,7 +117,7 @@ functional.out: functionalTest
 	touch $@
 
 unitTest: CPPFLAGS := ${TESTFLAGS}
-unitTest: Tests/tester.o $(call TEST_FILES, ${TEST_SRCS}) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
+unitTest: Tests/tester.o   $(patsubst %.cpp,%.o,$(wildcard Tests/Extensions/*_unit.cpp Tests/*_unit.cpp)) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 correctness.out: unitTest
@@ -132,12 +130,18 @@ Extensions/Tests/%: Tests/Extensions/%
 
 %_code_coverage.out: %.cpp Tests/%_unit.cpp | unitTest
 	rm -f $@ *gcda
-	TEST_FILE=$(patsubst %.o,%.cpp, $(call TEST_FILES, $<)) $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
+	TEST_FILE=Tests/$*_unit.cpp $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
+	[ -s  $$(basename -a $<).gcov ]
+	[ ! -s  $@ ]
+
+%_code_coverage.out: %.h Tests/%_unit.cpp  | unitTest
+	rm -f $@ *gcda
+	TEST_FILE=Tests/$*_unit.cpp $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE, $<, Tests/$*_unit.cpp) 2>&1 | tee -a $@)
 	[ -s  $$(basename -a $<).gcov ]
 	[ ! -s  $@ ]
 
 
-code_coverage.out: unitTest $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
+code_coverage.out: unitTest $(patsubst %.h,%_code_coverage.out,${TEST_SRCS}) $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
 
 
 arg_test.out: CPPFLAGS := ${TESTFLAGS}

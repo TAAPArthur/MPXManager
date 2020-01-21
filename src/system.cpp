@@ -230,7 +230,9 @@ void quit(int exitCode) {
 static bool caughtError = 0;
 static void handler(int sig) {
     LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
+#ifdef NDEBUG
     printStackTrace();
+#endif
     if(caughtError) {
         exit(sig);
     }
