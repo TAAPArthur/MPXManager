@@ -12,6 +12,7 @@
 #include "globals.h"
 #include "logger.h"
 #include "monitors.h"
+#include "ringbuffer.h"
 #include "system.h"
 #include "time.h"
 #include "user-events.h"
@@ -393,42 +394,21 @@ int getIdleCount() {
     return idle;
 }
 
-static xcb_generic_event_t* eventBuffer[2048];
-// next index to read from
-static uint32_t bufferIndexRead = 0;
-// 1 past the last valid index
-static uint32_t bufferIndexWrite = 0;
+static RingBuffer < xcb_generic_event_t*, 1 << 12 > eventBuffer;
 static uint32_t lastDetectedEventSequence = 0;
 
 uint32_t getLastDetectedEventSequenceNumber() {return lastDetectedEventSequence;}
 
-static inline xcb_generic_event_t* getEventFromBuffer() {
-    if(bufferIndexWrite == bufferIndexRead) {
-        bufferIndexRead = 0;
-        bufferIndexWrite = 0;
-        return NULL;
-    }
-    return eventBuffer[bufferIndexRead++];
-}
-static inline bool addEventToBuffer(xcb_generic_event_t* event) {
-    assert(bufferIndexRead == 0);
-    assert(bufferIndexWrite < LEN(eventBuffer));
-    if(event)
-        eventBuffer[bufferIndexWrite++] = event;
-    assert(bufferIndexRead <= bufferIndexWrite);
-    return event && bufferIndexWrite < LEN(eventBuffer);
-}
 static inline void enqueueEvents(xcb_generic_event_t* event) {
-    while(addEventToBuffer(xcb_poll_for_queued_event(dis)));
+    while(eventBuffer.push(xcb_poll_for_queued_event(dis)));
     assert(event);
-    lastDetectedEventSequence = (bufferIndexWrite ? eventBuffer[bufferIndexWrite - 1] : event)->sequence;
-    LOG(LOG_LEVEL_TRACE, "Size of event queue is now %d\n", bufferIndexWrite);
+    assert(eventBuffer.isEmpty() || eventBuffer.peekEnd());
+    lastDetectedEventSequence = (eventBuffer.isEmpty() ? event : eventBuffer.peekEnd())->sequence;
 }
 static inline xcb_generic_event_t* pollForEvent() {
     xcb_generic_event_t* event;
     for(int i = POLL_COUNT - 1; i >= 0; i--) {
-        if(i)
-            msleep(POLL_INTERVAL);
+        msleep(POLL_INTERVAL);
         event = xcb_poll_for_event(dis);
         if(event) {
             enqueueEvents(event);
@@ -439,10 +419,8 @@ static inline xcb_generic_event_t* pollForEvent() {
 }
 static inline xcb_generic_event_t* waitForEvent() {
     xcb_generic_event_t* event = xcb_wait_for_event(dis);
-    lock();
     if(event)
         enqueueEvents(event);
-    unlock();
     return event;
 }
 
@@ -452,7 +430,7 @@ static inline xcb_generic_event_t* getNextEvent() {
         applyEventRules(PERIODIC, NULL);
     }
     static xcb_generic_event_t* event;
-    event = getEventFromBuffer();
+    event = eventBuffer.pop();
     if(!event)
         event = pollForEvent();
     if(!event && !xcb_connection_has_error(dis)) {
@@ -486,15 +464,12 @@ int isSyntheticEvent() {
 
 
 void* runEventLoop(void* arg __attribute__((unused))) {
-    xcb_generic_event_t* event;
+    xcb_generic_event_t* event = NULL;
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
         if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
-            do
+            if(event)
                 free(event);
-            while(event = getEventFromBuffer());
-            if(isShuttingDown())
-                LOG(LOG_LEVEL_INFO, "shutting down\n");
             break;
         }
         int type = event->response_type & 127;
@@ -510,6 +485,12 @@ void* runEventLoop(void* arg __attribute__((unused))) {
         XSync(dpy, 0);
 #endif
         LOG(LOG_LEVEL_TRACE, "event processed\n");
+    }
+    if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
+        while(event = eventBuffer.pop())
+            free(event);
+        if(isShuttingDown())
+            LOG(LOG_LEVEL_INFO, "shutting down\n");
     }
     LOG(LOG_LEVEL_INFO, "Exited event loop\n");
     return NULL;

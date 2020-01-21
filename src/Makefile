@@ -14,7 +14,7 @@ NON_X_LDFLAGS := -lm -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
 LAYER0_SRCS := globals.cpp logger.cpp debug.cpp
-LAYER1_SRCS := arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp system.cpp
+LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp system.cpp
 LAYER2_SRCS := xsession.cpp bindings.cpp devices.cpp test-functions.cpp device-grab.cpp
 LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.cpp wm-rules.cpp extra-rules.cpp
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp
