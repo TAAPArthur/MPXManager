@@ -51,12 +51,8 @@ void addStartXMouseControlRule();
 
 /**
  * Will apply an update every XMOUSE_CONTROL_UPDATER_INTERVAL
- *
- * @param c
- *
- * @return NULL
  */
-void* runXMouseControl(void* c __attribute__((unused)));
+void runXMouseControl();
 /**
  * Add rules/bindings to get the XMousecontrol experience
  * @param mask the default mask of the bindings
@@ -93,7 +89,8 @@ void adjustSpeed(int multiplier);
 void adjustScrollSpeed(int multiplier);
 /**
  * Applies a single update
+ * @return 1 iff not a no-op
  */
-void xmousecontrolUpdate(void);
+bool xmousecontrolUpdate(void);
 #endif
 #endif

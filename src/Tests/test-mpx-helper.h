@@ -7,6 +7,7 @@
 #include "../monitors.h"
 #include "../mywm-structs.h"
 #include "../system.h"
+#include "../threads.h"
 #include "../windows.h"
 #include "../workspaces.h"
 

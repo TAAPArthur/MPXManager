@@ -20,42 +20,6 @@ MPX_TEST("get_time", {
     }
 })
 
-static int size = 100000;
-static int counter = 0;
-void* incrementCounter(void* p) {
-    int size = *(int*)p;
-    for(int i = 0; i < size; i++) {
-        lock();
-        counter++;
-        unlock();
-    }
-    return nullptr;
-}
-MPX_TEST_ITER("run_in_new_thread", 2, {
-    runInNewThread(incrementCounter, &size, "increment");
-    if(_i)
-        waitForAllThreadsToExit();
-    else ATOMIC(waitForAllThreadsToExit(););
-    assert(counter == size);
-});
-// make volatile
-int getSize(ArrayList<long>* list) {return list->size();}
-MPX_TEST("thread_lock_unlock", {
-    runInNewThread(incrementCounter, &size, "increment");
-    runInNewThread(incrementCounter, &size, "increment2");
-    assertEquals(getNumberOfThreads(), 2);
-    waitForAllThreadsToExit();
-    assertEquals(counter, size * 2);
-});
-MPX_TEST("safe_shutdown", {
-    runInNewThread([](void*)->void* {
-        while(!isShuttingDown())msleep(100);
-        return NULL;
-    }, NULL, "Spin Forever");
-    requestShutdown();
-    waitForAllThreadsToExit();
-});
-
 MPX_TEST_ITER_ERR("spawn_child", 2, 10, {
     breakFork(0);
     if(_i)
@@ -179,11 +143,10 @@ MPX_TEST("safe_quit", {
     char buffer[8] = {0};
     static const char* value = "safe";
     if(!spawnPipe(NULL)) {
-        runInNewThread([](void*)->void* {
+        spawnThread([] {
             while(!isShuttingDown())msleep(100);
             printf(value);
-            return NULL;
-        }, NULL, "Spin Forever");
+        }, "Spin Forever");
         quit(0);
     }
     assert(waitForChild(0) == 0);

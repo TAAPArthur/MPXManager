@@ -312,9 +312,8 @@ uint32_t getLastDetectedEventSequenceNumber();
 /**
  * Continually listens and responds to event and applying corresponding Rules.
  * This method will only exit when the x connection is lost
- * @param arg unused
  */
-void* runEventLoop(void* arg = NULL);
+void runEventLoop();
 /**
  * To be called when a generic event is received
  * loads info related to the generic event which can be accessed by getLastEvent()

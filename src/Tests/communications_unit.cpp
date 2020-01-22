@@ -76,7 +76,7 @@ MPX_TEST("test_send_receive_func", {
     send("log-level", "10");
     flush();
     addShutdownOnIdleRule();
-    runEventLoop(NULL);
+    runEventLoop();
     assert(getLogLevel() == 10);
     assert(!hasOutStandingMessages());
 });
@@ -90,7 +90,7 @@ MPX_TEST("test_stale", {
     assert(waitForChild(0) == 0);
     CRASH_ON_ERRORS = 0;
     setLogLevel(LOG_LEVEL_NONE);
-    runEventLoop(NULL);
+    runEventLoop();
 });
 
 MPX_TEST("test_bad_options", {
@@ -110,11 +110,11 @@ MPX_TEST("test_bad_options", {
     }
     flush();
     addDieOnIdleRule();
-    runEventLoop(NULL);
+    runEventLoop();
 });
 MPX_TEST("test_quit", {
     if(!fork()) {
-        runEventLoop(NULL);
+        runEventLoop();
     }
     openXDisplay();
     send("quit", "");

@@ -9,8 +9,8 @@
 #include "../globals.h"
 #include "../logger.h"
 #include "../masters.h"
-#include "../system.h"
 #include "../test-functions.h"
+#include "../threads.h"
 #include "../time.h"
 #include "../xsession.h"
 #include "xmousecontrol.h"
@@ -18,6 +18,7 @@
 #if XMOUSE_CONTROL_EXT_ENABLED
 
 unsigned int XMOUSE_CONTROL_UPDATER_INTERVAL = 30;
+
 unsigned int BASE_MOUSE_SPEED = 10;
 unsigned int BASE_SCROLL_SPEED = 1;
 
@@ -51,9 +52,13 @@ void resetXMouseControl() {
     info->vScale = BASE_MOUSE_SPEED ;
     info->mask = 0;
 }
+static ThreadSignaler signaler;
 void addXMouseControlMask(int mask) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
+    bool change = (info->mask ^ mask);
     info->mask |= mask;
+    if(change)
+        signaler.signal();
 }
 void removeXMouseControlMask(int mask) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
@@ -75,11 +80,13 @@ void adjustSpeed(int multiplier) {
 
 #define _IS_SET(info,A,B)\
        ((info->mask & (A|B)) && (((info->mask & A)?1:0) ^ ((info->mask&B)?1:0)))
-void xmousecontrolUpdate(void) {
+bool xmousecontrolUpdate(void) {
     assert(dis);
+    bool update = 0;
     for(Master* master : getAllMasters()) {
         XMouseControlMasterState* info = getXMouseControlMasterState(master, 0);
-        if(info) {
+        if(info && info->mask) {
+            update = 1;
             if(_IS_SET(info, SCROLL_RIGHT_MASK, SCROLL_LEFT_MASK))
                 for(int i = 0; i < info->scrollScale; i++)
                     clickButton(info->mask & SCROLL_RIGHT_MASK ? SCROLL_RIGHT : SCROLL_LEFT, info->pointerId);
@@ -95,17 +102,20 @@ void xmousecontrolUpdate(void) {
                 movePointerRelative(deltaX, deltaY, info->pointerId);
         }
     }
-    flush();
+    if(update)
+        flush();
+    return update;
 }
-void* runXMouseControl(void* c __attribute__((unused))) {
+void runXMouseControl() {
     while(!isShuttingDown()) {
-        ATOMIC(xmousecontrolUpdate());
-        msleep(XMOUSE_CONTROL_UPDATER_INTERVAL);
+        lock();
+        auto update = xmousecontrolUpdate();
+        unlock();
+        signaler.sleepOrWait(update, XMOUSE_CONTROL_UPDATER_INTERVAL);
     }
-    return NULL;
 }
 void addStartXMouseControlRule() {
-    getEventRules(X_CONNECTION).add({[]() {runInNewThread(runXMouseControl, NULL, "xmousecontrol");}, FUNC_NAME});
+    getEventRules(X_CONNECTION).add({[]() {spawnThread(runXMouseControl, "xmousecontrol");}, FUNC_NAME});
 }
 
 #define PAIR(MASK,KEY,KP,A1,KR,A2)\

@@ -61,7 +61,7 @@ MPX_TEST_ERR("test_handle_error", 1, {
     onSimpleStartup();
     xcb_generic_event_t event = {0};
     xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
-    runEventLoop(NULL);
+    runEventLoop();
     assert(0);
 });
 MPX_TEST("handle_error_continue", {
@@ -71,7 +71,7 @@ MPX_TEST("handle_error_continue", {
     xcb_generic_event_t event = {0};
     xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
     addShutdownOnIdleRule();
-    runEventLoop(NULL);
+    runEventLoop();
 });
 MPX_TEST("auto_grab_bindings", {
     Binding b = {0, 1, requestShutdown};

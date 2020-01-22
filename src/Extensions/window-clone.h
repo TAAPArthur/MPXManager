@@ -55,20 +55,20 @@ CloneInfo* getCloneInfo(WindowInfo* winInfo, bool createNew = 1);
  * Updates the displayed image for all cloned windows
  *
  * @param winInfo
+ * @return number of clones updated
  */
-void updateAllClonesOfWindow(WindowInfo* winInfo);
+uint32_t updateAllClonesOfWindow(WindowInfo* winInfo);
 /**
  * Updates the displayed image for all cloned windows.
  * Will also garbage collect deleted clone metadata
+ * @return number of clones updated
  */
-void updateAllClones(void);
+uint32_t updateAllClones(void);
 
 /**
  * Auto update cloned window every CLONE_REFRESH_RATE ms
- * @param arg unused
- *
  */
-void* autoUpdateClones(void* arg __attribute__((unused)));
+void autoUpdateClones();
 /**
  * Call autoUpdateClones in a new thread
  */

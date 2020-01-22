@@ -143,4 +143,13 @@ extern WindowMask MASKS_TO_SYNC;
  */
 extern uint32_t SRC_INDICATION;
 
+
+/**
+ * Requests all threads to terminate
+ */
+void requestShutdown(void);
+/**
+ * Indicate to threads that the system is shutting down;
+ */
+bool isShuttingDown(void);
 #endif

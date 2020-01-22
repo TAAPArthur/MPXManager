@@ -14,7 +14,7 @@
 #include "logger.h"
 #include "masters.h"
 #include "monitors.h"
-#include "system.h"
+#include "threads.h"
 #include "time.h"
 #include "user-events.h"
 #include "window-properties.h"
@@ -131,8 +131,7 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
 }
 
 
-static void* waitForWindowToDie(void* p) {
-    int id = *reinterpret_cast<int*>(p);
+static void* waitForWindowToDie(WindowID id) {
     lock();
     WindowInfo* winInfo = getWindowInfo(id);
     int hasPingMask = 0;
@@ -162,7 +161,6 @@ static void* waitForWindowToDie(void* p) {
         msleep(KILL_TIMEOUT);
     }
     LOG(LOG_LEVEL_DEBUG, "Finished waiting for window %d\n", id);
-    delete reinterpret_cast<int*>(p);
     return NULL;
 }
 
@@ -176,7 +174,8 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
         unsigned int data[5] = {WM_DELETE_WINDOW, getTime()};
         xcb_ewmh_send_client_message(dis, root, winInfo->getID(), ewmh->WM_PROTOCOLS, 5, data);
         LOG(LOG_LEVEL_INFO, "Sending request to delete window\n");
-        runInNewThread(waitForWindowToDie, new int(winInfo->getID()), "wait for window to die");
+        WindowID id = winInfo->getID();
+        spawnThread([ = ] {waitForWindowToDie(id);}, "wait for window to die");
     }
     else {
         killClientOfWindow(winInfo->getID());

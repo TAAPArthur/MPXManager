@@ -14,6 +14,7 @@
 #include "monitors.h"
 #include "ringbuffer.h"
 #include "system.h"
+#include "threads.h"
 #include "time.h"
 #include "user-events.h"
 #include "xsession.h"
@@ -463,7 +464,7 @@ int isSyntheticEvent() {
 }
 
 
-void* runEventLoop(void* arg __attribute__((unused))) {
+void runEventLoop() {
     xcb_generic_event_t* event = NULL;
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
@@ -493,7 +494,6 @@ void* runEventLoop(void* arg __attribute__((unused))) {
             LOG(LOG_LEVEL_INFO, "shutting down\n");
     }
     LOG(LOG_LEVEL_INFO, "Exited event loop\n");
-    return NULL;
 }
 int loadGenericEvent(xcb_ge_generic_event_t* event) {
     LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d seq %d\n",

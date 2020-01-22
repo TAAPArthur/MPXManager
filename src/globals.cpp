@@ -33,3 +33,11 @@ uint32_t ROOT_EVENT_MASKS = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MAS
     XCB_EVENT_MASK_STRUCTURE_NOTIFY;
 WindowMask MASKS_TO_SYNC = ABOVE_MASK | BELOW_MASK | HIDDEN_MASK | NO_TILE_MASK | STICKY_MASK | URGENT_MASK;
 uint32_t SRC_INDICATION = 7;
+
+static volatile bool shuttingDown = 0;
+void requestShutdown(void) {
+    shuttingDown = 1;
+}
+bool isShuttingDown(void) {
+    return shuttingDown;
+}

@@ -195,7 +195,7 @@ int _main(int argc, char* const* argv) {
     if(!dpy)
         onStartup();
     if(RUN_EVENT_LOOP)
-        runEventLoop(NULL);
+        runEventLoop();
     else {
         if(hasOutStandingMessages()) {
             LOG(LOG_LEVEL_TRACE, "waiting for send receipts\n");

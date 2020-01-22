@@ -17,6 +17,7 @@
 #ifndef MPX_SYSTEM
 #define MPX_SYSTEM
 
+
 /// name of env variable that (if set) should be the default pointer
 #define DEFAULT_POINTER_ENV_VAR_NAME "CLIENT_POINTER"
 /// name of env variable that (if set) should be the default keyboard
@@ -42,41 +43,6 @@ extern int numPassedArguments;
 /// the argument list passed into the main method
 extern char* const* passedArguments;
 /**
- * execute code in an atomic manner
- * @param code
- */
-#define ATOMIC(code...) do {lock();code;unlock();}while(0)
-/**
- * Locks/unlocks the global mutex
- *
- * It is not safe to modify most structs from multiple threads so the main event loop lock/unlocks a
- * global mutex. Any addition thread that runs alongside the main thread of if in general, there
- * is a race, lock/unlock should be used
- */
-void lock(void);
-///copydoc lock(void)
-void unlock(void);
-
-/**
- * Requests all threads to terminate
- */
-void requestShutdown(void);
-/**
- * Indicate to threads that the system is shutting down;
- */
-int isShuttingDown(void);
-/**
- * Runs method in a new thread
- * @param method the method to run
- * @param arg the argument to pass into method
- * @return a pthread identifier
- */
-void runInNewThread(void* (*method)(void*), void* arg, const char*);
-/**
- * @return the number of threads that have not terminated and been cleaned up
- */
-int getNumberOfThreads(void);
-/**
  * exits the application
  * @param exitCode exit status of the program
  */
@@ -86,11 +52,6 @@ void quit(int exitCode)__attribute__((__noreturn__));
  * restart the application
  */
 void restart(void)__attribute__((__noreturn__));
-
-/**
- * Joins all threads started via runInNewThread
- */
-void waitForAllThreadsToExit(void);
 
 /**
  * Forks and runs command in SHELL
@@ -149,4 +110,5 @@ void destroyAllLists();
  * Set environment vars such to help old clients know which master device to use
  */
 void setClientMasterEnvVar(void);
+
 #endif

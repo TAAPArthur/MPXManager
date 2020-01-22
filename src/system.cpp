@@ -16,6 +16,8 @@
 #include "monitors.h"
 #include "mywm-structs.h"
 #include "system.h"
+#include "threads.h"
+#include "time.h"
 #include "windows.h"
 #include "workspaces.h"
 
@@ -23,70 +25,7 @@ int statusPipeFD[4] = {0};
 int numPassedArguments;
 char* const* passedArguments;
 
-static volatile int shuttingDown = 0;
-void requestShutdown(void) {
-    shuttingDown = 1;
-}
-int isShuttingDown(void) {
-    return shuttingDown;
-}
-
-
 void (*onChildSpawn)(void) = setClientMasterEnvVar;
-
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static int trylock(void) {
-    return pthread_mutex_trylock(&mutex);
-}
-void lock(void) {
-    pthread_mutex_lock(&mutex);
-}
-void unlock(void) {
-    pthread_mutex_unlock(&mutex);
-}
-
-/// holds thread metadata
-struct Thread {
-    /// pthread id
-    pthread_t thread;
-    /// user specified name of thread
-    const char* name;
-} ;
-static ArrayList<Thread*> threads __attribute__((unused)) ;
-void runInNewThread(void* (*method)(void*)__attribute__((unused)), void* arg __attribute__((unused)),
-    const char* name) {
-    if(isShuttingDown())return;
-    pthread_t thread;
-    int result __attribute__((unused)) = pthread_create(&thread, NULL, method, arg) == 0;
-    assert(result);
-    assert(sizeof(thread) <= sizeof(void*));
-    Thread* t = new Thread{thread, name};
-    threads.add(t);
-}
-int getNumberOfThreads(void) {return threads.size();}
-void waitForAllThreadsToExit(void) {
-    pthread_t self = pthread_self();
-    bool relock = 0;
-    // if already locked, set relock, else lock
-    if(trylock()) {
-        relock = 1;
-    }
-    unlock();
-    LOG(LOG_LEVEL_DEBUG, "Thread %ld is waiting on %d threads\n", self, threads.size());
-    while(threads.size()) {
-        Thread* thread = threads.pop();
-        LOG(LOG_LEVEL_DEBUG, "Waiting for thread '%s' and %d more threads\n", thread->name, threads.size());
-        if(thread->thread != self) {
-            int result __attribute__((unused)) = pthread_join(thread->thread, NULL);
-            assert(result == 0);
-        }
-        delete thread;
-    }
-    LOG(LOG_LEVEL_DEBUG, "Finished waiting on threads\n");
-    if(relock)
-        lock();
-}
 void resetPipe() {
     if(statusPipeFD[0]) {
         // other fields were closed right after a call to spawnPipe;

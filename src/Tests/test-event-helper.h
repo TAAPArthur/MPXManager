@@ -46,7 +46,7 @@ static inline void exitFailure() {
 }
 
 static inline void startWM() {
-    runInNewThread(runEventLoop, NULL, "event-loop");
+    spawnThread(runEventLoop, "event-loop");
 }
 static inline void fullCleanup() {
     LOG(LOG_LEVEL_DEBUG, "full cleanup\n");

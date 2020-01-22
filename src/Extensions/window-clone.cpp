@@ -7,7 +7,7 @@
 #include "../globals.h"
 #include "../logger.h"
 #include "../state.h"
-#include "../system.h"
+#include "../threads.h"
 #include "../time.h"
 #include "../user-events.h"
 #include "../window-properties.h"
@@ -17,6 +17,7 @@
 #include "../xsession.h"
 #include "window-clone.h"
 
+static ThreadSignaler signaler;
 
 CloneInfo* getCloneInfo(WindowInfo* winInfo, bool createNew) {
     static Index<CloneInfo> index;
@@ -59,6 +60,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     CloneInfo* cloneInfo = getCloneInfo(clone);
     cloneInfo->original = winInfo->getID();
     cloneInfo->clone = clone->getID();
+    signaler.signal();
     return clone;
 }
 void killAllClones(WindowInfo* winInfo) {
@@ -81,29 +83,37 @@ static void updateClone(WindowInfo* clone) {
     xcb_copy_area(dis, clone->getEffectiveID(), clone->getID(), graphics_context,
         info->offset[0], info->offset[1], 0, 0, dims.width, dims.height);
 }
-void updateAllClonesOfWindow(WindowInfo* winInfo) {
+uint32_t updateAllClonesOfWindow(WindowInfo* winInfo) {
     auto* list = getClonesOfWindow(winInfo);
-    if(list)
+    if(list) {
         for(WindowID win : *list)
             if(getWindowInfo(win))
                 updateClone(getWindowInfo(win));
+        return list->size();
+    }
+    return 0;
 }
 
-void updateAllClones(void) {
+uint32_t updateAllClones(void) {
+    int count = 0;
     for(WindowInfo* winInfo : getAllWindows())
-        if(winInfo->getID() != winInfo->getEffectiveID())
+        if(winInfo->getID() != winInfo->getEffectiveID()) {
             updateClone(winInfo);
+            count++;
+        }
+    return count;
 }
-void* autoUpdateClones(void* arg __attribute__((unused))) {
+void autoUpdateClones() {
     assert(CLONE_REFRESH_RATE);
     while(!isShuttingDown()) {
-        ATOMIC(updateAllClones());
-        msleep(CLONE_REFRESH_RATE);
+        lock();
+        auto numClones = updateAllClones();
+        unlock();
+        signaler.sleepOrWait(numClones, CLONE_REFRESH_RATE);
     }
-    return NULL;
 }
 void startAutoUpdatingClones(void) {
-    runInNewThread(autoUpdateClones, NULL, "Auto update window clone");
+    spawnThread(autoUpdateClones, "AutoUpdateWindowClone");
 }
 
 void swapWithOriginalOnEnter(void) {

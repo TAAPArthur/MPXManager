@@ -71,7 +71,7 @@ MPX_TEST("ewmh_hooks", {
     addShutdownOnIdleRule();
     createNormalWindow();
     focusWindow(mapWindow(createNormalWindow()));
-    runEventLoop(NULL);
+    runEventLoop();
 });
 MPX_TEST("test_sync_state", {
     addWorkspaces(2);
