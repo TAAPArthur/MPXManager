@@ -30,6 +30,10 @@ LAYER5_SRCS += Extensions/xmousecontrol.cpp
 #endif
 #ifndef NO_SESSION
 LAYER5_SRCS += Extensions/session.cpp
+#ifndef NO_GESTURE
+LAYER0_SRCS += Extensions/gestures-helper.cpp
+LAYER5_SRCS += Extensions/gestures.cpp Extensions/gesture-functions.cpp
+LDFLAGS += -linput -ludev
 #endif
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
@@ -65,7 +69,6 @@ else ifeq ($(DEBUG),4)
 else
   CPPFLAGS += ${RELEASE_FLAGS} -DNDEBUG
 endif
-
 
 pkgname := mpxmanager
 
@@ -164,6 +167,14 @@ Extensions/Tests/%: Tests/Extensions/%
 
 
 code_coverage.out: unitTest $(patsubst %.h,%_code_coverage.out,${TEST_SRCS}) $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
+
+
+
+gestures: CPPFLAGS := ${TESTFLAGS}
+gestures: test-gestures.o $(BASE_SRCS:.cpp=.o)
+	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+gestures.out: gestures
+	./$^
 
 FORMATTER := astyle --project "$$file" >/dev/null ; rm -f "$$file.orig" || true
 

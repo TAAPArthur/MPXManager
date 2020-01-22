@@ -13,6 +13,8 @@ SET_ENV(createXSimpleEnv, cleanupXServer);
 MPX_TEST("print", {
     UserEvent e;
     Binding b = {0, 0};
+    BindingFlags f = {.noGrab = 1};
+    assert(f.noGrab);
     suppressOutput();
     std::cout << e;
     std::cout << b;
@@ -85,8 +87,8 @@ MPX_TEST_ITER("check_bindings", NO_PASSTHROUGH, {
                     getDeviceBindings().add(new Binding{goodMod, goodDetail, funcNoArg, { .passThrough = passThrough, .mask = goodMask}});
     }
     UserEvent events[] = {
-        {mod, detail, mask, 0, getActiveMaster(), NULL},
-        {mod | IGNORE_MASK, detail, mask, 0, getActiveMaster(), NULL}
+        {mod, detail, mask},
+        {mod | IGNORE_MASK, detail, mask}
     };
     for(UserEvent e : events)
         checkBindings(e);
@@ -140,7 +142,7 @@ MPX_TEST_ITER("check_binding_target", 4, {
 
     Binding b = {WILDCARD_MODIFIER, 0, funcWinArg, {.passThrough = NO_PASSTHROUGH, .mask = KEYBOARD_MASKS, .windowTarget = windowTarget}};
     getDeviceBindings().add(&b);
-    UserEvent event = {1, 1, KEYBOARD_MASKS, 0, getActiveMaster(), dummy};
+    UserEvent event = {1, 1, KEYBOARD_MASKS, 0, 0, getActiveMaster(), dummy};
     assert(checkBindings(event) == 0);
     getDeviceBindings().clear();
     assert(count);
