@@ -13,6 +13,7 @@
 #include <memory>
 #include <type_traits>
 
+#include "globals.h"
 #include "masters.h"
 #include "mywm-structs.h"
 #include "windows.h"
@@ -88,11 +89,29 @@ static inline bool shouldPassThrough(PassThrough passThrough, int result) {
             return !result;
     }
 }
+/**
+ * Arguments used to pass into boundFunction
+ */
 struct BoundFunctionArg {
+    /// @{ Fields that can be passed to a compitable BoundFunction
+    /// If the underlying function can't accept a subset of fields, it won't be called and 0 will be returned
+    /// NULL means unset but 0 is a valid value of integer
     WindowInfo* winInfo = NULL;
     Master* master = getActiveMaster();
     Workspace* workspace = NULL;
     Monitor* monitor = NULL;
+    uint32_t integer = winInfo ? winInfo->getID() : workspace ? workspace->getID() : 0;
+    std::string* string = NULL;
+    /// @}
+};
+
+/**
+ * Type of BoundFunction
+ */
+enum BoundFunctionType {
+    VOID_TYPE = 0,
+    STRING_TYPE = 1,
+    OTHER_TYPE = 2
 };
 
 /**
@@ -102,27 +121,48 @@ struct GenericFunctionWrapper {
     /// @{
     /// Used to distinguished different types of supported functions
     template<typename V>
-    using EnableIfWinInfo = typename std::enable_if_t<std::is_same<V, WindowInfo*>::value, int>;
+    using enable_if_winInfo = typename std::enable_if_t<std::is_same<V, WindowInfo*>::value, int>;
     template<typename V>
-    using EnableIfWin = typename std::enable_if_t<std::is_convertible<V, WindowID>::value, int>;
+    using enable_if_win = typename std::enable_if_t<std::is_convertible<V, WindowID>::value, int>;
     template<typename V>
-    using EnableIfMaster = typename std::enable_if_t<std::is_same<V, Master*>::value, int>;
+    using enable_if_master = typename std::enable_if_t<std::is_same<V, Master*>::value, int>;
     template<typename V>
-    using EnableIfWorkspace = typename std::enable_if_t<std::is_same<V, Workspace*>::value, int>;
+    using enable_if_workspace = typename std::enable_if_t<std::is_same<V, Workspace*>::value, int>;
     template<typename V>
-    using EnableIfMonitor = typename std::enable_if_t<std::is_same<V, Monitor*>::value, int>;
+    using enable_if_monitor = typename std::enable_if_t<std::is_same<V, Monitor*>::value, int>;
+    template<typename V>
+    using enable_if_integer = typename std::enable_if_t<std::is_convertible<V, int>::value, int>;
+    template<typename V>
+    using enable_if_string = typename std::enable_if_t<std::is_same<V, std::string*>::value, int>;
     /// @}
 
+    /// describes the argument this function can process
+    const BoundFunctionType type;
+
+    /**
+     * @param type describes the argument this function can process
+     */
+    GenericFunctionWrapper(BoundFunctionType type = VOID_TYPE): type(type) {};
     /**
      * Calls the stored function
      *
-     * @param winInfo the windowInfo to operate on or NULL
-     * @param master the master to operate on or NULL
-     *
+     * @param arg
      * @return the result of the function
      */
     virtual int call(const BoundFunctionArg& arg)const = 0;
 };
+#define _RETURN_VALUE_ALWAYS(X) return func(arg.X)
+#define _RETURN_VALUE(X)  return arg.X ? func(arg.X) : 0
+#define _RETURN_IF_CALLED(X) \
+        if((bool)arg.X) func(arg.X); \
+        return arg.X ? 1 : 0;
+#define _RETURN_TRUE(X) func(arg.X); return 1;
+
+#define _BFCALL(X, EXPR) \
+    template<typename V = P> \
+    _CAT(enable_if_, X)<V> _call(const BoundFunctionArg& arg) const { \
+        EXPR(X) ;\
+    }
 
 /**
  * Wrapper for a function that takes a single parameter and returns void
@@ -131,7 +171,7 @@ struct GenericFunctionWrapper {
  * @tparam R
  * @tparam P
  */
-template <typename R, typename P>
+template <typename R, typename P = void>
 struct FunctionWrapper: GenericFunctionWrapper {
     static_assert(std::is_convertible<R, int>::value);
     static_assert(std::is_convertible<P, int>::value || std::is_base_of<WMStruct, std::remove_pointer_t<P>>::value);
@@ -140,7 +180,14 @@ struct FunctionWrapper: GenericFunctionWrapper {
     /**
      * @param func the function to call
      */
-    FunctionWrapper(std::function<R(P)>func): func(func) {}
+    FunctionWrapper(std::function<R(P)>func): GenericFunctionWrapper(std::is_same<P, std::string*>::value ? STRING_TYPE :
+            OTHER_TYPE), func(func) {}
+
+    /**
+     * Needed to compile and support void arguments
+     * @param func
+     */
+    FunctionWrapper(std::function<R()> func): func(func) {}
     /**
      * @param func the function to call
      */
@@ -150,26 +197,12 @@ struct FunctionWrapper: GenericFunctionWrapper {
         return _call(arg);
     }
 
-    template<typename V = P>
-    EnableIfWinInfo<V> _call(const BoundFunctionArg& arg) const {
-        return arg.winInfo ? func(arg.winInfo) : 0;
-    }
-    template<typename V = P>
-    EnableIfWin<V> _call(const BoundFunctionArg& arg) const {
-        return arg.winInfo ? func(arg.winInfo->getID()) : 0;
-    }
-    template<typename V = P>
-    EnableIfMaster<V> _call(const BoundFunctionArg& arg) const {
-        return arg.master ? func(arg.master) : 0;
-    }
-    template<typename V = P>
-    EnableIfWorkspace<V> _call(const BoundFunctionArg& arg) const {
-        return arg.workspace ? func(arg.workspace) : 0;
-    }
-    template<typename V = P>
-    EnableIfMonitor <V> _call(const BoundFunctionArg& arg) const {
-        return arg.monitor ? func(arg.monitor) : 0;
-    }
+    _BFCALL(winInfo, _RETURN_VALUE);
+    _BFCALL(master, _RETURN_VALUE);
+    _BFCALL(monitor, _RETURN_VALUE);
+    _BFCALL(workspace, _RETURN_VALUE);
+    _BFCALL(integer, _RETURN_VALUE_ALWAYS);
+    _BFCALL(string, _RETURN_VALUE);
 };
 /**
  * Wrapper for a function that takes a single parameter and returns void
@@ -183,40 +216,19 @@ struct FunctionWrapper<void, P>: GenericFunctionWrapper {
     /**
      * @param func
      */
-    FunctionWrapper(std::function<void(P)>func): func(func) {}
+    FunctionWrapper(std::function<void(P)>func): GenericFunctionWrapper(std::is_same<P, std::string*>::value ? STRING_TYPE :
+            OTHER_TYPE), func(func) {}
+
     int call(const BoundFunctionArg& arg)const override {
         return _call(arg);
     }
-    template<typename V = P>
-    EnableIfWinInfo<V> _call(const BoundFunctionArg& arg) const {
-        if(arg.winInfo)
-            func(arg.winInfo);
-        return arg.winInfo ? 1 : 0;
-    }
-    template<typename V = P>
-    EnableIfWin<V> _call(const BoundFunctionArg& arg) const {
-        if(arg.winInfo)
-            func(arg.winInfo->getID());
-        return arg.winInfo ? 1 : 0;
-    }
-    template<typename V = P>
-    EnableIfMaster<V> _call(const BoundFunctionArg& arg) const {
-        if(arg.master)
-            func(arg.master);
-        return arg.master ? 1 : 0;
-    }
-    template<typename V = P>
-    EnableIfWorkspace<V> _call(const BoundFunctionArg& arg) const {
-        if(arg.workspace)
-            func(arg.workspace);
-        return arg.workspace ? 1 : 0;
-    }
-    template<typename V = P>
-    EnableIfMonitor <V> _call(const BoundFunctionArg& arg) const {
-        if(arg.monitor)
-            func(arg.monitor);
-        return arg.monitor ? 1 : 0;
-    }
+
+    _BFCALL(winInfo, _RETURN_IF_CALLED);
+    _BFCALL(master, _RETURN_IF_CALLED);
+    _BFCALL(monitor, _RETURN_IF_CALLED);
+    _BFCALL(workspace, _RETURN_IF_CALLED);
+    _BFCALL(integer, _RETURN_TRUE);
+    _BFCALL(string, _RETURN_IF_CALLED);
 };
 /**
  * Wrapper for a function that takes no parameters and returns an int (or something that can be converted to an int)
@@ -251,7 +263,6 @@ struct FunctionWrapper<void, void>: GenericFunctionWrapper {
     }
 };
 
-
 /**
  * A function wrapper
  *
@@ -285,34 +296,18 @@ struct BoundFunction {
      */
     BoundFunction(PassThrough passThrough = PASSTHROUGH_IF_TRUE): passThrough(passThrough) {}
 
-    /// @{
     /**
      *
-     * @tparam R the return parameter or void
-     * @tparam P the single argument or void
+     * @tparam F function
      * @param _func the function to call that is of type R(P)
      * @param name
      * @param passThrough
      */
-    template <typename R, typename P>
-    BoundFunction(R(*_func)(P), std::string name = "",
-        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper(_func)), passThrough(passThrough),
-        name(name) {}
-    template <typename R>
-    BoundFunction(R(*_func)(), std::string name = "",
-        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper<R, void>(std::function<R()>(_func))),
+    template <typename F>
+    BoundFunction(F _func, std::string name = "",
+        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper(std::function(_func))),
         passThrough(passThrough),
         name(name) {}
-    template <typename P>
-    BoundFunction(void(*_func)(P), std::string name = "",
-        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper<void, P>(std::function<void(P)>(_func))),
-        passThrough(passThrough),
-        name(name) {}
-    BoundFunction(void(*_func)(), std::string name = "",
-        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper<void, void>(_func)), passThrough(passThrough),
-        name(name) {}
-    /// @}
-
 
 
     /// @{
@@ -334,41 +329,43 @@ struct BoundFunction {
     template <typename R>
     BoundFunction(R(*_func)(std::string), const char* value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): BoundFunction(_func, std::string(value), name, passThrough) {}
-    template <typename P>
-    BoundFunction(void(*_func)(P), P value, std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, void>(std::function<void()>([ = ]() {_func(value);}))),
-    passThrough(passThrough), name(name) { }
     /// @}
 
-    /// @{
     /**
      *
      * Note that value is copy constructed
      *
-     * @tparam R
      * @tparam P1
      * @tparam P2
+     * @tparam R
      * @param _func function of type R(P1, P2)
      * @param value
      * @param name
      * @param passThrough
      */
-    template <typename R, typename P1, typename P2>
+    template <typename P1, typename P2, typename R = void>
     BoundFunction(R(*_func)(P1, P2), P2 value, std::string name = "",
         PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, P1>(std::function<R(P1)>([ = ](
                             P1 p) {return _func(p, value);}))), passThrough(passThrough), name(name) { }
-    template <typename P1, typename P2>
-    BoundFunction(void(*_func)(P1, P2), P2 value, std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<void, P1>(std::function<void(P1)>([ = ](
-                            P1 p) {_func(p, value);}))), passThrough(passThrough), name(name) { }
-    /// @}
 
+
+    /**
+     * @return the type of of the underlying function
+     */
+    BoundFunctionType getType() const {return func->type;};
+    /**
+     * @return does this function take a string (0) or an int (1) on match
+     */
+    bool isNumeric() const {return func->type == OTHER_TYPE;};
+
+    /**
+     * @return 1 iff this function takes no args
+     */
+    bool isVoid() const {return func->type == VOID_TYPE;};
     /**
      * Calls the underling function and returns whether the caller should proceed or abort
      *
-     * @param w
-     * @param m
-     *
+     * @param arg
      * @return 1 iff the caller should proceed
      */
     bool execute(const BoundFunctionArg& arg)const;
@@ -377,8 +374,7 @@ struct BoundFunction {
      *
      * For functions that return void, 1 is returned
      *
-     * @param winInfo
-     * @param master
+     * @param arg
      *
      * @return
      */
@@ -386,9 +382,6 @@ struct BoundFunction {
     /// @copydoc call
     int operator()(const BoundFunctionArg& arg)const {
         return execute(arg);
-    }
-    int operator()(WindowInfo* winInfo, Master* master = NULL)const {
-        return (*this)({winInfo = winInfo, .master = master});
     }
     /**
      * @param boundFunction
@@ -454,15 +447,25 @@ void applyBatchEventRules(void);
  * @return
  */
 int getNumberOfEventsTriggerSinceLastIdle(int type);
+
+/**
+ *
+ * Apply the list of rules designated by the type
+ *
+ * @param type
+ * @param arg
+ *
+ * @return the result
+ */
+int applyEventRules(int type, const BoundFunctionArg& arg = {});
 /**
  * Apply the list of rules designated by the type
  *
  * @param type
  * @param winInfo
- * @param m
+ * @param master
  * @return the result
  */
-int applyEventRules(int type, const BoundFunctionArg& arg = {});
 static inline int applyEventRules(int type, WindowInfo* winInfo, Master* master = getActiveMaster()) {
     return applyEventRules(type, {.winInfo = winInfo, .master = master});
 }

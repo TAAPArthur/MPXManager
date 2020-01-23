@@ -84,7 +84,7 @@ WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& 
     ArrayList<WindowID>* ignoreList, bool includeNonActivatable) {
     for(WindowInfo* winInfo : searchList)
         if((!ignoreList || !ignoreList->find(winInfo->getID())) && (includeNonActivatable || winInfo->isActivatable()) &&
-            rule(winInfo))
+            rule({.winInfo = winInfo}))
             return winInfo;
     return NULL;
 }
@@ -92,7 +92,7 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, FindAnd
     ArrayList<WindowID>* windowsToIgnore = arg.cache ? getWindowCache(master) : NULL;
     if(windowsToIgnore)
         if(arg.cache && windowsToIgnore && master->getFocusedWindow())
-            if(!rule(master->getFocusedWindow())) {
+            if(!rule({.winInfo = master->getFocusedWindow()})) {
                 LOG(LOG_LEVEL_DEBUG, "clearing window cache\n");
                 windowsToIgnore->clear();
             }
@@ -119,7 +119,7 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, FindAnd
     }
     else LOG(LOG_LEVEL_DEBUG, "found window locally\n");
     if(target) {
-        assert(rule(target));
+        assert(rule({.winInfo = target}));
         logger.debug() << "Applying action " << action << " to " << *target << std::endl;
         applyAction(target, action);
         if(windowsToIgnore)

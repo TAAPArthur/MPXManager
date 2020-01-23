@@ -11,6 +11,11 @@ MPX_TEST("print", {
     suppressOutput();
     std::cout << b;
 });
+MPX_TEST("print", {
+    BoundFunction b = {};
+    suppressOutput();
+    std::cout << b;
+});
 MPX_TEST("boundFunction_eq", {
     std::string name = "name";
     BoundFunction* b = new BoundFunction(incrementCount, name);
@@ -40,23 +45,27 @@ MPX_TEST("test_call_bounded_function", {
     static auto* targetWorkspace = getWorkspace(1);
     static auto* targetMonitor = getAllMonitors()[1];
     static auto* targetMaster = getAllMasters()[1];
+    static uint32_t integer = 2;
+    static std::string str = "string";
     BoundFunction b[] = {
-        {+[](WindowInfo * winInfo) {incrementCount(); assertEquals(fakeWinInfo, winInfo); return 1;}},
+        {[](WindowInfo * winInfo) {incrementCount(); assertEquals(fakeWinInfo, winInfo); return 1;}},
         incrementCount,
-        {+[](WindowInfo * winInfo)->bool{incrementCount(); assertEquals(fakeWinInfo, winInfo); return 1;}},
-        {+[](Master * master)->bool{incrementCount(); assertEquals(targetMaster, master); return 1;}},
-        {+[](Workspace * w)->bool{incrementCount(); assertEquals(targetWorkspace, w); return 1;}},
-        {+[](Monitor * m)->bool{incrementCount(); assertEquals(targetMonitor, m); return 1;}},
-        {+[]()->int{incrementCount(); return 1;}},
-        {+[](uint32_t i) {incrementCount(); assertEquals(fakeWinInfo->getID(), i);}},
-        {+[](uint32_t i)->int{incrementCount(); assertEquals(fakeWinInfo->getID(), i); return i;}},
-        {+[](WindowInfo * winInfo) { incrementCount(); assertEquals(fakeWinInfo, winInfo);}},
+        []{incrementCount();},
+        {[](WindowInfo * winInfo)->bool{incrementCount(); assertEquals(fakeWinInfo, winInfo); return 1;}},
+        {[](Master * master)->bool{incrementCount(); assertEquals(targetMaster, master); return 1;}},
+        {[](Workspace * w)->bool{incrementCount(); assertEquals(targetWorkspace, w); return 1;}},
+        {[](Monitor * m)->bool{incrementCount(); assertEquals(targetMonitor, m); return 1;}},
+        {[]()->int{incrementCount(); return 1;}},
+        {[](std::string * s) {incrementCount(); assertEquals(&str, s);}},
+        {[](uint32_t i) {incrementCount(); assertEquals(integer, i);}},
+        {[](uint32_t i)->int{incrementCount(); assertEquals(integer, i); return i;}},
+        {[](WindowInfo * winInfo) { incrementCount(); assertEquals(fakeWinInfo, winInfo);}},
         {+[](int i) {incrementCount(); assertEquals(i, 123);}, 123},
         {+[](int i)->int{incrementCount(); assertEquals(i, 123); return 1;}, 123},
         {+[](std::string s)->void{incrementCount(); assertEquals(s, "123");}, "123"},
         {+[](std::string s)->int{incrementCount(); assertEquals(s, "123"); return 1;}, "123"},
     };
-    BoundFunctionArg arg = {.winInfo = fakeWinInfo, .master = targetMaster, .workspace = targetWorkspace, .monitor = targetMonitor};
+    BoundFunctionArg arg = {.winInfo = fakeWinInfo, .master = targetMaster, .workspace = targetWorkspace, .monitor = targetMonitor, .integer = integer, .string = &str};
     for(int i = 0; i < LEN(b);) {
         getEventRules(0).add(b[i]);
         b[i].execute(arg);
@@ -74,8 +83,6 @@ MPX_TEST("test_call_bounded_function_null_window", {
     BoundFunction funcs[] = {
         {+[](WindowInfo * winInfo) {assert(winInfo); quit(1);}},
         {+[](WindowInfo * winInfo)->bool{assert(winInfo); quit(1); return 0;}},
-        {+[](uint32_t i) {assert(i); quit(1);}},
-        {+[](uint32_t i)->int{quit(1); return i;}},
         {+[](WindowInfo * winInfo) {assert(winInfo); quit(1);}},
         {+[](Master * m) {assert(m); quit(1);}},
         {+[](Workspace * w) {assert(w); quit(1);}},
