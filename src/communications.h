@@ -139,6 +139,7 @@ enum OptionFlags {
     FORK_ON_RECEIVE = 1,
     /// Send confirmation before command is run
     CONFIRM_EARLY = 4,
+    QUIT_AFTER = 8,
 };
 /// Holds info to map string to a given operation
 struct Option {
@@ -203,6 +204,7 @@ struct Option {
     }
 };
 
+void addStartupMode(std::string name, void(*func)(), uint32_t flags = QUIT_AFTER);
 
 /**
  * Finds a option by name that can accept value

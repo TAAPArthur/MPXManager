@@ -44,6 +44,8 @@ bool Option::matches(std::string str, bool empty, bool isNumeric) const {
 void Option::operator()(std::string value)const {
     LOG(LOG_LEVEL_DEBUG, "calling option %s(%s)\n", name.c_str(), value.c_str());
     func->call(value);
+    if(flags & QUIT_AFTER)
+        quit(0);
 }
 #define _OPTION(VAR) Option(std::string(#VAR),&VAR)
 

@@ -6,6 +6,7 @@
 #include "../device-grab.h"
 #include "../devices.h"
 #include "../ext.h"
+#include "../communications.h"
 #include "../globals.h"
 #include "../logger.h"
 #include "../masters.h"
@@ -14,8 +15,6 @@
 #include "../time.h"
 #include "../xsession.h"
 #include "xmousecontrol.h"
-
-#if XMOUSE_CONTROL_EXT_ENABLED
 
 unsigned int XMOUSE_CONTROL_UPDATER_INTERVAL = 30;
 
@@ -169,4 +168,7 @@ void addDefaultXMouseControlBindings(uint32_t mask) {
     for(Binding& b : bindings)
         getDeviceBindings().add(b);
 }
-#endif
+
+__attribute__((constructor)) static void registerModes() {
+    addStartupMode("xmousecontrol", addStartXMouseControlRule);
+}

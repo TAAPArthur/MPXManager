@@ -10,9 +10,8 @@
 #include "../test-functions.h"
 #include "../time.h"
 #include "../xsession.h"
+#include "../communications.h"
 #include "mpx.h"
-
-#if MPX_EXT_ENABLED
 
 /**
  * Holds info to match a master devices with a set of slaves
@@ -229,4 +228,10 @@ int loadMPXMasterInfo(void) {
     fclose(fp);
     return 1;
 }
-#endif
+
+__attribute__((constructor)) static void registerModes() {
+    addStartupMode("mpx-start", startMPX);
+    addStartupMode("mpx-stop", stopMPX);
+    addStartupMode("mpx-restart", restartMPX);
+    addStartupMode("mpx-restore", restoreMPX);
+}

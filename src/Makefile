@@ -18,7 +18,20 @@ LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp boundfunction.cpp rect.cpp slave
 LAYER2_SRCS := xsession.cpp bindings.cpp devices.cpp test-functions.cpp device-grab.cpp
 LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.cpp wm-rules.cpp extra-rules.cpp
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp
-LAYER5_SRCS := $(wildcard Extensions/*.cpp)
+
+#ifndef NO_MPX
+LAYER5_SRCS += Extensions/mpx.cpp
+#endif
+#ifndef NO_WINDOW_CLONE
+LAYER5_SRCS += Extensions/window-clone.cpp
+#endif
+#ifndef NO_XMOUSE_CONTROL
+LAYER5_SRCS += Extensions/xmousecontrol.cpp
+#endif
+#ifndef NO_SESSION
+LAYER5_SRCS += Extensions/session.cpp
+#endif
+
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
 BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
