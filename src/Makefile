@@ -1,17 +1,17 @@
 CC := g++ -std=gnu++17 -lstdc++
 CXX := ${CC}
 SHELL := /bin/bash
-DEBUGGING_FLAGS := -g -rdynamic -O0
+DEBUGGING_FLAGS := -g -rdynamic -O0 -D_GLIBCXX_DEBUG
 RELEASE_FLAGS := -g -rdynamic -O3
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
+IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
 ERROR_FLAGS := -Werror -Wall -Wextra
 CPPFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
-TESTFLAGS := ${CPPFLAGS} -Wno-sign-compare ${DEBUGGING_FLAGS} --coverage -D_GLIBCXX_DEBUG
-NON_X_LDFLAGS := -lm -lpthread
-LDFLAGS :=  ${NON_X_LDFLAGS} -lm -lpthread -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
+TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage
+NON_X_LDFLAGS := -lm -pthread
+LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
 LAYER0_SRCS := globals.cpp logger.cpp debug.cpp
 LAYER1_SRCS := arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp system.cpp
@@ -25,21 +25,30 @@ BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
 SRCS := ${BASE_SRCS} config.cpp
 
 PRELOAD := $$(pwd)/libmpx-test.so
-CHECK_TEST_COVERAGE = (gcov -mr $(2) $(1) 2> /dev/null  | grep -v '100' |grep -B 1 "Lines e" |grep -A1 $(1) && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#" && echo "$$((100 - $$(grep -c '\#\#\#\#' $$(basename -a $(1)).gcov)*100/$$(wc -l $$(basename -a $(1)).gcov | cut -d' ' -f1)))%")
+CHECK_TEST_COVERAGE = (gcov -mr $(2) $(1) 2> /dev/null  | grep -v '100.00%' |grep -B 1 "Lines e" |grep -A1 $(1) && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#" && echo "$$((100 - $$(grep -c '\#\#\#\#' $$(basename -a $(1)).gcov)*100/$$(wc -l $$(basename -a $(1)).gcov | cut -d' ' -f1)))%")
 
-RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 0 -a $(if $(QUICK) , valgrind -q  --error-exitcode=123 $(1) 20,$(1))
+MEM_CHECK = valgrind -q  --error-exitcode=123
+RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 0 -a $(if $(QUICK),  $(MEM_CHECK) $(1) 20,$(1))
 
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
 	CPPFLAGS += -DNO_XRANDR=1
 endif
 
+ifeq ($(QUICK),1)
+	MEM_CHECK = valgrind -q  --error-exitcode=123
+else ifeq ($(QUICK),2)
+	MEM_CHECK = valgrind -q --leak-check=full --errors-for-leak-kinds=definite --show-leak-kinds=definite --error-exitcode=123
+endif
+
 ifeq ($(DEBUG),1)
-  CPPFLAGS += ${DEBUGGING_FLAGS} -DDEBUG
+  CPPFLAGS += ${DEBUGGING_FLAGS}
 else ifeq ($(DEBUG),2)
   CPPFLAGS += ${DEBUGGING_FLAGS} -DNDEBUG
 else ifeq ($(DEBUG),3)
-  CPPFLAGS += ${RELEASE_FLAGS}
+  CPPFLAGS += ${RELEASE_FLAGS} -O2
+else ifeq ($(DEBUG),4)
+  CPPFLAGS += ${TESTFLAGS}
 else
   CPPFLAGS += ${RELEASE_FLAGS} -DNDEBUG
 endif
@@ -169,10 +178,12 @@ doc-check:
 	+$(MAKE) -j1 -C .. $@
 
 
-.PHONY: test all clean doc format format-all install package
+.PHONY: test all clean-test clean doc format format-all install package
 
 .DELETE_ON_ERROR:
 
+clean-test:
+	find . \( -name "*.out" \) -exec rm -f {} \;
 clean:
 	rm -f unitTest vgcore* *gc?? mpxmanager libmpxmanager*.a libmpxmanager*.so mpxmanager-autocomplete.sh mpxmanager.sh
 	find . \( -name "*.orig" -o -name "*.gc??" -o -name "*.out" -o -name "*.o" \) -exec rm -f {} \;
