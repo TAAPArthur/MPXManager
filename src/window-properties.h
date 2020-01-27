@@ -82,18 +82,6 @@ std::string getWindowTitle(WindowID win);
 bool loadWindowType(WindowInfo* winInfo) ;
 
 /**
- * Loads and returns info for an X11 property
- *
- * Wraps xcb_get_property and related methods
- *
- * @param win the window the property is stored on
- * @param atom the atom we want
- * @param type the type of atom (ie XCB_ATOM_STRING)
- *
- * @return xcb_get_property_reply_t or NULL
- */
-std::shared_ptr<xcb_get_property_reply_t> loadPropertyFromAtom(WindowID win, xcb_atom_t atom, xcb_atom_t type);
-/**
  * Load various window properties
  * This should be called when a window is requested to be mapped
  * @param winInfo

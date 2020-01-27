@@ -18,13 +18,11 @@
 
 
 static void loadSavedLayouts() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
+    auto reply = getWindowProperty(root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING);
     LOG(LOG_LEVEL_TRACE, "Loading active layouts\n");
-    cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, 0, UINT_MAX);
-    if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
-        uint32_t len = xcb_get_property_value_length(reply);
-        char* strings = (char*) xcb_get_property_value(reply);
+    if(reply) {
+        uint32_t len = xcb_get_property_value_length(reply.get());
+        char* strings = (char*) xcb_get_property_value(reply.get());
         uint32_t index = 0, count = 0;
         while(index < len) {
             Layout* layout = findLayoutByName(std::string(&strings[index]));
@@ -34,26 +32,20 @@ static void loadSavedLayouts() {
                 break;
         }
     }
-    free(reply);
 }
 static void loadSavedLayoutOffsets() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
     LOG(LOG_LEVEL_TRACE, "Loading Workspace layout offsets\n");
-    cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, 0, UINT_MAX);
-    if((reply = xcb_get_property_reply(dis, cookie, NULL)))
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++)
-            getWorkspace(i)->setLayoutOffset(((int*)xcb_get_property_value(reply))[i]);
-    free(reply);
+    auto reply = getWindowProperty(root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL);
+    if(reply)
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int) && i < getNumberOfWorkspaces(); i++)
+            getWorkspace(i)->setLayoutOffset(((int*)xcb_get_property_value(reply.get()))[i]);
 }
 static void loadSavedFakeMonitor() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
     LOG(LOG_LEVEL_TRACE, "Loading fake monitor mappings\n");
-    cookie = xcb_get_property(dis, 0, root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
-    if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / (sizeof(short) * 5) ; i++) {
-            short* values = (short*) & (((char*)xcb_get_property_value(reply))[i * sizeof(short) * 5]);
+    auto reply = getWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
+    if(reply)
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(short) * 5) ; i++) {
+            short* values = (short*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(short) * 5]);
             MonitorID id = values[0];
             values++;
             Monitor* m = getAllMonitors().find(id);
@@ -62,17 +54,13 @@ static void loadSavedFakeMonitor() {
             else
                 getAllMonitors().add(new Monitor(id, values, 0, "", 1));
         }
-        free(reply);
-    }
 }
 static void loadSavedMonitorWorkspaceMapping() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
     LOG(LOG_LEVEL_TRACE, "Loading Workspace monitor mappings\n");
-    cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
-    if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
-            MonitorID id = ((MonitorID*)xcb_get_property_value(reply))[i];
+    auto reply = getWindowProperty(root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL);
+    if(reply) {
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
+            MonitorID id = ((MonitorID*)xcb_get_property_value(reply.get()))[i];
             if(!id)
                 continue;
             Monitor* m = getAllMonitors().find(id);
@@ -86,18 +74,15 @@ static void loadSavedMonitorWorkspaceMapping() {
             else
                 logger.info() << "Could not find monitor " << id << std::endl;
         }
-        free(reply);
     }
 }
 static void loadSavedWorkspaceWindows() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
     LOG(LOG_LEVEL_TRACE, "Loading Workspace window stacks\n");
-    cookie = xcb_get_property(dis, 0, root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
-    if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
+    auto reply = getWindowProperty(root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL);
+    if(reply) {
         WorkspaceID index = 0;
-        WindowID* wid = (WindowID*) xcb_get_property_value(reply);
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
+        WindowID* wid = (WindowID*) xcb_get_property_value(reply.get());
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int); i++)
             if(wid[i] == 0) {
                 index++;
                 if(index == getNumberOfWorkspaces())
@@ -108,35 +93,27 @@ static void loadSavedWorkspaceWindows() {
                     getWindowInfo(wid[i])->moveToWorkspace(index);
                 assert(getWorkspace(index)->getWindowStack().back()->getID() == wid[i]);
             }
-        free(reply);
     }
 }
 static void loadSavedMasterWindows() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
     LOG(LOG_LEVEL_TRACE, "Loading Master window stacks\n");
-    cookie = xcb_get_property(dis, 0, root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, 0, UINT_MAX);
-    if((reply = xcb_get_property_reply(dis, cookie, NULL))) {
+    auto reply = getWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL);
+    if(reply) {
         Master* master = NULL;
-        WindowID* wid = (WindowID*)xcb_get_property_value(reply);
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++)
+        WindowID* wid = (WindowID*)xcb_get_property_value(reply.get());
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int); i++)
             if(wid[i] == 0) {
                 master = getMasterByID(wid[++i]);
             }
             else if(master)
                 master->onWindowFocus(wid[i]);
-        free(reply);
     }
 }
 static void loadSavedActiveMaster() {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
     LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
-    cookie = xcb_get_property(dis, 0, root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, 0, sizeof(MasterID));
-    if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply)) {
-        setActiveMasterByDeviceID(*(MasterID*)xcb_get_property_value(reply));
-        free(reply);
-    }
+    auto reply = getWindowProperty(root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
+    if(reply)
+        setActiveMasterByDeviceID(*(MasterID*)xcb_get_property_value(reply.get()));
 }
 
 void loadCustomState(void) {
@@ -186,17 +163,13 @@ void saveCustomState(void) {
         Layout* layout = getWorkspace(i)->getActiveLayout();
         joiner.add(layout ? layout->getName() : "");
     }
-    xcb_atom_t REPLACE = XCB_PROP_MODE_REPLACE;
-    xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, 8, joiner.getSize(),
-        joiner.getBuffer());
-    xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, 32,  LEN(layoutOffsets),
-        layoutOffsets);
-    xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, 32, numWindows, windows);
-    xcb_change_property(dis, REPLACE, root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, 32, LEN(monitors), monitors);
-    xcb_change_property(dis, REPLACE, root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, 16, numFakeMonitors, fakeMonitors);
-    xcb_change_property(dis, REPLACE, root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, 32, numMasterWindows, masterWindows);
-    MasterID masterID = getActiveMaster()->getID();
-    xcb_change_property(dis, REPLACE, root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, 32, 1, &masterID);
+    setWindowProperty(root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
+    setWindowProperty(root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
+    setWindowProperty(root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, windows, numWindows);
+    setWindowProperty(root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, monitors, LEN(monitors));
+    setWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
+    setWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
+    setWindowProperty(root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
     flush();
 }
 void addResumeCustomStateRules(AddFlag flag) {

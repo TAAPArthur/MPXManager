@@ -50,7 +50,7 @@ uint32_t getMaxNumberOfDevices(bool force) {
         if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply))
             maxNumDevices = *(int*)xcb_get_property_value(reply);
         else
-            xcb_change_property(dis, XCB_PROP_MODE_REPLACE, root, MAX_DEVICES, XCB_ATOM_INTEGER, 32, 1, &maxNumDevices);
+            setWindowProperty(root, MAX_DEVICES, XCB_ATOM_INTEGER, maxNumDevices);
         if(reply)
             free(reply);
     }
@@ -131,6 +131,26 @@ std::string getAtomName(xcb_atom_t atom) {
         free(valueReply);
     }
     return str;
+}
+
+std::shared_ptr<xcb_get_property_reply_t> getWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type) {
+    xcb_get_property_reply_t* reply;
+    std::shared_ptr<xcb_get_property_reply_t> result = NULL;
+    xcb_get_property_cookie_t cookie = xcb_get_property(dis, 0, win, atom, type, 0, -1);
+    if((reply = xcb_get_property_reply(dis, cookie, NULL)))
+        if(xcb_get_property_value_length(reply))
+            result = std::shared_ptr<xcb_get_property_reply_t>(reply, free);
+        else free(reply);
+    return result;
+}
+int getWindowPropertyValue(WindowID win, xcb_atom_t atom, xcb_atom_t type) {
+    auto reply = getWindowProperty(win, atom, type);
+    return reply ? *(int*)xcb_get_property_value(reply.get()) : 0;
+}
+
+std::string getWindowPropertyValueString(WindowID win, xcb_atom_t atom, xcb_atom_t type) {
+    auto reply = getWindowProperty(win, atom, type);
+    return reply ? std::string((char*)xcb_get_property_value(reply.get())) : "";
 }
 
 WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, uint32_t* valueList,
