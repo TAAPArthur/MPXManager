@@ -41,6 +41,11 @@ extern xcb_atom_t WM_HINTS;
  * Atoms with the flag are used to remotely interact with the WM
  */
 extern xcb_atom_t WM_INTERPROCESS_COM;
+/**
+ * Atom used to communicate the return value of the command executed through
+ * WM_INTERPROCESS_COM
+ */
+extern xcb_atom_t WM_INTERPROCESS_COM_STATUS;
 
 /// Atom to store an array of each window for every master so the state can be restored
 /// There is a '0' to separate each master's window stack and each stack is preceded with the master id

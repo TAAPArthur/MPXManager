@@ -8,6 +8,24 @@
 #include "test-event-helper.h"
 #include "test-x-helper.h"
 
+MPX_TEST("find_option", {
+    assert(findOption("poll-count", "1"));
+});
+MPX_TEST("call_option_string", {
+    std::string fakeShell = "test";
+    findOption("shell", fakeShell)->call(fakeShell);
+    assertEquals(SHELL, fakeShell);
+});
+MPX_TEST("call_option_int", {
+    POLL_COUNT = 10;
+    findOption("poll-count", "1")->call("1");
+    assertEquals(POLL_COUNT, 1);
+});
+static void checkAndSend(std::string name, std::string value) {
+    assert(findOption(name, value));
+    send(name, value);
+    flush();
+}
 static void setup() {
     enableInterClientCommunication();
     onSimpleStartup();
@@ -15,16 +33,29 @@ static void setup() {
     atexit(fullCleanup);
 }
 SET_ENV(setup, fullCleanup);
+
 MPX_TEST("test_send_receive_self", {
     POLL_COUNT = 10;
-    send("POLL_COUNT", "0");
-    flush();
+    checkAndSend("poll-count", "0");
     assert(hasOutStandingMessages());
     startWM();
     waitUntilIdle();
-    assert(POLL_COUNT == 0);
+    assertEquals(POLL_COUNT, 0);
     assert(!hasOutStandingMessages());
+    assertEquals(getLastMessageExitCode(), 1);
 });
+MPX_TEST("test_send_receive_failed_exit_code", {
+    std::string name = "name";
+    const int returnValue = 1;
+    getOptions().add({name, +[]{return returnValue ;}});
+    checkAndSend(name, "");
+    assert(hasOutStandingMessages());
+    startWM();
+    waitUntilIdle();
+    assert(!hasOutStandingMessages());
+    assertEquals(returnValue, getLastMessageExitCode());
+});
+
 MPX_TEST("touch_fork_options", {
     CRASH_ON_ERRORS = 0;
     suppressOutput();
@@ -44,11 +75,11 @@ MPX_TEST("test_send_receive", {
         RUN_AS_WM = 0;
         saveXSession();
         setup();
-        send("POLL_COUNT", "2");
-        send("STEAL_WM_SELECTION", "1");
-        send("KILL_TIMEOUT", "1000");
-        send("SHELL", "shell");
-        send("CRASH_ON_ERRORS", "0");
+        checkAndSend("poll-count", "2");
+        checkAndSend("steal-wm-selection", "1");
+        checkAndSend("kill-timeout", "1000");
+        checkAndSend("shell", "shell");
+        checkAndSend("crash-on-errors", "0");
         WAIT_UNTIL_TRUE(!hasOutStandingMessages());
         send("__bad__option__", "0");
         flush();
@@ -67,17 +98,17 @@ MPX_TEST("test_send_receive", {
 MPX_TEST("test_send_receive_func", {
     suppressOutput();
     POLL_COUNT = 1;
-    send("list-options", "");
-    send("dump", "");
-    send("dump", "0");
-    send("dump", "test");
-    send("load", "0");
-    send("dump-options", "");
-    send("log-level", "10");
+    checkAndSend("list-options", "");
+    checkAndSend("dump", "");
+    checkAndSend("dump", "0");
+    checkAndSend("dump", "test");
+    checkAndSend("load", "0");
+    checkAndSend("dump-options", "");
+    checkAndSend("log-level", "0");
     flush();
     addShutdownOnIdleRule();
     runEventLoop();
-    assert(getLogLevel() == 10);
+    assertEquals(getLogLevel(), 0);
     assert(!hasOutStandingMessages());
 });
 MPX_TEST("test_stale", {

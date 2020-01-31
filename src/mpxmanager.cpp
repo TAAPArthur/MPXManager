@@ -36,118 +36,113 @@ static void clearWMSettings(void) {
     startupMethod = NULL;
     RUN_AS_WM = 0;
 }
-/// whether the send (0) or set(1) was last called
-static bool lastLocal = 0;
-/**
- * Finds the option matching str and either calls in locally or sends it to a running instance
- *
- * @param str
- * @param local
- */
-static void _handleOption(std::string str, bool local) {
-    int index = str.find('=');
-    std::string name = str.substr(0, index);
-    std::string value = index == -1 ? "" : str.substr(index + 1);
-    const Option* option = findOption(name, value);
-    if(option)
-        if(local)
-            option->call(value);
-        else {
-            send(option->name, value);
-        }
-    else {
-        LOG(LOG_LEVEL_ERROR, "cannot find option %s with value '%s'\n", name.c_str(), value.c_str());
-        quit(1);
-    }
-    lastLocal = local;
-}
-/**
- * Calls the option specified by str
- *
- * @param str of the form: name[=value]
- */
-static void setOption(std::string str) {
-    _handleOption(str, 1);
-}
-/**
- * sends str to a running instance
- *
- * @param str of the form: name[=value]
- */
-static void sendOption(std::string str) {
-    if(!dpy) {
-        setLogLevel(LOG_LEVEL_WARN);
-        openXDisplay();
-        clearWMSettings();
-        RUN_EVENT_LOOP = 0;
-    }
-    _handleOption(str, 0);
-}
 
+/// list options that set global variables
+static void listVarOptions() {
+    for(const Option* option : getOptions())
+        if(option->getFlags() & VAR_SETTER)
+            std::cout << "--" << option->getName() << std::endl;
+}
 /// list of startup options
 static UniqueArrayList<Option*> options = {
     {"clear-startup-method", +[]{startupMethod = NULL;}},
     {"enable-inter-client-communication", enableInterClientCommunication},
-    {"list-start-options", +[]() {std::cout >> options; exit(0);}},
+    {"list-start-options", +[]() {std::cout >> options << "\n"; exit(0);}},
+    {"list-options", +[]() {std::cout >> getOptions() << "\n"; exit(0);}},
+    {"list-vars", +[]() {listVarOptions(); exit(0);}},
     {"no-event-loop", +[]() {RUN_EVENT_LOOP = 0;}},
+    {"no-run-as-window-manager", clearWMSettings},
     {"replace", +[]() {STEAL_WM_SELECTION = 1;}},
-    {"send", sendOption},
-    {"set", setOption},
 };
-void addStartupMode(std::string name, void(*func)(), uint32_t flags) {
-    options.add(new Option(name, func, flags));
+
+void addStartupMode(std::string name, void(*func)()) {
+    options.add(new Option(name, func));
 }
 
-
+/**
+ * @param list list of options
+ * @param argv
+ * @param i index of argv; may be modified
+ * @param varsOnly if true will only consider options with the VAR_SETTER flag
+ *
+ * @return true, if an option was found and called
+ */
+static inline bool callStartupOption(const ArrayList<Option*>& list, const char* const* argv, int& i,
+    bool varsOnly = 0) {
+    std::string str = argv[i];
+    for(const Option* option : list) {
+        if(varsOnly && !(option->getFlags() & VAR_SETTER)) {
+            continue;
+        }
+        std::string value = "";
+        bool incrementI = 0;
+        if(str == ("--" + option->name))
+            if(option->getBoundFunction().isVoid())
+                value = "";
+            else if(argv[i] && argv[i + 1]) {
+                value = argv[i + 1];
+                incrementI = 1;
+            }
+            else
+                continue;
+        else if(str.find("--" + option->name + "=") == 0) {
+            int index = str.find('=');
+            value = str.substr(index + 1);
+        }
+        else continue;
+        if(option->matches(value)) {
+            option->call(value);
+            if(incrementI)
+                i++;
+            return 1;
+        }
+    }
+    return 0;
+}
 /**
  * Parse command line arguments starting the 1st index
  * @param argc the number of args to parse
  * @param argv the list of args. An element by be like "-s", "--long", --long=V", etc
- * @param exitOnUnknownOptions if true will exit(1) if encounter an unknown option
  */
-static void parseArgs(int argc, char* const* argv, int exitOnUnknownOptions) {
-    for(int i = 1; i < argc; i++) {
-        bool foundMatch = 0;
-        LOG(LOG_LEVEL_TRACE, "processing %s\n", argv[i]);
-        std::string str = argv[i];
-        for(const Option* option : options) {
-            if(str == ("--" + option->name))
-                if(option->isVoid())
-                    option->call("");
-                else
-                    option->call(argv[++i]);
-            else if(str.find("--" + option->name + "=") == 0) {
-                int index = str.find('=');
-                std::string value = str.substr(index + 1);
-                option->call(value);
+static void parseArgs(int argc, char* const* argv) {
+    assert(argc > 1);
+    if(std::string(argv[1]).find("--") == 0)
+        for(int i = 1; i < argc; i++) {
+            LOG(LOG_LEVEL_TRACE, "processing %s\n", argv[i]);
+            if(!(callStartupOption(options, argv, i) || callStartupOption(getOptions(), argv, i, 1))) {
+                LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.\n", argv[i]);
+                exit(1);
             }
-            else continue;
-            foundMatch = 1;
-            break;
         }
-        if(!foundMatch && exitOnUnknownOptions) {
-            LOG(LOG_LEVEL_DEBUG, "Trying to send/set %s.\n", argv[i]);
-            const char* c = argv[i];
-            if(c[0] == '-' && c[1] == '-')
-                c += 2;
-            if(lastLocal)
-                setOption(c);
-            else
-                sendOption(c);
+    else {
+        int i = 1;
+        LOG(LOG_LEVEL_DEBUG, "Trying to send %s.\n", argv[i]);
+        std::string value(argv[i + 1] ? argv[i + 1] : "");
+        if(!findOption(argv[i], value)) {
+            LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.\n", argv[i]);
+            exit(1);
         }
+        if(!dpy) {
+            openXDisplay();
+            clearWMSettings();
+            RUN_EVENT_LOOP = 0;
+        }
+        send(argv[i], value);
     }
 }
 int _main(int argc, char* const* argv) {
     LOG(LOG_LEVEL_DEBUG, "MPXManager started with %d args\n", argc);
     numPassedArguments = argc;
     passedArguments = argv;
-    startupMethod = loadSettings;
-    parseArgs(argc, argv, 1);
+    if(!startupMethod)
+        startupMethod = loadSettings;
+    if(argc > 1)
+        parseArgs(argc, argv);
     if(!dpy)
         onStartup();
     if(RUN_EVENT_LOOP)
         runEventLoop();
-    else {
+    else if(getNumberOfMessageSent()) {
         if(hasOutStandingMessages()) {
             LOG(LOG_LEVEL_TRACE, "waiting for send receipts\n");
             bool wasMPXManagerRunning = isMPXManagerRunning();
@@ -162,10 +157,11 @@ int _main(int argc, char* const* argv) {
             }
             LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d\n", isMPXManagerRunning(), hasOutStandingMessages());
         }
+        if(dpy)
+            return !getLastMessageExitCode();
     }
     return 0;
 }
-#ifndef MPX_TEST_NO_MAIN
 /**
  * @param argc
  * @param argv[]
@@ -173,7 +169,8 @@ int _main(int argc, char* const* argv) {
  * @return
  */
 int __attribute__((weak)) main(int argc, char* const argv[]) {
-    _main(argc, argv);
-    quit(0);
+    quit(_main(argc, argv));
 }
+#ifndef NDEBUG
+int mainAlias(int argc, char* const argv[]) __attribute__((weak, alias("main")));
 #endif

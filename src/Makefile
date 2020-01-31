@@ -13,11 +13,11 @@ TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage
 NON_X_LDFLAGS := -lm -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb
 
-LAYER0_SRCS := globals.cpp logger.cpp debug.cpp
-LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp system.cpp
+LAYER0_SRCS := globals.cpp logger.cpp debug.cpp settings.cpp
+LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp threads.cpp system.cpp
 LAYER2_SRCS := xsession.cpp bindings.cpp devices.cpp test-functions.cpp device-grab.cpp
 LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.cpp wm-rules.cpp extra-rules.cpp
-LAYER4_SRCS := chain.cpp functions.cpp communications.cpp
+LAYER4_SRCS := chain.cpp functions.cpp communications.cpp mpxmanager.cpp
 
 #ifndef NO_MPX
 LAYER5_SRCS += Extensions/mpx.cpp
@@ -107,8 +107,8 @@ mpxmanager.sh: mpxmanager.sh.template
 mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.cpp communications.cpp | mpxmanager
 	cp $< $@
 	sed -i "s/startOptions=.*/startOptions=\"$$(echo $$(./mpxmanager --list-start-options 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'| sed -E 's/((\w|-)+\W)/--\1/g'))\"/g"  mpxmanager-autocomplete.sh
-	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --set list-options quit 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
-	sed -i "s/modeOptions=.*/modeOptions=\"$$(echo $$(./mpxmanager --list-modes 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
+	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 | sed 's/[,}{]//g' ))\"/g"  mpxmanager-autocomplete.sh
+	sed -Ei "s/(varOptions)=.*/\1=\"$$(echo $$(./mpxmanager --list-vars 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: $(BASE_SRCS:.cpp=.o)
 	${CC} $^ -o $@ ${CPPFLAGS} ${LDFLAGS}
@@ -126,7 +126,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out arg_test.out functional.out format doc-check correctness.out preinstall
+test: libmpx-test.so code_coverage.out functional.out format doc-check correctness.out preinstall
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp |libmpx-patch.so
@@ -164,13 +164,6 @@ Extensions/Tests/%: Tests/Extensions/%
 
 
 code_coverage.out: unitTest $(patsubst %.h,%_code_coverage.out,${TEST_SRCS}) $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
-
-
-arg_test.out: CPPFLAGS := ${TESTFLAGS}
-arg_test.out: mpxmanager Tests/arg-tests.sh
-	$(call RUN_TEST, Tests/arg-tests.sh )
-	touch $@
-
 
 FORMATTER := astyle --project "$$file" >/dev/null ; rm -f "$$file.orig" || true
 

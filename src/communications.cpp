@@ -19,10 +19,9 @@
 #include "xsession.h"
 
 std::ostream& operator<<(std::ostream& strm, const Option& option) {
-    strm << option.name;
-    if(!option.isVoid())
-        strm << " = ";
-    return option.func->toString(strm) << " (Flags: " << option.flags << ")";
+    return strm << option.name << " (" << (option.boundFunction.isVoid() ? "void" : option.boundFunction.isNumeric() ?
+            "numeric" : "string") <<
+        " Flags: " << option.flags << ")";
 }
 
 int isInt(std::string str, bool* isNumeric) {
@@ -36,41 +35,55 @@ int isInt(std::string str, bool* isNumeric) {
     return num;
 }
 
+Option::Option(std::string n, BoundFunction boundFunction, int flags): boundFunction(boundFunction), flags(flags) {
+    std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+    std::replace(n.begin(), n.end(), '_', '-');
+    name = n;
+}
+
 bool Option::matches(std::string str, bool empty, bool isNumeric) const {
-    if(func->isVoid() == empty && func->isNumeric() == isNumeric)
-        return strcasecmp(name.c_str(), str.c_str()) == 0;
+    if(strcasecmp(name.c_str(), str.c_str()) == 0) {
+        return (boundFunction.isVoid() == empty && boundFunction.isNumeric() == isNumeric);
+    }
     return 0;
 }
-void Option::operator()(std::string value)const {
-    LOG(LOG_LEVEL_DEBUG, "calling option %s(%s)\n", name.c_str(), value.c_str());
-    func->call(value);
-    if(flags & QUIT_AFTER)
-        quit(0);
+int Option::call(std::string p)const {
+    logger.debug() << "Calling " << *this << " with " << p << std::endl;
+    uint32_t i = isInt(p, NULL);
+    BoundFunctionArg arg = {
+        .winInfo = getWindowInfo(i),
+        .master = getMasterByID(i),
+        .integer = i, .string = &p
+    };
+    return boundFunction(arg);
 }
-#define _OPTION(VAR) Option(std::string(#VAR),&VAR)
+#define _OPTION_GETTER(VAR) Option("get-"#VAR,[]{std::cout<<VAR<<std::endl;})
+#define _OPTION(VAR) Option(#VAR,[](uint32_t value){VAR=value;}, VAR_SETTER), _OPTION_GETTER(VAR)
+#define _OPTION_STR(VAR) Option(#VAR,[](std::string* value){VAR=*value;}, VAR_SETTER), _OPTION_GETTER(VAR)
 
 static UniqueArrayList<Option*> options = {
-    {"activate", +[](WindowID win) {if(getWindowInfo(win))activateWindow(getWindowInfo(win));}},
+    {"activate", activateWindow},
     {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}, FORK_ON_RECEIVE},
     {"dump", +[](WindowMask i) {dumpWindow(i);}, FORK_ON_RECEIVE},
-    {"dump", +[](std::string s) {assert(s != ""); std::cout << s << "\n"; dumpWindow(s);}, FORK_ON_RECEIVE},
+    {"dump", +[](std::string * s) {dumpWindow(*s);}, FORK_ON_RECEIVE},
+    {"dump-master", dumpMaster, FORK_ON_RECEIVE},
     {"dump-master", +[]() {dumpMaster(getActiveMaster());}, FORK_ON_RECEIVE},
-    {"dump-master", +[](MasterID id) {dumpMaster(getMasterByID(id));}, FORK_ON_RECEIVE},
     {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
     {"dump-rules", dumpRules, FORK_ON_RECEIVE},
     {"dump-stack", dumpWindowStack, FORK_ON_RECEIVE},
-    {"dump-win", +[](WindowID win) {dumpSingleWindow(win);}, FORK_ON_RECEIVE},
+    {"dump-win", dumpSingleWindow, FORK_ON_RECEIVE},
     {"focus", +[](WindowID id) {focusWindow(id);}},
     {"focus-root", +[]() {focusWindow(root);}},
     {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
-    {"load", +[](WindowID win) {WindowInfo* winInfo = getWindowInfo(win); if(winInfo)loadWindowProperties(winInfo);}},
-    {"log-level", setLogLevel},
+    {"load", loadWindowProperties},
+    {"log-level", setLogLevel, VAR_SETTER},
     {"lower", +[](WindowID id) {lowerWindow(id);}},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"raise", +[](WindowID id) {raiseWindow(id);}},
     {"restart", restart, CONFIRM_EARLY},
+    {"request-shutdown", requestShutdown},
     {"sum", printSummary, FORK_ON_RECEIVE},
-    {"switch-workspace", +[](WorkspaceID id) {switchToWorkspace(id);}},
+    {"switch-workspace", switchToWorkspace},
     _OPTION(AUTO_FOCUS_NEW_WINDOW_TIMEOUT),
     _OPTION(CLONE_REFRESH_RATE),
     _OPTION(CRASH_ON_ERRORS),
@@ -83,40 +96,37 @@ static UniqueArrayList<Option*> options = {
     _OPTION(IGNORE_MASK),
     _OPTION(KILL_TIMEOUT),
     _OPTION(LD_PRELOAD_INJECTION),
-    _OPTION(MASTER_INFO_PATH),
     _OPTION(POLL_COUNT),
     _OPTION(POLL_INTERVAL),
     _OPTION(RUN_AS_WM),
-    _OPTION(SHELL),
     _OPTION(STEAL_WM_SELECTION),
+    _OPTION_STR(MASTER_INFO_PATH),
+    _OPTION_STR(SHELL),
 };
 
 ArrayList<Option*>& getOptions() {return options;}
 
-
-
 static int outstandingSendCount;
+uint32_t getNumberOfMessageSent() {
+    return outstandingSendCount;
+}
 int getConfirmedSentMessage(WindowID win) {
-    xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t* reply;
-    cookie = xcb_get_property(dis, 0, win, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL, 0, sizeof(int));
-    int result = 0;
-    if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply)) {
-        result = *(int*)xcb_get_property_value(reply);
-    }
-    free(reply);
-    LOG(LOG_LEVEL_TRACE, "Found %d out of %d confirmations\n", result, outstandingSendCount);
+    auto result = getWindowPropertyValue(win, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
+    LOG(LOG_LEVEL_TRACE, "Found %d out of %d confirmations\n", result, getNumberOfMessageSent());
     return result;
 }
 bool hasOutStandingMessages(void) {
-    return outstandingSendCount > getConfirmedSentMessage(getPrivateWindow());
+    return getNumberOfMessageSent() > getConfirmedSentMessage(getPrivateWindow());
 }
-static void sendConfirmation(WindowID target) {
+int getLastMessageExitCode(void) {
+    return getWindowPropertyValue(getPrivateWindow(), WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
+}
+static void sendConfirmation(WindowID target, int exitCode) {
     LOG(LOG_LEVEL_DEBUG, "sending receive confirmation to %d\n", target);
+    // not atomic, but there should be only one thread/process modifying this value
     int count = getConfirmedSentMessage(target) + 1;
-    catchErrorSilent(xcb_change_property_checked(dis, XCB_PROP_MODE_REPLACE, target, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL,
-            32,
-            1, &count));
+    setWindowProperty(target, WM_INTERPROCESS_COM_STATUS, XCB_ATOM_CARDINAL, exitCode);
+    setWindowProperty(target, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL, count);
     flush();
 }
 void send(std::string name, std::string value) {
@@ -156,13 +166,14 @@ void receiveClientMessage(void) {
         if(option) {
             logger.debug() << *option << std::endl;
             int childPID;
+            int returnValue = 0;
             if(option->flags & CONFIRM_EARLY) {
                 LOG(LOG_LEVEL_TRACE, "sending early confirmation\n");
-                sendConfirmation(sender);
+                sendConfirmation(sender, 0);
                 flush();
             }
             if(!(option->flags & FORK_ON_RECEIVE)) {
-                option->call(value);
+                returnValue = option->call(value);
             }
             // TODO stop forking
             else if(!(childPID = fork())) {
@@ -180,16 +191,16 @@ void receiveClientMessage(void) {
                     close(fd);
                 }
                 openXDisplay();
-                option->call(value);
+                returnValue = option->call(value);
                 std::cout << std::flush;
                 close(LOG_FD);
-                exit(0);
+                exit(returnValue);
             }
             else {
-                waitForChild(childPID);
+                returnValue = waitForChild(childPID);
             }
             if(!(option->flags & CONFIRM_EARLY))
-                sendConfirmation(sender);
+                sendConfirmation(sender, returnValue);
         }
         else
             LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'\n", name.c_str(), value.c_str());

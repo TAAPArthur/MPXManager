@@ -5,13 +5,9 @@
 #ifndef MPXMANAGER_COMMUTNICATE_H_
 #define MPXMANAGER_COMMUTNICATE_H_
 
-#include <typeinfo>
-
 #include "boundfunction.h"
-#include "bindings.h"
 
 /**
- *
  *
  * @param str the str to check
  * @param isNumeric if str can be converted to an int
@@ -20,153 +16,44 @@
  */
 int isInt(std::string str, bool* isNumeric);
 
-
-/**
- * Function wrapper for Option
- */
-struct GenericOptionFunctionWrapper {
-    virtual ~GenericOptionFunctionWrapper() = default;
-    /**
-     *
-     * @return does this function take a string (0) or an int (1) on match
-     */
-    virtual bool isNumeric() const {return 0;};
-    /**
-     * @return 1 iff this function takes no args
-     */
-    virtual bool isVoid()const {return 0;}
-    /**
-     * Calls the underlying function.
-     * p may be converted to an int
-     *
-     * @param p
-     */
-    virtual void call(std::string p)const = 0 ;
-    /**
-     * @return the type name
-     */
-    virtual std::string getType()const = 0;
-    /**
-     * prints string representation
-     *
-     * @param strm
-     *
-     * @return
-     */
-    virtual std::ostream& toString(std::ostream& strm) {
-        return strm << "(" << getType() << ")";
-    }
+/// flags that control how options are handled
+enum OptionFlags {
+    /// if true and the command was sent, program will fork before executing this command and attempt redirect output to the caller's stdout
+    FORK_ON_RECEIVE = 1 << 0,
+    /// Send confirmation before command is run
+    CONFIRM_EARLY = 1 << 2,
+    /// marks this function as one that only modifies a global variable
+    VAR_SETTER = 1 << 4,
 };
 /**
  * Holds a function that takes an string or an int like parameter
  * If a variable pointer is passed in, it is wrapped in a setter
- *
- * @tparam P
  */
-template <typename P>
-struct OptionFunctionWrapper : GenericOptionFunctionWrapper {
-    /// backing variable
-    P* var = NULL;
-    /// generic function holder
-    std::function<void(P)>func;
-
-    /**
-     *
-     *
-     * @param p var or function pointer
-     */
-    /// @{
-    OptionFunctionWrapper(std::function<void(P)>p): func(p) {}
-    OptionFunctionWrapper(P* p): var(p), func([ = ](P v) {*var = v;}) {}
-    /// @}
-    void call(std::string p)const override {
-        _call(p);
-    }
-    /**
-     * @tparam U
-     * @param p a string that can be converted to an int
-     * @return
-     */
-    template<typename U = P>
-    std::enable_if_t < std::is_convertible<int, U>::value, void > _call(std::string p)const {
-        func(isInt(p, NULL));
-    }
-    /**
-     * @tparam U
-     * @param p a string to pass to the underlying function
-     * @return
-     */
-    template<typename U = P>
-    std::enable_if_t < std::is_same<std::string, U>::value, void > _call(std::string p)const {
-        func(p);
-    }
-    std::ostream& toString(std::ostream& strm) override {
-        if(var)
-            strm << *var << " ";
-        return strm << "(" << getType() << ")";
-    }
-    virtual std::string getType()const {
-        return typeid(P).name();
-    }
-    bool isNumeric() const override {
-        return !std::is_same<std::string, P>::value;
-    }
-};
-/**
- * Holds a reference to a void function
- */
-template<>
-struct OptionFunctionWrapper<void> : GenericOptionFunctionWrapper {
-    /// generic function holder
-    std::function<void(void)>func;
-    /**
-     * @param func
-     */
-    OptionFunctionWrapper(std::function<void(void)>func): func(func) {}
-    void call(std::string p __attribute__((unused)))const override {
-        func();
-    }
-    virtual std::string getType()const {
-        return typeid(func).name();
-    }
-    bool isVoid() const override {
-        return 1;
-    }
-};
-/// flags that control how options are handled
-enum OptionFlags {
-    /// if true and the command was sent, program will fork before executing this command and attempt redirect output to the caller's stdout
-    FORK_ON_RECEIVE = 1,
-    /// Send confirmation before command is run
-    CONFIRM_EARLY = 4,
-    QUIT_AFTER = 8,
-};
-/// Holds info to map string to a given operation
 struct Option {
 
-    /// option name; --$name will trigger option
+    /// option name
     std::string name;
-    /// detail how we should respond to the option
-    const std::shared_ptr<GenericOptionFunctionWrapper> func;
+    /// the backing function
+    const BoundFunction boundFunction;
     /// bitmask of OptionFlags
     int flags = 0;
     /**
-     * @tparam T
-     * @param name
-     * @param t
+     * @param n
+     * @param boundFunction
      * @param flags
      */
-    /// @{
-    template <typename T>
-    Option(std::string name, T* t, int flags = 0): name(name), func(new OptionFunctionWrapper<T>(t)), flags(flags) {}
-    template <typename T>
-    Option(std::string name, void(*t)(T), int flags = 0): name(name), func(new OptionFunctionWrapper<T>(t)), flags(flags) {}
-    Option(std::string name, void(*t)(void), int flags = 0): name(name), func(new OptionFunctionWrapper<void>(t)),
-        flags(flags) {}
-    /// @}
-
-    /// @return the type of backing function
-    std::string getType()const {return func->getType();}
+    Option(std::string n, BoundFunction boundFunction, int flags = 0);
+    /**
+     * If option holds a function, calls the function bound to option with argument value.
+     * Else sets name to value
+     *
+     * @param value the value to set/pass. If NULL, a value of '1' is used
+     */
+    int call(std::string value)const;
+    /**
+     * @return the boundFunction
+     */
+    const BoundFunction& getBoundFunction() const { return boundFunction;}
 
     /// @return name
     std::string getName() const {return name;}
@@ -180,15 +67,16 @@ struct Option {
      * @return 1 if the name matches str and func matches empty and isNumeric
      */
     bool matches(std::string str, bool empty, bool isNumeric)const ;
-    /// @return if func take no arguments
-    bool isVoid() const {return func->isVoid();}
     /**
-     * If option holds a function, calls the function bound to option with argument value.
-     * Else sets name to value
+     * @param value
      *
-     * @param value the value to set/pass. If NULL, a value of '1' is used
+     * @return 1 if this option accepts value
      */
-    void call(std::string value)const {(*this)(value);}
+    bool matches(std::string value) const {
+        bool isNumeric;
+        isInt(value, &isNumeric);
+        return matches(getName(), value.empty(), isNumeric);
+    }
     /// @copydoc call
     void operator()(std::string value)const ;
     /// @return name
@@ -200,11 +88,12 @@ struct Option {
      * @return 1 iff the name and type match
      */
     bool operator==(const Option& option)const {
-        return name == option.name && getType() == option.getType();
+        return name == option.name && boundFunction.getType() == option.boundFunction.getType();
     }
 };
 
-void addStartupMode(std::string name, void(*func)(), uint32_t flags = QUIT_AFTER);
+/// Adds a startup mode
+void addStartupMode(std::string name, void(*func)());
 
 /**
  * Finds a option by name that can accept value
@@ -255,4 +144,13 @@ ArrayList<Option*>& getOptions();
  * @return 1 iff there are send messages whose receipt has not been confirmed
  */
 bool hasOutStandingMessages(void);
+/**
+ * @return the number of calls to send
+ */
+uint32_t getNumberOfMessageSent();
+
+/**
+ * @return the return value of the last mesage sent
+ */
+int getLastMessageExitCode(void);
 #endif

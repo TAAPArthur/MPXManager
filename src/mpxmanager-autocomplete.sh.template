@@ -11,14 +11,16 @@ _mpxmanagerAutocomplete ()   #  By convention, the function name
     firstArg=${COMP_WORDS[1]}
 
     startOptions=
-    modeOptions=
+    varOptions=
     sendOptions=
-    if [[ "$last" == "--set" || "$last" == "--send" || "$last" == "-s" ]]; then
-        COMPREPLY=( $( compgen -W "$sendOptions --" -- $cur ) )
-    elif [[ "$last" == "--mode" ]]; then
-        COMPREPLY=( $( compgen -W "$modeOptions --" -- $cur ) )
+    bashOptions="-h --help -v --version --recompile --restart --force-restart --name --path"
+
+    if [[ "$cur" =~ --* ]]; then
+        COMPREPLY=( $( compgen -W "$sendOptions $bashOptions $startOptions  $varOptions --" -- $cur ) )
+    elif [[ "$first" =~ "--*" ]]; then
+        COMPREPLY=( $( compgen -W "$sendOptions $bashOptions $startOptions  $varOptions --" -- $cur ) )
     else
-        COMPREPLY=( $( compgen -W "-h --help -v --version $startOptions $sendOptions --recompile --restart --force-restart --name --path " -- $cur ) )
+        COMPREPLY=( $( compgen -W "$sendOptions -- " -- $cur ) )
     fi
     return 0
 }
