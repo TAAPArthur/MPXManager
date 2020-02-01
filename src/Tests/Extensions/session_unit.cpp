@@ -10,13 +10,10 @@
 #include "../test-x-helper.h"
 #include "../test-event-helper.h"
 
-SET_ENV(onSimpleStartup, fullCleanup);
-
-
 static long rectToLong(const Rect& r) {
     return ((long)r.x) << 48L | ((long)r.y) << 32L | r.width << 16L | r.height;
 }
-const ArrayList<long>serializeState(uint8_t mask) {
+static const ArrayList<long>serializeState(uint8_t mask) {
     ArrayList<long> list;
     ArrayList<const ArrayList<WindowInfo*>*> listsOfStacks;
     if(mask & 1) {
@@ -56,9 +53,15 @@ const ArrayList<long>serializeState(uint8_t mask) {
     return list;
 }
 
-SET_ENV(onSimpleStartup, fullCleanup);
-MPX_TEST_ITER("test_restore_state", 16, {
+
+static void setup() {
+    onSimpleStartup();
+    addEWMHRules();
     addResumeCustomStateRules();
+}
+
+SET_ENV(setup, fullCleanup);
+MPX_TEST_ITER("test_restore_state", 16, {
     int mask = _i;
     CRASH_ON_ERRORS = -1;
     saveCustomState();
@@ -122,7 +125,6 @@ MPX_TEST_ITER("test_restore_state", 16, {
     assertEquals(waitForChild(0), 0);
 });
 MPX_TEST("test_restore_state_monitor_change", {
-    addResumeCustomStateRules();
     CRASH_ON_ERRORS = -1;
     Rect bounds1 = {0, 20, 100, 100};
     Rect bounds2 = {0, 40, 100, 100};
@@ -136,4 +138,55 @@ MPX_TEST("test_restore_state_monitor_change", {
     assertEquals(getAllMonitors().size(), 2);
     assertEquals(getAllMonitors()[0]->getBase(), bounds1);
     assertEquals(getAllMonitors()[1]->getBase(), bounds2);
+});
+
+MPX_TEST("replace_monitors", {
+    WorkspaceID origin = 5;
+    switchToWorkspace(origin);
+    getAllMonitors()[0]->setName("S");
+    Rect bounds1 = {0, 20, 100, 100};
+    Rect bounds2 = {0, 40, 100, 100};
+    addFakeMonitor(bounds1, "A");
+    addFakeMonitor(bounds2, "B");
+    for(Workspace* w : getAllWorkspaces())
+        w->setMonitor(NULL);
+    applyBatchEventRules();
+    detectMonitors();
+    for(Monitor* m : getAllMonitors()) {
+        assert(m->getWorkspace());
+    }
+    assert(getWorkspace(origin)->isVisible());
+    assert(getWorkspace(0)->isVisible());
+    switchToWorkspace(0);
+    applyBatchEventRules();
+    getAllMonitors().deleteElements();
+    detectMonitors();
+    assertEquals(getAllMonitors().size(), 1);
+    assert(getWorkspace(origin)->isVisible());
+});
+
+MPX_TEST("replace_monitors", {
+    startWM();
+    WorkspaceID other = 5;
+
+    ATOMIC(switchToWorkspace(2));
+    WindowID win = mapWindow(createNormalWindow());
+    waitUntilIdle();
+
+    lock();
+    switchToWorkspace(other);
+    getAllMonitors()[0]->setName("S");
+    unlock();
+
+    waitUntilIdle();
+
+    lock();
+    getAllMonitors().deleteElements();
+    detectMonitors();
+    unlock();
+
+    waitUntilIdle(1);
+    assert(isWindowMapped(win));
+    // This is a side effect but explicitly intended
+    assert(!getActiveWorkspace()->isVisible());
 });

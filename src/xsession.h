@@ -77,9 +77,8 @@ extern xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 extern xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
 /// Atom to store an array of the paired monitor for each workspace so the state can be restored
 extern xcb_atom_t WM_WORKSPACE_MONITORS;
-/// Atom to store an array of each window for every workspace so the state can be restored
-/// There is a '0' to separate each workspace's window stack
-extern xcb_atom_t WM_WORKSPACE_WINDOWS;
+/// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
+extern xcb_atom_t WM_WORKSPACE_MONITOR_HISTORY;
 
 /**XDisplay instance (only used for events/device commands)*/
 extern Display* dpy;

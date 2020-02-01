@@ -34,7 +34,7 @@ xcb_atom_t WM_WINDOW_ROLE;
 xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
 xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
 xcb_atom_t WM_WORKSPACE_MONITORS;
-xcb_atom_t WM_WORKSPACE_WINDOWS;
+xcb_atom_t WM_WORKSPACE_MONITOR_HISTORY;
 
 static int maxNumDevices;
 uint32_t getMaxNumberOfMasterDevices(bool force) {
@@ -273,7 +273,7 @@ void openXDisplay(void) {
     _CREATE_ATOM(WM_WORKSPACE_LAYOUT_INDEXES);
     _CREATE_ATOM(WM_WORKSPACE_LAYOUT_NAMES);
     _CREATE_ATOM(WM_WORKSPACE_MONITORS);
-    _CREATE_ATOM(WM_WORKSPACE_WINDOWS);
+    _CREATE_ATOM(WM_WORKSPACE_MONITOR_HISTORY);
     _CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
     setRootDims(&screen->width_in_pixels);
@@ -346,6 +346,7 @@ const char* eventTypeToString(int type) {
             _ADD_EVENT_TYPE_CASE(WINDOW_WORKSPACE_CHANGE);
             _ADD_EVENT_TYPE_CASE(MONITOR_WORKSPACE_CHANGE);
             _ADD_EVENT_TYPE_CASE(SCREEN_CHANGE);
+            _ADD_EVENT_TYPE_CASE(MONITOR_DETECTED);
             _ADD_EVENT_TYPE_CASE(WINDOW_MOVE);
             _ADD_EVENT_TYPE_CASE(TILE_WORKSPACE);
             _ADD_EVENT_TYPE_CASE(POSSIBLE_STATE_CHANGE);

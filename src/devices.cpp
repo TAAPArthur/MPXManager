@@ -8,6 +8,7 @@
 #endif
 
 #include "arraylist.h"
+#include "boundfunction.h"
 #include "debug.h"
 #include "devices.h"
 #include "globals.h"
@@ -17,6 +18,7 @@
 #include "system.h"
 #include "test-functions.h"
 #include "time.h"
+#include "user-events.h"
 #include "xsession.h"
 using namespace std;
 
@@ -208,12 +210,14 @@ void detectMonitors(void) {
     assert(monitors);
     xcb_randr_monitor_info_iterator_t iter = xcb_randr_get_monitors_monitors_iterator(monitors);
     ArrayList<MonitorID> monitorNames;
+    bool newMonitor;
     while(iter.rem) {
         xcb_randr_monitor_info_t* monitorInfo = iter.data;
         Monitor* m = getAllMonitors().find(monitorInfo->name);
         if(!m) {
             m = new Monitor(monitorInfo->name, &monitorInfo->x);
             getAllMonitors().add(m);
+            newMonitor = 1;
         }
         else m->setBase(*(Rect*)&monitorInfo->x);
         m->setName(getAtomName(monitorInfo->name));
@@ -232,5 +236,7 @@ void detectMonitors(void) {
 #endif
     removeDuplicateMonitors();
     getAllMonitors().sort();
+    if(newMonitor)
+        applyEventRules(MONITOR_DETECTED);
     assignUnusedMonitorsToWorkspaces();
 }

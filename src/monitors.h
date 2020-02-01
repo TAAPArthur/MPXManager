@@ -249,4 +249,15 @@ Monitor* addFakeMonitor(Rect bounds, std::string name = "");
  * Clears all fake monitors
  */
 void removeAllFakeMonitors();
+
+/**
+ * @param name
+ * @return the first monitor with matching name or NULL
+ */
+static inline Monitor* getMonitorByName(std::string name) {
+    for(Monitor* monitor : getAllMonitors())
+        if(monitor->getName() == name)
+            return monitor;
+    return NULL;
+}
 #endif

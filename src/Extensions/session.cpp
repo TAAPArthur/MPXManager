@@ -76,25 +76,6 @@ static void loadSavedMonitorWorkspaceMapping() {
         }
     }
 }
-static void loadSavedWorkspaceWindows() {
-    LOG(LOG_LEVEL_TRACE, "Loading Workspace window stacks\n");
-    auto reply = getWindowProperty(root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL);
-    if(reply) {
-        WorkspaceID index = 0;
-        WindowID* wid = (WindowID*) xcb_get_property_value(reply.get());
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int); i++)
-            if(wid[i] == 0) {
-                index++;
-                if(index == getNumberOfWorkspaces())
-                    break;
-            }
-            else if(getWindowInfo(wid[i])) {
-                if(getWindowInfo(wid[i]))
-                    getWindowInfo(wid[i])->moveToWorkspace(index);
-                assert(getWorkspace(index)->getWindowStack().back()->getID() == wid[i]);
-            }
-    }
-}
 static void loadSavedMasterWindows() {
     LOG(LOG_LEVEL_TRACE, "Loading Master window stacks\n");
     auto reply = getWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL);
@@ -121,7 +102,6 @@ void loadCustomState(void) {
     loadSavedLayoutOffsets();
     loadSavedFakeMonitor();
     loadSavedMonitorWorkspaceMapping();
-    loadSavedWorkspaceWindows();
     loadSavedMasterWindows();
     loadSavedActiveMaster();
     for(Master* master : getAllMasters()) {
@@ -129,13 +109,45 @@ void loadCustomState(void) {
             setBorderColor(master->getFocusedWindow()->getID(), master->getFocusColor());
     }
 }
+
+static std::unordered_map<std::string, std::string> monitorWorkspaceMapping;
+
+void saveMonitorWorkspaceMapping() {
+    for(Monitor* monitor : getAllMonitors())
+        if(monitor->getWorkspace())
+            monitorWorkspaceMapping[monitor->getName()] = monitor->getWorkspace()->getName();
+    StringJoiner joiner;
+    for(auto element : monitorWorkspaceMapping) {
+        joiner.add(element.first);
+        joiner.add(element.second);
+    }
+    setWindowProperty(root, WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
+}
+void loadMonitorWorkspaceMapping() {
+    auto reply = getWindowProperty(root, WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING);
+    LOG(LOG_LEVEL_TRACE, "Loading active layouts\n");
+    if(reply) {
+        uint32_t len = xcb_get_property_value_length(reply.get());
+        char* strings = (char*) xcb_get_property_value(reply.get());
+        uint32_t index = 0;
+        while(index + 1 < len) {
+            std::string monitorName = std::string(&strings[index]);
+            index += strlen(&strings[index]) + 1;
+            std::string workspaceName = std::string(&strings[index]);
+            index += strlen(&strings[index]) + 1;
+            Monitor* monitor = getMonitorByName(monitorName);
+            Workspace* workspace = getWorkspaceByName(workspaceName);
+            if(monitor && workspace)
+                workspace->setMonitor(monitor);
+        }
+    }
+}
+
 void saveCustomState(void) {
     int layoutOffsets[getNumberOfWorkspaces()];
     int monitors[getNumberOfWorkspaces()];
     short fakeMonitors[getAllMonitors().size() * 5];
-    WindowID windows[getAllWindows().size() + 2 * getNumberOfWorkspaces()];
     WindowID masterWindows[(getAllWindows().size() + 2) * getAllMasters().size()];
-    int numWindows = 0;
     int numFakeMonitors = 0;
     int numMasterWindows = 0;
     for(int i = getAllMasters().size() - 1; i >= 0; i--) {
@@ -153,10 +165,6 @@ void saveCustomState(void) {
         }
     StringJoiner joiner;
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
-        for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack()) {
-            windows[numWindows++] = winInfo->getID();
-        }
-        windows[numWindows++] = 0;
         Monitor* m = getWorkspace(i)->getMonitor();
         monitors[i] = m ? m->getID() : 0;
         layoutOffsets[i] = getWorkspace(i)->getLayoutOffset();
@@ -165,7 +173,6 @@ void saveCustomState(void) {
     }
     setWindowProperty(root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
     setWindowProperty(root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
-    setWindowProperty(root, WM_WORKSPACE_WINDOWS, XCB_ATOM_CARDINAL, windows, numWindows);
     setWindowProperty(root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, monitors, LEN(monitors));
     setWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
     setWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
@@ -174,6 +181,8 @@ void saveCustomState(void) {
 }
 void addResumeCustomStateRules(AddFlag flag) {
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadCustomState), flag);
+    getEventRules(MONITOR_DETECTED).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), flag);
+    getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping), flag);
     getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(saveCustomState), flag);
     getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(saveCustomState), flag);
 }
