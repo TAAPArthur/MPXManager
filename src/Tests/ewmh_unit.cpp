@@ -177,16 +177,16 @@ static void clientMessageSetup() {
     addAutoTileRules();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
-    startWM();
-    waitUntilIdle();
+    scan(root);
+    assertEquals(getAllWindows().size(), 2);
     assert(focusWindow(win1));
     assert(focusWindow(win2));
     for(WindowInfo* winInfo : getAllWindows())
         assert(winInfo->getWorkspace());
     getWindowInfo(win1)->moveToWorkspace(0);
     getWindowInfo(win2)->moveToWorkspace(1);
+    startWM();
     waitUntilIdle();
-    assertEquals(getAllWindows().size(), 2);
 }
 
 SET_ENV(clientMessageSetup, fullCleanup);
@@ -236,7 +236,7 @@ MPX_TEST_ITER("test_client_activate_window", 2, {
     }
 });
 MPX_TEST("test_client_activate_window_bad", {
-    activateWindow(getAllWindows()[0]);
+    ATOMIC(activateWindow(getAllWindows()[0]));
     //don't crash
     sendActivateWindowRequest(0);
     sendActivateWindowRequest(1);
@@ -251,6 +251,7 @@ MPX_TEST("test_client_change_desktop", {
         WAIT_UNTIL_TRUE(getActiveWorkspaceIndex() == i);
     }
     sendChangeWorkspaceRequest(-2);
+    assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
 });
 MPX_TEST("test_client_change_num_desktop", {
     assert(getNumberOfWorkspaces() >= 2);
@@ -265,7 +266,6 @@ MPX_TEST("test_client_change_num_desktop", {
         }
     }
 });
-
 
 MPX_TEST("test_client_set_sticky_window", {
     mapArbitraryWindow();
@@ -502,7 +502,7 @@ MPX_TEST("test_client_request_move_resize", {
 
 MPX_TEST("event_speed", {
     startWindowMoveResize(getAllWindows()[0], 0);
-    generateMotionEvents(10000);
+    generateMotionEvents(1000);
     waitUntilIdle();
     assert(!consumeEvents());
 });

@@ -1,5 +1,6 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
+#include "unistd.h"
 
 #include "arraylist.h"
 #include "bindings.h"

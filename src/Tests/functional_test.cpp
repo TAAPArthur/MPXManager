@@ -142,7 +142,7 @@ MPX_TEST_ITER("tile_invisible", 2, {
             sendChangeWorkspaceRequest(1);
         else {
             movePointerRelative(1, 1);
-            switchToWorkspace(1);
+            ATOMIC(switchToWorkspace(1));
         }
         waitUntilIdle();
         assertEquals(getActiveWorkspaceIndex(), 1);
@@ -156,7 +156,7 @@ MPX_TEST_ITER("tile_invisible", 2, {
             sendChangeWorkspaceRequest(0);
         else {
             movePointerRelative(1, 1);
-            switchToWorkspace(0);
+            ATOMIC(switchToWorkspace(0));
         }
         waitUntilIdle();
         assertEquals(getActiveWorkspaceIndex(), 0);
@@ -200,7 +200,7 @@ MPX_TEST("switchWorkspace", {
     assert(getActiveMaster()->getWindowStack().size());
     for(int i = 0; i < 2; i++)
         for(Workspace* w : getAllWorkspaces()) {
-            switchToWorkspace(w->getID());
+            ATOMIC(switchToWorkspace(w->getID()));
             waitUntilIdle(1);
         }
 });
@@ -219,7 +219,7 @@ static void  userEnvSetup() {
     getWindowInfo(win)->addMask(STICKY_MASK | ALWAYS_ON_BOTTOM_MASK);
     mapWindow(win);
     mapArbitraryWindow();
-    switchToWorkspace(0);
+    ATOMIC(switchToWorkspace(0));
     waitUntilIdle();
 }
 SET_ENV(userEnvSetup, fullCleanup);
@@ -262,7 +262,7 @@ MPX_TEST("focus_unfocusable_window", {
     assertEquals(0, getRealGeometry(win).border);
 });
 MPX_TEST_ITER("remove_all_monitors", 2, {
-    getAllMonitors().deleteElements();
+    ATOMIC(getAllMonitors().deleteElements());
     if(_i)
         getActiveWorkspace()->getWindowStack()[0]->addMask(STICKY_MASK);
     for(Workspace* w : getAllWorkspaces()) {
