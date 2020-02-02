@@ -183,7 +183,7 @@ void __attribute__((weak)) loadSettings(void) {
     loadNormalSettings();
 }
 void loadNormalSettings() {
-    LOG(LOG_LEVEL_INFO, "Loading normal settings\n");
+    INFO("Loading normal settings");
     SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;
     enableInterClientCommunication();
@@ -192,7 +192,7 @@ void loadNormalSettings() {
 }
 void (*startupMethod)();
 void onStartup(void) {
-    LOG(LOG_LEVEL_INFO, "Starting up\n");
+    INFO("Starting up");
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
     addDefaultMaster();
     if(RUN_AS_WM) {

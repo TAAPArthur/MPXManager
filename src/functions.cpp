@@ -93,13 +93,13 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, FindAnd
     if(windowsToIgnore)
         if(arg.cache && windowsToIgnore && master->getFocusedWindow())
             if(!rule({.winInfo = master->getFocusedWindow()})) {
-                LOG(LOG_LEVEL_DEBUG, "clearing window cache\n");
+                DEBUG("clearing window cache");
                 windowsToIgnore->clear();
             }
             else if(windowsToIgnore->addUnique(master->getFocusedWindow()->getID())) {
                 windowsToIgnore->clear();
                 windowsToIgnore->add(master->getFocusedWindow()->getID());
-                LOG(LOG_LEVEL_DEBUG, "clearing window cache and adding focused window\n");
+                DEBUG("clearing window cache and adding focused window");
             }
     WindowInfo* target = arg.checkLocalFirst ? findWindow(rule, master->getWindowStack(), windowsToIgnore,
             arg.includeNonActivatable) : NULL;
@@ -112,21 +112,21 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, FindAnd
                     list.add(getWindowInfo(win));
             target = findWindow(rule,  list, NULL, arg.includeNonActivatable);
             windowsToIgnore->clear();
-            LOG(LOG_LEVEL_DEBUG, "found window by bypassing ignore list\n");
+            DEBUG("found window by bypassing ignore list");
         }
         else
-            LOG(LOG_LEVEL_DEBUG, "found window globally\n");
+            DEBUG("found window globally");
     }
-    else LOG(LOG_LEVEL_DEBUG, "found window locally\n");
+    else DEBUG("found window locally");
     if(target) {
         assert(rule({.winInfo = target}));
-        logger.debug() << "Applying action " << action << " to " << *target << std::endl;
+        DEBUG("Applying action " << action << " to " << *target);
         applyAction(target, action);
         if(windowsToIgnore)
             windowsToIgnore->add(target->getID());
     }
     else
-        LOG(LOG_LEVEL_DEBUG, "could not find window\n");
+        DEBUG("could not find window");
     return target;
 }
 bool matchesClass(WindowInfo* winInfo, std::string str) {

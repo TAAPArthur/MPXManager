@@ -36,21 +36,21 @@ void markMaster(Master* master) {
 }
 void attachActiveSlaveToMarkedMaster() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_DEBUG, "device event %d %d %d %d\n", event->event_type, event->deviceid, event->sourceid, event->flags);
+    LOG(LOG_LEVEL_DEBUG, "device event %d %d %d %d", event->event_type, event->deviceid, event->sourceid, event->flags);
     Master* master = getMasterByID(markedMasterID);
     if(!master) {
-        LOG(LOG_LEVEL_WARN, "could not find master %d\n", markedMasterID);
+        LOG(LOG_LEVEL_WARN, "could not find master %d", markedMasterID);
         return;
     }
     Slave* slave = getAllSlaves().find(event->sourceid);
     if(slave)
         attachSlaveToMaster(slave, master);
     else
-        LOG(LOG_LEVEL_DEBUG, "Slave %d (%d) not found\n", event->sourceid, event->deviceid);
+        LOG(LOG_LEVEL_DEBUG, "Slave %d (%d) not found", event->sourceid, event->deviceid);
 }
 
 void startSplitMaster(void) {
-    LOG(LOG_LEVEL_INFO, "Started splitting master\n");
+    INFO("Started splitting master");
     passiveGrab(root, XCB_INPUT_XI_EVENT_MASK_HIERARCHY | XCB_INPUT_XI_EVENT_MASK_KEY_PRESS |
         XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_MOTION);
     std::string name = "dummy" + std::to_string(getTime());
@@ -60,13 +60,13 @@ void startSplitMaster(void) {
 }
 
 void endSplitMaster(void) {
-    LOG(LOG_LEVEL_INFO, "Finished splitting master\n");
+    INFO("Finished splitting master");
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
     markMaster(0);
 }
 void cycleSlave(int dir) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_DEBUG, "device event %d %d %d %d\n", event->event_type, event->deviceid, event->sourceid, event->flags);
+    LOG(LOG_LEVEL_DEBUG, "device event %d %d %d %d", event->event_type, event->deviceid, event->sourceid, event->flags);
     Slave* slave = getAllSlaves().find(event->sourceid);
     Master* newMaster = getAllMasters().getNextValue(getAllMasters().indexOf(getActiveMaster()), dir);
     if(slave)
@@ -90,7 +90,7 @@ void swapSlaves(Master* master, int dir) {
 void swapDeviceID(Master* master1, Master* master2) {
     if(master1 == master2)
         return;
-    LOG(LOG_LEVEL_DEBUG, "Swapping %d(%d) with %d (%d)\n",
+    LOG(LOG_LEVEL_DEBUG, "Swapping %d(%d) with %d (%d)",
         master1->getID(), master1->getPointerID(), master2->getID(), master2->getPointerID());
     //swap keyboard focus
     xcb_input_xi_set_focus(dis, getActiveFocus(master1->getID()), 0, master2->getID());
@@ -130,7 +130,7 @@ void restoreMPX(void) {
     for(MPXMasterInfo* masterInfo : masterInfoList) {
         Master* m = getMasterByName(masterInfo->masterName);
         if(m) {
-            LOG(LOG_LEVEL_TRACE, "setting color to %0x\n", masterInfo->focusColor);
+            LOG(LOG_LEVEL_TRACE, "setting color to %0x", masterInfo->focusColor);
             m->setFocusColor(masterInfo->focusColor);
         }
     }
@@ -142,7 +142,7 @@ void restoreMPX(void) {
     initCurrentMasters();
 }
 void startMPX(void) {
-    LOG(LOG_LEVEL_INFO, "Starting MPX\n");
+    INFO("Starting MPX");
     mpxEnabled = 1;
     if(masterInfoList.empty())
         loadMPXMasterInfo();
@@ -180,7 +180,7 @@ int saveMPXMasterInfo(void) {
     FILE* fp = openMPXMasterInfoFile("w");
     if(!fp)
         return 0;
-    LOG(LOG_LEVEL_INFO, "Saving MPX state\n");
+    INFO("Saving MPX state");
     for(Master* master : getAllMasters()) {
         fprintf(fp, "%s\n", master->getName().c_str());
         fprintf(fp, "%06X\n", master->getFocusColor());
@@ -200,7 +200,7 @@ int loadMPXMasterInfo(void) {
     fp = openMPXMasterInfoFile("r");
     if(fp == NULL)
         return 0;
-    LOG(LOG_LEVEL_INFO, "Loading saved MPX state\n");
+    INFO("Loading saved MPX state");
     masterInfoList.deleteElements();
     MPXMasterInfo* info = NULL;
     int state = 0;

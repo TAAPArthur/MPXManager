@@ -73,7 +73,7 @@ bool loadWindowType(WindowInfo* winInfo) {
         xcb_ewmh_get_atoms_reply_wipe(&name);
     }
     else {
-        LOG(LOG_LEVEL_TRACE, "could not read window type; using default based on transient being set to %d\n",
+        LOG(LOG_LEVEL_TRACE, "could not read window type; using default based on transient being set to %d",
             winInfo->getTransientFor());
         winInfo->setType(winInfo->getTransientFor() ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
         failed = 1;
@@ -115,8 +115,8 @@ static void loadProtocols(WindowInfo* winInfo) {
     if(xcb_icccm_get_wm_protocols_reply(dis,
             xcb_icccm_get_wm_protocols(dis, winInfo->getID(), ewmh->WM_PROTOCOLS),
             &reply, NULL)) {
-        LOG(LOG_LEVEL_TRACE, "Found %d protocols\n", reply.atoms_len);
-        LOG_RUN(LOG_LEVEL_TRACE, dumpAtoms(reply.atoms, reply.atoms_len));
+        TRACE("Found " << reply.atoms_len << " protocols");
+        TRACE(getAtomsAsString(reply.atoms, reply.atoms_len));
         for(uint32_t i = 0; i < reply.atoms_len; i++)
             if(reply.atoms[i] == WM_DELETE_WINDOW)
                 winInfo->addMask(WM_DELETE_WINDOW_MASK);
@@ -125,7 +125,7 @@ static void loadProtocols(WindowInfo* winInfo) {
             else if(reply.atoms[i] == WM_TAKE_FOCUS)
                 winInfo->addMask(WM_TAKE_FOCUS_MASK);
             else
-                LOG(LOG_LEVEL_DEBUG, "Unsupported protocol detected %s %d\n", getAtomName(reply.atoms[i]).c_str(), reply.atoms[i]);
+                LOG(LOG_LEVEL_DEBUG, "Unsupported protocol detected %s %d", getAtomName(reply.atoms[i]).c_str(), reply.atoms[i]);
         xcb_icccm_get_wm_protocols_reply_wipe(&reply);
     }
 }
@@ -144,7 +144,7 @@ void loadWindowRole(WindowInfo* winInfo) {
 }
 
 void loadWindowProperties(WindowInfo* winInfo) {
-    LOG(LOG_LEVEL_TRACE, "loading window properties %d\n", winInfo->getID());
+    LOG(LOG_LEVEL_TRACE, "loading window properties %d", winInfo->getID());
     loadClassInfo(winInfo->getID(), &winInfo->className, &winInfo->instanceName);
     loadWindowTitle(winInfo);
     xcb_window_t prop;
@@ -162,11 +162,11 @@ void loadWindowProperties(WindowInfo* winInfo) {
 }
 void setBorderColor(WindowID win, unsigned int color) {
     if(color > 0xFFFFFF) {
-        LOG(LOG_LEVEL_WARN, "Color %d is out f range\n", color);
+        LOG(LOG_LEVEL_WARN, "Color %d is out f range", color);
         return;
     }
     xcb_change_window_attributes(dis, win, XCB_CW_BORDER_PIXEL, &color);
-    LOG(LOG_LEVEL_TRACE, "setting border for window %d to %#08x\n", win, color);
+    LOG(LOG_LEVEL_TRACE, "setting border for window %d to %#08x", win, color);
 }
 void setBorder(WindowID win) {
     setBorderColor(win, getActiveMaster()->getFocusColor());
@@ -193,7 +193,7 @@ xcb_size_hints_t* getWindowSizeHints(WindowInfo* winInfo) {
 
 //TODO consider moving to devices
 int focusWindow(WindowID win, Master* master) {
-    LOG(LOG_LEVEL_DEBUG, "Trying to set focus to %d for master %d\n", win, master->getID());
+    LOG(LOG_LEVEL_DEBUG, "Trying to set focus to %d for master %d", win, master->getID());
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME,
             master->getKeyboardID());
@@ -213,7 +213,7 @@ int focusWindow(WindowInfo* winInfo, Master* master) {
     return 0;
 }
 int loadDockProperties(WindowInfo* winInfo) {
-    LOG(LOG_LEVEL_TRACE, "Reloading dock properties\n");
+    TRACE("Reloading dock properties");
     xcb_window_t win = winInfo->getID();
     xcb_ewmh_wm_strut_partial_t strut;
     if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
@@ -225,7 +225,7 @@ int loadDockProperties(WindowInfo* winInfo) {
             (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
         winInfo->setDockProperties((int*)&strut, sizeof(xcb_ewmh_get_extents_reply_t) / sizeof(int));
     else {
-        LOG(LOG_LEVEL_TRACE, "could not read struct data\n");
+        TRACE("could not read struct data");
         winInfo->setDockProperties(NULL, 0);
         return 0;
     }

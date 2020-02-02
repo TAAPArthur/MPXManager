@@ -52,11 +52,11 @@ static char couldStateHaveChanged = 1;
 
 bool isStateMarked(void) { return couldStateHaveChanged;}
 void markState(void) {
-    LOG(LOG_LEVEL_TRACE, "marking state\n");
+    TRACE("marking state");
     couldStateHaveChanged = 1;
 }
 void unmarkState(void) {
-    LOG(LOG_LEVEL_TRACE, "unmarking state\n");
+    TRACE("unmarking state");
     couldStateHaveChanged = 0;
 }
 
@@ -97,10 +97,9 @@ static WorkspaceState* computeState() {
 
 static inline void _printStateComparison(WorkspaceState* currentState, WorkspaceID i) {
     if(currentState[i].size || i < numberOfRecordedWorkspaces && savedStates[i].size) {
-        logger.debug() << "Index:  " << i << "\n" <<
-            "Current:" << currentState[i] << "\n";
+        VERBOSE("Index:  " << i << "\n" << "Current:" << currentState[i]);
         if(i < numberOfRecordedWorkspaces)
-            logger.debug() << "Saved: " << savedStates[i] << "\n";
+            VERBOSE("Saved: " << savedStates[i]);
     }
 }
 
@@ -123,7 +122,7 @@ static int compareState() {
     assert(workspaceIDs.size() == getNumberOfWorkspaces());
     applyEventRules(POSSIBLE_STATE_CHANGE);
     for(WorkspaceID i : workspaceIDs) {
-        LOG_RUN(LOG_LEVEL_TRACE, _printStateComparison(currentState, i));
+        _printStateComparison(currentState, i);
         if(currentState[i].forceRetile || (savedStates || currentState[i].size) &&
             (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
                 memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
@@ -138,13 +137,13 @@ static int compareState() {
                 changed = 1;
             }
             if(currentState[i].visible) {
-                LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d\n", i);
+                LOG(LOG_LEVEL_DEBUG, "Detected WORKSPACE_WINDOW_CHANGE in %d", i);
                 tileWorkspace(getWorkspace(i));
             }
             currentState[i].forceRetile = !currentState[i].visible;
         }
     }
-    LOG(LOG_LEVEL_TRACE, "State changed %d\n", changed);
+    LOG(LOG_LEVEL_TRACE, "State changed %d", changed);
     unmarkState();
     if(savedStates)
         destroyCurrentState();
@@ -155,6 +154,6 @@ static int compareState() {
 
 int updateState() {
     if(!isStateMarked())
-        LOG(LOG_LEVEL_TRACE, "State could not have changed \n");
+        TRACE("State could not have changed ");
     return isStateMarked() ? compareState() : 0;
 }

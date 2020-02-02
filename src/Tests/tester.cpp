@@ -21,7 +21,7 @@ void* timer(void* f) {
     if(pid) {
         printf("Timeout %d\n", pid);
         if(kill(pid, SIGKILL)) {
-            LOG(LOG_LEVEL_ERROR, "killing failed %s\n", strerror(errno));
+            LOG(LOG_LEVEL_ERROR, "killing failed %s", strerror(errno));
         }
     }
     return NULL;
@@ -106,7 +106,11 @@ int main(int argc, char* const* argv) {
     bool veryStrict = strict && strictStr ? std::string(strictStr) != "1" : 0;
     char* failStr = getenv("MAX_FAILS");;
     uint32_t maxFails = failStr ? std::stoi(failStr) : -1;
-    setLogLevel(LOG_LEVEL_ERROR);
+    char* logLevelStr = getenv("LOG_LEVEL");;
+    if(logLevelStr)
+        setLogLevel((LogLevel)std::stoi(logLevelStr));
+    else
+        setLogLevel(LOG_LEVEL_ERROR);
     CRASH_ON_ERRORS = -1;
     signal(SIGINT, printResults);
     for(Test* t : tests)

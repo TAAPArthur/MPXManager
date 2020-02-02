@@ -46,7 +46,7 @@ WindowInfo* Binding::getWindowToActOn(const UserEvent& event)const {
     }
 }
 bool Binding::trigger(const UserEvent& event)const {
-    logger.info() << "Triggering " << *this << std::endl;
+    INFO("Triggering " << *this);
     return shouldPassThrough(getPassThrough(), boundFunction({getWindowToActOn(event), event.master}));
 }
 std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
@@ -74,11 +74,11 @@ std::ostream& operator<<(std::ostream& stream, const UserEvent& userEvent) {
 }
 
 bool checkBindings(const UserEvent& userEvent, const ArrayList<Binding*>& bindings) {
-    LOG(LOG_LEVEL_INFO, "checking %d bindings\n", bindings.size());
-    logger.info() << "Event: " << userEvent << std::endl;
+    TRACE("checking " << bindings.size() << " bindings");
+    DEBUG("Event: " << userEvent);
     for(Binding* binding : bindings)
         if(binding->matches(userEvent) && !binding->trigger(userEvent)) {
-            LOG(LOG_LEVEL_INFO, "checkBindings terminated early\n");
+            INFO("checkBindings terminated early");
             return 0;
         }
     return 1;

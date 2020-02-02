@@ -11,6 +11,7 @@
 #include "bindings.h"
 #include "communications.h"
 #include "globals.h"
+#include "debug.h"
 #include "logger.h"
 #include "system.h"
 #include "window-properties.h"
@@ -48,7 +49,7 @@ bool Option::matches(std::string str, bool empty, bool isNumeric) const {
     return 0;
 }
 int Option::call(std::string p)const {
-    logger.debug() << "Calling " << *this << " with " << p << std::endl;
+    DEBUG("Calling " << *this << " with " << p);
     uint32_t i = isInt(p, NULL);
     BoundFunctionArg arg = {
         .winInfo = getWindowInfo(i),
@@ -76,7 +77,7 @@ static UniqueArrayList<Option*> options = {
     {"focus-root", +[]() {focusWindow(root);}},
     {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
     {"load", loadWindowProperties},
-    {"log-level", setLogLevel, VAR_SETTER},
+    {"log-level", +[](int i){setLogLevel((LogLevel)i);}, VAR_SETTER},
     {"lower", +[](WindowID id) {lowerWindow(id);}},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"raise", +[](WindowID id) {raiseWindow(id);}},
@@ -112,7 +113,7 @@ uint32_t getNumberOfMessageSent() {
 }
 int getConfirmedSentMessage(WindowID win) {
     auto result = getWindowPropertyValue(win, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
-    LOG(LOG_LEVEL_TRACE, "Found %d out of %d confirmations\n", result, getNumberOfMessageSent());
+    LOG(LOG_LEVEL_TRACE, "Found %d out of %d confirmations", result, getNumberOfMessageSent());
     return result;
 }
 bool hasOutStandingMessages(void) {
@@ -122,7 +123,7 @@ int getLastMessageExitCode(void) {
     return getWindowPropertyValue(getPrivateWindow(), WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
 }
 static void sendConfirmation(WindowID target, int exitCode) {
-    LOG(LOG_LEVEL_DEBUG, "sending receive confirmation to %d\n", target);
+    LOG(LOG_LEVEL_DEBUG, "sending receive confirmation to %d", target);
     // not atomic, but there should be only one thread/process modifying this value
     int count = getConfirmedSentMessage(target) + 1;
     setWindowProperty(target, WM_INTERPROCESS_COM_STATUS, XCB_ATOM_CARDINAL, exitCode);
@@ -131,7 +132,7 @@ static void sendConfirmation(WindowID target, int exitCode) {
 }
 void send(std::string name, std::string value) {
     unsigned int data[5] = {getAtom(name), getAtom(value), (uint32_t)getpid(), getPrivateWindow()};
-    LOG(LOG_LEVEL_DEBUG, "sending %d (%s) %d (%s)\n", data[0], name.c_str(), data[1], value.c_str());
+    LOG(LOG_LEVEL_DEBUG, "sending %d (%s) %d (%s)", data[0], name.c_str(), data[1], value.c_str());
     catchError(xcb_ewmh_send_client_message(dis, root, root, WM_INTERPROCESS_COM, sizeof(data), data));
     outstandingSendCount++;
 }
@@ -143,7 +144,7 @@ const Option* findOption(std::string name, std::string value) {
         if(option->matches(name, empty, isNumeric))
             return option;
     }
-    LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s' Empty %d numeric %d\n", name.c_str(), value.c_str(),
+    LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s' Empty %d numeric %d", name.c_str(), value.c_str(),
         empty, isNumeric);
     return NULL;
 }
@@ -157,18 +158,18 @@ void receiveClientMessage(void) {
     pid_t callerPID = data.data32[2];
     WindowID sender = data.data32[3];
     if(message == WM_INTERPROCESS_COM && event->window == root && optionAtom) {
-        LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(data.data32, 5));
+        DEBUG(getAtomsAsString(data.data32, 5));
         std::string name = getAtomName(optionAtom);
         std::string value = "";
         if(valueAtom)
             value = getAtomName(valueAtom);
         const Option* option = findOption(name, value);
         if(option) {
-            logger.debug() << *option << std::endl;
+            DEBUG(*option);
             int childPID;
             int returnValue = 0;
             if(option->flags & CONFIRM_EARLY) {
-                LOG(LOG_LEVEL_TRACE, "sending early confirmation\n");
+                TRACE("sending early confirmation");
                 sendConfirmation(sender, 0);
                 flush();
             }
@@ -183,8 +184,8 @@ void receiveClientMessage(void) {
                     const char* formatter = "/proc/%d/fd/1";
                     sprintf(outputFile, formatter, callerPID);
                     int fd = open(outputFile, O_WRONLY | O_APPEND);
-                    if(fd == -1 || dup2(fd, LOG_FD) == -1) {
-                        LOG(LOG_LEVEL_WARN, "could not open %s for writing; could not call/set %s aborting\n", outputFile,
+                    if(fd == -1 || dup2(fd, STDOUT_FILENO) == -1) {
+                        LOG(LOG_LEVEL_WARN, "could not open %s for writing; could not call/set %s aborting", outputFile,
                             option->name.c_str());
                         exit(0);
                     }
@@ -193,7 +194,7 @@ void receiveClientMessage(void) {
                 openXDisplay();
                 returnValue = option->call(value);
                 std::cout << std::flush;
-                close(LOG_FD);
+                close(STDOUT_FILENO);
                 exit(returnValue);
             }
             else {
@@ -203,7 +204,7 @@ void receiveClientMessage(void) {
                 sendConfirmation(sender, returnValue);
         }
         else
-            LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'\n", name.c_str(), value.c_str());
+            LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'", name.c_str(), value.c_str());
     }
 }
 void enableInterClientCommunication(void) {

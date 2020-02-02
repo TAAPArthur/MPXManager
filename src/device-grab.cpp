@@ -14,6 +14,7 @@
 #pragma GCC diagnostic ignored "-Wnarrowing"
 
 void passiveGrab(WindowID window, uint32_t maskValue) {
+    TRACE("Passively Selecting " << maskValue << " on window " << window);
     XIEventMask eventMask = {XIAllDevices, 4, (unsigned char*)& maskValue};
     XISelectEvents(dpy, window, &eventMask, 1);
 }
@@ -24,19 +25,19 @@ void passiveUngrab(WindowID window) {
 int grabDevice(MasterID deviceID, uint32_t maskValue) {
     assert(!isSpecialID(deviceID));
     XIEventMask eventMask = {deviceID, 4, (unsigned char*)& maskValue};
-    LOG(LOG_LEVEL_INFO, "Grabbing device %d with mask %d\n", deviceID, maskValue);
+    LOG(LOG_LEVEL_INFO, "Grabbing device %d with mask %d", deviceID, maskValue);
     return XIGrabDevice(dpy, deviceID, root, CurrentTime, None, GrabModeAsync,
             GrabModeAsync, 1, &eventMask);
 }
 int ungrabDevice(MasterID id) {
-    LOG(LOG_LEVEL_INFO, "Ungrabbing device %d\n", id);
+    LOG(LOG_LEVEL_INFO, "Ungrabbing device %d", id);
     return XIUngrabDevice(dpy, id, 0);
 }
 
 int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskValue) {
     XIEventMask eventMask = {deviceID, 2, (unsigned char*)& maskValue};
     XIGrabModifiers modifiers[2] = {{mod}, {mod | IGNORE_MASK}};
-    LOG(LOG_LEVEL_TRACE, "Grabbing device:%d detail:%d mod:%d mask: %d %d\n",
+    LOG(LOG_LEVEL_TRACE, "Grabbing device:%d detail:%d mod:%d mask: %d %d",
         deviceID, detail, mod, maskValue, getKeyboardMask(maskValue));
     if(!getKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,
@@ -46,7 +47,7 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
                 1, &eventMask, 2, modifiers);
 }
 int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboard) {
-    LOG(LOG_LEVEL_DEBUG, "UNGrabbing device:%d detail:%d mod:%d %d\n",
+    LOG(LOG_LEVEL_DEBUG, "UNGrabbing device:%d detail:%d mod:%d %d",
         deviceID, detail, mod, isKeyboard);
     XIGrabModifiers modifiers[2] = {{mod}, {mod | IGNORE_MASK}};
     if(!isKeyboard)

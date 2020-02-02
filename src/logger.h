@@ -6,60 +6,12 @@
 #ifndef MPXMANAGER_LOGGER_H_
 #define MPXMANAGER_LOGGER_H_
 
-
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include <cstdio>
-
-#include "mywm-structs.h"
-#include "window-masks.h"
-
-
-
-/// The FD to log to
-#define LOG_FD STDOUT_FILENO
-
-/**
- * Prints the element in arr space separated. Arr is treated like an array of ints
- *
- * @param label some prefix
- * @param arr
- * @param size the number of elements
- *
- * @return
- */
-#define PRINT_ARR(label,arr,size){auto& info = logger.info() <<label << " Arr: ";for(int _n=0;_n<size;_n++)info<<(arr)[_n]<< " ";info<<std::endl;}
-
-
-/**
- * If i >= getLogLevel(), the print str
- *
- * @param i
- * @param str
- *
- */
-#define LOG(i,str...) do{if(isLogging(i)) { \
-    size_t needed = snprintf(NULL, 0, str) + 1; \
-    char  *buffer = (char*)malloc(needed); \
-    sprintf(buffer, str); \
-    logger.log(i) << buffer; \
-    free(buffer); }}while(0)\
-
-
-/**
- * if i>= getLogLevel(), run code
- *
- * @param i
- * @param code
- *
- */
-#define LOG_RUN(i,code...) \
-    do{if(isLogging(i)){code;}}while(0)
+#include <string>
 
 /// various logging levels
 enum LogLevel {
+    /// used to extra verbose logging
+    LOG_LEVEL_VERBOSE,
     /// used to debug specific problems
     LOG_LEVEL_TRACE,
     /// used for debug problems
@@ -74,6 +26,61 @@ enum LogLevel {
     LOG_LEVEL_NONE
 };
 
+/**
+ * Prints the element in arr space separated. Arr is treated like an array of ints
+ *
+ * @param label some prefix
+ * @param arr
+ * @param size the number of elements
+ *
+ * @return
+ */
+#define PRINT_ARR(label,arr,size){std::cout << label << " Arr: ";for(int _n=0;_n<size;_n++)std::cout<<(arr)[_n]<< " ";std::cout<<std::endl;}
+
+
+/**
+ * If i >= getLogLevel(), the print str
+ *
+ * @param i
+ * @param str
+ *
+ */
+#define LOG(i,str...) do{if(isLogging(i)) { \
+    size_t needed = snprintf(NULL, 0, str) + 1; \
+    char  *buffer = (char*)malloc(needed); \
+    sprintf(buffer, str); \
+    _LOG(i, buffer); \
+    free(buffer); }}while(0)\
+
+
+/**
+ * if i>= getLogLevel(), run code
+ *
+ * @param i
+ * @param code
+ *
+ */
+#define LOG_RUN(i,code...) \
+    do{if(isLogging(i)){code;}}while(0)
+
+#define _LOG(LEVEL, X...) \
+    do {if(isLogging(LEVEL)) std::cout << getContextString().c_str() << X << std::endl;}while(0)
+
+/// @{ Logging macros
+/// VERBOSE and TRACE logging macros will be no-ops in release builds
+#ifndef NDEBUG
+#define VERBOSE(X...) _LOG(LOG_LEVEL_VERBOSE, X)
+#define TRACE(X...) _LOG(LOG_LEVEL_TRACE, X)
+#else
+#define VERBOSE(X...) do{}while(0)
+#define TRACE(X...) do{}while(0)
+#endif
+#define DEBUG(X...) _LOG(LOG_LEVEL_DEBUG, X)
+#define INFO(X...)_LOG(LOG_LEVEL_INFO, X)
+#define WARN(X...)_LOG(LOG_LEVEL_WARN, X)
+#define ERROR(X...)_LOG(LOG_LEVEL_ERROR, X)
+/// @}
+
 
 /// if false then all logging will be disabled
 #ifndef LOGGING
@@ -83,12 +90,12 @@ enum LogLevel {
 /**
  * @return the current log level
  */
-int getLogLevel();
+LogLevel getLogLevel();
 /**
  * Sets the log level
  * @param level the new log level
  */
-void setLogLevel(uint32_t level);
+void setLogLevel(LogLevel level);
 /**
  * If message at log level i will be logged
  *
@@ -109,84 +116,15 @@ void pushContext(std::string context);
  * Removes the last context pushed via pushContext
  */
 void popContext();
+
 /**
- *
- *
  * @return a string representation of everything on the context stack
  */
 std::string getContextString();
-/**
- * Logging class
- */
-class Logger {
-    /// @cond
-    struct : std::streambuf { int overflow(int c) { return c; } } nullBuffer;
-    /// @endcond
-    std::ostream nullStream = std::ostream(&nullBuffer);
-    std::ostream& logStream = std::cout;
-
-public:
-    /**
-     * @param level
-     *
-     * @return  either nullStream or logSteam depening on level
-     */
-    std::ostream& log(int level) {
-        return (isLogging(level) ? logStream : nullStream) << getContextString().c_str();
-    }
-
-    /// @{ @see LogLevel
-    std::ostream& trace() { return log(LOG_LEVEL_TRACE);}
-    std::ostream& info() { return log(LOG_LEVEL_INFO);}
-    std::ostream& debug() { return log(LOG_LEVEL_DEBUG);}
-    std::ostream& warn() { return log(LOG_LEVEL_WARN);}
-    std::ostream& err() { return log(LOG_LEVEL_ERROR);}
-    std::ostream& always() { return log(LOG_LEVEL_NONE);}
-    /// @}
-};
-/// global logger variable
-extern Logger logger;
-
-/**
- * Prints every window in the active Workspace
- */
-void dumpWindowStack() ;
-/**
- * Prints just win if it is registered
- * @param win
- */
-void dumpSingleWindow(WindowID win) ;
 
 /**
  * Prints the stack strace
  */
 void printStackTrace(void);
-/**
- * Prints a summary of the state of the WM
- */
-void printSummary(void);
-/**
- * Prints all set rules
- */
-void dumpRules(void);
-/**
- * Prints all with that have filterMask (if filterMask is 0, print all windows)
- *
- * @param filterMask
- */
-void dumpWindow(WindowMask filterMask = 0);
-
-/**
- * Prints all window whose title, class, instance of type equals match
- *
- * @param match
- */
-void dumpWindow(std::string match);
-/**
- * Dumps info on master. If master == null, info on the active master will be printed
- *
- * @param master
- */
-void dumpMaster(Master* master) ;
 
 #endif /* LOGGER_H_ */

@@ -91,7 +91,7 @@ MPX_TEST("create_destroy_window", {
     assert(!destroyWindow(createWindow()));
 });
 
-MPX_TEST("attempToMapWindow", {
+MPX_TEST("attemptToMapWindow", {
     WindowID win = createWindow();
     assert(!isWindowMapped(win));
     mapWindow(win);
@@ -115,10 +115,9 @@ MPX_TEST("event_attributes", {
         assert(opcodeToString(i));
 });
 MPX_TEST("dump_atoms", {
-    suppressOutput();
-    dumpAtoms(&WM_SELECTION_ATOM, 1);
+    getAtomsAsString(&WM_SELECTION_ATOM, 1);
     xcb_atom_t arr[] = {WM_DELETE_WINDOW, WM_TAKE_FOCUS};
-    dumpAtoms(arr, 2);
+    getAtomsAsString(arr, 2);
 });
 MPX_TEST("catch_error_silient", {
     xcb_window_t win = createNormalWindow();
@@ -126,7 +125,7 @@ MPX_TEST("catch_error_silient", {
     assert(catchErrorSilent(xcb_map_window_checked(dis, win)) == 0);
     assert(catchErrorSilent(xcb_map_window_checked(dis, 0)) == BadWindow);
 });
-MPX_TEST_ITER_ERR("catch_error_silient", 2, 1, {
+MPX_TEST_ITER_ERR("catch_error_silent", 2, 1, {
     xcb_window_t win = createNormalWindow();
     CRASH_ON_ERRORS = _i == 0 ? -1 : 0;
     suppressOutput();

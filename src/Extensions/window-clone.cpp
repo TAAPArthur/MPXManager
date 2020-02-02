@@ -38,7 +38,7 @@ static void syncPropertiesWithParent(WindowInfo* clone, WindowInfo* parent) {
 }
 WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     assert(winInfo);
-    LOG(LOG_LEVEL_DEBUG, "Cloning window %d\n", winInfo->getID());
+    LOG(LOG_LEVEL_DEBUG, "Cloning window %d", winInfo->getID());
     uint32_t values[1] = {winInfo->isOverrideRedirectWindow()};
     parent = parent ? parent : winInfo->getParent();
     WindowID win = createWindow(parent, winInfo->isInputOnly() ? XCB_WINDOW_CLASS_INPUT_ONLY :
@@ -122,7 +122,7 @@ void swapWithOriginalOnEnter(void) {
     if(winInfo) {
         WindowInfo* origin = getWindowInfo(winInfo->getEffectiveID());
         if(origin && origin->isNotInInvisibleWorkspace() && winInfo->isNotInInvisibleWorkspace()) {
-            LOG(LOG_LEVEL_DEBUG, "swapping clone %d with %d\n", winInfo->getID(), origin ? origin->getID() : 0);
+            LOG(LOG_LEVEL_DEBUG, "swapping clone %d with %d", winInfo->getID(), origin ? origin->getID() : 0);
             swapWindows(origin, winInfo);
             markState();
         }
@@ -155,7 +155,7 @@ void swapOnMapEvent(void) {
     if(winInfo) {
         WindowInfo* origin = getWindowInfo(winInfo->getEffectiveID());
         if(origin && origin != winInfo && !origin->isNotInInvisibleWorkspace()) {
-            LOG(LOG_LEVEL_DEBUG, "swapping mapped clone with unmapped parent %d with %d\n", winInfo->getID(), origin->getID());
+            LOG(LOG_LEVEL_DEBUG, "swapping mapped clone with unmapped parent %d with %d", winInfo->getID(), origin->getID());
             swapWindows(origin, winInfo);
         }
     }

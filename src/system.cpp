@@ -29,7 +29,7 @@ void (*onChildSpawn)(void) = setClientMasterEnvVar;
 void resetPipe() {
     if(statusPipeFD[0]) {
         // other fields were closed right after a call to spawnPipe;
-        LOG(LOG_LEVEL_TRACE, "reseting pipe\n");
+        TRACE("reseting pipe");
         close(STATUS_FD);
         close(STATUS_FD_READ);
         for(int i = LEN(statusPipeFD) - 1; i >= 0; i--)
@@ -82,7 +82,7 @@ void suppressOutput(void) {
 }
 
 static int _spawn(const char* command, bool spawnPipe, bool silent = 0) {
-    LOG(LOG_LEVEL_INFO, "spawning command %s\n", command);
+    INFO("Spawning command " << command);
     if(spawnPipe) {
         resetPipe();
         pipe(statusPipeFD);
@@ -126,11 +126,11 @@ int spawnPipe(const char* command) {
 }
 
 int waitForChild(int pid) {
-    LOG(LOG_LEVEL_DEBUG, "Waiting for process: %d\n", pid);
+    LOG(LOG_LEVEL_DEBUG, "Waiting for process: %d", pid);
     int status = 0;
     waitpid(pid, &status, 0);
     int exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : WIFSIGNALED(status) ? WTERMSIG(status) : -1;
-    LOG(LOG_LEVEL_DEBUG, "Process exited with %d status %d\n", pid, status);
+    LOG(LOG_LEVEL_DEBUG, "Process exited with %d status %d", pid, status);
     return exitCode;
 }
 void destroyAllLists() {
@@ -144,16 +144,16 @@ void destroyAllLists() {
 static void stop(void) {
     requestShutdown();
     waitForAllThreadsToExit();
-    LOG(LOG_LEVEL_DEBUG, "Shutting down\n");
+    DEBUG("Shutting down");
     resetPipe();
     destroyAllLists();
 }
 
 void restart(void) {
     if(passedArguments) {
-        LOG(LOG_LEVEL_INFO, "restarting\n");
+        INFO("restarting");
         stop();
-        LOG(LOG_LEVEL_DEBUG, "calling execv\n");
+        DEBUG("calling execv");
         execv(passedArguments[0], passedArguments);
         err(1, "exec failed; Aborting");
     }
@@ -162,13 +162,13 @@ void restart(void) {
 }
 void quit(int exitCode) {
     stop();
-    LOG(LOG_LEVEL_DEBUG, "Exiting\n");
+    DEBUG("Exiting");
     exit(exitCode);
 }
 
 static bool caughtError = 0;
 static void handler(int sig) {
-    LOG(LOG_LEVEL_ERROR, "Error: signal %d:\n", sig);
+    LOG(LOG_LEVEL_ERROR, "Error: signal %d:", sig);
 #ifdef NDEBUG
     printStackTrace();
 #endif

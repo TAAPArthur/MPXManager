@@ -21,6 +21,8 @@ Master* getActiveMaster(void) {
     return master;
 }
 void setActiveMaster(Master* newMaster) {
+    if(master != newMaster && newMaster)
+        LOG(LOG_LEVEL_DEBUG, "Setting new master %d", newMaster->getID());
     master = newMaster;
 }
 std::ostream& operator<<(std::ostream& strm, const Master& m) {
@@ -47,7 +49,7 @@ void Master::onWindowFocus(WindowID win) {
     if(!winInfo)
         return;
     int pos = getWindowStack().indexOf(winInfo);
-    LOG(LOG_LEVEL_DEBUG, "updating focus for win %d at position %d out of %d\n", win, pos, getWindowStack().size());
+    LOG(LOG_LEVEL_DEBUG, "updating focus for win %d at position %d out of %d", win, pos, getWindowStack().size());
     if(! isFocusStackFrozen()) {
         if(pos == -1)
             windowStack.add(winInfo);
@@ -88,7 +90,7 @@ Master* getMasterByID(MasterID id, bool keyboard) {
         for(Master* master : getAllMasters())
             if(master->getPointerID() == id)
                 return master;
-    LOG(LOG_LEVEL_TRACE, "Could not find master matching %d\n", id);
+    LOG(LOG_LEVEL_TRACE, "Could not find master matching %d", id);
     return NULL;
 }
 Master* getMasterByName(std::string name) {

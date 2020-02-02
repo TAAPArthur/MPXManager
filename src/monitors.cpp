@@ -51,7 +51,6 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     if(winInfo->getWorkspace() && winInfo->getWorkspace()->getMonitor() != this ||
         !winInfo->getWorkspace() && winInfo->hasMask(PRIMARY_MONITOR_MASK) && !isPrimary())
         return 0;
-    logger.debug() << "Attempting to resize Monitor " << getID() << " because of " << winInfo->getID() << std::endl;
     bool changed = 0;
     auto properties = winInfo->getDockProperties();
     for(int i = 0; i < 4; i++) {
@@ -83,6 +82,8 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
             (&view.x)[offset] = dim;
         changed = 1;
     }
+    if(changed)
+        DEBUG("Monitor " << getID() << " was resized because of " << winInfo->getID() << "; new size is: " << getViewport());
     return changed;
 }
 void addRootMonitor() {
@@ -90,7 +91,7 @@ void addRootMonitor() {
 }
 void removeDuplicateMonitors(void) {
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION) {
-        LOG(LOG_LEVEL_TRACE, "MONITOR_DUPLICATION_POLICY or MONITOR_DUPLICATION_RESOLUTION is not set\n");
+        TRACE("MONITOR_DUPLICATION_POLICY or MONITOR_DUPLICATION_RESOLUTION is not set");
         return;
     }
     for(uint32_t i = 0; i < getAllMonitors().size(); i++) {
@@ -107,7 +108,7 @@ void removeDuplicateMonitors(void) {
             if(!dup)
                 continue;
             Monitor* monitorToRemove = NULL;
-            LOG(LOG_LEVEL_DEBUG, "Monitors %u and %u are duplicates\n", m1->getID(), m2->getID());
+            LOG(LOG_LEVEL_DEBUG, "Monitors %u and %u are duplicates", m1->getID(), m2->getID());
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_SMALLER)
                 monitorToRemove = m1->getBase().isLargerThan(m2->getBase()) ? m1 : m2;
             if(MONITOR_DUPLICATION_RESOLUTION & TAKE_LARGER)

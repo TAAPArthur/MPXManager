@@ -5,6 +5,7 @@
 #include "mywm-structs.h"
 #include "system.h"
 #include "user-events.h"
+#include "window-masks.h"
 #include "windows.h"
 #include "workspaces.h"
 #include "xsession.h"
@@ -51,7 +52,7 @@ bool validate() {
         if(m->getWorkspace())
             assertEquals(m->getWorkspace()->getMonitor(), m);
     }
-    LOG(LOG_LEVEL_DEBUG, "validation result: %d\n", valid);
+    LOG(LOG_LEVEL_DEBUG, "validation result: %d", valid);
     return valid;
 }
 void dieOnIntegrityCheckFail() {
@@ -62,7 +63,60 @@ void addDieOnIntegrityCheckFailRule(AddFlag flag) {
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), flag);
 }
 void addAllDebugRules(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {logger.info() << *winInfo << std::endl;}, "WindowDump"},
-    flag);
+    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {INFO(*winInfo);}, "WindowDump"}, flag);
     addDieOnIntegrityCheckFailRule(flag);
+}
+
+void dumpRules(void) {
+    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
+        if(!getEventRules(i).empty())
+            std::cout << eventTypeToString(i) << ": " << getEventRules(i) << std::endl;
+    for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
+        if(!getBatchEventRules(i).empty())
+            std::cout << eventTypeToString(i) << "(Batch): " << getBatchEventRules(i) << std::endl;
+}
+void printSummary(void) {
+    std::cout << "Summary:" << std::endl;
+    std::cout << "Slaves: " << getAllSlaves() << std::endl;
+    std::cout << "Masters: " << getAllMasters() << std::endl;
+    std::cout << "Monitors: " << getAllMonitors() << std::endl;
+    std::cout << "Workspaces: " << getAllWorkspaces() << std::endl;
+    dumpWindow();
+}
+void dumpWindow(WindowMask filterMask) {
+    std::cout << "Dumping:" << std::endl;
+    for(WindowInfo* winInfo : getAllWindows()) {
+        if(!filterMask || winInfo->hasMask(filterMask))
+            std::cout << *winInfo << std::endl;
+    }
+}
+void dumpMaster(Master* master) {
+    if(!master)
+        master = getActiveMaster();
+    std::cout << "Dumping:" << *master << std::endl;
+    std::cout << master->getSlaves() << std::endl;
+    for(WindowInfo* winInfo : master->getWindowStack()) {
+        std::cout << *winInfo << std::endl;
+    }
+}
+void dumpWindow(std::string match) {
+    std::cout << "Dumping:" << std::endl;
+    for(WindowInfo* winInfo : getAllWindows()) {
+        if(winInfo->getClassName() == match || winInfo->getInstanceName() == match)
+            std::cout << *winInfo << std::endl;
+    }
+}
+void dumpSingleWindow(WindowID win) {
+    WindowInfo* winInfo = getWindowInfo(win);
+    if(!winInfo) {
+        std::cout << "No window with id " << win << std::endl;
+        return;
+    }
+    std::cout << "Dumping:" << std::endl;
+    std::cout << *winInfo << std::endl;
+}
+void dumpWindowStack() {
+    std::cout << "Dumping Window Stack:" << std::endl;
+    for(WindowInfo* winInfo : getActiveWorkspace()->getWindowStack())
+        std::cout << *winInfo << std::endl;
 }

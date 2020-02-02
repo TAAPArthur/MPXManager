@@ -48,7 +48,7 @@ uint32_t getMaxNumberOfDevices(bool force) {
         maxNumDevices = 40; // the max devices as of 2019-10-19
         xcb_get_property_cookie_t cookie;
         xcb_get_property_reply_t* reply;
-        LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
+        TRACE("Loading active Master");
         cookie = xcb_get_property(dis, 0, root, MAX_DEVICES, XCB_ATOM_INTEGER, 0, sizeof(int));
         if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply))
             maxNumDevices = *(int*)xcb_get_property_value(reply);
@@ -174,16 +174,16 @@ WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, 
 }
 int destroyWindow(WindowID win) {
     assert(win);
-    LOG(LOG_LEVEL_DEBUG, "Destroying window %d\n", win);
+    LOG(LOG_LEVEL_DEBUG, "Destroying window %d", win);
     return catchError(xcb_destroy_window_checked(dis, win));
 }
 WindowID mapWindow(WindowID id) {
-    logger.trace() << "Mapping " << id << std::endl;
+    TRACE("Mapping " << id);
     xcb_map_window(dis, id);
     return id;
 }
 void unmapWindow(WindowID id) {
-    logger.trace() << "UnMapping " << id << std::endl;
+    TRACE("UnMapping " << id);
     xcb_unmap_window(dis, id);
 }
 
@@ -208,15 +208,15 @@ int catchErrorSilent(xcb_void_cookie_t cookie) {
 }
 void logError(xcb_generic_error_t* e, bool xlibError) {
     if(xlibError)
-        LOG(LOG_LEVEL_ERROR, "XLib error\n");
-    LOG(LOG_LEVEL_ERROR, "error occurred with resource %d. Error code: %d %s (%d %d)\n", e->resource_id, e->error_code,
+        ERROR("XLib error");
+    LOG(LOG_LEVEL_ERROR, "error occurred with resource %d. Error code: %d %s (%d %d)", e->resource_id, e->error_code,
         opcodeToString(e->major_code), e->major_code, e->minor_code);
     int size = 256;
     char buff[size];
     XGetErrorText(dpy, e->error_code, buff, size);
-    LOG(LOG_LEVEL_ERROR, "Error code %d %s \n", e->error_code, buff) ;
+    LOG(LOG_LEVEL_ERROR, "Error code %d %s ", e->error_code, buff) ;
     if((1 << e->error_code) & CRASH_ON_ERRORS) {
-        LOG(LOG_LEVEL_ERROR, "Crashing on error\n");
+        ERROR("Crashing on error");
         LOG_RUN(LOG_LEVEL_ERROR, printStackTrace());
         quit(1);
     }
@@ -244,7 +244,7 @@ static xcb_gcontext_t create_graphics_context(void) {
 #define _CREATE_ATOM(name)name=getAtom(# name);
 void openXDisplay(void) {
     XInitThreads();
-    LOG(LOG_LEVEL_DEBUG, " connecting to XServer \n");
+    DEBUG(" connecting to XServer ");
     for(int i = 0; i < 20; i++) {
         dpy = XOpenDisplay(NULL);
         if(dpy)
@@ -252,7 +252,7 @@ void openXDisplay(void) {
         msleep(5);
     }
     if(!dpy) {
-        LOG(LOG_LEVEL_ERROR, " Failed to connect to xserver\n");
+        ERROR(" Failed to connect to xserver");
         exit(EXIT_FAILURE);
     }
     dis = XGetXCBConnection(dpy);
@@ -300,7 +300,7 @@ void openXDisplay(void) {
 
 void closeConnection(void) {
     if(ewmh) {
-        LOG(LOG_LEVEL_DEBUG, "closing X connection\n");
+        DEBUG("closing X connection");
         xcb_ewmh_connection_wipe(ewmh);
         free(ewmh);
         ewmh = NULL;
@@ -382,14 +382,14 @@ const char* opcodeToString(int opcode) {
             return "unknown code";
     }
 }
-void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms) {
-    std::cout << "Dumping Atoms: ";
+std::string getAtomsAsString(const xcb_atom_t* atoms, int numberOfAtoms) {
+    std::string result = "";
     for(int i = 0; i < numberOfAtoms; i++) {
         if(i)
-            std::cout << ", ";
-        std::cout << getAtomName(atoms[i]) << " (" << atoms[i] << ")";
+            result += ", ";
+        result += getAtomName(atoms[i]) + " (" + std::to_string(atoms[i]) + ")";
     }
-    std::cout << "\n";
+    return result;
 }
 static volatile int idle;
 static unsigned int periodCounter;
@@ -453,7 +453,7 @@ static inline xcb_generic_event_t* getNextEvent() {
         idle++;
         flush();
         unlock();
-        LOG(LOG_LEVEL_INFO, "Idle %d\n", idle);
+        INFO("Idle " << idle);
         if(!isShuttingDown())
             event = waitForEvent();
     }
@@ -487,18 +487,18 @@ void runEventLoop() {
 #ifdef DEBUG
         XSync(dpy, 0);
 #endif
-        LOG(LOG_LEVEL_TRACE, "event processed\n");
+        TRACE("event processed");
     }
     if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
         while(event = eventBuffer.pop())
             free(event);
         if(isShuttingDown())
-            LOG(LOG_LEVEL_INFO, "shutting down\n");
+            INFO("shutting down");
     }
-    LOG(LOG_LEVEL_INFO, "Exited event loop\n");
+    INFO("Exited event loop");
 }
 int loadGenericEvent(xcb_ge_generic_event_t* event) {
-    LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d seq %d\n",
+    LOG(LOG_LEVEL_TRACE, "processing generic event; ext: %d type: %d event type %d seq %d",
         event->extension, event->response_type, event->event_type, event->sequence);
     if(event->extension == xcb_get_extension_data(dis, &xcb_input_id)->major_opcode) {
         int type = event->event_type + GENERIC_EVENT_OFFSET;

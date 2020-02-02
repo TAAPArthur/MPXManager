@@ -40,4 +40,43 @@ void addDieOnIntegrityCheckFailRule(AddFlag flag = ADD_UNIQUE);
  * @param flag
  */
 void addAllDebugRules(AddFlag flag = ADD_UNIQUE);
+
+
+/**
+ * Prints every window in the active Workspace
+ */
+void dumpWindowStack() ;
+/**
+ * Prints just win if it is registered
+ * @param win
+ */
+void dumpSingleWindow(WindowID win) ;
+
+/**
+ * Prints a summary of the state of the WM
+ */
+void printSummary(void);
+/**
+ * Prints all set rules
+ */
+void dumpRules(void);
+/**
+ * Prints all with that have filterMask (if filterMask is 0, print all windows)
+ *
+ * @param filterMask
+ */
+void dumpWindow(WindowMask filterMask = 0);
+
+/**
+ * Prints all window whose title, class, instance of type equals match
+ *
+ * @param match
+ */
+void dumpWindow(std::string match);
+/**
+ * Dumps info on master. If master == null, info on the active master will be printed
+ *
+ * @param master
+ */
+void dumpMaster(Master* master) ;
 #endif

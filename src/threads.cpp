@@ -22,6 +22,9 @@ void lock(void) {
 }
 
 void unlock(void) {
+#ifndef NDEBUG
+    std::cout << std::flush;
+#endif
     globalMutex.unlock();
 }
 
@@ -64,16 +67,16 @@ void spawnThread(std::function<void()>func, const char* name) {
 int getNumberOfThreads(void) {return threads.size();}
 void waitForAllThreadsToExit(void) {
     auto currentThreadID = std::this_thread::get_id();
-    LOG(LOG_LEVEL_DEBUG, "Running %d wakeup functions for %d threads\n", wakeupFunctions.size(), threads.size());
+    LOG(LOG_LEVEL_DEBUG, "Running %d wakeup functions for %d threads", wakeupFunctions.size(), threads.size());
     for(auto func : wakeupFunctions)
         func();
     while(threads.size()) {
         Thread* thread = threads.pop();
-        LOG(LOG_LEVEL_DEBUG, "Waiting for thread '%s' and %d more threads\n", thread->name, threads.size());
+        LOG(LOG_LEVEL_DEBUG, "Waiting for thread '%s' and %d more threads", thread->name, threads.size());
         if(thread->thread.get_id() != currentThreadID) {
             thread->thread.join();
         }
         delete thread;
     }
-    LOG(LOG_LEVEL_DEBUG, "Finished waiting on threads\n");
+    DEBUG("Finished waiting on threads");
 }

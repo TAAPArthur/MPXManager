@@ -26,7 +26,7 @@ uint32_t getNumberOfActiveChains(Master* master) {
     return globalChain.size() + getActiveChains(master).size();
 }
 void endActiveChain(Master* master) {
-    LOG(LOG_LEVEL_INFO, "External call to end chain\n");
+    INFO("External call to end chain");
     if(getActiveChain(master))
         getActiveChain(master)->end();
 }
@@ -37,7 +37,7 @@ bool Chain::check(const UserEvent& userEvent)const {
     return shouldPassThrough(getPassThrough(), end());
 }
 bool Chain::start(const UserEvent& event)const {
-    LOG(LOG_LEVEL_INFO, "starting chain; mask:%d\n", chainMask);
+    INFO("starting chain; mask: " << chainMask);
     if(chainMask) {
         if(getKeyboardMask(chainMask))
             grabDevice(getActiveMasterKeyboardID(), getKeyboardMask(chainMask));
@@ -53,7 +53,7 @@ bool Chain::start(const UserEvent& event)const {
     return boundFunction({getWindowToActOn(event)})&& check(event);
 }
 bool Chain::end()const {
-    LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d\n", isGlobalChain());
+    LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d", isGlobalChain());
     if(isGlobalChain())
         globalChain.removeElement(this);
     else
@@ -75,7 +75,7 @@ bool checkAllChainBindings(const UserEvent& userEvent) {
     const Chain* chain;
     while(chain = getActiveChain(userEvent.master))
         if(!chain->check(userEvent)) {
-            LOG(LOG_LEVEL_INFO, "checkAllChainBindings terminated early\n");
+            INFO("checkAllChainBindings terminated early");
             return 0;
         }
     return 1;

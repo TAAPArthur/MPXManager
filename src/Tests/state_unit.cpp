@@ -20,7 +20,7 @@ MPX_TEST("init", {
     assert(!updateState());
 });
 MPX_TEST("print", {
-    setLogLevel(LOG_LEVEL_TRACE);
+    setLogLevel(LOG_LEVEL_VERBOSE);
     suppressOutput();
     markState();
     addVisibleWindow(0);

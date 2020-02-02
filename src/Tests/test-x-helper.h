@@ -63,7 +63,7 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
     if(!reply) {
-        LOG(LOG_LEVEL_WARN, "could not query tree to check stacking order\n");
+        WARN("could not query tree to check stacking order");
         return 0;
     }
     int numberOfChildren = xcb_query_tree_children_length(reply);
@@ -76,7 +76,7 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
                 break;
         }
         if(adj && counter) {
-            LOG(LOG_LEVEL_WARN, "results not adjacent\n");
+            WARN("results not adjacent");
             break;
         }
     }

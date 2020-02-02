@@ -31,18 +31,18 @@ void onXConnect(void) {
 void onHiearchyChangeEvent(void) {
     xcb_input_hierarchy_event_t* event = (xcb_input_hierarchy_event_t*)getLastEvent();
     if(event->flags & (XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED | XCB_INPUT_HIERARCHY_MASK_SLAVE_ADDED)) {
-        LOG(LOG_LEVEL_DEBUG, "detected new master\n");
+        DEBUG("detected new master");
         initCurrentMasters();
         return;
     }
     xcb_input_hierarchy_info_iterator_t iter = xcb_input_hierarchy_infos_iterator(event);
     while(iter.rem) {
         if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED) {
-            LOG(LOG_LEVEL_DEBUG, "Master %d %d has been removed\n", iter.data->deviceid, iter.data->attachment);
+            LOG(LOG_LEVEL_DEBUG, "Master %d %d has been removed", iter.data->deviceid, iter.data->attachment);
             delete getAllMasters().removeElement(iter.data->deviceid);
         }
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_REMOVED) {
-            LOG(LOG_LEVEL_DEBUG, "Slave %d %d has been removed\n", iter.data->deviceid, iter.data->attachment);
+            LOG(LOG_LEVEL_DEBUG, "Slave %d %d has been removed", iter.data->deviceid, iter.data->attachment);
             delete getAllSlaves().removeElement(iter.data->deviceid);
         }
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_ATTACHED) {
@@ -56,7 +56,7 @@ void onHiearchyChangeEvent(void) {
 }
 
 void onError(void) {
-    LOG(LOG_LEVEL_ERROR, "error received in event loop\n");
+    ERROR("error received in event loop");
     logError((xcb_generic_error_t*)getLastEvent());
 }
 void onConfigureNotifyEvent(void) {
@@ -93,9 +93,9 @@ bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
 }
 void onCreateEvent(void) {
     xcb_create_notify_event_t* event = (xcb_create_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "Detected create event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected create event for Window %d", event->window);
     if(getWindowInfo(event->window)) {
-        LOG(LOG_LEVEL_TRACE, "Window %d is already in our records; Ignoring create event\n", event->window);
+        LOG(LOG_LEVEL_TRACE, "Window %d is already in our records; Ignoring create event", event->window);
         return;
     }
     if(registerWindow(event->window, event->parent)) {
@@ -106,7 +106,7 @@ void onCreateEvent(void) {
 }
 void onDestroyEvent(void) {
     xcb_destroy_notify_event_t* event = (xcb_destroy_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "Detected destroy event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected destroy event for Window %d", event->window);
     unregisterWindow(getWindowInfo(event->window), 1);
 }
 void onVisibilityEvent(void) {
@@ -124,7 +124,7 @@ void onVisibilityEvent(void) {
 }
 void onMapEvent(void) {
     xcb_map_notify_event_t* event = (xcb_map_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "Detected map event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected map event for Window %d", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         bool alreadlyMapped = winInfo->hasMask(MAPPABLE_MASK);
@@ -146,7 +146,7 @@ void onMapRequestEvent(void) {
 }
 void onUnmapEvent(void) {
     xcb_unmap_notify_event_t* event = (xcb_unmap_notify_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "Detected unmap event for Window %d\n", event->window);
+    LOG(LOG_LEVEL_TRACE, "Detected unmap event for Window %d", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
         winInfo->removeMask(FULLY_VISIBLE_MASK | MAPPED_MASK);
@@ -170,7 +170,7 @@ void onFocusInEvent(void) {
     xcb_input_focus_in_event_t* event = (xcb_input_focus_in_event_t*)getLastEvent();
     setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
-    LOG(LOG_LEVEL_DEBUG, "Window %d was focused\n", event->event);
+    LOG(LOG_LEVEL_DEBUG, "Window %d was focused", event->event);
     if(winInfo && winInfo->isFocusAllowed()) {
         if(!winInfo->hasMask(NO_RECORD_FOCUS_MASK))
             getActiveMaster()->onWindowFocus(winInfo->getID());
@@ -183,7 +183,7 @@ void onFocusOutEvent(void) {
     xcb_input_focus_out_event_t* event = (xcb_input_focus_out_event_t*)getLastEvent();
     setActiveMasterByDeviceID(event->deviceid);
     WindowInfo* winInfo = getWindowInfo(event->event);
-    LOG(LOG_LEVEL_DEBUG, "Window %d was unfocused\n", event->event);
+    LOG(LOG_LEVEL_DEBUG, "Window %d was unfocused", event->event);
     if(winInfo)
         resetBorder(winInfo->getID());
 }
@@ -204,7 +204,7 @@ void onPropertyEvent(void) {
         else if(event->atom == WM_HINTS)
             loadWindowHints(winInfo);
         else {
-            LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(&event->atom, 1));
+            DEBUG(getAtomsAsString(&event->atom, 1));
             //loadWindowProperties(winInfo);
         }
     }
@@ -223,7 +223,7 @@ void addApplyBindingsRule(AddFlag flag) {
 }
 void onDeviceEvent(void) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
-    LOG(LOG_LEVEL_TRACE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d\n",
+    LOG(LOG_LEVEL_TRACE, "device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d",
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
         event->root, event->event, event->child);
     setActiveMasterByDeviceID(event->deviceid);
@@ -243,7 +243,7 @@ void onGenericEvent(void) {
 bool onSelectionClearEvent(void) {
     xcb_selection_clear_event_t* event = (xcb_selection_clear_event_t*)getLastEvent();
     if(event->owner == getPrivateWindow() && event->selection == WM_SELECTION_ATOM) {
-        LOG(LOG_LEVEL_INFO, "We lost the WM_SELECTION; another window manager is taking over (%d)", event->owner);
+        INFO("We lost the WM_SELECTION; another window manager is taking over: " << event->owner);
         requestShutdown();
         return 0;
     }
@@ -255,11 +255,11 @@ void registerForEvents() {
     if(ROOT_EVENT_MASKS)
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
     ArrayList<Binding*>& list = getDeviceBindings();
-    LOG(LOG_LEVEL_DEBUG, "Grabbing %d buttons/keys\n", list.size());
+    LOG(LOG_LEVEL_DEBUG, "Grabbing %d buttons/keys", list.size());
     for(Binding* binding : list) {
         binding->grab();
     }
-    LOG(LOG_LEVEL_DEBUG, "listening for device event; masks: %d\n", ROOT_DEVICE_EVENT_MASKS);
+    LOG(LOG_LEVEL_DEBUG, "listening for device event; masks: %d", ROOT_DEVICE_EVENT_MASKS);
     if(ROOT_DEVICE_EVENT_MASKS)
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
 }
@@ -272,7 +272,7 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
         result = 1;
         uint32_t deviceMask = winInfo->getDeviceEventMasks() ? winInfo->getDeviceEventMasks() : NON_ROOT_DEVICE_EVENT_MASKS;
         passiveGrab(winInfo->getID(), deviceMask);
-        LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d\n", deviceMask, winInfo->getID());
+        LOG(LOG_LEVEL_DEBUG, "Listening for events %d on %d", deviceMask, winInfo->getID());
     }
     return result;
 }

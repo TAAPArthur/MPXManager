@@ -295,12 +295,11 @@ const char* eventTypeToString(int type);
  */
 const char* opcodeToString(int opcode);
 /**
- * Prints the name of each element of atoms
- *
  * @param atoms
  * @param numberOfAtoms
+ * @return a str representation of the list of atoms
  */
-void dumpAtoms(xcb_atom_t* atoms, int numberOfAtoms);
+std::string getAtomsAsString(const xcb_atom_t* atoms, int numberOfAtoms);
 /**
  * @return 1 iff the last event was synthetic (not sent by the XServer)
  */

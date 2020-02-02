@@ -461,7 +461,7 @@ MPX_TEST("test_kill_window", {
     }
     int result = read(STATUS_FD_READ, &win, sizeof(win));
     if(result < sizeof(win)) {
-        LOG(LOG_LEVEL_NONE, "killing failed %s\n", strerror(errno));
+        LOG(LOG_LEVEL_NONE, "killing failed %s", strerror(errno));
         assertEquals(result, sizeof(win));
     }
     assert(win);
@@ -535,7 +535,7 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
         delete getAllWindows().removeElement(win);
         assertEquals(killClientOfWindow(win), 0);
         unlock();
-        LOG(0, "Killed client\n");
+        LOG(0, "Killed client");
     }
     assertEquals(waitForChild(0), 1);
     fullCleanup();

@@ -67,14 +67,14 @@ void adjustScrollSpeed(int diff) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->scrollScale = diff == 0 ? 0 : info->scrollScale + diff;
     info->scrollScale = std::max(1, std::min(info->scrollScale, 8));
-    logger.info() << "scrollScale is now " << info->scrollScale << "Master " << info->id << std::endl;
+    INFO("scrollScale is now " << info->scrollScale << "Master " << info->id);
 }
 
 void adjustSpeed(int multiplier) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->vScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
     info->vScale = std::max(1, info->vScale);
-    logger.info() << "vScale is now " << info->scrollScale << "Master " << info->id << std::endl;
+    INFO("vScale is now " << info->scrollScale << "Master " << info->id);
 }
 
 #define _IS_SET(info,A,B)\

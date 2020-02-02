@@ -37,11 +37,11 @@ void incrementBatchEventRuleCounter(int i) {
 }
 static int applyRules(ArrayList<BoundFunction*>& rules, const BoundFunctionArg& arg = {}) {
     for(BoundFunction* func : rules) {
-        logger.debug() << "Running func: " << func->getName() << std::endl;
+        DEBUG("Running func: " << func->getName());
         pushContext(func->getName());
         if(!func->execute(arg)) {
             popContext();
-            logger.info() << "Rules aborted early due to: " << func->getName() << std::endl;
+            INFO("Rules aborted early due to: " << func->getName());
             return 0;
         }
         popContext();
@@ -54,7 +54,7 @@ int getNumberOfEventsTriggerSinceLastIdle(int type) {
 void applyBatchEventRules(void) {
     for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
-            LOG(LOG_LEVEL_INFO, "Applying Batch rules %d (count:%d) %s number of rules: %d\n", i, batchEventRules[i].counter,
+            LOG(LOG_LEVEL_INFO, "Applying Batch rules %d (count:%d) %s number of rules: %d", i, batchEventRules[i].counter,
                 eventTypeToString(i), getBatchEventRules(i).size());
             pushContext("BATCH_" + std::string(eventTypeToString(i)));
             applyRules(getBatchEventRules(i));
@@ -63,7 +63,7 @@ void applyBatchEventRules(void) {
         }
 }
 int applyEventRules(int type, const BoundFunctionArg& arg) {
-    LOG(LOG_LEVEL_INFO, "Event detected %d %s number of rules: %d parameters\n",
+    LOG(LOG_LEVEL_INFO, "Event detected %d %s number of rules: %d parameters",
         type, eventTypeToString(type), getEventRules(type).size());
     incrementBatchEventRuleCounter(type);
     pushContext(eventTypeToString(type));

@@ -65,7 +65,7 @@ void addAvoidDocksRule(AddFlag flag) {
     getEventRules(PROPERTY_LOAD).add(new BoundFunction(+[](WindowInfo * winInfo) {
         assert(winInfo->getType());
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
-            LOG(LOG_LEVEL_DEBUG, "Marking window as dock\n");
+            DEBUG("Marking window as dock");
             winInfo->setDock();
             winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);
             removeBorder(winInfo->getID());
@@ -87,7 +87,7 @@ void focusFollowMouse() {
     setActiveMasterByDeviceID(event->deviceid);
     WindowID win = event->event;
     WindowInfo* winInfo = getWindowInfo(win);
-    LOG(LOG_LEVEL_DEBUG, "focus following mouse %d win %d\n", getActiveMaster()->getID(), win);
+    LOG(LOG_LEVEL_DEBUG, "focus following mouse %d win %d", getActiveMaster()->getID(), win);
     if(winInfo)
         focusWindow(winInfo);
 }
@@ -159,13 +159,13 @@ void autoFocus() {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             Master* master = getClientMaster(winInfo->getID());
             if(master && focusWindow(winInfo, master)) {
-                LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
+                LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)", winInfo->getID(), delta);
                 raiseWindow(winInfo->getID());
                 getActiveMaster()->onWindowFocus(winInfo->getID());
             }
         }
         else
-            LOG(LOG_LEVEL_DEBUG, "did not auto focus window %d (Detected %ldms ago)\n", winInfo->getID(), delta);
+            LOG(LOG_LEVEL_DEBUG, "did not auto focus window %d (Detected %ldms ago)", winInfo->getID(), delta);
     }
 }
 void addAutoFocusRule(AddFlag flag) {

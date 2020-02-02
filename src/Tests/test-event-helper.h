@@ -49,7 +49,7 @@ static inline void startWM() {
     spawnThread(runEventLoop, "event-loop");
 }
 static inline void fullCleanup() {
-    LOG(LOG_LEVEL_DEBUG, "full cleanup\n");
+    DEBUG("full cleanup");
     if(!isLogging(LOG_LEVEL_DEBUG))
         setLogLevel(LOG_LEVEL_NONE);
     requestShutdown();
@@ -58,7 +58,7 @@ static inline void fullCleanup() {
         wakeupWM();
     }
     waitForAllThreadsToExit();
-    LOG(LOG_LEVEL_DEBUG, "validating state\n");
+    DEBUG("validating state");
     validate();
     getDeviceBindings().deleteElements();
     for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
@@ -69,7 +69,7 @@ static inline void fullCleanup() {
             if(b->func)
                 assert(b->getName() != "");
     }
-    LOG(LOG_LEVEL_DEBUG, "cleaning up xserver\n");
+    DEBUG("cleaning up xserver");
     cleanupXServer();
 }
 static inline void triggerBinding(Binding* b, WindowID win = root) {
@@ -104,7 +104,7 @@ static inline void* getNextDeviceEvent() {
             eventTypeToString(GENERIC_EVENT_OFFSET + dEvent->event_type));
     }
     else if(((xcb_generic_event_t*)event)->response_type == 0) {
-        LOG(LOG_LEVEL_ERROR, "error waiting on event\n");
+        ERROR("error waiting on event");
         setLastEvent(event);
         applyEventRules(0, NULL);
     }

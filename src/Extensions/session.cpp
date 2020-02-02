@@ -19,7 +19,7 @@
 
 static void loadSavedLayouts() {
     auto reply = getWindowProperty(root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING);
-    LOG(LOG_LEVEL_TRACE, "Loading active layouts\n");
+    TRACE("Loading active layouts");
     if(reply) {
         uint32_t len = xcb_get_property_value_length(reply.get());
         char* strings = (char*) xcb_get_property_value(reply.get());
@@ -34,14 +34,14 @@ static void loadSavedLayouts() {
     }
 }
 static void loadSavedLayoutOffsets() {
-    LOG(LOG_LEVEL_TRACE, "Loading Workspace layout offsets\n");
+    TRACE("Loading Workspace layout offsets");
     auto reply = getWindowProperty(root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL);
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int) && i < getNumberOfWorkspaces(); i++)
             getWorkspace(i)->setLayoutOffset(((int*)xcb_get_property_value(reply.get()))[i]);
 }
 static void loadSavedFakeMonitor() {
-    LOG(LOG_LEVEL_TRACE, "Loading fake monitor mappings\n");
+    TRACE("Loading fake monitor mappings");
     auto reply = getWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(short) * 5) ; i++) {
@@ -56,7 +56,7 @@ static void loadSavedFakeMonitor() {
         }
 }
 static void loadSavedMonitorWorkspaceMapping() {
-    LOG(LOG_LEVEL_TRACE, "Loading Workspace monitor mappings\n");
+    TRACE("Loading Workspace monitor mappings");
     auto reply = getWindowProperty(root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL);
     if(reply) {
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
@@ -72,12 +72,12 @@ static void loadSavedMonitorWorkspaceMapping() {
                     getWorkspace(i)->setMonitor(m);
             }
             else
-                logger.info() << "Could not find monitor " << id << std::endl;
+                INFO("Could not find monitor " << id);
         }
     }
 }
 static void loadSavedMasterWindows() {
-    LOG(LOG_LEVEL_TRACE, "Loading Master window stacks\n");
+    TRACE("Loading Master window stacks");
     auto reply = getWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL);
     if(reply) {
         Master* master = NULL;
@@ -91,7 +91,7 @@ static void loadSavedMasterWindows() {
     }
 }
 static void loadSavedActiveMaster() {
-    LOG(LOG_LEVEL_TRACE, "Loading active Master\n");
+    TRACE("Loading active Master");
     auto reply = getWindowProperty(root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
     if(reply)
         setActiveMasterByDeviceID(*(MasterID*)xcb_get_property_value(reply.get()));
@@ -125,7 +125,7 @@ void saveMonitorWorkspaceMapping() {
 }
 void loadMonitorWorkspaceMapping() {
     auto reply = getWindowProperty(root, WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING);
-    LOG(LOG_LEVEL_TRACE, "Loading active layouts\n");
+    TRACE("Loading active layouts");
     if(reply) {
         uint32_t len = xcb_get_property_value_length(reply.get());
         char* strings = (char*) xcb_get_property_value(reply.get());

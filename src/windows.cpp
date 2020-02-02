@@ -76,7 +76,7 @@ void WindowInfo::moveToWorkspace(WorkspaceID destIndex) {
         destIndex = getActiveMaster()->getWorkspaceIndex();
     }
     if(destIndex != getWorkspaceIndex()) {
-        LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d from %d\n", getID(), destIndex, getWorkspaceIndex());
+        LOG(LOG_LEVEL_DEBUG, "Moving %d to workspace %d from %d", getID(), destIndex, getWorkspaceIndex());
         removeFromWorkspace();
         ::getWorkspace(destIndex)->getWindowStack().add(this);
         applyEventRules(WINDOW_WORKSPACE_CHANGE, {.winInfo = this, .workspace = getWorkspace()});

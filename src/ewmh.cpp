@@ -31,19 +31,19 @@ bool isMPXManagerRunning(void) {
     return result;
 }
 void broadcastEWMHCompilence() {
-    LOG(LOG_LEVEL_DEBUG, "Complying with EWMH\n");
+    DEBUG("Complying with EWMH");
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else ignore it)
     if(!STEAL_WM_SELECTION) {
         xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
                     WM_SELECTION_ATOM), NULL);
         if(ownerReply->owner) {
-            LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d\n", WM_SELECTION_ATOM, ownerReply->owner);
+            LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d", WM_SELECTION_ATOM, ownerReply->owner);
             quit(0);
         }
         free(ownerReply);
     }
-    LOG(LOG_LEVEL_DEBUG, "Setting selection owner\n");
+    DEBUG("Setting selection owner");
     if(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), WM_SELECTION_ATOM,
                 XCB_CURRENT_TIME)) == 0) {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
@@ -57,7 +57,7 @@ void broadcastEWMHCompilence() {
     // Not strictly needed
     updateWorkspaceNames();
     setSupportedActions();
-    LOG(LOG_LEVEL_DEBUG, "Complied with EWMH/ICCCM specs\n");
+    DEBUG("Complied with EWMH/ICCCM specs");
 }
 
 void setSupportedActions() {
@@ -184,7 +184,7 @@ void autoResumeWorkspace(WindowInfo* winInfo) {
 }
 
 void setShowingDesktop(int value) {
-    LOG(LOG_LEVEL_INFO, "setting showing desktop %d\n", value);
+    LOG(LOG_LEVEL_INFO, "setting showing desktop %d", value);
     for(WindowInfo* winInfo : getAllWindows())
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
             raiseWindow(winInfo->getID(), 0, value);
@@ -196,12 +196,24 @@ bool isShowingDesktop(void) {
     xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
     return value;
 }
+static const char* getSourceTypeName(xcb_ewmh_client_source_type_t source) {
+    switch(source) {
+        default:
+        case XCB_EWMH_CLIENT_SOURCE_TYPE_NONE:
+            return "Old";
+        case XCB_EWMH_CLIENT_SOURCE_TYPE_NORMAL:
+            return "Application";
+        case XCB_EWMH_CLIENT_SOURCE_TYPE_OTHER:
+            return "Other";
+    }
+}
 /**
  * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
  * @param source
  * @return
  */
 static bool allowRequestFromSource(int source) {
+    INFO("Got request from " << getSourceTypeName((xcb_ewmh_client_source_type_t)source));
     return SRC_INDICATION & (1 << (source));
 }
 
@@ -210,7 +222,7 @@ void onClientMessage(void) {
     xcb_client_message_data_t data = event->data;
     xcb_window_t win = event->window;
     Atom message = event->type;
-    LOG(LOG_LEVEL_INFO, "Received client message for window: %d message: %s\n", win, getAtomName(message).c_str());
+    LOG(LOG_LEVEL_INFO, "Received client message for window: %d message: %s", win, getAtomName(message).c_str());
     if(message == ewmh->_NET_CURRENT_DESKTOP)
         switchToWorkspace(data.data32[0]);
     else if(message == ewmh->_NET_ACTIVE_WINDOW) {
@@ -220,16 +232,16 @@ void onClientMessage(void) {
             Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
             if(m)
                 setActiveMaster(m);
-            LOG(LOG_LEVEL_DEBUG, "Activating window %d for master %d due to client request\n", win, getActiveMaster()->getID());
+            LOG(LOG_LEVEL_DEBUG, "Activating window %d for master %d due to client request", win, getActiveMaster()->getID());
             activateWindow(winInfo);
         }
     }
     else if(message == ewmh->_NET_SHOWING_DESKTOP) {
-        LOG(LOG_LEVEL_DEBUG, "Changing showing desktop to %d\n\n", data.data32[0]);
+        LOG(LOG_LEVEL_DEBUG, "Changing showing desktop to %d\n", data.data32[0]);
         setShowingDesktop(data.data32[0]);
     }
     else if(message == ewmh->_NET_CLOSE_WINDOW) {
-        LOG(LOG_LEVEL_DEBUG, "Killing window %d\n\n", win);
+        LOG(LOG_LEVEL_DEBUG, "Killing window %d\n", win);
         WindowInfo* winInfo = getWindowInfo(win);
         if(!winInfo)
             killClientOfWindow(win);
@@ -239,7 +251,7 @@ void onClientMessage(void) {
     }
     else if(message == ewmh->_NET_RESTACK_WINDOW) {
         WindowInfo* winInfo = getWindowInfo(win);
-        LOG(LOG_LEVEL_DEBUG, "Restacking Window %d sibling %d detail %d\n\n", win, data.data32[1], data.data32[2]);
+        LOG(LOG_LEVEL_DEBUG, "Restacking Window %d sibling %d detail %d\n", win, data.data32[1], data.data32[2]);
         if(winInfo && allowRequestFromSource(data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
                 XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
@@ -249,7 +261,7 @@ void onClientMessage(void) {
             DEFAULT_BORDER_WIDTH);
     }
     else if(message == ewmh->_NET_MOVERESIZE_WINDOW) {
-        LOG(LOG_LEVEL_DEBUG, "Move/Resize window request %d\n\n", win);
+        LOG(LOG_LEVEL_DEBUG, "Move/Resize window request %d\n", win);
         int mask = data.data8[1] & 15;
         int source = (data.data8[1] >> 4) & 15;
         short values[4];
@@ -282,7 +294,7 @@ void onClientMessage(void) {
         if(!(destIndex == NO_WORKSPACE || destIndex < getNumberOfWorkspaces()))
             destIndex = getNumberOfWorkspaces() - 1;
         if(winInfo && allowRequestFromSource(data.data32[1])) {
-            LOG(LOG_LEVEL_DEBUG, "Changing window workspace %d %d\n\n", destIndex, data.data32[0]);
+            LOG(LOG_LEVEL_DEBUG, "Changing window workspace %d %d\n", destIndex, data.data32[0]);
             winInfo->moveToWorkspace(destIndex);
         }
     }
@@ -291,15 +303,13 @@ void onClientMessage(void) {
         WindowInfo* winInfo = getWindowInfo(win);
         // if prop2 is 0, then there is only 1 property to consider
         int num = data.data32[2] == 0 ? 1 : 2;
-        LOG(LOG_LEVEL_INFO, "Got request to change window state from %d\n", data.data32[3]);
-        LOG_RUN(LOG_LEVEL_INFO, dumpAtoms(&data.data32[1], num));
         if(winInfo) {
             if(allowRequestFromSource(data.data32[3])) {
                 setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
                 setXWindowStateFromMask(winInfo);
             }
             else
-                LOG(LOG_LEVEL_INFO, "Client message denied\n");
+                INFO("Client message denied");
         }
         else {
             WindowInfo fakeWinInfo = {.id = win};
@@ -311,15 +321,15 @@ void onClientMessage(void) {
     else if(message == ewmh->WM_PROTOCOLS) {
         if(data.data32[0] == ewmh->_NET_WM_PING) {
             if(win == root) {
-                LOG(LOG_LEVEL_DEBUG, "Pong received\n");
+                DEBUG("Pong received");
                 WindowInfo* winInfo = getWindowInfo(data.data32[2]);
                 if(winInfo) {
-                    LOG(LOG_LEVEL_DEBUG, "Updated ping timestamp for window %d\n\n", winInfo->getID());
+                    LOG(LOG_LEVEL_DEBUG, "Updated ping timestamp for window %d\n", winInfo->getID());
                     winInfo->setPingTimeStamp(getTime());
                 }
             }
             else if(win == getPrivateWindow()) {
-                LOG(LOG_LEVEL_DEBUG, "Pong requested\n");
+                DEBUG("Pong requested");
                 xcb_ewmh_send_client_message(ewmh->connection, root, root, ewmh->WM_PROTOCOLS, sizeof(data), data.data32);
                 flush();
             }
@@ -467,12 +477,12 @@ void loadSavedAtomState(WindowInfo* winInfo) {
     }
 }
 void setXWindowStateFromMask(WindowInfo* winInfo) {
-    logger.info() << "Setting X State for window " << winInfo->getID() << " from masks " << winInfo->getMask() << std::endl;
+    INFO("Setting X State for window " << winInfo->getID() << " from masks " << winInfo->getMask());
     xcb_ewmh_get_atoms_reply_t reply;
     bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL);
     ArrayList<xcb_atom_t> windowState;
     if(hasState) {
-        LOG(LOG_LEVEL_DEBUG, "Window currently has %d states\n", reply.atoms_len);
+        DEBUG("Current state atoms" << getAtomsAsString(reply.atoms, reply.atoms_len));
         for(uint32_t i = 0; i < reply.atoms_len; i++) {
             if((getMaskFromAtom(reply.atoms[i]) & MASKS_TO_SYNC) == 0)
                 windowState.add(reply.atoms[i]);
@@ -481,16 +491,19 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
     }
     getAtomsFromMask(winInfo->getMask() & MASKS_TO_SYNC, windowState);
     xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), windowState.size(), windowState.data());
-    LOG(LOG_LEVEL_DEBUG, "Set %d states\n", windowState.size());
+    DEBUG("New Atoms" << getAtomsAsString(windowState.data(), windowState.size()));
 }
 
 void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
-    LOG(LOG_LEVEL_INFO, "Updating state of %d from %d atoms\n", winInfo->getID(), numberOfAtoms);
+    INFO("Setting window masks for window " << winInfo->getID() << " current masks " << winInfo->getMask() << " from atoms "
+        << getAtomsAsString(atoms, numberOfAtoms) << "Action: " << action);
     WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++) {
         mask |= getMaskFromAtom(atoms[i]);
     }
+    DEBUG("Pre filtered masks: " << mask);
     mask &= MASKS_TO_SYNC;
+    DEBUG("Filtered masks: " << mask);
     if(action == XCB_EWMH_WM_STATE_TOGGLE)
         winInfo->toggleMask(mask);
     else if(action == XCB_EWMH_WM_STATE_REMOVE)
@@ -511,7 +524,7 @@ void syncState() {
     unsigned int value = 0;
     xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
     setShowingDesktop(value);
-    LOG(LOG_LEVEL_INFO, "Current workspace is %d\n", currentWorkspace);
+    LOG(LOG_LEVEL_INFO, "Current workspace is %d", currentWorkspace);
     switchToWorkspace(currentWorkspace);
     for(Master* m : getAllMasters())
         m->onWindowFocus(getActiveFocus(m->getKeyboardID()));

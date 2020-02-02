@@ -31,7 +31,7 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
     else
         loadWindowHints(winInfo);
     if(winInfo->hasMask(MAPPABLE_MASK)) {
-        LOG(LOG_LEVEL_DEBUG, "Window is mappable %d\n", winInfo->getID());
+        LOG(LOG_LEVEL_DEBUG, "Window is mappable %d", winInfo->getID());
         if(!applyEventRules(CLIENT_MAP_ALLOW, winInfo))
             return 0;
     }
@@ -40,7 +40,7 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated) {
 
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr) {
     assert(!getAllWindows().find(win) && "Window registered exists");
-    LOG(LOG_LEVEL_TRACE, "processing %d (%x)\n", win, win);
+    LOG(LOG_LEVEL_TRACE, "processing %d (%x)", win, win);
     return registerWindow(new WindowInfo(win, parent), attr);
 }
 bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr) {
@@ -59,7 +59,7 @@ bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr
             free(attr);
     }
     else {
-        LOG(LOG_LEVEL_DEBUG, "Could not load attributes %d \n", winInfo->getID());
+        LOG(LOG_LEVEL_DEBUG, "Could not load attributes %d ", winInfo->getID());
         delete winInfo;
         return 0;
     }
@@ -67,26 +67,26 @@ bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr
         delete winInfo;
         return 0;
     }
-    LOG(LOG_LEVEL_DEBUG, "Registering %d (%x)\n", winInfo->getID(), winInfo->getID());
+    LOG(LOG_LEVEL_DEBUG, "Registering %d (%x)", winInfo->getID(), winInfo->getID());
     getAllWindows().add(winInfo);
     return postRegisterWindow(winInfo, newlyCreated);
 }
 void scan(xcb_window_t baseWindow) {
     assert(baseWindow);
-    LOG(LOG_LEVEL_TRACE, "Scanning children of window %d\n", baseWindow);
+    LOG(LOG_LEVEL_TRACE, "Scanning children of window %d", baseWindow);
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, baseWindow), 0);
     if(reply) {
         xcb_get_window_attributes_reply_t* attr;
         int numberOfChildren = xcb_query_tree_children_length(reply);
-        LOG(LOG_LEVEL_TRACE, "detected %d kids\n", numberOfChildren);
+        LOG(LOG_LEVEL_TRACE, "detected %d kids", numberOfChildren);
         xcb_window_t* children = xcb_query_tree_children(reply);
         xcb_get_window_attributes_cookie_t cookies[numberOfChildren];
         for(int i = 0; i < numberOfChildren; i++)
             cookies[i] = xcb_get_window_attributes(dis, children[i]);
         // iterate in top to bottom order
         for(int i = numberOfChildren - 1; i >= 0; i--) {
-            LOG(LOG_LEVEL_TRACE, "processing child %d\n", children[i]);
+            LOG(LOG_LEVEL_TRACE, "processing child %d", children[i]);
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
             if(registerWindow(children[i], baseWindow, attr)) {
                 xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, children[i]), NULL);
@@ -112,14 +112,14 @@ void updateFocusForAllMasters(WindowInfo* winInfo) {
     for(Master* master : getAllMasters())
         if(master->getFocusedWindow() == winInfo)
             if(!focusNextVisibleWindow(master, winInfo))
-                LOG(LOG_LEVEL_DEBUG, "Could not find window to update focus to\n");
+                DEBUG("Could not find window to update focus to");
 }
 
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     if(!winInfo)
         return 0;
     WindowID winToRemove = winInfo->getID();
-    LOG(LOG_LEVEL_DEBUG, "window %d has been removed\n", winToRemove);
+    LOG(LOG_LEVEL_DEBUG, "window %d has been removed", winToRemove);
     if(!destroyed)
         unregisterForWindowEvents(winInfo->getID());
     if(applyEventRules(UNREGISTER_WINDOW, winInfo))
@@ -146,11 +146,11 @@ static void* waitForWindowToDie(WindowID id) {
         int timeout = winInfo ? getTime() - winInfo->getPingTimeStamp() >= KILL_TIMEOUT : 0;
         unlock();
         if(!winInfo) {
-            LOG(LOG_LEVEL_DEBUG, "Window %d no longer exists\n", id);
+            LOG(LOG_LEVEL_DEBUG, "Window %d no longer exists", id);
             break;
         }
         else if(timeout) {
-            LOG(LOG_LEVEL_INFO, "Window %d is not responsive; force killing\n", id);
+            LOG(LOG_LEVEL_INFO, "Window %d is not responsive; force killing", id);
             killClientOfWindow(id);
             break;
         }
@@ -160,20 +160,20 @@ static void* waitForWindowToDie(WindowID id) {
         }
         msleep(KILL_TIMEOUT);
     }
-    LOG(LOG_LEVEL_DEBUG, "Finished waiting for window %d\n", id);
+    LOG(LOG_LEVEL_DEBUG, "Finished waiting for window %d", id);
     return NULL;
 }
 
 int killClientOfWindow(WindowID win) {
     assert(win);
-    LOG(LOG_LEVEL_DEBUG, "Killing window %d\n", win);
+    LOG(LOG_LEVEL_DEBUG, "Killing window %d", win);
     return catchError(xcb_kill_client_checked(dis, win));
 }
 void killClientOfWindowInfo(WindowInfo* winInfo) {
     if(winInfo->hasMask(WM_DELETE_WINDOW_MASK)) {
         unsigned int data[5] = {WM_DELETE_WINDOW, getTime()};
         xcb_ewmh_send_client_message(dis, root, winInfo->getID(), ewmh->WM_PROTOCOLS, 5, data);
-        LOG(LOG_LEVEL_INFO, "Sending request to delete window\n");
+        INFO("Sending request to delete window");
         WindowID id = winInfo->getID();
         spawnThread([ = ] {waitForWindowToDie(id);}, "wait for window to die");
     }
@@ -186,8 +186,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
     Workspace* w = winInfo->getWorkspace();
     if(!w)
         return;
-    logger.trace()  << "updating window workspace state: " << w->isVisible() << "; "
-        << *winInfo << "\n";
+    TRACE("updating window workspace state: " << w->isVisible() << "; " << *winInfo);
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
         mapWindow(winInfo->getID());
     }
@@ -205,7 +204,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
     }
 }
 void syncMappedState(Workspace* workspace) {
-    logger.debug()  << "Syncing map state: " << *workspace << "\n";
+    DEBUG("Syncing map state: " << *workspace);
     for(WindowInfo* winInfo : workspace->getWindowStack())
         if(winInfo->hasMask(STICKY_MASK))
             updateWindowWorkspaceState(winInfo);
@@ -227,7 +226,7 @@ void switchToWorkspace(int workspaceIndex) {
             if(visibleWorkspace)
                 currentIndex = visibleWorkspace->getID();
         }
-        LOG(LOG_LEVEL_DEBUG, "Swapping visible workspace %d with %d\n", currentIndex, workspaceIndex);
+        LOG(LOG_LEVEL_DEBUG, "Swapping visible workspace %d with %d", currentIndex, workspaceIndex);
         swapMonitors(workspaceIndex, currentIndex);
     }
     getActiveMaster()->setWorkspaceIndex(workspaceIndex);
@@ -236,7 +235,7 @@ void switchToWorkspace(int workspaceIndex) {
 WindowID activateWindow(WindowInfo* winInfo) {
     if(winInfo && winInfo->isActivatable()) {
         raiseWindow(winInfo->getID());
-        LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d\n", winInfo->getID(), winInfo->getWorkspaceIndex());
+        LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d", winInfo->getID(), winInfo->getWorkspaceIndex());
         if(winInfo->getWorkspaceIndex() != NO_WORKSPACE) {
             switchToWorkspace(winInfo->getWorkspaceIndex());
         }
@@ -253,7 +252,7 @@ WindowID activateWindow(WindowInfo* winInfo) {
 void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
     if(mask) {
-        LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)\n", win, mask, __builtin_popcount(mask));
+        LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)", win, mask, __builtin_popcount(mask));
         LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));
     }
 #ifndef NDEBUG
@@ -272,7 +271,7 @@ void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition
 }
 
 void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2) {
-    LOG(LOG_LEVEL_TRACE, "swapping windows %d %d\n", winInfo1->getID(), winInfo2->getID());
+    LOG(LOG_LEVEL_TRACE, "swapping windows %d %d", winInfo1->getID(), winInfo2->getID());
     winInfo1->swapWorkspaceWith(winInfo2);
     RectWithBorder geo = getRealGeometry(winInfo2->getID());
     setWindowPosition(winInfo2->getID(), getRealGeometry(winInfo1->getID()));
@@ -308,7 +307,7 @@ static inline int filterConfigValues(uint32_t* filteredArr, const WindowInfo* wi
 }
 int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask) {
     assert(configMask);
-    LOG(LOG_LEVEL_DEBUG, "processing configure request window %d\n", win);
+    LOG(LOG_LEVEL_DEBUG, "processing configure request window %d", win);
     uint32_t actualValues[7];
     WindowInfo* winInfo = getWindowInfo(win);
     if(!winInfo) {
@@ -319,11 +318,11 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
         return configMask;
     }
     int mask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
-    LOG(LOG_LEVEL_DEBUG, "Mask filtered from %d to %d\n", configMask, mask);
+    LOG(LOG_LEVEL_DEBUG, "Mask filtered from %d to %d", configMask, mask);
     if(mask) {
         configureWindow(win, mask, actualValues);
         /*
-        LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d\n", win, mask);
+        LOG(LOG_LEVEL_TRACE, "re-configure window %d configMask: %d", win, mask);
         if(mask & XCB_CONFIG_WINDOW_STACK_MODE) {
             Workspace* workspace = winInfo->getWorkspace();
             if(workspace)
@@ -334,14 +333,14 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
                     else
                         workspace->getWindowStack().shiftToEnd(i);
                 }
-                else LOG(LOG_LEVEL_WARN, "not updating workspace window stack to reflect sibling change: win %d, sibling %d\n", win,
+                else LOG(LOG_LEVEL_WARN, "not updating workspace window stack to reflect sibling change: win %d, sibling %d", win,
                              sibling);
         }
         */
     }
     else {
-        LOG(LOG_LEVEL_INFO, "configure request denied for window %d; configMasks %d (%d)\n", win, mask, configMask);
-        logger.info() << *winInfo << std::endl;
+        LOG(LOG_LEVEL_INFO, "configure request denied for window %d; configMasks %d (%d)", win, mask, configMask);
+        INFO(*winInfo);
     }
     return mask;
 }

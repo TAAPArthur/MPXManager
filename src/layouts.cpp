@@ -230,7 +230,7 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
     if(winInfo->hasMask(Y_MAXIMIZED_MASK))
         mask |= XCB_CONFIG_WINDOW_HEIGHT;
     if(mask) {
-        LOG(LOG_LEVEL_INFO, "PreConfig %d: mask %d (%d bits)\n", winInfo->getID(), mask, __builtin_popcount(mask));
+        LOG(LOG_LEVEL_INFO, "PreConfig %d: mask %d (%d bits)", winInfo->getID(), mask, __builtin_popcount(mask));
         uint32_t finalConfig[CONFIG_LEN] = {0};
         for(int i = 0, counter = 0; i < CONFIG_LEN; i++) {
             if(mask & (1 << i))
@@ -268,14 +268,14 @@ void retile(void) {
 
 void tileWorkspace(Workspace* workspace) {
     assert(workspace);
-    LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d\n", workspace->getID());
+    LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d", workspace->getID());
     if(!workspace->getMonitor())
         return;
     Monitor* m = workspace->getMonitor();
     assert(m);
     ArrayList<WindowInfo*>& windowStack = workspace->getWindowStack();
     if(windowStack.empty()) {
-        LOG(LOG_LEVEL_TRACE, "no windows in workspace\n");
+        TRACE("no windows in workspace");
         return;
     }
     Layout* layout = workspace->getActiveLayout();
@@ -284,17 +284,17 @@ void tileWorkspace(Workspace* workspace) {
         LayoutState state = {.args = &layout->getArgs(), .monitor = m, .numWindows = size, .stack = windowStack};
         if(size)
             if(layout->getFunc()) {
-                LOG(LOG_LEVEL_DEBUG, "using '%s' layout: num win %d (max %d)\n", layout->getName().c_str(), size,
+                LOG(LOG_LEVEL_DEBUG, "using '%s' layout: num win %d (max %d)", layout->getName().c_str(), size,
                     layout->getArgs().limit);
                 layout->apply(&state);
             }
             else
-                LOG(LOG_LEVEL_WARN, "WARNING there is not a set layout function\n");
+                WARN("WARNING there is not a set layout function");
         else
-            LOG(LOG_LEVEL_TRACE, "there are no windows to tile\n");
+            TRACE("there are no windows to tile");
     }
     else if(!layout)
-        LOG(LOG_LEVEL_TRACE, "workspace %d does not have a layout; skipping \n", workspace->getID());
+        LOG(LOG_LEVEL_TRACE, "workspace %d does not have a layout; skipping ", workspace->getID());
     for(WindowInfo* winInfo : windowStack) {
         if(!winInfo->isTileable())
             arrangeNonTileableWindow(winInfo, m);
@@ -321,7 +321,7 @@ static uint32_t splitEven(LayoutState* state, int offset, short const* baseValue
     memcpy(values, baseValues, sizeof(values));
     int sizePerWindow = values[dim] / num;
     int rem = values[dim] % num;
-    LOG(LOG_LEVEL_DEBUG, "tiling at most %d windows size %d %d\n", num, sizePerWindow, dim);
+    LOG(LOG_LEVEL_DEBUG, "tiling at most %d windows size %d %d", num, sizePerWindow, dim);
     uint32_t i = offset;
     int count = 0;
     while(i < state->stack.size()) {

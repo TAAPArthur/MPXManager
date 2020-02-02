@@ -9,7 +9,6 @@
 
 #include "arraylist.h"
 #include "boundfunction.h"
-#include "debug.h"
 #include "devices.h"
 #include "globals.h"
 #include "logger.h"
@@ -27,7 +26,7 @@ using namespace std;
 
 void createMasterDevice(std::string name) {
     if(getAllMasters().size() * 4 + getAllSlaves().size() >= getMaxNumberOfDevices())
-        logger.warn() << "This action may cause the max number of devices to be exceeded" << std::endl;
+        WARN("This action may cause the max number of devices to be exceeded");
     XIAddMasterInfo add = {.type = XIAddMaster, .name = (char*)name.c_str(), .send_core = 1, .enable = 1};
     XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&add, 1);
     //xcb_input_xi_change_hierarchy(c, num_changes, changes);
@@ -39,14 +38,14 @@ void attachSlaveToMaster(Slave* slave, Master* master) {
     else floatSlave(slave->getID());
 }
 void floatSlave(SlaveID slaveID) {
-    LOG(LOG_LEVEL_INFO, "floating %d \n", slaveID);
+    LOG(LOG_LEVEL_INFO, "floating %d ", slaveID);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIDetachSlave;
     changes.attach.deviceid = slaveID;
     XIChangeHierarchy(dpy, &changes, 1);
 }
 void attachSlaveToMaster(SlaveID slaveID, MasterID masterID) {
-    LOG(LOG_LEVEL_INFO, "attaching %d to %d\n", slaveID, masterID);
+    LOG(LOG_LEVEL_INFO, "attaching %d to %d", slaveID, masterID);
     XIAnyHierarchyChangeInfo changes;
     changes.type = XIAttachSlave;
     changes.attach.deviceid = slaveID;
@@ -93,7 +92,7 @@ void initCurrentMasters() {
     devices = XIQueryDevice(dpy, XIAllDevices, &ndevices);
     ArrayList<MasterID>masters;
     getAllSlaves().deleteElements();
-    LOG(LOG_LEVEL_DEBUG, "Detected %d devices\n", ndevices);
+    LOG(LOG_LEVEL_DEBUG, "Detected %d devices", ndevices);
     for(int i = 0; i < ndevices; i++) {
         device = &devices[i];
         switch(device->use) {
@@ -154,7 +153,7 @@ bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]) {
     if(reply) {
         result[0] = reply->win_x >> 16;
         result[1] = reply->win_y >> 16;
-        LOG(LOG_LEVEL_DEBUG, "Mouse position for Master %d is %d, %d\n", id, result[0], result[1]);
+        LOG(LOG_LEVEL_DEBUG, "Mouse position for Master %d is %d, %d", id, result[0], result[1]);
         free(reply);
     }
     return reply ? 1 : 0;
@@ -204,7 +203,7 @@ void detectMonitors(void) {
     addRootMonitor();
     removeDuplicateMonitors();
 #else
-    LOG(LOG_LEVEL_DEBUG, "refreshing monitors\n");
+    DEBUG("refreshing monitors");
     xcb_randr_get_monitors_cookie_t cookie = xcb_randr_get_monitors(dis, root, 1);
     xcb_randr_get_monitors_reply_t* monitors = xcb_randr_get_monitors_reply(dis, cookie, NULL);
     assert(monitors);
@@ -226,9 +225,9 @@ void detectMonitors(void) {
         monitorNames.add(monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
-    LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors\n", monitorNames.size());
+    LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors", monitorNames.size());
     if(getPrimaryMonitor())
-        logger.debug() << "Primary is " << *getPrimaryMonitor() << std::endl;
+        DEBUG("Primary is " << *getPrimaryMonitor());
     free(monitors);
     for(int i = getAllMonitors().size() - 1; i >= 0; i--)
         if(!getAllMonitors()[i]->isFake() && !monitorNames.find(getAllMonitors()[i]->getID()))

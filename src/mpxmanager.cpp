@@ -108,18 +108,18 @@ static void parseArgs(int argc, char* const* argv) {
     assert(argc > 1);
     if(std::string(argv[1]).find("--") == 0)
         for(int i = 1; i < argc; i++) {
-            LOG(LOG_LEVEL_TRACE, "processing %s\n", argv[i]);
+            LOG(LOG_LEVEL_TRACE, "processing %s", argv[i]);
             if(!(callStartupOption(options, argv, i) || callStartupOption(getOptions(), argv, i, 1))) {
-                LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.\n", argv[i]);
+                LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.", argv[i]);
                 exit(1);
             }
         }
     else {
         int i = 1;
-        LOG(LOG_LEVEL_DEBUG, "Trying to send %s.\n", argv[i]);
+        LOG(LOG_LEVEL_DEBUG, "Trying to send %s.", argv[i]);
         std::string value(argv[i + 1] ? argv[i + 1] : "");
         if(!findOption(argv[i], value)) {
-            LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.\n", argv[i]);
+            LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.", argv[i]);
             exit(1);
         }
         if(!dpy) {
@@ -131,7 +131,7 @@ static void parseArgs(int argc, char* const* argv) {
     }
 }
 int _main(int argc, char* const* argv) {
-    LOG(LOG_LEVEL_DEBUG, "MPXManager started with %d args\n", argc);
+    LOG(LOG_LEVEL_DEBUG, "MPXManager started with %d args", argc);
     numPassedArguments = argc;
     passedArguments = argv;
     if(!startupMethod)
@@ -144,7 +144,7 @@ int _main(int argc, char* const* argv) {
         runEventLoop();
     else if(getNumberOfMessageSent()) {
         if(hasOutStandingMessages()) {
-            LOG(LOG_LEVEL_TRACE, "waiting for send receipts\n");
+            TRACE("waiting for send receipts");
             bool wasMPXManagerRunning = isMPXManagerRunning();
             if(!wasMPXManagerRunning)
                 for(int i = 0; i < 10 && hasOutStandingMessages(); i++)
@@ -152,10 +152,10 @@ int _main(int argc, char* const* argv) {
             while(isMPXManagerRunning() && hasOutStandingMessages())
                 msleep(100);
             if(hasOutStandingMessages()) {
-                LOG(LOG_LEVEL_ERROR, "did not receive confirmation\n");
+                ERROR("did not receive confirmation");
                 quit(2);
             }
-            LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d\n", isMPXManagerRunning(), hasOutStandingMessages());
+            LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d", isMPXManagerRunning(), hasOutStandingMessages());
         }
         if(dpy)
             return !getLastMessageExitCode();
