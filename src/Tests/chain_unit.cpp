@@ -143,11 +143,11 @@ MPX_TEST("chain_passthrough", {
 
 MPX_TEST("test_chain_bindings", {
     static int count = 0;
-    unsigned int outerChainEndMod = 1;
+    Modifier outerChainEndMod = 1;
     static void (*add)() = []{count++;};
     static void (*subtract)() = []{count--;};
-    uint32_t dangerDetail = 2;
-    uint32_t exitDetail = 3;
+    Detail dangerDetail = 2;
+    Detail exitDetail = 3;
     void(*terminate)() = []() {exit(11);};
     Binding* dummy = new Binding{0, dangerDetail, terminate, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, .name = "dummy"};
     Binding* chain = new Chain(0, 1, add,

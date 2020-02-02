@@ -227,7 +227,7 @@ void onDeviceEvent(void) {
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
         event->root, event->event, event->child);
     setActiveMasterByDeviceID(event->deviceid);
-    setLastUserEvent({event->mods.effective, event->detail, 1U << event->event_type,
+    setLastUserEvent({(Modifier)event->mods.effective, (Detail)event->detail, 1U << event->event_type,
             (bool)((event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT) ? 1 : 0),
             .winInfo = getTargetWindow(event->root, event->event, event->child),
         });

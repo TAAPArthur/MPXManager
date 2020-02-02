@@ -54,7 +54,8 @@ public:
      * @param chainMask
      * @param name
      */
-    Chain(const ArrayList<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const ArrayList<Binding*>&
+    Chain(const std::initializer_list<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const
+        ArrayList<Binding*>&
         members = {},
         const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(keyBindings, boundFunction,
                 flags, name),

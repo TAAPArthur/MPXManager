@@ -12,6 +12,13 @@
 #include "user-events.h"
 #include "xsession.h"
 
+
+/// type of key detail; X will not use a key detail greater than 255
+typedef uint16_t Detail;
+/// type of keySym or button ;
+typedef uint32_t ButtonOrKeySym;
+/// type of modifier; X will not use a value greater than 1<<15
+typedef uint32_t Modifier;
 /**
  * Details which window to act on for Bindings
  */
@@ -36,9 +43,9 @@ enum WindowParamType {
  */
 struct UserEvent {
     /// @return Returns true if the binding should be triggered based on the combination of detail and mods
-    uint32_t mod = 0;
+    Modifier mod = 0;
     /// either a keycode or a button
-    uint32_t detail = 0;
+    Detail detail = 0;
     /// the mask to match
     uint32_t mask = 0;
     /// @param keyRepeat if the event was a key repeat
@@ -71,37 +78,43 @@ struct BindingFlags {
     ///The mask to grab;
     uint32_t mask = 0 ;
     /**The target of the grab;; Default: is XIAllMasterDevices*/
-    uint32_t targetID = 1;
+    MasterID targetID = 1;
     /// Details which window to pass to the boundFunction
     WindowParamType windowTarget = DEFAULT_WINDOW ;
     /// if true the binding won't trigger for key repeats
     bool noKeyRepeat = 0;
-    /// Binding will be triggered in the active master is in a compatible mode
+    /// Binding will be triggered if the active master is in a compatible mode
     unsigned int mode = 0;
 };
+
 /// holds a modifier and button/key
 struct KeyBinding {
 private:
     /**Modifier to match on*/
-    unsigned int mod;
+    Modifier mod = 0;
     /**Either Button or KeySym to match**/
-    uint32_t buttonOrKey;
+    ButtonOrKeySym buttonOrKey;
     /**Converted detail of key bindings. Should not be set manually*/
-    int detail = 0;
+    Detail detail = 0;
 public:
     /**
      * @param mod
      * @param buttonOrKey
      */
     KeyBinding(uint32_t mod, uint32_t buttonOrKey): mod(mod), buttonOrKey(buttonOrKey) {}
+    virtual ~KeyBinding() = default;
     /// @return the button or key code used to initiate grabs
-    uint32_t getDetail();
+    Detail getDetail();
     /// @return the button or key sym used to generate the detail
-    uint32_t getButtonOrKey() const {return buttonOrKey;}
+    ButtonOrKeySym getButtonOrKey() const {return buttonOrKey;}
     /// @return the modifier
-    uint32_t getMod() const {return mod;}
+    Modifier getMod() const {return mod;}
+    /// @return 1 iff buttonOrKey is 0
+    bool isWildcard() const {return !buttonOrKey;}
+    /// @return 1 iff this instance's modifier is a wildcard or equals mod (ignoring IGNORE_MASK)
+    bool matchesMod(Modifier mod) const {return getMod() == WILDCARD_MODIFIER || getMod() == (mod & ~IGNORE_MASK);}
     /// @return 1 iff the bindings are
-    bool operator==(const KeyBinding& binding)const;
+    virtual bool operator==(const KeyBinding& binding)const;
     /**
      * @param stream
      * @param binding
@@ -115,8 +128,8 @@ public:
 ///used for key/mouse bindings
 struct Binding {
 protected:
-    /// list of keybinds that will cause this to be triggered
-    ArrayList<KeyBinding> keyBindings;
+    /// list of keybindings that will cause this to be triggered
+    std::shared_ptr<const UniqueArrayList<KeyBinding*>> keyBindings;
     /**Function to call on match**/
     const BoundFunction boundFunction;
     /// extra optional flags
@@ -128,7 +141,8 @@ private:
     /// init the flags.mask if it was initially 0
     void init() {
         if(flags.mask == 0)
-            this->flags.mask = keyBindings[0].getButtonOrKey() == 0 ? ANY_MASK : isButton(keyBindings[0].getButtonOrKey()) ?
+            this->flags.mask = getKeyBindings()[0]->getButtonOrKey() == 0 ? ANY_MASK : isButton(
+                    getKeyBindings()[0]->getButtonOrKey()) ?
                 XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
                 XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
     }
@@ -142,23 +156,34 @@ public:
      * @param name
      */
     Binding(uint32_t mod, uint32_t buttonOrKey, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
-        std::string name = ""): keyBindings({{mod, buttonOrKey}}), boundFunction(boundFunction), flags(flags), name(name) {
+        std::string name = ""): keyBindings(new UniqueArrayList<KeyBinding*>({{mod, buttonOrKey}})),
+    boundFunction(boundFunction), flags(flags), name(name) {
         init();
     }
 
-    /**
+    /** @{
      * Note that flags.mask is inferred from buttonOrKey if set to the default value of 0.
      * @param keyBindings a list of keyBindings
      * @param boundFunction the function to call when this binding is triggered
      * @param flags
      * @param name
      */
-    Binding(ArrayList<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const BindingFlags& flags = {},
-        std::string name = ""): keyBindings(keyBindings), boundFunction(boundFunction), flags(flags), name(name) {
+    Binding(std::initializer_list<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const BindingFlags& flags
+        = {}, std::string name = ""): keyBindings(new UniqueArrayList<KeyBinding*>(keyBindings)), boundFunction(boundFunction),
+        flags(flags), name(name) {
         init();
     }
-
-
+    explicit Binding(std::initializer_list<KeyBinding*> keyBindings, const BoundFunction boundFunction, const BindingFlags&
+        flags = {}, std::string name = ""): keyBindings(new UniqueArrayList<KeyBinding*>(keyBindings)),
+        boundFunction(boundFunction), flags(flags), name(name) {
+        init();
+    }
+    explicit Binding(const ArrayList<KeyBinding*> keyBindings, const BoundFunction boundFunction, const BindingFlags&
+        flags = {}, std::string name = ""): keyBindings(new UniqueArrayList<KeyBinding*>(keyBindings)),
+        boundFunction(boundFunction), flags(flags), name(name) {
+        init();
+    }
+    /// @}
 
     virtual ~Binding() = default;
     /**
@@ -210,9 +235,9 @@ public:
      *
      * @return 1 iff this Binding matches event
      */
-    bool matches(const UserEvent& event);
+    virtual bool matches(const UserEvent& event) const;
     /// @return a list of keyBindings this struct should match with
-    ArrayList<KeyBinding>& getKeyBindings() {return keyBindings;}
+    const ArrayList<KeyBinding*>& getKeyBindings() const {return *keyBindings;}
     /// @return the id of the device to grab
     int getTargetID() const {return flags.targetID;}
     /**

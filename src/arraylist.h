@@ -429,6 +429,11 @@ struct UniqueArrayList: ArrayList<T> {
     /// Constructs a list with the specified elements
     UniqueArrayList(std::initializer_list<T> __l) : ArrayList<T>(__l) {}
     /**
+     * Steals data from list
+     * @param list
+     */
+    UniqueArrayList(ArrayList<T> list) : ArrayList<T>(std::move(list)) {}
+    /**
      * Copies the members onto the heap and adds them to the list
      */
     UniqueArrayList(std::initializer_list<std::remove_pointer_t<T>> __l): ArrayList<T>(__l) {}

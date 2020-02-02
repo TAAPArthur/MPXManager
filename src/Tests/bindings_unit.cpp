@@ -55,8 +55,8 @@ MPX_TEST_ITER("check_bindings", NO_PASSTHROUGH, {
     uint32_t badMask = 8;
     getActiveMaster()->setCurrentMode(0);
     const int GOOD = 1, BAD = 0;
-    uint32_t detail = 1;
-    uint32_t mod = 2;
+    Detail detail = 1;
+    Modifier mod = 2;
     uint32_t mods[][2] = {{(uint32_t) -1, 0}, {WILDCARD_MODIFIER, mod}};
     uint32_t* modsPointer = &mods[0][0];
     uint32_t details[][2] = {{2, 7}, {0, detail}};
