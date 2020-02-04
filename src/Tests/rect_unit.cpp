@@ -7,7 +7,7 @@ static short baseArr[] = {1, 2, 3, 4};
 MPX_TEST("print", {
     suppressOutput();
     Rect r = Rect(baseArr);
-    std::cout << r << RectWithBorder(r);
+    std::cout << r << RectWithBorder(r) << (Point)r;
 });
 MPX_TEST("rect_==", {
     Rect rects[] = {Rect(baseArr), Rect(baseArr[0], baseArr[1], baseArr[2], baseArr[3])};
@@ -75,6 +75,27 @@ MPX_TEST("rect_intersection", {
 });
 MPX_TEST("translate", {
     Rect rect = {0, 0, 100, 100};
-    rect.translate({0, 0}, {100, 200});
+    rect.translate({100, 200});
     assertEquals(rect, Rect(100, 200, 100, 100));
+    rect.translate({100, 200}, {100, 200});
+    assertEquals(rect, Rect(100, 200, 100, 100));
+    rect.translate({0, 0}, {100, 200});
+    assertEquals(rect, Rect(0, 0, 100, 100));
+});
+static Rect bounds = {0, 0, 9, 9};
+static Rect rect[][2] = {
+    {{0, 0, 100, 200}, {0, 0, 100, 200}},
+    {{0, 0, 0, 0}, {0, 0, 9, 9}},
+    {{-1, -1, 1, 1}, {8, 8, 1, 1}},
+    {{1, 1, 0, 0}, {1, 1, 9, 9}},
+    {{1, -1, 0, 1}, {1, 8, 9, 1}},
+    {{-9, -9, 1, 1}, {0, 0, 1, 1}},
+    {{-10, -10, 1, 1}, {-1, -1, 1, 1}},
+};
+MPX_TEST_ITER("relative_region", LEN(rect), {
+    assertEquals(bounds.getRelativeRegion(rect[_i][0]), rect[_i][1]);
+});
+MPX_TEST_ITER("relative_region_offset", LEN(rect), {
+    assertEquals(Rect(9, 9, 9, 9).getRelativeRegion({1, 2, 3, 4}), Rect(10, 11, 3, 4));
+    assertEquals(Rect(9, 9, 9, 9).getRelativeRegion({1, 2, 0, 0}), Rect(10, 11, 9, 9));
 });

@@ -12,22 +12,50 @@
  */
 struct Point {
     /// x coordinate
-    const int32_t x;
+    int32_t x;
     /// y coordinate
-    const int32_t y;
+    int32_t y;
     /**
+     * Adds p's coordinates with to this structs
      * @param p
-     * @return a new Point with the sum of this and p
+     * @return *this
      */
-    Point operator+(const Point p) {
-        return {x + p.x, y + p.y};
+    Point& operator +=(const Point& p) {
+        x += p.x;
+        y += p.y;
+        return *this;
     }
     /**
      * @param p
-     * @return a new Point with the delta between this and p
+     * @return  a point with the difference of the coordinates
      */
-    Point operator-(const Point p) {
+    Point operator -(const Point& p)const {
         return {x - p.x, y - p.y};
+    }
+    /**
+     * @param p
+     * @return  a point with the sum of the coordinates
+     */
+    Point operator +(const Point& p)const {
+        return {x + p.x, y + p.y};
+    }
+    /**
+     * Scales the coordinates by 1/n
+     * @param n
+     * @return *this
+     */
+    Point& operator /=(int n) {
+        x /= n;
+        y /= n;
+        return *this;
+    }
+    /**
+     * Scales the coordinates by n
+     * @param n
+     * @return a new point
+     */
+    Point operator *(int n)const {
+        return {x * n, y * n};
     }
 };
 /**
@@ -59,6 +87,18 @@ struct Rect {
      * @param h
      */
     Rect(short x, short y, uint16_t w, uint16_t h): x(x), y(y), width(w), height(h) {}
+
+    /**
+     * If region contains only positive numbers, then region is returned
+     * Else If region contains negative numbers then it "wraps around" ie {-1, -1, 1, 1} refers the to the bottom right region
+     * and {1, 1, -1, -1} refers to everything except the top-left most region
+     * If a region has 0 for the width or height, then that index is set to this rect's width/height
+     *
+     * @param region
+     *
+     * @return the region described by region
+     */
+    Rect getRelativeRegion(const Rect& region) const;
 
     /**
      * @return returns the top left point of bounded by this rect
@@ -161,7 +201,7 @@ struct Rect {
      * @param currentRef
      * @param newRef
      */
-    void translate(const Point currentRef, const Point newRef);
+    void translate(const Point newRef, const Point currentRef = {0, 0});
 };
 
 /**
@@ -215,4 +255,9 @@ std::ostream& operator<<(std::ostream&, const RectWithBorder&);
  * @return
  */
 std::ostream& operator<<(std::ostream&, const Rect&);
+/**
+ * Prints Point
+ * @return
+ */
+std::ostream& operator<<(std::ostream&, const Point&);
 #endif

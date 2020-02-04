@@ -200,7 +200,7 @@ static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
         if(rect.isAtOrigin()) {
             Workspace* w = winInfo->getWorkspace();
             if(w && w->isVisible()) {
-                rect.translate({0, 0}, w->getMonitor()->getViewport().getTopLeftCorner());
+                rect.translate(w->getMonitor()->getViewport().getTopLeftCorner());
                 setWindowPosition(winInfo->getID(), rect);
             }
         }

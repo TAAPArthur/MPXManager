@@ -164,21 +164,16 @@ static void applyMasksToConfig(const WindowInfo* winInfo, const Monitor* m, uint
 }
 
 static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor* m, uint32_t* config) {
+    if(!winInfo->getTilingOverrideMask())
+        return;
     RectWithBorder tilingOverride = winInfo->getTilingOverride();
     Rect bounds = m->getViewport();
     if(winInfo->isDock() || !winInfo->getWorkspace() || winInfo->hasPartOfMask(ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
         bounds = config;
-    for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++) {
-        if(winInfo->isTilingOverrideEnabledAtIndex(i)) {
-            short fixedValue = tilingOverride[i];
-            short refEndPoint = bounds[i % 2 + 2];
-            config[i] = fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
-            if(i < CONFIG_INDEX_WIDTH)
-                config[i] += bounds[i];
-            else if(!config[i])
-                config[i] = bounds[i];
-        }
-    }
+    Rect region = bounds.getRelativeRegion(tilingOverride);
+    for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
+        if(winInfo->isTilingOverrideEnabledAtIndex(i))
+            config[i] = region[i];
     if(winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER))
         config[CONFIG_INDEX_BORDER] = MAX(0, tilingOverride.border);
 }

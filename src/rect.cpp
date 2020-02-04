@@ -28,12 +28,31 @@ bool Rect::containsProper(Rect arg)const {
     return (x < arg.x && arg.x + arg.width < x + width &&
             y < arg.y && arg.y + arg.height < y + height);
 }
-void Rect::translate(const Point currentOrigin, const Point newOrigin) {
+void Rect::translate(const Point newOrigin, const Point currentOrigin) {
     x = x - currentOrigin.x + newOrigin.x;
     y = y - currentOrigin.y + newOrigin.y;
 }
+
+Rect Rect::getRelativeRegion(const Rect& region) const {
+    const Rect& bounds = *this;
+    Rect config = {0, 0, 0, 0};
+    for(int i = 0; i < 4; i++) {
+        short fixedValue = region[i];
+        short refEndPoint = bounds[i % 2 + 2];
+        config[i] = fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
+        if(i < 2)
+            config[i] += bounds[i];
+        else if(!config[i])
+            config[i] = bounds[i];
+    }
+    return config;
+}
+
+std::ostream& operator<<(std::ostream& strm, const Point& point) {
+    return strm << "{" << point.x << ", " << point.y << "}";
+}
 std::ostream& operator<<(std::ostream& strm, const Rect& rect) {
-    return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ", " << "}";
+    return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << "}";
 }
 std::ostream& operator<<(std::ostream& strm, const RectWithBorder& rect) {
     return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ", " << rect.border <<
