@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
     if(winInfo.getType()) {
         stream << " Title '" << winInfo.getTitle() << "'" ;
         stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
-        stream << " Type " << (winInfo.isImplicitType()?"?":"") << "'" << winInfo.getTypeName() << "'";
+        stream << " Type " << (winInfo.isImplicitType() ? "?" : "") << "'" << winInfo.getTypeName() << "'";
         stream << " Role '" << winInfo.getRole() << "'";
     }
     stream << " Masks: " << winInfo.getMask();
@@ -112,9 +112,9 @@ WindowInfo::~WindowInfo() {
     removeFromWorkspace();
     removeID(this);
 }
-void WindowInfo::setDockProperties(int* properties, int numberofProperties) {
+void WindowInfo::setDockProperties(int* properties, int numberOfProperties) {
     memset(getDockProperties(1), 0, 12 * sizeof(int));
-    memcpy(getDockProperties(1), properties, numberofProperties * sizeof(int));
+    memcpy(getDockProperties(1), properties, numberOfProperties * sizeof(int));
 }
 int* WindowInfo::getDockProperties(bool createNew) {
     static Index<int[12]> key;

@@ -195,6 +195,12 @@ void onPropertyEvent(void) {
     if(winInfo && winInfo->isMappable()) {
         if(event->atom == ewmh->_NET_WM_NAME || event->atom == WM_NAME)
             loadWindowTitle(winInfo);
+        if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
+            if(winInfo->isDock()) {
+                loadDockProperties(winInfo);
+                resizeAllMonitorsToAvoidDock(winInfo);
+            }
+        }
         else if(event->atom == WM_HINTS)
             loadWindowHints(winInfo);
         else {

@@ -199,7 +199,10 @@ void resizeAllMonitorsToAvoidAllDocks(void);
  * @param winInfo the dock to avoid
  * @see resizeMonitorToAvoidStruct
  */
-void resizeAllMonitorsToAvoidDock(WindowInfo* winInfo);
+static inline void resizeAllMonitorsToAvoidDock(WindowInfo* winInfo) {
+    for(Monitor* m : getAllMonitors())
+        m->resizeToAvoidDock(winInfo);
+}
 /**
  * Resizes all monitors such that its viewport does not intersect the given dock
  *

@@ -232,6 +232,16 @@ MPX_TEST("test_property_update", {
     waitUntilIdle();
     assert(getWindowInfo(win)->getTitle() == title);
 });
+MPX_TEST("test_property_update_dock", {
+    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK));
+    waitUntilIdle();
+    getWindowInfo(win)->setDock();
+    int size = 20;
+    setDockProperties(win, 0, size);
+    waitUntilIdle();
+    assertEquals(getWindowInfo(win)->getDockProperties()[0], size);
+    assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
+});
 MPX_TEST("test_property_update_other", {
     WindowID win = mapWindow(createNormalWindow());
     waitUntilIdle();
