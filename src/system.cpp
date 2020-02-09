@@ -26,6 +26,10 @@ int numPassedArguments;
 char* const* passedArguments;
 
 void (*onChildSpawn)(void) = setClientMasterEnvVar;
+void createStatusPipe() {
+    pipe(statusPipeFD);
+    pipe(statusPipeFD + 2);
+}
 void resetPipe() {
     if(statusPipeFD[0]) {
         // other fields were closed right after a call to spawnPipe;
@@ -81,20 +85,21 @@ void suppressOutput(void) {
     assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDOUT_FILENO) == STDOUT_FILENO);
 }
 
-static int _spawn(const char* command, bool spawnPipe, bool silent = 0) {
+static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool noDup = 0) {
     INFO("Spawning command " << command);
     if(spawnPipe) {
         resetPipe();
-        pipe(statusPipeFD);
-        pipe(statusPipeFD + 2);
+        createStatusPipe();
     }
     int pid = fork();
     if(pid == 0) {
         if(spawnPipe) {
             close(STATUS_FD);
             close(STATUS_FD_READ);
-            dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
-            dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
+            if(!noDup) {
+                dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
+                dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
+            }
         }
         else
             resetPipe();
@@ -121,8 +126,8 @@ int spawn(const char* command) {
 int spawn(const char* command, bool silent) {
     return _spawn(command, 0, silent);
 }
-int spawnPipe(const char* command) {
-    return _spawn(command, 1);
+int spawnPipe(const char* command, bool noDup) {
+    return _spawn(command, 1, 0, noDup);
 }
 
 int waitForChild(int pid) {
@@ -149,10 +154,12 @@ static void stop(void) {
     destroyAllLists();
 }
 
-void restart(void) {
+void restart(bool force) {
     if(passedArguments) {
         INFO("restarting");
-        stop();
+        if(!force) {
+            stop();
+        }
         DEBUG("calling execv");
         execv(passedArguments[0], passedArguments);
         err(1, "exec failed; Aborting");
@@ -189,7 +196,7 @@ __attribute__((constructor)) static void set_handlers() {
     signal(SIGABRT, handler);
     signal(SIGTERM, handler);
     signal(SIGPIPE, [](int) {resetPipe();});
-    signal(SIGUSR1, [](int) {restart();});
+    signal(SIGUSR1, [](int) {restart(1);});
     signal(SIGUSR2, [](int) {printStackTrace();});
     char* counter = getenv(restartCounterString);
     RESTART_COUNTER = counter ? strtol(counter, NULL, 10) + 1 : 0;

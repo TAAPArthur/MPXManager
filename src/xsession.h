@@ -416,4 +416,9 @@ void unmapWindow(WindowID id);
  * @return 0 on success or the error
  */
 int destroyWindow(WindowID win);
+
+/**
+ * @return 1 iff a connection to the xserver has been opened
+ */
+bool hasXConnectionBeenOpened();
 #endif /* XSESSION_H_ */

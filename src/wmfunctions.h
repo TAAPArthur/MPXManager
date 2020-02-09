@@ -93,9 +93,7 @@ void killClientOfWindowInfo(WindowInfo* winInfo);
 /**
  * Updates the map state of the window to be in sync with its workspace.
  * For Sticky windows which should always be mapped, this involves moving it to a different workspace
- *
  * @param winInfo
- * @param updateFocus
  */
 void updateWindowWorkspaceState(WindowInfo* winInfo);
 /**

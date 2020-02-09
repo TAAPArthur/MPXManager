@@ -50,13 +50,13 @@ void quit(int exitCode)__attribute__((__noreturn__));
 
 /**
  * restart the application
+ * @param force don't try to safly shutdown
  */
-void restart(void)__attribute__((__noreturn__));
+void restart(bool force = 0)__attribute__((__noreturn__));
 
 /**
- * Forks and runs command in SHELL
+ * Forks and, if command is not NULL, exec command in SHELL
  * The command run shall terminate independently of the parent.
- * If MPX_TESTING is defined, then a NULL value of shell will result in the child return 0 instead of running exec
  * @param command
  * @return the pid of the new process
  */
@@ -70,18 +70,18 @@ int spawn(const char* command);
 int spawn(const char* command, bool silent);
 /**
  * wrapper for spawn(command, 1)
- *
  * @param command
- *
- * @return
  */
 static inline int spawnSilent(const char* command) {return spawn(command, 1);}
 
 /**
+ * @copydoc spawn(const char*)
  * Like spawn but the child's stdin refers to our stdout
+ *
+ * @param noDup if true, the stdout and stdout won't be dup2 to use the statusPipe
  * @return the pid of the new process
  */
-int spawnPipe(const char* command);
+int spawnPipe(const char* command, bool noDup = 0);
 
 /**
  * Dups stdout and stderror to /dev/null
@@ -95,9 +95,13 @@ void suppressOutput(void) ;
  */
 int waitForChild(int pid);
 /**
- * Closes all pipes opend by spawnPipe and zeros out statusPipeFD
+ * Closes all pipes opened by createStatusPipe and zeros out statusPipeFD
  */
 void resetPipe();
+/**
+ * pipes statusPipeFD to create 2 pipes for bi-directional communication with a process spawned by spawnPipe()
+ */
+void createStatusPipe();
 /**
  * function to run in child after a fork/spawn call
  */

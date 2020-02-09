@@ -1,7 +1,6 @@
 #include "../arraylist.h"
 #include "tester.h"
 
-
 MPX_TEST("enable_if", {
     ArrayList<int> list;
     list.add(1);

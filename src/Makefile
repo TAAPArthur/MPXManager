@@ -126,7 +126,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out functional.out format doc-check correctness.out preinstall
+test: libmpx-test.so code_coverage.out functional.out format doc-check correctness.out
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp |libmpx-patch.so
@@ -139,7 +139,7 @@ functional.out: functionalTest
 	touch $@
 
 unitTest: CPPFLAGS := ${TESTFLAGS}
-unitTest: Tests/tester.o   $(patsubst %.cpp,%.o,$(wildcard Tests/Extensions/*_unit.cpp Tests/*_unit.cpp)) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
+unitTest: Tests/tester.o   $(patsubst %.cpp,%.o,$(wildcard Tests/Extensions/*_unit.cpp Tests/*_unit.cpp )) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 correctness.out: unitTest

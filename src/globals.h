@@ -100,7 +100,11 @@ extern uint32_t DEFAULT_NUMBER_OF_WORKSPACES;
 /**Border color for unfocused windows and windows whose last focused master is not set*/
 extern uint32_t DEFAULT_UNFOCUS_BORDER_COLOR;
 
-/// after this number of events (or when the connection is idle) Period events with will be triggered
+/**
+ * After this number of events (or when the connection is idle) PERIODIC events with will be triggered.
+ * Setting to 0 disables PERIODIC events.
+ * Setting to 1 will allow code to be run after every X event received
+ */
 extern uint32_t EVENT_PERIOD;
 
 

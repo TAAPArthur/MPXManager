@@ -237,6 +237,10 @@ static xcb_gcontext_t create_graphics_context(void) {
     catchError(cookie);
     return graphics_context;
 }
+
+bool hasXConnectionBeenOpened() {
+    return dpy ? 1 : 0;
+}
 /**
  * Shorthand macro to init a X11 atom
  * @param name the name of the atom to init

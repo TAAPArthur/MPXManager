@@ -170,7 +170,7 @@ static int getAssociatedMasterDevice(int deviceID) {
 }
 */
 void setClientPointerForWindow(WindowID window, MasterID id) {
-    xcb_input_xi_set_client_pointer(dis, window, id);
+    XCALL(xcb_input_xi_set_client_pointer, dis, window, id);
 }
 MasterID getClientPointerForWindow(WindowID win) {
     MasterID masterPointer;

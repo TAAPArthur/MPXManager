@@ -78,8 +78,6 @@ static inline int grabPointer(MasterID id = getActiveMasterPointerID()) {
     return grabDevice(id, POINTER_MASKS);
 }
 
-
-
 /**
  * Returns the mask that relates to a keyboard devices
  * @param mask

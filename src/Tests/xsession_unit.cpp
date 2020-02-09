@@ -10,6 +10,7 @@
 
 MPX_TEST_ERR("no_display", 1, {
     suppressOutput();
+    assert(!hasXConnectionBeenOpened());
     setenv("DISPLAY", "1", 1);
     openXDisplay();
     assert(0);
@@ -19,6 +20,7 @@ SET_ENV(openXDisplay, NULL);
 MPX_TEST("open_xdisplay", {
     assert(dis);
     assert(!xcb_connection_has_error(dis));
+    assert(hasXConnectionBeenOpened());
     assert(screen);
     assert(root);
     assert(WM_DELETE_WINDOW);

@@ -30,7 +30,7 @@ static inline void waitUntilIdle(bool safe = 0) {
     idleCount = getIdleCount();
 }
 static inline void wakeupWM() {
-    createNormalWindow();
+    createOverrideRedirectWindow();
     flush();
 }
 static inline void onSimpleStartup() {
@@ -42,7 +42,7 @@ static inline void onSimpleStartup() {
 }
 
 static inline void exitFailure() {
-    exit(10);
+    quit(10);
 }
 
 static inline void startWM() {

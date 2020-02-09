@@ -6,6 +6,7 @@
 #define WINDOW_MASKS_H_
 
 #include <string>
+#include <assert.h>
 #include "mywm-structs.h"
 
 /// Max number of window masks

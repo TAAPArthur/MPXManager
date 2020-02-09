@@ -9,6 +9,7 @@
 #include <xcb/xinput.h>
 
 #include "chain.h"
+#include "threads.h"
 #include "communications.h"
 #include "ewmh.h"
 #include "extra-rules.h"
@@ -100,8 +101,8 @@ void addDefaultBindings() {
 
         {WILDCARD_MODIFIER, Button1, activateWorkspaceUnderMouse, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {WILDCARD_MODIFIER, Button1, activateWindow, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-        {DEFAULT_MOD_MASK, XK_c, killClientOfWindow, {.noKeyRepeat = 1}},
-        {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindow, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
+        {DEFAULT_MOD_MASK, XK_c, killClientOfWindowInfo, {.noKeyRepeat = 1}},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindowInfo, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK, Button1, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, Button3, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, {.passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
@@ -179,9 +180,6 @@ void defaultPrintFunction(void) {
     }
     dprintf(STATUS_FD, "\n");
 }
-void __attribute__((weak)) loadSettings(void) {
-    loadNormalSettings();
-}
 void loadNormalSettings() {
     INFO("Loading normal settings");
     SHELL = getenv("SHELL");
@@ -189,6 +187,9 @@ void loadNormalSettings() {
     enableInterClientCommunication();
     addDefaultBindings();
     addChainDefaultBindings();
+}
+void __attribute__((weak)) loadSettings(void) {
+    loadNormalSettings();
 }
 void (*startupMethod)();
 void onStartup(void) {
@@ -220,7 +221,9 @@ void onStartup(void) {
         ROOT_EVENT_MASKS &= ~WM_MASKS;
     if(startupMethod)
         startupMethod();
+    lock();
     openXDisplay();
+    unlock();
     assert(getActiveMaster());
     assert(getNumberOfWorkspaces());
 }

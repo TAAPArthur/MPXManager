@@ -162,7 +162,7 @@ void addDefaultXMouseControlBindings(uint32_t mask) {
         {mask, XK_Return, CLICK(Button2)},
         {mask | ShiftMask,	XK_space, CLICK(Button3)},
 
-        {mask,	XK_Tab, grabKeyboard},
+        {mask,	XK_Tab, +[]{grabKeyboard();}},
         {mask | ShiftMask,	XK_Tab, {[]() {ungrabDevice(getActiveMasterKeyboardID());}}},
     };
     for(Binding& b : bindings)

@@ -11,7 +11,7 @@ void sendDeviceAction(MasterID id, int detail, int type, WindowID window) {
     LOG(LOG_LEVEL_DEBUG, "Sending action: id %d detail %d type %d to win %d", id, detail, type, window);
     assert(detail);
     assert(id < getMaxNumberOfDevices());
-    catchError(xcb_test_fake_input_checked(dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id));
+    XCALL(xcb_test_fake_input, dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id);
 }
 
 void sendButtonPress(int button, WindowID win, MasterID id) {

@@ -8,7 +8,6 @@
 /// Returns the length of the array
 #define LEN(X) (sizeof X / sizeof X[0])
 
-#include <assert.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <type_traits>
@@ -234,7 +233,6 @@ struct ArrayList: std::vector<T> {
      * @return the element that was removed
      */
     T remove(uint32_t index) {
-        assert(index < this->size());
         T value = (*this)[index];
         for(uint32_t i = index; i < this->size() - 1; i++)
             (*this)[i] = (*this)[i + 1];
@@ -338,7 +336,6 @@ struct ArrayList: std::vector<T> {
      * @param index
      */
     void shiftToHead(uint32_t index) {
-        assert(index < this->size());
         T newHead = (*this)[ index];
         for(int i = index; i > 0; i--)
             (*this)[i] = (*this)[i - 1];
@@ -360,7 +357,6 @@ struct ArrayList: std::vector<T> {
      * @param index2
      */
     void swap(uint32_t index1, uint32_t index2) {
-        assert(index1 < this->size() && index2 < this->size());
         T temp = (*this)[ index1];
         (*this)[index1] = (*this)[index2];
         (*this)[index2] = temp;

@@ -194,8 +194,7 @@ void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name) {
 }
 void centerMouseInWindow(WindowInfo* winInfo) {
     Rect dims = winInfo->getGeometry();
-    if(getFocusedWindow())
-        movePointer(dims.width / 2, dims.height / 2, winInfo->getID());
+    movePointer(dims.width / 2, dims.height / 2, winInfo->getID());
 }
 void activateWorkspaceUnderMouse(void) {
     short pos[2];

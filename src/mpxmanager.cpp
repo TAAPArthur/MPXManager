@@ -122,7 +122,7 @@ static void parseArgs(int argc, char* const* argv) {
             LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.", argv[i]);
             exit(1);
         }
-        if(!dpy) {
+        if(!hasXConnectionBeenOpened()) {
             openXDisplay();
             clearWMSettings();
             RUN_EVENT_LOOP = 0;
@@ -138,7 +138,7 @@ int _main(int argc, char* const* argv) {
         startupMethod = loadSettings;
     if(argc > 1)
         parseArgs(argc, argv);
-    if(!dpy)
+    if(!hasXConnectionBeenOpened())
         onStartup();
     if(RUN_EVENT_LOOP)
         runEventLoop();
@@ -157,7 +157,7 @@ int _main(int argc, char* const* argv) {
             }
             LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d", isMPXManagerRunning(), hasOutStandingMessages());
         }
-        if(dpy)
+        if(hasXConnectionBeenOpened())
             return !getLastMessageExitCode();
     }
     return 0;
