@@ -1,41 +1,39 @@
 #include <xcb/xinput.h>
 #include <xcb/xtest.h>
 #include <X11/extensions/XInput2.h>
+#include <X11/extensions/XTest.h>
 
 #include "logger.h"
 #include "masters.h"
 #include "test-functions.h"
 #include "xsession.h"
 
-void sendDeviceAction(MasterID id, int detail, int type, WindowID window) {
-    LOG(LOG_LEVEL_DEBUG, "Sending action: id %d detail %d type %d to win %d", id, detail, type, window);
-    assert(detail);
-    assert(id < getMaxNumberOfDevices());
-    XCALL(xcb_test_fake_input, dis, type, detail, XCB_CURRENT_TIME, window, 0, 0, id);
+void sendButtonPress(int button, MasterID id) {
+    XDevice dev = {.device_id = id};
+    XTestFakeDeviceButtonEvent(dpy, &dev, button, 1, NULL, 0, CurrentTime);
+}
+void sendButtonRelease(int button, MasterID id) {
+    XDevice dev = {.device_id = id};
+    XTestFakeDeviceButtonEvent(dpy, &dev, button, 0, NULL, 0, CurrentTime);
+}
+void clickButton(int button, MasterID id) {
+    VERBOSE("Clicking button " << button << " for " << id);
+    sendButtonPress(button, id);
+    sendButtonRelease(button, id);
 }
 
-void sendButtonPress(int button, WindowID win, MasterID id) {
-    sendDeviceAction(id, button, XCB_INPUT_BUTTON_PRESS, win);
+void sendKeyPress(int keyCode, MasterID id) {
+    XDevice dev = {.device_id = id};
+    XTestFakeDeviceKeyEvent(dpy, &dev, keyCode, 1, NULL, 0, CurrentTime);
 }
-void sendButtonRelease(int button, WindowID win, MasterID id) {
-    sendDeviceAction(id, button, XCB_INPUT_BUTTON_RELEASE, win);
+void sendKeyRelease(int keyCode, MasterID id) {
+    XDevice dev = {.device_id = id};
+    XTestFakeDeviceKeyEvent(dpy, &dev, keyCode, 0, NULL, 0, CurrentTime);
 }
-void clickButton(int button, WindowID win, MasterID id) {
-    sendButtonPress(button, win, id);
-    sendButtonRelease(button, win, id);
+void typeKey(int keycode, MasterID id) {
+    sendKeyPress(keycode, id);
+    sendKeyRelease(keycode, id);
 }
-
-void sendKeyPress(int keycode, WindowID win, MasterID id) {
-    sendDeviceAction(id, keycode, XCB_INPUT_KEY_PRESS, win);
-}
-void sendKeyRelease(int keycode, WindowID win, MasterID id) {
-    sendDeviceAction(id, keycode, XCB_INPUT_KEY_RELEASE, win);
-}
-void typeKey(int keycode, WindowID win, MasterID id) {
-    sendKeyPress(keycode, win, id);
-    sendKeyRelease(keycode, win, id);
-}
-
 
 void movePointerRelative(short x, short y, MasterID id) {
     movePointer(x, y, XCB_NONE, id);

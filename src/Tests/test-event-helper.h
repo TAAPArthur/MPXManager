@@ -79,9 +79,10 @@ static inline void triggerBinding(Binding* b, WindowID win = root) {
         return;
     }
     if(getKeyboardMask(b->getMask()))
-        typeKey(b->getKeyBindings()[0]->getDetail(), win);
+        typeKey(b->getKeyBindings()[0]->getDetail());
     else
-        clickButton(b->getKeyBindings()[0]->getDetail(), win);
+        clickButton(b->getKeyBindings()[0]->getDetail());
+    flush();
 }
 static inline void triggerAllBindings(int mask, WindowID win = root) {
     flush();
@@ -93,14 +94,15 @@ static inline void triggerAllBindings(int mask, WindowID win = root) {
 }
 
 
-static inline void* getNextDeviceEvent() {
-    xcb_flush(dis);
+static inline xcb_generic_event_t* getNextDeviceEvent() {
+    flush();
     xcb_generic_event_t* event = xcb_wait_for_event(dis);
-    LOG(LOG_LEVEL_DEBUG, "Event received%d\n\n", ((xcb_generic_event_t*)event)->response_type);
+    DEBUG("Event received" << (int)((xcb_generic_event_t*)event)->response_type);
     if(((xcb_generic_event_t*)event)->response_type == XCB_GE_GENERIC) {
-        loadGenericEvent((xcb_ge_generic_event_t*)event);
+        auto type = loadGenericEvent((xcb_ge_generic_event_t*)event);
         xcb_input_key_press_event_t* dEvent = (xcb_input_key_press_event_t*) event;
-        LOG(LOG_LEVEL_DEBUG, "Detail %d type %s\n", dEvent->detail,
+        assertEquals(type, GENERIC_EVENT_OFFSET + dEvent->event_type);
+        LOG(LOG_LEVEL_DEBUG, "Detail %d Device type %d (%d) %s", dEvent->detail, dEvent->deviceid, dEvent->sourceid,
             eventTypeToString(GENERIC_EVENT_OFFSET + dEvent->event_type));
     }
     else if(((xcb_generic_event_t*)event)->response_type == 0) {

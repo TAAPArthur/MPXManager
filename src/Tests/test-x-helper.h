@@ -106,6 +106,7 @@ static inline WindowID setDockProperties(WindowID win, int i, int size, bool ful
 static inline int consumeEvents() {
     lock();
     flush();
+    XSync(dpy, 0);
     xcb_generic_event_t* e;
     int numEvents = 0;
     while(1) {

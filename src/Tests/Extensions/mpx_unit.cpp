@@ -177,8 +177,6 @@ static void setup() {
             event->sourceid = getMasterByID(event->deviceid, 0)->getSlaves()[0]->getID();
             return;
         }
-        if(event->deviceid == event->sourceid)
-            return;
         Master* m;
         if(m = getMasterByID(event->deviceid, 1)) {
             if(m->getSlaves().size())
@@ -188,7 +186,6 @@ static void setup() {
             if(m->getSlaves().size())
                 event->sourceid = m->getSlaves()[0]->getID();
         }
-        assert(m);
     };
     getEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(injectSlaveID), PREPEND_UNIQUE);
     onSimpleStartup();
@@ -197,6 +194,25 @@ static void setup() {
 }
 SET_ENV(setup, fullCleanup);
 
+MPX_TEST_ITER("test_split_master_bad", 2, {
+    createMasterDevice("test");
+    waitUntilIdle();
+    setActiveMaster(getAllMasters()[1]);
+    startSplitMaster();
+    waitUntilIdle();
+    lock();
+    typeKey(getKeyCode(XK_A));
+    clickButton(1);
+    if(_i)
+        getAllMasters().deleteElements();
+    getAllSlaves().deleteElements();
+    addDefaultMaster();
+    getEventRules(DEVICE_EVENT).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
+    unlock();
+    waitUntilIdle();
+    initCurrentMasters();
+});
+
 MPX_TEST_ITER("test_split_master", 2, {
     Master* m = getActiveMaster();
     assertEquals(getAllMasters().size(), 1);
@@ -204,9 +220,9 @@ MPX_TEST_ITER("test_split_master", 2, {
     assertEquals(getAllSlaves().size(), 2);
     startSplitMaster();
     getEventRules(DEVICE_EVENT).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));
-    sendKeyPress(getKeyCode(XK_A));
+    typeKey(getKeyCode(XK_A));
     if(_i)
-        sendButtonPress(1);
+        clickButton(1);
     else {
         movePointer(0, 0);
         movePointer(1, 1);

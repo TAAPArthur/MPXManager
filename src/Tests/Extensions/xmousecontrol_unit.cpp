@@ -95,15 +95,15 @@ MPX_TEST("test_scroll_scale", {
     int scaleFactor = 4;
     adjustScrollSpeed(0);
     xmousecontrolUpdate();
-    int num = consumeEvents() / 2;
+    int num = consumeEvents();
     assert(num);
     adjustScrollSpeed(scaleFactor);
     xmousecontrolUpdate();
-    int num2 = consumeEvents() / 2;
+    int num2 = consumeEvents();
     assertEquals(num2, num + scaleFactor);
     adjustScrollSpeed(-scaleFactor);
     xmousecontrolUpdate();
-    int num3 = consumeEvents() / 2;
+    int num3 = consumeEvents();
     assertEquals(num3, num);
 });
 MPX_TEST("test_move_scale", {
@@ -156,7 +156,7 @@ MPX_TEST_ITER("test_mpx_aware", 3 * 2, {
     if(move)
         assertEquals(getCount(), 1);
     else
-        assertEquals(getCount(), 4);
+        assertEquals(getCount(), 2);
     assertEquals(*getActiveMaster(), *targetMaster);
 });
 MPX_TEST("warm_bindings", {

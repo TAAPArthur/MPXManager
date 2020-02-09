@@ -168,12 +168,11 @@ MPX_TEST("load_generic_events", {
     addDefaultMaster();
     grabPointer();
     clickButton(1);
-    xcb_generic_event_t* event;
-    event = xcb_wait_for_event(dis);
-    assertEquals(loadGenericEvent((xcb_ge_generic_event_t*)event), GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_PRESS);
+    auto* event = (xcb_ge_generic_event_t*)getNextDeviceEvent();
+    assertEquals(event->event_type, XCB_INPUT_BUTTON_PRESS);
     free(event);
-    event = xcb_wait_for_event(dis);
-    assertEquals(loadGenericEvent((xcb_ge_generic_event_t*)event), GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE);
+    event = (xcb_ge_generic_event_t*)getNextDeviceEvent();
+    assertEquals(event->event_type, XCB_INPUT_BUTTON_RELEASE);
     free(event);
 });
 MPX_TEST_ITER("getButtonOrKey", 2, {
