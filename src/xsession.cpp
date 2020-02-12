@@ -29,6 +29,7 @@ xcb_atom_t WM_INTERPROCESS_COM;
 xcb_atom_t WM_INTERPROCESS_COM_STATUS;
 xcb_atom_t WM_MASTER_WINDOWS;
 xcb_atom_t WM_NAME;
+xcb_atom_t WM_CHANGE_STATE;
 xcb_atom_t WM_SELECTION_ATOM;
 xcb_atom_t WM_STATE_NO_TILE;
 xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
@@ -268,6 +269,7 @@ void openXDisplay(void) {
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
     _CREATE_ATOM(MAX_DEVICES);
     _CREATE_ATOM(WM_ACTIVE_MASTER);
+    _CREATE_ATOM(WM_CHANGE_STATE);
     _CREATE_ATOM(WM_DELETE_WINDOW);
     _CREATE_ATOM(WM_FAKE_MONITORS);
     _CREATE_ATOM(WM_HINTS);
@@ -278,11 +280,11 @@ void openXDisplay(void) {
     _CREATE_ATOM(WM_STATE_NO_TILE);
     _CREATE_ATOM(WM_STATE_ROOT_FULLSCREEN);
     _CREATE_ATOM(WM_TAKE_FOCUS);
+    _CREATE_ATOM(WM_WINDOW_ROLE);
     _CREATE_ATOM(WM_WORKSPACE_LAYOUT_INDEXES);
     _CREATE_ATOM(WM_WORKSPACE_LAYOUT_NAMES);
     _CREATE_ATOM(WM_WORKSPACE_MONITORS);
     _CREATE_ATOM(WM_WORKSPACE_MONITOR_HISTORY);
-    _CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
     setRootDims(&screen->width_in_pixels);
     root = screen->root;

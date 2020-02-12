@@ -99,7 +99,7 @@ void setAllowedActions(WindowInfo* winInfo) {
     ArrayList<xcb_atom_t> actions = {
         ewmh->_NET_WM_ACTION_CHANGE_DESKTOP, ewmh->_NET_WM_ACTION_CLOSE,
     };
-    getAtomsFromMask(MASKS_TO_SYNC, actions, 1);
+    getAtomsFromMask(winInfo->getMasksToSync(), actions, 1);
     xcb_ewmh_set_wm_allowed_actions_checked(ewmh, winInfo->getID(), actions.size(), actions.data());
 }
 
@@ -196,7 +196,7 @@ bool isShowingDesktop(void) {
     xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
     return value;
 }
-static const char* getSourceTypeName(xcb_ewmh_client_source_type_t source) {
+static inline const char* getSourceTypeName(xcb_ewmh_client_source_type_t source) {
     switch(source) {
         default:
         case XCB_EWMH_CLIENT_SOURCE_TYPE_NONE:
@@ -223,11 +223,11 @@ void onClientMessage(void) {
     xcb_window_t win = event->window;
     Atom message = event->type;
     LOG(LOG_LEVEL_INFO, "Received client message for window: %d message: %s", win, getAtomName(message).c_str());
+    WindowInfo* winInfo = getWindowInfo(win);
     if(message == ewmh->_NET_CURRENT_DESKTOP)
         switchToWorkspace(data.data32[0]);
     else if(message == ewmh->_NET_ACTIVE_WINDOW) {
         //data: source,timestamp,current active window
-        WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo && allowRequestFromSource(data.data32[0])) {
             Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
             if(m)
@@ -242,7 +242,6 @@ void onClientMessage(void) {
     }
     else if(message == ewmh->_NET_CLOSE_WINDOW) {
         LOG(LOG_LEVEL_DEBUG, "Killing window %d\n", win);
-        WindowInfo* winInfo = getWindowInfo(win);
         if(!winInfo)
             killClientOfWindow(win);
         else if(allowRequestFromSource(data.data32[0])) {
@@ -250,7 +249,6 @@ void onClientMessage(void) {
         }
     }
     else if(message == ewmh->_NET_RESTACK_WINDOW) {
-        WindowInfo* winInfo = getWindowInfo(win);
         LOG(LOG_LEVEL_DEBUG, "Restacking Window %d sibling %d detail %d\n", win, data.data32[1], data.data32[2]);
         if(winInfo && allowRequestFromSource(data.data32[0]))
             processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
@@ -267,14 +265,12 @@ void onClientMessage(void) {
         short values[4];
         for(int i = 1; i <= 4; i++)
             values[i - 1] = data.data32[i];
-        WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo && allowRequestFromSource(source)) {
             processConfigureRequest(win, values, 0, 0, mask);
         }
     }
     else if(message == ewmh->_NET_WM_MOVERESIZE) {
         // x,y, direction, button, src
-        WindowInfo* winInfo = getWindowInfo(win);
         if(winInfo && allowRequestFromSource(data.data32[4])) {
             int dir = data.data32[2];
             bool allowMoveX = XCB_EWMH_WM_MOVERESIZE_SIZE_TOP != dir && XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOM != dir ;
@@ -289,7 +285,6 @@ void onClientMessage(void) {
     }
     //change window's workspace
     else if(message == ewmh->_NET_WM_DESKTOP) {
-        WindowInfo* winInfo = getWindowInfo(win);
         WorkspaceID destIndex = data.data32[0];
         if(!(destIndex == NO_WORKSPACE || destIndex < getNumberOfWorkspaces()))
             destIndex = getNumberOfWorkspaces() - 1;
@@ -300,7 +295,6 @@ void onClientMessage(void) {
     }
     else if(message == ewmh->_NET_WM_STATE) {
         // action, prop1, prop2, source
-        WindowInfo* winInfo = getWindowInfo(win);
         // if prop2 is 0, then there is only 1 property to consider
         int num = data.data32[2] == 0 ? 1 : 2;
         if(winInfo) {
@@ -311,12 +305,18 @@ void onClientMessage(void) {
             else
                 INFO("Client message denied");
         }
-        else {
-            WindowInfo fakeWinInfo = {.id = win};
-            loadSavedAtomState(&fakeWinInfo);
-            setWindowStateFromAtomInfo(&fakeWinInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
-            setXWindowStateFromMask(&fakeWinInfo);
-        }
+    }
+    else if(message == WM_CHANGE_STATE) {
+        if(winInfo && allowRequestFromSource(XCB_EWMH_CLIENT_SOURCE_TYPE_NONE))
+            if(data.data32[0] == XCB_ICCCM_WM_STATE_ICONIC) {
+                if(winInfo->getMasksToSync() & HIDDEN_MASK) {
+                    INFO("Received request to iconify window; marking window as HIDDEN");
+                    winInfo->addMask(HIDDEN_MASK);
+                    setXWindowStateFromMask(winInfo);
+                }
+                else
+                    INFO("Received request to iconify window; ignored");
+            }
     }
     else if(message == ewmh->WM_PROTOCOLS) {
         if(data.data32[0] == ewmh->_NET_WM_PING) {
@@ -460,14 +460,14 @@ void updateXWindowStateForAllWindows() {
     for(WindowInfo* winInfo : getAllWindows()) {
         if(winInfo->hasMask(MAPPABLE_MASK))
             if(!savedWindowMasks.count(winInfo->getID()) ||
-                winInfo->getMask() & MASKS_TO_SYNC != savedWindowMasks[winInfo->getID()]) {
+                winInfo->getMask() & winInfo->getMasksToSync() != savedWindowMasks[winInfo->getID()]) {
                 setXWindowStateFromMask(winInfo);
             }
     }
     savedWindowMasks.clear();
     for(WindowInfo* winInfo : getAllWindows())
         if(winInfo->hasMask(MAPPABLE_MASK))
-            savedWindowMasks[winInfo->getID()] = winInfo->getMask() & MASKS_TO_SYNC;
+            savedWindowMasks[winInfo->getID()] = winInfo->getMask() & winInfo->getMasksToSync();
 }
 void loadSavedAtomState(WindowInfo* winInfo) {
     xcb_ewmh_get_atoms_reply_t reply;
@@ -484,12 +484,12 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
     if(hasState) {
         DEBUG("Current state atoms" << getAtomsAsString(reply.atoms, reply.atoms_len));
         for(uint32_t i = 0; i < reply.atoms_len; i++) {
-            if((getMaskFromAtom(reply.atoms[i]) & MASKS_TO_SYNC) == 0)
+            if((getMaskFromAtom(reply.atoms[i]) & winInfo->getMasksToSync()) == 0)
                 windowState.add(reply.atoms[i]);
         }
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
-    getAtomsFromMask(winInfo->getMask() & MASKS_TO_SYNC, windowState);
+    getAtomsFromMask(winInfo->getMask() & winInfo->getMasksToSync(), windowState);
     xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), windowState.size(), windowState.data());
     DEBUG("New Atoms" << getAtomsAsString(windowState.data(), windowState.size()));
 }
@@ -502,7 +502,7 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
         mask |= getMaskFromAtom(atoms[i]);
     }
     DEBUG("Pre filtered masks: " << mask);
-    mask &= MASKS_TO_SYNC;
+    mask &= winInfo->getMasksToSync();
     DEBUG("Filtered masks: " << mask);
     if(action == XCB_EWMH_WM_STATE_TOGGLE)
         winInfo->toggleMask(mask);

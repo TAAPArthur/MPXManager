@@ -21,7 +21,7 @@ MPX_TEST("test_float_sink_window", {
     assert(winInfo.hasMask(FLOATING_MASK));
     assert(!winInfo.isTileable());
     sinkWindow(&winInfo);
-    assert(!winInfo.hasMask(FLOATING_MASK));
+    assert(!(winInfo.getMask() & FLOATING_MASK));
     assert(winInfo.isTileable());
 });
 MPX_TEST("get_set_title", {

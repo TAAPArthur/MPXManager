@@ -61,6 +61,8 @@
 #define ALWAYS_ON_BOTTOM_MASK 	(1U << 11)
 /// will cause WindowInfo::isSpecial to return 1
 #define SPECIAL_MASK 	(1U << 12)
+/// will cause all masks to be synced regardless of MASKS_TO_SYNC
+#define SYNC_ALL_MASKS 	(1U << 13)
 
 /// Will not update our internal focus representation when a window with this mask is focused
 /// Intended for Desktop windows
@@ -87,7 +89,7 @@
 /// Window won't be tiled and can be freely moved like by external programs/mouse
 #define EXTERNAL_CONFIGURABLE_MASK 	(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK)
 /// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
-#define FLOATING_MASK 	(NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK)
+#define FLOATING_MASK 	(SYNC_ALL_MASKS | NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK)
 
 /**The window can receive input focus*/
 #define INPUT_MASK 	(1U << 24)

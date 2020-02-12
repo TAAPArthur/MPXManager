@@ -103,6 +103,9 @@ public:
     /// @return the parent of the window
     WindowID getParent()const {return parent;}
 
+    /// @return the masks this window will sync with X
+    WindowMask getMasksToSync()const {return hasMask(SYNC_ALL_MASKS) ? (WindowMask) - 1 : MASKS_TO_SYNC;}
+
 
     /// @param win the window this is transient for
     void setTransientFor(WindowID win) {transientFor = win;}

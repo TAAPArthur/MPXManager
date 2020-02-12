@@ -296,6 +296,14 @@ MPX_TEST("test_client_set_window_unknown_state", {
     assertEquals(reply.atoms[0], ewmh->MANAGER);
     xcb_ewmh_get_atoms_reply_wipe(&reply);
 });
+MPX_TEST_ITER("test_client_set_window_state", 3, {
+    suppressOutput();
+    setLogLevel(LOG_LEVEL_VERBOSE);
+    source = (xcb_ewmh_client_source_type_t)_i;
+    WindowInfo* winInfo = getAllWindows()[0];
+    sendChangeWindowStateRequest(winInfo->getID(), XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_STICKY);
+    waitUntilIdle();
+});
 MPX_TEST_ITER("test_client_set_window_state", 2, {
     WindowInfo* winInfo = getAllWindows()[0];
     bool allowRequest = _i;
@@ -315,8 +323,17 @@ MPX_TEST_ITER("test_client_set_window_state", 2, {
         else
             assert(!winInfo->hasPartOfMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
         loadSavedAtomState(&fakeWinInfo);
-        assert(fakeWinInfo.hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK) == (i % 2 == 0));
+        assert(!fakeWinInfo.hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
     }
+});
+MPX_TEST_ITER("change_wm_state", 2, {
+    Window win = mapArbitraryWindow();
+    if(!_i)
+        MASKS_TO_SYNC = 0;
+    uint32_t state = XCB_ICCCM_WM_STATE_ICONIC;
+    catchError(xcb_ewmh_send_client_message(dis, win, root, WM_CHANGE_STATE, sizeof(state), &state));
+    waitUntilIdle();
+    assertEquals(getWindowInfo(win)->hasMask(HIDDEN_MASK), _i);
 });
 MPX_TEST_ITER("test_handle_unsync_requests", 2, {
     MASKS_TO_SYNC = HIDDEN_MASK | URGENT_MASK;

@@ -52,6 +52,8 @@ extern xcb_atom_t WM_INTERPROCESS_COM_STATUS;
 extern xcb_atom_t WM_MASTER_WINDOWS;
 /// predecessor to _NET_WM_NAME
 extern xcb_atom_t WM_NAME;
+/// ICCCM client message to change window state to hidden;
+extern xcb_atom_t WM_CHANGE_STATE;
 
 /**
  * Atom for the WM_SELECTION for the default screen

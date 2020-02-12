@@ -145,7 +145,7 @@ static inline void floatWindow(WindowInfo* winInfo) {
  * Removes any all all masks that would cause the window to not be tiled
  */
 static inline void sinkWindow(WindowInfo* winInfo) {
-    winInfo->removeMask(ALL_NO_TILE_MASKS);
+    winInfo->removeMask(FLOATING_MASK | ALL_NO_TILE_MASKS);
 }
 
 /**
