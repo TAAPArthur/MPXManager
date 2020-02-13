@@ -83,7 +83,7 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
         changed = 1;
     }
     if(changed)
-        DEBUG("Monitor " << getID() << " was resized because of " << winInfo->getID() << "; new size is: " << getViewport());
+        INFO("Monitor " << getID() << " was resized because of " << winInfo->getID() << "; new size is: " << getViewport());
     return changed;
 }
 void addRootMonitor() {
