@@ -298,7 +298,7 @@ void assignDefaultLayoutsToWorkspace() {
 }
 void updateMapState(Workspace* w) {
     for(WindowInfo* winInfo : w->getWindowStack())
-        if((winInfo->isMappable() && (winInfo->getWorkspace()->isVisible() ^ winInfo->hasMask(MAPPED_MASK))))
+        if(winInfo->isOutOfSyncWithWorkspace())
             updateWindowWorkspaceState(winInfo);
 }
 

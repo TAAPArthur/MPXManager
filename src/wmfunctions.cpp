@@ -186,7 +186,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
     Workspace* w = winInfo->getWorkspace();
     if(!w)
         return;
-    TRACE("updating window workspace state: " << w->isVisible() << "; " << *winInfo);
+    DEBUG("updating window workspace state: " << w->isVisible() << "; " << *winInfo);
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
         mapWindow(winInfo->getID());
     }

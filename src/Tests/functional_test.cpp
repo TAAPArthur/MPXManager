@@ -1,4 +1,5 @@
 #include "../chain.h"
+#include "../state.h"
 #include "../devices.h"
 #include "../ewmh.h"
 #include "../extra-rules.h"
@@ -270,6 +271,29 @@ MPX_TEST_ITER("remove_all_monitors", 2, {
         mapArbitraryWindow();
         waitUntilIdle();
     }
+});
+MPX_TEST("add_hidden_mask", {
+    MASKS_TO_SYNC = -1;
+    lock();
+    WindowInfo* winInfo = getActiveWorkspace()->getWindowStack()[0];
+    assert(winInfo->hasMask(MAPPED_MASK));
+    winInfo->addMask(HIDDEN_MASK);
+    markState();
+    wakeupWM();
+    unlock();
+    waitUntilIdle();
+    assert(!winInfo->hasMask(MAPPED_MASK));
+    lock();
+    winInfo->removeMask(HIDDEN_MASK);
+    markState();
+    wakeupWM();
+    unlock();
+    waitUntilIdle();
+    assert(winInfo->hasMask(MAPPED_MASK));
+    lock();
+    loadSavedAtomState(winInfo);
+    assert(!winInfo->hasMask(HIDDEN_MASK));
+    unlock();
 });
 
 static void bindingsSetup() {

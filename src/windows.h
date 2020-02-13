@@ -12,6 +12,7 @@
 #include "rect.h"
 #include "mywm-structs.h"
 #include "window-masks.h"
+#include "workspaces.h"
 
 
 /**
@@ -294,6 +295,13 @@ public:
      */
     bool isMappable() const {
         return hasMask(MAPPABLE_MASK) && !hasMask(HIDDEN_MASK);
+    }
+    /**
+     * @return 1 iff whether the window is mapped doesn't match if its workspace is visible
+     */
+    bool isOutOfSyncWithWorkspace() {
+        return getWorkspace()->isVisible() ^
+            (!hasMask(HIDDEN_MASK) && hasMask(MAPPED_MASK));
     }
     /**
      * @return true if the user can interact (focus, type etc) with the window

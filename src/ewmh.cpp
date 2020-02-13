@@ -458,11 +458,12 @@ void updateWindowMoveResize(Master* m) {
 void updateXWindowStateForAllWindows() {
     static std::unordered_map<WindowID, uint32_t> savedWindowMasks;
     for(WindowInfo* winInfo : getAllWindows()) {
-        if(winInfo->hasMask(MAPPABLE_MASK))
+        if(winInfo->hasMask(MAPPABLE_MASK) && !winInfo->isNotManageable()) {
             if(!savedWindowMasks.count(winInfo->getID()) ||
-                winInfo->getMask() & winInfo->getMasksToSync() != savedWindowMasks[winInfo->getID()]) {
+                (winInfo->getMask() & winInfo->getMasksToSync()) != savedWindowMasks[winInfo->getID()]) {
                 setXWindowStateFromMask(winInfo);
             }
+        }
     }
     savedWindowMasks.clear();
     for(WindowInfo* winInfo : getAllWindows())
