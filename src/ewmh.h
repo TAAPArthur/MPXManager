@@ -257,9 +257,10 @@ static inline void sendRestackRequest(WindowID wid, xcb_window_t sibling_window,
  * @param move whether to move (change position) or resize (change width/height)
  * @param allowMoveX allow x position/width to be changed
  * @param allowMoveY allow y position/height to be changed
+ * @param btn
  * @param m
  */
-void startWindowMoveResize(WindowInfo* winInfo, bool move, bool allowMoveX = 1, bool allowMoveY = 1,
+void startWindowMoveResize(WindowInfo* winInfo, bool move, bool allowMoveX = 1, bool allowMoveY = 1, bool btn = 0,
     Master* m = getActiveMaster());
 /**
  * Update a window-move resize with the new mouse position.
@@ -279,6 +280,14 @@ void updateWindowMoveResize(Master* m = getActiveMaster()) ;
  * @param m
  */
 void commitWindowMoveResize(Master* m = getActiveMaster()) ;
+
+/**
+ * A DEVICE_EVENT function that will triggered commitWindowMoveResize when the client specified button is released
+ * @param m
+ *
+ * @return 1 iff commitWindowMoveResize was called
+ */
+bool detectWindowMoveResizeButtonRelease(Master* m);
 /**
  * Cancels the window-move resize operation
  *

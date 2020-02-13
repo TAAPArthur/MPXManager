@@ -419,13 +419,10 @@ MPX_TEST("test_client_ping_bad", {
 });
 
 static void wmMoveSetup() {
-    getDeviceBindings().add({0, 0, DEFAULT_EVENT(updateWindowMoveResize), {.noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION}});
     clientMessageSetup();
     lock();
     movePointer(0, 0);
-    WindowInfo* winInfo = getAllWindows()[0];
-    floatWindow(winInfo);
-    grabPointer();
+    floatWindow(getAllWindows()[0]);
     unlock();
 }
 SET_ENV(wmMoveSetup, fullCleanup);
@@ -451,7 +448,13 @@ MPX_TEST_ITER("wm_move_resize_window", 4, {
     flush();
     waitUntilIdle();
     assertEquals(rect, getRealGeometry(winInfo->getID()));
-    consumeEvents();
+    for(int i = 0; i < 2; i++) {
+        clickButton(1);
+        movePointer(deltaX * 2, deltaY * 2);
+        waitUntilIdle();
+        assertEquals(rect, getRealGeometry(winInfo->getID()));
+        grabPointer();
+    }
 });
 MPX_TEST("wm_move_resize_window_bad", {
     sendWMMoveResizeRequest(0, 0, 0, XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT, 1);
@@ -518,6 +521,7 @@ MPX_TEST("test_client_request_move_resize", {
 });
 
 MPX_TEST("event_speed", {
+    grabPointer();
     startWindowMoveResize(getAllWindows()[0], 0);
     generateMotionEvents(1000);
     waitUntilIdle();

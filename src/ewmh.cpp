@@ -152,6 +152,9 @@ void addEWMHRules(AddFlag flag) {
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadSavedAtomState), flag);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(recordWindow), flag);
+    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE).add(DEFAULT_EVENT(detectWindowMoveResizeButtonRelease),
+        flag);
+    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_MOTION).add(DEFAULT_EVENT(updateWindowMoveResize), flag);
     getEventRules(POSSIBLE_STATE_CHANGE).add(DEFAULT_EVENT(updateXWindowStateForAllWindows), flag);
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setAllowedActions), flag);
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(setActiveProperties), flag);
@@ -276,11 +279,16 @@ void onClientMessage(void) {
             bool allowMoveX = XCB_EWMH_WM_MOVERESIZE_SIZE_TOP != dir && XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOM != dir ;
             bool allowMoveY = XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT != dir && XCB_EWMH_WM_MOVERESIZE_SIZE_LEFT != dir ;
             bool move = dir == XCB_EWMH_WM_MOVERESIZE_MOVE || dir == XCB_EWMH_WM_MOVERESIZE_MOVE_KEYBOARD;
-            if(dir == XCB_EWMH_WM_MOVERESIZE_CANCEL) {
+            if(dir == XCB_EWMH_WM_MOVERESIZE_CANCEL)
                 cancelWindowMoveResize();
+            else {
+                Master* m = getClientMaster(win);
+                if(m)
+                    setActiveMaster(m);
+                auto btn = data.data32[3] ? data.data32[3] : 1;
+                INFO("Starting WM move/resize with button" << btn << "(" << data.data32[3] << ")");
+                startWindowMoveResize(winInfo, move, allowMoveX, allowMoveY, btn, getActiveMaster());
             }
-            else
-                startWindowMoveResize(winInfo, move, allowMoveX, allowMoveY);
         }
     }
     //change window's workspace
@@ -379,6 +387,7 @@ struct RefWindowMouse {
     short mousePos[2];
     bool change[2];
     bool move = 0;
+    bool btn = 0;
     uint32_t lastSeqNumber = 0;
     RectWithBorder calculateNewPosition(const short newMousePos[2], bool* hasChanged) {
         *hasChanged = 0;
@@ -413,34 +422,60 @@ struct RefWindowMouse {
 };
 
 static Index<RefWindowMouse> key;
-static RefWindowMouse* getRef(Master* m, bool createNew = 1) {
+static RefWindowMouse* getRef(Master* m, bool createNew = 0) {
     return get(key, m, createNew);
 }
 static void removeRef(Master* m) {
     remove(key, m);
 }
 
-void startWindowMoveResize(WindowInfo* winInfo, bool move, bool changeX, bool changeY, Master* m) {
+bool detectWindowMoveResizeButtonRelease(Master* m) {
+    xcb_input_button_release_event_t* event = (xcb_input_button_release_event_t*)getLastEvent();
     auto ref = getRef(m);
+    if(ref) {
+        if(ref->btn && ref->btn == event->detail) {
+            commitWindowMoveResize(m);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void startWindowMoveResize(WindowInfo* winInfo, bool move, bool changeX, bool changeY, bool btn, Master* m) {
+    DEBUG("Starting WM move/resize; Master: " << m->getID());
+    auto ref = getRef(m, 1);
     short pos[2] = {0, 0};
     getMousePosition(m, root, pos);
-    *ref = (RefWindowMouse) {winInfo->getID(), getRealGeometry(winInfo->getID()), {pos[0], pos[1]}, {changeX, changeY}, move};
+    *ref = (RefWindowMouse) {winInfo->getID(), getRealGeometry(winInfo->getID()), {pos[0], pos[1]}, {changeX, changeY}, move, btn};
+    if(btn)
+        grabDevice(m->getPointerID(), POINTER_MASKS);
 }
 void commitWindowMoveResize(Master* m) {
-    removeRef(m);
+    auto ref = getRef(m);
+    if(ref) {
+        DEBUG("Committing WM move/resize; Master: " << m->getID());
+        if(ref->btn)
+            ungrabDevice(m->getPointerID());
+        removeRef(m);
+    }
 }
 void cancelWindowMoveResize(Master* m) {
-    auto ref = getRef(m, 0);
+    auto ref = getRef(m);
     if(ref) {
+        DEBUG("Canceling WM move/resize; Master: " << m->getID());
         RectWithBorder r = ref->getRef();
         processConfigureRequest(ref->win, r, 0, 0,
             XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+        if(ref->btn)
+            ungrabDevice(m->getPointerID());
+        removeRef(m);
     }
 }
 
 void updateWindowMoveResize(Master* m) {
-    auto ref = getRef(m, 0);
+    auto ref = getRef(m);
     if(ref) {
+        TRACE("Updating WM move/resize; Master: " << m->getID());
         if(!ref->shouldUpdate())
             return;
         short pos[2];
