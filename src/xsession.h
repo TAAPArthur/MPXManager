@@ -54,6 +54,8 @@ extern xcb_atom_t WM_MASTER_WINDOWS;
 extern xcb_atom_t WM_NAME;
 /// ICCCM client message to change window state to hidden;
 extern xcb_atom_t WM_CHANGE_STATE;
+/// Used to save raw window masks
+extern xcb_atom_t WM_MPX_MASKS;
 
 /**
  * Atom for the WM_SELECTION for the default screen
