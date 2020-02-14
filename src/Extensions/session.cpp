@@ -108,6 +108,8 @@ void loadCustomState(void) {
         if(master->getFocusedWindow())
             setBorderColor(master->getFocusedWindow()->getID(), master->getFocusColor());
     }
+    for(WindowInfo* winInfo : getAllWindows())
+        winInfo->addMask(~EXTERNAL_MASKS & getWindowPropertyValue(winInfo->getID(), WM_MPX_MASKS, XCB_ATOM_CARDINAL));
 }
 
 static std::unordered_map<std::string, std::string> monitorWorkspaceMapping;
@@ -177,6 +179,11 @@ void saveCustomState(void) {
     setWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
     setWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
     setWindowProperty(root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
+    for(WindowInfo* winInfo : getAllWindows()) {
+        auto mask = ~EXTERNAL_MASKS & (uint32_t)winInfo->getMask();
+        if(mask)
+            setWindowProperty(winInfo->getID(), WM_MPX_MASKS, XCB_ATOM_CARDINAL, mask);
+    }
     flush();
 }
 void addResumeCustomStateRules(AddFlag flag) {

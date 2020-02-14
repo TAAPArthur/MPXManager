@@ -124,6 +124,24 @@ MPX_TEST_ITER("test_restore_state", 16, {
     }
     assertEquals(waitForChild(0), 0);
 });
+
+MPX_TEST("test_restore_state_window_masks_change", {
+    for(int i = 0; i < 32; i++)
+        mapWindow(createNormalWindow());
+    scan(root);
+    ArrayList<WindowMask>oldWindowMasks;
+    for(int i = 0; i < 32; i++) {
+        getAllWindows()[i]->addMask((1 << i) & ~EXTERNAL_MASKS);
+        oldWindowMasks.add(getAllWindows()[i]->getMask());
+    }
+    saveCustomState();
+    getAllWindows().deleteElements();
+    scan(root);
+    loadCustomState();
+    for(int i = 0; i < 32; i++) {
+        assertEquals(oldWindowMasks[i], getAllWindows()[i]->getMask());
+    }
+});
 MPX_TEST("test_restore_state_monitor_change", {
     CRASH_ON_ERRORS = -1;
     Rect bounds1 = {0, 20, 100, 100};
