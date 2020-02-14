@@ -26,68 +26,64 @@ extern xcb_gcontext_t graphics_context;
 /// Stores a hint to the max number of supported devices
 extern xcb_atom_t MAX_DEVICES;
 /// Stores the active master so the state can be restored
-extern xcb_atom_t WM_ACTIVE_MASTER;
-/**
- * WM_DELETE_WINDOW atom
- * Used to send client messages to delete the window
-*/
-extern xcb_atom_t WM_DELETE_WINDOW;
+extern xcb_atom_t MPX_WM_ACTIVE_MASTER;
 /// Atom to store fake monitors
-extern xcb_atom_t WM_FAKE_MONITORS;
-/// used to convery inital mapping_state and urgency
-extern xcb_atom_t WM_HINTS;
+extern xcb_atom_t MPX_WM_FAKE_MONITORS;
 /**
  * Atom used to differentiate custom client messages
  * Atoms with the flag are used to remotely interact with the WM
  */
-extern xcb_atom_t WM_INTERPROCESS_COM;
+extern xcb_atom_t MPX_WM_INTERPROCESS_COM;
 /**
  * Atom used to communicate the return value of the command executed through
- * WM_INTERPROCESS_COM
+ * MPX_WM_INTERPROCESS_COM
  */
-extern xcb_atom_t WM_INTERPROCESS_COM_STATUS;
+extern xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
+
+/// Used to save raw window masks
+extern xcb_atom_t MPX_WM_MASKS;
 
 /// Atom to store an array of each window for every master so the state can be restored
 /// There is a '0' to separate each master's window stack and each stack is preceded with the master id
-extern xcb_atom_t WM_MASTER_WINDOWS;
-/// predecessor to _NET_WM_NAME
-extern xcb_atom_t WM_NAME;
-/// ICCCM client message to change window state to hidden;
-extern xcb_atom_t WM_CHANGE_STATE;
-/// Used to save raw window masks
-extern xcb_atom_t WM_MPX_MASKS;
-
-/**
- * Atom for the WM_SELECTION for the default screen
- */
-extern xcb_atom_t WM_SELECTION_ATOM;
-
+extern xcb_atom_t MPX_WM_MASTER_WINDOWS;
 /**
  * Custom atom store in window's state to indicate that it should not be tiled
  */
-extern xcb_atom_t WM_STATE_NO_TILE;
+extern xcb_atom_t MPX_WM_STATE_NO_TILE;
 
 /**
  * Custom atom store in window's state to indicate that this window should
  * have the ROOT_FULLSCREEN mask
  */
-extern xcb_atom_t WM_STATE_ROOT_FULLSCREEN;
+extern xcb_atom_t MPX_WM_STATE_ROOT_FULLSCREEN;
+
+/// Atom to store an array of the layout offset for each workspace so the state can be restored
+extern xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_INDEXES;
+/// Atom to store an array of the active layout's for each workspace so the state can be restored
+extern xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_NAMES;
+/// Atom to store an array of the paired monitor for each workspace so the state can be restored
+extern xcb_atom_t MPX_WM_WORKSPACE_MONITORS;
+/// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
+extern xcb_atom_t MPX_WM_WORKSPACE_MONITOR_HISTORY;
+/// ICCCM client message to change window state to hidden;
+extern xcb_atom_t WM_CHANGE_STATE;
+/**
+ * MPX_WM_DELETE_WINDOW atom
+ * Used to send client messages to delete the window
+*/
+extern xcb_atom_t WM_DELETE_WINDOW;
+/**
+ * Atom for the MPX_WM_SELECTION for the default screen
+ */
+extern xcb_atom_t WM_SELECTION_ATOM;
 
 /**
- * WM_TAKE_FOCUS atom
+ * MPX_WM_TAKE_FOCUS atom
  * Used to send client messages to direct focus of an application
 */
 extern xcb_atom_t WM_TAKE_FOCUS;
 /// Some windows have a applications specified role, (like browser) stored in this atom
 extern xcb_atom_t WM_WINDOW_ROLE;
-/// Atom to store an array of the layout offset for each workspace so the state can be restored
-extern xcb_atom_t WM_WORKSPACE_LAYOUT_INDEXES;
-/// Atom to store an array of the active layout's for each workspace so the state can be restored
-extern xcb_atom_t WM_WORKSPACE_LAYOUT_NAMES;
-/// Atom to store an array of the paired monitor for each workspace so the state can be restored
-extern xcb_atom_t WM_WORKSPACE_MONITORS;
-/// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
-extern xcb_atom_t WM_WORKSPACE_MONITOR_HISTORY;
 
 /**XDisplay instance (only used for events/device commands)*/
 extern Display* dpy;

@@ -131,12 +131,12 @@ MPX_TEST("test_bad_options", {
     const char* optionValues[] = {"CRASH_ON_ERRORS", "dump", "bad"};
     for(int n = 0; n < 2; n++) {
         unsigned int data[5] = {0};
-        catchError(xcb_ewmh_send_client_message(dis, root, root, WM_INTERPROCESS_COM, sizeof(data), data));
+        catchError(xcb_ewmh_send_client_message(dis, root, root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
         data[0] = getAtom(optionValues[n]);
-        catchError(xcb_ewmh_send_client_message(dis, root, root, WM_INTERPROCESS_COM, sizeof(data), data));
+        catchError(xcb_ewmh_send_client_message(dis, root, root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
         for(int i = 1; i < LEN(data); i++) {
             data[i] = 1;
-            catchError(xcb_ewmh_send_client_message(dis, root, root, WM_INTERPROCESS_COM, sizeof(data), data));
+            catchError(xcb_ewmh_send_client_message(dis, root, root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
         }
     }
     flush();

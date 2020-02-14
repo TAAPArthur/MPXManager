@@ -112,7 +112,7 @@ uint32_t getNumberOfMessageSent() {
     return outstandingSendCount;
 }
 int getConfirmedSentMessage(WindowID win) {
-    auto result = getWindowPropertyValue(win, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
+    auto result = getWindowPropertyValue(win, MPX_WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
     LOG(LOG_LEVEL_TRACE, "Found %d out of %d confirmations", result, getNumberOfMessageSent());
     return result;
 }
@@ -120,20 +120,20 @@ bool hasOutStandingMessages(void) {
     return getNumberOfMessageSent() > getConfirmedSentMessage(getPrivateWindow());
 }
 int getLastMessageExitCode(void) {
-    return getWindowPropertyValue(getPrivateWindow(), WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
+    return getWindowPropertyValue(getPrivateWindow(), MPX_WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
 }
 static void sendConfirmation(WindowID target, int exitCode) {
     LOG(LOG_LEVEL_DEBUG, "sending receive confirmation to %d", target);
     // not atomic, but there should be only one thread/process modifying this value
     int count = getConfirmedSentMessage(target) + 1;
-    setWindowProperty(target, WM_INTERPROCESS_COM_STATUS, XCB_ATOM_CARDINAL, exitCode);
-    setWindowProperty(target, WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL, count);
+    setWindowProperty(target, MPX_WM_INTERPROCESS_COM_STATUS, XCB_ATOM_CARDINAL, exitCode);
+    setWindowProperty(target, MPX_WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL, count);
     flush();
 }
 void send(std::string name, std::string value) {
     unsigned int data[5] = {getAtom(name), getAtom(value), (uint32_t)getpid(), getPrivateWindow()};
     LOG(LOG_LEVEL_DEBUG, "sending %d (%s) %d (%s)", data[0], name.c_str(), data[1], value.c_str());
-    catchError(xcb_ewmh_send_client_message(dis, root, root, WM_INTERPROCESS_COM, sizeof(data), data));
+    catchError(xcb_ewmh_send_client_message(dis, root, root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
     outstandingSendCount++;
 }
 const Option* findOption(std::string name, std::string value) {
@@ -157,7 +157,7 @@ void receiveClientMessage(void) {
     xcb_atom_t valueAtom = data.data32[1];
     pid_t callerPID = data.data32[2];
     WindowID sender = data.data32[3];
-    if(message == WM_INTERPROCESS_COM && event->window == root && optionAtom) {
+    if(message == MPX_WM_INTERPROCESS_COM && event->window == root && optionAtom) {
         DEBUG(getAtomsAsString(data.data32, 5));
         std::string name = getAtomName(optionAtom);
         std::string value = "";

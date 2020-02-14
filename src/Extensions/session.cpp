@@ -18,7 +18,7 @@
 
 
 static void loadSavedLayouts() {
-    auto reply = getWindowProperty(root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING);
+    auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING);
     TRACE("Loading active layouts");
     if(reply) {
         uint32_t len = xcb_get_property_value_length(reply.get());
@@ -35,14 +35,14 @@ static void loadSavedLayouts() {
 }
 static void loadSavedLayoutOffsets() {
     TRACE("Loading Workspace layout offsets");
-    auto reply = getWindowProperty(root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL);
+    auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL);
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int) && i < getNumberOfWorkspaces(); i++)
             getWorkspace(i)->setLayoutOffset(((int*)xcb_get_property_value(reply.get()))[i]);
 }
 static void loadSavedFakeMonitor() {
     TRACE("Loading fake monitor mappings");
-    auto reply = getWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
+    auto reply = getWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(short) * 5) ; i++) {
             short* values = (short*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(short) * 5]);
@@ -57,7 +57,7 @@ static void loadSavedFakeMonitor() {
 }
 static void loadSavedMonitorWorkspaceMapping() {
     TRACE("Loading Workspace monitor mappings");
-    auto reply = getWindowProperty(root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL);
+    auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL);
     if(reply) {
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int) && i < getNumberOfWorkspaces(); i++) {
             MonitorID id = ((MonitorID*)xcb_get_property_value(reply.get()))[i];
@@ -78,7 +78,7 @@ static void loadSavedMonitorWorkspaceMapping() {
 }
 static void loadSavedMasterWindows() {
     TRACE("Loading Master window stacks");
-    auto reply = getWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL);
+    auto reply = getWindowProperty(root, MPX_WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL);
     if(reply) {
         Master* master = NULL;
         WindowID* wid = (WindowID*)xcb_get_property_value(reply.get());
@@ -92,7 +92,7 @@ static void loadSavedMasterWindows() {
 }
 static void loadSavedActiveMaster() {
     TRACE("Loading active Master");
-    auto reply = getWindowProperty(root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
+    auto reply = getWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
     if(reply)
         setActiveMasterByDeviceID(*(MasterID*)xcb_get_property_value(reply.get()));
 }
@@ -109,7 +109,7 @@ void loadCustomState(void) {
             setBorderColor(master->getFocusedWindow()->getID(), master->getFocusColor());
     }
     for(WindowInfo* winInfo : getAllWindows())
-        winInfo->addMask(~EXTERNAL_MASKS & getWindowPropertyValue(winInfo->getID(), WM_MPX_MASKS, XCB_ATOM_CARDINAL));
+        winInfo->addMask(~EXTERNAL_MASKS & getWindowPropertyValue(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL));
 }
 
 static std::unordered_map<std::string, std::string> monitorWorkspaceMapping;
@@ -123,10 +123,10 @@ void saveMonitorWorkspaceMapping() {
         joiner.add(element.first);
         joiner.add(element.second);
     }
-    setWindowProperty(root, WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
+    setWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
 }
 void loadMonitorWorkspaceMapping() {
-    auto reply = getWindowProperty(root, WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING);
+    auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING);
     TRACE("Loading active layouts");
     if(reply) {
         uint32_t len = xcb_get_property_value_length(reply.get());
@@ -173,16 +173,16 @@ void saveCustomState(void) {
         Layout* layout = getWorkspace(i)->getActiveLayout();
         joiner.add(layout ? layout->getName() : "");
     }
-    setWindowProperty(root, WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
-    setWindowProperty(root, WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
-    setWindowProperty(root, WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, monitors, LEN(monitors));
-    setWindowProperty(root, WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
-    setWindowProperty(root, WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
-    setWindowProperty(root, WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
+    setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
+    setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
+    setWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, monitors, LEN(monitors));
+    setWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
+    setWindowProperty(root, MPX_WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
+    setWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
     for(WindowInfo* winInfo : getAllWindows()) {
         auto mask = ~EXTERNAL_MASKS & (uint32_t)winInfo->getMask();
         if(mask)
-            setWindowProperty(winInfo->getID(), WM_MPX_MASKS, XCB_ATOM_CARDINAL, mask);
+            setWindowProperty(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL, mask);
     }
     flush();
 }
