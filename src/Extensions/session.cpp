@@ -16,7 +16,6 @@
 #include "../xsession.h"
 #include "session.h"
 
-
 static void loadSavedLayouts() {
     auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING);
     TRACE("Loading active layouts");
@@ -113,21 +112,34 @@ void loadCustomState(void) {
 }
 
 static std::unordered_map<std::string, std::string> monitorWorkspaceMapping;
+static std::unordered_map<uint64_t, WorkspaceID> boundsToWorkspaceMapping;
 
 void saveMonitorWorkspaceMapping() {
     for(Monitor* monitor : getAllMonitors())
-        if(monitor->getWorkspace())
+        if(monitor->getWorkspace()) {
             monitorWorkspaceMapping[monitor->getName()] = monitor->getWorkspace()->getName();
+            boundsToWorkspaceMapping[monitor->getBase()] = monitor->getWorkspace()->getID();
+        }
+    int i = 0;
+    short bounds[boundsToWorkspaceMapping.size() * 5];
+    for(auto element : boundsToWorkspaceMapping) {
+        const Rect rect = (const short*)&element.first;
+        bounds[i++] = element.second;
+        for(int n = 0; n < 4; n++)
+            bounds[i++] = rect[n];
+    }
     StringJoiner joiner;
     for(auto element : monitorWorkspaceMapping) {
         joiner.add(element.first);
         joiner.add(element.second);
     }
     setWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
+    setWindowProperty(root, MPX_WM_WORKSPACE_MONITORS_ALT, XCB_ATOM_CARDINAL, bounds, i);
 }
 void loadMonitorWorkspaceMapping() {
     auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, ewmh->UTF8_STRING);
-    TRACE("Loading active layouts");
+    TRACE("Loading monitor workspace mappings");
+    int numberRestored = 0;
     if(reply) {
         uint32_t len = xcb_get_property_value_length(reply.get());
         char* strings = (char*) xcb_get_property_value(reply.get());
@@ -139,8 +151,33 @@ void loadMonitorWorkspaceMapping() {
             index += strlen(&strings[index]) + 1;
             Monitor* monitor = getMonitorByName(monitorName);
             Workspace* workspace = getWorkspaceByName(workspaceName);
-            if(monitor && workspace)
+            if(monitor && workspace) {
+                INFO("Restoring " << monitor->getName() << " " << workspace->getID());
                 workspace->setMonitor(monitor);
+                numberRestored++;
+            }
+            monitorWorkspaceMapping[monitorName] = workspaceName;
+        }
+    }
+    if(numberRestored != getAllMonitors().size()) {
+        DEBUG("Couldn't fully restore monitors based on name; trying remaining with position");
+        reply = getWindowProperty(root, MPX_WM_WORKSPACE_MONITORS_ALT, XCB_ATOM_CARDINAL);
+        if(reply) {
+            uint32_t len = xcb_get_property_value_length(reply.get()) / sizeof(short);
+            auto data = (short*) xcb_get_property_value(reply.get());
+            for(int i = 0; i + 4 < len; i += 5) {
+                WorkspaceID id = data[i];
+                Rect bounds = &data[i + 1];
+                boundsToWorkspaceMapping[bounds] = id;
+                Workspace* workspace = getWorkspace(id);
+                if(workspace && !workspace->isVisible())
+                    for(Monitor* m : getAllMonitors())
+                        if(!m->getWorkspace() && m->getBase() == bounds) {
+                            INFO("Restoring " << m->getName() << " " << workspace->getID() << " based on position");
+                            workspace->setMonitor(m);
+                            break;
+                        }
+            }
         }
     }
 }
@@ -188,7 +225,9 @@ void saveCustomState(void) {
 }
 void addResumeCustomStateRules(AddFlag flag) {
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadCustomState), flag);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), flag);
     getEventRules(MONITOR_DETECTED).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), flag);
+    getEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), flag);
     getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping), flag);
     getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(saveCustomState), flag);
     getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(saveCustomState), flag);

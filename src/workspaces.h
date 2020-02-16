@@ -197,7 +197,6 @@ Workspace* getWorkspaceByName(std::string name);
  * @return the workspace at a given index
  */
 static inline Workspace* getWorkspace(WorkspaceID index) {
-    assert(index < getAllWorkspaces().size());
-    return getAllWorkspaces()[index];
+    return index < getAllWorkspaces().size() ? getAllWorkspaces()[index] : NULL;
 }
 #endif

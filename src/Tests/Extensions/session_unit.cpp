@@ -10,9 +10,6 @@
 #include "../test-x-helper.h"
 #include "../test-event-helper.h"
 
-static long rectToLong(const Rect& r) {
-    return ((long)r.x) << 48L | ((long)r.y) << 32L | r.width << 16L | r.height;
-}
 static const ArrayList<long>serializeState(uint8_t mask) {
     ArrayList<long> list;
     ArrayList<const ArrayList<WindowInfo*>*> listsOfStacks;
@@ -39,8 +36,8 @@ static const ArrayList<long>serializeState(uint8_t mask) {
         list.add(getAllMonitors().size());
         for(Monitor* monitor : getAllMonitors()) {
             list.add(monitor->getID());
-            list.add(rectToLong(monitor->getBase()));
-            list.add(rectToLong(monitor->getViewport()));
+            list.add(monitor->getBase());
+            list.add(monitor->getViewport());
             list.add(monitor->getWorkspace() ? monitor->getWorkspace()->getID() : 0);
         }
     }
@@ -158,53 +155,41 @@ MPX_TEST("test_restore_state_monitor_change", {
     assertEquals(getAllMonitors()[1]->getBase(), bounds2);
 });
 
-MPX_TEST("replace_monitors", {
-    WorkspaceID origin = 5;
-    switchToWorkspace(origin);
-    getAllMonitors()[0]->setName("S");
-    Rect bounds1 = {0, 20, 100, 100};
-    Rect bounds2 = {0, 40, 100, 100};
-    addFakeMonitor(bounds1, "A");
-    addFakeMonitor(bounds2, "B");
-    for(Workspace* w : getAllWorkspaces())
-        w->setMonitor(NULL);
-    applyBatchEventRules();
-    detectMonitors();
-    for(Monitor* m : getAllMonitors()) {
-        assert(m->getWorkspace());
-    }
-    assert(getWorkspace(origin)->isVisible());
-    assert(getWorkspace(0)->isVisible());
-    switchToWorkspace(0);
-    applyBatchEventRules();
-    getAllMonitors().deleteElements();
-    detectMonitors();
-    assertEquals(getAllMonitors().size(), 1);
-    assert(getWorkspace(origin)->isVisible());
-});
-
-MPX_TEST("replace_monitors", {
+MPX_TEST("dock_undock", {
+    MONITOR_DUPLICATION_POLICY = CONTAINS | INTERSECTS;
+    MONITOR_DUPLICATION_RESOLUTION = TAKE_SMALLER;
+    Rect rects[] = {{0, 0, 10, 10}, {10, 0, 10, 10}, {20, 0, 10, 10}};
+    std::string names[] = {"m1", "m2", "m3"};
+    WorkspaceID workspaceIds[] = {1, 2, 0};
     startWM();
-    WorkspaceID other = 5;
-
-    ATOMIC(switchToWorkspace(2));
-    WindowID win = mapWindow(createNormalWindow());
     waitUntilIdle();
-
     lock();
-    switchToWorkspace(other);
-    getAllMonitors()[0]->setName("S");
+    for(int i = 0; i < LEN(rects); i++) {
+        getWorkspace(workspaceIds[i])->setMonitor(addFakeMonitor(rects[i], names[i]));
+    }
     unlock();
-
-    waitUntilIdle();
-
-    lock();
-    getAllMonitors().deleteElements();
-    detectMonitors();
-    unlock();
-
-    waitUntilIdle(1);
-    assert(isWindowMapped(win));
-    // This is a side effect but explicitly intended
-    assert(!getActiveWorkspace()->isVisible());
-});
+    for(int n = 0; n < 10; n++) {
+        wakeupWM();
+        waitUntilIdle();
+        auto getExpectedName = [ = ](int i) {return names[i] + (n % 2 == 0 ? "" : "_" + std::to_string(n));};
+        lock();
+        getAllMonitors().deleteElements();
+        applyEventRules(SCREEN_CHANGE);
+        unlock();
+        wakeupWM();
+        waitUntilIdle();
+        lock();
+        assertEquals(getAllMonitors().size(), 1);
+        for(int i = 0; i < LEN(rects); i++)
+            addFakeMonitor(rects[i], getExpectedName(i));
+        applyEventRules(SCREEN_CHANGE);
+        unlock();
+        wakeupWM();
+        waitUntilIdle();
+        assertEquals(getAllMonitors().size(), LEN(rects));
+        for(int i = 0; i < LEN(rects); i++) {
+            assert(getWorkspace(workspaceIds[i])->getMonitor());
+            assertEquals(getWorkspace(workspaceIds[i])->getMonitor()->getName(), getExpectedName(i));
+        }
+    }
+})
