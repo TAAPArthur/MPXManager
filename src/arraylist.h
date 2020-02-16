@@ -86,7 +86,7 @@ struct ArrayList: std::vector<T> {
     /// Constructs an empty list
     ArrayList() {}
     /// Constructs a list with the specified elements
-    ArrayList(std::initializer_list<T> __l) : std::vector<T>(__l){}
+    ArrayList(std::initializer_list<T> __l) : std::vector<T>(__l) {}
     /**
      * Copies the members onto the heap and adds them to the list
      */

@@ -258,7 +258,7 @@ MPX_TEST("test_configure_dock", {
     winInfo->setTilingOverrideEnabled(3);
     winInfo->setDock();
     Monitor* monitor = getAllMonitors()[0];
-    monitor->setViewport({1,2,3,4});
+    monitor->setViewport({1, 2, 3, 4});
     arrangeNonTileableWindow(winInfo, monitor);
     assertEquals(monitor->getBase().x, getRealGeometry(winInfo).x);
     assertEquals(monitor->getBase().y, getRealGeometry(winInfo).y);

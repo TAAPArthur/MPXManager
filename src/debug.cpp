@@ -62,6 +62,7 @@ void addDieOnIntegrityCheckFailRule(AddFlag flag) {
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), flag);
 }
 void addAllDebugRules(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {logger.info() << *winInfo << std::endl;}, "WindowDump"}, flag);
+    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {logger.info() << *winInfo << std::endl;}, "WindowDump"},
+    flag);
     addDieOnIntegrityCheckFailRule(flag);
 }

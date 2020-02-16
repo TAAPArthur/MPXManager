@@ -33,8 +33,9 @@ void Rect::translate(const Point currentOrigin, const Point newOrigin) {
     y = y - currentOrigin.y + newOrigin.y;
 }
 std::ostream& operator<<(std::ostream& strm, const Rect& rect) {
-    return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ", "<< "}";
+    return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ", " << "}";
 }
 std::ostream& operator<<(std::ostream& strm, const RectWithBorder& rect) {
-    return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ", "<< rect.border<< "}";
+    return strm << "{" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << ", " << rect.border <<
+        "}";
 }

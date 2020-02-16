@@ -209,7 +209,7 @@ struct RectWithBorder : Rect {
  * Prints Rect
  * @return
  */
-std::ostream& operator<<(std::ostream&, const RectWithBorder& );
+std::ostream& operator<<(std::ostream&, const RectWithBorder&);
 /**
  * Prints Rect
  * @return
