@@ -179,6 +179,16 @@ MPX_TEST_ITER("test_monitor_dup_resolution", 5, {
     assert(getAllMonitors().size() == 1);
     assert(getAllMonitors()[0] == (_i < LEN(masks) / 2 ? larger : smaller));
 });
+MPX_TEST("test_monitor_dup_remove_all", {
+    MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
+    MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;
+
+    for(int i = 0; i < 10; i++) {
+        getAllMonitors().add(new Monitor(2, {1, 1, 1, 1}));
+    }
+    removeDuplicateMonitors();
+    assertEquals(getAllMonitors().size(), 1);
+});
 MPX_TEST_ITER("test_monitor_intersection", 12, {
     int id = 2;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;
@@ -186,13 +196,13 @@ MPX_TEST_ITER("test_monitor_intersection", 12, {
     int n = _i % 3;
     int masks[] = {SAME_DIMS, CONTAINS, CONTAINS_PROPER, INTERSECTS};
     MONITOR_DUPLICATION_POLICY = masks[i];
-    int sizes[][3] = {
-        {3, 2, 1},
-        {2, 1, 1},
-        {3, 2, 2},
-        {2, 1, 1}
+    int sizes[] = {
+        3, 2, 1,
+        2, 1, 1,
+        3, 2, 2,
+        1, 1, 1
     };
-    int size = sizes[i][n];
+    int size = sizes[_i];
     Monitor* m = new Monitor(id++, {0, 0, 100, 100});
     getAllMonitors().add(m);
     Rect base = m->getBase();

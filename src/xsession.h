@@ -64,7 +64,7 @@ extern xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_NAMES;
 /// Atom to store an array of the paired monitor for each workspace so the state can be restored
 extern xcb_atom_t MPX_WM_WORKSPACE_MONITORS;
 /// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
-extern xcb_atom_t MPX_WM_WORKSPACE_MONITOR_HISTORY;
+extern xcb_atom_t MPX_WM_WORKSPACE_MONITORS_ALT;
 /// ICCCM client message to change window state to hidden;
 extern xcb_atom_t WM_CHANGE_STATE;
 /**

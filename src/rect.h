@@ -58,14 +58,16 @@ struct Point {
         return {x * n, y * n};
     }
 };
+
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 /**
  * holds top-left coordinates and width/height of the bounding box
  */
 struct Rect {
     /// top left coordinate of the bounding box
-    short x = 0;
+    int16_t x = 0;
     /// top left coordinate of the bounding box
-    short y = 0;
+    int16_t y = 0;
     /// width of the bounding box
     uint16_t width = 0;
     /// height of the bounding box
@@ -129,6 +131,12 @@ struct Rect {
      */
     operator const short* () const {
         return &x;
+    }
+    /**
+     * @return unique identifier for rectangle
+     */
+    operator uint64_t () const {
+        return *(unsigned long*)&x;
     }
     /**
      * @param r

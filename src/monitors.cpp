@@ -94,9 +94,9 @@ void removeDuplicateMonitors(void) {
         TRACE("MONITOR_DUPLICATION_POLICY or MONITOR_DUPLICATION_RESOLUTION is not set");
         return;
     }
-    for(uint32_t i = 0; i < getAllMonitors().size(); i++) {
+    for(int32_t i = getAllMonitors().size() - 1; i >= 0; i--) {
         Monitor* m1 = getAllMonitors()[i];
-        for(uint32_t n = i + 1; n < getAllMonitors().size(); n++) {
+        for(int32_t n = getAllMonitors().size() - 1; n > i; n--) {
             Monitor* m2 = getAllMonitors()[n];
             bool dup =
                 (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && (m1->getBase() == m2->getBase()) ||
@@ -119,6 +119,8 @@ void removeDuplicateMonitors(void) {
                 LOG(LOG_LEVEL_DEBUG, "removing monitor %u because it is a duplicates of %u", monitorToRemove->getID(),
                     monitorToRemove->getID() ^ m1->getID() ^ m2->getID());
                 delete getAllMonitors().removeElement(monitorToRemove);
+                if(monitorToRemove == m1)
+                    break;
             }
         }
     }
@@ -144,8 +146,10 @@ void Monitor::assignWorkspace(Workspace* workspace) {
 }
 void assignUnusedMonitorsToWorkspaces(void) {
     for(Monitor* m : getAllMonitors()) {
-        if(!m->getWorkspace())
+        if(!m->getWorkspace()) {
+            DEBUG("Trying to auto assign workspace to Monitor: " << *m);
             m->assignWorkspace();
+        }
     }
 }
 Monitor::~Monitor() {

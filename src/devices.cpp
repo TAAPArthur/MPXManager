@@ -209,14 +209,13 @@ void detectMonitors(void) {
     assert(monitors);
     xcb_randr_monitor_info_iterator_t iter = xcb_randr_get_monitors_monitors_iterator(monitors);
     ArrayList<MonitorID> monitorNames;
-    bool newMonitor;
     while(iter.rem) {
         xcb_randr_monitor_info_t* monitorInfo = iter.data;
         Monitor* m = getAllMonitors().find(monitorInfo->name);
         if(!m) {
             m = new Monitor(monitorInfo->name, &monitorInfo->x);
             getAllMonitors().add(m);
-            newMonitor = 1;
+            DEBUG("New monitor detected " << monitorInfo->name);
         }
         else m->setBase(*(Rect*)&monitorInfo->x);
         m->setName(getAtomName(monitorInfo->name));
@@ -225,7 +224,9 @@ void detectMonitors(void) {
         monitorNames.add(monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
-    LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors", monitorNames.size());
+    auto currentNumberOfMonitors = getAllMonitors().size();
+    LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors; current: %d",
+        monitorNames.size(), getAllMonitors().size());
     if(getPrimaryMonitor())
         DEBUG("Primary is " << *getPrimaryMonitor());
     free(monitors);
@@ -235,7 +236,9 @@ void detectMonitors(void) {
 #endif
     removeDuplicateMonitors();
     getAllMonitors().sort();
-    if(newMonitor)
+    LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Number of monitors after consolidation%d",
+        getAllMonitors().size());
+    if(currentNumberOfMonitors != getAllMonitors().size())
         applyEventRules(MONITOR_DETECTED);
     assignUnusedMonitorsToWorkspaces();
 }
