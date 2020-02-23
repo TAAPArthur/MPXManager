@@ -37,6 +37,11 @@ int isInt(std::string str, bool* isNumeric) {
 }
 
 Option::Option(std::string n, BoundFunction boundFunction, int flags): boundFunction(boundFunction), flags(flags) {
+    if(flags & VAR_SETTER) {
+        char* var = getenv(std::string("MPX_" + n).c_str());
+        if(var)
+            call(var);
+    }
     std::transform(n.begin(), n.end(), n.begin(), ::tolower);
     std::replace(n.begin(), n.end(), '_', '-');
     name = n;

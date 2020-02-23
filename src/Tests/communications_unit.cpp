@@ -21,6 +21,15 @@ MPX_TEST("call_option_int", {
     findOption("poll-count", "1")->call("1");
     assertEquals(POLL_COUNT, 1);
 });
+
+MPX_TEST("read_env_var", {
+    setenv("MPX_POLL_COUNT", "100", 1);
+    setenv("MPX_SHELL", "shell", 1);
+    Option("POLL_COUNT", [](uint32_t value) {POLL_COUNT = value;}, VAR_SETTER);
+    Option("SHELL", [](std::string * value) {SHELL = *value;}, VAR_SETTER);
+    assertEquals(POLL_COUNT, 100);
+    assertEquals(SHELL, "shell");
+});
 static void checkAndSend(std::string name, std::string value) {
     assert(findOption(name, value));
     send(name, value);
