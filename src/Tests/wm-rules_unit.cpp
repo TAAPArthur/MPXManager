@@ -90,7 +90,9 @@ MPX_TEST("test_auto_tile", {
     addAutoTileRules();
     createSimpleEnv();
     openXDisplay();
+    applyEventRules(PERIODIC, NULL);
     applyBatchEventRules();
+    applyEventRules(IDLE, NULL);
     assert(!isStateMarked());
 
     assertEquals(getCount(), 1);
@@ -241,6 +243,10 @@ MPX_TEST("test_property_update_dock", {
     waitUntilIdle();
     assertEquals(getWindowInfo(win)->getDockProperties()[0], size);
     assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
+    getWindowInfo(win)->removeFromWorkspace();
+    unmapWindow(win);
+    waitUntilIdle();
+    assertEquals(getAllMonitors()[0]->getBase(), getAllMonitors()[0]->getViewport());
 });
 MPX_TEST("test_property_update_other", {
     WindowID win = mapWindow(createNormalWindow());
@@ -292,6 +298,31 @@ MPX_TEST("test_unmap", {
     assert(!getWindowInfo(win)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
     assert(!getWindowInfo(winOR)->hasPartOfMask(MAPPED_MASK | MAPPABLE_MASK));
 });
+
+MPX_TEST("test_map_unmap_dock", {
+    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(incrementCount));
+    waitUntilIdle();
+    setDockProperties(win, 0, 10);
+    getWindowInfo(win)->setDock();
+    getWindowInfo(win)->moveToWorkspace(0);
+    mapWindow(win);
+    waitUntilIdle();
+    assert(getAndResetCount());
+    assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
+    unmapWindow(win);
+    waitUntilIdle();
+    assert(getAndResetCount());
+    assertEquals(getAllMonitors()[0]->getBase(), getAllMonitors()[0]->getViewport());
+    setDockProperties(win, 0, 1);
+    mapWindow(win);
+    waitUntilIdle();
+    assertEquals(getAllMonitors()[0]->getBase().getArea() - getAllMonitors()[0]->getViewport().getArea(), getAllMonitors()[0]->getViewport().height);
+    setDockProperties(win, 0, 2);
+    waitUntilIdle();
+    assertEquals(getAllMonitors()[0]->getBase().getArea() - getAllMonitors()[0]->getViewport().getArea(), getAllMonitors()[0]->getViewport().height * 2);
+});
+
 MPX_TEST("test_switch_workspace_with_sticky_window", {
     switchToWorkspace(0);
     addAutoTileRules();

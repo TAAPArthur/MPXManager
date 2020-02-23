@@ -131,6 +131,8 @@ void onMapEvent(void) {
         winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
         if(!alreadlyMapped)
             applyEventRules(CLIENT_MAP_ALLOW, winInfo);
+        if(winInfo->isDock())
+            applyEventRules(SCREEN_CHANGE);
     }
 }
 void onMapRequestEvent(void) {
@@ -153,6 +155,8 @@ void onUnmapEvent(void) {
         // used to indicate that the window is no longer mappable
         if(isSyntheticEvent() || winInfo->isOverrideRedirectWindow())
             winInfo->removeMask(MAPPABLE_MASK);
+        if(winInfo->isDock())
+            applyEventRules(SCREEN_CHANGE);
     }
 }
 void onReparentEvent(void) {
@@ -196,10 +200,8 @@ void onPropertyEvent(void) {
         if(event->atom == ewmh->_NET_WM_NAME || event->atom == XCB_ATOM_WM_NAME)
             loadWindowTitle(winInfo);
         if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
-            if(winInfo->isDock()) {
+            if(winInfo->isDock())
                 loadDockProperties(winInfo);
-                resizeAllMonitorsToAvoidDock(winInfo);
-            }
         }
         else if(event->atom == XCB_ATOM_WM_HINTS)
             loadWindowHints(winInfo);
@@ -284,7 +286,6 @@ void addAutoTileRules(AddFlag flag) {
         };
     for(auto event : events)
         getEventRules(event).add(DEFAULT_EVENT(markState), flag);
-    getBatchEventRules(X_CONNECTION).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(PERIODIC).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(unmarkState), flag);
 }

@@ -33,4 +33,9 @@ static inline void decrementCount(void) {
     count--;
 }
 static inline int getCount() {return count;}
+static inline int getAndResetCount() {
+    auto c = count;
+    count = 0;
+    return c;
+}
 #endif
