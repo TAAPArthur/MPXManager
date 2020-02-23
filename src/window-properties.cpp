@@ -229,8 +229,8 @@ int loadDockProperties(WindowInfo* winInfo) {
         winInfo->setDockProperties(NULL, 0);
         return 0;
     }
-    if(winInfo->isDock())
-        resizeAllMonitorsToAvoidAllDocks();
+    if(winInfo->hasMask(MAPPED_MASK))
+        applyEventRules(SCREEN_CHANGE);
     return 1;
 }
 

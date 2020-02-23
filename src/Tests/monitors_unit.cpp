@@ -62,6 +62,7 @@ MPX_TEST_ITER("test_avoid_docks", 4 * 2 + 2, {
         WindowInfo* info = new WindowInfo(i);
         assert(addWindowInfo(info));
         info->setDock();
+        info->addMask(MAPPABLE_MASK | MAPPED_MASK);
         int properties[12] = {0};
         properties[i] = dockSize;
         properties[i * 2 + 4] = 0;

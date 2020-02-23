@@ -41,7 +41,7 @@ bool Monitor::resizeToAvoidAllDocks() {
     reset();
     bool result = false;
     for(WindowInfo* winInfo : getAllWindows())
-        if(winInfo->isDock())
+        if(winInfo->isDock() && winInfo->hasMask(MAPPED_MASK))
             result |= resizeToAvoidDock(winInfo);
     return result;
 }
