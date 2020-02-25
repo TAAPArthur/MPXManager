@@ -107,10 +107,19 @@ void updateEWMHClientList() {
     xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, mappedOrder.size(), (WindowID*)mappedOrder.data());
 }
 
+
 void setActiveProperties() {
+    static WindowInfo* lastActiveWindow;
+    static WorkspaceID lastActiveWorkspaceIndex;
     WindowInfo* winInfo = getActiveMaster()->getFocusedWindow();
-    xcb_ewmh_set_active_window(ewmh, defaultScreenNumber, winInfo ? winInfo->getID() : root);
-    xcb_ewmh_set_current_desktop_checked(ewmh, defaultScreenNumber, getActiveWorkspaceIndex());
+    if(lastActiveWindow != winInfo) {
+        xcb_ewmh_set_active_window(ewmh, defaultScreenNumber, winInfo ? winInfo->getID() : root);
+        lastActiveWindow = winInfo;
+    }
+    if(lastActiveWorkspaceIndex != getActiveWorkspaceIndex()) {
+        xcb_ewmh_set_current_desktop_checked(ewmh, defaultScreenNumber, getActiveWorkspaceIndex());
+        lastActiveWorkspaceIndex = getActiveWorkspaceIndex();
+    }
 }
 static void updateEWMHWorkspaceProperties() {
     xcb_ewmh_coordinates_t viewPorts[getNumberOfWorkspaces()] = {0};
