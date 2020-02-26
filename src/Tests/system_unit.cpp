@@ -43,6 +43,10 @@ MPX_TEST("spawn_wait", {
     assert(waitForChild(spawn("exit 1")) == 1);
     assert(waitForChild(spawn("exit 122")) == 122);
 });
+static void verifyResetPipe() {
+    for(int i : statusPipeFD)
+        assert(i == 0);
+}
 MPX_TEST("reset_pipe", {
     spawnPipe("yes");
     for(int i = 0; i < LEN(statusPipeFD); i++)
@@ -51,8 +55,7 @@ MPX_TEST("reset_pipe", {
     for(int i : statusPipeFD)
         assert(i);
     resetPipe();
-    for(int i : statusPipeFD)
-        assert(i == 0);
+    verifyResetPipe();
     waitForChild(0);
 });
 MPX_TEST_ITER("spawn", 2, {
@@ -61,10 +64,11 @@ MPX_TEST_ITER("spawn", 2, {
 
     if(!spawnPipe(NULL)) {
         if(!spawn(NULL, _i)) {
+            verifyResetPipe();
             printf(value);
             exit(0);
         }
-        waitForChild(0);
+        assertEquals(0, waitForChild(0));
         exit(0);
     }
     int result = read(STATUS_FD_READ, buffer, LEN(buffer));
@@ -73,7 +77,7 @@ MPX_TEST_ITER("spawn", 2, {
         assertEquals(result, 0);
     else
         assert(strcmp(buffer, value) == 0);
-    assert(waitForChild(0) == 0);
+    assertEquals(waitForChild(0), 0);
 });
 MPX_TEST("spawn_pipe", {
     const char values[2][256] = {"1\n", "2\n"};
@@ -87,7 +91,7 @@ MPX_TEST("spawn_pipe", {
     dprintf(STATUS_FD, values[0]);
     read(STATUS_FD_READ, buffer[1], LEN(buffer[1]));
     assert(strcmp(buffer[1], values[1]) == 0);
-    assert(waitForChild(0) == 0);
+    assertEquals(waitForChild(0), 0);
 });
 MPX_TEST("spawn_pipe_close", {
     if(!spawnPipe(NULL)) {
@@ -154,16 +158,22 @@ MPX_TEST("safe_quit", {
     assert(strcmp(buffer, value) == 0);
 });
 
-MPX_TEST_ITER_ERR("restart", 3, 2, {
-    static const char* const args[] = {SHELL.c_str(), "-c", "exit 2", NULL};
-    if(_i == 2) {
-        passedArguments = (char* const*)args;
-        numPassedArguments = LEN(args) - 1;
-    }
+MPX_TEST_ITER_ERR("restart", 2, 10, {
+    static const char* const args[] = {SHELL.c_str(), "-c", "exit 10", NULL};
+    passedArguments = (char* const*)args;
+    numPassedArguments = LEN(args) - 1;
     if(_i)
         restart();
     else
         kill(getpid(), SIGUSR1);
+    assert(0);
+});
+MPX_TEST_ERR("force_restart", 10, {
+    static const char* const args[] = {SHELL.c_str(), "-c", "exit 10", NULL};
+    passedArguments = (char* const*)args;
+    numPassedArguments = LEN(args) - 1;
+    spawnThread([]{while(1)msleep(100);}, "InfiniteLoop");
+    restart(1);
     assert(0);
 });
 SET_ENV(suppressOutput, NULL);

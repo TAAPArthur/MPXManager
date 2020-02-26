@@ -79,15 +79,6 @@ getopts "$optspec" optchar || run $@
     case "${optchar}" in
         -)
             case "${OPTARG}" in
-                force-restart)
-                    pid=$(pgrep $MPXMANAGER_BIN_NAME)
-                    kill $pid;
-                    while kill -0 $pid; do
-                        sleep 1
-                    done
-                    shift
-                    run $@
-                    ;;
                 hash)
                     displayHash
                     ;;
@@ -109,9 +100,6 @@ getopts "$optspec" optchar || run $@
                     shift
                     echo $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
                     $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
-                    ;;
-                restart)
-                    run "--send=restart"
                     ;;
                 version)
                     displayVersion

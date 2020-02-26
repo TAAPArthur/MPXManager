@@ -128,7 +128,7 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK | ShiftMask, XK_Return, +[]() {focusTop();}},
 
         {DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_q, requestShutdown},
-        {DEFAULT_MOD_MASK | ShiftMask, XK_q, restart},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_q, []{restart();}},
         {DEFAULT_MOD_MASK, XK_q, +[]() {if(waitForChild(spawn("mpxmanager --recompile -g")) == 0)restart();}},
 
         {DEFAULT_MOD_MASK, XK_F1, +[](){getActiveMaster()->setCurrentMode(0);}, {.mode = ANY_MODE}},

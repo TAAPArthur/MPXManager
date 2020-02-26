@@ -81,6 +81,7 @@ static UniqueArrayList<Option*> options = {
     {"lower", +[](WindowID id) {lowerWindow(id);}},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"raise", +[](WindowID id) {raiseWindow(id);}},
+    {"restart", +[]{restart();}, CONFIRM_EARLY},
     {"restart", restart, CONFIRM_EARLY},
     {"request-shutdown", requestShutdown},
     {"sum", printSummary, FORK_ON_RECEIVE},

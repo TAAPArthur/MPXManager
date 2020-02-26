@@ -155,17 +155,15 @@ static void stop(void) {
 }
 
 void restart(bool force) {
-    if(passedArguments) {
-        INFO("restarting");
-        if(!force) {
-            stop();
-        }
-        DEBUG("calling execv");
-        execv(passedArguments[0], passedArguments);
-        err(1, "exec failed; Aborting");
-    }
+    INFO("restarting");
+    if(!force)
+        stop();
     else
-        quit(2);
+        resetPipe();
+    DEBUG("calling execv");
+    if(passedArguments)
+        execv(passedArguments[0], passedArguments);
+    err(1, "exec failed; Aborting");
 }
 void quit(int exitCode) {
     stop();
