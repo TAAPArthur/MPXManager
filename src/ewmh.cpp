@@ -316,8 +316,8 @@ void onClientMessage(void) {
         int num = data.data32[2] == 0 ? 1 : 2;
         if(winInfo) {
             if(allowRequestFromSource(data.data32[3])) {
-                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
-                setXWindowStateFromMask(winInfo);
+                bool added = setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
+                setXWindowStateFromMask(winInfo, &data.data32[1], added ? num : 0);
             }
             else
                 INFO("Client message denied");
@@ -521,7 +521,7 @@ void loadSavedAtomState(WindowInfo* winInfo) {
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
 }
-void setXWindowStateFromMask(WindowInfo* winInfo) {
+void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len) {
     INFO("Setting X State for window " << winInfo->getID() << " from masks " << winInfo->getMask());
     xcb_ewmh_get_atoms_reply_t reply;
     bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL);
@@ -534,12 +534,17 @@ void setXWindowStateFromMask(WindowInfo* winInfo) {
         }
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
+    if(ALLOW_SETTING_UNSYNCED_MASKS) {
+        for(uint32_t i = 0; i < len; i++)
+            if((getMaskFromAtom(atoms[i]) & winInfo->getMasksToSync()) == 0)
+                windowState.add(atoms[i]);
+    }
     getAtomsFromMask(winInfo->getMask() & winInfo->getMasksToSync(), windowState);
     xcb_ewmh_set_wm_state(ewmh, winInfo->getID(), windowState.size(), windowState.data());
     DEBUG("New Atoms" << getAtomsAsString(windowState.data(), windowState.size()));
 }
 
-void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
+bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
     INFO("Setting window masks for window " << winInfo->getID() << " current masks " << winInfo->getMask() << " from atoms "
         << getAtomsAsString(atoms, numberOfAtoms) << "Action: " << action);
     WindowMask mask = 0;
@@ -555,6 +560,7 @@ void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
         winInfo->removeMask(mask);
     else
         winInfo->addMask(mask);
+    return winInfo->hasMask(mask);
 }
 void syncState() {
     WorkspaceID currentWorkspace ;

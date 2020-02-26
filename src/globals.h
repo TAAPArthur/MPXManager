@@ -44,6 +44,9 @@
  */
 #define WINDOW_MANAGER_NAME "MPXManager"
 
+/// If false, the ewmh states will not be propagated unless there is not
+/// corresponding mask or it is in MASK_TO_SYNC
+extern bool ALLOW_SETTING_UNSYNCED_MASKS;
 
 /// if true, then preload LD_PRELOAD_PATH
 extern bool LD_PRELOAD_INJECTION;

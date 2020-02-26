@@ -335,27 +335,35 @@ MPX_TEST_ITER("change_wm_state", 2, {
     waitUntilIdle();
     assertEquals(getWindowInfo(win)->hasMask(HIDDEN_MASK), _i);
 });
-MPX_TEST_ITER("test_handle_unsync_requests", 2, {
-    MASKS_TO_SYNC = HIDDEN_MASK | URGENT_MASK;
-    bool add = _i;
-
+MPX_TEST_ITER("test_handle_unsync_requests", 4, {
+    MASKS_TO_SYNC = HIDDEN_MASK;
+    ALLOW_SETTING_UNSYNCED_MASKS = _i / 2;
+    bool masksAlreadySet = _i % 2;
+    int newExpectedAtomsDistribution[][2] = {
+        {0, 1},
+        {1, 1}
+    };
+    int baseAtoms = 1;
+    int expectedAtoms = baseAtoms + newExpectedAtomsDistribution[ALLOW_SETTING_UNSYNCED_MASKS][masksAlreadySet];
     WindowInfo* winInfo = getAllWindows()[0];
-    if(!add) {
+    if(masksAlreadySet) {
         MASKS_TO_SYNC |= FULLSCREEN_MASK;
         winInfo->addMask(FULLSCREEN_MASK);
     }
-    sendChangeWindowStateRequest(winInfo->getID(), XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_FULLSCREEN);
+    sendChangeWindowStateRequest(winInfo->getID(), XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_HIDDEN, ewmh->_NET_WM_STATE_FULLSCREEN);
     waitUntilIdle();
-    assertEquals(!add, winInfo->hasMask(FULLSCREEN_MASK));
+    assert(winInfo->hasMask(HIDDEN_MASK));
+    assertEquals(masksAlreadySet, winInfo->hasMask(FULLSCREEN_MASK));
 
     xcb_ewmh_get_atoms_reply_t reply;
     assert(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL));
-    assertEquals(reply.atoms_len, !add);
+    INFO(getAtomsAsString(reply.atoms, reply.atoms_len));
+    assertEquals(reply.atoms_len, expectedAtoms);
     xcb_ewmh_get_atoms_reply_wipe(&reply);
-    if(!add) {
+    if(expectedAtoms) {
         sendChangeWindowStateRequest(winInfo->getID(), XCB_EWMH_WM_STATE_REMOVE, ewmh->_NET_WM_STATE_FULLSCREEN);
         assert(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL));
-        assertEquals(reply.atoms_len, 1);
+        assertEquals(reply.atoms_len, expectedAtoms);
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
 })

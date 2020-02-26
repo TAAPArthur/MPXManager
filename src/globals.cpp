@@ -4,6 +4,7 @@
 #include "globals.h"
 #include "window-masks.h"
 
+bool ALLOW_SETTING_UNSYNCED_MASKS = 0;
 bool LD_PRELOAD_INJECTION = 0;
 // TODO start up option
 bool RUN_AS_WM = 1;

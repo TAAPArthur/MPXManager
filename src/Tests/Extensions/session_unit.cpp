@@ -77,7 +77,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     detectMonitors();
     swapMonitors(0, 2);
     swapMonitors(1, 4);
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 32; i++)
         createNormalWindow();
     scan(root);
     for(WindowInfo* winInfo : getAllWindows())

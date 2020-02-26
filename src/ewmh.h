@@ -302,7 +302,7 @@ void cancelWindowMoveResize(Master* m = getActiveMaster());
 /**
  * Sets the WM_STATE from the window masks
  */
-void setXWindowStateFromMask(WindowInfo* winInfo);
+void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms = NULL, int len = 0);
 /**
  * Reads the WM_STATE fields from the given window and sets the window mask to be consistent with the state
  * If the WM_STATE cannot be read, then nothing is done
@@ -323,7 +323,7 @@ void updateXWindowStateForAllWindows();
  * @param action whether to add,remove or toggle atoms. For toggle, if all of the corresponding masks for the list of atoms is set, then they all will be removed else they all will be added
  * @see XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE
  */
-void setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action);
+bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action);
 /**
  * Sets the WM_ACTIONS supported for this given window (which is the same for all of them)
  *
