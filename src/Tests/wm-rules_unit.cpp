@@ -354,6 +354,7 @@ MPX_TEST("test_screen_configure", {
 
 MPX_TEST("test_device_event", {
     getDeviceBindings().add({0, 1, incrementCount, {}, "incrementCount"});
+    getDeviceBindings()[0]->grab();
     assertEquals(getDeviceBindings().size(), 1);
     ATOMIC(triggerBinding(getDeviceBindings()[0]));
     flush();
