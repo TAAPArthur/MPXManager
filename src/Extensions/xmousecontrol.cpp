@@ -76,7 +76,7 @@ static inline void _notify(XMouseControlMasterState* info, bool scroll) {
 void adjustScrollSpeed(int diff) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->scrollScale = diff == 0 ? 0 : info->scrollScale + diff;
-    info->scrollScale = std::max(1, std::min(info->scrollScale, 8));
+    info->scrollScale = std::max(1, std::min(info->scrollScale, 256));
     INFO("scrollScale is now " << info->scrollScale << "Master " << info->id);
     _notify(info, 1);
 }

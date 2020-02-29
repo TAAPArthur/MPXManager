@@ -105,9 +105,23 @@ MPX_TEST_ITER("test_grab_ungrab_detail_exclusive", NUM_ITER, {
     testGrabDetailExclusive(_i, 0);
 });
 
-char deviceBindingTriggerCount[] = {0, 0, 0, 0};
-
-//Rule genericEventRule = CREATE_DEFAULT_EVENT_RULE(onGenericEvent);
+MPX_TEST("replay_events", {
+    grabDetail(2, 1, 0, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS);
+    getEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT([]{ loadGenericEvent((xcb_ge_generic_event_t*)getLastEvent()); }));
+    getEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(replayPointerEvent));
+    Window win = mapArbitraryWindow();
+    movePointer(1, 1, win);
+    startWM();
+    waitUntilIdle();
+    if(!fork()) {
+        openXDisplay();
+        passiveGrab(win, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS);
+        clickButton(1);
+        waitToReceiveInput(XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS, 0);
+        exit(0);
+    }
+    assertEquals(waitForChild(0), 0);
+});
 
 
 MPX_TEST("test_register_events", {

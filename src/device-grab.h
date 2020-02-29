@@ -59,6 +59,12 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
 int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboard);
 
 /**
+ * Replays current pointer event to children of the grab window
+ * Wraps xcb_allow_events
+ */
+void replayPointerEvent();
+
+/**
  *
  * @param id
  * @return 0 iff the grab succeeded

@@ -5,8 +5,6 @@
 #include <stdlib.h>
 
 #include <X11/keysym.h>
-#include <X11/extensions/XInput2.h>
-#include <xcb/xinput.h>
 
 #include "chain.h"
 #include "threads.h"
@@ -100,8 +98,10 @@ void addDefaultBindings() {
         STACK_OPERATION(XK_Up, XK_Down, XK_Left, XK_Right),
         STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
 
-        {WILDCARD_MODIFIER, Button1, activateWorkspaceUnderMouse, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-        {WILDCARD_MODIFIER, Button1, activateWindow, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
+        {0, Button1, activateWorkspaceUnderMouse, {.passThrough = ALWAYS_PASSTHROUGH}},
+        {0, Button1, activateWindow, {.passThrough = ALWAYS_PASSTHROUGH}},
+        {0, Button1, replayPointerEvent},
+
         {DEFAULT_MOD_MASK, XK_c, killClientOfWindowInfo, {.noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindowInfo, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK, Button1, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},

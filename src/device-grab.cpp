@@ -41,7 +41,8 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
         deviceID, detail, mod, maskValue, getKeyboardMask(maskValue));
     if(!getKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,
-                XIGrabModeAsync, XIGrabModeAsync, 1, &eventMask, 2, modifiers);
+                maskValue & XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE ? XIGrabModeAsync : XIGrabModeSync, XIGrabModeAsync, 1, &eventMask,
+                2, modifiers);
     else
         return XIGrabKeycode(dpy, deviceID, detail, root, XIGrabModeAsync, XIGrabModeAsync,
                 1, &eventMask, 2, modifiers);
@@ -54,6 +55,10 @@ int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboa
         return XIUngrabButton(dpy, deviceID, detail, root, 2, modifiers);
     else
         return XIUngrabKeycode(dpy, deviceID, detail, root, 2, modifiers);
+}
+void replayPointerEvent() {
+    TRACE("Replaying pointer events");
+    xcb_allow_events(dis, XCB_ALLOW_REPLAY_POINTER, XCB_CURRENT_TIME);
 }
 int registerForWindowEvents(WindowID window, int mask) {
     xcb_void_cookie_t cookie;

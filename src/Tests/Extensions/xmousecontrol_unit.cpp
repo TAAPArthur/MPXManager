@@ -91,6 +91,7 @@ MPX_TEST("test_mouse_remove", {
 });
 SET_ENV(onSimpleStartup, fullCleanup);
 MPX_TEST("test_scroll_scale", {
+    passiveGrab(root, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS);
     addXMouseControlMask(SCROLL_UP_MASK);
     int scaleFactor = 4;
     adjustScrollSpeed(0);
