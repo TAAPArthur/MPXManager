@@ -16,10 +16,12 @@ const ArrayList<Workspace*>& getAllWorkspaces() {
     return workspaces;
 }
 
+std::ostream& operator>>(std::ostream& strm, const Workspace& w) {
+    return strm << "ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName();
+}
 
 std::ostream& operator<<(std::ostream& strm, const Workspace& w) {
-    strm << "{ID:" << w.getID() << (w.isVisible() ? "*" : "") << ", name:" << w.getName() << ", windows: " >>
-        w.windows;
+    strm >> w << ", windows: " >> w.windows;
     if(w.getActiveLayout())
         strm << ", Layout: " << *w.getActiveLayout() ;
     return strm << " }";

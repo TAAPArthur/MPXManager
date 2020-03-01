@@ -1,6 +1,7 @@
 #include "../ringbuffer.h"
 #include "tester.h"
 
+SET_ENV(NULL, NULL);
 const int size = 12;
 MPX_TEST("ring_buffer_push_null", {
     RingBuffer<int*, size> buffer;

@@ -95,6 +95,14 @@ struct ArrayList: std::vector<T> {
             this->add(t);
     }
     virtual ~ArrayList() = default;
+
+    /**
+     * @param __l list of elements to add
+     */
+    void addAll(std::initializer_list<T> __l) {
+        for(auto t : __l)
+            this->add(t);
+    }
     /// Reverse iterator
     virtual Iterator<T> rbegin() const {
         return Iterator(this->data() + this->size() - 1, 1);

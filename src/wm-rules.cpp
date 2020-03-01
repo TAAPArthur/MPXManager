@@ -253,15 +253,16 @@ bool onSelectionClearEvent(void) {
     return 1;
 }
 
+void grabDeviceBindings() {
+    for(Binding* binding : getDeviceBindings())
+        binding->grab();
+    LOG(LOG_LEVEL_DEBUG, "Grabbing %d buttons/keys", getDeviceBindings().size());
+}
 
 void registerForEvents() {
     if(ROOT_EVENT_MASKS)
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
-    ArrayList<Binding*>& list = getDeviceBindings();
-    LOG(LOG_LEVEL_DEBUG, "Grabbing %d buttons/keys", list.size());
-    for(Binding* binding : list) {
-        binding->grab();
-    }
+    grabDeviceBindings();
     LOG(LOG_LEVEL_DEBUG, "listening for device event; masks: %d", ROOT_DEVICE_EVENT_MASKS);
     if(ROOT_DEVICE_EVENT_MASKS)
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);

@@ -31,6 +31,7 @@ static void loadSavedLayouts() {
                 break;
         }
     }
+    INFO("Restored workspace layouts" << getAllWorkspaces());
 }
 static void loadSavedLayoutOffsets() {
     TRACE("Loading Workspace layout offsets");
@@ -69,6 +70,7 @@ static void loadSavedMonitorWorkspaceMapping() {
                     swapMonitors(i, w->getID());
                 else
                     getWorkspace(i)->setMonitor(m);
+                INFO("Restored monitor " >> *m << " to workspace " >> i);
             }
             else
                 INFO("Could not find monitor " << id);
@@ -92,8 +94,10 @@ static void loadSavedMasterWindows() {
 static void loadSavedActiveMaster() {
     TRACE("Loading active Master");
     auto reply = getWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
-    if(reply)
+    if(reply) {
         setActiveMasterByDeviceID(*(MasterID*)xcb_get_property_value(reply.get()));
+        INFO("Restored the active master to " >> *getActiveMaster());
+    }
 }
 
 void loadCustomState(void) {
@@ -103,12 +107,16 @@ void loadCustomState(void) {
     loadSavedMonitorWorkspaceMapping();
     loadSavedMasterWindows();
     loadSavedActiveMaster();
-    for(Master* master : getAllMasters()) {
-        if(master->getFocusedWindow())
-            setBorderColor(master->getFocusedWindow()->getID(), master->getFocusColor());
+    for(WindowInfo* winInfo : getAllWindows()) {
+        WindowMask mask = ~EXTERNAL_MASKS & getWindowPropertyValue(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL);
+        if(mask) {
+            INFO("Restoring mask of window:" >> *winInfo);
+            if(!winInfo->hasMask(mask)) {
+                winInfo->addMask(mask);
+                INFO("Added masks:" << mask);
+            }
+        }
     }
-    for(WindowInfo* winInfo : getAllWindows())
-        winInfo->addMask(~EXTERNAL_MASKS & getWindowPropertyValue(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL));
 }
 
 static std::unordered_map<std::string, std::string> monitorWorkspaceMapping;
@@ -183,6 +191,7 @@ void loadMonitorWorkspaceMapping() {
 }
 
 void saveCustomState(void) {
+    DEBUG("Saving custom State");
     int layoutOffsets[getNumberOfWorkspaces()];
     int monitors[getNumberOfWorkspaces()];
     short fakeMonitors[getAllMonitors().size() * 5];

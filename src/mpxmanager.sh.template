@@ -91,9 +91,6 @@ getopts "$optspec" optchar || run $@
                 path)
                     echo $MPXMANAGER_HOME
                     ;;
-                quit)
-                    run "--send=quit"
-                    ;;
                 recompile)
                     mkdir -p $MPXMANAGER_HOME
                     [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG

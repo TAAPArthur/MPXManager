@@ -22,6 +22,8 @@ static const char* const args[] = {"" __FILE__, "--no-event-loop"};
 static void setup() {
     addDieOnIntegrityCheckFailRule();
     _main(2, (char* const*)args);
+    assert(getActiveMaster());
+    assert(getNumberOfWorkspaces());
     startWM();
     waitUntilIdle(1);
 }
@@ -58,19 +60,6 @@ MPX_TEST("test_dock_detection", {
 MPX_TEST("default_active_layout", {
     for(Workspace* w : getAllWorkspaces())
         assert(w->getActiveLayout());
-});
-MPX_TEST_ITER("default_layout", getRegisteredLayouts().size(), {
-    DEFAULT_BORDER_WIDTH = 0;
-    setActiveLayout(getRegisteredLayouts()[_i]);
-    for(int i = 0; i < 3; i++) {
-        mapArbitraryWindow();
-    }
-    waitUntilIdle();
-    int area = 0;
-    for(WindowInfo* winInfo : getAllWindows())
-        if(winInfo->isVisible())
-            area += getRealGeometry(winInfo->getID()).getArea();
-    assertEquals(area, getActiveWorkspace()->getMonitor()->getViewport().getArea());
 });
 MPX_TEST_ITER("auto_fullscreen", 4, {
     getAllMonitors()[0]->setViewport({10, 10, 10, 10});
@@ -136,32 +125,16 @@ MPX_TEST_ITER("tile_invisible", 2, {
     mapArbitraryWindow();
     waitUntilIdle();
     grabPointer();
-    for(int i = 0; i < 2; i++) {
-        ATOMIC(getAllWindows()[0]->moveToWorkspace(1));
-        waitUntilIdle();
-        if(_i)
-            sendChangeWorkspaceRequest(1);
-        else {
-            movePointerRelative(1, 1);
-            ATOMIC(switchToWorkspace(1));
-        }
-        waitUntilIdle();
-        assertEquals(getActiveWorkspaceIndex(), 1);
-        if(i)
-            assertEquals(getRealGeometry(getAllWindows()[0]->getID()), getAllMonitors()[0]->getViewport());
-        else
-            assert(getRealGeometry(getAllWindows()[0]->getID()) !=  getRealGeometry(getAllWindows()[1]->getID()));
-        ATOMIC(getAllWindows()[0]->moveToWorkspace(0));
-        waitUntilIdle();
-        if(_i)
-            sendChangeWorkspaceRequest(0);
-        else {
-            movePointerRelative(1, 1);
-            ATOMIC(switchToWorkspace(0));
-        }
-        waitUntilIdle();
-        assertEquals(getActiveWorkspaceIndex(), 0);
-    }
+    ATOMIC(getAllWindows()[0]->moveToWorkspace(1));
+    waitUntilIdle();
+    if(_i)
+        sendChangeWorkspaceRequest(1);
+    else
+        ATOMIC(switchToWorkspace(1));
+    waitUntilIdle();
+    assertEquals(getActiveWorkspaceIndex(), 1);
+    assertEquals(getRealGeometry(getAllWindows()[0]->getID()), getAllMonitors()[0]->getViewport());
+    assert(getRealGeometry(getAllWindows()[0]->getID()) !=  getRealGeometry(getAllWindows()[1]->getID()));
 });
 
 MPX_TEST("detect_many_masters", {

@@ -60,11 +60,15 @@ public:
  * @return
  */
 std::ostream& operator<<(std::ostream&, const Monitor&);
+std::ostream& operator>>(std::ostream&, const Monitor&);
 std::ostream& operator<<(std::ostream&, const Layout&);
 std::ostream& operator<<(std::ostream&, const Master&);
+std::ostream& operator>>(std::ostream&, const Master&);
 std::ostream& operator<<(std::ostream&, const Slave&);
 std::ostream& operator<<(std::ostream&, const WindowInfo&);
+std::ostream& operator>>(std::ostream&, const WindowInfo&);
 std::ostream& operator<<(std::ostream&, const Workspace&);
+std::ostream& operator>>(std::ostream&, const Workspace&);
 /// @}
 
 /**
@@ -80,7 +84,7 @@ template<class T>
 std::ostream& operator<<(std::ostream& stream, const ArrayList<T>& list) {
     stream << "{ ";
     for(uint32_t i = 0; i < list.size(); i++)
-        stream << (i ? ", " : "") << list[i];
+        stream << (i ? ", " : "") << "{" << list[i] << "}";
     stream << " }";
     return stream;
 }

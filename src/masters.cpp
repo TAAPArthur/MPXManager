@@ -25,9 +25,12 @@ void setActiveMaster(Master* newMaster) {
         LOG(LOG_LEVEL_DEBUG, "Setting new master %d", newMaster->getID());
     master = newMaster;
 }
+
+std::ostream& operator>>(std::ostream& strm, const Master& m) {
+    return strm << "ID:" << m.getID() << "(" << m.getPointerID() << "), name:" << m.getName();
+}
 std::ostream& operator<<(std::ostream& strm, const Master& m) {
-    return strm << "{ ID:" << m.getID() << "(" << m.getPointerID() << "), name:" << m.getName() <<
-        ", color: " << m.getFocusColor() << ", window stack:"
+    return strm >> m << ", color: " << m.getFocusColor() << ", window stack:"
         >> m.windowStack << ", slaves: " >> m.getSlaves() << "}";
 }
 

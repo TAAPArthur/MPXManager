@@ -174,7 +174,8 @@ struct GenericFunctionWrapper {
 template <typename R, typename P = void>
 struct FunctionWrapper: GenericFunctionWrapper {
     static_assert(std::is_convertible<R, int>::value);
-    static_assert(std::is_convertible<P, int>::value || std::is_base_of<WMStruct, std::remove_pointer_t<P>>::value);
+    static_assert(std::is_same<P, std::string*>::value || std::is_convertible<P, int>::value ||
+        std::is_base_of<WMStruct, std::remove_pointer_t<P>>::value);
     /// generic function
     std::function<R(P)>func;
     /**

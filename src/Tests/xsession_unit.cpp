@@ -278,7 +278,7 @@ MPX_TEST("test_event_spam", {
 MPX_TEST("spam_mouse_motion", {
     addDefaultMaster();
     grabPointer();
-    static int num = 100000;
+    static int num = 1000;
     getBatchEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(+[]{assertEquals(getNumberOfEventsTriggerSinceLastIdle(XCB_GE_GENERIC), 2 * num);}));
     generateMotionEvents(num);
     startWM();
