@@ -48,9 +48,6 @@ set -e
 
 VERSION=1.2.0
 GIT_HASH=
-CC=
-CPPFLAGS=
-LDFLAGS=
 
 displayHelp(){
     SCRIPT_HEADSIZE=$(head -200 ${0} |grep -n "^# END_OF_HEADER" | cut -f1 -d:)
@@ -69,9 +66,10 @@ displayHash(){
     echo $GIT_HASH
 }
 
-MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-$(echo "mpxmanager-"$(sed "s/ /-/g" -- < <(uname -sm)))}
+MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-mpxmanager}
 MPXMANAGER_HOME=${MPXMANAGER_HOME:-$HOME/.config/mpxmanager}
 MPXMANAGER_CONFIG=${MPXMANAGER_CONFIG:-$MPXMANAGER_HOME/config.cpp}
+MPXMANAGER_LAST_COMPILED_VERSION=$MPXMANAGER_HOME/.last_compiled_verision
 optspec=":vhs-:"
 
 
@@ -93,10 +91,17 @@ getopts "$optspec" optchar || run $@
                     ;;
                 recompile)
                     mkdir -p $MPXMANAGER_HOME
-                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
                     shift
-                    echo $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
-                    $CC $MPXMANAGER_CONFIG -o $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME -lmpxmanager $CPPFLAGS $LDFLAGS "$@"
+                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
+                    export CXX=
+                    export CPPFLAGS=
+                    export LDFLAGS=
+                    if [[ ! -f $MPXMANAGER_LAST_COMPILED_VERSION || "$GIT_HASH" != $(cat $MPXMANAGER_LAST_COMPILED_VERSION) ]]; then
+                        make -f /usr/share/mpxmanager/sample-makefile -C $MPXMANAGER_HOME clean
+                        echo -n $GIT_HASH > $MPXMANAGER_LAST_COMPILED_VERSION
+                    fi
+
+                    make -f /usr/share/mpxmanager/sample-makefile -C $MPXMANAGER_HOME $* $MPXMANAGER_BIN_NAME
                     ;;
                 version)
                     displayVersion
