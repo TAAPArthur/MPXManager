@@ -50,10 +50,10 @@ bool Chain::start(const UserEvent& event)const {
         globalChain.add(this);
     else
         getActiveChains().add(this);
-    return boundFunction({getWindowToActOn(event)})&& check(event);
+    return hooks.onStart({getWindowToActOn(event)}) && check(event);
 }
-bool Chain::end()const {
-    LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d", isGlobalChain());
+bool Chain::end(bool abort)const {
+    LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d; Abort: %d", isGlobalChain(), abort);
     if(isGlobalChain())
         globalChain.removeElement(this);
     else
@@ -66,7 +66,11 @@ bool Chain::end()const {
     }
     for(Binding* member : members)
         member->ungrab();
-    return 1;
+
+    if(abort)
+        hooks.onAbort();
+
+    return hooks.onEnd();
 }
 bool Chain::trigger(const UserEvent& event)const {
     return start(event);
@@ -80,7 +84,17 @@ bool checkAllChainBindings(const UserEvent& userEvent) {
         }
     return 1;
 }
+void maybeAbortActiveChains() {
+    for(Master* master : getAllMasters()) {
+        const Chain* chain = getActiveChain(master);
+        if(chain && chain->allowAbortionOnIdle()) {
+            INFO("Aborting chain: "<< chain);
+            chain->end(1);
+        }
+    }
+}
 void addApplyChainBindingsRule(AddFlag flag) {
     getEventRules(DEVICE_EVENT).add(BoundFunction{+[]{return checkAllChainBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkAllChainBindings), PASSTHROUGH_IF_TRUE},
         flag);
+    getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(maybeAbortActiveChains));
 }

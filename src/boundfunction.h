@@ -349,6 +349,8 @@ struct BoundFunction {
                             P1 p) {return _func(p, value);}))), passThrough(passThrough), name(name) { }
 
 
+    /// @return true iff the function is set
+    operator bool() const {return func != NULL;}
     /**
      * @return the type of of the underlying function
      */
@@ -380,7 +382,7 @@ struct BoundFunction {
      */
     int call(const BoundFunctionArg& arg)const;
     /// @copydoc call
-    int operator()(const BoundFunctionArg& arg)const {
+    int operator()(const BoundFunctionArg& arg={})const {
         return execute(arg);
     }
     /**
