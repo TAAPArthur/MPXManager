@@ -34,6 +34,13 @@ struct FindAndRaiseArg {
     /// only consider activatable windows
     bool includeNonActivatable = 0;
 };
+
+/// Determines what WindowInfo field to match on
+enum RaiseOrRunType {
+    MATCHES_TITLE,
+    MATCHES_CLASS,
+    MATCHES_ROLE,
+} ;
 /**
  * Attempts to find a that rule matches a managed window.
  * First the active Master's window& stack is checked ignoring the master's window cache.
@@ -48,6 +55,16 @@ struct FindAndRaiseArg {
 WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_ACTIVATE, FindAndRaiseArg arg = {},
     Master* master = getActiveMaster());
 
+
+/**
+ * Wrapper around findAndRaise
+ * @param s string to match against
+ * @param matchType what property of the window to match
+ * @param action what to do if a window was found
+ *
+ * @return if a matching window was found
+ */
+bool findAndRaise(std::string s, RaiseOrRunType matchType = MATCHES_CLASS, WindowAction action = ACTION_ACTIVATE);
 /**
  * Tries to find a window by checking all the managed windows, and if it finds one it activates it
  *
@@ -56,13 +73,6 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION
  * @return the window found or NULL
  */
 static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, {.checkLocalFirst = 0, .cache = 0}, 0);}
-
-/// Determines what WindowInfo field to match on
-enum RaiseOrRunType {
-    MATCHES_TITLE,
-    MATCHES_CLASS,
-    MATCHES_ROLE,
-} ;
 /**
  * @param winInfo
  * @param str

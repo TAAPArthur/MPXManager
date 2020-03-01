@@ -169,6 +169,7 @@ int _main(int argc, char* const* argv) {
  * @return
  */
 int __attribute__((weak)) main(int argc, char* const argv[]) {
+    setLogLevel(LOG_LEVEL_WARN);
     quit(_main(argc, argv));
 }
 #ifndef NDEBUG

@@ -10,6 +10,7 @@
 
 #include "bindings.h"
 #include "communications.h"
+#include "functions.h"
 #include "globals.h"
 #include "debug.h"
 #include "logger.h"
@@ -79,6 +80,8 @@ static UniqueArrayList<Option*> options = {
     {"dump-stack", dumpWindowStack, FORK_ON_RECEIVE},
     {"dump-win", dumpSingleWindow, FORK_ON_RECEIVE},
     {"focus", +[](WindowID id) {focusWindow(id);}},
+    {"find", [](std::string * str) {return findAndRaise(*str, MATCHES_CLASS, ACTION_NONE);}},
+    {"find-and-raise", [](std::string * str) {return findAndRaise(*str, MATCHES_CLASS, ACTION_ACTIVATE);}},
     {"focus-root", +[]() {focusWindow(root);}},
     {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
     {"load", loadWindowProperties},
@@ -89,6 +92,7 @@ static UniqueArrayList<Option*> options = {
     {"restart", +[]{restart();}, CONFIRM_EARLY},
     {"restart", restart, CONFIRM_EARLY},
     {"request-shutdown", requestShutdown},
+    {"spawn", +[](std::string * str) {spawn(str->c_str());}},
     {"sum", printSummary, FORK_ON_RECEIVE},
     {"switch-workspace", switchToWorkspace},
     _OPTION(AUTO_FOCUS_NEW_WINDOW_TIMEOUT),
@@ -126,7 +130,7 @@ bool hasOutStandingMessages(void) {
     return getNumberOfMessageSent() > getConfirmedSentMessage(getPrivateWindow());
 }
 int getLastMessageExitCode(void) {
-    return getWindowPropertyValue(getPrivateWindow(), MPX_WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL);
+    return getWindowPropertyValue(getPrivateWindow(), MPX_WM_INTERPROCESS_COM_STATUS, XCB_ATOM_CARDINAL);
 }
 static void sendConfirmation(WindowID target, int exitCode) {
     LOG(LOG_LEVEL_DEBUG, "sending receive confirmation to %d", target);
