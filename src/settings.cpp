@@ -38,7 +38,7 @@ void addChainDefaultBindings() {
             Binding {WILDCARD_MODIFIER, 0, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_absorbCycleWindows"}, \
         }, {}, XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE, "_cycleWindows"),
         new Chain{
-            DEFAULT_MOD_MASK, Button1, +[](WindowInfo * winInfo){startWindowMoveResize(winInfo, 1);},
+            DEFAULT_MOD_MASK, Button1, {+[](WindowInfo * winInfo) {startWindowMoveResize(winInfo, 1);}},
             {
                 {DEFAULT_MOD_MASK, 0, DEFAULT_EVENT(updateWindowMoveResize), {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
                 {WILDCARD_MODIFIER, XK_Escape, DEFAULT_EVENT(cancelWindowMoveResize), {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}},
@@ -48,7 +48,7 @@ void addChainDefaultBindings() {
             "_windowMove"
         },
         new Chain{
-            DEFAULT_MOD_MASK, Button3, +[](WindowInfo * winInfo){startWindowMoveResize(winInfo, 0);},
+            DEFAULT_MOD_MASK, Button3, {+[](WindowInfo * winInfo) {startWindowMoveResize(winInfo, 0);}},
             {
                 {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
                 {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, {.noGrab = 1}},

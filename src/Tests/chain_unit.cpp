@@ -15,7 +15,7 @@ static Binding* autoGrabBinding = new Binding {0, Button1};
 static Binding* nonAutoGrabBinding = new Binding {0, Button1, {incrementCount}, {.noGrab = 1}};
 static Binding* nonAutoGrabBindingAbort = new Binding {0, Button2, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}};
 static Chain sampleChain = {0, Button2, {}, {autoGrabBinding, nonAutoGrabBinding, nonAutoGrabBindingAbort}, {}, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS };
-static Chain sampleGlobalChain = {0, Button2, BoundFunction(NO_PASSTHROUGH), {}, {.passThrough = NO_PASSTHROUGH}, GLOBAL_CHAIN | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS };
+static Chain sampleGlobalChain = {0, Button2, {BoundFunction(NO_PASSTHROUGH)}, {}, {.passThrough = NO_PASSTHROUGH}, GLOBAL_CHAIN | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS };
 static UserEvent eventNoPassthrough;
 
 static void setup() {
@@ -47,6 +47,31 @@ MPX_TEST_ITER("auto_grab_device", 3, {
     chain.trigger({0, Button1, .mask = mask});
     triggerBinding(&b);
     waitToReceiveInput(mask);
+});
+MPX_TEST_ITER("end_on_idle", 2, {
+
+    Chain* chain = new Chain(0, 0, {incrementCount, incrementCount, incrementCount}, {
+        {WILDCARD_MODIFIER, 1, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = 0}},
+    }, {.noGrab = 1});
+    getDeviceBindings().add(chain);
+
+    assertEquals(checkBindings({0, Button1}), 0);
+    assertEquals(getCount(), 1);
+    assert(getActiveChain());
+
+    if(_i) {
+        addApplyChainBindingsRule();
+        applyEventRules(DEVICE_EVENT);
+        startWM();
+        waitUntilIdle();
+        assertEquals(getCount(), 3);
+    }
+    else {
+        assertEquals(checkAllChainBindings({0, Button2}), 1);
+        assertEquals(getCount(), 2);
+    }
+
+    assert(!getActiveChain());
 });
 
 MPX_TEST_ITER("test_chain_grab", 3, {
@@ -150,15 +175,15 @@ MPX_TEST("test_chain_bindings", {
     Detail exitDetail = 3;
     void(*terminate)() = []() {exit(11);};
     Binding* dummy = new Binding{0, dangerDetail, terminate, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, .name = "dummy"};
-    Binding* chain = new Chain(0, 1, add,
+    Binding* chain = new Chain(0, 1, {add},
     {
         new Chain{
-            0, 1, add,
+            0, 1, {add},
             {
-                new Chain(0, 1, add, {{0, 0, {}, {.passThrough = ALWAYS_PASSTHROUGH}}}),
-                new Binding{0, 1, add, {.passThrough = NO_PASSTHROUGH}},
-                new Binding{0, dangerDetail, add, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}},
-                new Binding{0, exitDetail, subtract, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}}
+                new Chain(0, 1, {add}, {{0, 0, {}, {.passThrough = ALWAYS_PASSTHROUGH}}}),
+                new Binding{0, 1, {add}, {.passThrough = NO_PASSTHROUGH}},
+                new Binding{0, dangerDetail, {add}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}},
+                new Binding{0, exitDetail, {subtract}, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1}}
             },
             {.passThrough = NO_PASSTHROUGH, .noGrab = 1},
         },

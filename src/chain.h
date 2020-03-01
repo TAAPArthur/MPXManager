@@ -7,6 +7,18 @@
 #include "arraylist.h"
 #include "bindings.h"
 
+/**
+ * Helper class to group the onStart and onEnd boundFunctions
+ */
+struct BoundFunctionTuple {
+    /// function to run on chain start
+    BoundFunction onStart = {};
+    /// function to run on chain end
+    BoundFunction onAbort = {};
+    /// function to run on chain end
+    BoundFunction onEnd = {};
+};
+
 /// Can be added to a chain mask to indicate that this chain should be applied to all masters
 #define GLOBAL_CHAIN 1
 /**
@@ -19,10 +31,11 @@
  * @see addApplyChainBindingsRule
  */
 struct Chain : Binding {
-
 private:
     /// members of the chain
     ArrayList<Binding*>members;
+    /// functions to on start, end and abort
+    BoundFunctionTuple hooks;
     /**
      * if 0, no device will be grabbed
      * if 1, no device will be grabbed and the chain will be global
@@ -35,31 +48,31 @@ public:
      *
      * @param mod
      * @param buttonOrKey
-     * @param boundFunction
+     * @param hooks
      * @param members
      * @param flags
      * @param chainMask
      * @param name
      */
-    Chain(unsigned int mod, int buttonOrKey, const BoundFunction boundFunction = {}, const ArrayList<Binding*>& members = {},
-        const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(mod, buttonOrKey, boundFunction,
+    Chain(unsigned int mod, int buttonOrKey, const BoundFunctionTuple& hooks = {}, const ArrayList<Binding*>& members = {},
+        const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(mod, buttonOrKey, {},
                 flags, name),
-        members(members), chainMask(chainMask) { }
+        members(members), hooks(hooks), chainMask(chainMask) { }
     /**
      *
      * @param keyBindings
-     * @param boundFunction
+     * @param hooks
      * @param members
      * @param flags
      * @param chainMask
      * @param name
      */
-    Chain(const std::initializer_list<KeyBinding> keyBindings, const BoundFunction boundFunction = {}, const
+    Chain(const std::initializer_list<KeyBinding> keyBindings, const BoundFunctionTuple hooks = {}, const
         ArrayList<Binding*>&
         members = {},
-        const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(keyBindings, boundFunction,
+        const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(keyBindings, {},
                 flags, name),
-        members(members), chainMask(chainMask) { }
+        members(members), hooks(hooks), chainMask(chainMask) { }
     /**
      *
      *
@@ -92,8 +105,10 @@ public:
     /**
      * Ends the active chain for the active master
      * Undoes all of startChain()
+     * @param abort if the chain aborted due to being idle
+     * @return hooks.onEnd()
      */
-    bool end()const;
+    bool end(bool abort = false)const;
     virtual bool trigger(const UserEvent& event)const override;
     std::string getName()const override {return Binding::getName() + (isGlobalChain() ? "*" : "");}
 
@@ -105,6 +120,9 @@ public:
      * @return 1 if the caller shouldn't abort operation
      */
     bool check(const UserEvent& userEvent)const;
+
+    ///@return true iff the chain is allowed to be aborted when idle
+    bool allowAbortionOnIdle() const { return hooks.onAbort;}
 };
 /**
  * @return the last Chain added the active chain stack
