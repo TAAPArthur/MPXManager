@@ -1,6 +1,5 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-#include "unistd.h"
 
 #include "arraylist.h"
 #include "bindings.h"
@@ -49,7 +48,6 @@ void broadcastEWMHCompilence() {
         unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
-    xcb_ewmh_set_wm_pid(ewmh, getPrivateWindow(), getpid());
     setWindowClass(getPrivateWindow(), numPassedArguments ? passedArguments[0] : WINDOW_MANAGER_NAME, WINDOW_MANAGER_NAME);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
     xcb_ewmh_set_supporting_wm_check(ewmh, getPrivateWindow(), getPrivateWindow());

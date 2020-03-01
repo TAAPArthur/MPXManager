@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include "unistd.h"
 
 #ifndef NO_XRANDR
 #include <xcb/randr.h>
@@ -79,6 +80,7 @@ WindowID getPrivateWindow(void) {
         compliantWindowManagerIndicatorWindow = xcb_generate_id(dis);
         xcb_create_window(dis, 0, compliantWindowManagerIndicatorWindow, root, 0, 0, 1, 1, 0,
             XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
+        xcb_ewmh_set_wm_pid(ewmh, compliantWindowManagerIndicatorWindow, getpid());
     }
     return compliantWindowManagerIndicatorWindow;
 }
