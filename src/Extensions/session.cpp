@@ -217,9 +217,12 @@ void saveCustomState(void) {
     setWindowProperty(root, MPX_WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
     setWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
     for(WindowInfo* winInfo : getAllWindows()) {
-        auto mask = ~EXTERNAL_MASKS & (uint32_t)winInfo->getMask();
-        if(mask)
-            setWindowProperty(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL, mask);
+        if(!winInfo->isNotManageable()) {
+            WindowMask mask = ~EXTERNAL_MASKS & (uint32_t)winInfo->getMask();
+            TRACE("Saving window masks for window: " << *winInfo);
+            setWindowProperty(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL, (int)mask);
+            setWindowProperty(winInfo->getID(), MPX_WM_MASKS_STR, ewmh->UTF8_STRING, (std::string)mask);
+        }
     }
     flush();
 }

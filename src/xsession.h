@@ -43,6 +43,9 @@ extern xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
 /// Used to save raw window masks
 extern xcb_atom_t MPX_WM_MASKS;
 
+/// Str representation of MPX_WM_MASKS used solely for debugging
+extern xcb_atom_t MPX_WM_MASKS_STR;
+
 /// Atom to store an array of each window for every master so the state can be restored
 /// There is a '0' to separate each master's window stack and each stack is preceded with the master id
 extern xcb_atom_t MPX_WM_MASTER_WINDOWS;

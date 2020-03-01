@@ -127,7 +127,7 @@ MPX_TEST("test_restore_state_window_masks_change", {
         mapWindow(createNormalWindow());
     scan(root);
     ArrayList<WindowMask>oldWindowMasks;
-    for(int i = 0; i < 32; i++) {
+    for(int i = 0; i < 12; i++) {
         getAllWindows()[i]->addMask((1 << i) & ~EXTERNAL_MASKS);
         oldWindowMasks.add(getAllWindows()[i]->getMask());
     }
@@ -135,9 +135,21 @@ MPX_TEST("test_restore_state_window_masks_change", {
     getAllWindows().deleteElements();
     scan(root);
     loadCustomState();
-    for(int i = 0; i < 32; i++) {
+    for(int i = 0; i < oldWindowMasks.size(); i++) {
         assertEquals(oldWindowMasks[i], getAllWindows()[i]->getMask());
     }
+});
+MPX_TEST("test_restore_state_clear_previous", {
+    WindowID win = mapWindow(createNormalWindow());
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    winInfo->addMask(FLOATING_MASK);
+    saveCustomState();
+    winInfo->removeMask(FLOATING_MASK);
+    // needs to clear the previously saved value
+    saveCustomState();
+    loadCustomState();
+    assert(!winInfo->hasMask(FLOATING_MASK));
 });
 MPX_TEST("test_restore_state_monitor_change", {
     CRASH_ON_ERRORS = -1;
