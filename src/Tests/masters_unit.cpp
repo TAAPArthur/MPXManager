@@ -22,13 +22,19 @@ MPX_TEST("default_master", {
     assertEquals(getMasterByName(getActiveMaster()->getName()), getActiveMaster());
 });
 
+static WindowInfo* createFakeFocusableWindow(WindowID win) {
+    WindowInfo* winInfo = new WindowInfo(win);
+    winInfo->addMask(FOCUSABLE_MASK);
+    return winInfo;
+}
+
 
 MPX_TEST("onWindowFocus", {
     for(int i = DEFAULT_KEYBOARD + DEFAULT_POINTER; i < 10; i += 2)
         getAllMasters().add(new Master(i, i + 1, ""));
 
     for(int i = 0; i < 5; i++) {
-        assert(addWindowInfo(new WindowInfo(i)));
+        assert(addWindowInfo(createFakeFocusableWindow(i)));
         for(Master* m : getAllMasters()) {
             assert(m->getWindowStack().size() == i);
             unsigned int time = getTime();
@@ -65,9 +71,10 @@ MPX_TEST("freeze_focus_stack_empty", {
 });
 
 MPX_TEST("freeze_focus_stack", {
-    assert(addWindowInfo(new WindowInfo(3)));
-    assert(addWindowInfo(new WindowInfo(2)));
-    assert(addWindowInfo(new WindowInfo(1)));
+
+    assert(addWindowInfo(createFakeFocusableWindow(3)));
+    assert(addWindowInfo(createFakeFocusableWindow(2)));
+    assert(addWindowInfo(createFakeFocusableWindow(1)));
     getActiveMaster()->onWindowFocus(1);
     getActiveMaster()->onWindowFocus(2);
 
@@ -98,9 +105,10 @@ MPX_TEST("freeze_focus_stack", {
 
 });
 MPX_TEST("test_focus_delete", {
-    assert(addWindowInfo(new WindowInfo(3)));
-    assert(addWindowInfo(new WindowInfo(2)));
-    assert(addWindowInfo(new WindowInfo(1)));
+
+    assert(addWindowInfo(createFakeFocusableWindow(3)));
+    assert(addWindowInfo(createFakeFocusableWindow(2)));
+    assert(addWindowInfo(createFakeFocusableWindow(1)));
     assert(getFocusedWindow() == NULL);
     for(WindowInfo* winInfo : getAllWindows())
         getActiveMaster()->onWindowFocus(winInfo->getID());

@@ -168,7 +168,7 @@ MPX_TEST("reset_border_color", {
     createMasterDevice("test");
     initCurrentMasters();
     WindowID win = mapWindow(createNormalWindow());
-    getAllWindows().add(new WindowInfo(win));
+    scan(root);
     for(Master* m : getAllMasters())
         m->onWindowFocus(win);
     resetBorder(win);

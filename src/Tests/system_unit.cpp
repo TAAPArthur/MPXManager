@@ -125,6 +125,7 @@ MPX_TEST("spawn_env", {
     createSimpleEnv();
     LD_PRELOAD_INJECTION = 1;
     getAllWindows().add(new WindowInfo(1));
+    getAllWindows()[0]->addMask(FOCUSABLE_MASK);
     getActiveMaster()->onWindowFocus(getAllWindows()[0]->getID());
     getAllMonitors().add(new Monitor(1, {0, 0, 0, 0}, ""));
     assignUnusedMonitorsToWorkspaces();
