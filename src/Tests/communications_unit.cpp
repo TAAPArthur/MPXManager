@@ -39,7 +39,6 @@ static void setup() {
     enableInterClientCommunication();
     onSimpleStartup();
     saveXSession();
-    atexit(fullCleanup);
 }
 SET_ENV(setup, fullCleanup);
 
@@ -107,6 +106,7 @@ MPX_TEST("test_send_receive", {
 MPX_TEST("test_send_receive_func", {
     suppressOutput();
     POLL_COUNT = 1;
+    setLogLevel(LOG_LEVEL_WARN);
     checkAndSend("list-options", "");
     checkAndSend("dump", "");
     checkAndSend("dump", "0");
@@ -132,6 +132,16 @@ MPX_TEST("test_stale", {
     setLogLevel(LOG_LEVEL_NONE);
     runEventLoop();
 });
+
+MPX_TEST("bad_pid", {
+    startWM();
+    waitUntilIdle();
+    catchError(xcb_ewmh_set_wm_pid_checked(ewmh, getPrivateWindow(), -1));
+    send("dump", "");
+    CRASH_ON_ERRORS = 0;
+    waitUntilIdle();
+});
+
 
 MPX_TEST("test_bad_options", {
     CRASH_ON_ERRORS = 0;

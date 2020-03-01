@@ -106,6 +106,10 @@ MPX_TEST("private_window", {
     xcb_window_t win = getPrivateWindow();
     assert(win == getPrivateWindow());
     assert(xcb_request_check(dis, xcb_map_window_checked(dis, win)) == NULL);
+    uint32_t pid;
+    xcb_ewmh_get_wm_pid_reply(ewmh, xcb_ewmh_get_wm_pid(ewmh, getPrivateWindow()), &pid, NULL);
+    assert(pid);
+    assertEquals(pid, getpid());
 });
 
 MPX_TEST("event_names", {

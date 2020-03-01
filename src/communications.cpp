@@ -137,9 +137,9 @@ static void sendConfirmation(WindowID target, int exitCode) {
     flush();
 }
 void send(std::string name, std::string value) {
-    unsigned int data[5] = {getAtom(name), getAtom(value), (uint32_t)getpid(), getPrivateWindow()};
+    unsigned int data[5] = {getAtom(name), getAtom(value)};
     LOG(LOG_LEVEL_DEBUG, "sending %d (%s) %d (%s)", data[0], name.c_str(), data[1], value.c_str());
-    catchError(xcb_ewmh_send_client_message(dis, root, root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
+    catchError(xcb_ewmh_send_client_message(dis, getPrivateWindow(), root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
     outstandingSendCount++;
 }
 const Option* findOption(std::string name, std::string value) {
@@ -158,12 +158,12 @@ const Option* findOption(std::string name, std::string value) {
 void receiveClientMessage(void) {
     xcb_client_message_event_t* event = (xcb_client_message_event_t*) getLastEvent();
     xcb_client_message_data_t data = event->data;
+    WindowID win = event->window;
     xcb_atom_t message = event->type;
     xcb_atom_t optionAtom = data.data32[0];
     xcb_atom_t valueAtom = data.data32[1];
-    pid_t callerPID = data.data32[2];
-    WindowID sender = data.data32[3];
-    if(message == MPX_WM_INTERPROCESS_COM && event->window == root && optionAtom) {
+    pid_t callerPID = getWindowPropertyValue(win, ewmh->_NET_WM_PID, XCB_ATOM_CARDINAL);
+    if(message == MPX_WM_INTERPROCESS_COM && optionAtom) {
         DEBUG(getAtomsAsString(data.data32, 5));
         std::string name = getAtomName(optionAtom);
         std::string value = "";
@@ -176,7 +176,7 @@ void receiveClientMessage(void) {
             int returnValue = 0;
             if(option->flags & CONFIRM_EARLY) {
                 TRACE("sending early confirmation");
-                sendConfirmation(sender, 0);
+                sendConfirmation(win, 0);
                 flush();
             }
             if(!(option->flags & FORK_ON_RECEIVE)) {
@@ -184,20 +184,22 @@ void receiveClientMessage(void) {
             }
             // TODO stop forking
             else if(!(childPID = fork())) {
+                if(isLogging(LOG_LEVEL_WARN))
+                    setLogLevel(LOG_LEVEL_WARN);
                 std::cout << std::flush;
-                char outputFile[64] = {0};
+                openXDisplay();
+                char outputFile[64] = {"/dev/null"};
                 if(callerPID) {
                     const char* formatter = "/proc/%d/fd/1";
                     sprintf(outputFile, formatter, callerPID);
-                    int fd = open(outputFile, O_WRONLY | O_APPEND);
-                    if(fd == -1 || dup2(fd, STDOUT_FILENO) == -1) {
-                        LOG(LOG_LEVEL_WARN, "could not open %s for writing; could not call/set %s aborting", outputFile,
-                            option->name.c_str());
-                        exit(0);
-                    }
-                    close(fd);
                 }
-                openXDisplay();
+                int fd = open(outputFile, O_WRONLY | O_APPEND);
+                if(fd == -1 || dup2(fd, STDOUT_FILENO) == -1) {
+                    LOG(LOG_LEVEL_WARN, "could not open %s for writing; could not call/set '%s' aborting", outputFile,
+                        option->name.c_str());
+                    exit(1);
+                }
+                close(fd);
                 returnValue = option->call(value);
                 std::cout << std::flush;
                 close(STDOUT_FILENO);
@@ -207,7 +209,7 @@ void receiveClientMessage(void) {
                 returnValue = waitForChild(childPID);
             }
             if(!(option->flags & CONFIRM_EARLY))
-                sendConfirmation(sender, returnValue);
+                sendConfirmation(win, returnValue);
         }
         else
             LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'", name.c_str(), value.c_str());
