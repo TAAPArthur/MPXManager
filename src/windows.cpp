@@ -16,22 +16,29 @@ ArrayList<WindowInfo*>& getAllWindows(void) {
     return windows;
 }
 
-std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
-    stream << "{ WindowInfo: ID " << winInfo.getID() << (winInfo.isTileable() ? "*" : "") <<
+std::ostream& operator>>(std::ostream& stream, const WindowInfo& winInfo) {
+    stream << "ID " << winInfo.getID() << (winInfo.isTileable() ? "*" : "") <<
         (!winInfo.isMappable() ? "?" : "");
-    stream << " Parent: " << winInfo.getParent();
     if(winInfo.getID() != winInfo.getEffectiveID())
         stream << " EffectiveID: " << winInfo.getEffectiveID();
+    if(winInfo.getType()) {
+        stream << " Title '" << winInfo.getTitle() << "'" ;
+        stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
+    }
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
+    stream >> winInfo;
+    if(winInfo.getType()) {
+        stream << " Type " << (winInfo.isImplicitType() ? "?" : "") << "'" << winInfo.getTypeName() << "'";
+        stream << " Role '" << winInfo.getRole() << "'";
+    }
+    stream << " Parent: " << winInfo.getParent();
     if(winInfo.getGroup())
         stream << " Group: " << winInfo.getGroup();
     if(winInfo.getTransientFor())
         stream << " Transient For: " << winInfo.getTransientFor();
-    if(winInfo.getType()) {
-        stream << " Title '" << winInfo.getTitle() << "'" ;
-        stream << " Class '" << winInfo.getClassName() << "' '" << winInfo.getInstanceName() << "'";
-        stream << " Type " << (winInfo.isImplicitType() ? "?" : "") << "'" << winInfo.getTypeName() << "'";
-        stream << " Role '" << winInfo.getRole() << "'";
-    }
     stream << " Masks: " << winInfo.getMask();
     if(winInfo.getWorkspace())
         stream << " Workspace:" << winInfo.getWorkspaceIndex() ;
@@ -45,8 +52,7 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
         stream << " OverrideRedirect";
     else if(winInfo.getTilingOverrideMask())
         stream << " TilingOverride: (" << (int)winInfo.getTilingOverrideMask() << ")" << winInfo.getTilingOverride();
-    stream << " Geometry " << winInfo.getGeometry();
-    return stream << "}";
+    return stream << " Geometry " << winInfo.getGeometry();
 }
 
 bool WindowInfo::isNotInInvisibleWorkspace()const {

@@ -106,6 +106,10 @@ void addBasicRules(AddFlag flag = ADD_UNIQUE);
  */
 void registerForEvents();
 /**
+ * Calls grab for all getDeviceBindings()
+ */
+void grabDeviceBindings();
+/**
  * Listens for NON_ROOT_EVENT_MASKS and NON_ROOT_DEVICE_EVENT_MASKS
  *
  * @param winInfo

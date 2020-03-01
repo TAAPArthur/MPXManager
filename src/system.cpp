@@ -60,6 +60,9 @@ void setClientMasterEnvVar(void) {
         if(getFocusedWindow()) {
             sprintf(strValue, "%d", getFocusedWindow()->getID());
             setenv("_WIN_ID", strValue, 1);
+            setenv("_WIN_TITLE", getFocusedWindow()->getTitle().c_str(), 1);
+            setenv("_WIN_CLASS", getFocusedWindow()->getClassName().c_str(), 1);
+            setenv("_WIN_INSTANCE", getFocusedWindow()->getInstanceName().c_str(), 1);
             setEnvRect("WIN", getFocusedWindow()->getGeometry());
         }
         Monitor* m = getActiveMonitor();

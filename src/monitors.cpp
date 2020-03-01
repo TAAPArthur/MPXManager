@@ -21,15 +21,19 @@ uint32_t MONITOR_DUPLICATION_POLICY = SAME_DIMS;
 uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
 
+std::ostream& operator>>(std::ostream& strm, const Monitor& m) {
+    return strm << "id:" << m.getID() << (m.isPrimary() ? "*" : "") << (m.isFake() ? "?" : "") << ", name:" << m.getName();
+}
+
 std::ostream& operator<<(std::ostream& strm, const Monitor& m) {
-    strm << "{id:" << m.getID() << (m.isPrimary() ? "*" : "") << (m.isFake() ? "?" : "") << ", name:" << m.getName();
+    strm >> m;
     if(m.getWorkspace())
         strm << ", Workspace:" << m.getWorkspace()->getID();
     strm << ", base:" << m.getBase();
     if(m.getBase() != m.getViewport()) {
         strm << ", viewport: " << m.getViewport();
     }
-    return strm  << "}";
+    return strm;
 }
 
 

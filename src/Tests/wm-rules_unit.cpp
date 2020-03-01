@@ -450,30 +450,33 @@ MPX_TEST("test_map_request_unregistered", {
     waitForNormalEvent(XCB_MAP_NOTIFY);
 });
 
-MPX_TEST("test_configure_request", {
-    int values[] = {2, 1, 1000, 1000, 1, XCB_STACK_MODE_ABOVE};
+
+MPX_TEST("test_configure_request_no_error", {
+    int values[] = {0, 0, 1000, 1000, 1, XCB_STACK_MODE_ABOVE};
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
         XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
         XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
-    for(int i = 0; i < 2; i++) {
-        WindowID win = i ? createUnmappedWindow() : createOverrideRedirectWindow();
-        assert(!catchError(xcb_configure_window_checked(dis, win, mask, values)));
-        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
-    }
-    consumeEvents();
+    assert(!catchError(xcb_configure_window_checked(dis, createUnmappedWindow(), mask, values)));
+});
+MPX_TEST("test_configure_request", {
+    CRASH_ON_ERRORS = 0;
+    int value = 2;
     int allMasks = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-        XCB_CONFIG_WINDOW_BORDER_WIDTH;
+    XCB_CONFIG_WINDOW_BORDER_WIDTH;
     int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
-    int defaultValues[] = {10, 10, 10, 10, 10};
-    WindowID win = createUnmappedWindow();
+    int defaultValues[] = {10, 11, 12, 13, 14};
+    WindowID win = createNormalWindow();
+    msleep(1000);
+    consumeEvents();
     for(int i = 0; i < LEN(masks); i++) {
-        catchError(xcb_configure_window_checked(dis, win, allMasks, defaultValues));
+        assert(!catchError(xcb_configure_window_checked(dis, win, allMasks, defaultValues)));
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
-        catchError(xcb_configure_window_checked(dis, win, masks[i], values));
+        assert(!catchError(xcb_configure_window_checked(dis, win, masks[i], &value)));
         waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
         xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
+        assert(reply);
         for(int n = 0; n < 5; n++)
-            assert((&reply->x)[n] == (n == i ? values[0] : defaultValues[0]));
+            assertEquals((&reply->x)[n], (n == i ? value : defaultValues[n]));
         free(reply);
     }
 });

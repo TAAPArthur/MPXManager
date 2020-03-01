@@ -113,6 +113,8 @@ void updateFocusForAllMasters(WindowInfo* winInfo) {
         if(master->getFocusedWindow() == winInfo)
             if(!focusNextVisibleWindow(master, winInfo))
                 DEBUG("Could not find window to update focus to");
+            else
+                DEBUG("Updated focus for master" << *master);
 }
 
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
@@ -122,8 +124,10 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     LOG(LOG_LEVEL_DEBUG, "window %d has been removed", winToRemove);
     if(!destroyed)
         unregisterForWindowEvents(winInfo->getID());
-    if(applyEventRules(UNREGISTER_WINDOW, winInfo))
+    if(applyEventRules(UNREGISTER_WINDOW, winInfo)) {
+        INFO("Updating window focus");
         updateFocusForAllMasters(winInfo);
+    }
     bool result = getAllWindows().removeElement(winInfo) ? 1 : 0;
     if(winInfo)
         delete winInfo;
@@ -255,11 +259,7 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
         LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)", win, mask, __builtin_popcount(mask));
         LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));
     }
-#ifndef NDEBUG
-    catchError(xcb_configure_window_checked(dis, win, mask, values));
-#else
-    xcb_configure_window(dis, win, mask, values);
-#endif
+    XCALL(xcb_configure_window, dis, win, mask, values);
 }
 void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition) {
     uint32_t values[5];

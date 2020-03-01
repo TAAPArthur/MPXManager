@@ -15,6 +15,7 @@
 #include "extra-rules.h"
 #include "functions.h"
 #include "globals.h"
+#include "devices.h"
 #include "layouts.h"
 #include "logger.h"
 #include "masters.h"
@@ -136,7 +137,8 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, XK_F3, +[](){getActiveMaster()->setCurrentMode(2);}, {.mode = ANY_MODE}},
         {DEFAULT_MOD_MASK, XK_F4, +[](){getActiveMaster()->setCurrentMode(3);}, {.mode = ANY_MODE}},
 
-        {DEFAULT_MOD_MASK, XK_r, +[](){if(getActiveLayout())getActiveLayout()->restoreArgs();}, {.mode = LAYOUT_MODE}},
+        {DEFAULT_MOD_MASK, XK_r, retile},
+        {DEFAULT_MOD_MASK | ShiftMask, XK_r, +[](){if(getActiveLayout())getActiveLayout()->restoreArgs();}, {.mode = LAYOUT_MODE}},
         {DEFAULT_MOD_MASK, XK_p, +[](){increaseLayoutArg(LAYOUT_PADDING, 10);}, {.mode = LAYOUT_MODE}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_p, +[](){increaseLayoutArg(LAYOUT_PADDING, -10);}, {.mode = LAYOUT_MODE}},
         {DEFAULT_MOD_MASK, XK_b, +[](){increaseLayoutArg(LAYOUT_NO_BORDER, 1);}, {.mode = LAYOUT_MODE}},
@@ -161,7 +163,9 @@ void defaultPrintFunction(void) {
         dprintf(STATUS_FD, "%dM %dA ", getAllMasters().size(), getActiveMasterKeyboardID());
     for(Workspace* w : getAllWorkspaces()) {
         const char* color;
-        if(w->isVisible())
+        if(w->hasWindowWithMask(URGENT_MASK))
+            color = "cyan";
+        else if(w->isVisible())
             color = "green";
         else if(w->hasWindowWithMask(MAPPABLE_MASK))
             color = "yellow";
@@ -178,13 +182,14 @@ void defaultPrintFunction(void) {
             dprintf(STATUS_FD, "%0xd ", getFocusedWindow()->getID());
         dprintf(STATUS_FD, "^fg(%s)%s^fg()", "green", getFocusedWindow()->getTitle().c_str());
     }
+    else {
+        dprintf(STATUS_FD, "Focused on %0xd (root: %0xd)", getActiveFocus(), root);
+    }
     dprintf(STATUS_FD, "\n");
 }
 void loadNormalSettings() {
     INFO("Loading normal settings");
-    SHELL = getenv("SHELL");
     printStatusMethod = defaultPrintFunction;
-    enableInterClientCommunication();
     addDefaultBindings();
     addChainDefaultBindings();
 }
@@ -194,8 +199,8 @@ void __attribute__((weak)) loadSettings(void) {
 void (*startupMethod)();
 void onStartup(void) {
     INFO("Starting up");
-    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
     addDefaultMaster();
+    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
     if(RUN_AS_WM) {
         addBasicRules();
         addApplyChainBindingsRule();
@@ -215,7 +220,7 @@ void onStartup(void) {
         addUnknownInputOnlyWindowIgnoreRule();
         addConvertNonManageableWindowMask();
         addDesktopRule();
-        //addResumeCustomStateRules();
+        enableInterClientCommunication();
     }
     if(!RUN_AS_WM)
         ROOT_EVENT_MASKS &= ~WM_MASKS;
@@ -224,6 +229,4 @@ void onStartup(void) {
     lock();
     openXDisplay();
     unlock();
-    assert(getActiveMaster());
-    assert(getNumberOfWorkspaces());
 }

@@ -16,7 +16,7 @@ LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewm
 LAYER0_SRCS := globals.cpp logger.cpp debug.cpp settings.cpp
 LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp boundfunction.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp threads.cpp system.cpp
 LAYER2_SRCS := xsession.cpp test-functions.cpp bindings.cpp devices.cpp device-grab.cpp
-LAYER3_SRCS := window-properties.cpp wmfunctions.cpp ewmh.cpp layouts.cpp state.cpp wm-rules.cpp extra-rules.cpp
+LAYER3_SRCS := window-properties.cpp wmfunctions.cpp state.cpp layouts.cpp wm-rules.cpp ewmh.cpp extra-rules.cpp
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp mpxmanager.cpp
 
 #ifndef NO_MPX
@@ -129,7 +129,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out functional.out format doc-check correctness.out
+test: libmpx-test.so code_coverage.out functional.out format doc-check
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp |libmpx-patch.so
@@ -142,13 +142,8 @@ functional.out: functionalTest
 	touch $@
 
 unitTest: CPPFLAGS := ${TESTFLAGS}
-unitTest: Tests/tester.o   $(patsubst %.cpp,%.o,$(wildcard Tests/Extensions/*_unit.cpp Tests/*_unit.cpp )) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
+unitTest: Tests/tester.o   $(patsubst %.h,Tests/%_unit.o,$(patsubst %.cpp,Tests/%_unit.o,$(TEST_SRCS))) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
-
-correctness.out: unitTest
-	$(call RUN_TEST, ./unitTest )
-	touch $@
-	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 
 Extensions/Tests/%: Tests/Extensions/%
 	@true

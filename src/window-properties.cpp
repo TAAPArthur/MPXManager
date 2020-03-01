@@ -165,7 +165,7 @@ void setBorderColor(WindowID win, unsigned int color) {
         LOG(LOG_LEVEL_WARN, "Color %d is out f range", color);
         return;
     }
-    xcb_change_window_attributes(dis, win, XCB_CW_BORDER_PIXEL, &color);
+    XCALL(xcb_change_window_attributes, dis, win, XCB_CW_BORDER_PIXEL, &color);
     LOG(LOG_LEVEL_TRACE, "setting border for window %d to %#08x", win, color);
 }
 void setBorder(WindowID win) {
