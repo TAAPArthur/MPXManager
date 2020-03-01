@@ -2,15 +2,15 @@ CC := g++ -std=gnu++17 -lstdc++
 CXX := ${CC}
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0 -D_GLIBCXX_DEBUG
-RELEASE_FLAGS := -g -rdynamic -O3
+RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
 ERROR_FLAGS := -Werror -Wall -Wextra
 CPPFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
-TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage
-NON_X_LDFLAGS := -lm -pthread
+TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage -lm
+NON_X_LDFLAGS := -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lxdo
 
 LAYER0_SRCS := globals.cpp logger.cpp debug.cpp settings.cpp
@@ -81,7 +81,7 @@ install-headers:
 install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
-	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.cpp
+	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-*
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
