@@ -73,8 +73,11 @@ WindowInfo* Master::removeWindowFromFocusStack(WindowID win) {
     return windowStack.removeElement(win);
 }
 WindowInfo* Master::getFocusedWindow(void) {
-    return windowStack.empty() ? nullptr : isFocusStackFrozen() &&
+    if(windowStack.empty())
+        return NULL;
+    WindowInfo* winInfo = isFocusStackFrozen() &&
         focusedWindowIndex < getWindowStack().size() ? getWindowStack()[focusedWindowIndex] : getWindowStack().back();
+    return winInfo->hasMask(FOCUSABLE_MASK) ? winInfo : NULL;
 }
 void Master::setFocusStackFrozen(int value) {
     if(freezeFocusStack != value) {

@@ -109,6 +109,7 @@ MPX_TEST_ITER("check_binding_target", 4, {
     static WindowInfo* dummy = new WindowInfo(1);
     static WindowInfo* focusDummy = new WindowInfo(2);
     static WindowInfo* target = new WindowInfo(3);
+    focusDummy->addMask(FOCUSABLE_MASK);
     getActiveMaster()->setCurrentMode(0);
     getAllWindows().add(dummy);
     getAllWindows().add(focusDummy);

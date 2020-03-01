@@ -39,6 +39,28 @@ MPX_TEST("auto_window_map", {
     assert(winInfo->getWorkspace());
     assert(winInfo->hasMask(MAPPED_MASK));
 });
+MPX_TEST_ITER("auto_focus_window_when_switching_workspace", 2, {
+    WorkspaceID base = _i;
+    WorkspaceID other = !_i;
+    switchToWorkspace(base);
+
+    WindowID win = mapWindow(createNormalWindow());
+    waitUntilIdle();
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(winInfo->hasMask(MAPPED_MASK));
+    assertEquals(getFocusedWindow(), winInfo);
+    focusWindow(winInfo);
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 0;
+    ATOMIC(switchToWorkspace(other));
+    waitUntilIdle();
+    assert(getActiveFocus() != winInfo->getID());
+    assert(!winInfo->hasMask(MAPPED_MASK));
+    ATOMIC(switchToWorkspace(base));
+    waitUntilIdle();
+    assert(winInfo->hasMask(MAPPED_MASK));
+    assertEquals(getFocusedWindow(), winInfo);
+    assertEquals(getActiveFocus(), winInfo->getID());
+});
 MPX_TEST("auto_focus", {
     lock();
     WindowID win = mapArbitraryWindow();
