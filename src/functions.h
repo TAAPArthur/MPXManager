@@ -11,6 +11,7 @@
 
 #include "bindings.h"
 #include "masters.h"
+#include "monitors.h"
 #include "wmfunctions.h"
 
 /// Direction towards the head of the list
@@ -225,4 +226,22 @@ void activateWorkspaceUnderMouse(void);
  * @param winInfo
  */
 void centerMouseInWindow(WindowInfo* winInfo);
+
+/**
+ * switches to an adjacent workspace
+ *
+ * @param dir either UP or DOWN
+ */
+static inline void swapWorkspace(int dir) {
+    switchToWorkspace(getAllWorkspaces().getNextIndex(getActiveWorkspaceIndex(), dir));
+}
+
+/**
+ * Swaps monitors with an adjacent workspace
+ *
+ * @param dir either UP or DOWN
+ */
+static inline void shiftWorkspace(int dir) {
+    swapMonitors(getActiveWorkspaceIndex(), (getAllWorkspaces().getNextIndex(getActiveWorkspaceIndex(), dir)));
+}
 #endif

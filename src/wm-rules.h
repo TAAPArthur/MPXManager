@@ -42,10 +42,6 @@ void onUnmapEvent(void);
  */
 void onMapRequestEvent(void);
 /**
- * Removes/adds windows from our list of managed windows when it is reparented
- */
-void onReparentEvent(void);
-/**
  * updates window geometry
  */
 void onConfigureNotifyEvent(void);
@@ -68,6 +64,13 @@ bool onSelectionClearEvent(void);
  * After some processing, we check to see if the key/mod/mask combination matches any key bindings via checkBindigs()
  */
 void onDeviceEvent(void);
+
+/**
+ * Removes/adds windows from our list of managed windows when it is reparented
+ * Use with XCB_REPARENT_NOTIFY
+ */
+
+void onReparentEvent(void);
 /**
  * Updates the border color of the new window
  */

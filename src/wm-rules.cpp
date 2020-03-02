@@ -161,6 +161,7 @@ void onUnmapEvent(void) {
             applyEventRules(SCREEN_CHANGE);
     }
 }
+
 void onReparentEvent(void) {
     xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);

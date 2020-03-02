@@ -1,39 +1,22 @@
-#include "mywm-structs.h"
-
-
 #include "bindings.h"
 #include "devices.h"
+#include "extra-rules.h"
 #include "globals.h"
 #include "layouts.h"
 #include "logger.h"
 #include "masters.h"
-#include "user-events.h"
 #include "monitors.h"
-#include "extra-rules.h"
+#include "mywm-structs.h"
 #include "state.h"
 #include "system.h"
-#include "windows.h"
+#include "time.h"
+#include "user-events.h"
 #include "window-properties.h"
+#include "windows.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
 #include "xsession.h"
-#include "time.h"
 
-
-void addUnknownInputOnlyWindowIgnoreRule(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {return winInfo->isImplicitType() && winInfo->isInputOnly() ? unregisterWindow(winInfo) : 0;},
-    FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
-}
-static bool isBaseAreaLessThan(WindowInfo* winInfo, int area) {
-    auto sizeHints = getWindowSizeHints(winInfo);
-    return sizeHints && (sizeHints->flags & XCB_ICCCM_SIZE_HINT_P_SIZE) &&
-        sizeHints->width * sizeHints->height <= area;
-}
-
-void addIgnoreSmallWindowRule(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {return isBaseAreaLessThan(winInfo, 5) ? unregisterWindow(winInfo) : 0;},
-    FUNC_NAME, PASSTHROUGH_IF_FALSE), flag);
-}
 void (*printStatusMethod)();
 void addPrintStatusRule(AddFlag flag) {
     getEventRules(IDLE).add(new BoundFunction(+[]() {
@@ -54,12 +37,6 @@ void addDesktopRule(AddFlag flag) {
             updateFocusForAllMasters(winInfo);
     }, "_desktopTransferFocus"), flag);
 }
-void addFloatRule(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
-        if(winInfo->getType() != ewmh->_NET_WM_WINDOW_TYPE_NORMAL &&
-            winInfo->getType()  != ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) floatWindow(winInfo);
-    }, FUNC_NAME), flag);
-}
 
 void addAvoidDocksRule(AddFlag flag) {
     getEventRules(PROPERTY_LOAD).add(new BoundFunction(+[](WindowInfo * winInfo) {
@@ -73,23 +50,6 @@ void addAvoidDocksRule(AddFlag flag) {
             winInfo->removeFromWorkspace();
         }
     }, FUNC_NAME), flag);
-}
-void addNoDockFocusRule(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) { if(winInfo->isDock()) winInfo->removeMask(INPUT_MASK | WM_TAKE_FOCUS_MASK);},
-    FUNC_NAME), flag);
-}
-void addFocusFollowsMouseRule(AddFlag flag) {
-    NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_ENTER;
-    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_ENTER).add(DEFAULT_EVENT(focusFollowMouse), flag);
-}
-void focusFollowMouse() {
-    xcb_input_enter_event_t* event = (xcb_input_enter_event_t*)getLastEvent();
-    setActiveMasterByDeviceID(event->deviceid);
-    WindowID win = event->event;
-    WindowInfo* winInfo = getWindowInfo(win);
-    LOG(LOG_LEVEL_DEBUG, "focus following mouse %d win %d", getActiveMaster()->getID(), win);
-    if(winInfo)
-        focusWindow(winInfo);
 }
 
 static void stickyPrimaryMonitor() {
@@ -106,14 +66,6 @@ static void stickyPrimaryMonitor() {
 void addStickyPrimaryMonitorRule(AddFlag flag) {
     getBatchEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
-}
-
-
-void addDieOnIdleRule(AddFlag flag) {
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(+[]() {quit(0);}), flag);
-}
-void addShutdownOnIdleRule(AddFlag flag) {
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), flag);
 }
 
 void keepTransientsOnTop(WindowInfo* winInfo) {
@@ -149,27 +101,12 @@ void autoFocus() {
 void addAutoFocusRule(AddFlag flag) {
     getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(autoFocus), flag);
 }
-void addScanChildrenRule(AddFlag flag) {
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(scan), flag);
-}
 static bool isNotRepeatedKey() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
     return !(event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT);
 }
 void addIgnoreKeyRepeat(AddFlag flag) {
     getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey), flag);
-}
-static bool unregisterNonTopLevelWindows() {
-    xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
-    WindowInfo* winInfo = getWindowInfo(event->window);
-    if(event->parent != root && winInfo) {
-        unregisterWindow(winInfo, 0);
-        return 0;
-    }
-    return 1;
-}
-void addIgnoreNonTopLevelWindowsRule(AddFlag flag) {
-    getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(unregisterNonTopLevelWindows), flag);
 }
 
 static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
@@ -186,4 +123,40 @@ static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
 }
 void addMoveNonTileableWindowsToWorkspaceBounds() {
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
+}
+
+bool addIgnoreInputOnlyWindowsRule(AddFlag flag) {
+    return getEventRules(PRE_REGISTER_WINDOW).add({
+        +[](WindowInfo * winInfo) {return !winInfo->isInputOnly();},
+        FUNC_NAME,
+        PASSTHROUGH_IF_TRUE
+    }, flag);
+}
+
+
+void addShutdownOnIdleRule(AddFlag flag) {
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), flag);
+}
+
+
+
+static bool unregisterNonTopLevelWindows() {
+    xcb_reparent_notify_event_t* event = (xcb_reparent_notify_event_t*)getLastEvent();
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(event->parent != root && winInfo) {
+        unregisterWindow(winInfo, 0);
+        return 0;
+    }
+    return 1;
+}
+
+void addIgnoreNonTopLevelWindowsRule(AddFlag flag) {
+    getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(unregisterNonTopLevelWindows), flag);
+}
+
+void addFloatRule(bool remove) {
+    getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
+        if(winInfo->getType() != ewmh->_NET_WM_WINDOW_TYPE_NORMAL &&
+            winInfo->getType()  != ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) floatWindow(winInfo);
+    }, FUNC_NAME), remove);
 }
