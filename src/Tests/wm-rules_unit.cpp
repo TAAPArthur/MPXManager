@@ -182,21 +182,6 @@ MPX_TEST("test_detect_new_override_redirect_windows", {
     for(WindowInfo* winInfo : getAllWindows())
         assert(winInfo->isOverrideRedirectWindow());
 });
-MPX_TEST("test_reparent_windows", {
-    WindowID win = createNormalWindow();
-    WindowID child = createNormalSubWindow(win);
-    WindowID parent = createNormalWindow();
-    waitUntilIdle();
-    assert(getWindowInfo(win));
-    assert(getWindowInfo(parent));
-    assert(!getWindowInfo(child));
-    xcb_reparent_window_checked(dis, child, root, 0, 0);
-    xcb_reparent_window_checked(dis, win, parent, 0, 0);
-    waitUntilIdle();
-    assertEquals(root, getWindowInfo(child)->getParent());
-    assertEquals(parent, getWindowInfo(win)->getParent());
-    xcb_reparent_window_checked(dis, win, parent, 0, 0);
-});
 
 MPX_TEST("test_delete_windows", {
     CRASH_ON_ERRORS = 0;
@@ -321,6 +306,22 @@ MPX_TEST("test_map_unmap_dock", {
     setDockProperties(win, 0, 2);
     waitUntilIdle();
     assertEquals(getAllMonitors()[0]->getBase().getArea() - getAllMonitors()[0]->getViewport().getArea(), getAllMonitors()[0]->getViewport().height * 2);
+});
+
+MPX_TEST("test_reparent_windows", {
+    WindowID win = createNormalWindow();
+    WindowID child = createNormalSubWindow(win);
+    WindowID parent = createNormalWindow();
+    waitUntilIdle();
+    assert(getWindowInfo(win));
+    assert(getWindowInfo(parent));
+    assert(!getWindowInfo(child));
+    assertEquals(0, catchError(xcb_reparent_window_checked(dis, child, root, 0, 0)));
+    assertEquals(0, catchError(xcb_reparent_window_checked(dis, win, parent, 0, 0)));
+    waitUntilIdle();
+    assertEquals(root, getWindowInfo(child)->getParent());
+    assertEquals(parent, getWindowInfo(win)->getParent());
+    assertEquals(0, catchError(xcb_reparent_window_checked(dis, win, parent, 0, 0)));
 });
 
 MPX_TEST("test_switch_workspace_with_sticky_window", {

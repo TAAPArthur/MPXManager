@@ -159,7 +159,7 @@ MPX_TEST("test_bad_options", {
         }
     }
     flush();
-    addDieOnIdleRule();
+    addShutdownOnIdleRule();
     runEventLoop();
 });
 MPX_TEST("test_quit", {
