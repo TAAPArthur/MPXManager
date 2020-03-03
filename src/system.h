@@ -17,6 +17,7 @@
 #ifndef MPX_SYSTEM
 #define MPX_SYSTEM
 
+#include <string>
 
 /// name of env variable that (if set) should be the default pointer
 #define DEFAULT_POINTER_ENV_VAR_NAME "CLIENT_POINTER"
@@ -82,6 +83,15 @@ static inline int spawnSilent(const char* command) {return spawn(command, 1);}
  * @return the pid of the new process
  */
 int spawnPipe(const char* command, bool noDup = 0);
+
+/**
+ * Calls NOTIFY_CMD with summary and body
+ *
+ * NOTIFY_CMD is a cmd like notify-send to give the user notifications
+ * @param summary
+ * @param body
+ */
+void notify(std::string summary, std::string body);
 
 /**
  * Dups stdout and stderror to /dev/null

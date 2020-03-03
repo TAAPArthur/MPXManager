@@ -74,6 +74,8 @@ extern std::string LD_PRELOAD_PATH;
 /// File path of config file dictating ideal master(s)/slaves configuration
 extern std::string MASTER_INFO_PATH;
 
+/// The notification cmd (and options) to use with the notify()
+extern std::string NOTIFY_CMD;
 
 /// The default SHELL; This defaults to the SHELL environment var
 extern std::string SHELL;

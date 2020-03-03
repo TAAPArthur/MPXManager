@@ -89,6 +89,7 @@ int main(int argc, char* const* argv) {
     assert(tests.size());
     numPassedArguments = argc;
     passedArguments = argv;
+    NOTIFY_CMD = "true";
     char* startingFrom = getenv("STARTING_FROM");
     char* file = getenv("TEST_FILE");
     char* func = getenv("TEST_FUNC");

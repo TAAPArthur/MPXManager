@@ -10,6 +10,7 @@
 #include "../globals.h"
 #include "../logger.h"
 #include "../masters.h"
+#include "../system.h"
 #include "../test-functions.h"
 #include "../threads.h"
 #include "../time.h"
@@ -63,6 +64,15 @@ void removeXMouseControlMask(int mask) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->mask &= ~mask;
 }
+
+static inline void _notify(XMouseControlMasterState* info, bool scroll) {
+    std::string summary = "XMouseControl " + std::to_string(info->id);
+    std::string body = scroll ?
+        "Scroll speed " + std::to_string(info->vScale) :
+        "Pointer Speed " + std::to_string(info->scrollScale);
+    notify(summary, body);
+}
+
 void adjustScrollSpeed(int diff) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->scrollScale = diff == 0 ? 0 : info->scrollScale + diff;
@@ -74,7 +84,7 @@ void adjustSpeed(int multiplier) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
     info->vScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
     info->vScale = std::max(1, info->vScale);
-    INFO("vScale is now " << info->scrollScale << "Master " << info->id);
+    INFO("vScale is now " << info->vScale << "Master " << info->id);
 }
 
 #define _IS_SET(info,A,B)\
