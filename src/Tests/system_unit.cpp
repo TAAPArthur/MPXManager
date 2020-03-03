@@ -37,6 +37,14 @@ MPX_TEST_ITER_ERR("spawn_env", 2, 0, {
     int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
     assert(pid);
 });
+MPX_TEST("notify", {
+    suppressOutput();
+    NOTIFY_CMD = "echo";
+    notify("110", "");
+    assertEquals(0, waitForChild(0));
+    notify("", "110");
+    assertEquals(0, waitForChild(0));
+});
 
 MPX_TEST("spawn_wait", {
     assert(waitForChild(spawn("exit 0")) == 0);

@@ -88,6 +88,10 @@ void suppressOutput(void) {
     assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDOUT_FILENO) == STDOUT_FILENO);
 }
 
+void notify(std::string summary, std::string body) {
+    spawn((NOTIFY_CMD + " '" + summary + "' '" + body + "'").c_str());
+}
+
 static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool noDup = 0) {
     INFO("Spawning command " << command);
     if(spawnPipe) {

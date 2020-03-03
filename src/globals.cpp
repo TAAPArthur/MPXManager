@@ -12,6 +12,7 @@ bool STEAL_WM_SELECTION = 0;
 std::string LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
 std::string MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
 std::string SHELL = "/bin/sh";
+std::string NOTIFY_CMD = "notify-send -h string:x-canonical-private-synchronous:MPX_NOTIFICATIONS -a " WINDOW_MANAGER_NAME;
 uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 5000;
 // TODO make configurable per window
 uint32_t CLONE_REFRESH_RATE = 15;
