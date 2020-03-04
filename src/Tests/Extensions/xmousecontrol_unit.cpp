@@ -110,7 +110,6 @@ MPX_TEST("test_move_scale", {
     grabPointer();
     grabKeyboard();
     addXMouseControlMask(MOVE_DOWN_MASK | MOVE_RIGHT_MASK);
-    int scaleFactor = 10;
     int displacement = 10;
     adjustSpeed(0);
     xmousecontrolUpdate();
@@ -119,7 +118,7 @@ MPX_TEST("test_move_scale", {
     getMousePosition(getActiveMasterPointerID(), root, result);
     waitToReceiveInput(1 << XCB_INPUT_MOTION, 0);
     consumeEvents();
-    adjustSpeed(displacement);
+    adjustSpeed(displacement - 1);
     xmousecontrolUpdate();
     waitToReceiveInput(1 << XCB_INPUT_MOTION, 0);
     consumeEvents();
@@ -129,12 +128,6 @@ MPX_TEST("test_move_scale", {
 
     assertEquals(result2[0] - result[0], displacement);
     assertEquals(result2[1] - result[1], displacement);
-    adjustSpeed(scaleFactor);
-    xmousecontrolUpdate();
-    waitToReceiveInput(1 << XCB_INPUT_MOTION, 0);
-    getMousePosition(getActiveMasterPointerID(), root, result2);
-    assertEquals(result2[0] - result[0], displacement * (1 + scaleFactor));
-    assertEquals(result2[1] - result[1], displacement * (1 + scaleFactor));
 });
 MPX_TEST_ITER("test_mpx_aware", 3 * 2, {
     createMasterDevice("test");
