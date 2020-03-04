@@ -84,8 +84,8 @@ void scan(xcb_window_t baseWindow) {
         xcb_get_window_attributes_cookie_t cookies[numberOfChildren];
         for(int i = 0; i < numberOfChildren; i++)
             cookies[i] = xcb_get_window_attributes(dis, children[i]);
-        // iterate in top to bottom order
-        for(int i = numberOfChildren - 1; i >= 0; i--) {
+        // iterate in bottom to top order
+        for(int i = 0; i < numberOfChildren; i++) {
             LOG(LOG_LEVEL_TRACE, "processing child %d", children[i]);
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
             if(registerWindow(children[i], baseWindow, attr)) {
@@ -239,7 +239,7 @@ void switchToWorkspace(int workspaceIndex) {
 
 WindowID activateWindow(WindowInfo* winInfo) {
     if(winInfo && winInfo->isActivatable()) {
-        raiseWindow(winInfo->getID());
+        raiseWindow(winInfo);
         LOG(LOG_LEVEL_DEBUG, "activating window %d in workspace %d", winInfo->getID(), winInfo->getWorkspaceIndex());
         if(winInfo->getWorkspaceIndex() != NO_WORKSPACE) {
             switchToWorkspace(winInfo->getWorkspaceIndex());
@@ -349,6 +349,8 @@ void removeBorder(WindowID win) {
     uint32_t i = 0;
     configureWindow(win, XCB_CONFIG_WINDOW_BORDER_WIDTH, &i);
 }
+
+
 void raiseWindow(WindowID win, WindowID sibling, bool above) {
     uint32_t values[] = {sibling, above ? XCB_STACK_MODE_ABOVE : XCB_STACK_MODE_BELOW};
     int mask = XCB_CONFIG_WINDOW_STACK_MODE;
@@ -356,8 +358,11 @@ void raiseWindow(WindowID win, WindowID sibling, bool above) {
         mask |= XCB_CONFIG_WINDOW_SIBLING;
     configureWindow(win, mask, &values[!sibling]);
 }
-void lowerWindow(WindowID win, WindowID sibling) {
-    raiseWindow(win, sibling, 0);
+void raiseWindow(WindowInfo* winInfo, WindowID sibling, bool above) {
+    if(!sibling)
+        if(above && !winInfo->hasMask(ABOVE_MASK) || !above && !winInfo->hasMask(BELOW_MASK))
+            sibling = getWindowDivider(above = !above);
+    raiseWindow(winInfo->getID(), sibling, above);
 }
 RectWithBorder getRealGeometry(WindowID id) {
     RectWithBorder rect;

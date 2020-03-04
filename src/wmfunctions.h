@@ -178,9 +178,22 @@ void removeBorder(WindowID win);
  */
 void raiseWindow(WindowID win, WindowID sibling = 0, bool above = 1);
 /**
+ * Raises or lowers the winInfo depending on above.
+ * @param winInfo
+ * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
+ * @param above whether to raise or lower the window
+ */
+void raiseWindow(WindowInfo* winInfo, WindowID sibling = 0, bool above = 1);
+
+/**
  * @param win
  * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
  * @see raiseWindowInfo
  */
-void lowerWindow(WindowID win, WindowID sibling = 0);
+static inline void lowerWindow(WindowID win, WindowID sibling = 0) {
+    raiseWindow(win, sibling, 0);
+}
+static inline void lowerWindow(WindowInfo* winInfo, WindowID sibling = 0) {
+    raiseWindow(winInfo, sibling, 0);
+}
 #endif

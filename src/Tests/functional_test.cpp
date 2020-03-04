@@ -121,26 +121,6 @@ MPX_TEST("click_to_focus", {
         assertEquals(getFocusedWindow()->getID(), win);
     }
 });
-MPX_TEST("test_always_on_top_bottom_conflicting_masks", {
-    addAlwaysOnTopBottomRules();
-    lock();
-    WindowID wins[4] = {
-        createNormalWindow(),
-        createNormalWindow(),
-        createNormalWindow(),
-        createNormalWindow(),
-    };
-    scan(root);
-    getWindowInfo(wins[0])->addMask(ALWAYS_ON_BOTTOM_MASK | ALWAYS_ON_TOP_MASK);
-    getWindowInfo(wins[1])->addMask(ALWAYS_ON_BOTTOM_MASK | ABOVE_MASK);
-    getWindowInfo(wins[3])->addMask(ALWAYS_ON_TOP_MASK | BELOW_MASK);
-    for(WindowID win : wins) {
-        lowerWindow(win);
-    }
-    unlock();
-    waitUntilIdle();
-    assert(checkStackingOrder(wins, LEN(wins)));
-});
 MPX_TEST_ITER("tile_invisible", 2, {
     setActiveLayout(GRID);
     mapArbitraryWindow();
@@ -212,7 +192,7 @@ static void  userEnvSetup() {
     }
     createOverrideRedirectWindow();
     waitUntilIdle();
-    getWindowInfo(win)->addMask(STICKY_MASK | ALWAYS_ON_BOTTOM_MASK);
+    getWindowInfo(win)->addMask(STICKY_MASK | BELOW_MASK);
     mapWindow(win);
     mapArbitraryWindow();
     ATOMIC(switchToWorkspace(0));

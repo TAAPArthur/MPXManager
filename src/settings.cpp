@@ -108,7 +108,6 @@ void addDefaultBindings() {
         {DEFAULT_MOD_MASK, Button3, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, {.passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, XK_t, sinkWindow},
-        {DEFAULT_MOD_MASK | ControlMask, XK_t, {toggleMask, ALWAYS_ON_TOP_MASK}},
         {DEFAULT_MOD_MASK | Mod1Mask, XK_t, {toggleMask, STICKY_MASK}},
         {DEFAULT_MOD_MASK, XK_u, +[]{activateNextUrgentWindow();}},
         {DEFAULT_MOD_MASK, XK_y, +[]{popHiddenWindow();}},
@@ -209,7 +208,6 @@ void onStartup(void) {
         addAutoFocusRule();
         addAvoidDocksRule();
         addNoDockFocusRule();
-        addAlwaysOnTopBottomRules();
         addStickyPrimaryMonitorRule();
         addKeepTransientsOnTopRule();
         addIgnoreNonTopLevelWindowsRule();
@@ -218,7 +216,6 @@ void onStartup(void) {
         addPrintStatusRule();
         addIgnoreSmallWindowRule();
         addUnknownInputOnlyWindowIgnoreRule();
-        addConvertNonManageableWindowMask();
         addDesktopRule();
         enableInterClientCommunication();
     }

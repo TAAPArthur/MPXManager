@@ -197,7 +197,7 @@ void setShowingDesktop(int value) {
     LOG(LOG_LEVEL_INFO, "setting showing desktop %d", value);
     for(WindowInfo* winInfo : getAllWindows())
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
-            raiseWindow(winInfo->getID(), 0, value);
+            raiseWindow(winInfo, 0, value);
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
 }
 

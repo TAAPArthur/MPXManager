@@ -122,38 +122,6 @@ MPX_TEST_ITER("detect_dock", 2, {
             assert(prop[i] == 0);
 });
 
-MPX_TEST("test_always_on_top_bottom", {
-    addAlwaysOnTopBottomRules();
-    //windows are in same spot
-    WindowID bottom = createNormalWindow();
-    WindowID bottom2 = createNormalWindow();
-    WindowID normal = createNormalWindow();
-    WindowID top = createNormalWindow();
-    WindowID top2 = createNormalWindow();
-    scan(root);
-    getWindowInfo(bottom)->addMask(ALWAYS_ON_BOTTOM_MASK);
-    getWindowInfo(bottom2)->addMask(ALWAYS_ON_BOTTOM_MASK);
-    getWindowInfo(top)->addMask(ALWAYS_ON_TOP_MASK);
-    getWindowInfo(top2)->addMask(ALWAYS_ON_TOP_MASK);
-    raiseWindow(normal);
-    raiseWindow(bottom);
-    lowerWindow(top);
-    setActiveLayout(NULL);
-    flush();
-    startWM();
-    waitUntilIdle();
-    WindowID stackingOrder[][3] = {
-        {bottom, normal, top},
-        {bottom2, normal, top2},
-        {bottom, normal, top2},
-        {bottom2, normal, top},
-    };
-    for(int i = 0; i < LEN(stackingOrder); i++)
-        assert(checkStackingOrder(stackingOrder[i], 3));
-    msleep(POLL_COUNT* POLL_INTERVAL * 2);
-    assert(consumeEvents() == 0);
-});
-
 MPX_TEST_ITER("primary_monitor_windows", 2, {
     addAutoTileRules();
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}), PREPEND_ALWAYS);
@@ -390,7 +358,6 @@ MPX_TEST_ITER("unmanaged_windows_above", 2, {
     MASKS_TO_SYNC |= ABOVE_MASK | BELOW_MASK;
     bool above = _i;
     addEWMHRules();
-    addConvertNonManageableWindowMask();
     addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
     startWM();
     waitUntilIdle();
@@ -399,5 +366,5 @@ MPX_TEST_ITER("unmanaged_windows_above", 2, {
     waitUntilIdle();
     mapWindow(win);
     waitUntilIdle();
-    assert(getWindowInfo(win)->hasMask(above ? ALWAYS_ON_TOP_MASK : ALWAYS_ON_BOTTOM_MASK));
+    assert(getWindowInfo(win)->hasMask(above ? ABOVE_MASK : BELOW_MASK));
 });

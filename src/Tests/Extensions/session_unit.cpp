@@ -127,7 +127,7 @@ MPX_TEST("test_restore_state_window_masks_change", {
         mapWindow(createNormalWindow());
     scan(root);
     ArrayList<WindowMask>oldWindowMasks;
-    for(int i = 0; i < 12; i++) {
+    for(int i = 0; i < 8; i++) {
         getAllWindows()[i]->addMask((1 << i) & ~EXTERNAL_MASKS);
         oldWindowMasks.add(getAllWindows()[i]->getMask());
     }

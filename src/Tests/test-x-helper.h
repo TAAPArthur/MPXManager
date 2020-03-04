@@ -49,9 +49,6 @@ static inline WindowID createInputOnlyWindow(void) {
 static inline WindowID createTypelessInputOnlyWindow(void) {
     return _createWindow(root, 1, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
 }
-static inline WindowID createOverrideRedirectWindow(void) {
-    return _createWindow(root, 1, 1, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
-}
 static inline WindowID createNormalSubWindow(int parent) {
     return _createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
 }
