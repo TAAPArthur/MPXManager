@@ -68,8 +68,8 @@ void removeXMouseControlMask(int mask) {
 static inline void _notify(XMouseControlMasterState* info, bool scroll) {
     std::string summary = "XMouseControl " + std::to_string(info->id);
     std::string body = scroll ?
-        "Scroll speed " + std::to_string(info->vScale) :
-        "Pointer Speed " + std::to_string(info->scrollScale);
+        "Scroll speed " + std::to_string(info->scrollScale) :
+        "Pointer Speed " + std::to_string(info->vScale);
     notify(summary, body);
 }
 
@@ -78,13 +78,15 @@ void adjustScrollSpeed(int diff) {
     info->scrollScale = diff == 0 ? 0 : info->scrollScale + diff;
     info->scrollScale = std::max(1, std::min(info->scrollScale, 8));
     INFO("scrollScale is now " << info->scrollScale << "Master " << info->id);
+    _notify(info, 1);
 }
 
-void adjustSpeed(int multiplier) {
+void adjustSpeed(int diff) {
     XMouseControlMasterState* info = getXMouseControlMasterState();
-    info->vScale *= multiplier >= 0 ? multiplier : -1.0 / multiplier;
-    info->vScale = std::max(1, info->vScale);
-    INFO("vScale is now " << info->vScale << "Master " << info->id);
+    info->vScale = diff == 0 ? 0 : info->vScale + diff;
+    info->vScale = std::max(1, std::min(info->vScale, 256));
+    INFO("vScale is now " << info->vScale << " Master " << info->id);
+    _notify(info, 0);
 }
 
 #define _IS_SET(info,A,B)\
@@ -160,10 +162,13 @@ void addDefaultXMouseControlBindings(uint32_t mask) {
 
         {mask,	XK_e, {adjustScrollSpeed, 1}},
         {mask | ShiftMask,	XK_e, {adjustScrollSpeed, -1}},
-        {mask | Mod1Mask,	XK_e, {adjustSpeed, 0}},
+        {mask | Mod1Mask,	XK_e, {adjustSpeed, 1}},
+        {mask | Mod1Mask | ShiftMask,	XK_e, {adjustSpeed, -1}},
+
         {mask,	XK_semicolon, {adjustScrollSpeed, 2}},
         {mask | ShiftMask,	XK_semicolon, {adjustScrollSpeed, -2}},
-        {mask | Mod1Mask,	XK_semicolon, {adjustSpeed, 0}},
+        {mask | Mod1Mask,	XK_semicolon, {adjustSpeed, 2}},
+        {mask | Mod1Mask | ShiftMask,	XK_semicolon, {adjustSpeed, -2}},
         {mask,	XK_q, resetXMouseControl},
 
         {mask, XK_c, CLICK(Button2)},
