@@ -7,12 +7,6 @@
 #include "mywm-structs.h"
 
 /**
- * Adds rules to enforce ALWAYS_ON_TOP_MASK and ALWAYS_ON_BOTTOM_MASK
- *
- * @param flag
- */
-void addAlwaysOnTopBottomRules(AddFlag flag = ADD_UNIQUE);
-/**
  * Adds rules to have windows avoid docks (default)
  * @param flag
  */
@@ -133,8 +127,4 @@ void addIgnoreNonTopLevelWindowsRule(AddFlag flag = ADD_UNIQUE);
  * Windows left at the origin are assumed to still be at their creation time position which is believed to be arbitrary.
  */
 void addMoveNonTileableWindowsToWorkspaceBounds() ;
-/**
- * Converts masks that don't make since for non-manageable window (like ABOVE/BELOW mask) into a more suitable target (ALWAYS_ON_TOP_MASK/BOTTOM)
- */
-void addConvertNonManageableWindowMask();
 #endif

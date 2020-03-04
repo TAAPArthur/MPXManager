@@ -20,6 +20,8 @@
 #include "xsession.h"
 
 void onXConnect(void) {
+    lowerWindow(getWindowDivider(1));
+    raiseWindow(getWindowDivider(0));
     addDefaultMaster();
     initCurrentMasters();
     assert(getActiveMaster() != NULL);
@@ -311,6 +313,11 @@ void addSyncMapStateRules(AddFlag flag) {
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateMapState), flag);
 }
 
+void setDefaultStackPosition(WindowInfo* winInfo) {
+    if(winInfo->getParent() == root)
+        raiseWindow(winInfo, 0, !winInfo->hasMask(BELOW_MASK));
+}
+
 void addBasicRules(AddFlag flag) {
     getEventRules(0).add(DEFAULT_EVENT(onError), flag);
     getEventRules(XCB_VISIBILITY_NOTIFY).add(DEFAULT_EVENT(onVisibilityEvent), flag);
@@ -341,6 +348,7 @@ void addBasicRules(AddFlag flag) {
     addIgnoreOverrideRedirectWindowsRule(flag);
     addDoNotManageOverrideRedirectWindowsRule(flag);
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultStackPosition), flag);
     addApplyBindingsRule(flag);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors), flag);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), flag);

@@ -261,6 +261,13 @@ int getButtonDetailOrKeyCode(int buttonOrKey);
  * @return
  */
 xcb_window_t getPrivateWindow(void);
+
+/**
+ * @param upper
+ *
+ * @return the window seperating the BELOW/ABOVE windows from the normal windows
+ */
+WindowID getWindowDivider(bool upper);
 /**
  * @see catchError
  */
@@ -398,6 +405,11 @@ uint32_t getMaxNumberOfDevices(bool force = 0);
  */
 WindowID createWindow(WindowID parent = root, xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_OUTPUT,
     uint32_t mask = 0, uint32_t* valueList = NULL, const RectWithBorder& dims = {0, 0, 150, 150, 0});
+
+static inline WindowID createOverrideRedirectWindow() {
+    uint32_t overrideRedirect = 1;
+    return createWindow(root, XCB_WINDOW_CLASS_INPUT_ONLY, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect, {0, 0, 1, 1});
+}
 
 /**
  * Maps the window

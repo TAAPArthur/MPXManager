@@ -91,26 +91,6 @@ void focusFollowMouse() {
     if(winInfo)
         focusWindow(winInfo);
 }
-static int nonAlwaysOnTopOrBottomWindowMoved;
-static void markAlwaysOnTop(WindowInfo* winInfo) {
-    if(!winInfo->hasPartOfMask(ALWAYS_ON_TOP_MASK | ALWAYS_ON_BOTTOM_MASK))
-        nonAlwaysOnTopOrBottomWindowMoved = 1;
-}
-static void enforceAlwaysOnTop() {
-    if(nonAlwaysOnTopOrBottomWindowMoved) {
-        for(WindowInfo* winInfo : getAllWindows()) {
-            if(winInfo->hasMask(ALWAYS_ON_BOTTOM_MASK))
-                lowerWindow(winInfo->getID());
-            else if(winInfo->hasMask(ALWAYS_ON_TOP_MASK))
-                raiseWindow(winInfo->getID());
-        }
-        nonAlwaysOnTopOrBottomWindowMoved = 0;
-    }
-}
-void addAlwaysOnTopBottomRules(AddFlag flag) {
-    getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(markAlwaysOnTop), flag);
-    getBatchEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(enforceAlwaysOnTop), flag);
-}
 
 static void stickyPrimaryMonitor() {
     Monitor* primary = getPrimaryMonitor();
@@ -137,12 +117,10 @@ void addShutdownOnIdleRule(AddFlag flag) {
 }
 
 void keepTransientsOnTop(WindowInfo* winInfo) {
-    if(!winInfo->hasMask(ALWAYS_ON_TOP_MASK)) {
-        WindowID id = winInfo->getID();
-        for(WindowInfo* winInfo2 : getAllWindows()) {
-            if(winInfo2->getTransientFor() == id)
-                raiseWindow(winInfo2->getID(), id);
-        }
+    WindowID id = winInfo->getID();
+    for(WindowInfo* winInfo2 : getAllWindows()) {
+        if(winInfo2->getTransientFor() == id)
+            raiseWindow(winInfo2, id);
     }
 }
 void addKeepTransientsOnTopRule(AddFlag flag) {
@@ -160,7 +138,7 @@ void autoFocus() {
             Master* master = getClientMaster(winInfo->getID());
             if(master && focusWindow(winInfo, master)) {
                 LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)", winInfo->getID(), delta);
-                raiseWindow(winInfo->getID());
+                raiseWindow(winInfo);
                 getActiveMaster()->onWindowFocus(winInfo->getID());
             }
         }
@@ -208,14 +186,4 @@ static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
 }
 void addMoveNonTileableWindowsToWorkspaceBounds() {
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
-}
-static void convertNonManageableWindowMask(WindowInfo* winInfo) {
-    if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_NORMAL && winInfo->isNotManageable())
-        if(winInfo->hasMask(BELOW_MASK))
-            winInfo->addMask(ALWAYS_ON_BOTTOM_MASK);
-        else if(winInfo->hasMask(ABOVE_MASK))
-            winInfo->addMask(ALWAYS_ON_TOP_MASK);
-}
-void addConvertNonManageableWindowMask() {
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(convertNonManageableWindowMask));
 }

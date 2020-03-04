@@ -246,7 +246,7 @@ static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
         }
         else if(winInfo->hasMask(ABOVE_MASK)) {
             if(!currentAbove) {
-                raiseWindow(winInfo->getID());
+                raiseWindow(winInfo);
                 lowestAbove =  currentAbove;
             }
             else
@@ -299,9 +299,9 @@ void tileWorkspace(Workspace* workspace) {
         for(WindowInfo* winInfo : getActiveMaster()->getWindowStack()) {
             if(winInfo->getWorkspace() == workspace) {
                 if(lowestAbove)
-                    lowerWindow(winInfo->getID(), lowestAbove);
+                    lowerWindow(winInfo, lowestAbove);
                 else
-                    raiseWindow(winInfo->getID());
+                    raiseWindow(winInfo);
                 lowestAbove =  winInfo->getID();
             }
         }

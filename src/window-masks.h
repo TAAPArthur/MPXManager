@@ -46,23 +46,10 @@
  * (it is move added between workspaces to stay on its monitor)
  */
 #define STICKY_MASK 	(1U << 9)
-
-/**
- * Best effort will be made to place all windows with this mask above any other window without it.
- * One particular flaw the implementation is that if a window with this mask is lowered, it will not automatically be re-raised
- * This mask is implemented via a WINDOW_MOVE Rule
- */
-#define ALWAYS_ON_TOP_MASK 	(1U << 10)
-/**
- * Best effort will be made to place all windows with this mask below any other window without it.
- * One particular flaw the implementation is that if a window with this mask is raised, it will not automatically be re-lowered
- * This mask is implemented via a WINDOW_MOVE Rule
- */
-#define ALWAYS_ON_BOTTOM_MASK 	(1U << 11)
 /// will cause WindowInfo::isSpecial to return 1
-#define SPECIAL_MASK 	(1U << 12)
+#define SPECIAL_MASK 	(1U << 10)
 /// will cause all masks to be synced regardless of MASKS_TO_SYNC
-#define SYNC_ALL_MASKS 	(1U << 13)
+#define SYNC_ALL_MASKS 	(1U << 11)
 
 /// Will not update our internal focus representation when a window with this mask is focused
 /// Intended for Desktop windows
@@ -176,8 +163,6 @@ struct WindowMask {
         _PRINT_MASK(WM_TAKE_FOCUS_MASK);
         _PRINT_MASK(WM_DELETE_WINDOW_MASK);
         _PRINT_MASK(WM_PING_MASK);
-        _PRINT_MASK(ALWAYS_ON_TOP_MASK);
-        _PRINT_MASK(ALWAYS_ON_BOTTOM_MASK);
         _PRINT_MASK(FULLY_VISIBLE_MASK);
         _PRINT_MASK(PARTIALLY_VISIBLE_MASK);
         _PRINT_MASK(MAPPED_MASK);

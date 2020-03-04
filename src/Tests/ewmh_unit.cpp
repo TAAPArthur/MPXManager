@@ -134,24 +134,6 @@ MPX_TEST_ITER("auto_resume_workspace", 2, {
     assertEquals(winInfo->getWorkspaceIndex(), getNumberOfWorkspaces() - 1);
 });
 
-MPX_TEST("test_toggle_show_desktop", {
-    addBasicRules();
-    WindowID win = mapWindow(createNormalWindow());
-    WindowID desktop = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
-    WindowID stackingOrder[] = {desktop, win, desktop};
-    flush();
-    scan(root);
-    raiseWindow(win);
-    assert(checkStackingOrder(stackingOrder, 2));
-    setShowingDesktop(1);
-    flush();
-    assert(isShowingDesktop());
-    assert(checkStackingOrder(stackingOrder + 1, 2));
-    setShowingDesktop(0);
-    flush();
-    assert(!isShowingDesktop());
-    assert(checkStackingOrder(stackingOrder, 2));
-});
 
 MPX_TEST("test_sync_window_state", {
     assert(MASKS_TO_SYNC);
@@ -166,6 +148,26 @@ MPX_TEST("test_sync_window_state", {
     winInfo = getWindowInfo(win);
     loadSavedAtomState(winInfo);
     assertEquals(winInfo->getMask()&MASKS_TO_SYNC, MASKS_TO_SYNC);
+});
+
+SET_ENV(onSimpleStartup, fullCleanup);
+MPX_TEST("test_toggle_show_desktop", {
+    WindowID win = mapWindow(createNormalWindow());
+    WindowID desktop = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+
+    WindowID stackingOrder[] = {desktop, win, desktop};
+    flush();
+    scan(root);
+    raiseWindow(getWindowInfo(win));
+    assert(checkStackingOrder(stackingOrder, 2));
+    setShowingDesktop(1);
+    flush();
+    assert(isShowingDesktop());
+    assert(checkStackingOrder(stackingOrder + 1, 2));
+    setShowingDesktop(0);
+    flush();
+    assert(!isShowingDesktop());
+    assert(checkStackingOrder(stackingOrder, 2));
 });
 
 static void clientMessageSetup() {

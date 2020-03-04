@@ -271,6 +271,29 @@ MPX_TEST_ITER("test_workspace_activation", 3, {
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo2->getID());
 });
 
+static void createWMEnv(void) {
+    createXSimpleEnv();
+    registerForWindowEvents(root, ROOT_EVENT_MASKS);
+}
+SET_ENV(createWMEnv, fullCleanup);
+
+MPX_TEST_ITER("test_raise_window_ignore_unmanaged", 2, {
+    getEventRules(POST_REGISTER_WINDOW).clear();
+    WindowID bottom = mapArbitraryWindow();
+    WindowID top = mapArbitraryWindow();
+    WindowID stackingOrder[] = {createOverrideRedirectWindow(), getWindowDivider(1), bottom, top, getWindowDivider(0), createOverrideRedirectWindow()};
+    scan(root);
+    if(_i) {
+        raiseWindow(getWindowInfo(bottom));
+        raiseWindow(getWindowInfo(top));
+        assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
+    }
+    else {
+        lowerWindow(getWindowInfo(top));
+        lowerWindow(getWindowInfo(bottom));
+        assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
+    }
+});
 
 MPX_TEST("test_raise_window", {
     //windows are in same spot
@@ -302,13 +325,39 @@ MPX_TEST("test_raise_window_sibling", {
     assert(checkStackingOrder(stackingOrder, 3));
     lowerWindow(sibling, bottom);
     assert(checkStackingOrder(stackingOrder, 3));
+    lowerWindow(bottom, top);
+    assert(checkStackingOrder(stackingOrder, 3));
+    lowerWindow(top, sibling);
+    assert(!checkStackingOrder(stackingOrder, 3));
+});
+MPX_TEST("test_raise_window_just_above", {
+    WindowID bottom = mapArbitraryWindow();
+    WindowID sibling = mapArbitraryWindow();
+    WindowID top = mapArbitraryWindow();
+    WindowID stackingOrder[] = {bottom, sibling,  top};
+    assert(checkStackingOrder(stackingOrder, 3));
+    raiseWindow(top, bottom);
+    WindowID stackingOrder2[] = {bottom,  top, sibling };
+    assert(checkStackingOrder(stackingOrder2, 3));
 });
 
-static void createWMEnv(void) {
-    createXSimpleEnv();
-    registerForWindowEvents(root, ROOT_EVENT_MASKS);
-}
-SET_ENV(createWMEnv, fullCleanup);
+MPX_TEST("test_raise_lower_above_below_windows", {
+    WindowID lower = mapArbitraryWindow();
+    WindowID base = mapArbitraryWindow();
+    WindowID upper = mapArbitraryWindow();
+    WindowID stackingOrder[] = {lower, base, upper};
+    scan(root);
+    assert(checkStackingOrder(stackingOrder, 3));
+    getWindowInfo(upper)->addMask(ABOVE_MASK);
+    getWindowInfo(lower)->addMask(BELOW_MASK);
+    for(WindowID win : stackingOrder)
+        raiseWindow(getWindowInfo(win));
+    assert(checkStackingOrder(stackingOrder, 3));
+    lowerWindow(getWindowInfo(upper));
+    assert(checkStackingOrder(stackingOrder, 3));
+    raiseWindow(getWindowInfo(lower));
+    assert(checkStackingOrder(stackingOrder, 3));
+});
 
 MPX_TEST("test_window_swap", {
     addWorkspaces(2);

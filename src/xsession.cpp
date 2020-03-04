@@ -74,15 +74,22 @@ const int defaultScreenNumber = 0;
  */
 static WindowID compliantWindowManagerIndicatorWindow;
 
+
 WindowID getPrivateWindow(void) {
     if(!compliantWindowManagerIndicatorWindow) {
-        int overrideRedirect = 1;
-        compliantWindowManagerIndicatorWindow = xcb_generate_id(dis);
-        xcb_create_window(dis, 0, compliantWindowManagerIndicatorWindow, root, 0, 0, 1, 1, 0,
-            XCB_WINDOW_CLASS_INPUT_ONLY, 0, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect);
+        compliantWindowManagerIndicatorWindow = createOverrideRedirectWindow();
         xcb_ewmh_set_wm_pid(ewmh, compliantWindowManagerIndicatorWindow, getpid());
     }
     return compliantWindowManagerIndicatorWindow;
+}
+
+static WindowID windowDivider[2] = {0};
+WindowID getWindowDivider(bool upper) {
+    if(!windowDivider[0]) {
+        windowDivider[1] = createOverrideRedirectWindow();
+        windowDivider[0] = createOverrideRedirectWindow();
+    }
+    return windowDivider[upper];
 }
 
 
@@ -312,6 +319,9 @@ void closeConnection(void) {
         xcb_ewmh_connection_wipe(ewmh);
         free(ewmh);
         ewmh = NULL;
+        compliantWindowManagerIndicatorWindow = 0;
+        windowDivider[0] = 0;
+        windowDivider[1] = 0;
         if(dpy)
             XCloseDisplay(dpy);
     }
