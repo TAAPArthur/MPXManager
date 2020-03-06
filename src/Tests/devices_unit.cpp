@@ -26,7 +26,7 @@ MPX_TEST("test_init_current_masters", {
 
 });
 MPX_TEST_ITER("test_create_destroy_master", 2, {
-    int size = _i ? getMaxNumberOfMasterDevices() : 2;
+    int size = _i ? MAX_NUMBER_OF_MASTER_DEVICES : 2;
     initCurrentMasters();
     int numSlaves = getAllSlaves().size();
     for(int i = getAllMasters().size(); i < size; i++)
@@ -38,17 +38,12 @@ MPX_TEST_ITER("test_create_destroy_master", 2, {
     assertEquals(getAllMasters().size(), 1);
     assertEquals(numSlaves, getAllSlaves().size());
 });
-MPX_TEST_ITER("test_create_excessive_masters", 2, {
-
-    if(_i) {
-        int maxNumDevices = 8;
-        xcb_change_property(dis, XCB_PROP_MODE_REPLACE, root, MAX_DEVICES, XCB_ATOM_INTEGER, 32, 1, &maxNumDevices);
-    }
+MPX_TEST("test_create_excessive_masters", {
     CRASH_ON_ERRORS = 0;
     setLogLevel(LOG_LEVEL_NONE);
-    for(int i = 0; i < getMaxNumberOfMasterDevices() * 128; i++) {
+    for(int i = 0; i < MAX_NUMBER_OF_MASTER_DEVICES * 128; i++) {
         createMasterDevice("test");
-        if(i % getMaxNumberOfMasterDevices() == 0)
+        if(i % MAX_NUMBER_OF_MASTER_DEVICES == 0)
             initCurrentMasters();
     }
     initCurrentMasters();

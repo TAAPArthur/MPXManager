@@ -67,18 +67,6 @@ MPX_TEST("get_set_window_property_string", {
     assertEquals(value, v);
 });
 
-MPX_TEST("get_max_devices", {
-    int maxMasters = getMaxNumberOfMasterDevices();
-    assertEquals(maxMasters, getMaxNumberOfMasterDevices());
-    assertEquals(maxMasters, getMaxNumberOfMasterDevices(1));
-    assert(maxMasters);
-    assert(maxMasters * 4 <= getMaxNumberOfDevices());
-});
-MPX_TEST("get_max_devices_closed_display", {
-    getMaxNumberOfMasterDevices();
-    closeConnection();
-    getMaxNumberOfMasterDevices();
-});
 MPX_TEST("reopen_display", {
     closeConnection();
     openXDisplay();
