@@ -21,7 +21,6 @@
 #include "xsession.h"
 
 
-xcb_atom_t MAX_DEVICES;
 xcb_atom_t MPX_WM_ACTIVE_MASTER;
 xcb_atom_t MPX_WM_FAKE_MONITORS;
 xcb_atom_t MPX_WM_INTERPROCESS_COM;
@@ -41,26 +40,6 @@ xcb_atom_t WM_SELECTION_ATOM;
 xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_WINDOW_ROLE;
 
-static int maxNumDevices;
-uint32_t getMaxNumberOfMasterDevices(bool force) {
-    return (getMaxNumberOfDevices(force) - 2) / 4;
-}
-uint32_t getMaxNumberOfDevices(bool force) {
-    if(force || maxNumDevices == 0) {
-        maxNumDevices = 40; // the max devices as of 2019-10-19
-        xcb_get_property_cookie_t cookie;
-        xcb_get_property_reply_t* reply;
-        TRACE("Loading active Master");
-        cookie = xcb_get_property(dis, 0, root, MAX_DEVICES, XCB_ATOM_INTEGER, 0, sizeof(int));
-        if((reply = xcb_get_property_reply(dis, cookie, NULL)) && xcb_get_property_value_length(reply))
-            maxNumDevices = *(int*)xcb_get_property_value(reply);
-        else
-            setWindowProperty(root, MAX_DEVICES, XCB_ATOM_INTEGER, maxNumDevices);
-        if(reply)
-            free(reply);
-    }
-    return maxNumDevices;
-}
 xcb_gcontext_t graphics_context;
 Display* dpy;
 xcb_connection_t* dis;
@@ -276,7 +255,6 @@ void openXDisplay(void) {
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
-    _CREATE_ATOM(MAX_DEVICES);
     _CREATE_ATOM(MPX_WM_ACTIVE_MASTER);
     _CREATE_ATOM(MPX_WM_FAKE_MONITORS);
     _CREATE_ATOM(MPX_WM_INTERPROCESS_COM);

@@ -140,10 +140,10 @@ MPX_TEST_ITER("tile_invisible", 2, {
 });
 
 MPX_TEST("detect_many_masters", {
-    for(int i = getAllMasters().size(); i < getMaxNumberOfMasterDevices(); i++)
+    for(int i = getAllMasters().size(); i < MAX_NUMBER_OF_MASTER_DEVICES; i++)
         createMasterDevice("test");
     waitUntilIdle();
-    assertEquals(getAllMasters().size(), getMaxNumberOfMasterDevices());
+    assertEquals(getAllMasters().size(), MAX_NUMBER_OF_MASTER_DEVICES);
 });
 
 static void multiMonitorSetup() {

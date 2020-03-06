@@ -16,6 +16,21 @@
 #include "rect.h"
 #include "globals.h"
 
+/**
+ * The max number of devices the XServer can support.
+ */
+#ifndef MAX_NUMBER_OF_DEVICES
+#define MAX_NUMBER_OF_DEVICES 40
+#endif
+
+/**
+ * The max number of master devices the XServer can support.
+ *
+ * Every call to create a new master creates 4 devices (The master pair and each
+ * of their slave devices) In addition the first 2 devices are reserved.
+ */
+#define MAX_NUMBER_OF_MASTER_DEVICES ((MAX_NUMBER_OF_DEVICES - 2)/4)
+
 /// the default screen index
 extern const int defaultScreenNumber;
 
@@ -23,8 +38,6 @@ extern const int defaultScreenNumber;
 ///global graphics context
 extern xcb_gcontext_t graphics_context;
 
-/// Stores a hint to the max number of supported devices
-extern xcb_atom_t MAX_DEVICES;
 /// Stores the active master so the state can be restored
 extern xcb_atom_t MPX_WM_ACTIVE_MASTER;
 /// Atom to store fake monitors
@@ -370,30 +383,6 @@ WindowMask getMaskFromAtom(xcb_atom_t atom) ;
 void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action = 0);
 
 
-/**
- * Returns the max number of master devices the XServer can support.
- *
- * This method suffers from the same problems as getMaxNumberOfMasterDevices()
- *
- * Every new master creates 4 devices (The master pair and each of their slave devices)
- * In addition the first 2 devices are reserved.
- *
- * @param force
- *
- * @return the (getMaxNumberOfDevices()-2)/4
- */
-uint32_t getMaxNumberOfMasterDevices(bool force = 0);
-/**
- * Returns the max number of devices the XServer can support.
- * This value is read from a property on the root window, so it can be incorrect.
- * Once retried, the same value will be used unless force is given, in which case
- * we would reload it
- *
- * @param force
- *
- * @return the maximum number of devices X can handle
- */
-uint32_t getMaxNumberOfDevices(bool force = 0);
 /**
  * @param parent
  * @param clazz
