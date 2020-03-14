@@ -91,7 +91,7 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     return changed;
 }
 void addRootMonitor() {
-    getAllMonitors().add(new Monitor(1, {0, 0, getRootWidth(), getRootHeight()}, 0, "ROOT", 1), ADD_UNIQUE);
+    getAllMonitors().addUnique(new Monitor(1, {0, 0, getRootWidth(), getRootHeight()}, 0, "ROOT", 1));
 }
 void removeDuplicateMonitors(void) {
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION) {

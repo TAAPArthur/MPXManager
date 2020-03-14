@@ -8,6 +8,7 @@
 
 #include <xcb/xcb.h>
 #include "../mywm-structs.h"
+#include "../bindings.h"
 
 /**
  * Loads global MPX state that has been save via saveCustomState()
@@ -21,5 +22,5 @@ void saveCustomState(void);
 /**
  * Loads saved state on XConnection and saves after a batch of TILE_WORKSPACE
  */
-void addResumeCustomStateRules(AddFlag flag = ADD_UNIQUE);
+void addResumeCustomStateRules(bool remove = 0);
 #endif

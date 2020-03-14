@@ -14,10 +14,10 @@ extern void (*printStatusMethod)();
 
 /**
  * Adds a PRE_REGISTER window rule to ignore input only windows
- * @param flag
+ * @param remove
  * @return
  */
-bool addIgnoreInputOnlyWindowsRule(AddFlag flag = ADD_UNIQUE);
+bool addIgnoreInputOnlyWindowsRule(bool remove = 0);
 /**
  * Adds a CLIENT_MAP_ALLOW rule to auto focus a window
  *
@@ -25,39 +25,39 @@ bool addIgnoreInputOnlyWindowsRule(AddFlag flag = ADD_UNIQUE);
  * it was created within AUTO_FOCUS_NEW_WINDOW_TIMEOUT ms from now
  * getUserTime returns non-zero for the window
  *
- * @param flag
+ * @param remove
  */
-void addAutoFocusRule(AddFlag flag = ADD_UNIQUE) ;
+void addAutoFocusRule(bool remove = 0) ;
 /**
  * Adds rules to have windows avoid docks (default)
- * @param flag
+ * @param remove
  */
-void addAvoidDocksRule(AddFlag flag = ADD_UNIQUE);
+void addAvoidDocksRule(bool remove = 0);
 /**
  * Adds rules to the make Desktop windows behave like desktop window.
  * Adds STICKY, MAXIMIZED NO_TILE and BELOW masks and fixes the position at view port 0,0
  */
-void addDesktopRule(AddFlag flag = ADD_UNIQUE);
+void addDesktopRule(bool remove = 0);
 
 /**
  * Adds a XCB_INPUT_KEY_PRESS to abort processing if the event was a key repeat
  *
- * @param flag
+ * @param remove
  */
-void addIgnoreKeyRepeat(AddFlag flag = PREPEND_UNIQUE);
+void addIgnoreKeyRepeat(bool remove = 0);
 /**
  * Adds a XCB_REPARENT_NOTIFY rule to unregister a window if it is no longer a
  * direct child of the root window
  *
- * @param flag
+ * @param remove
  */
-void addIgnoreNonTopLevelWindowsRule(AddFlag flag = ADD_UNIQUE);
+void addIgnoreNonTopLevelWindowsRule(bool remove = 0);
 /**
  * Best-effort attempt to keep transients on top of the window they are transient for
  *
- * @param flag
+ * @param remove
  */
-void addKeepTransientsOnTopRule(AddFlag flag = ADD_UNIQUE);
+void addKeepTransientsOnTopRule(bool remove = 0);
 /**
  * Non-tileable windows that are at the origin will be moved to the origin of the Workspace's monitor if any
  *
@@ -68,19 +68,19 @@ void addMoveNonTileableWindowsToWorkspaceBounds() ;
 /**
  * Calls printStatusMethod if set (and pipe is setup) on IDLE events
  */
-void addPrintStatusRule(AddFlag flag = ADD_UNIQUE);
+void addPrintStatusRule(bool remove = 0);
 /**
  * Calls requestShutdown when the WM is not IDLE
  *
- * @param flag
+ * @param remove
  */
-void addShutdownOnIdleRule(AddFlag flag = ADD_UNIQUE);
+void addShutdownOnIdleRule(bool remove = 0);
 
 /**
  * Adds a rule for the PRIMARY_MONITOR_MASK to have any effect
  *
- * @param flag
+ * @param remove
  */
-void addStickyPrimaryMonitorRule(AddFlag flag = ADD_UNIQUE);
+void addStickyPrimaryMonitorRule(bool remove = 0);
 
 #endif

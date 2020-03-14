@@ -146,9 +146,9 @@ bool checkAllChainBindings(const UserEvent& userEvent = getLastUserEvent())__att
 /**
  * Adds a ProcessDevice Rule that will process active chains before normal bindings
  *
- * @param flag
+ * @param remove
  */
-void addApplyChainBindingsRule(AddFlag flag = PREPEND_UNIQUE);
+void addApplyChainBindingsRule(bool remove = 0);
 /**
  * Ends the currently active chain for master.
  * This is equivalent to having a chain not shortcutting

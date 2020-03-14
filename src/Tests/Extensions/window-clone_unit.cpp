@@ -85,7 +85,7 @@ MPX_TEST_ITER("test_simple_kill_clone", 2, {
 });
 
 MPX_TEST_ITER("clone_special_windows", 3, {
-    addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
+    addIgnoreOverrideRedirectWindowsRule(1);
 
     WindowID overrideRedirectWindow = createOverrideRedirectWindow();
     WindowID inputOnly = createInputOnlyWindow();

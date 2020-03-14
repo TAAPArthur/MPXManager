@@ -11,7 +11,8 @@ int _main(int argc, char* const* argv) ;
 
 int mainAlias(int argc, char* const argv[]);
 int fakeMain(ArrayList<const char*>args) {
-    args.add("" __FILE__, PREPEND_ALWAYS);
+    args.add("" __FILE__);
+    args.shiftToHead(args.size() - 1);
     args.add(NULL);
     int result = _main(args.size() - 1, (char* const*)args.data());
     return result;

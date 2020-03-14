@@ -136,7 +136,9 @@ public:
     /// @return 1 iff this instance's modifier is a wildcard or equals mod (ignoring IGNORE_MASK)
     bool matchesMod(Modifier mod) const {return getMod() == WILDCARD_MODIFIER || getMod() == (mod & ~IGNORE_MASK);}
     /// @return 1 iff the bindings are
-    virtual bool operator==(const KeyBinding& binding)const;
+    virtual bool operator==(const KeyBinding& binding)const {
+        return mod == binding.mod && buttonOrKey == binding.buttonOrKey;
+    }
     /**
      * @param stream
      * @param binding
@@ -209,13 +211,10 @@ public:
 
     virtual ~Binding() = default;
     /**
-     * 2 Bindings (A and B) are equal iff a event that triggers A would also trigger B
-     *
      * @param binding
-     *
-     * @return 1 iff the mode, buttonOrKey, mode and mask
+     * @return
      */
-    bool operator==(const Binding& binding)const;
+    bool operator==(const Binding& binding)const {return this == &binding;}
     /**
      * Prints this binding
      *

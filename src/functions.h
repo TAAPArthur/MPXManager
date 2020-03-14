@@ -9,6 +9,7 @@
 #define FUNCTIONS_H_
 
 
+#include "boundfunction.h"
 #include "bindings.h"
 #include "masters.h"
 #include "monitors.h"

@@ -59,12 +59,12 @@ void dieOnIntegrityCheckFail() {
     if(!validate())
         quit(3);
 }
-void addDieOnIntegrityCheckFailRule(AddFlag flag) {
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), flag);
+void addDieOnIntegrityCheckFailRule(bool remove) {
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), remove);
 }
-void addAllDebugRules(AddFlag flag) {
-    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {INFO(*winInfo);}, "WindowDump"}, flag);
-    addDieOnIntegrityCheckFailRule(flag);
+void addAllDebugRules(bool remove) {
+    getEventRules(CLIENT_MAP_ALLOW).add({+[](WindowInfo * winInfo) {INFO(*winInfo);}, "WindowDump"}, remove);
+    addDieOnIntegrityCheckFailRule(remove);
 }
 
 void dumpRules(void) {
@@ -76,6 +76,7 @@ void dumpRules(void) {
             std::cout << eventTypeToString(i) << "(Batch): " << getBatchEventRules(i) << std::endl;
 }
 void printSummary(void) {
+    dumpRules();
     std::cout << "Summary:" << std::endl;
     std::cout << "Slaves: " << getAllSlaves() << std::endl;
     std::cout << "Masters: " << getAllMasters() << std::endl;

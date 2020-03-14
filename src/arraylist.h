@@ -13,24 +13,6 @@
 #include <type_traits>
 #include <vector>
 
-/// Flags that control if and where a member is added to the list
-enum AddFlag {
-    /// Always add the object
-    ADD_ALWAYS,
-    /// add the object iff it doesn't already exist
-    ADD_UNIQUE,
-    /// remove the object if it exists
-    ADD_REMOVE,
-    /// Adds value to the list iff the list does not already contain it else it removes the element
-    ADD_TOGGLE,
-    /// AAlways add the object to the head of the list
-    PREPEND_ALWAYS,
-    /// AAlways add the object to the head of the list iff it is not already present in the list
-    PREPEND_UNIQUE,
-    /// Adds value to the list iff the list does not already contain it else it removes the element
-    PREPEND_TOGGLE,
-};
-
 /**
  * Reversible iterator
  */
@@ -119,67 +101,38 @@ struct ArrayList: std::vector<T> {
     virtual Iterator<T> end() const {
         return this->data() + this->size();
     }
-    /// Copies value to the heap and adds into according to flag
+    /// Copies value to the heap and adds into according to remove
     template<typename U = T>
-    EnableIfPointer<U, bool> add(const std::remove_pointer_t<U>& value, AddFlag flag = ADD_ALWAYS) {
-        return add(new std::remove_pointer_t<U>(value), flag);
+    EnableIfPointer<U, bool> add(const std::remove_pointer_t<U>& value, bool remove = 0) {
+        return add(new std::remove_pointer_t<U>(value), remove);
     }
     /**
      * Adds value to the end of list
      * @param value the value to append
      */
-    void add(T value) {
+    virtual void add(T value) {
         this->push_back(value);
     }
     /**
      * Adds/removes value to list according to flag.
      * If value is not added to the list, it is deleted. If an element is removed from the list it is deleted.
      * For ADD_REMOVE, the value will also be deleted
-     * @return 1 iff element was not freed or if flag == ADD_REMOVE, if value was not present in list
+     * @return 1 iff element was not freed or if remove == ADD_REMOVE, if value was not present in list
      */
     template<typename U = T>
-    EnableIfPointer<U, bool>add(T value, AddFlag flag) {
-        switch(flag) {
-            case PREPEND_ALWAYS:
-                add(value);
-                shiftToHead(size() - 1);
+    EnableIfPointer<U, bool>add(T value, bool removeValue) {
+        if(removeValue) {
+            int i = indexOf(value);
+            delete value;
+            if(i == -1)
                 return 1;
-            case ADD_ALWAYS:
-                add(value);
-                return 1;
-            case PREPEND_UNIQUE:
-                if(addUnique(value)) {
-                    shiftToHead(size() - 1);
-                    return 1;
-                }
-                break;
-            case ADD_UNIQUE:
-                if(addUnique(value))
-                    return 1;
-                break;
-            case ADD_REMOVE: {
-                int i = indexOf(value);
-                delete value;
-                if(i == -1)
-                    return 1;
-                delete remove(i);
-                return 0;
-            }
-            case PREPEND_TOGGLE:
-            case ADD_TOGGLE: {
-                int index = indexOf(value);
-                if(index == -1) {
-                    this->add(value);
-                    if(flag == PREPEND_TOGGLE)
-                        shiftToHead(size() - 1);
-                    return 1;
-                }
-                else
-                    delete this->remove(index);
-            }
+            delete remove(i);
+            return 0;
         }
-        delete value;
-        return 0;
+        else {
+            add(value);
+            return 1;
+        }
     }
     /**
      * Adds value to the list iff the list does not already contain it

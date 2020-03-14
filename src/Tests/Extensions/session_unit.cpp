@@ -99,12 +99,13 @@ MPX_TEST_ITER("test_restore_state", 16, {
     flush();
     if(!fork()) {
         saveXSession();
-        RUN_AS_WM = 0;
         destroyAllLists();
         RUN_AS_WM = 0;
+        clearAllRules();
+        setup();
         // reapply onXConnect rules
         ewmh = NULL;
-        onSimpleStartup();
+        openXDisplay();
         getAllMonitors().sort();
         const auto& list2 = serializeState(mask);
         for(int i = 0; i < list.size(); i++) {

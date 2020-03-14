@@ -23,15 +23,6 @@ MPX_TEST("boundFunction_eq", {
     assertEquals(b->getName(), name);
     assertEquals(b2->getName(), b->getName());
     assertEquals(*b2, *b);
-    ArrayList<BoundFunction*>list = {b};
-    assert(!list.add(*b, ADD_UNIQUE));
-    assert(!list.add(*b, ADD_UNIQUE));
-    assert(!list.add(*b2, ADD_UNIQUE));
-    assert(!list.add(*b2, ADD_TOGGLE));
-    assert(list.add(*b2, ADD_TOGGLE));
-    assert(!list.add(*b2, ADD_REMOVE));
-    assert(list.add(b2, ADD_ALWAYS));
-    list.deleteElements();
 });
 ///Test to make sure callBoundedFunction() actually calls the right function
 MPX_TEST("test_call_bounded_function", {
@@ -141,4 +132,17 @@ MPX_TEST("apply_rules_counter", {
     assertEquals(counter, counter2);
     for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)
         assert(getNumberOfEventsTriggerSinceLastIdle(i) == 0);
+});
+MPX_TEST("priority_order", {
+    BoundFunction func[] = {
+        {[]() {assert(getCount()); incrementCount();}, "", PASSTHROUGH_IF_TRUE, .priority = 0},
+        {[]() {assertEquals(getCount(), 2);}, "", PASSTHROUGH_IF_TRUE, .priority = 1},
+        {[]() {assertEquals(getCount(), 2); incrementCount();}, "", PASSTHROUGH_IF_TRUE, .priority = 1},
+        {[]() {assert(!getCount()); incrementCount();}, "", PASSTHROUGH_IF_TRUE, -11},
+    };
+    for(auto& b : func)
+        getEventRules(0).add(b);
+    assert(applyEventRules(0, NULL));
+    assertEquals(getCount(), 3);
+
 });

@@ -12,23 +12,23 @@
 #include "../workspaces.h"
 #include "experimental-rules.h"
 
-void addDieOnIdleRule(AddFlag flag) {
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(+[]() {quit(0);}), flag);
+void addDieOnIdleRule(bool remove) {
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(+[]() {quit(0);}), remove);
 }
-void addFloatRule(AddFlag flag) {
+void addFloatRule(bool remove) {
     getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() != ewmh->_NET_WM_WINDOW_TYPE_NORMAL &&
             winInfo->getType()  != ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) floatWindow(winInfo);
-    }, FUNC_NAME), flag);
+    }, FUNC_NAME), remove);
 }
 
-void addFocusFollowsMouseRule(AddFlag flag) {
+void addFocusFollowsMouseRule(bool remove) {
     NON_ROOT_DEVICE_EVENT_MASKS |= XCB_INPUT_XI_EVENT_MASK_ENTER;
-    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_ENTER).add(DEFAULT_EVENT(focusFollowMouse), flag);
+    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_ENTER).add(DEFAULT_EVENT(focusFollowMouse), remove);
 }
 
-void addScanChildrenRule(AddFlag flag) {
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(scan), flag);
+void addScanChildrenRule(bool remove) {
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(scan), remove);
 }
 
 void focusFollowMouse() {

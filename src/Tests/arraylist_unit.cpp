@@ -99,49 +99,18 @@ MPX_TEST("add", {
 MPX_TEST("add_flag", {
     list.deleteElements();
     int* p = createStruct(1);
-    assert(list.add(*p, ADD_ALWAYS));
-    assert(list.add(*p, ADD_ALWAYS));
-    assert(list.add(*p, PREPEND_ALWAYS));
-    assertEquals(list.size(), 3);
-    assert(!list.add(*p, ADD_TOGGLE));
-    assertEquals(list.size(), 2);
-    assert(!list.add(*p, ADD_UNIQUE));
-    assert(!list.add(*p, PREPEND_UNIQUE));
-    assertEquals(list.size(), 2);
-    assert(!list.add(*p, ADD_REMOVE));
+    assert(list.add(*p));
     assertEquals(list.size(), 1);
-    assert(!list.add(*p, ADD_REMOVE));
+    assert(list.add(*p));
+    assertEquals(list.size(), 2);
+    assert(!list.add(*p, 1));
+    assertEquals(list.size(), 1);
+    assert(!list.add(*p, 1));
     assertEquals(list.size(), 0);
-    assert(list.add(*p, ADD_UNIQUE));
-    assert(!list.add(*p, ADD_TOGGLE));
-    assert(list.add(*p, ADD_TOGGLE));
-    assert(list.size() == 1);
-    assert(!list.add(*p, ADD_TOGGLE));
-    assert(list.size() == 0);
-    assert(list.add(*p, PREPEND_UNIQUE));
-    list.deleteElements();
+    assert(list.add(*p, 1));
+    assertEquals(list.size(), 0);
     delete p;
 });
-MPX_TEST("add_flag2", {
-    list.deleteElements();
-    assert(list.add(2, ADD_ALWAYS));
-    assert(list.add(1, PREPEND_UNIQUE));
-    assert(list.add(3, ADD_UNIQUE));
-
-    assert(list.add(1, ADD_ALWAYS));
-    assert(!list.add(1, ADD_REMOVE));
-
-    assert(list.add(4, PREPEND_ALWAYS));
-    assert(!list.add(4, PREPEND_TOGGLE));
-    assert(list.add(4, ADD_TOGGLE));
-
-    assert(list.add(0, PREPEND_TOGGLE));
-    assert(!list.add(0, PREPEND_TOGGLE));
-    assert(list.add(0, ADD_REMOVE));
-    for(int i = 0; i < list.size(); i++)
-        assertEquals(*list[i], i + 1);
-    list.deleteElements();
-})
 MPX_TEST("add_unique", {
     list.deleteElements();
     int* p = createStruct(1);

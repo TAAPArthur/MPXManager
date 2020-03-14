@@ -6,6 +6,7 @@
 #ifndef MPX_WM_RULES_H_
 #define MPX_WM_RULES_H_
 
+#include "bindings.h"
 #include "mywm-structs.h"
 
 
@@ -102,7 +103,7 @@ void onXConnect(void);
  * Adds a bunch of rules needed for the WM to function as expected
  * The majority are wrappers to map X11 event to the corresponding function
  */
-void addBasicRules(AddFlag flag = ADD_UNIQUE);
+void addBasicRules(bool remove = 0);
 /**
  * Register ROOT_EVENT_MASKS
  * @see ROOT_EVENT_MASKS
@@ -130,7 +131,7 @@ void onGenericEvent(void);
  * When any of these are called, we check the state via a PERIODIC hook. If it indeed has, we retile the workspace.
  * We unmark the state if for any reason, a workspace has been retiled
  */
-void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
+void addAutoTileRules(bool remove = 0);
 /**
  * Adds a PRE_REGISTER_WINDOW rule to ignore override redirect windows
  *
@@ -143,25 +144,25 @@ void addAutoTileRules(AddFlag flag = ADD_UNIQUE);
  * there are cases where one may want apply rules like ALWAYS_ON_TOP_MASK to these windows.
  * For such reasons, there are other rule in addBasicRules that will help keep sane
  * behavior even if this rule is removed.
- * @param flag
+ * @param remove
  *
  * @return
  */
-bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE);
+bool addIgnoreOverrideRedirectWindowsRule(bool remove = 0);
 /**
  * Adds a PRE_REGISTER_WINDOW rule indicating that override redirect windows should not be managed.
  * This should prevent them from being automatically added to workspaces/auto focused
  *
- * @param flag
+ * @param remove
  *
  * @return
  */
-bool addDoNotManageOverrideRedirectWindowsRule(AddFlag flag = ADD_UNIQUE) ;
+bool addDoNotManageOverrideRedirectWindowsRule(bool remove = 0) ;
 /**
  * Adds DEVICE_EVENT rule to trigger any of getDeviceBindings() using getLastUserEvent
  *
  * @see checkBindings()
- * @param flag
+ * @param remove
  */
-void addApplyBindingsRule(AddFlag flag = ADD_UNIQUE);
+void addApplyBindingsRule(bool remove = 0);
 #endif /* DEFAULT_RULES_H_ */

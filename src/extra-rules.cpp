@@ -18,27 +18,27 @@
 #include "xsession.h"
 
 void (*printStatusMethod)();
-void addPrintStatusRule(AddFlag flag) {
+void addPrintStatusRule(bool remove) {
     getEventRules(IDLE).add(new BoundFunction(+[]() {
         if(printStatusMethod && STATUS_FD)
             printStatusMethod();
-    }, FUNC_NAME), flag);
+    }, FUNC_NAME), remove);
 }
-void addDesktopRule(AddFlag flag) {
+void addDesktopRule(bool remove) {
     getEventRules(CLIENT_MAP_ALLOW).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP) {
             winInfo->addMask(IGNORE_WORKSPACE_MASKS_MASK | NO_TILE_MASK | MAXIMIZED_MASK |
                 BELOW_MASK | STICKY_MASK);
             winInfo->setTilingOverrideEnabled(1 | 2 | 16);
         }
-    }, FUNC_NAME), flag);
+    }, FUNC_NAME), remove);
     getEventRules(WINDOW_WORKSPACE_CHANGE).add(new BoundFunction(+[](WindowInfo * winInfo) {
         if(winInfo->hasMask(STICKY_MASK) && winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
             updateFocusForAllMasters(winInfo);
-    }, "_desktopTransferFocus"), flag);
+    }, "_desktopTransferFocus"), remove);
 }
 
-void addAvoidDocksRule(AddFlag flag) {
+void addAvoidDocksRule(bool remove) {
     getEventRules(PROPERTY_LOAD).add(new BoundFunction(+[](WindowInfo * winInfo) {
         assert(winInfo->getType());
         if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
@@ -49,7 +49,7 @@ void addAvoidDocksRule(AddFlag flag) {
             loadDockProperties(winInfo);
             winInfo->removeFromWorkspace();
         }
-    }, FUNC_NAME), flag);
+    }, FUNC_NAME), remove);
 }
 
 static void stickyPrimaryMonitor() {
@@ -63,9 +63,9 @@ static void stickyPrimaryMonitor() {
                     arrangeNonTileableWindow(winInfo, primary);
             }
 }
-void addStickyPrimaryMonitorRule(AddFlag flag) {
-    getBatchEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
-    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(stickyPrimaryMonitor), flag);
+void addStickyPrimaryMonitorRule(bool remove) {
+    getBatchEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(stickyPrimaryMonitor), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(stickyPrimaryMonitor), remove);
 }
 
 void keepTransientsOnTop(WindowInfo* winInfo) {
@@ -75,8 +75,8 @@ void keepTransientsOnTop(WindowInfo* winInfo) {
             raiseWindow(winInfo2, id);
     }
 }
-void addKeepTransientsOnTopRule(AddFlag flag) {
-    getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(keepTransientsOnTop), flag);
+void addKeepTransientsOnTopRule(bool remove) {
+    getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(keepTransientsOnTop), remove);
 }
 
 void autoFocus() {
@@ -98,15 +98,15 @@ void autoFocus() {
             LOG(LOG_LEVEL_DEBUG, "did not auto focus window %d (Detected %ldms ago)", winInfo->getID(), delta);
     }
 }
-void addAutoFocusRule(AddFlag flag) {
-    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(autoFocus), flag);
+void addAutoFocusRule(bool remove) {
+    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(autoFocus), remove);
 }
 static bool isNotRepeatedKey() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
     return !(event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT);
 }
-void addIgnoreKeyRepeat(AddFlag flag) {
-    getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey), flag);
+void addIgnoreKeyRepeat(bool remove) {
+    getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT_HIGH(isNotRepeatedKey), remove);
 }
 
 static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
@@ -125,17 +125,18 @@ void addMoveNonTileableWindowsToWorkspaceBounds() {
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
 }
 
-bool addIgnoreInputOnlyWindowsRule(AddFlag flag) {
+bool addIgnoreInputOnlyWindowsRule(bool remove) {
     return getEventRules(PRE_REGISTER_WINDOW).add({
         +[](WindowInfo * winInfo) {return !winInfo->isInputOnly();},
         FUNC_NAME,
-        PASSTHROUGH_IF_TRUE
-    }, flag);
+        PASSTHROUGH_IF_TRUE,
+        HIGH_PRIORITY
+    }, remove);
 }
 
 
-void addShutdownOnIdleRule(AddFlag flag) {
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), flag);
+void addShutdownOnIdleRule(bool remove) {
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), remove);
 }
 
 
@@ -150,6 +151,6 @@ static bool unregisterNonTopLevelWindows() {
     return 1;
 }
 
-void addIgnoreNonTopLevelWindowsRule(AddFlag flag) {
-    getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(unregisterNonTopLevelWindows), flag);
+void addIgnoreNonTopLevelWindowsRule(bool remove) {
+    getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(unregisterNonTopLevelWindows), remove);
 }
