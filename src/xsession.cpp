@@ -75,6 +75,7 @@ WindowID getWindowDivider(bool upper) {
 static std::unordered_map<uint32_t, WindowMask> atomStateToMask;
 static std::unordered_map<uint32_t, WindowMask> atomActionToMask;
 static void createMaskAtomMapping() {
+    atomStateToMask[ewmh->_NET_WM_STATE_MODAL] = MODAL_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_ABOVE] = ABOVE_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_BELOW] = BELOW_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_FULLSCREEN] = FULLSCREEN_MASK;
@@ -100,7 +101,7 @@ WindowMask getMaskFromAtom(xcb_atom_t atom) {
 }
 void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action) {
     for(auto pair : (action ? atomActionToMask : atomStateToMask))
-        if(pair.second & masks)
+        if((pair.second & masks) == pair.second)
             arr.add(pair.first);
 }
 
