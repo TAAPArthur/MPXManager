@@ -314,8 +314,10 @@ void onClientMessage(void) {
         int num = data.data32[2] == 0 ? 1 : 2;
         if(winInfo) {
             if(allowRequestFromSource(data.data32[3])) {
+                auto mask = winInfo->getMask();
                 bool added = setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
-                setXWindowStateFromMask(winInfo, &data.data32[1], added ? num : 0);
+                if(mask != winInfo->getMask())
+                    setXWindowStateFromMask(winInfo, &data.data32[1], added ? num : 0);
             }
             else
                 INFO("Client message denied");
@@ -515,7 +517,8 @@ void updateXWindowStateForAllWindows() {
 void loadSavedAtomState(WindowInfo* winInfo) {
     xcb_ewmh_get_atoms_reply_t reply;
     if(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->getID()), &reply, NULL)) {
-        setWindowStateFromAtomInfo(winInfo, reply.atoms, reply.atoms_len, XCB_EWMH_WM_STATE_ADD);
+        if(reply.atoms_len)
+            setWindowStateFromAtomInfo(winInfo, reply.atoms, reply.atoms_len, XCB_EWMH_WM_STATE_ADD);
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
 }
@@ -543,7 +546,9 @@ void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len) {
 }
 
 bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
-    INFO("Setting window masks for window " << winInfo->getID() << " current masks " << winInfo->getMask() << " from atoms "
+    assert(numberOfAtoms);
+    INFO("Setting window masks for window " << winInfo->getID() << " " << winInfo->getTitle() << " current masks " <<
+        winInfo->getMask() << " from " << numberOfAtoms << " atom(s) "
         << getAtomsAsString(atoms, numberOfAtoms) << "Action: " << action);
     WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++) {

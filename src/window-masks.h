@@ -35,8 +35,6 @@
 ///The window will be treated as unmapped until this mask is removed
 #define HIDDEN_MASK 	(1U << 7)
 
-/// or of all masks that will cause the layout function to skip a window
-#define ALL_NO_TILE_MASKS 	(FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | BELOW_MASK | ABOVE_MASK | NO_TILE_MASK | HIDDEN_MASK)
 
 
 /**Marks the window as urgent*/
@@ -50,6 +48,8 @@
 #define SPECIAL_MASK 	(1U << 10)
 /// will cause all masks to be synced regardless of MASKS_TO_SYNC
 #define SYNC_ALL_MASKS 	(1U << 11)
+/// corresponds to modal state
+#define MODAL_MASK 	(1U << 12)
 
 /// Will not update our internal focus representation when a window with this mask is focused
 /// Intended for Desktop windows
@@ -75,8 +75,12 @@
 #define EXTERNAL_RAISE_MASK 	(1U << 23)
 /// Window won't be tiled and can be freely moved like by external programs/mouse
 #define EXTERNAL_CONFIGURABLE_MASK 	(EXTERNAL_RESIZE_MASK | EXTERNAL_MOVE_MASK | EXTERNAL_BORDER_MASK | EXTERNAL_RAISE_MASK)
+
 /// Window is floating; Not tiled, above other windows and can be freely moved like by external programs/mouse and is above other windows
-#define FLOATING_MASK 	(SYNC_ALL_MASKS | NO_TILE_MASK | ABOVE_MASK | EXTERNAL_CONFIGURABLE_MASK)
+#define FLOATING_MASK  (SYNC_ALL_MASKS | NO_TILE_MASK | EXTERNAL_CONFIGURABLE_MASK | ABOVE_MASK )
+
+/// or of all masks that will cause the layout function to skip a window
+#define ALL_NO_TILE_MASKS 	(FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | BELOW_MASK | ABOVE_MASK | NO_TILE_MASK | HIDDEN_MASK | MODAL_MASK)
 
 /**The window can receive input focus*/
 #define INPUT_MASK 	(1U << 24)
@@ -145,6 +149,7 @@ struct WindowMask {
         _PRINT_MASK(FULLSCREEN_MASK);
         _PRINT_MASK(ROOT_FULLSCREEN_MASK);
         _PRINT_MASK(FLOATING_MASK);
+        _PRINT_MASK(MODAL_MASK);
         _PRINT_MASK(BELOW_MASK);
         _PRINT_MASK(ABOVE_MASK);
         _PRINT_MASK(NO_TILE_MASK);
