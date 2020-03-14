@@ -80,18 +80,19 @@ void onConfigureRequestEvent(void) {
             values[n++] = (&event->x)[i];
     processConfigureRequest(event->window, values, event->sibling, event->stack_mode, event->value_mask);
 }
-bool addDoNotManageOverrideRedirectWindowsRule(AddFlag flag) {
+bool addDoNotManageOverrideRedirectWindowsRule(bool remove) {
     return getEventRules(PRE_REGISTER_WINDOW).add({
         +[](WindowInfo * winInfo) {if(winInfo->isOverrideRedirectWindow())winInfo->setNotManageable();},
         FUNC_NAME,
-    }, flag);
+    }, remove);
 }
-bool addIgnoreOverrideRedirectWindowsRule(AddFlag flag) {
+bool addIgnoreOverrideRedirectWindowsRule(bool remove) {
     return getEventRules(PRE_REGISTER_WINDOW).add({
         +[](WindowInfo * winInfo) {return !winInfo->isOverrideRedirectWindow();},
         FUNC_NAME,
-        PASSTHROUGH_IF_TRUE
-    }, flag);
+        PASSTHROUGH_IF_TRUE,
+        HIGH_PRIORITY,
+    }, remove);
 }
 void onCreateEvent(void) {
     xcb_create_notify_event_t* event = (xcb_create_notify_event_t*)getLastEvent();
@@ -222,9 +223,9 @@ static WindowInfo* getTargetWindow(int root, int event, int child) {
     for(i = LEN(list) - 1; i >= 1 && !list[i]; i--);
     return getWindowInfo(list[i]);
 }
-void addApplyBindingsRule(AddFlag flag) {
+void addApplyBindingsRule(bool remove) {
     getEventRules(DEVICE_EVENT).add({+[]{return checkBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkBindings)},
-        flag);
+        remove);
 }
 void onDeviceEvent(void) {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
@@ -284,15 +285,15 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     return result;
 }
 
-void addAutoTileRules(AddFlag flag) {
+void addAutoTileRules(bool remove) {
     int events[] = {CLIENT_MAP_ALLOW, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
             DEVICE_EVENT, XCB_CLIENT_MESSAGE, WINDOW_WORKSPACE_CHANGE,
             MONITOR_WORKSPACE_CHANGE, SCREEN_CHANGE,
         };
     for(auto event : events)
-        getEventRules(event).add(DEFAULT_EVENT(markState), flag);
-    getEventRules(PERIODIC).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), flag);
-    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(unmarkState), flag);
+        getEventRules(event).add(DEFAULT_EVENT(markState), remove);
+    getEventRules(PERIODIC).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), remove);
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(unmarkState), remove);
 }
 void assignDefaultLayoutsToWorkspace() {
     for(Workspace* w : getAllWorkspaces())
@@ -308,10 +309,10 @@ void updateMapState(Workspace* w) {
             updateWindowWorkspaceState(winInfo);
 }
 
-void addSyncMapStateRules(AddFlag flag) {
-    getEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(syncMappedState), flag);
-    getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateWindowWorkspaceState), flag);
-    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateMapState), flag);
+void addSyncMapStateRules(bool remove) {
+    getEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(syncMappedState), remove);
+    getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateWindowWorkspaceState), remove);
+    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateMapState), remove);
 }
 
 void setDefaultStackPosition(WindowInfo* winInfo) {
@@ -319,42 +320,42 @@ void setDefaultStackPosition(WindowInfo* winInfo) {
         raiseWindow(winInfo, 0, !winInfo->hasMask(BELOW_MASK));
 }
 
-void addBasicRules(AddFlag flag) {
-    getEventRules(0).add(DEFAULT_EVENT(onError), flag);
-    getEventRules(XCB_VISIBILITY_NOTIFY).add(DEFAULT_EVENT(onVisibilityEvent), flag);
-    getEventRules(XCB_CREATE_NOTIFY).add(DEFAULT_EVENT(onCreateEvent), flag);
-    getEventRules(XCB_DESTROY_NOTIFY).add(DEFAULT_EVENT(onDestroyEvent), flag);
-    getEventRules(XCB_UNMAP_NOTIFY).add(DEFAULT_EVENT(onUnmapEvent), flag);
-    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(onMapEvent), flag);
-    getEventRules(XCB_MAP_REQUEST).add(DEFAULT_EVENT(onMapRequestEvent), flag);
-    getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(onReparentEvent), flag);
-    getEventRules(XCB_CONFIGURE_REQUEST).add(DEFAULT_EVENT(onConfigureRequestEvent), flag);
-    getEventRules(XCB_CONFIGURE_NOTIFY).add(DEFAULT_EVENT(onConfigureNotifyEvent), flag);
-    getEventRules(XCB_PROPERTY_NOTIFY).add(DEFAULT_EVENT(onPropertyEvent), flag);
-    getEventRules(XCB_SELECTION_CLEAR).add(DEFAULT_EVENT(onSelectionClearEvent), flag);
-    getEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(onGenericEvent), flag);
-    getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusInEvent), flag);
-    getEventRules(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusOutEvent), flag);
-    getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), flag);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(onXConnect), flag);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace), flag);
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadWindowProperties), flag);
+void addBasicRules(bool remove) {
+    getEventRules(0).add(DEFAULT_EVENT(onError), remove);
+    getEventRules(XCB_VISIBILITY_NOTIFY).add(DEFAULT_EVENT(onVisibilityEvent), remove);
+    getEventRules(XCB_CREATE_NOTIFY).add(DEFAULT_EVENT(onCreateEvent), remove);
+    getEventRules(XCB_DESTROY_NOTIFY).add(DEFAULT_EVENT(onDestroyEvent), remove);
+    getEventRules(XCB_UNMAP_NOTIFY).add(DEFAULT_EVENT(onUnmapEvent), remove);
+    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(onMapEvent), remove);
+    getEventRules(XCB_MAP_REQUEST).add(DEFAULT_EVENT(onMapRequestEvent), remove);
+    getEventRules(XCB_REPARENT_NOTIFY).add(DEFAULT_EVENT(onReparentEvent), remove);
+    getEventRules(XCB_CONFIGURE_REQUEST).add(DEFAULT_EVENT(onConfigureRequestEvent), remove);
+    getEventRules(XCB_CONFIGURE_NOTIFY).add(DEFAULT_EVENT(onConfigureNotifyEvent), remove);
+    getEventRules(XCB_PROPERTY_NOTIFY).add(DEFAULT_EVENT(onPropertyEvent), remove);
+    getEventRules(XCB_SELECTION_CLEAR).add(DEFAULT_EVENT(onSelectionClearEvent), remove);
+    getEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(onGenericEvent), remove);
+    getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusInEvent), remove);
+    getEventRules(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusOutEvent), remove);
+    getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(onXConnect, HIGH_PRIORITY), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace, HIGH_PRIORITY), remove);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadWindowProperties), remove);
     // From the ICCCM spec,
     // "The user will not be able to move, resize, restack, or transfer the input
     // focus to override-redirect windows, since the window manager is not managing them"
     // so it seems like a bug for a OR window to have INPUT_MASK set
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}),
-    flag);
-    addSyncMapStateRules(flag);
-    addIgnoreOverrideRedirectWindowsRule(flag);
-    addDoNotManageOverrideRedirectWindowsRule(flag);
-    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), flag);
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultStackPosition), flag);
-    addApplyBindingsRule(flag);
-    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors), flag);
-    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), flag);
+    remove);
+    addSyncMapStateRules(remove);
+    addIgnoreOverrideRedirectWindowsRule(remove);
+    addDoNotManageOverrideRedirectWindowsRule(remove);
+    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), remove);
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultStackPosition), remove);
+    addApplyBindingsRule(remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), remove);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
-        getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), flag);
+        getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), remove);
     }
 }
 

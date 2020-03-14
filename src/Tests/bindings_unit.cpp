@@ -19,14 +19,6 @@ MPX_TEST("print", {
     std::cout << e;
     std::cout << b;
 });
-MPX_TEST("binding_eq", {
-    assertEquals(Binding(1, 2, {}, {}, "test"), Binding(1, 2, {}, {}, "test"));
-    assertEquals(Binding(1, 2, incrementCount, {}, "test"), Binding(1, 2, incrementCount, {}, "test"));
-    assert(!(Binding(1, 3, incrementCount, {}, "test") == Binding(1, 2, {}, {}, "test")));
-    assert(!(Binding(1, 3, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test")));
-    assert(!(Binding(3, 2, incrementCount, {}, "test") == Binding(1, 2, incrementCount, {}, "test")));
-    assert(!(Binding(1, 2, incrementCount, {.mode = 0}, "test") == Binding(1, 2, incrementCount, {.mode = 1}, "test")));
-});
 MPX_TEST("getLastUserEvent", {
     UserEvent e = { 1, 2};
     setLastUserEvent(e);

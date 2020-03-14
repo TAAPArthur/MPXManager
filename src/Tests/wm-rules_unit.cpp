@@ -82,7 +82,7 @@ MPX_TEST("auto_grab_bindings", {
 });
 
 MPX_TEST("test_auto_tile", {
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(mapArbitraryWindow));
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(mapArbitraryWindow, HIGH_PRIORITY));
     addBasicRules();
     getEventRules(TILE_WORKSPACE).deleteElements();
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(incrementCount));
@@ -173,7 +173,7 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
     assertEquals(getAllWindows().size(), 3);
 });
 MPX_TEST("test_detect_new_override_redirect_windows", {
-    assert(!addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE));
+    assert(!addIgnoreOverrideRedirectWindowsRule(1));
     createOverrideRedirectWindow();
     createOverrideRedirectWindow();
     createOverrideRedirectWindow();
@@ -268,7 +268,7 @@ MPX_TEST("test_map_windows", {
 });
 
 MPX_TEST("test_unmap", {
-    addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
+    addIgnoreOverrideRedirectWindowsRule(1);
     WindowID win = createUnmappedWindow();
     WindowID winOR = mapWindow(createOverrideRedirectWindow());
     waitUntilIdle();

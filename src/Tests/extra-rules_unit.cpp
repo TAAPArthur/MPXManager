@@ -89,7 +89,7 @@ MPX_TEST_ITER("detect_dock", 2, {
 
 MPX_TEST_ITER("primary_monitor_windows", 2, {
     addAutoTileRules();
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}), PREPEND_ALWAYS);
+    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}));
     addStickyPrimaryMonitorRule();
     addFakeMonitor({100, 100, 200, 200});
     addFakeMonitor({300, 100, 100, 100});
@@ -229,7 +229,7 @@ MPX_TEST_ITER("unmanaged_windows_above", 2, {
     MASKS_TO_SYNC |= ABOVE_MASK | BELOW_MASK;
     bool above = _i;
     addEWMHRules();
-    addIgnoreOverrideRedirectWindowsRule(ADD_REMOVE);
+    addIgnoreOverrideRedirectWindowsRule(1);
     startWM();
     waitUntilIdle();
     WindowID win = createOverrideRedirectWindow();

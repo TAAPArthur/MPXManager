@@ -10,6 +10,7 @@
 #include <string>
 #include <xcb/xcb_ewmh.h>
 
+#include "boundfunction.h"
 #include "masters.h"
 #include "mywm-structs.h"
 #include "windows.h"
@@ -93,9 +94,9 @@ void setActiveProperties();
 /**
  * Adds a series of rules to be compliant with EWMH/ICCCM spec
  *
- * @param flag
+ * @param remove
  */
-void addEWMHRules(AddFlag flag = ADD_UNIQUE);
+void addEWMHRules(bool remove = 0);
 
 /**
  * Reads EWMH desktop property to find the workspace the window should be long.

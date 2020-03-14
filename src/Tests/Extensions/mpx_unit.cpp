@@ -11,7 +11,6 @@
 #include "../../wm-rules.h"
 #include "../../wmfunctions.h"
 #include "../../functions.h"
-#include "../../functions.h"
 #include "../../devices.h"
 #include "../../Extensions/mpx.h"
 #include "../tester.h"
@@ -187,7 +186,7 @@ static void setup() {
                 event->sourceid = m->getSlaves()[0]->getID();
         }
     };
-    getEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(injectSlaveID), PREPEND_UNIQUE);
+    getEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(injectSlaveID, HIGH_PRIORITY));
     onSimpleStartup();
     startWM();
     waitUntilIdle();

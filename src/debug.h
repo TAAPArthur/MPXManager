@@ -6,6 +6,7 @@
 #ifndef MPXMANAGER_DEBUG_H_
 #define MPXMANAGER_DEBUG_H_
 #include "windows.h"
+#include "boundfunction.h"
 /**
  * Validates everything is internally consistent.
  *
@@ -31,15 +32,15 @@ bool validateX();
 bool isWindowMapped(WindowID win);
 /**
  * Adds a TRUE_IDLE rule that will crash the program if an invariant check fails
- * @param flag
+ * @param remove
  */
-void addDieOnIntegrityCheckFailRule(AddFlag flag = ADD_UNIQUE);
+void addDieOnIntegrityCheckFailRule(bool remove = 0);
 /**
  * Adds a series of rules to make detecting and debugging problems easier
  *
- * @param flag
+ * @param remove
  */
-void addAllDebugRules(AddFlag flag = ADD_UNIQUE);
+void addAllDebugRules(bool remove = 0);
 
 
 /**

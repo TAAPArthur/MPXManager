@@ -44,7 +44,6 @@ extern xcb_atom_t MPX_WM_ACTIVE_MASTER;
 extern xcb_atom_t MPX_WM_FAKE_MONITORS;
 /**
  * Atom used to differentiate custom client messages
- * Atoms with the flag are used to remotely interact with the WM
  */
 extern xcb_atom_t MPX_WM_INTERPROCESS_COM;
 /**

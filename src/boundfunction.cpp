@@ -3,17 +3,23 @@
 #include "user-events.h"
 #include "xsession.h"
 
+struct EventList: UniqueArrayList<BoundFunction*> {
+    void add(BoundFunction* value) override {
+        push_back(value);
+        sort();
+    }
+};
 
 /// Holds batch events
 struct BatchEventList {
     /// how many times the event has been trigged
     int counter;
     /// the list of events to trigger when counter is non zero
-    UniqueArrayList<BoundFunction*> list;
+    EventList list;
 } ;
 
 /// Holds an Arraylist of rules that will be applied in response to various conditions
-static UniqueArrayList<BoundFunction*> eventRules[NUMBER_OF_MPX_EVENTS];
+static EventList eventRules[NUMBER_OF_MPX_EVENTS];
 static BatchEventList batchEventRules[NUMBER_OF_MPX_EVENTS];
 
 void clearAllRules() {
@@ -78,8 +84,7 @@ int BoundFunction::call(const BoundFunctionArg& arg)const {
     return func ? func->call(arg) : 1;
 }
 bool BoundFunction::operator==(const BoundFunction& boundFunction)const {
-    assert(name != "" || boundFunction.name != "");
-    return name == boundFunction.name;
+    return boundFunction.name != "" && name == boundFunction.name;
 }
 std::ostream& operator<<(std::ostream& stream, const BoundFunction& boundFunction) {
     return stream << boundFunction.getName();

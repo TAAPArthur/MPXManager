@@ -18,13 +18,22 @@
 #include "mywm-structs.h"
 #include "windows.h"
 
-/**
- * Creates a BoundFunction with a name based on F
- *
- * @param F the function to call
- *
- */
-#define DEFAULT_EVENT(F){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE}
+/// @{
+/// Controls when a binding will be executed in the queue for its event type.
+/// [-128, 127] where higher priorities (lower numbers) are executed first
+#define HIGHEST_PRIORITY (-128)
+#define HIGHER_PRIORITY  (-64)
+#define HIGH_PRIORITY    (-32)
+#define LOW_PRIORITY     ( 32)
+#define LOWER_PRIORITY   ( 64)
+/// @}
+
+/// @{
+/// Creates a BoundFunction with a name based on F with a preset priority
+/// @param F the function to call
+/// @param args
+#define DEFAULT_EVENT(F, args...){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE, args}
+/// @}
 
 /**
  * Macro to get the default name for a BoundFunction backed by F
@@ -32,14 +41,15 @@
  *
  */
 #define DEFAULT_EVENT_NAME(F) "_" #F
-/**
- * Creates a BoundFunction with a name based on F
- *
- * @param F the function to call
- *
- * @return
- */
-#define USER_EVENT(F){F, "_" #F,PASSTHROUGH_IF_TRUE}
+
+/// @{
+/// Creates a BoundFunction with a name based on F with a preset priority
+/// @param F
+#define USER_EVENT(F){F, #F,PASSTHROUGH_IF_TRUE}
+/// @param F
+/// @param P the priority
+#define USER_EVENT_P(F, P){F, #F,PASSTHROUGH_IF_TRUE, P}
+/// @}
 /**
  * Like DEFAULT_EVENT but the passThrough is p
  * @param F
@@ -93,7 +103,7 @@ static inline bool shouldPassThrough(PassThrough passThrough, int result) {
  * Arguments used to pass into boundFunction
  */
 struct BoundFunctionArg {
-    /// @{ Fields that can be passed to a compitable BoundFunction
+    /// @{ Fields that can be passed to a compatible BoundFunction
     /// If the underlying function can't accept a subset of fields, it won't be called and 0 will be returned
     /// NULL means unset but 0 is a valid value of integer
     WindowInfo* winInfo = NULL;
@@ -290,6 +300,8 @@ struct BoundFunction {
      * Each BoundFunction should have a unique name.
      */
     const std::string name;
+    /// controllers the position the queue of event rules to be executed; lower numbers are triggered first
+    const char priority = 0;
     /**
      * Creates an empty BoundFunction
      *
@@ -303,12 +315,13 @@ struct BoundFunction {
      * @param _func the function to call that is of type R(P)
      * @param name
      * @param passThrough
+     * @param priority
      */
     template <typename F>
     BoundFunction(F _func, std::string name = "",
-        PassThrough passThrough = PASSTHROUGH_IF_TRUE): func(new FunctionWrapper(std::function(_func))),
+        PassThrough passThrough = PASSTHROUGH_IF_TRUE, char priority = 0): func(new FunctionWrapper(std::function(_func))),
         passThrough(passThrough),
-        name(name) {}
+        name(name), priority(priority) {}
 
 
     /// @{
@@ -322,14 +335,18 @@ struct BoundFunction {
      * @param value
      * @param name
      * @param passThrough
+     * @param priority
      */
     template <typename R, typename P>
     BoundFunction(R(*_func)(P), P value, std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): func(new FunctionWrapper<R, void>(std::function<R()>([ = ]() {return _func(value);}))),
-    passThrough(passThrough), name(name) { }
+        PassThrough passThrough = ALWAYS_PASSTHROUGH,
+        char priority = 0): func(new FunctionWrapper<R, void>(std::function<R()>([ = ]() {return _func(value);}))),
+    passThrough(passThrough), name(name), priority(priority) { }
+
     template <typename R>
     BoundFunction(R(*_func)(std::string), const char* value, std::string name = "",
-        PassThrough passThrough = ALWAYS_PASSTHROUGH): BoundFunction(_func, std::string(value), name, passThrough) {}
+        PassThrough passThrough = ALWAYS_PASSTHROUGH,  char priority = 0): BoundFunction(_func, std::string(value), name,
+                passThrough, priority) {}
     /// @}
 
     /**
@@ -392,6 +409,13 @@ struct BoundFunction {
      * @return 1 iff the names match
      */
     bool operator==(const BoundFunction& boundFunction)const;
+    /**
+     * Used to sort by priority
+     * @return true iff this priority is lower (executes first)
+     */
+    int operator<(const BoundFunction& boundFunction)const {
+        return priority < boundFunction.priority;
+    }
     /**
      *
      * @return the human readable name of this function

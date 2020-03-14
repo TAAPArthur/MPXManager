@@ -112,13 +112,6 @@ Detail KeyBinding::getDetail() {
     }
     return detail;
 }
-bool Binding::operator==(const Binding& binding)const {
-    return name == binding.name && getKeyBindings() == binding.getKeyBindings() &&
-        flags.mask == binding.flags.mask && flags.mode == binding.flags.mode;
-}
-bool KeyBinding::operator==(const KeyBinding& binding)const {
-    return mod == binding.mod && buttonOrKey == binding.buttonOrKey;
-}
 std::ostream& operator<<(std::ostream& stream, const KeyBinding& binding) {
     return stream << "{ " << binding.mod << " " << binding.buttonOrKey << "}" ;
 }

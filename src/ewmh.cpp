@@ -151,25 +151,25 @@ static void unrecordWindow(WindowInfo* winInfo) {
     mappedOrder.removeElement(winInfo->getID());
 }
 
-void addEWMHRules(AddFlag flag) {
-    getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), flag);
-    getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
-    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), flag);
-    getBatchEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), flag);
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(autoResumeWorkspace), flag);
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadSavedAtomState), flag);
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(recordWindow), flag);
+void addEWMHRules(bool remove) {
+    getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), remove);
+    getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), remove);
+    getBatchEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), remove);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(autoResumeWorkspace), remove);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadSavedAtomState), remove);
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(recordWindow), remove);
     getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE).add(DEFAULT_EVENT(detectWindowMoveResizeButtonRelease),
-        flag);
-    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_MOTION).add(DEFAULT_EVENT(updateWindowMoveResize), flag);
-    getEventRules(POSSIBLE_STATE_CHANGE).add(DEFAULT_EVENT(updateXWindowStateForAllWindows), flag);
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setAllowedActions), flag);
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(setActiveProperties), flag);
-    getEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(unrecordWindow), flag);
-    getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(setSavedWorkspaceIndex), flag);
-    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), flag);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(broadcastEWMHCompilence), flag);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(syncState), flag);
+        remove);
+    getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_MOTION).add(DEFAULT_EVENT(updateWindowMoveResize), remove);
+    getEventRules(POSSIBLE_STATE_CHANGE).add(DEFAULT_EVENT(updateXWindowStateForAllWindows), remove);
+    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setAllowedActions), remove);
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(setActiveProperties), remove);
+    getEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(unrecordWindow), remove);
+    getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(setSavedWorkspaceIndex), remove);
+    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(broadcastEWMHCompilence), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(syncState), remove);
 }
 
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {
