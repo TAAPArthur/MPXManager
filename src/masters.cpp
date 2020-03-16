@@ -77,7 +77,7 @@ WindowInfo* Master::getFocusedWindow(void) {
         return NULL;
     WindowInfo* winInfo = isFocusStackFrozen() &&
         focusedWindowIndex < getWindowStack().size() ? getWindowStack()[focusedWindowIndex] : getWindowStack().back();
-    return winInfo->hasMask(FOCUSABLE_MASK) ? winInfo : NULL;
+    return winInfo->isFocusable() ? winInfo : NULL;
 }
 void Master::setFocusStackFrozen(int value) {
     if(freezeFocusStack != value) {

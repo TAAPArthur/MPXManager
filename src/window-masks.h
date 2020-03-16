@@ -103,7 +103,7 @@
 #define MAPPED_MASK 	(1U << 31)
 
 /// The minimum requirements to be reported has the focusedWindow
-#define FOCUSABLE_MASK  (MAPPED_MASK)
+#define FOCUSABLE_MASK  (INPUT_MASK|MAPPED_MASK)
 /// These masks indicate state beyond our control and should not be arbitrarily set
 #define EXTERNAL_MASKS 	(INPUT_MASK|WM_TAKE_FOCUS_MASK|WM_DELETE_WINDOW_MASK|WM_PING_MASK|FULLY_VISIBLE_MASK|MAPPABLE_MASK|MAPPED_MASK)
 /// A change in these masks may cause windows to be retiled

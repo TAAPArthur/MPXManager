@@ -154,10 +154,13 @@ void onUnmapEvent(void) {
     LOG(LOG_LEVEL_TRACE, "Detected unmap event for Window %d", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
+        updateFocusForAllMasters(winInfo);
         winInfo->removeMask(FULLY_VISIBLE_MASK | MAPPED_MASK);
         // used to indicate that the window is no longer mappable
-        if(isSyntheticEvent() || winInfo->isOverrideRedirectWindow())
+        if(isSyntheticEvent() || winInfo->isOverrideRedirectWindow()) {
+            INFO("Marking window as withdrawn " << event->window);
             winInfo->removeMask(MAPPABLE_MASK);
+        }
         if(winInfo->isDock())
             applyEventRules(SCREEN_CHANGE);
     }

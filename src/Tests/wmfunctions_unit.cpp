@@ -19,26 +19,6 @@ MPX_TEST("register_unregister", {
     assert(unregisterWindow(getWindowInfo(win)) == 1);
     assertEquals(getAllWindows().size(), 0);
 });
-MPX_TEST("unregister_focus_transfer", {
-    WindowID win = mapArbitraryWindow();
-    WindowID win2 = mapArbitraryWindow();
-    mapArbitraryWindow();
-    scan(root);
-    for(WindowInfo* winInfo : getAllWindows()) {
-        winInfo->addMask(INPUT_MASK);
-        winInfo->moveToWorkspace(0);
-        assert(winInfo->isActivatable());
-        assert(winInfo->isNotInInvisibleWorkspace());
-    }
-    getActiveMaster()->onWindowFocus(win2);
-    getActiveMaster()->onWindowFocus(win);
-    focusWindow(win);
-    assertEquals(getActiveFocus(), win);
-    assert(unregisterWindow(getWindowInfo(win)));
-    flush();
-    assertEquals(getActiveFocus(), win2);
-    assert(unregisterWindow(getWindowInfo(win2)));
-});
 MPX_TEST_ITER("register_bad_window", 2, {
     WindowID win = 2;
     if(_i) {
@@ -198,6 +178,8 @@ MPX_TEST("test_activate_window", {
     scan(root);
     assert(getWindowInfo(win2)->isActivatable());
     assert(!activateWindow(getWindowInfo(win)));
+    getWindowInfo(win)->addMask(MAPPABLE_MASK);
+    assert(activateWindow(getWindowInfo(win)));
     assert(activateWindow(getWindowInfo(win2)));
     getWindowInfo(win2)->removeMask(ALL_MASK);
     assert(!activateWindow(getWindowInfo(win2)));
@@ -443,34 +425,6 @@ MPX_TEST("remove_border", {
     assertEquals(getRealGeometry(win).border, border);
     removeBorder((win));
     assertEquals(getRealGeometry(win).border, 0);
-});
-
-MPX_TEST("test_auto_focus_delete", {
-    for(int i = 0; i < 3; i++)
-        mapWindow(createNormalWindow());
-    scan(root);
-    assert(getAllWindows().size() == 3);
-    for(WindowInfo* winInfo : getAllWindows()) {
-        loadWindowProperties(winInfo);
-        winInfo->moveToWorkspace(0);
-        getActiveMaster()->onWindowFocus(winInfo->getID());
-        raiseWindow(winInfo->getID());
-    }
-    getActiveWorkspace()->setActiveLayout(NULL);
-    WindowInfo* head = getAllWindows()[0];
-    WindowInfo* middle = getAllWindows()[1];
-    WindowInfo* lastFocused = getAllWindows()[2];
-    focusWindow(middle);
-    getActiveMaster()->onWindowFocus(head->getID());
-    getActiveMaster()->onWindowFocus(lastFocused->getID());
-
-    WindowID stackingOrder[] = {head->getID(), middle->getID(), lastFocused->getID()};
-    assert(checkStackingOrder(stackingOrder, 3));
-    assert(destroyWindow(lastFocused->getID()) == 0);
-    unregisterWindow(lastFocused);
-    assert(getAllWindows().size() == 2);
-    assert(checkStackingOrder(stackingOrder, 2));
-    assert(head->getID() == getActiveFocus(getActiveMasterKeyboardID()));
 });
 
 SET_ENV(openXDisplay, fullCleanup);

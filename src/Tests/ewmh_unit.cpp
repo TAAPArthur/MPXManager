@@ -255,9 +255,12 @@ MPX_TEST("test_client_change_desktop", {
     sendChangeWorkspaceRequest(-2);
     assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
 });
-MPX_TEST("test_client_change_num_desktop", {
+MPX_TEST_ITER("test_client_change_num_desktop", 2, {
     assert(getNumberOfWorkspaces() >= 2);
-    switchToWorkspace(1);
+    lock();
+    switchToWorkspace(_i);
+    unlock();
+    waitUntilIdle(1);
     for(int n = 0; n < 2; n++) {
         for(int i = 1; i < 10; i++) {
             sendChangeNumWorkspaceRequestAbs(i);
