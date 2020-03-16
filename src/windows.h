@@ -326,6 +326,13 @@ public:
             !hasPartOfMask(HIDDEN_MASK | NO_ACTIVATE_MASK);
     }
 
+    /**
+     * @return If the window can be focused
+     */
+    bool isFocusable() const {
+        return hasMask(FOCUSABLE_MASK);
+    }
+
 
     /**
      * @return 1 iff external resize requests should be granted

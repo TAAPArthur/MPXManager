@@ -104,15 +104,16 @@ void scan(xcb_window_t baseWindow) {
 
 static bool focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
     for(WindowInfo* winInfo : master->getWindowStack())
-        if(winInfo != ignore && winInfo->isNotInInvisibleWorkspace() && winInfo->isActivatable() && focusWindow(winInfo))
+        if(winInfo != ignore && winInfo->isNotInInvisibleWorkspace() && winInfo->isFocusable() && focusWindow(winInfo))
             return 1;
     return 0;
 }
 void updateFocusForAllMasters(WindowInfo* winInfo) {
+    DEBUG("Trying to update focus from " << (winInfo ? winInfo->getID() : 0));
     for(Master* master : getAllMasters())
-        if(master->getFocusedWindow() == winInfo)
+        if(!winInfo || master->getFocusedWindow() == winInfo)
             if(!focusNextVisibleWindow(master, winInfo))
-                DEBUG("Could not find window to update focus to");
+                DEBUG("Could not find window to update focus to out of " << master->getWindowStack());
             else
                 DEBUG("Updated focus for master" << *master);
 }
@@ -124,13 +125,12 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     LOG(LOG_LEVEL_DEBUG, "window %d has been removed", winToRemove);
     if(!destroyed)
         unregisterForWindowEvents(winInfo->getID());
+    bool result = 0;
     if(applyEventRules(UNREGISTER_WINDOW, winInfo)) {
-        INFO("Updating window focus");
-        updateFocusForAllMasters(winInfo);
+        result = getAllWindows().removeElement(winInfo);
+        if(winInfo)
+            delete winInfo;
     }
-    bool result = getAllWindows().removeElement(winInfo) ? 1 : 0;
-    if(winInfo)
-        delete winInfo;
     return result;
 }
 
@@ -193,6 +193,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
     DEBUG("updating window workspace state: " << w->isVisible() << "; " << *winInfo);
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
         mapWindow(winInfo->getID());
+        winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
         updateFocusForAllMasters(NULL);
     }
     else {
@@ -206,6 +207,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
         }
         updateFocusForAllMasters(winInfo);
         unmapWindow(winInfo->getID());
+        winInfo->removeMask(FULLY_VISIBLE_MASK | MAPPED_MASK);
     }
 }
 void syncMappedState(Workspace* workspace) {
@@ -247,6 +249,7 @@ WindowID activateWindow(WindowInfo* winInfo) {
         if(!winInfo->hasMask(MAPPED_MASK)) {
             assert(winInfo->hasMask(MAPPABLE_MASK));
             mapWindow(winInfo->getID());
+            winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
         }
         return focusWindow(winInfo) ? winInfo->getID() : 0;
     }

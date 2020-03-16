@@ -324,6 +324,29 @@ MPX_TEST("test_reparent_windows", {
     assertEquals(0, catchError(xcb_reparent_window_checked(dis, win, parent, 0, 0)));
 });
 
+MPX_TEST("unregister_focus_transfer", {
+    setActiveLayout(NULL);
+    WindowID win = mapArbitraryWindow();
+    WindowID win2 = mapArbitraryWindow();
+    mapArbitraryWindow();
+    waitUntilIdle();
+    for(WindowInfo* winInfo : getAllWindows()) {
+        winInfo->addMask(INPUT_MASK);
+        winInfo->moveToWorkspace(0);
+        assert(winInfo->isActivatable());
+        assert(winInfo->isNotInInvisibleWorkspace());
+    }
+    focusWindow(win2);
+    focusWindow(win);
+    assertEquals(getActiveFocus(), win);
+    unmapWindow(win);
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), win2);
+    unmapWindow(win2);
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), root);
+});
+
 MPX_TEST("test_switch_workspace_with_sticky_window", {
     switchToWorkspace(0);
     addAutoTileRules();
