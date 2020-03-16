@@ -177,6 +177,24 @@ MPX_TEST_ERR("force_restart", 10, {
     assert(0);
 });
 SET_ENV(suppressOutput, NULL);
+MPX_TEST_ITER("restart_recursive", 3, {
+    const char* testKey = "MPX_TEST_KEY";
+    if(!getenv(testKey))
+        clearenv();
+    setenv(testKey, "1", 1);
+    setenv("TEST_FUNC", ("restart_recursive." + std::to_string(_i)).c_str(), 1);
+    const int COUNTER = 5;
+    while(RESTART_COUNTER < COUNTER) {
+        if(_i == 0)
+            restart();
+        else if(_i == 1)
+            raise(SIGUSR1);
+        else if(_i == 2)
+            raise(SIGHUP);
+        pause();
+    }
+    assertEquals(RESTART_COUNTER, COUNTER);
+});
 MPX_TEST_ITER_ERR("spawn_fail", 2, 1, {
     breakFork(-1);
     if(_i)

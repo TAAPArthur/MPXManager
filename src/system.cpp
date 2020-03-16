@@ -187,16 +187,37 @@ static void handler(int sig) {
         exit(sig);
     quit(sig);
 }
-static const char* restartCounterString = "MPX_RESTART_COUNTER";
-int RESTART_COUNTER = 0;
+
+/**
+ * Used to create a signal handler for functions that don't return
+ *
+ * @param sig the signal to catch
+ * @param handler the callback function
+ *
+ * @return 0 on success or the result from sigaction
+ */
+static int createSigAction(int sig, void(*callback)(int)) {
+    struct sigaction sa;
+    sa.sa_handler = callback;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESETHAND | SA_NODEFER;
+    return sigaction(sig, &sa, NULL);
+}
+
+static const char* RESTART_COUNTER_STR = "MPX_RESTART_COUNTER";
+static int initRestartCounter() {
+    char* counter = getenv(RESTART_COUNTER_STR);
+    int value = counter ? strtol(counter, NULL, 10) + 1 : 0;
+    setenv(RESTART_COUNTER_STR, std::to_string(value).c_str(), 1);
+    return value;
+}
+const int RESTART_COUNTER = initRestartCounter();
 __attribute__((constructor)) static void set_handlers() {
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
     signal(SIGTERM, handler);
     signal(SIGPIPE, [](int) {resetPipe();});
-    signal(SIGUSR1, [](int) {restart(1);});
+    createSigAction(SIGHUP, [](int) {restart(1);});
+    createSigAction(SIGUSR1, [](int) {restart(0);});
     signal(SIGUSR2, [](int) {printStackTrace();});
-    char* counter = getenv(restartCounterString);
-    RESTART_COUNTER = counter ? strtol(counter, NULL, 10) + 1 : 0;
-    setenv(restartCounterString, std::to_string(RESTART_COUNTER).c_str(), 1);
 }

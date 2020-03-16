@@ -87,6 +87,8 @@ bool runTest(Test* t, int i) {
 }
 int main(int argc, char* const* argv) {
     assert(tests.size());
+    numPassedArguments = argc;
+    passedArguments = argv;
     char* startingFrom = getenv("STARTING_FROM");
     char* file = getenv("TEST_FILE");
     char* func = getenv("TEST_FUNC");
