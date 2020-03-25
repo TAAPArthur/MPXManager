@@ -41,7 +41,7 @@ struct Index: AbstractIndex {
 /**
  * A map from pointer to builtin struct to a map of Index* to custom struct
  */
-extern std::unordered_map<void*, std::unordered_map<AbstractIndex*, void*>> ext;
+extern std::unordered_map<const void*, std::unordered_map<AbstractIndex*, void*>> ext;
 
 /**
  * Returns the last accessed pointer associated with key, id
@@ -56,7 +56,7 @@ extern std::unordered_map<void*, std::unordered_map<AbstractIndex*, void*>> ext;
  * @return a pointer or NULL
  */
 template<class T >
-T* get(Index<T>& key, void* id, bool createNew = 1, bool* newElement = NULL) {
+T* get(Index<T>& key, const void* id, bool createNew = 1, bool* newElement = NULL) {
     auto& map = ext[id];
     int count = map.count(&key);
     if(newElement)
