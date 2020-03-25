@@ -46,8 +46,15 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
         stream << " NotManageable";
     if(winInfo.isInputOnly())
         stream << " InputOnly";
-    if(winInfo.isDock())
+    if(winInfo.isDock()) {
         stream << " Dock";
+        auto properties = winInfo.getDockProperties(false);
+        if(properties) {
+            for(int i = 0; i < 4; i++)
+                if(properties[i])
+                    stream << "{" << i << ": " << properties[i * 2 + 4] << ", " << properties[i * 2 + 5] << "}";
+        }
+    }
     if(winInfo.isOverrideRedirectWindow())
         stream << " OverrideRedirect";
     else if(winInfo.getTilingOverrideMask())
@@ -122,7 +129,7 @@ void WindowInfo::setDockProperties(int* properties, int numberOfProperties) {
     memset(getDockProperties(1), 0, 12 * sizeof(int));
     memcpy(getDockProperties(1), properties, numberOfProperties * sizeof(int));
 }
-int* WindowInfo::getDockProperties(bool createNew) {
+int* WindowInfo::getDockProperties(bool createNew) const {
     static Index<int[12]> key;
     return *get(key, this, createNew);
 }

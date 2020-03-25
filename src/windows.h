@@ -401,7 +401,7 @@ public:
      *
      * @return size 12 array representing dock properties
      */
-    int* getDockProperties(bool createNew = 0);
+    int* getDockProperties(bool createNew = 0) const;
     /**
      * Add properties to winInfo that will be used to avoid docks
      * @param numberOfProperties number of properties
