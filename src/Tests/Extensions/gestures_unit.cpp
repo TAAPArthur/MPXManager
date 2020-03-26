@@ -390,23 +390,23 @@ MPX_TEST("gesture_regions", {
     Rect bounds = {0, 0, dims[0], dims[1]};
     setRootDims(dims);
 
-    GestureRegion leftNormal = GestureRegion({0, 0, 40, 20}, 0, 1);
-    GestureRegion rightNegative = GestureRegion({-20, 0, 20, 0});
+    GestureRegion leftNormal = GestureRegion(0, 0, 40, 20, 10);
+    GestureRegion rightNegative = GestureRegion(-20, 0, 20, 0);
     GestureRegion topAbs = GestureRegion({0, 0, 0, 20});
     GestureRegion bottomSplit[] = {
-        GestureRegion({0, -20, 33, 20}, 1, 0),
-        GestureRegion({33, -20, 33, 20}, 1, 0),
-        GestureRegion({66, -20, 33, 20}, 1, 0)
+        GestureRegion(0, -20, 33, 20, 5),
+        GestureRegion(33, -20, 33, 20, 5),
+        GestureRegion(66, -20, 33, 20, 5)
     };
     Point points[] = {{50, 0}, {0, 20}, {dims[0] - 10, 40}, {0, 99}, {50, 99}, {99, 99},
         {dims[0] / 2, dims[1] / 2}
     };
-    assert(topAbs.contains(points[0], bounds));
-    assert(leftNormal.contains(points[1], bounds));
-    assert(rightNegative.contains(points[2], bounds));
-    assert(bottomSplit[0].contains(points[3], bounds));
-    assert(bottomSplit[1].contains(points[4], bounds));
-    assert(bottomSplit[2].contains(points[5], bounds));
+    assert(bounds.getRelativeRegion(topAbs).contains(points[0]));
+    assert(bounds.getRelativeRegion(leftNormal).contains(points[1]));
+    assert(bounds.getRelativeRegion(rightNegative).contains(points[2]));
+    assert(bounds.getRelativeRegion(bottomSplit[0]).contains(points[3]));
+    assert(bounds.getRelativeRegion(bottomSplit[1]).contains(points[4]));
+    assert(bounds.getRelativeRegion(bottomSplit[2]).contains(points[5]));
 
     getGestureRegions().add(topAbs);
     getGestureRegions().add(leftNormal);

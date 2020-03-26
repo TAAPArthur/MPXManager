@@ -258,6 +258,7 @@ WindowID activateWindow(WindowInfo* winInfo) {
 
 void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
+    assert(mask < 128);
     if(mask) {
         LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)", win, mask, __builtin_popcount(mask));
         LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));

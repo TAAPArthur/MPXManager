@@ -207,7 +207,7 @@ MPX_TEST_ITER("test_fixed_position_windows", NUMBER_OF_LAYOUT_FAMILIES + 1, {
     if(_i == NUMBER_OF_LAYOUT_FAMILIES)
         floatWindow(winInfo);
     winInfo->moveToWorkspace(0);
-    winInfo->setTilingOverrideEnabled(-1, 1);
+    winInfo->setTilingOverrideEnabled(31, 1);
     winInfo->setTilingOverride(config);
     setActiveLayout(&LAYOUT_FAMILIES[_i % NUMBER_OF_LAYOUT_FAMILIES ]);
     retile();
@@ -217,19 +217,30 @@ MPX_TEST_ITER("test_fixed_position_windows", NUMBER_OF_LAYOUT_FAMILIES + 1, {
 MPX_TEST("test_fixed_position_windows_relative", {
     DEFAULT_BORDER_WIDTH = 0;
     getWorkspace(0)->getMonitor()->setBase({100, 200, 300, 400});
+
+    Rect bounds = getWorkspace(0)->getMonitor()->getViewport();
     mapArbitraryWindow();
     flush();
     scan(root);
-    RectWithBorder config = {-1, 0, 0, -1};
+    RectWithBorder config;
+    Rect expectedConfig = {0, 0, 0, 0};
+
     WindowInfo* winInfo = getAllWindows()[0];
+    if(_i) {
+        winInfo->setTilingOverrideEnabled(31, 1);
+        config = {-1, 0, 0, -1};
+        expectedConfig = {bounds.x + bounds.width + config.x, bounds.y, bounds.width, bounds.height + config.height};
+    }
+    else {
+        winInfo->setTilingOverrideEnabled(-1, 1);
+        config = {-1, -1, 0, 0};
+        expectedConfig = {bounds.x + config.x, bounds.y + config.y, bounds.width, bounds.height };
+    }
     floatWindow(winInfo);
     winInfo->moveToWorkspace(0);
-    winInfo->setTilingOverrideEnabled(-1, 1);
     winInfo->setTilingOverride(config);
     retile();
     RectWithBorder actualConfig = getRealGeometry(winInfo);;
-    Rect bounds = getWorkspace(0)->getMonitor()->getViewport();
-    Rect expectedConfig = {bounds.x + bounds.width + config.x, bounds.y, bounds.width, bounds.height + config.height};
     assertEquals(expectedConfig, actualConfig);
 });
 

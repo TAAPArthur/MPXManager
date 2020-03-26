@@ -139,40 +139,12 @@ static inline GestureType getReflection(TransformMasks mask, GestureType type) {
  * The GestureRegion will be apart of the GestureID thus events starting in different regions
  * are independent of each other
  */
-struct GestureRegion {
+struct GestureRegion: Rect {
+    using Rect::Rect;
     /// global counter
     static uint32_t count;
     /// unique id
     const int id = ++count;
-    /// Dimensions of the gesture region
-    Rect base;
-    /// whether to treat the x/y pos/dimensions as percents or absolutes
-    bool percent[2];
-    /**
-     * @param base
-     * @param percentX
-     * @param percentY
-     */
-    GestureRegion(const Rect& base, bool percentX = 0, bool percentY = 0): base(base)  {
-        percent[0] = percentX;
-        percent[1] = percentY;
-    }
-    /**
-     * @param p
-     * @param relativeBounds total gesture device/screen size
-     *
-     * @return 1 iff p is contains by this gesture
-     */
-    bool contains(Point p, Rect relativeBounds) const {
-        Rect temp = base;
-        for(int i = 0; i < 2; i++) {
-            if(percent[i]) {
-                temp[i] *= relativeBounds[i + 2] / 100.0;
-                temp[i + 2] *= relativeBounds[i + 2] / 100.0;
-            }
-        }
-        return relativeBounds.getRelativeRegion(temp).contains(Rect(p.x, p.y, 0, 0));
-    }
     /// @copydoc id
     int getID() const { return id; }
 };

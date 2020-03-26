@@ -125,7 +125,7 @@ static int compareState() {
         _printStateComparison(currentState, i);
         if(currentState[i].forceRetile || (savedStates || currentState[i].size) &&
             (i >= numberOfRecordedWorkspaces || savedStates[i].size != currentState[i].size ||
-                memcmp(&savedStates[i].monitorViewport, &currentState[i].monitorViewport, sizeof(Rect)) ||
+                savedStates[i].monitorViewport != currentState[i].monitorViewport ||
                 savedStates[i].layout != currentState[i].layout ||
                 savedStates[i].size && (
                     memcmp(savedStates[i].windowIds, currentState[i].windowIds, sizeof(WindowID)*savedStates[i].size) ||

@@ -82,20 +82,27 @@ MPX_TEST("translate", {
     rect.translate({0, 0}, {100, 200});
     assertEquals(rect, Rect(0, 0, 100, 100));
 });
-static Rect bounds = {0, 0, 9, 9};
+static Rect bounds = {0, 0, 8, 8};
 static Rect rect[][2] = {
     {{0, 0, 100, 200}, {0, 0, 100, 200}},
-    {{0, 0, 0, 0}, {0, 0, 9, 9}},
-    {{-1, -1, 1, 1}, {8, 8, 1, 1}},
-    {{1, 1, 0, 0}, {1, 1, 9, 9}},
-    {{1, -1, 0, 1}, {1, 8, 9, 1}},
-    {{-9, -9, 1, 1}, {0, 0, 1, 1}},
-    {{-10, -10, 1, 1}, {-1, -1, 1, 1}},
+    {{0, 0, 0, 0}, {0, 0, 8, 8}},
+    {{-1, -1, 1, 1}, {7, 7, 1, 1}},
+    {{1, 1, 0, 0}, {1, 1, 8, 8}},
+    {{1, -1, 0, 1}, {1, 7, 8, 1}},
+    {{-8, -8, 1, 1}, {0, 0, 1, 1}},
+    {{-9, -9, 1, 1}, {-1, -1, 1, 1}},
+    {{0, 0, 100, 100, 15}, {0, 0, 8, 8}},
+    {{25, 50, 75, 100, 15}, {2, 4, 6, 8}},
+    {{25, 50, 75, 100, 1}, {2, 50, 75, 100}},
+    {{25, 50, 75, 100, 2}, {25, 4, 75, 100}},
+    {{25, 50, 75, 100, 4}, {25, 50, 6, 100}},
+    {{25, 50, 75, 75, 8}, {25, 50, 75, 6}},
 };
 MPX_TEST_ITER("relative_region", LEN(rect), {
+    assert(Rect(25, 50, 75, 75, 8).percent == 8);
     assertEquals(bounds.getRelativeRegion(rect[_i][0]), rect[_i][1]);
 });
-MPX_TEST_ITER("relative_region_offset", LEN(rect), {
-    assertEquals(Rect(9, 9, 9, 9).getRelativeRegion({1, 2, 3, 4}), Rect(10, 11, 3, 4));
-    assertEquals(Rect(9, 9, 9, 9).getRelativeRegion({1, 2, 0, 0}), Rect(10, 11, 9, 9));
+MPX_TEST("relative_region_offset", {
+    assertEquals(Rect(8, 8, 8, 8).getRelativeRegion({1, 2, 3, 4}), Rect(9, 10, 3, 4));
+    assertEquals(Rect(8, 8, 8, 8).getRelativeRegion({1, 2, 0, 0}), Rect(9, 10, 8, 8));
 });

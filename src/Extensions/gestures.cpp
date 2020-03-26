@@ -99,8 +99,9 @@ static std::unordered_map<GestureGroupID, GestureGroup*>gestureGroupIDToGestureG
 static std::unordered_map<TouchID, GestureGroup*>touchIDToGestureGroup;
 static GestureGroupID generateID(ProductID id, Point startingPoint) {
     int regionID = 0;
+    Rect base = {0, 0, getRootWidth(), getRootHeight()};
     for(auto& region : getGestureRegions())
-        if(region.contains(startingPoint, {0, 0, getRootWidth(), getRootHeight()})) {
+        if(base.getRelativeRegion(region).contains(startingPoint)) {
             regionID = region.getID();
             break;
         }

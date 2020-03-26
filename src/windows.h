@@ -62,8 +62,8 @@ private:
     /// Window gravity (TODO implemented)
     // char gravity = 0;
 
-    /// 5 bits each to enable 1 element of config
-    unsigned char tilingOverrideEnabled = 0;
+    /// 5 bits each to enable 1 element of config and 5 bits for toggle absolute vs relative
+    uint16_t tilingOverrideEnabled = 0;
     /** Set to override tiling */
     RectWithBorder tilingOverride = {};
     /** The last know size of the window */
@@ -210,7 +210,6 @@ public:
      * @param enable
      */
     void setTilingOverrideEnabled(unsigned int mask, bool enable = 1) {
-        mask &= (1 << 5) - 1;
         if(enable)
             tilingOverrideEnabled |= mask;
         else
@@ -226,11 +225,19 @@ public:
     bool isTilingOverrideEnabledAtIndex(int index) const {
         return tilingOverrideEnabled & (1 << index);
     }
+
+    /**
+     * @param index
+     * @return true iff tiling override should be treated as relative instead of absolute
+     */
+    bool isTilingOverrideRelativeAtIndex(int index) const {
+        return tilingOverrideEnabled & (1 << (index + 5));
+    }
     /**
      * @return a bitmap indicating which parts of the geometry will be overridden
      */
     uint8_t getTilingOverrideMask()const {
-        return tilingOverrideEnabled;
+        return tilingOverrideEnabled & 31;
     }
     /**
      * Returns User set geometry that will override that generated when tiling
