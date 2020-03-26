@@ -73,6 +73,11 @@ struct Rect {
     /// height of the bounding box
     uint16_t height = 0;
     /**
+     * A bit mask representing weather x through height should be interrupted as a
+     * percent when computing getRelativeRegion
+     */
+    uint8_t percent = 0;
+    /**
      * Reads the first 4 values and uses them to construct the rect
      * @param p
      */
@@ -87,11 +92,20 @@ struct Rect {
      * @param y
      * @param w
      * @param h
+     * @param percent
      */
-    Rect(short x, short y, uint16_t w, uint16_t h): x(x), y(y), width(w), height(h) {}
+    Rect(short x, short y, uint16_t w, uint16_t h, uint8_t percent = 0): x(x), y(y), width(w), height(h),
+        percent(percent) {}
 
     /**
-     * If region contains only positive numbers, then region is returned
+     * @param p
+     */
+    Rect(Point p): x(p.x), y(p.y), width(0), height(0) {}
+
+    /**
+     * If percent, the field corresponding to the bitmask will be treated as a percent of region.
+     * ie Rect(0, 25, 50, 100).getRelativeRegion({0, 0, 100, 200}) will yield {0, 50, 50, 200} if percent is 31
+     * Else If region contains only positive numbers, then region is returned
      * Else If region contains negative numbers then it "wraps around" ie {-1, -1, 1, 1} refers the to the bottom right region
      * and {1, 1, -1, -1} refers to everything except the top-left most region
      * If a region has 0 for the width or height, then that index is set to this rect's width/height
@@ -122,6 +136,7 @@ struct Rect {
      * @return
      */
     short& operator[](int i) {
+        assert(i >= 0 && i < 4);
         return (&x)[i];
     }
     /**
@@ -218,7 +233,7 @@ struct Rect {
  */
 struct RectWithBorder : Rect {
     /// The border of this rect
-    short border;
+    uint16_t border;
     /**
      * Creates an empty rect
      */

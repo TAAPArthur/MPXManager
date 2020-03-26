@@ -107,7 +107,7 @@ MPX_TEST_ITER("primary_monitor_windows", 2, {
         winInfo->moveToWorkspace(realMonitor->getWorkspace()->getID());
     }
     else {
-        winInfo->setTilingOverrideEnabled(-1);
+        winInfo->setTilingOverrideEnabled(31);
         winInfo->setTilingOverride({0, 0, 100, 100});
     }
 

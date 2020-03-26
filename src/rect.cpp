@@ -39,7 +39,9 @@ Rect Rect::getRelativeRegion(const Rect& region) const {
     for(int i = 0; i < 4; i++) {
         short fixedValue = region[i];
         short refEndPoint = bounds[i % 2 + 2];
-        config[i] = fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
+        config[i] = region.percent & (1 << i) ?
+            region[i] * bounds[i % 2 + 2] / 100 :
+            fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
         if(i < 2)
             config[i] += bounds[i];
         else if(!config[i])

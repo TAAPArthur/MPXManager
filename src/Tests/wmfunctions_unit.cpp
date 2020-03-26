@@ -401,8 +401,9 @@ MPX_TEST("test_configure_windows", {
             processConfigureRequest(win, values, 0, 0, masks[i]);
             waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
             const RectWithBorder& rect = getRealGeometry(win);
-            for(int n = 0; n < 5; n++)
+            for(int n = 0; n < 4; n++)
                 assert(rect[n] == (n == i ? values[0] : defaultValues[0]));
+            assert(rect.border == (4 == i ? values[0] : defaultValues[0]));
         }
         configureWindow(win, allSizeMasks, defaultValues);
         processConfigureRequest(win, values, 0, 0, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);

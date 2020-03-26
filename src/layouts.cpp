@@ -173,9 +173,12 @@ static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor
     Rect region = bounds.getRelativeRegion(tilingOverride);
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
         if(winInfo->isTilingOverrideEnabledAtIndex(i))
-            config[i] = region[i];
+            if(!winInfo->isTilingOverrideRelativeAtIndex(i))
+                config[i] = region[i];
+            else
+                config[i] += tilingOverride[i];
     if(winInfo->isTilingOverrideEnabledAtIndex(CONFIG_INDEX_BORDER))
-        config[CONFIG_INDEX_BORDER] = MAX(0, tilingOverride.border);
+        config[CONFIG_INDEX_BORDER] = tilingOverride.border;
 }
 
 void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const short values[CONFIG_LEN]) {
