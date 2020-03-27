@@ -59,7 +59,7 @@ static void stickyPrimaryMonitor() {
             if(winInfo->hasMask(PRIMARY_MONITOR_MASK)) {
                 if(winInfo->getWorkspace() && primary->getWorkspace())
                     winInfo->moveToWorkspace(primary->getWorkspace()->getID());
-                if(winInfo->getTilingOverrideMask())
+                else
                     arrangeNonTileableWindow(winInfo, primary);
             }
 }
