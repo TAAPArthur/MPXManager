@@ -375,7 +375,7 @@ MPX_TEST("test_tile_windows", {
 });
 
 
-MPX_TEST_ITER("test_privileged_windows_size", 6 * 2, {
+MPX_TEST_ITER("test_privileged_windows_size", 9 * 2, {
     WindowMask extra = _i % 2 ? NO_MASK : NO_TILE_MASK;
     _i /= 2;
     Monitor* m = getAllMonitors()[0];
@@ -400,12 +400,17 @@ MPX_TEST_ITER("test_privileged_windows_size", 6 * 2, {
         const RectWithBorder dims;
     } arr[] = {
         {0, baseConfig},
+
+        {X_CENTERED_MASK | extra, {m->getViewport().x + m->getViewport().width / 2, baseConfig.y, baseConfig.width, baseConfig.height, DEFAULT_BORDER_WIDTH }},
+        {Y_CENTERED_MASK | extra, {baseConfig.x, m->getViewport().y + m->getViewport().height / 2, baseConfig.width, baseConfig.height, DEFAULT_BORDER_WIDTH}},
+        {CENTERED_MASK | extra, {m->getViewport().x + m->getViewport().width / 2, m->getViewport().y + m->getViewport().height / 2, baseConfig.width, baseConfig.height, DEFAULT_BORDER_WIDTH}},
         {X_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, baseConfig.height, DEFAULT_BORDER_WIDTH }},
         {Y_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, baseConfig.width, m->getViewport().height, DEFAULT_BORDER_WIDTH}},
         {MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->getViewport().width, m->getViewport().height, DEFAULT_BORDER_WIDTH}},
         {FULLSCREEN_MASK | extra, m->getBase()},
         {ROOT_FULLSCREEN_MASK | extra, {0, 0, getRootWidth(), getRootHeight()}},
     };
+    assert(_i < LEN(arr));
     int baseMask = MAPPABLE_MASK | MAPPED_MASK;
     winInfo->removeMask(-1);
     winInfo->addMask(baseMask | arr[_i].mask);

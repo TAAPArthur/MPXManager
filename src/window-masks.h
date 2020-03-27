@@ -51,6 +51,13 @@
 /// corresponds to modal state
 #define MODAL_MASK 	(1U << 12)
 
+/**The window's X position will be centered in the viewport */
+#define X_CENTERED_MASK 	(1U << 13)
+/**The window's Y position will be centered in the viewport */
+#define Y_CENTERED_MASK 	(1U << 14)
+/// Have the top left point of the window be in the center of the monitor
+#define CENTERED_MASK 	(X_CENTERED_MASK | Y_CENTERED_MASK)
+
 /// Will not update our internal focus representation when a window with this mask is focused
 /// Intended for Desktop windows
 #define NO_RECORD_FOCUS_MASK 	(1U << 16)
@@ -146,6 +153,9 @@ struct WindowMask {
         _PRINT_MASK(MAXIMIZED_MASK);
         _PRINT_MASK(X_MAXIMIZED_MASK);
         _PRINT_MASK(Y_MAXIMIZED_MASK);
+        _PRINT_MASK(CENTERED_MASK);
+        _PRINT_MASK(X_CENTERED_MASK);
+        _PRINT_MASK(Y_CENTERED_MASK);
         _PRINT_MASK(FULLSCREEN_MASK);
         _PRINT_MASK(ROOT_FULLSCREEN_MASK);
         _PRINT_MASK(FLOATING_MASK);
