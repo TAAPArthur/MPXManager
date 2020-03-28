@@ -13,12 +13,6 @@
 extern void (*printStatusMethod)();
 
 /**
- * Adds a PRE_REGISTER window rule to ignore input only windows
- * @param remove
- * @return
- */
-bool addIgnoreInputOnlyWindowsRule(bool remove = 0);
-/**
  * Adds a CLIENT_MAP_ALLOW rule to auto focus a window
  *
  * Focuses a window when it is mapped and:

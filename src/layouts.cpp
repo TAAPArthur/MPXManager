@@ -127,20 +127,14 @@ void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t config[C
         }
     }
 }
-static int adjustBorders(const WindowInfo* winInfo, const LayoutState* state, uint32_t config[CONFIG_LEN], int mask) {
-    if(winInfo->isInputOnly()) {
-        mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
-        for(int i = CONFIG_INDEX_BORDER; i < CONFIG_LEN - 1; i++)
-            config[i] = config[i + 1];
-    }
-    else if(state->getArgs()) {
+static void adjustBorders(const LayoutState* state, uint32_t config[CONFIG_LEN]) {
+    if(state->getArgs()) {
         config[CONFIG_INDEX_BORDER] = state->getArgs()->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
         if(!state->getArgs()->noAdjustForBorders) {
             config[CONFIG_INDEX_WIDTH] -= config[CONFIG_INDEX_BORDER] * 2;
             config[CONFIG_INDEX_HEIGHT] -= config[CONFIG_INDEX_BORDER] * 2;
         }
     }
-    return mask;
 }
 static uint32_t applyMasksToConfig(const WindowInfo* winInfo, const Monitor* m, uint32_t* values) {
     if(winInfo->hasMask(ROOT_FULLSCREEN_MASK)) {
@@ -208,7 +202,8 @@ void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const 
         config[i] = values[i];
     transformConfig(state->getArgs(), state->monitor, config);
     applyMasksToConfig(winInfo, state->monitor, config);
-    mask = adjustBorders(winInfo, state, config, mask);
+
+    adjustBorders(state, config);
     applyTilingOverrideToConfig(winInfo, state->monitor, config);
     if(state->getArgs())
         for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++) {
@@ -233,9 +228,7 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
     uint32_t mask = applyMasksToConfig(winInfo, monitor, config);
     mask |= winInfo->getTilingOverrideMask();
     applyTilingOverrideToConfig(winInfo, monitor, config);
-    if(winInfo->isInputOnly())
-        mask &= ~XCB_CONFIG_WINDOW_BORDER_WIDTH;
-    else if(winInfo->isFocusAllowed())
+    if(winInfo->isFocusAllowed())
         mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
     if(mask) {
         LOG(LOG_LEVEL_INFO, "PreConfig %d: mask %d (%d bits)", winInfo->getID(), mask, __builtin_popcount(mask));

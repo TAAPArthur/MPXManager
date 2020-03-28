@@ -174,13 +174,19 @@ MPX_TEST_ITER("test_detect_new_windows", 2, {
 });
 MPX_TEST("test_detect_new_override_redirect_windows", {
     assert(!addIgnoreOverrideRedirectWindowsRule(1));
-    createOverrideRedirectWindow();
-    createOverrideRedirectWindow();
-    createOverrideRedirectWindow();
+    createOverrideRedirectWindow(XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    createOverrideRedirectWindow(XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    createOverrideRedirectWindow(XCB_WINDOW_CLASS_INPUT_OUTPUT);
     waitUntilIdle();
     assertEquals(getAllWindows().size(), 3);
     for(WindowInfo* winInfo : getAllWindows())
         assert(winInfo->isOverrideRedirectWindow());
+});
+
+MPX_TEST("ignore_input_only_rule", {
+    WindowID win = createWindow(root, XCB_WINDOW_CLASS_INPUT_ONLY);
+    scan(root);
+    assert(!getWindowInfo(win));
 });
 
 MPX_TEST("test_delete_windows", {
@@ -270,7 +276,7 @@ MPX_TEST("test_map_windows", {
 MPX_TEST("test_unmap", {
     addIgnoreOverrideRedirectWindowsRule(1);
     WindowID win = createUnmappedWindow();
-    WindowID winOR = mapWindow(createOverrideRedirectWindow());
+    WindowID winOR = mapWindow(createOverrideRedirectWindow(XCB_WINDOW_CLASS_INPUT_OUTPUT));
     waitUntilIdle();
     xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .window = win};
     catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
@@ -445,7 +451,6 @@ MPX_TEST("steal_other_selection", {
 static void clientSetup() {
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);}));
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}));
-    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {return !winInfo->isInputOnly();}));
     onSimpleStartup();
     addAutoTileRules();
     startWM();
@@ -465,12 +470,12 @@ static void clientSetup() {
 SET_ENV(clientSetup, fullCleanup);
 
 MPX_TEST_ITER("test_map_request", 2, {
-    mapWindow(_i ? createUnmappedWindow() : createOverrideRedirectWindow());
+    mapWindow(_i ? createUnmappedWindow() : createWindow(root, XCB_WINDOW_CLASS_INPUT_ONLY));
     flush();
     waitForNormalEvent(XCB_MAP_NOTIFY);
 });
 MPX_TEST("test_map_request_unregistered", {
-    mapWindow(createTypelessInputOnlyWindow());
+    mapWindow(createOverrideRedirectWindow());
     flush();
     waitForNormalEvent(XCB_MAP_NOTIFY);
 });

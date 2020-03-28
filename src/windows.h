@@ -167,7 +167,7 @@ public:
     bool isNotManageable()const {return notManageable;}
 
     /// @return 1 if the window has any flags sets
-    bool isSpecial() const {return isNotManageable() || isInputOnly() || isOverrideRedirectWindow() || isDock();}
+    bool isSpecial() const {return isNotManageable() || isOverrideRedirectWindow() || isDock();}
 
     /// sets that the window type was not explicitly set
     void setImplicitType(bool b) {implicitType = b;}
