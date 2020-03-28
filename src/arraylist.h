@@ -150,9 +150,8 @@ struct ArrayList: std::vector<T> {
      */
     template<typename U = T>
     EnableIfPointer<U, void> deleteElements() {
-        for(T t : *this)
-            delete t;
-        this->clear();
+        while(size())
+            delete pop();
     }
     /**
      * @param value
@@ -177,15 +176,6 @@ struct ArrayList: std::vector<T> {
      * @return the first element whose memory starts with value
      */
     bool contains(const T value)const {
-        return indexOf(value) != -1;
-    }
-
-    /**
-     * @param value
-     * @return the first element whose memory starts with value
-     */
-    template<typename U = T>
-    EnableIf<U, bool> contains(uint32_t value) const {
         return indexOf(value) != -1;
     }
     /**

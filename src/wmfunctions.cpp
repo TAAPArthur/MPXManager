@@ -135,7 +135,7 @@ bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
 }
 
 
-static void* waitForWindowToDie(WindowID id) {
+static void waitForWindowToDie(WindowID id) {
     lock();
     WindowInfo* winInfo = getWindowInfo(id);
     int hasPingMask = 0;
@@ -165,7 +165,6 @@ static void* waitForWindowToDie(WindowID id) {
         msleep(KILL_TIMEOUT);
     }
     LOG(LOG_LEVEL_DEBUG, "Finished waiting for window %d", id);
-    return NULL;
 }
 
 int killClientOfWindow(WindowID win) {

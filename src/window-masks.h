@@ -193,10 +193,12 @@ static inline std::ostream& operator<<(std::ostream& stream, const WindowMask& m
  * Abstract class for Workspace and WindowInfo which have WindowMasks
  */
 struct HasMask {
+private:
     /**
      * bitmap of window properties
      */
     WindowMask mask = 0;
+public:
     virtual ~HasMask() = default;
     /**
      * @returns the full mask of the given window

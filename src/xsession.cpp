@@ -16,6 +16,7 @@
 #include "ringbuffer.h"
 #include "system.h"
 #include "threads.h"
+#include "debug.h"
 #include "time.h"
 #include "user-events.h"
 #include "xsession.h"
@@ -208,6 +209,7 @@ void logError(xcb_generic_error_t* e, bool xlibError) {
     if((1 << e->error_code) & CRASH_ON_ERRORS) {
         ERROR("Crashing on error");
         LOG_RUN(LOG_LEVEL_ERROR, printStackTrace());
+        LOG_RUN(LOG_LEVEL_DEBUG, printSummary());
         quit(1);
     }
 }

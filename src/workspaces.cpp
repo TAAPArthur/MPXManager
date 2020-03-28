@@ -22,6 +22,8 @@ std::ostream& operator>>(std::ostream& strm, const Workspace& w) {
 
 std::ostream& operator<<(std::ostream& strm, const Workspace& w) {
     strm >> w << ", windows: " >> w.windows;
+    if(w.getMonitor())
+        strm << ", Monitor: " >>* w.getMonitor() ;
     if(w.getActiveLayout())
         strm << ", Layout: " << *w.getActiveLayout() ;
     return strm << " }";
