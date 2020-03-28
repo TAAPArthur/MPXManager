@@ -159,7 +159,7 @@ static void multiMonitorSetup() {
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
         mapArbitraryWindow();
     waitUntilIdle();
-    assertEquals(getActiveMaster()->getWorkspace()->getWindowStack().size(), getAllWindows().size());
+    assertEquals(getActiveWorkspace()->getWindowStack().size(), getAllWindows().size());
     lock();
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
         getAllWindows()[i]->moveToWorkspace(i);

@@ -7,7 +7,6 @@
 
 #include <string>
 
-#include "masters.h"
 #include "mywm-structs.h"
 #include "rect.h"
 
@@ -159,12 +158,6 @@ static inline Workspace* getPrimaryWorkspace() {
     Monitor* m = getPrimaryMonitor();
     return m ? m->getWorkspace() : NULL;
 }
-/**
- * @return  the workspace of the primary monitor or NULL
- */
-static inline Monitor* getActiveMonitor() {
-    return getActiveWorkspace() ? getActiveWorkspace()->getMonitor() : NULL;
-}
 
 /**
  * Reads (one of) the struct property to loads the info into properties and
@@ -230,12 +223,6 @@ uint16_t getRootWidth(void);
  * @return the height of the root window
  */
 uint16_t getRootHeight(void);
-/**
- * Swaps the monitors associated with the given workspaces
- * @param index1
- * @param index2
- */
-void swapMonitors(WorkspaceID index1, WorkspaceID index2 = getActiveMaster()->getWorkspaceIndex());
 /**
  * Creates a new X11 monitor with the given bounds.
  *

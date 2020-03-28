@@ -9,7 +9,6 @@
 #include "globals.h"
 #include "mywm-structs.h"
 #include "slaves.h"
-#include "workspaces.h"
 
 /// will match any mode
 #define ANY_MODE ((uint32_t)-1)
@@ -212,13 +211,6 @@ public:
     void setWorkspaceIndex(WorkspaceID index) {
         activeWorkspaceIndex = index;
     }
-    /**
-     *
-     * @return the active Workspace of this Master or NULL
-     */
-    Workspace* getWorkspace(void) {
-        return ::getWorkspace(getWorkspaceIndex());
-    }
 };
 
 
@@ -233,8 +225,6 @@ static inline MasterID getActiveMasterKeyboardID(void) {return getActiveMaster()
 static inline MasterID getActiveMasterPointerID(void) {return getActiveMaster()->getPointerID();}
 /// @return the ID of the active Workspace or NO_WORKSPACE
 static inline WorkspaceID getActiveWorkspaceIndex(void) {return getActiveMaster()->getWorkspaceIndex();}
-/// @return the active Workspace or NULL
-static inline Workspace* getActiveWorkspace(void) {return getActiveMaster()->getWorkspace();}
 
 
 /// @return the window with recorded focus for the active Master

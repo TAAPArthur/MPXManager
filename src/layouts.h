@@ -191,7 +191,7 @@ static inline int toggleLayout(std::string name) { return getActiveWorkspace()->
 /// @param name the name of the registered layout that will become the new active layout of the active workspace
 static inline void setActiveLayout(std::string name) {getActiveWorkspace()->setActiveLayout(findLayoutByName(name));}
 /// @param l the new active layout of the active workspace
-static inline void setActiveLayout(Layout* l) {getActiveMaster()->getWorkspace()->setActiveLayout(l);}
+static inline void setActiveLayout(Layout* l) {getActiveWorkspace()->setActiveLayout(l);}
 /// @return the active layout of the active workspace
 static inline Layout* getActiveLayout() {return getActiveWorkspace()->getActiveLayout();}
 

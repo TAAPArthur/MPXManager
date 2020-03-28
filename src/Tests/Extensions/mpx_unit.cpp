@@ -202,8 +202,10 @@ MPX_TEST_ITER("test_split_master_bad", 2, {
     lock();
     typeKey(getKeyCode(XK_A));
     clickButton(1);
-    if(_i)
+    if(_i) {
+        setActiveMaster(NULL);
         getAllMasters().deleteElements();
+    }
     getAllSlaves().deleteElements();
     addDefaultMaster();
     getEventRules(DEVICE_EVENT).add(PASSTHROUGH_EVENT(attachActiveSlaveToMarkedMaster, NO_PASSTHROUGH));

@@ -227,3 +227,4 @@ bool popHiddenWindow(WindowAction action) {
     }
     return winInfo ? 1 : 0;
 }
+
