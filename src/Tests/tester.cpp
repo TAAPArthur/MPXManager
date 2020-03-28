@@ -37,12 +37,18 @@ int Test::runTest(int i) {
         if(!noFork)
             signal(SIGINT, NULL);
         printf("%s:%d %s.%d \n", fileName, lineNumber, name, i);
+        DEBUG("Running test setup");
         if(testSetup)
             testSetup();
         if(exitCode && this->testTeardown) {
             assert(atexit(this->testTeardown) == 0);
         }
+        DEBUG("Running test");
+        char* logLevelStr = getenv("TEST_LOG_LEVEL");;
+        if(logLevelStr)
+            setLogLevel((LogLevel)std::stoi(logLevelStr));
         func(i);
+        DEBUG("Running teardown");
         if(this->testTeardown)
             this->testTeardown();
         if(!noFork)

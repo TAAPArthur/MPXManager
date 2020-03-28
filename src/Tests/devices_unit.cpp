@@ -51,7 +51,7 @@ MPX_TEST("test_create_excessive_masters", {
     initCurrentMasters();
     assertEquals(getAllMasters().size(), 1);
 });
-MPX_TEST("test_init_current_masters", {
+MPX_TEST("test_init_current_masters_after_reset", {
     int size = 8;
     for(int i = 0; i < size; i++)
         createMasterDevice("test");
@@ -59,7 +59,6 @@ MPX_TEST("test_init_current_masters", {
     initCurrentMasters();
     assert(getAllMasters().size() == size + 1);
     destroyAllNonDefaultMasters();
-    getAllMasters().deleteElements();
     initCurrentMasters();
     assert(getAllMasters().size() == 1);
 });

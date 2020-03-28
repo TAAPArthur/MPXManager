@@ -288,8 +288,7 @@ MPX_TEST("free_events_on_exit", {
     grabPointer();
     generateMotionEvents(10000);
     getEventRules(XCB_GE_GENERIC).add(DEFAULT_EVENT(requestShutdown));
-    startWM();
-    waitForAllThreadsToExit();
+    runEventLoop();
     assert(consumeEvents());
 });
 MPX_TEST("true_idle", {

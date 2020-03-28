@@ -264,7 +264,7 @@ void retile(void) {
 void tileWorkspace(Workspace* workspace) {
     assert(workspace);
     LOG(LOG_LEVEL_DEBUG, "Tiling workspace %d", workspace->getID());
-    if(!workspace->getMonitor())
+    if(!workspace->isVisible())
         return;
     Monitor* m = workspace->getMonitor();
     assert(m);
