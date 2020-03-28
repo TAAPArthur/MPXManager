@@ -125,15 +125,6 @@ void addMoveNonTileableWindowsToWorkspaceBounds() {
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(moveNonTileableWindowsToWorkspaceBounds));
 }
 
-bool addIgnoreInputOnlyWindowsRule(bool remove) {
-    return getEventRules(PRE_REGISTER_WINDOW).add({
-        +[](WindowInfo * winInfo) {return !winInfo->isInputOnly();},
-        FUNC_NAME,
-        PASSTHROUGH_IF_TRUE,
-        HIGH_PRIORITY
-    }, remove);
-}
-
 
 void addShutdownOnIdleRule(bool remove) {
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), remove);

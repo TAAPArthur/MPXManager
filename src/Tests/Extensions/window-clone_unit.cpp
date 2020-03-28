@@ -84,11 +84,10 @@ MPX_TEST_ITER("test_simple_kill_clone", 2, {
     updateAllClones();
 });
 
-MPX_TEST_ITER("clone_special_windows", 3, {
+MPX_TEST_ITER("clone_special_windows", 2, {
     addIgnoreOverrideRedirectWindowsRule(1);
 
-    WindowID overrideRedirectWindow = createOverrideRedirectWindow();
-    WindowID inputOnly = createInputOnlyWindow();
+    WindowID overrideRedirectWindow = createOverrideRedirectWindow(XCB_WINDOW_CLASS_INPUT_OUTPUT);
     waitUntilIdle();
     lock();
     if(_i == 1) {
@@ -97,8 +96,6 @@ MPX_TEST_ITER("clone_special_windows", 3, {
     }
     else if(_i == 2)
         assert(cloneWindow(getWindowInfo(overrideRedirectWindow))->isOverrideRedirectWindow());
-    else
-        assert(cloneWindow(getWindowInfo(inputOnly))->isInputOnly());
     unlock();
 });
 

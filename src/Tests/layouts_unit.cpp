@@ -81,9 +81,8 @@ MPX_TEST_ITER("test_layouts", NUMBER_OF_LAYOUT_FAMILIES, {
     int area;
     for(int i = 1; i <= size; i++) {
         WindowID win =
-        i == 0 ? mapArbitraryWindow():
-        i == 1 ? mapWindow(createInputOnlyWindow()) :
-        i == 1 ? mapWindow(createNormalSubWindow(createNormalWindow())) :
+        i % 3 == 0 ? mapArbitraryWindow():
+        i % 3 == 1 ? mapWindow(createNormalSubWindow(createNormalWindow())) :
         mapArbitraryWindow();
         registerWindow(win, root);
         WindowInfo* winInfo = getWindowInfo(win);
@@ -304,20 +303,6 @@ MPX_TEST_ITER("test_simple_transform_config", TRANSFORM_LEN, {
         assert(memcmp(config, correctConfig[_i], sizeof(correctConfig[_i])) == 0);
     }
 });
-MPX_TEST("test_tile_input_only_window", {
-    CRASH_ON_ERRORS = -1;
-    WindowID win = mapWindow(createInputOnlyWindow());
-    scan(root);
-    WindowInfo* winInfo = getWindowInfo(win);
-    winInfo->moveToWorkspace(getActiveWorkspaceIndex());
-    assert(winInfo->isInputOnly());
-    assert(winInfo->isTileable());
-    assert(getActiveWindowStack().size() == 1);
-    setActiveLayout(GRID);
-    assert(getActiveLayout()->getArgs().noBorder == 0);
-    retile();
-});
-
 
 MPX_TEST("test_empty_layout", {
     mapWindow(createNormalWindow());
@@ -336,20 +321,18 @@ MPX_TEST("test_empty_layout", {
 });
 MPX_TEST("floating_windows", {
     WindowID win = mapWindow(createNormalWindow());
-    WindowID win2 = mapWindow(createInputOnlyWindow());
-    WindowID win3 = mapWindow(createNormalWindow());
+    WindowID win2 = mapWindow(createNormalWindow());
     scan(root);
     for(WindowInfo* winInfo : getAllWindows()) {
         winInfo->moveToWorkspace(getActiveWorkspaceIndex());
         floatWindow(winInfo);
     }
-    getWindowInfo(win3)->setTilingOverrideEnabled(1 << CONFIG_INDEX_BORDER);
+    getWindowInfo(win2)->setTilingOverrideEnabled(1 << CONFIG_INDEX_BORDER);
     int customBorder = 5;
-    getWindowInfo(win3)->setTilingOverride({0, 0, 0, 0, customBorder});
+    getWindowInfo(win2)->setTilingOverride({0, 0, 0, 0, customBorder});
     retile();
     assertEquals(getRealGeometry(getWindowInfo(win)).border, DEFAULT_BORDER_WIDTH);
-    assertEquals(getRealGeometry(getWindowInfo(win2)).border, 0);
-    assertEquals(getRealGeometry(getWindowInfo(win3)).border, customBorder);
+    assertEquals(getRealGeometry(getWindowInfo(win2)).border, customBorder);
 });
 
 MPX_TEST("test_tile_windows", {

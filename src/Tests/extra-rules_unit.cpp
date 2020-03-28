@@ -232,7 +232,7 @@ MPX_TEST_ITER("unmanaged_windows_above", 2, {
     addIgnoreOverrideRedirectWindowsRule(1);
     startWM();
     waitUntilIdle();
-    WindowID win = createOverrideRedirectWindow();
+    WindowID win = createOverrideRedirectWindow(XCB_WINDOW_CLASS_INPUT_OUTPUT);
     sendChangeWindowStateRequest(win, XCB_EWMH_WM_STATE_ADD, above ? ewmh->_NET_WM_STATE_ABOVE : ewmh->_NET_WM_STATE_BELOW);
     waitUntilIdle();
     mapWindow(win);
@@ -265,13 +265,6 @@ MPX_TEST("moveNonTileableWindowsToWorkspaceBounds", {
     waitUntilIdle();
     assert(getRealGeometry(win) != getRealGeometry(win2));
     assert(dims.intersects(getRealGeometry(win2)) || dims.contains(getRealGeometry(win2)));
-});
-MPX_TEST("ignore_input_only_rule", {
-    addIgnoreInputOnlyWindowsRule();
-    WindowID win = createWindow(root, XCB_WINDOW_CLASS_INPUT_ONLY, 0, NULL);
-    scan(root);
-    assert(!getWindowInfo(win));
-
 });
 
 MPX_TEST("ignore_non_top_level_windows", {

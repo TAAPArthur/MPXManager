@@ -94,6 +94,15 @@ bool addIgnoreOverrideRedirectWindowsRule(bool remove) {
         HIGH_PRIORITY,
     }, remove);
 }
+
+bool addIgnoreInputOnlyWindowsRule(bool remove) {
+    return getEventRules(PRE_REGISTER_WINDOW).add({
+        +[](WindowInfo * winInfo) {return !winInfo->isInputOnly();},
+        FUNC_NAME,
+        PASSTHROUGH_IF_TRUE,
+        HIGH_PRIORITY
+    }, remove);
+}
 void onCreateEvent(void) {
     xcb_create_notify_event_t* event = (xcb_create_notify_event_t*)getLastEvent();
     LOG(LOG_LEVEL_TRACE, "Detected create event for Window %d", event->window);
@@ -350,8 +359,9 @@ void addBasicRules(bool remove) {
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) { if(winInfo->isNotManageable()) winInfo->removeMask(INPUT_MASK);}),
     remove);
     addSyncMapStateRules(remove);
-    addIgnoreOverrideRedirectWindowsRule(remove);
     addDoNotManageOverrideRedirectWindowsRule(remove);
+    addIgnoreInputOnlyWindowsRule(remove);
+    addIgnoreOverrideRedirectWindowsRule(remove);
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), remove);
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultStackPosition), remove);
     addApplyBindingsRule(remove);

@@ -158,6 +158,14 @@ bool addIgnoreOverrideRedirectWindowsRule(bool remove = 0);
  * @return
  */
 bool addDoNotManageOverrideRedirectWindowsRule(bool remove = 0) ;
+
+/**
+ * Adds a PRE_REGISTER window rule to ignore input only windows
+ * @param remove
+ * @return
+ */
+bool addIgnoreInputOnlyWindowsRule(bool remove = 0);
+
 /**
  * Adds DEVICE_EVENT rule to trigger any of getDeviceBindings() using getLastUserEvent
  *

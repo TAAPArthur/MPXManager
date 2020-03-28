@@ -394,9 +394,9 @@ void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action 
 WindowID createWindow(WindowID parent = root, xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_OUTPUT,
     uint32_t mask = 0, uint32_t* valueList = NULL, const RectWithBorder& dims = {0, 0, 150, 150, 0});
 
-static inline WindowID createOverrideRedirectWindow() {
+static inline WindowID createOverrideRedirectWindow(xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_ONLY) {
     uint32_t overrideRedirect = 1;
-    return createWindow(root, XCB_WINDOW_CLASS_INPUT_ONLY, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect, {0, 0, 1, 1});
+    return createWindow(root, clazz, XCB_CW_OVERRIDE_REDIRECT, &overrideRedirect, {0, 0, 1, 1});
 }
 
 /**
