@@ -222,19 +222,6 @@ MPX_TEST_ITER("test_monitor_intersection", 12, {
     assertEquals(getAllMonitors().size(), size);
     getAllMonitors().deleteElements();
 });
-MPX_TEST_ITER("swapMonitors", 4, {
-    addWorkspaces(2);
-    for(int i = 1; i <= _i; i++)
-        getAllMonitors().add(new Monitor(i, {0, 0, 1, 1}));
-    assignUnusedMonitorsToWorkspaces();
-    Monitor* monitor[2] = {getWorkspace(0)->getMonitor(), getWorkspace(1)->getMonitor()};
-    bool visible[2] = {getWorkspace(0)->isVisible(), getWorkspace(1)->isVisible()};
-    swapMonitors(0, 1);
-    assert(monitor[1] == getWorkspace(0)->getMonitor());
-    assert(monitor[0] == getWorkspace(1)->getMonitor());
-    assert(visible[1] == getWorkspace(0)->isVisible());
-    assert(visible[0] == getWorkspace(1)->isVisible());
-});
 
 MPX_TEST_ITER("assign_workspace", 2, {
     addWorkspaces(2);
@@ -273,8 +260,8 @@ MPX_TEST("test_auto_assign_workspace_active_first", {
     assert(getWorkspace(1)->isVisible());
     getAllMonitors().add(new Monitor(3, {0, 0, 1, 1}));
     assignUnusedMonitorsToWorkspaces();
-    assert(getAllMasters()[0]->getWorkspace()->isVisible());
-    assert(getAllMasters()[1]->getWorkspace()->isVisible());
+    assert(getWorkspace(getAllMasters()[0]->getWorkspaceIndex())->isVisible());
+    assert(getWorkspace(getAllMasters()[1]->getWorkspaceIndex())->isVisible());
 });
 MPX_TEST("monitor_cleanup", {
     addWorkspaces(2);

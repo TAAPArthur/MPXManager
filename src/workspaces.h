@@ -7,6 +7,8 @@
 
 #include "mywm-structs.h"
 #include "window-masks.h"
+#include "monitors.h"
+#include "masters.h"
 #include <string>
 #include <assert.h>
 
@@ -53,6 +55,7 @@ void removeWorkspaces(int num);
  * Destroys every single workspaces
  */
 void removeAllWorkspaces();
+
 ///metadata on Workspace
 /**
  *
@@ -93,7 +96,7 @@ public:
     /**
      * @return the monitor associate with the given workspace if any
      */
-    Monitor* getMonitor() {return monitor;};
+    Monitor* getMonitor() const {return monitor;};
     /// returns the name of this workspace
     const std::string& getName()const {return name;};
     /// @param n the new name of the workspace
@@ -187,6 +190,14 @@ public:
 
 
 /**
+ * Swaps the monitors associated with the given workspaces
+ * @param index1
+ * @param index2
+ */
+void swapMonitors(WorkspaceID index1, WorkspaceID index2 = getActiveMaster()->getWorkspaceIndex());
+
+
+/**
  * @param name
  *
  * @return the workspace with the specified name
@@ -199,4 +210,10 @@ Workspace* getWorkspaceByName(std::string name);
 static inline Workspace* getWorkspace(WorkspaceID index) {
     return index < getAllWorkspaces().size() ? getAllWorkspaces()[index] : NULL;
 }
+
+
+/// @return the active Workspace or NULL
+static inline Workspace* getActiveWorkspace(void) {return getWorkspace(getActiveWorkspaceIndex());}
+/// @return the workspace of the active master
+static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveWorkspace()->getWindowStack();}
 #endif

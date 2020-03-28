@@ -65,7 +65,7 @@ void setClientMasterEnvVar(void) {
             setenv("_WIN_INSTANCE", getFocusedWindow()->getInstanceName().c_str(), 1);
             setEnvRect("WIN", getFocusedWindow()->getGeometry());
         }
-        Monitor* m = getActiveMonitor();
+        Monitor* m = getActiveWorkspace() ? getActiveWorkspace()->getMonitor() : NULL;
         if(m) {
             setEnvRect("VIEW", m->getViewport());
             setEnvRect("MON", m->getBase());

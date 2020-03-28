@@ -199,7 +199,7 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
         if(winInfo->hasMask(STICKY_MASK)) {
             Workspace* w = getActiveWorkspace();
             if(!w->isVisible())
-                w = getActiveMaster()->getWorkspace()->getNextWorkspace(1, VISIBLE);
+                w = getActiveWorkspace()->getNextWorkspace(1, VISIBLE);
             if(w)
                 winInfo->moveToWorkspace(w->getID());
             return;
@@ -228,7 +228,7 @@ void switchToWorkspace(int workspaceIndex) {
          * wants its workspace to become visible it must first find a visible workspace to swap with
          */
         if(!getActiveWorkspace()->isVisible()) {
-            Workspace* visibleWorkspace = getActiveMaster()->getWorkspace()->getNextWorkspace(1, VISIBLE);
+            Workspace* visibleWorkspace = getActiveWorkspace()->getNextWorkspace(1, VISIBLE);
             if(visibleWorkspace)
                 currentIndex = visibleWorkspace->getID();
         }

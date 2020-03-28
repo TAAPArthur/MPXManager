@@ -133,8 +133,8 @@ static inline Workspace* findWorkspace() {
     if(!getActiveWorkspace()->isVisible())
         return getActiveWorkspace();
     for(Master* master : getAllMasters())
-        if(!master->getWorkspace()->isVisible())
-            return master->getWorkspace();
+        if(!getWorkspace(master->getWorkspaceIndex())->isVisible())
+            return getWorkspace(master->getWorkspaceIndex());
     const Workspace* base = ::getWorkspace(getNumberOfWorkspaces() - 1);
     auto* workspace = base->getNextWorkspace(1, HIDDEN | NON_EMPTY);
     if(!workspace)
@@ -198,15 +198,6 @@ uint16_t getRootWidth(void) {
 
 uint16_t getRootHeight(void) {
     return rootDim ? rootDim[1] : 0;
-}
-void swapMonitors(WorkspaceID index1, WorkspaceID index2) {
-    Monitor* monitor1 = getWorkspace(index1)->getMonitor();
-    Monitor* monitor2 = getWorkspace(index2)->getMonitor();
-    if(monitor2)
-        getWorkspace(index1)->setMonitor(monitor2);
-    getWorkspace(index2)->setMonitor(monitor1);
-    if(!monitor2)
-        getWorkspace(index1)->setMonitor(monitor2);
 }
 void removeAllFakeMonitors() {
     for(int i = getAllMonitors().size() - 1; i >= 0; i--)

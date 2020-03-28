@@ -10,12 +10,7 @@
 
 #include "windows.h"
 #include "masters.h"
-/**
- *
- *
- * @return the workspace of the active master
- */
-static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveMaster()->getWorkspace()->getWindowStack();}
+
 
 /**
  * Called after a window has been successfully registered
