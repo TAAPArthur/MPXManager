@@ -265,7 +265,7 @@ public:
      * Set the last recorded geometry of the window
      * @param geo
      */
-    void setGeometry(const RectWithBorder geo) {
+    virtual void setGeometry(const RectWithBorder geo) {
         geometry = geo;
     }
 

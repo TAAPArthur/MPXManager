@@ -113,7 +113,7 @@ public:
      * @return 1 iff the workspace has been assigned a monitor
      */
     bool isVisible()const {
-        return ((Workspace*)(this))->getMonitor() ? 1 : 0;
+        return this->getMonitor() && this->getMonitor()->isActive();
     }
     /**
      * @return the windows stack of the workspace

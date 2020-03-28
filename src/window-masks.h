@@ -237,14 +237,14 @@ public:
      * Adds the states give by mask to the window
      * @param mask
      */
-    void addMask(WindowMask mask) {
+    virtual void addMask(WindowMask mask) {
         this->mask |= mask;
     }
     /**
      * Removes the states give by mask from the window
      * @param mask
      */
-    void removeMask(WindowMask mask) {
+    virtual void removeMask(WindowMask mask) {
         this->mask &= ~mask;
     }
     /**

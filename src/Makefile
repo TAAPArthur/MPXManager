@@ -30,6 +30,11 @@ LAYER5_SRCS += Extensions/xmousecontrol.cpp
 #endif
 #ifndef NO_SESSION
 LAYER5_SRCS += Extensions/session.cpp
+#endif
+
+#ifndef NO_CONTAINERS
+LAYER5_SRCS += Extensions/containers.cpp
+#endif
 #ifndef NO_GESTURE
 LAYER0_SRCS += Extensions/gestures-helper.cpp
 LAYER5_SRCS += Extensions/gestures.cpp Extensions/gesture-functions.cpp
