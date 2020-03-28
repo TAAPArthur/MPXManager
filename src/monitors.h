@@ -30,6 +30,7 @@ private:
     std::string name;
     bool fake = 0;
     uint32_t output = 0;
+    bool inactive;
 public:
     /**
      * @param id the X unique id of the monitor
@@ -116,6 +117,13 @@ public:
      * @return 1 iff the size changed
      */
     bool resizeToAvoidDock(WindowInfo* winInfo);
+    /// @return true iff a Workspace with this monitor can be considered visibile
+    virtual bool isActive() const {return !inactive;}
+    /**
+     * @param b sets the value of active
+     * @see isActive
+     */
+    void setActive(bool b) {inactive = !b;}
 };
 ///Masks used to determine the whether two monitors are duplicates
 enum MonitorDuplicationPolicy {

@@ -79,8 +79,8 @@ static void loadSavedFakeMonitor() {
     TRACE("Loading fake monitor mappings");
     auto reply = getWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
     if(reply)
-        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(short) * 5) ; i++) {
-            short* values = (short*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(short) * 5]);
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(MonitorID) * 5) ; i++) {
+            MonitorID* values = (MonitorID*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(MonitorID) * 5]);
             MonitorID id = values[0];
             values++;
             Monitor* m = getAllMonitors().find(id);
@@ -250,7 +250,7 @@ void saveCustomState(void) {
     DEBUG("Saving custom State");
     int layoutOffsets[getNumberOfWorkspaces()];
     int monitors[getNumberOfWorkspaces()];
-    short fakeMonitors[getAllMonitors().size() * 5];
+    MonitorID fakeMonitors[getAllMonitors().size() * 5];
     WindowID masterWindows[(getAllWindows().size() + 2) * getAllMasters().size()];
     WindowID workspaceWindows[getAllWindows().size() + getNumberOfWorkspaces() ];
     int numFakeMonitors = 0;

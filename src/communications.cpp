@@ -70,11 +70,12 @@ int Option::call(std::string p)const {
 
 static UniqueArrayList<Option*> options = {
     {"activate", activateWindow},
+    {"active-master", [](){std::cout << getActiveMaster()->getID() << std::endl;}, FORK_ON_RECEIVE},
     {"dump", +[]() {dumpWindow(MAPPABLE_MASK);}, FORK_ON_RECEIVE},
     {"dump", +[](WindowMask i) {dumpWindow(i);}, FORK_ON_RECEIVE},
     {"dump", +[](std::string * s) {dumpWindow(*s);}, FORK_ON_RECEIVE},
-    {"dump-master", dumpMaster, FORK_ON_RECEIVE},
     {"dump-master", +[]() {dumpMaster(getActiveMaster());}, FORK_ON_RECEIVE},
+    {"dump-master", dumpMaster, FORK_ON_RECEIVE},
     {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
     {"dump-rules", dumpRules, FORK_ON_RECEIVE},
     {"dump-stack", dumpWindowStack, FORK_ON_RECEIVE},

@@ -31,6 +31,9 @@ LAYER5_SRCS += Extensions/xmousecontrol.cpp
 #ifndef NO_SESSION
 LAYER5_SRCS += Extensions/session.cpp
 #endif
+#ifndef NO_CONTAINERS
+LAYER5_SRCS += Extensions/containers.cpp
+#endif
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
