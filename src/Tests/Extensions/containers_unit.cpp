@@ -50,8 +50,9 @@ static void setup() {
     containedWindow = mapArbitraryWindow();
     startWM();
     waitUntilIdle();
-    containerMonitor = getAllMonitors().find(container);
-    containerWindowInfo = getWindowInfo(container);
+    containerMonitor = getMonitorForContainer(container);
+    containerWindowInfo = getWindowInfoForContainer(container);
+    assert(containerWindowInfo);
     assert(containerMonitor);
     assert(containerMonitor->getWorkspace());
     assertEquals(containerMonitor->getBase(), getRealGeometry(containerWindowInfo));
@@ -126,5 +127,6 @@ MPX_TEST("resume_containers", {
     assertEquals(size, getAllMonitors().size());
     containerMonitor = getAllMonitors()[index];
     assert(containerMonitor->isFake());
-    assert(getWindowInfo(*containerMonitor));
+    assert(getWindowInfoForContainer(*containerMonitor));
+    assertEquals(containerMonitor, getMonitorForContainer(*getWindowInfoForContainer(*containerMonitor)));
 });

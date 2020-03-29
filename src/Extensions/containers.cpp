@@ -26,6 +26,15 @@ struct Container : WindowInfo, Monitor {
     }
 };
 
+
+WindowInfo* getWindowInfoForContainer(MonitorID mon) {
+    return getWindowInfo(mon);
+}
+Monitor* getMonitorForContainer(WindowID win) {
+    return getAllMonitors().find(win);
+}
+
+
 WindowID createContainer(bool doNotAssignWorkspace) {
     WindowID win = createWindow(root, XCB_WINDOW_CLASS_INPUT_OUTPUT, XCB_CW_BACK_PIXEL, &screen->black_pixel);
     Container* container = new Container(win, root);
@@ -33,15 +42,26 @@ WindowID createContainer(bool doNotAssignWorkspace) {
         return 0;
     getAllMonitors().add(container);
     container->addMask(MAPPABLE_MASK);
-    container->moveToWorkspace(getActiveWorkspaceIndex());
-    if(doNotAssignWorkspace)
+    if(doNotAssignWorkspace) {
         container->assignWorkspace();
+        container->moveToWorkspace(getActiveWorkspaceIndex());
+    }
     return win;
 }
 WindowID createContainer() {
     return createContainer(1);
 }
-static void loadContainers() {
+
+static void saveContainers() {
+    DEBUG("Saving custom State");
+    MonitorID containers[getNumberOfWorkspaces()];
+    for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
+        Monitor* m = getWorkspace(i)->getMonitor();
+        containers[i] = getWindowInfoForContainer(*m) ? m->getID() : 0;
+    }
+    setWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, containers, LEN(containers));
+}
+static void loadContainerMonitors() {
     for(int i = 0; i < getAllMonitors().size(); i++) {
         Monitor* m = getAllMonitors()[i];
         if(m->isFake() && m->getName() == CONTAINER_NAME) {
@@ -53,6 +73,23 @@ static void loadContainers() {
         }
     }
 }
+static void loadContainerWindows() {
+    TRACE("Loading fake monitor mappings");
+    auto reply = getWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
+    if(reply)
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(short) ; i++) {
+            short* values = (short*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(short)]);
+            MonitorID id = values[0];
+            WindowInfo* winInfo = getWindowInfoForContainer(id);
+            if(winInfo)
+                winInfo->moveToWorkspace(i);
+        }
+}
+static void loadContainers() {
+    loadContainerMonitors();
+    loadContainerWindows();
+}
 void addResumeContainerRules(bool remove) {
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadContainers, LOW_PRIORITY), remove);
+    getBatchEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveContainers, LOW_PRIORITY), remove);
 }
