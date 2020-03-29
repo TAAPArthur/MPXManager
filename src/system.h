@@ -53,7 +53,7 @@ void quit(int exitCode)__attribute__((__noreturn__));
  * restart the application
  * @param force don't try to safly shutdown
  */
-void restart(bool force = 0)__attribute__((__noreturn__));
+void restart()__attribute__((__noreturn__));
 
 /**
  * Forks and, if command is not NULL, exec command in SHELL
@@ -116,10 +116,6 @@ void createStatusPipe();
  * function to run in child after a fork/spawn call
  */
 extern void (*onChildSpawn)(void);
-/**
- * Destroys internal structs
- */
-void destroyAllLists();
 /**
  * Set environment vars such to help old clients know which master device to use
  */

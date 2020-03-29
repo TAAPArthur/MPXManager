@@ -13,8 +13,8 @@ TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage -lm
 NON_X_LDFLAGS := -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lxdo
 
-LAYER0_SRCS := globals.cpp logger.cpp debug.cpp settings.cpp
-LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp boundfunction.cpp threads.cpp system.cpp
+LAYER0_SRCS := globals.cpp logger.cpp debug.cpp settings.cpp threads.cpp
+LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp boundfunction.cpp system.cpp
 LAYER2_SRCS := xsession.cpp test-functions.cpp devices.cpp device-grab.cpp bindings.cpp
 LAYER3_SRCS := window-properties.cpp wmfunctions.cpp state.cpp layouts.cpp wm-rules.cpp ewmh.cpp extra-rules.cpp
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp mpxmanager.cpp

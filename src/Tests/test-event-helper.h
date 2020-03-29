@@ -46,18 +46,17 @@ static inline void exitFailure() {
 }
 
 static inline void startWM() {
-    spawnThread(runEventLoop, "event-loop");
+    spawnThread(runEventLoop);
 }
 static inline void fullCleanup() {
     DEBUG("full cleanup");
     if(!isLogging(LOG_LEVEL_DEBUG))
         setLogLevel(LOG_LEVEL_NONE);
     requestShutdown();
-    if(getNumberOfThreads() && ewmh) {
+    if(getIdleCount() && ewmh) {
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
         wakeupWM();
     }
-    waitForAllThreadsToExit();
     DEBUG("validating state");
     validate();
     getDeviceBindings().deleteElements();

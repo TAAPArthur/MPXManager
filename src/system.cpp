@@ -145,35 +145,15 @@ int waitForChild(int pid) {
     LOG(LOG_LEVEL_DEBUG, "Process exited with %d status %d", pid, status);
     return exitCode;
 }
-void destroyAllLists() {
-    setActiveMaster(NULL);
-    getAllSlaves().deleteElements();
-    getAllMasters().deleteElements();
-    removeAllWorkspaces();
-    getAllWindows().deleteElements();
-    getAllMonitors().deleteElements();
-}
-static void stop(void) {
-    requestShutdown();
-    waitForAllThreadsToExit();
-    DEBUG("Shutting down");
-    resetPipe();
-    destroyAllLists();
-}
 
-void restart(bool force) {
-    INFO("restarting");
-    if(!force)
-        stop();
-    else
-        resetPipe();
+void restart() {
+    resetPipe();
     DEBUG("calling execv");
     if(passedArguments)
         execv(passedArguments[0], passedArguments);
     err(1, "exec failed; Aborting");
 }
 void quit(int exitCode) {
-    stop();
     DEBUG("Exiting");
     exit(exitCode);
 }
@@ -222,7 +202,7 @@ __attribute__((constructor)) static void set_handlers() {
     signal(SIGABRT, handler);
     signal(SIGTERM, handler);
     signal(SIGPIPE, [](int) {resetPipe();});
-    createSigAction(SIGHUP, [](int) {restart(1);});
-    createSigAction(SIGUSR1, [](int) {restart(0);});
+    createSigAction(SIGHUP, [](int) {restart();});
+    createSigAction(SIGUSR1, [](int) {restart();});
     signal(SIGUSR2, [](int) {printStackTrace();});
 }

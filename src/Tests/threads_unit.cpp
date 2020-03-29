@@ -78,11 +78,3 @@ MPX_TEST("thread_signal", {
     waitForAllThreadsToExit();
     assertEquals(num, 124);
 });
-
-MPX_TEST("wakeup_function", {
-    registerWakeupFunction([]{signaler.signal(1);});
-    spawnThread([]{signaler.justWait();}, "T1");
-    spawnThread([]{signaler.justWait();}, "T2");
-    requestShutdown();
-    waitForAllThreadsToExit();
-});

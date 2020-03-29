@@ -51,10 +51,6 @@ void addWorkspaces(int num);
  * @param num number of workspace to remove
  */
 void removeWorkspaces(int num);
-/**
- * Destroys every single workspaces
- */
-void removeAllWorkspaces();
 
 ///metadata on Workspace
 /**

@@ -61,6 +61,7 @@ MPX_TEST("tile", {
     assert(count == 1);
     tileWorkspace(getWorkspace(2));
     assert(count == 1);
+    setActiveLayout(NULL);
 });
 
 /**
@@ -318,6 +319,7 @@ MPX_TEST("test_empty_layout", {
         assert(!xcb_poll_for_event(dis));
         getAllWindows()[0]->moveToWorkspace(getActiveWorkspaceIndex());
     }
+    setActiveLayout(NULL);
 });
 MPX_TEST("floating_windows", {
     WindowID win = mapWindow(createNormalWindow());
@@ -400,6 +402,8 @@ MPX_TEST_ITER("test_privileged_windows_size", 9 * 2, {
     retile();
     Rect rect = getRealGeometry(winInfo);
     assertEquals(arr[_i].dims, rect);
+
+    setActiveLayout(NULL);
 });
 
 MPX_TEST("find_layout_by_name", {
@@ -441,4 +445,5 @@ MPX_TEST("test_register_restore_layout", {
     assert(memcmp(&zeroLayout.getArgs(), &getActiveLayout()->getArgs(), sizeof(zeroLayout.getArgs())));
     getActiveLayout()->restoreArgs();
     assert(memcmp(&zeroLayout.getArgs(), &getActiveLayout()->getArgs(), sizeof(zeroLayout.getArgs())) == 0);
+    setActiveLayout(NULL);
 });

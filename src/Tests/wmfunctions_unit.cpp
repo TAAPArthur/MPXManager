@@ -525,7 +525,6 @@ MPX_TEST("test_delete_window_request_race", {
     killClientOfWindowInfo(winInfo);
     unregisterWindow(winInfo);
     unlock();
-    waitForAllThreadsToExit();
 });
 
 /*

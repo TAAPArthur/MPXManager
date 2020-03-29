@@ -105,7 +105,6 @@ MPX_TEST("test_auto_update_clones", {
     // TODO actually test something
     requestShutdown();
     createNormalWindow();
-    waitForAllThreadsToExit();
 });
 
 

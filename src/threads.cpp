@@ -7,14 +7,6 @@
 #include "logger.h"
 #include "threads.h"
 
-static ArrayList<std::function<void()>>wakeupFunctions;
-void registerWakeupFunction(void(*func)()) {
-    wakeupFunctions.add(func);
-}
-void registerWakeupFunction(std::function<void()>func) {
-    wakeupFunctions.add(func);
-}
-
 static std::mutex globalMutex;
 
 void lock(void) {
@@ -34,49 +26,20 @@ struct _CondMutex {
 };
 ThreadSignaler::ThreadSignaler() {
     condMutex = new _CondMutex();
-    registerWakeupFunction([&] {this->signal();});
 }
-void ThreadSignaler::signal(std::function<void()>func, bool all) {
+void ThreadSignaler::signal() {
     {
         std::lock_guard<std::mutex> lk(condMutex->m);
-        func();
+        ready = 1;
     }
-    if(all)
-        condMutex->cv.notify_all();
-    else
-        condMutex->cv.notify_one();
+    condMutex->cv.notify_one();
 }
-void ThreadSignaler::justWait(std::function<bool()>func, bool noResetSignal) {
+void ThreadSignaler::justWait() {
     std::unique_lock<std::mutex> lk(condMutex->m);
-    condMutex->cv.wait(lk, func);
-    if(!noResetSignal && !isShuttingDown())
-        ready = 0;
+    condMutex->cv.wait(lk, [&] {return ready;});
+    ready = 0;
 }
-
-/// holds thread metadata
-struct Thread {
-    /// thread id
-    std::thread thread;
-    /// user specified name of thread
-    const char* name;
-} ;
-static ArrayList<Thread*> threads __attribute__((unused)) ;
-void spawnThread(std::function<void()>func, const char* name) {
-    threads.add(new Thread{std::thread(func), name});
-}
-int getNumberOfThreads(void) {return threads.size();}
-void waitForAllThreadsToExit(void) {
-    auto currentThreadID = std::this_thread::get_id();
-    LOG(LOG_LEVEL_DEBUG, "Running %d wakeup functions for %d threads", wakeupFunctions.size(), threads.size());
-    for(auto func : wakeupFunctions)
-        func();
-    while(threads.size()) {
-        Thread* thread = threads.pop();
-        LOG(LOG_LEVEL_DEBUG, "Waiting for thread '%s' and %d more threads", thread->name, threads.size());
-        if(thread->thread.get_id() != currentThreadID) {
-            thread->thread.join();
-        }
-        delete thread;
-    }
-    DEBUG("Finished waiting on threads");
+void spawnThread(std::function<void()>func) {
+    std::thread thread(func);
+    thread.detach();
 }

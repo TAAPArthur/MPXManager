@@ -170,6 +170,20 @@ MPX_TEST("test_toggle_show_desktop", {
     assert(checkStackingOrder(stackingOrder, 2));
 });
 
+MPX_TEST_ITER_ERR("test_client_close_window", 2, 1, {
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
+    addEWMHRules();
+    suppressOutput();
+    addIgnoreOverrideRedirectWindowsRule();
+
+    mapWindow(createNormalWindow());
+    scan(root);
+    sendCloseWindowRequest(_i ? createOverrideRedirectWindow() : getAllWindows()[0]->getID());
+    runEventLoop();
+    assert(xcb_connection_has_error(dis));
+    exit(1);
+});
+
 static void clientMessageSetup() {
     CRASH_ON_ERRORS = -1;
     SRC_INDICATION = -1;
@@ -193,16 +207,6 @@ static void clientMessageSetup() {
 
 SET_ENV(clientMessageSetup, fullCleanup);
 
-MPX_TEST_ITER_ERR("test_client_close_window", 2, 1, {
-    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
-    suppressOutput();
-    addIgnoreOverrideRedirectWindowsRule();
-    sendCloseWindowRequest(_i ? createOverrideRedirectWindow() : getAllWindows()[0]->getID());
-    flush();
-    waitForAllThreadsToExit();
-    assert(xcb_connection_has_error(dis));
-    exit(1);
-});
 MPX_TEST("client_list", {
     xcb_ewmh_get_windows_reply_t reply;
     assert(xcb_ewmh_get_client_list_reply(ewmh, xcb_ewmh_get_client_list(ewmh, defaultScreenNumber), &reply, nullptr));

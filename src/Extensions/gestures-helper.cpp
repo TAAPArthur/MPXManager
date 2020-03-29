@@ -104,17 +104,10 @@ void processTouchEvent(libinput_event_touch* event, enum libinput_event_type typ
             break;
     }
 }
-static int dummyFD;
-static void wakeupFunction() {
-    long num = 100;
-    write(dummyFD, &num, sizeof(num));
-}
 static void listenForGestures(struct libinput* li) {
-    dummyFD = eventfd(0, EFD_CLOEXEC);
-    registerWakeupFunction(wakeupFunction);
     libinput_event* event;
     auto fd = libinput_get_fd(li);
-    struct pollfd fds[2] = {{fd, POLLIN}, {(short)dummyFD, POLLIN}};
+    struct pollfd fds[1] = {{fd, POLLIN}};
     while(!isShuttingDown()) {
         poll(fds, LEN(fds), -1);
         if(fds[0].revents & POLLIN == 0)
@@ -137,6 +130,6 @@ static void listenForGestures(struct libinput* li) {
 }
 void enableGestures(const char** paths, int num, bool grab) {
     struct libinput* li = paths && num ? createPathInterface(paths, num, grab) : createUdevInterface(0);
-    spawnThread([ = ] {listenForGestures(li);}, "LibInputGesturesReader");
-    spawnThread(gestureEventLoop, "GesturesEventProcessor");
+    spawnThread([ = ] {listenForGestures(li);});
+    spawnThread(gestureEventLoop);
 }
