@@ -134,12 +134,11 @@ MPX_TEST("test_stale", {
 });
 
 MPX_TEST("bad_pid", {
-    startWM();
-    waitUntilIdle();
+    CRASH_ON_ERRORS = 0;
     catchError(xcb_ewmh_set_wm_pid_checked(ewmh, getPrivateWindow(), -1));
     send("dump", "");
-    CRASH_ON_ERRORS = 0;
-    waitUntilIdle();
+    send("quit", "");
+    runEventLoop();
 });
 
 

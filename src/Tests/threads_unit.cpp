@@ -16,23 +16,22 @@ void incrementCounter() {
     }
 }
 MPX_TEST("run_in_new_thread", {
-    spawnThread(incrementCounter, "increment");
+    spawnThread(incrementCounter);
     waitForAllThreadsToExit();
     assert(counter == size);
 });
 // make volatile
 int getSize(ArrayList<long>* list) {return list->size();}
 MPX_TEST("thread_lock_unlock", {
-    spawnThread(incrementCounter, "increment");
-    spawnThread(incrementCounter, "increment2");
-    assertEquals(getNumberOfThreads(), 2);
+    spawnThread(incrementCounter);
+    spawnThread(incrementCounter);
     waitForAllThreadsToExit();
     assertEquals(counter, size * 2);
 });
 MPX_TEST("safe_shutdown", {
     spawnThread([]{
         while(!isShuttingDown())msleep(100);
-    }, "Spin Forever");
+    });
     requestShutdown();
     waitForAllThreadsToExit();
 });
@@ -50,7 +49,7 @@ MPX_TEST("thread_signal_wakeup_sync_reuse", {
 MPX_TEST_ITER("thread_signal_wakeup_async", 2, {
     if(_i)
         signaler.signal();
-    spawnThread([]{signaler.justWait();}, "wait");
+    spawnThread([]{signaler.justWait();});
     if(!_i) {
         msleep(100);
         signaler.signal();
@@ -67,22 +66,14 @@ MPX_TEST("thread_signal", {
             signaler.signal();
             signaler2.justWait();
         }
-    }, "Evens");
+    });
     spawnThread([&]{
         for(int i = 1; i < size; i++) {
             signaler.justWait();
             num *= i;
             signaler2.signal();
         }
-    }, "Odds");
+    });
     waitForAllThreadsToExit();
     assertEquals(num, 124);
-});
-
-MPX_TEST("wakeup_function", {
-    registerWakeupFunction([]{signaler.signal(1);});
-    spawnThread([]{signaler.justWait();}, "T1");
-    spawnThread([]{signaler.justWait();}, "T2");
-    requestShutdown();
-    waitForAllThreadsToExit();
 });

@@ -126,7 +126,7 @@ void runXMouseControl() {
     }
 }
 void addStartXMouseControlRule() {
-    getEventRules(X_CONNECTION).add({[]() {spawnThread(runXMouseControl, "xmousecontrol");}, FUNC_NAME});
+    getEventRules(X_CONNECTION).add({[]() {spawnThread(runXMouseControl);}, FUNC_NAME});
 }
 
 #define PAIR(MASK,KEY,KP,A1,KR,A2)\

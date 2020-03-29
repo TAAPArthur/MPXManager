@@ -152,20 +152,6 @@ MPX_TEST("quit", {
 MPX_TEST_ERR("quit_err", 1, {
     quit(1);
 });
-MPX_TEST("safe_quit", {
-    char buffer[8] = {0};
-    static const char* value = "safe";
-    if(!spawnPipe(NULL)) {
-        spawnThread([] {
-            while(!isShuttingDown())msleep(100);
-            printf(value);
-        }, "Spin Forever");
-        quit(0);
-    }
-    assert(waitForChild(0) == 0);
-    read(STATUS_FD_READ, buffer, LEN(buffer));
-    assert(strcmp(buffer, value) == 0);
-});
 
 MPX_TEST_ITER_ERR("restart", 2, 10, {
     static const char* const args[] = {SHELL.c_str(), "-c", "exit 10", NULL};
@@ -175,14 +161,6 @@ MPX_TEST_ITER_ERR("restart", 2, 10, {
         restart();
     else
         kill(getpid(), SIGUSR1);
-    assert(0);
-});
-MPX_TEST_ERR("force_restart", 10, {
-    static const char* const args[] = {SHELL.c_str(), "-c", "exit 10", NULL};
-    passedArguments = (char* const*)args;
-    numPassedArguments = LEN(args) - 1;
-    spawnThread([]{while(1)msleep(100);}, "InfiniteLoop");
-    restart(1);
     assert(0);
 });
 SET_ENV(suppressOutput, NULL);

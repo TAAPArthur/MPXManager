@@ -72,11 +72,11 @@ static void setup() {
     int readNumber = 0;
     auto pid = spawnPipe(NULL, 1);
     if(pid) {
-        fakeMain({"--clear-startup-method", "--no-event-loop"});
-        enableInterClientCommunication();
-        startWM();
-        waitUntilIdle(1);
+        fakeMain({"--no-event-loop"});
+        addInterClientCommunicationRule();
+
         write(STATUS_FD, &number, sizeof(number));
+        runEventLoop();
         int result = read(STATUS_FD_READ, &readNumber, sizeof(readNumber));
         if(result) {
             assertEquals(result, sizeof(readNumber));
@@ -110,4 +110,5 @@ static void cleanup() {
 SET_ENV(setup, cleanup);
 MPX_TEST("set-var", {
     assertEquals(0, fakeMain({"poll-count", "0"}));
+    assertEquals(0, fakeMain({"request-shutdown"}));
 });

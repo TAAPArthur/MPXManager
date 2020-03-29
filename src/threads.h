@@ -12,8 +12,6 @@
  */
 #define ATOMIC(code...) do {lock();code;unlock();}while(0)
 
-void registerWakeupFunction(void(*func)());
-
 /**
  * Locks/unlocks the global mutex
  *
@@ -39,25 +37,15 @@ public:
      * Runs func under a lock and then notifies one or all waiting threads
      *
      * @param func
-     * @param all determines where a single thread or all threads are notified
      */
-    void signal(std::function<void()> func, bool all = 0);
-    /**
-     * Notifies threads that are blocked in justWait()
-     * @param all
-     */
-    void signal(bool all = 0) {signal([&] {this->ready = 1;}, all);}
+    void signal();
     /**
      * Blocks until the thread is signaled and func returns true
      *
      * @param  func
      * @param noResetSignal if set this->ready will be cleared; Only matters if waiting on ready
      */
-    void justWait(std::function<bool()> func, bool noResetSignal = 0);
-    /**
-     * Blocks until signal(bool) has been called
-     */
-    void justWait() {justWait([&] {return this->ready;});}
+    void justWait();
     /**
      * Either sleeps delay ms or blocks until signaled
      *
@@ -75,14 +63,5 @@ public:
  * Runs method in a new thread
  * @param func the method to run
  */
-void spawnThread(std::function<void()>func, const char* name);
-/**
- * @return the number of threads that have not terminated and been cleaned up
- */
-int getNumberOfThreads(void);
-
-/**
- * Joins all threads started via runInNewThread
- */
-void waitForAllThreadsToExit(void);
+void spawnThread(std::function<void()>func);
 #endif

@@ -30,7 +30,7 @@ private:
     std::string name;
     bool fake = 0;
     uint32_t output = 0;
-    bool inactive;
+    bool inactive = 0;
 public:
     /**
      * @param id the X unique id of the monitor

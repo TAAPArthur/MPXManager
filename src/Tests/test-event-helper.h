@@ -46,21 +46,23 @@ static inline void exitFailure() {
 }
 
 static inline void startWM() {
-    spawnThread(runEventLoop, "event-loop");
+    spawnThread(runEventLoop);
 }
 static inline void fullCleanup() {
     DEBUG("full cleanup");
     if(!isLogging(LOG_LEVEL_DEBUG))
         setLogLevel(LOG_LEVEL_NONE);
     requestShutdown();
-    if(getNumberOfThreads() && ewmh) {
+    if(getIdleCount() && ewmh) {
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
         wakeupWM();
     }
     waitForAllThreadsToExit();
     DEBUG("validating state");
     validate();
+    DEBUG("Clearing bindings");
     getDeviceBindings().deleteElements();
+    DEBUG("Checking bound function names");
     for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
         for(const BoundFunction* b : getEventRules(i))
             if(b->func)

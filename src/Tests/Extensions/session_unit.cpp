@@ -88,7 +88,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
         longName[i] = 'A';
     longName[LEN(longName) - 1] = 0;
 
-    Layout l = Layout(longName, NULL);
+    static Layout l = Layout(longName, NULL);
     registeredLayout(&l);
     setActiveLayout(&l);
     switchToWorkspace(1);

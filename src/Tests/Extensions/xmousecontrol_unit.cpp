@@ -24,7 +24,14 @@ static void setup(void) {
     addStartXMouseControlRule();
     onSimpleStartup();
 }
-SET_ENV(setup, fullCleanup);
+static void cleanup() {
+    requestShutdown();
+    addXMouseControlMask(1);
+    removeXMouseControlMask(1);
+    fullCleanup();
+}
+
+SET_ENV(setup, cleanup);
 MPX_TEST("test_scroll", {
     int masks[] = {
         SCROLL_UP_MASK, SCROLL_DOWN_MASK, SCROLL_LEFT_MASK, SCROLL_RIGHT_MASK,

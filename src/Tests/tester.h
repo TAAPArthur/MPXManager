@@ -28,6 +28,8 @@
 
 #define SET_ENV(env...) static Env _CAT(e,__LINE__) __attribute__((unused))= Env(env,__FILE__)
 
+void waitForAllThreadsToExit();
+
 static void(*_setup)(void) = NULL;
 static void(*_teardown)(void) = NULL;
 static const char* _file = "";

@@ -178,7 +178,7 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
         xcb_ewmh_send_client_message(dis, root, winInfo->getID(), ewmh->WM_PROTOCOLS, 5, data);
         INFO("Sending request to delete window");
         WindowID id = winInfo->getID();
-        spawnThread([ = ] {waitForWindowToDie(id);}, "wait for window to die");
+        spawnThread([ = ] {waitForWindowToDie(id);});
     }
     else {
         killClientOfWindow(winInfo->getID());

@@ -116,7 +116,7 @@ void autoUpdateClones() {
     }
 }
 void startAutoUpdatingClones(void) {
-    spawnThread(autoUpdateClones, "AutoUpdateWindowClone");
+    spawnThread(autoUpdateClones);
 }
 
 void swapWithOriginalOnEnter(void) {

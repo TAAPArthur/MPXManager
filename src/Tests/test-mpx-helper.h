@@ -18,10 +18,20 @@ static inline void createSimpleEnv(void) {
 static inline bool addWindowInfo(WindowInfo* winInfo) {
     return getAllWindows().addUnique(winInfo);
 }
+static inline void destroyAllLists() {
+    setActiveMaster(NULL);
+    getAllSlaves().deleteElements();
+    getAllMasters().deleteElements();
+    extern ArrayList<Workspace*> workspaces;
+    workspaces.deleteElements();
+    getAllWindows().deleteElements();
+    getAllMonitors().deleteElements();
+}
 static inline void simpleCleanup() {
     validate();
     suppressOutput();
     printSummary();
+    destroyAllLists();
 }
 static volatile int count = 0;
 static inline void incrementCount(void) {

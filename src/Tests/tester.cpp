@@ -51,6 +51,7 @@ int Test::runTest(int i) {
         DEBUG("Running teardown");
         if(this->testTeardown)
             this->testTeardown();
+        DEBUG("Process exited normally");
         if(!noFork)
             quit(0);
     }

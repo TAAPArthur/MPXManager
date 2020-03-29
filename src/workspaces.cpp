@@ -11,7 +11,7 @@
 
 
 ///list of all workspaces
-static ArrayList<Workspace*> workspaces;
+ArrayList<Workspace*> workspaces;
 const ArrayList<Workspace*>& getAllWorkspaces() {
     return workspaces;
 }
@@ -36,9 +36,6 @@ void addWorkspaces(int num) {
 void removeWorkspaces(int num) {
     for(int i = 0; i < num && getNumberOfWorkspaces() > 1; i++)
         delete workspaces.pop();
-}
-void removeAllWorkspaces() {
-    workspaces.deleteElements();
 }
 
 void Workspace::setMonitor(Monitor* m) {
