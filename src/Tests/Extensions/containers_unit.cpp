@@ -63,7 +63,7 @@ SET_ENV(setup, fullCleanup);
 MPX_TEST("tile", {
     assertEquals(getRealGeometry(container).getArea(), getRealGeometry(normalWindow).getArea());
     assertEquals(getRealGeometry(container).getArea(), containerMonitor->getBase().getArea());
-    assertEquals(getRealGeometry(container).getArea(), getAllMonitors()[0]->getBase().getArea()/2);
+    assertEquals(getRealGeometry(container).getArea(), getAllMonitors()[0]->getBase().getArea() / 2);
 });
 
 MPX_TEST("close", {
@@ -90,7 +90,7 @@ MPX_TEST("mapWindowInsideContainer", {
     assert(containerWindowInfo->hasMask(MAPPED_MASK));
 });
 
-MPX_TEST_ITER("contain_self",2, {
+MPX_TEST_ITER("contain_self", 2, {
     containerWindowInfo->moveToWorkspace(containerMonitor->getWorkspace()->getID());
     waitUntilIdle();
     assert(getWindowInfo(normalWindow)->hasMask(MAPPED_MASK));
@@ -108,4 +108,23 @@ MPX_TEST("unmapContainer", {
     assert(!getWindowInfo(normalWindow)->hasMask(MAPPED_MASK));
     assert(!containerWindowInfo->hasMask(MAPPED_MASK));
     assert(!getWindowInfo(containedWindow)->hasMask(MAPPED_MASK));
+});
+
+MPX_TEST("persist_after_monitor_refresh", {
+    detectMonitors();
+    assert(getAllMonitors().find(container));
+});
+MPX_TEST("resume_containers", {
+    auto size = getAllMonitors().size();
+    auto index = getAllMonitors().indexOf(container);
+    addResumeContainerRules();
+    destroyWindow(container);
+    waitUntilIdle();
+    assertEquals(size, getAllMonitors().size());
+    ATOMIC(applyEventRules(X_CONNECTION));
+    waitUntilIdle();
+    assertEquals(size, getAllMonitors().size());
+    containerMonitor = getAllMonitors()[index];
+    assert(containerMonitor->isFake());
+    assert(getWindowInfo(*containerMonitor));
 });

@@ -5,4 +5,6 @@
 
 WindowID createContainer();
 
+void addResumeContainerRules(bool remove = 0);
+
 #endif
