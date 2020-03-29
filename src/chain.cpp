@@ -96,5 +96,5 @@ void maybeAbortActiveChains() {
 void addApplyChainBindingsRule(bool remove) {
     getEventRules(DEVICE_EVENT).add(BoundFunction{+[]{return checkAllChainBindings(getLastUserEvent());}, DEFAULT_EVENT_NAME(checkAllChainBindings), PASSTHROUGH_IF_TRUE, HIGH_PRIORITY},
         remove);
-    getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT_HIGH(maybeAbortActiveChains));
+    getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(maybeAbortActiveChains, HIGH_PRIORITY));
 }

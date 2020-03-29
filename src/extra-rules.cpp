@@ -106,7 +106,7 @@ static bool isNotRepeatedKey() {
     return !(event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT);
 }
 void addIgnoreKeyRepeat(bool remove) {
-    getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT_HIGH(isNotRepeatedKey), remove);
+    getEventRules(XCB_INPUT_KEY_PRESS).add(DEFAULT_EVENT(isNotRepeatedKey, HIGH_PRIORITY), remove);
 }
 
 static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {

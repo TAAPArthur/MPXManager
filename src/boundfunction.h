@@ -29,9 +29,7 @@
 /// @{
 /// Creates a BoundFunction with a name based on F with a preset priority
 /// @param F the function to call
-#define DEFAULT_EVENT(F){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE}
-#define DEFAULT_EVENT_HIGH(F){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE, HIGH_PRIORITY}
-#define DEFAULT_EVENT_LOW(F){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE, LOW_PRIORITY}
+#define DEFAULT_EVENT(F, args...){F, DEFAULT_EVENT_NAME(F), PASSTHROUGH_IF_TRUE, args}
 /// @}
 
 /**
