@@ -202,15 +202,17 @@ void centerMouseInWindow(WindowInfo* winInfo) {
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
     Master* master = getActiveMaster();
+    Monitor*smallestMonitor = NULL;
     if(getMousePosition(master->getPointerID(), root, pos)) {
         Rect rect = {pos[0], pos[1], 1, 1};
         for(Monitor* m : getAllMonitors()) {
-            if(m->getBase().intersects(rect) && m->getWorkspace()) {
-                switchToWorkspace(m->getWorkspace()->getID());
-                return;
-            }
+            if(m->getBase().intersects(rect) && m->getWorkspace())
+                if(!smallestMonitor || smallestMonitor->getBase().isLargerThan(m->getBase()))
+                    smallestMonitor = m;
         }
     }
+    if(smallestMonitor)
+        switchToWorkspace(smallestMonitor->getWorkspace()->getID());
 }
 bool activateNextUrgentWindow(WindowAction action) {
     const BoundFunction f = {hasMask, URGENT_MASK, "_activateNextUrgent",  PASSTHROUGH_IF_TRUE};
