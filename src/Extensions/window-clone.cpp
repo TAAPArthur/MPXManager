@@ -19,6 +19,8 @@
 
 static ThreadSignaler signaler;
 
+static void updateClone(WindowInfo* clone);
+
 CloneInfo* getCloneInfo(WindowInfo* winInfo, bool createNew) {
     static Index<CloneInfo> index;
     auto* list = get(index, winInfo, createNew, NULL);
@@ -60,6 +62,7 @@ WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent) {
     CloneInfo* cloneInfo = getCloneInfo(clone);
     cloneInfo->original = winInfo->getID();
     cloneInfo->clone = clone->getID();
+    updateClone(clone);
     signaler.signal();
     return clone;
 }
