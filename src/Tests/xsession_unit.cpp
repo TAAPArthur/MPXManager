@@ -51,13 +51,13 @@ MPX_TEST("get_set_atom_bad", {
 });
 MPX_TEST("get_set_window_property", {
     for(int value = 0; value < 3; value++) {
-        setWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, value);
-        int v = getWindowPropertyValue(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
+        setWindowProperty(root, ewmh->_NET_SUPPORTED, XCB_ATOM_CARDINAL, value);
+        int v = getWindowPropertyValue(root, ewmh->_NET_SUPPORTED, XCB_ATOM_CARDINAL);
         assertEquals(value, v);
     }
 });
 MPX_TEST("get_unset_window_property", {
-    assertEquals(0, getWindowPropertyValue(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL));
+    assertEquals(0, getWindowPropertyValue(root, ewmh->_NET_SUPPORTED, XCB_ATOM_CARDINAL));
     assertEquals("", getWindowPropertyValueString(root, WM_WINDOW_ROLE, XCB_ATOM_STRING));
 });
 MPX_TEST("get_set_window_property_string", {

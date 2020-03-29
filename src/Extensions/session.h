@@ -10,6 +10,7 @@
 #include "../mywm-structs.h"
 #include "../bindings.h"
 
+
 /**
  * Loads global MPX state that has been save via saveCustomState()
  */

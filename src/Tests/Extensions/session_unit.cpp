@@ -52,9 +52,9 @@ static const ArrayList<long>serializeState(uint8_t mask) {
 
 
 static void setup() {
+    addResumeCustomStateRules();
     onSimpleStartup();
     addEWMHRules();
-    addResumeCustomStateRules();
 }
 
 SET_ENV(setup, fullCleanup);
@@ -102,10 +102,9 @@ MPX_TEST_ITER("test_restore_state", 16, {
         destroyAllLists();
         RUN_AS_WM = 0;
         clearAllRules();
-        setup();
         // reapply onXConnect rules
         ewmh = NULL;
-        openXDisplay();
+        setup();
         getAllMonitors().sort();
         const auto& list2 = serializeState(mask);
         for(int i = 0; i < list.size(); i++) {
