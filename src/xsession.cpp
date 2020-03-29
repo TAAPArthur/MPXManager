@@ -438,7 +438,6 @@ static inline xcb_generic_event_t* getNextEvent() {
     if(!event && !xcb_connection_has_error(dis)) {
         periodCounter = 0;
         lock();
-        applyEventRules(PERIODIC, NULL);
         applyBatchEventRules();
         if(applyEventRules(IDLE, NULL)) {
             flush();

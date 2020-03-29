@@ -327,6 +327,7 @@ void setDefaultStackPosition(WindowInfo* winInfo) {
 
 void addBasicRules(bool remove) {
     getEventRules(0).add(DEFAULT_EVENT(onError), remove);
+    getEventRules(IDLE).add(DEFAULT_EVENT([]{applyEventRules(PERIODIC);}), remove);
     getEventRules(XCB_VISIBILITY_NOTIFY).add(DEFAULT_EVENT(onVisibilityEvent), remove);
     getEventRules(XCB_CREATE_NOTIFY).add(DEFAULT_EVENT(onCreateEvent), remove);
     getEventRules(XCB_DESTROY_NOTIFY).add(DEFAULT_EVENT(onDestroyEvent), remove);
