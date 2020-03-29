@@ -21,21 +21,17 @@
 #include "../test-event-helper.h"
 #include "../test-x-helper.h"
 
-static void setup() {
-    createXSimpleEnv();
-    spawnThread(gestureEventLoop, "checkGestureEvents");
-}
-SET_ENV(setup, fullCleanup);
+SET_ENV(createXSimpleEnv, fullCleanup);
 
 MPX_TEST("move_and_click", {
     movePointer(0, 0);
-    getGestureBindings().add(new GestureBinding{{GESTURE_TAP}, []{moveAndClick(1);}, {.count = 2}});
+    getGestureBindings().add(new GestureBinding{{GESTURE_TAP}, []{moveAndClick(1);requestShutdown();}, {.count = 2}});
     Point p = {10, 10};
     for(int i = 0; i < 2; i++) {
         startGesture(0, 0, p, p);
         endGesture(0, 0);
     }
-    WAIT_UNTIL_TRUE(getGestureEventQueueSize() == 0);
+    gestureEventLoop();
     short result[2];
     getMousePosition(getActiveMaster(), root, result);
     assertEquals(p.x, result[0]);

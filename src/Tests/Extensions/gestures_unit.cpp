@@ -337,51 +337,51 @@ MPX_TEST_ITER("gesture_matching", LEN(gestureBindingEventMatching), {
     assertEquals(getCount(), values.count);
 });
 
-static void setup() {
-    spawnThread(gestureEventLoop, "checkGestureEvents");
-}
-
-SET_ENV(setup, fullCleanup);
 MPX_TEST("receive_shutdown", {
-    GestureBinding wildcard({}, []{incrementCount();}, {.count = 1});
-    getGestureBindings().add(&wildcard);
+    getGestureBindings().add(new GestureBinding{{}, requestShutdown, {.count = 1}});
+    getGestureBindings().add(new GestureBinding{{}, []{incrementCount();}, {.count = 1}});
     startGestureHelper({{0, 0}}, 0);
     endGestureHelper(1);
+    gestureEventLoop();
     WAIT_UNTIL_TRUE(getCount() == 1);
-    requestShutdown();
-    waitForAllThreadsToExit();
 });
 
+MPX_TEST("wakeup", {
+    std::thread thread(gestureEventLoop);
+    msleep(100);
+    getGestureBindings().add(new GestureBinding{{}, requestShutdown, {.count = 1}});
+    startGestureHelper({{0, 0}}, 0);
+    endGestureHelper(1);
+    thread.join();
+});
+
+
 MPX_TEST("double_tap", {
-    GestureBinding wildcard({}, []{assert(getLastGestureEvent()); incrementCount(); requestShutdown();}, {.count = 2});
-    GestureBinding badMatch({}, DEFAULT_EVENT(exitFailure), {.count = 1});
-    getGestureBindings().add(&wildcard);
-    getGestureBindings().add(&badMatch);
+    getGestureBindings().add(new GestureBinding({}, []{assert(getLastGestureEvent()); incrementCount(); requestShutdown();}, {.count = 2}));
+    getGestureBindings().add(new GestureBinding({}, DEFAULT_EVENT(exitFailure), {.count = 1}));
 
     for(int i = 0; i < 2; i++) {
         startGestureHelper({{0, 0}}, 0);
         endGestureHelper(1);
     }
-    waitForAllThreadsToExit();
+    gestureEventLoop();
     assertEquals(getCount(), 1);
     getGestureBindings().clear();
 });
+
 MPX_TEST("differentiate_devices", {
-    GestureBinding wildcard({}, incrementCount, {.count = 1});
-    GestureBinding badMatch({}, DEFAULT_EVENT(exitFailure), {.count = 2});
-    getGestureBindings().add(&wildcard);
-    getGestureBindings().add(&badMatch);
+    getGestureBindings().add(new GestureBinding({}, incrementCount, {.count = 1}));
+    getGestureBindings().add(new GestureBinding({}, DEFAULT_EVENT(exitFailure), {.count = 2}));
+    getGestureBindings().add(new GestureBinding({}, []{if(getCount() == 2)requestShutdown();}, {.count = 1}));
 
     for(int i = 0; i < 2; i++) {
         startGesture(i, 0, {0, 0});
         endGesture(i, 0);
     }
-    WAIT_UNTIL_TRUE(getCount() == 2);
-    requestShutdown();
-    waitForAllThreadsToExit();
-    getGestureBindings().clear();
-});
 
+    gestureEventLoop();
+    assert(getCount() == 2);
+});
 
 SET_ENV(NULL, fullCleanup);
 MPX_TEST("gesture_regions", {
@@ -414,22 +414,20 @@ MPX_TEST("gesture_regions", {
     for(int i = 0; i < LEN(bottomSplit); i++)
         getGestureRegions().add(bottomSplit[i]);
 
-    GestureBinding wildcard(GESTURE_TAP, incrementCount, {.count = 1});
-    GestureBinding badMatch({}, DEFAULT_EVENT(exitFailure), {.count = 2});
-    getGestureBindings().add(&wildcard);
-    getGestureBindings().add(&badMatch);
+    getGestureBindings().add(new GestureBinding(GESTURE_TAP, incrementCount, {.count = 1}));
+    getGestureBindings().add(new GestureBinding(GESTURE_TAP, []{if(!getGestureEventQueueSize())requestShutdown();}, {.count = 1}));
+    getGestureBindings().add(new GestureBinding({}, DEFAULT_EVENT(exitFailure), {.count = 2}));
 
-    spawnThread(gestureEventLoop, "checkGestureEvents");
 
     listenForGestureEvents(GestureEndMask);
     for(int i = 0; i < LEN(points); i++)
         startGesture(0, i, points[i]);
     for(int i = 0; i < LEN(points); i++)
         endGesture(0, i);
-    WAIT_UNTIL_TRUE(getGestureEventQueueSize() == 0);
+
+
+    gestureEventLoop();
     assertEquals(getCount(), LEN(points));
-    requestShutdown();
-    waitForAllThreadsToExit();
     getGestureBindings().clear();
 });
 
