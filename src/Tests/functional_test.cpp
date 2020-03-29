@@ -19,11 +19,39 @@
 int _main(int argc, char* const* argv) ;
 
 static const char* const args[] = {"" __FILE__, "--no-event-loop"};
-static void setup() {
+
+static void initSetup() {
     addDieOnIntegrityCheckFailRule();
     _main(2, (char* const*)args);
     assert(getActiveMaster());
     assert(getNumberOfWorkspaces());
+}
+SET_ENV(initSetup, fullCleanup);
+MPX_TEST_ITER("auto_tile_with_dock", 4, {
+    bool premap = _i%2;
+    bool consume = _i/2;
+    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
+    if(premap)
+        mapWindow(win);
+    setDockProperties(win, DOCK_TOP, 100);
+    WindowID win2 = mapArbitraryWindow();
+    WindowID win3 = mapArbitraryWindow();
+    scan(root);
+
+    if(consume)
+        consumeEvents();
+    if(!premap)
+        mapWindow(win);
+    startWM();
+    waitUntilIdle(1);
+    Monitor* m = getAllMonitors()[0];
+    assert(m->getBase() != getAllMonitors()[0]->getViewport());
+    assert(m->getViewport().contains(getRealGeometry(win2)));
+    assert(m->getViewport().contains(getRealGeometry(win3)));
+});
+
+static void setup() {
+    initSetup();
     startWM();
     waitUntilIdle(1);
 }
