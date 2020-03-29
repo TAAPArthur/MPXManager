@@ -11,6 +11,11 @@
 
 static std::string CONTAINER_NAME = "CONTAINER";
 
+xcb_atom_t MPX_CONTAINER_WORKSPACE;
+static void initContainerAtoms() {
+    CREATE_ATOM(MPX_CONTAINER_WORKSPACE);
+}
+
 struct Container : WindowInfo, Monitor {
     Container(WindowID id, WindowID parent = 0): WindowInfo(id, parent), Monitor(id, {0, 0, 1, 1}, 0, CONTAINER_NAME, 1) {}
     virtual void setGeometry(const RectWithBorder geo) {
@@ -59,7 +64,7 @@ static void saveContainers() {
         Monitor* m = getWorkspace(i)->getMonitor();
         containers[i] = getWindowInfoForContainer(*m) ? m->getID() : 0;
     }
-    setWindowProperty(root, MPX_WM_WORKSPACE_MONITORS, XCB_ATOM_CARDINAL, containers, LEN(containers));
+    setWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, containers, LEN(containers));
 }
 static void loadContainerMonitors() {
     for(int i = 0; i < getAllMonitors().size(); i++) {
@@ -75,7 +80,7 @@ static void loadContainerMonitors() {
 }
 static void loadContainerWindows() {
     TRACE("Loading fake monitor mappings");
-    auto reply = getWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
+    auto reply = getWindowProperty(root, MPX_CONTAINER_WORKSPACE, XCB_ATOM_CARDINAL);
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(short) ; i++) {
             short* values = (short*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(short)]);
@@ -90,6 +95,7 @@ static void loadContainers() {
     loadContainerWindows();
 }
 void addResumeContainerRules(bool remove) {
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initContainerAtoms, HIGH_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadContainers, LOW_PRIORITY), remove);
     getBatchEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveContainers, LOW_PRIORITY), remove);
 }
