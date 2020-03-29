@@ -127,9 +127,9 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo);
 void onGenericEvent(void);
 
 /**
- * Adds rules to various events that may indicate that the state has changed. (markState)
- * When any of these are called, we check the state via a PERIODIC hook. If it indeed has, we retile the workspace.
- * We unmark the state if for any reason, a workspace has been retiled
+ * Rules to automatically tile workspaces when they have changed
+ *
+ * @param remove
  */
 void addAutoTileRules(bool remove = 0);
 /**

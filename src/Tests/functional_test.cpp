@@ -281,14 +281,14 @@ MPX_TEST("add_hidden_mask", {
     WindowInfo* winInfo = getActiveWorkspace()->getWindowStack()[0];
     assert(winInfo->hasMask(MAPPED_MASK));
     winInfo->addMask(HIDDEN_MASK);
-    markState();
+
     wakeupWM();
     unlock();
     waitUntilIdle();
     assert(!winInfo->hasMask(MAPPED_MASK));
     lock();
     winInfo->removeMask(HIDDEN_MASK);
-    markState();
+
     wakeupWM();
     unlock();
     waitUntilIdle();

@@ -155,6 +155,7 @@ void addEWMHRules(bool remove) {
     getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), remove);
     getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), remove);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), remove);
+    getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateXWindowStateForAllWindows), remove);
     getBatchEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), remove);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(autoResumeWorkspace), remove);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadSavedAtomState), remove);
@@ -162,7 +163,6 @@ void addEWMHRules(bool remove) {
     getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE).add(DEFAULT_EVENT(detectWindowMoveResizeButtonRelease),
         remove);
     getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_MOTION).add(DEFAULT_EVENT(updateWindowMoveResize), remove);
-    getEventRules(POSSIBLE_STATE_CHANGE).add(DEFAULT_EVENT(updateXWindowStateForAllWindows), remove);
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setAllowedActions), remove);
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(setActiveProperties), remove);
     getEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(unrecordWindow), remove);

@@ -63,10 +63,10 @@ MPX_TEST("test_seemless_swap_with_original", {
     lock();
     winInfo->moveToWorkspace(0);
     cloneInfo->moveToWorkspace(1);
-    markState();
+
     updateState();
     swapWindows(winInfo, cloneInfo);
-    markState();
+
     assert(!updateState());
     unlock();
 });

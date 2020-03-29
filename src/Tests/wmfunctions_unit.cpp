@@ -163,7 +163,7 @@ MPX_TEST("test_workspace_change_focus", {
     assert(focusWindow(getAllWindows()[1]));
     assertEquals(getActiveFocus(), getAllWindows()[1]->getID());
     switchToWorkspace(1);
-    markState();
+
     updateState();
     flush();
     assertEquals(getActiveFocus(), getAllWindows()[0]->getID());
@@ -188,10 +188,10 @@ MPX_TEST("test_activate_window", {
     getWindowInfo(win3)->removeMask(MAPPED_MASK);
     assert(!getWorkspace(1)->isVisible());
     assert(getWindowInfo(win3)->isActivatable());
-    markState();
+
     updateState();
     assert(activateWindow(getWindowInfo(win3)));
-    markState();
+
     updateState();
     assertEquals(getActiveWorkspaceIndex(), 1);
 
@@ -209,7 +209,6 @@ MPX_TEST_ITER("test_sticky_window", 2, {
     getAllMasters().add(m);
     auto check = +[](int i) {
         WindowInfo* winInfo = getAllWindows()[0];
-        markState();
         updateState();
         assertEquals(winInfo->getWorkspaceIndex(), i % getNumberOfWorkspaces());
         validate();
@@ -227,7 +226,7 @@ MPX_TEST("test_sticky_workspaceless_window", {
     scan(root);
     WindowInfo* winInfo = getAllWindows()[0];
     winInfo->addMask(STICKY_MASK);
-    markState();
+
     updateState();
     updateWindowWorkspaceState(winInfo);
 });

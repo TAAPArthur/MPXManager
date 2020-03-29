@@ -53,9 +53,6 @@ enum {
     WINDOW_MOVE,
     /// Called after workspace is tilled.
     TILE_WORKSPACE,
-    /// Called when the state may have changed
-    /// @see markState
-    POSSIBLE_STATE_CHANGE,
     /// called after a set number of events or when the connection is idle
     PERIODIC,
     /// called when the connection is idle

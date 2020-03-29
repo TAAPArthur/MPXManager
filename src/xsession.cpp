@@ -329,7 +329,6 @@ const char* eventTypeToString(int type) {
             _ADD_EVENT_TYPE_CASE(MONITOR_DETECTED);
             _ADD_EVENT_TYPE_CASE(WINDOW_MOVE);
             _ADD_EVENT_TYPE_CASE(TILE_WORKSPACE);
-            _ADD_EVENT_TYPE_CASE(POSSIBLE_STATE_CHANGE);
             _ADD_EVENT_TYPE_CASE(PERIODIC);
             _ADD_EVENT_TYPE_CASE(IDLE);
             _ADD_EVENT_TYPE_CASE(TRUE_IDLE);
