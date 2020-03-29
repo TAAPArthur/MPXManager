@@ -16,24 +16,24 @@ static WindowInfo* addVisibleWindow(int i = getActiveWorkspaceIndex()) {
 }
 SET_ENV(createXSimpleEnv, fullCleanup);
 MPX_TEST("init", {
-    markState();
+
     assert(!updateState());
 });
 MPX_TEST("print", {
     setLogLevel(LOG_LEVEL_VERBOSE);
     suppressOutput();
-    markState();
+
     addVisibleWindow(0);
     assert(updateState());
-    markState();
+
     assert(!updateState());
 
 });
 MPX_TEST("test_no_state_change", {
-    markState();
+
     assert(!updateState());
     assert(!updateState());
-    markState();
+
     assert(!updateState());
 });
 
@@ -43,7 +43,6 @@ static void setup() {
     assertEquals(getAllMonitors().size(), 1);
     assertEquals(getNumberOfWorkspaces(), DEFAULT_NUMBER_OF_WORKSPACES);
     assert(getWorkspace(0)->isVisible());
-    markState();
     updateState();
     getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT_HIGH(incrementCount));
 }
@@ -51,7 +50,6 @@ SET_ENV(setup, fullCleanup);
 MPX_TEST("test_state_change_num_windows", {
     for(int i = getCount(); i < 10; i++) {
         addVisibleWindow(getActiveWorkspaceIndex());
-        markState();
         assertEquals(updateState(), 1);
         assertEquals(getCount(), i + 1);
     }
@@ -60,15 +58,15 @@ MPX_TEST("test_mask_change", {
     WindowInfo* winInfo = addVisibleWindow(getActiveWorkspaceIndex());
     winInfo->addMask(MAPPED_MASK);
 
-    markState();
+
     assertEquals(updateState(), 1);
 
-    markState();
+
     winInfo->addMask(FULLSCREEN_MASK);
     assertEquals(updateState(), 1);
 
     winInfo->addMask(FULLY_VISIBLE_MASK);
-    markState();
+
     assert(!updateState());
 });
 MPX_TEST("test_layout_change", {
@@ -76,10 +74,10 @@ MPX_TEST("test_layout_change", {
     updateState();
     Layout l = {"", NULL};
     getActiveWorkspace()->setActiveLayout(&l);
-    markState();
+
     assertEquals(updateState(), 1);
     getActiveWorkspace()->setActiveLayout(NULL);
-    markState();
+
     assertEquals(updateState(), 1);
 });
 
@@ -87,7 +85,7 @@ MPX_TEST_ITER("test_num_workspaces_grow", 2, {
     int size = 10;
     addWorkspaces(size);
     updateState();
-    markState();
+
     int num = getNumberOfWorkspaces();
     assert(num > 2);
     if(_i)
@@ -95,7 +93,7 @@ MPX_TEST_ITER("test_num_workspaces_grow", 2, {
     else removeWorkspaces(size / 2);
     assert(num != getNumberOfWorkspaces());
     //detect change only when growing
-    assertEquals(updateState(), 1);
+    assertEquals(updateState(), _i);
 });
 
 MPX_TEST("test_on_workspace_change", {
@@ -107,7 +105,7 @@ MPX_TEST("test_on_workspace_change", {
     }
     for(int i = 0; i < size; i++)
         assert(!getWorkspace(i)->getWindowStack().empty());
-    markState();
+
     int count = getCount();
     // windows in invisible workspaces will be unmapped
     assertEquals(updateState(), 1);
@@ -122,18 +120,16 @@ MPX_TEST("test_on_workspace_change", {
         assertEquals(mapped, isWindowMapped(winInfo->getID()));
         assertEquals(mapped, winInfo->hasMask(MAPPED_MASK));
     }
-    markState();
+
     assert(!updateState());
     for(int i = 1; i < size; i++) {
         switchToWorkspace(i);
-        markState();
         //workspace hasn't been tiled yet
         ATOMIC(assertEquals(updateState(), 1));
         waitUntilIdle();
     }
     for(int i = 0; i < size; i++) {
         switchToWorkspace(i);
-        markState();
         ATOMIC(assert(!updateState()));
         waitUntilIdle();
     }
@@ -146,7 +142,7 @@ MPX_TEST("test_on_invisible_workspace_window_add", {
         getAllWindows().back()->moveToWorkspace(i);
     }
     startWM();
-    markState();
+
     waitUntilIdle();
     lock();
     registerWindow(mapArbitraryWindow(), root);
@@ -154,10 +150,10 @@ MPX_TEST("test_on_invisible_workspace_window_add", {
     unlock();
     waitUntilIdle();
 
-    markState();
+
     int mask = updateState();
     switchToWorkspace(1);
-    markState();
+
     mask |= updateState();
     assert(mask);
 });
@@ -167,11 +163,11 @@ MPX_TEST("test_tile_limit", {
     assertEquals(getActiveLayout()->getArgs().limit, 2);
     addVisibleWindow()->getID();
     WindowID win2 = addVisibleWindow()->getID();
-    markState();
+
     assertEquals(updateState(), 1);
     WindowID win3 = addVisibleWindow()->getID();
     assertEquals(getNumberOfWindowsToTile(getActiveWorkspace()), 2);
-    markState();
+
     assertEquals(updateState(), 1);
     assertEquals(getRealGeometry(win3), getRealGeometry(win2));
 });

@@ -15,7 +15,6 @@ struct Container : WindowInfo, Monitor{
     virtual void setGeometry(const RectWithBorder geo) {
         WindowInfo::setGeometry(geo);
         setBase(geo);
-        markState();
     }
     virtual void addMask(WindowMask mask) override {
         bool change = !hasMask(MAPPED_MASK) && (mask & MAPPED_MASK);

@@ -48,17 +48,6 @@ std::ostream& operator<<(std::ostream& strm, const WorkspaceState& state) {
 
 static WorkspaceID numberOfRecordedWorkspaces;
 static WorkspaceState* savedStates;
-static char couldStateHaveChanged = 1;
-
-bool isStateMarked(void) { return couldStateHaveChanged;}
-void markState(void) {
-    TRACE("marking state");
-    couldStateHaveChanged = 1;
-}
-void unmarkState(void) {
-    TRACE("unmarking state");
-    couldStateHaveChanged = 0;
-}
 
 static void destroyCurrentState() {
     delete[] savedStates;
@@ -144,7 +133,6 @@ static int compareState() {
         }
     }
     LOG(LOG_LEVEL_TRACE, "State changed %d", changed);
-    unmarkState();
     if(savedStates)
         destroyCurrentState();
     numberOfRecordedWorkspaces = getNumberOfWorkspaces();
@@ -153,7 +141,5 @@ static int compareState() {
 }
 
 int updateState() {
-    if(!isStateMarked())
-        TRACE("State could not have changed ");
-    return isStateMarked() ? compareState() : 0;
+    return compareState();
 }

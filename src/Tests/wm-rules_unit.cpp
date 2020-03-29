@@ -93,13 +93,11 @@ MPX_TEST("test_auto_tile", {
     applyEventRules(PERIODIC, NULL);
     applyBatchEventRules();
     applyEventRules(IDLE, NULL);
-    assert(!isStateMarked());
 
     assertEquals(getCount(), 1);
     setActiveLayout(GRID);
-    markState();
+
     updateState();
-    assert(!isStateMarked());
 
 
     mapArbitraryWindow();
@@ -127,7 +125,7 @@ static inline void createWMEnvWithRunningWM() {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;
     onSimpleStartup();
-    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {markState(); winInfo->moveToWorkspace(getActiveWorkspaceIndex());}));
+    getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(getActiveWorkspaceIndex());}));
     startWM();
     assert(getDeviceBindings().size() == 0);
     waitUntilIdle();

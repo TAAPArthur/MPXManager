@@ -127,7 +127,6 @@ void swapWithOriginalOnEnter(void) {
         if(origin && origin->isNotInInvisibleWorkspace() && winInfo->isNotInInvisibleWorkspace()) {
             LOG(LOG_LEVEL_DEBUG, "swapping clone %d with %d", winInfo->getID(), origin ? origin->getID() : 0);
             swapWindows(origin, winInfo);
-            markState();
         }
     }
 }

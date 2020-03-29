@@ -298,14 +298,7 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 }
 
 void addAutoTileRules(bool remove) {
-    int events[] = {CLIENT_MAP_ALLOW, XCB_UNMAP_NOTIFY, XCB_DESTROY_NOTIFY,
-            DEVICE_EVENT, XCB_CLIENT_MESSAGE, WINDOW_WORKSPACE_CHANGE,
-            MONITOR_WORKSPACE_CHANGE, SCREEN_CHANGE,
-        };
-    for(auto event : events)
-        getEventRules(event).add(DEFAULT_EVENT(markState), remove);
     getEventRules(PERIODIC).add(PASSTHROUGH_EVENT(updateState, ALWAYS_PASSTHROUGH), remove);
-    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(unmarkState), remove);
 }
 void assignDefaultLayoutsToWorkspace() {
     for(Workspace* w : getAllWorkspaces())
