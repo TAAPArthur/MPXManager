@@ -23,6 +23,12 @@
 #define MAX_NUMBER_OF_DEVICES 40
 #endif
 
+
+/**
+ * Shorthand macro to init a X11 atom
+ * @param name the name of the atom to init
+ */
+#define CREATE_ATOM(name)name=getAtom(# name);
 /**
  * The max number of master devices the XServer can support.
  *
@@ -38,10 +44,6 @@ extern const int defaultScreenNumber;
 ///global graphics context
 extern xcb_gcontext_t graphics_context;
 
-/// Stores the active master so the state can be restored
-extern xcb_atom_t MPX_WM_ACTIVE_MASTER;
-/// Atom to store fake monitors
-extern xcb_atom_t MPX_WM_FAKE_MONITORS;
 /**
  * Atom used to differentiate custom client messages
  */
@@ -52,15 +54,6 @@ extern xcb_atom_t MPX_WM_INTERPROCESS_COM;
  */
 extern xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
 
-/// Used to save raw window masks
-extern xcb_atom_t MPX_WM_MASKS;
-
-/// Str representation of MPX_WM_MASKS used solely for debugging
-extern xcb_atom_t MPX_WM_MASKS_STR;
-
-/// Atom to store an array of each window for every master so the state can be restored
-/// There is a '0' to separate each master's window stack and each stack is preceded with the master id
-extern xcb_atom_t MPX_WM_MASTER_WINDOWS;
 /**
  * Custom atom store in window's state to indicate that it should not be tiled
  */
@@ -72,14 +65,6 @@ extern xcb_atom_t MPX_WM_STATE_NO_TILE;
  */
 extern xcb_atom_t MPX_WM_STATE_ROOT_FULLSCREEN;
 
-/// Atom to store an array of the layout offset for each workspace so the state can be restored
-extern xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_INDEXES;
-/// Atom to store an array of the active layout's for each workspace so the state can be restored
-extern xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_NAMES;
-/// Atom to store an array of the paired monitor for each workspace so the state can be restored
-extern xcb_atom_t MPX_WM_WORKSPACE_MONITORS;
-/// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
-extern xcb_atom_t MPX_WM_WORKSPACE_MONITORS_ALT;
 /// ICCCM client message to change window state to hidden;
 extern xcb_atom_t WM_CHANGE_STATE;
 /**

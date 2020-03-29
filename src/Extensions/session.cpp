@@ -16,6 +16,37 @@
 #include "../xsession.h"
 #include "session.h"
 
+/// Stores the active master so the state can be restored
+xcb_atom_t MPX_WM_ACTIVE_MASTER;
+/// Atom to store fake monitors
+xcb_atom_t MPX_WM_FAKE_MONITORS;
+/// Used to save raw window masks
+xcb_atom_t MPX_WM_MASKS;
+/// Str representation of MPX_WM_MASKS used solely for debugging
+xcb_atom_t MPX_WM_MASKS_STR;
+/// Atom to store an array of each window for every master so the state can be restored
+/// There is a '0' to separate each master's window stack and each stack is preceded with the master id
+xcb_atom_t MPX_WM_MASTER_WINDOWS;
+/// Atom to store an array of the layout offset for each workspace so the state can be restored
+xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_INDEXES;
+/// Atom to store an array of the active layout's for each workspace so the state can be restored
+xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_NAMES;
+/// Atom to store an array of the paired monitor for each workspace so the state can be restored
+xcb_atom_t MPX_WM_WORKSPACE_MONITORS;
+/// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
+xcb_atom_t MPX_WM_WORKSPACE_MONITORS_ALT;
+static void initSessionAtoms() {
+    CREATE_ATOM(MPX_WM_ACTIVE_MASTER);
+    CREATE_ATOM(MPX_WM_FAKE_MONITORS);
+    CREATE_ATOM(MPX_WM_MASKS);
+    CREATE_ATOM(MPX_WM_MASKS_STR);
+    CREATE_ATOM(MPX_WM_MASTER_WINDOWS);
+    CREATE_ATOM(MPX_WM_WORKSPACE_LAYOUT_INDEXES);
+    CREATE_ATOM(MPX_WM_WORKSPACE_LAYOUT_NAMES);
+    CREATE_ATOM(MPX_WM_WORKSPACE_MONITORS);
+    CREATE_ATOM(MPX_WM_WORKSPACE_MONITORS_ALT);
+}
+
 static void loadSavedLayouts() {
     auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING);
     TRACE("Loading active layouts");
@@ -236,6 +267,7 @@ void saveCustomState(void) {
     flush();
 }
 void addResumeCustomStateRules(bool remove) {
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initSessionAtoms, HIGH_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadCustomState), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), remove);
     getEventRules(MONITOR_DETECTED).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), remove);

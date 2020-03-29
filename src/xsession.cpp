@@ -22,19 +22,10 @@
 #include "xsession.h"
 
 
-xcb_atom_t MPX_WM_ACTIVE_MASTER;
-xcb_atom_t MPX_WM_FAKE_MONITORS;
 xcb_atom_t MPX_WM_INTERPROCESS_COM;
 xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
-xcb_atom_t MPX_WM_MASKS;
-xcb_atom_t MPX_WM_MASKS_STR;
-xcb_atom_t MPX_WM_MASTER_WINDOWS;
 xcb_atom_t MPX_WM_STATE_NO_TILE;
 xcb_atom_t MPX_WM_STATE_ROOT_FULLSCREEN;
-xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_INDEXES;
-xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_NAMES;
-xcb_atom_t MPX_WM_WORKSPACE_MONITORS;
-xcb_atom_t MPX_WM_WORKSPACE_MONITORS_ALT;
 xcb_atom_t WM_CHANGE_STATE;
 xcb_atom_t WM_DELETE_WINDOW;
 xcb_atom_t WM_SELECTION_ATOM;
@@ -233,11 +224,6 @@ static xcb_gcontext_t create_graphics_context(void) {
 bool hasXConnectionBeenOpened() {
     return dpy ? 1 : 0;
 }
-/**
- * Shorthand macro to init a X11 atom
- * @param name the name of the atom to init
- */
-#define _CREATE_ATOM(name)name=getAtom(# name);
 void openXDisplay(void) {
     XInitThreads();
     DEBUG(" connecting to XServer ");
@@ -258,23 +244,14 @@ void openXDisplay(void) {
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
-    _CREATE_ATOM(MPX_WM_ACTIVE_MASTER);
-    _CREATE_ATOM(MPX_WM_FAKE_MONITORS);
-    _CREATE_ATOM(MPX_WM_INTERPROCESS_COM);
-    _CREATE_ATOM(MPX_WM_INTERPROCESS_COM_STATUS);
-    _CREATE_ATOM(MPX_WM_MASKS);
-    _CREATE_ATOM(MPX_WM_MASKS_STR);
-    _CREATE_ATOM(MPX_WM_MASTER_WINDOWS);
-    _CREATE_ATOM(MPX_WM_STATE_NO_TILE);
-    _CREATE_ATOM(MPX_WM_STATE_ROOT_FULLSCREEN);
-    _CREATE_ATOM(MPX_WM_WORKSPACE_LAYOUT_INDEXES);
-    _CREATE_ATOM(MPX_WM_WORKSPACE_LAYOUT_NAMES);
-    _CREATE_ATOM(MPX_WM_WORKSPACE_MONITORS);
-    _CREATE_ATOM(MPX_WM_WORKSPACE_MONITORS_ALT);
-    _CREATE_ATOM(WM_CHANGE_STATE);
-    _CREATE_ATOM(WM_DELETE_WINDOW);
-    _CREATE_ATOM(WM_TAKE_FOCUS);
-    _CREATE_ATOM(WM_WINDOW_ROLE);
+    CREATE_ATOM(MPX_WM_INTERPROCESS_COM);
+    CREATE_ATOM(MPX_WM_INTERPROCESS_COM_STATUS);
+    CREATE_ATOM(MPX_WM_STATE_NO_TILE);
+    CREATE_ATOM(MPX_WM_STATE_ROOT_FULLSCREEN);
+    CREATE_ATOM(WM_CHANGE_STATE);
+    CREATE_ATOM(WM_DELETE_WINDOW);
+    CREATE_ATOM(WM_TAKE_FOCUS);
+    CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
     setRootDims(&screen->width_in_pixels);
     root = screen->root;
