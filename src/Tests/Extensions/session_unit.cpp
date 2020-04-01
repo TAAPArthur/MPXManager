@@ -52,9 +52,9 @@ static const ArrayList<long>serializeState(uint8_t mask) {
 
 
 static void setup() {
+    addEWMHRules();
     addResumeCustomStateRules();
     onSimpleStartup();
-    addEWMHRules();
 }
 
 SET_ENV(setup, fullCleanup);
@@ -95,12 +95,17 @@ MPX_TEST_ITER("test_restore_state", 16, {
     setActiveLayout(NULL);
     getAllMonitors().sort();
     const auto& list = serializeState(mask);
+    raiseWindow(getAllWindows()[3]);
+    lowerWindow(getAllWindows()[4]);
     saveCustomState();
     flush();
+    raiseWindow(getAllWindows()[0]);
+    lowerWindow(getAllWindows()[1]);
     if(!fork()) {
+        RUN_AS_WM = 0;
+        STEAL_WM_SELECTION = 1;
         saveXSession();
         destroyAllLists();
-        RUN_AS_WM = 0;
         clearAllRules();
         // reapply onXConnect rules
         ewmh = NULL;

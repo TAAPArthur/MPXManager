@@ -35,6 +35,9 @@ xcb_atom_t MPX_WM_WORKSPACE_LAYOUT_NAMES;
 xcb_atom_t MPX_WM_WORKSPACE_MONITORS;
 /// Atom to store a mapping or monitor name to workspace name so a monitor can resume its workspace when it is disconnected and reconnected
 xcb_atom_t MPX_WM_WORKSPACE_MONITORS_ALT;
+
+/// Used to preserves the workspace stack order
+xcb_atom_t MPX_WM_WORKSPACE_ORDER;
 static void initSessionAtoms() {
     CREATE_ATOM(MPX_WM_ACTIVE_MASTER);
     CREATE_ATOM(MPX_WM_FAKE_MONITORS);
@@ -45,6 +48,7 @@ static void initSessionAtoms() {
     CREATE_ATOM(MPX_WM_WORKSPACE_LAYOUT_NAMES);
     CREATE_ATOM(MPX_WM_WORKSPACE_MONITORS);
     CREATE_ATOM(MPX_WM_WORKSPACE_MONITORS_ALT);
+    CREATE_ATOM(MPX_WM_WORKSPACE_ORDER);
 }
 
 static void loadSavedLayouts() {
@@ -122,6 +126,26 @@ static void loadSavedMasterWindows() {
                 master->onWindowFocus(wid[i]);
     }
 }
+static void loadSavedWorkspaceWindows() {
+    TRACE("Loading Master window stacks");
+    auto reply = getWindowProperty(root, MPX_WM_WORKSPACE_ORDER, XCB_ATOM_CARDINAL);
+    if(reply) {
+        WindowID* wid = (WindowID*)xcb_get_property_value(reply.get());
+        WorkspaceID workspaceID = 0;
+        for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / sizeof(int); i++)
+            if(wid[i] == 0) {
+                if(++workspaceID == getNumberOfWorkspaces())
+                    break;
+            }
+            else {
+                WindowInfo* winInfo = getWindowInfo(wid[i]);
+                if(winInfo && winInfo->getWorkspaceIndex() == workspaceID) {
+                    Workspace* w = getWorkspace(workspaceID);
+                    w->getWindowStack().shiftToEnd(w->getWindowStack().indexOf(winInfo));
+                }
+            }
+    }
+}
 static void loadSavedActiveMaster() {
     TRACE("Loading active Master");
     auto reply = getWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL);
@@ -138,6 +162,7 @@ void loadCustomState(void) {
     loadSavedMonitorWorkspaceMapping();
     loadSavedMasterWindows();
     loadSavedActiveMaster();
+    loadSavedWorkspaceWindows();
     for(WindowInfo* winInfo : getAllWindows()) {
         WindowMask mask = ~EXTERNAL_MASKS & getWindowPropertyValue(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL);
         if(mask) {
@@ -227,8 +252,10 @@ void saveCustomState(void) {
     int monitors[getNumberOfWorkspaces()];
     short fakeMonitors[getAllMonitors().size() * 5];
     WindowID masterWindows[(getAllWindows().size() + 2) * getAllMasters().size()];
+    WindowID workspaceWindows[getAllWindows().size() + getNumberOfWorkspaces() ];
     int numFakeMonitors = 0;
     int numMasterWindows = 0;
+    int numWorkspaceWindows = 0;
     for(int i = getAllMasters().size() - 1; i >= 0; i--) {
         Master* master = getAllMasters()[i];
         masterWindows[numMasterWindows++] = 0;
@@ -249,6 +276,9 @@ void saveCustomState(void) {
         layoutOffsets[i] = getWorkspace(i)->getLayoutOffset();
         Layout* layout = getWorkspace(i)->getActiveLayout();
         joiner.add(layout ? layout->getName() : "");
+        for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack())
+            workspaceWindows[numWorkspaceWindows++] = winInfo->getID();
+        workspaceWindows[numWorkspaceWindows++] = 0;
     }
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
@@ -256,6 +286,7 @@ void saveCustomState(void) {
     setWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
     setWindowProperty(root, MPX_WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
     setWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
+    setWindowProperty(root, MPX_WM_WORKSPACE_ORDER, XCB_ATOM_CARDINAL, workspaceWindows, numWorkspaceWindows);
     for(WindowInfo* winInfo : getAllWindows()) {
         if(!winInfo->isNotManageable()) {
             WindowMask mask = ~EXTERNAL_MASKS & (uint32_t)winInfo->getMask();
