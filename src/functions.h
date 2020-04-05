@@ -89,6 +89,14 @@ bool matchesClass(WindowInfo* winInfo, std::string str);
  * @return if the window title is equal to str
  */
 bool matchesTitle(WindowInfo* winInfo, std::string str);
+
+/**
+ * @param winInfo
+ * @param str
+ *
+ * @return if the window role is equal to str
+ */
+bool matchesRole(WindowInfo* winInfo, std::string str);
 /**
  * Tries to raise a window that matches s. If it cannot find one, spawn cmd
  *
