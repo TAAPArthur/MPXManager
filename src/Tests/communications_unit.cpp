@@ -30,9 +30,9 @@ MPX_TEST("read_env_var", {
     assertEquals(POLL_COUNT, 100);
     assertEquals(SHELL, "shell");
 });
-static void checkAndSend(std::string name, std::string value) {
+static void checkAndSend(std::string name, std::string value, WindowID active = 0) {
     assert(findOption(name, value));
-    send(name, value);
+    send(name, value, active);
     flush();
 }
 static void setup() {
@@ -42,14 +42,22 @@ static void setup() {
 }
 SET_ENV(setup, fullCleanup);
 
-MPX_TEST("test_send_receive_self", {
+MPX_TEST_ITER("test_send_receive_self", 3, {
+    createMasterDevice("test");
+    createMasterDevice("test2");
+    initCurrentMasters();
+    WindowID win = createNormalWindow();
+    setClientPointerForWindow(win, *getAllMasters()[2]);
+    Master* master = getAllMasters()[_i];
+    WindowID id = _i == 0 ? 0 : _i == 1 ? *master : win;
     POLL_COUNT = 10;
-    checkAndSend("poll-count", "0");
+    checkAndSend("poll-count", "0", id);
     assert(hasOutStandingMessages());
     startWM();
     waitUntilIdle();
     assertEquals(POLL_COUNT, 0);
     assert(!hasOutStandingMessages());
+    assertEquals(master, getActiveMaster());
     assertEquals(getLastMessageExitCode(), 1);
 });
 MPX_TEST("test_send_receive_failed_exit_code", {

@@ -127,11 +127,11 @@ void receiveClientMessage(void);
 /**
  * Sends a message to the running WM to set name = value or call name(value) depending if name is an variable or a method
  *
- *
  * @param name
  * @param value
+ * @param active
  */
-void send(std::string name, std::string value);
+void send(std::string name, std::string value, WindowID active = 0);
 
 /**
  *

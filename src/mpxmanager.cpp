@@ -36,6 +36,7 @@ static void clearWMSettings(void) {
     startupMethod = NULL;
     RUN_AS_WM = 0;
 }
+static WindowID active = 0;
 
 /// list options that set global variables
 static void listVarOptions() {
@@ -52,6 +53,7 @@ static UniqueArrayList<Option*> options = {
     {"no-event-loop", +[]() {RUN_EVENT_LOOP = 0;}},
     {"no-run-as-window-manager", clearWMSettings},
     {"replace", +[]() {STEAL_WM_SELECTION = 1;}},
+    {"as", +[](WindowID win) {active = win;}},
 };
 
 void addStartupMode(std::string name, void(*func)()) {
@@ -126,7 +128,7 @@ static void parseArgs(int argc, char* const* argv) {
             clearWMSettings();
             RUN_EVENT_LOOP = 0;
         }
-        send(argv[i], value);
+        send(argv[i], value, active);
     }
 }
 int _main(int argc, char* const* argv) {

@@ -66,21 +66,23 @@ MPX_TEST_ITER_ERR("set_var_unknown_with_arg", 2, 1, {
 MPX_TEST_ERR("timeout", 2, {
     assert(fakeMain({"log-level", "0"}));
 });
+static int otherMasterID = 0;
 static void setup() {
     addDieOnIntegrityCheckFailRule();
-    int number = 1;
-    int readNumber = 0;
     auto pid = spawnPipe(NULL, 1);
     if(pid) {
         fakeMain({"--no-event-loop"});
         addInterClientCommunicationRule();
-
-        write(STATUS_FD, &number, sizeof(number));
+        createMasterDevice("test");
+        initCurrentMasters();
+        otherMasterID = *getAllMasters()[1];
+        write(STATUS_FD, &otherMasterID, sizeof(otherMasterID));
         runEventLoop();
-        int result = read(STATUS_FD_READ, &readNumber, sizeof(readNumber));
+        int result = read(STATUS_FD_READ, &otherMasterID, sizeof(otherMasterID));
         if(result) {
-            assertEquals(result, sizeof(readNumber));
-            assertEquals(readNumber, POLL_COUNT);
+            assertEquals(result, sizeof(otherMasterID));
+            assertEquals(otherMasterID, POLL_COUNT);
+            assertEquals(otherMasterID, *getActiveMaster());
         }
         else
             assert(isShuttingDown());
@@ -88,9 +90,8 @@ static void setup() {
         fullCleanup();
         exit(0);
     }
-    int result = read(STATUS_FD_EXTERNAL_READ, &readNumber, sizeof(readNumber));
-    assertEquals(result, sizeof(readNumber));
-    assertEquals(readNumber, number);
+    int result = read(STATUS_FD_EXTERNAL_READ, &otherMasterID, sizeof(otherMasterID));
+    assertEquals(result, sizeof(otherMasterID));
     clearAllRules();
 }
 SET_ENV(setup, fullCleanup);
@@ -103,12 +104,18 @@ MPX_TEST("replace", {
     assertEquals(0, fakeMain({"--no-event-loop", "--replace"}));
 });
 static void cleanup() {
-    int n = 0;
-    write(STATUS_FD_EXTERNAL_WRITE, &n, sizeof(POLL_COUNT));
     fullCleanup();
 }
 SET_ENV(setup, cleanup);
 MPX_TEST("set-var", {
-    assertEquals(0, fakeMain({"poll-count", "0"}));
+    assertEquals(0, fakeMain({"poll-count", "3"}));
     assertEquals(0, fakeMain({"request-shutdown"}));
+    int temp = 3;
+    write(STATUS_FD_EXTERNAL_WRITE, &temp, sizeof(otherMasterID));
+});
+MPX_TEST("set-var-as", {
+    std::string idString = std::to_string(otherMasterID).c_str();
+    assertEquals(0, fakeMain({"--as", idString.c_str(), "poll-count", idString.c_str()}));
+    assertEquals(0, fakeMain({"request-shutdown"}));
+    write(STATUS_FD_EXTERNAL_WRITE, &otherMasterID, sizeof(otherMasterID));
 });

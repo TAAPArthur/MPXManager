@@ -10,6 +10,7 @@
 
 #include "bindings.h"
 #include "communications.h"
+#include "devices.h"
 #include "functions.h"
 #include "globals.h"
 #include "debug.h"
@@ -140,9 +141,9 @@ static void sendConfirmation(WindowID target, int exitCode) {
     setWindowProperty(target, MPX_WM_INTERPROCESS_COM, XCB_ATOM_CARDINAL, count);
     flush();
 }
-void send(std::string name, std::string value) {
-    unsigned int data[5] = {getAtom(name), getAtom(value)};
-    LOG(LOG_LEVEL_DEBUG, "sending %d (%s) %d (%s)", data[0], name.c_str(), data[1], value.c_str());
+void send(std::string name, std::string value, WindowID active) {
+    unsigned int data[5] = {getAtom(name), getAtom(value), active};
+    LOG(LOG_LEVEL_DEBUG, "sending %d (%s) %d (%s) active: %d", data[0], name.c_str(), data[1], value.c_str(), active);
     catchError(xcb_ewmh_send_client_message(dis, getPrivateWindow(), root, MPX_WM_INTERPROCESS_COM, sizeof(data), data));
     outstandingSendCount++;
 }
@@ -166,6 +167,7 @@ void receiveClientMessage(void) {
     xcb_atom_t message = event->type;
     xcb_atom_t optionAtom = data.data32[0];
     xcb_atom_t valueAtom = data.data32[1];
+    WindowID active = data.data32[2];
     pid_t callerPID = getWindowPropertyValue(win, ewmh->_NET_WM_PID, XCB_ATOM_CARDINAL);
     if(message == MPX_WM_INTERPROCESS_COM && optionAtom) {
         DEBUG(getAtomsAsString(data.data32, 5));
@@ -174,6 +176,13 @@ void receiveClientMessage(void) {
         if(valueAtom)
             value = getAtomName(valueAtom);
         const Option* option = findOption(name, value);
+        if(active) {
+            WindowInfo* winInfo = getWindowInfo(active);
+            if(winInfo)
+                setActiveMasterByDeviceID(getClientPointerForWindow(*winInfo));
+            else
+                setActiveMasterByDeviceID(active);
+        }
         if(option) {
             DEBUG(*option);
             int childPID;
