@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& strm, const Option& option) ;
 /**
  * Sets up the system to receive messages from an external client
  */
-void enableInterClientCommunication(void);
+void addInterClientCommunicationRule(bool remove = 0);
 /**
  * Should be to a xcb_client_message_event_t event.
  *

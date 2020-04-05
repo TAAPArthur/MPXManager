@@ -36,7 +36,7 @@ static void checkAndSend(std::string name, std::string value) {
     flush();
 }
 static void setup() {
-    enableInterClientCommunication();
+    addInterClientCommunicationRule();
     onSimpleStartup();
     saveXSession();
 }

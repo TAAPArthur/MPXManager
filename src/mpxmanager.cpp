@@ -45,8 +45,7 @@ static void listVarOptions() {
 }
 /// list of startup options
 static UniqueArrayList<Option*> options = {
-    {"clear-startup-method", +[]{startupMethod = NULL;}},
-    {"enable-inter-client-communication", enableInterClientCommunication},
+    {"enable-inter-client-communication", addInterClientCommunicationRule},
     {"list-start-options", +[]() {std::cout >> options << "\n"; exit(0);}},
     {"list-options", +[]() {std::cout >> getOptions() << "\n"; exit(0);}},
     {"list-vars", +[]() {listVarOptions(); exit(0);}},

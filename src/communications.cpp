@@ -219,6 +219,6 @@ void receiveClientMessage(void) {
             LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'", name.c_str(), value.c_str());
     }
 }
-void enableInterClientCommunication(void) {
-    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(receiveClientMessage));
+void addInterClientCommunicationRule(bool remove) {
+    getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(receiveClientMessage), remove);
 }

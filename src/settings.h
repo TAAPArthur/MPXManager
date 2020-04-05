@@ -34,4 +34,9 @@ void defaultPrintFunction(void);
  * arbitrary commands and most commonly add device bindings and event rules
  */
 void loadSettings(void);
+/**
+ * Adds a collection of rules that aren't strictly needed to call this a functioning WM, but may align with expected
+ * behavior
+ */
+void addSuggestedRules();
 #endif

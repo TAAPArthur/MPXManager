@@ -192,7 +192,24 @@ void loadNormalSettings() {
     addDefaultBindings();
     addChainDefaultBindings();
 }
+void addSuggestedRules() {
+    addApplyChainBindingsRule();
+    addAutoFocusRule();
+    addAutoTileRules();
+    addAvoidDocksRule();
+    addDesktopRule();
+    addEWMHRules();
+    addFloatRule();
+    addIgnoreInputOnlyWindowsRule();
+    addIgnoreNonTopLevelWindowsRule();
+    addInterClientCommunicationRule();
+    addKeepTransientsOnTopRule();
+    addMoveNonTileableWindowsToWorkspaceBounds();
+    addPrintStatusRule();
+    addStickyPrimaryMonitorRule();
+}
 void __attribute__((weak)) loadSettings(void) {
+    addSuggestedRules();
     loadNormalSettings();
 }
 void (*startupMethod)();
@@ -200,21 +217,7 @@ void onStartup(void) {
     INFO("Starting up");
     addDefaultMaster();
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
-    if(RUN_AS_WM) {
-        addBasicRules();
-        addApplyChainBindingsRule();
-        addAutoTileRules();
-        addEWMHRules();
-        addAutoFocusRule();
-        addAvoidDocksRule();
-        addStickyPrimaryMonitorRule();
-        addKeepTransientsOnTopRule();
-        addMoveNonTileableWindowsToWorkspaceBounds();
-        addPrintStatusRule();
-        addIgnoreInputOnlyWindowsRule();
-        addDesktopRule();
-        enableInterClientCommunication();
-    }
+    addBasicRules();
     if(!RUN_AS_WM)
         ROOT_EVENT_MASKS &= ~WM_MASKS;
     if(startupMethod)
