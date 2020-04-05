@@ -107,16 +107,16 @@ static inline bool callStartupOption(const ArrayList<Option*>& list, const char*
  */
 static void parseArgs(int argc, char* const* argv) {
     assert(argc > 1);
-    if(std::string(argv[1]).find("--") == 0)
-        for(int i = 1; i < argc; i++) {
+    for(int i = 1; i < argc; i++) {
+        TRACE("Processing: " << argv[i]);
+        if(std::string(argv[i]).find("--") == 0) {
             LOG(LOG_LEVEL_TRACE, "processing %s", argv[i]);
             if(!(callStartupOption(options, argv, i) || callStartupOption(getOptions(), argv, i, 1))) {
                 LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.", argv[i]);
                 exit(1);
             }
+            continue;
         }
-    else {
-        int i = 1;
         LOG(LOG_LEVEL_DEBUG, "Trying to send %s.", argv[i]);
         std::string value(argv[i + 1] ? argv[i + 1] : "");
         if(!findOption(argv[i], value)) {
@@ -129,6 +129,7 @@ static void parseArgs(int argc, char* const* argv) {
             RUN_EVENT_LOOP = 0;
         }
         send(argv[i], value, active);
+        break;
     }
 }
 int _main(int argc, char* const* argv) {
