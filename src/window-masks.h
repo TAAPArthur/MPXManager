@@ -87,7 +87,7 @@
 #define FLOATING_MASK  (SYNC_ALL_MASKS | NO_TILE_MASK | EXTERNAL_CONFIGURABLE_MASK | ABOVE_MASK )
 
 /// or of all masks that will cause the layout function to skip a window
-#define ALL_NO_TILE_MASKS 	(FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | BELOW_MASK | ABOVE_MASK | NO_TILE_MASK | HIDDEN_MASK | MODAL_MASK)
+#define ALL_NO_TILE_MASKS 	(FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | NO_TILE_MASK | HIDDEN_MASK | MODAL_MASK)
 
 /**The window can receive input focus*/
 #define INPUT_MASK 	(1U << 24)

@@ -62,7 +62,7 @@ WindowID createContainer(bool doNotAssignWorkspace) {
     WindowID win = createWindow(root, XCB_WINDOW_CLASS_INPUT_OUTPUT, XCB_CW_BACK_PIXEL, &screen->black_pixel);
     Container* container = new Container(win, root);
     setWindowTitle(win, CONTAINER_NAME);
-    container->addMask(INPUT_MASK | MAPPABLE_MASK);
+    container->addMask(INPUT_MASK | BELOW_MASK | MAPPABLE_MASK);
     if(!registerWindow(container))
         return 0;
     getAllMonitors().add(container);

@@ -68,8 +68,8 @@ static std::unordered_map<uint32_t, WindowMask> atomStateToMask;
 static std::unordered_map<uint32_t, WindowMask> atomActionToMask;
 static void createMaskAtomMapping() {
     atomStateToMask[ewmh->_NET_WM_STATE_MODAL] = MODAL_MASK;
-    atomStateToMask[ewmh->_NET_WM_STATE_ABOVE] = ABOVE_MASK;
-    atomStateToMask[ewmh->_NET_WM_STATE_BELOW] = BELOW_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_ABOVE] = ABOVE_MASK | NO_TILE_MASK;
+    atomStateToMask[ewmh->_NET_WM_STATE_BELOW] = BELOW_MASK | NO_TILE_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_FULLSCREEN] = FULLSCREEN_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_HIDDEN] = HIDDEN_MASK;
     atomStateToMask[MPX_WM_STATE_NO_TILE] = NO_TILE_MASK;
@@ -78,8 +78,8 @@ static void createMaskAtomMapping() {
     atomStateToMask[ewmh->_NET_WM_STATE_DEMANDS_ATTENTION] = URGENT_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_MAXIMIZED_HORZ] = X_MAXIMIZED_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_MAXIMIZED_VERT] = Y_MAXIMIZED_MASK;
-    atomActionToMask[ewmh->_NET_WM_ACTION_ABOVE] = ABOVE_MASK;
-    atomActionToMask[ewmh->_NET_WM_ACTION_BELOW] = BELOW_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_ABOVE] = ABOVE_MASK | NO_TILE_MASK;
+    atomActionToMask[ewmh->_NET_WM_ACTION_BELOW] = BELOW_MASK | NO_TILE_MASK;
     atomActionToMask[ewmh->_NET_WM_ACTION_FULLSCREEN] = FULLSCREEN_MASK;
     atomActionToMask[ewmh->_NET_WM_ACTION_MINIMIZE] = HIDDEN_MASK;
     atomActionToMask[ewmh->_NET_WM_ACTION_MOVE] = EXTERNAL_MOVE_MASK;
