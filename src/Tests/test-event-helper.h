@@ -39,6 +39,7 @@ static inline void onSimpleStartup() {
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
     addDefaultMaster();
     openXDisplay();
+    assignUnusedMonitorsToWorkspaces();
 }
 
 static inline void exitFailure() {

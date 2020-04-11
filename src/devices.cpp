@@ -237,5 +237,4 @@ void detectMonitors(void) {
     getAllMonitors().sort();
     LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Number of monitors after consolidation%d",
         getAllMonitors().size());
-    assignUnusedMonitorsToWorkspaces();
 }

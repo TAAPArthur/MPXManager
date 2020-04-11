@@ -90,6 +90,7 @@ MPX_TEST("test_auto_tile", {
     addAutoTileRules();
     createSimpleEnv();
     openXDisplay();
+    assignUnusedMonitorsToWorkspaces();
     applyEventRules(PERIODIC, NULL);
     applyBatchEventRules();
     applyEventRules(IDLE, NULL);

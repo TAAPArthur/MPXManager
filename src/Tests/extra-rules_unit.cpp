@@ -96,6 +96,7 @@ MPX_TEST_ITER("primary_monitor_windows", 2, {
     Monitor* realMonitor = getAllMonitors()[0];
     getAllMonitors()[1]->setPrimary();
     detectMonitors();
+    assignUnusedMonitorsToWorkspaces();
     assert(getPrimaryMonitor()->getWorkspace());
     WindowID win = mapWindow(createNormalWindow());
     startWM();

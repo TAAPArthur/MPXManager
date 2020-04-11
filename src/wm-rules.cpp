@@ -26,6 +26,8 @@ void onXConnect(void) {
     initCurrentMasters();
     assert(getActiveMaster() != NULL);
     detectMonitors();
+    assignUnusedMonitorsToWorkspaces();
+    applyEventRules(SCREEN_CHANGE);
     registerForEvents();
     scan(root);
 }
@@ -359,8 +361,9 @@ void addBasicRules(bool remove) {
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), remove);
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultStackPosition), remove);
     addApplyBindingsRule(remove);
-    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY), remove);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, LOW_PRIORITY), remove);
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         getEventRules(GENERIC_EVENT_OFFSET + i).add(DEFAULT_EVENT(onDeviceEvent), remove);
     }

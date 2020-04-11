@@ -28,6 +28,7 @@ static void initSetup() {
 }
 SET_ENV(initSetup, fullCleanup);
 MPX_TEST_ITER("auto_tile_with_dock", 4, {
+    assignUnusedMonitorsToWorkspaces();
     bool premap = _i%2;
     bool consume = _i/2;
     WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
@@ -54,6 +55,7 @@ static void setup() {
     initSetup();
     startWM();
     waitUntilIdle(1);
+    assert(getAllMonitors()[0]->getWorkspace());
 }
 SET_ENV(setup, fullCleanup);
 MPX_TEST("auto_window_map", {
@@ -183,6 +185,7 @@ static void multiMonitorSetup() {
     detectMonitors();
     assertEquals(getAllMonitors().size(), 3);
     getActiveMaster()->setWorkspaceIndex(3);
+    assignUnusedMonitorsToWorkspaces();
     unlock();
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
         mapArbitraryWindow();

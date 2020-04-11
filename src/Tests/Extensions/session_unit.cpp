@@ -72,6 +72,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
     addFakeMonitor({0, 20, 100, 100});
     addFakeMonitor(ref->getBase());
     detectMonitors();
+    assignUnusedMonitorsToWorkspaces();
     swapMonitors(0, 2);
     swapMonitors(1, 4);
     for(int i = 0; i < 32; i++)
