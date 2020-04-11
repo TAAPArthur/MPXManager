@@ -39,14 +39,12 @@ enum {
     CLIENT_MAP_ALLOW,
     /// Triggered when loadWindowProperties() is called
     PROPERTY_LOAD,
+    /// triggered when root screen is changed (indicated by a XCB_CONFIGURE_NOTIFY to the root window)
+    SCREEN_CHANGE,
     /// called right after a window changes workspaces
     WINDOW_WORKSPACE_CHANGE,
     /// called right after a monitor changes workspaces
     MONITOR_WORKSPACE_CHANGE,
-    /// triggered when root screen is changed (indicated by a XCB_CONFIGURE_NOTIFY to the root window)
-    SCREEN_CHANGE,
-    /// triggered when at least one new monitor is detected
-    MONITOR_DETECTED,
     /**
      * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. The other being that the WindowInfo object will be passed in when the rule is applied.
      */

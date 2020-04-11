@@ -224,7 +224,6 @@ void detectMonitors(void) {
         monitorNames.add(monitorInfo->name);
         xcb_randr_monitor_info_next(&iter);
     }
-    auto currentNumberOfMonitors = getAllMonitors().size();
     LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Detected %d monitors; current: %d",
         monitorNames.size(), getAllMonitors().size());
     if(getPrimaryMonitor())
@@ -238,7 +237,5 @@ void detectMonitors(void) {
     getAllMonitors().sort();
     LOG(getAllMonitors().size() ? LOG_LEVEL_DEBUG : LOG_LEVEL_WARN, "Number of monitors after consolidation%d",
         getAllMonitors().size());
-    if(currentNumberOfMonitors != getAllMonitors().size())
-        applyEventRules(MONITOR_DETECTED);
     assignUnusedMonitorsToWorkspaces();
 }

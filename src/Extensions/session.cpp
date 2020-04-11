@@ -301,8 +301,7 @@ void addResumeCustomStateRules(bool remove) {
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initSessionAtoms, HIGH_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadCustomState), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), remove);
-    getEventRules(MONITOR_DETECTED).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), remove);
-    getEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(loadMonitorWorkspaceMapping), remove);
     getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping), remove);
     getBatchEventRules(DEVICE_EVENT).add(DEFAULT_EVENT(saveCustomState), remove);
     getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(saveCustomState), remove);
