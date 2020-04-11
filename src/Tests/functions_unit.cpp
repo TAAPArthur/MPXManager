@@ -219,11 +219,11 @@ MPX_TEST("test_activate_workspace_with_mouse", {
 });
 MPX_TEST("test_activate_workspace_with_mouse_smallest", {
     assert(getAllMonitors().size() == 1);
-    Monitor* m = new Monitor(2, {0,0,2,2});
+    Monitor* m = new Monitor(2, {0, 0, 2, 2});
     getAllMonitors().add(m);
     getAllMonitors().add(new Monitor(3, getAllMonitors()[0]->getBase()));
     assignUnusedMonitorsToWorkspaces();
-    movePointer(1,1);
+    movePointer(1, 1);
     flush();
     activateWorkspaceUnderMouse();
     assertEquals(m, getActiveWorkspace()->getMonitor());

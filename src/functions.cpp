@@ -202,7 +202,7 @@ void centerMouseInWindow(WindowInfo* winInfo) {
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
     Master* master = getActiveMaster();
-    Monitor*smallestMonitor = NULL;
+    Monitor* smallestMonitor = NULL;
     if(getMousePosition(master->getPointerID(), root, pos)) {
         Rect rect = {pos[0], pos[1], 1, 1};
         for(Monitor* m : getAllMonitors()) {

@@ -29,8 +29,8 @@ static void initSetup() {
 SET_ENV(initSetup, fullCleanup);
 MPX_TEST_ITER("auto_tile_with_dock", 4, {
     assignUnusedMonitorsToWorkspaces();
-    bool premap = _i%2;
-    bool consume = _i/2;
+    bool premap = _i % 2;
+    bool consume = _i / 2;
     WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     if(premap)
         mapWindow(win);

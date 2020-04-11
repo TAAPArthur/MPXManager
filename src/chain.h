@@ -56,8 +56,8 @@ public:
      */
     Chain(unsigned int mod, int buttonOrKey, const BoundFunctionTuple& hooks = {}, const ArrayList<Binding*>& members = {},
         const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(mod, buttonOrKey, {},
-                flags, name),
-        members(members), hooks(hooks), chainMask(chainMask) { }
+    flags, name),
+    members(members), hooks(hooks), chainMask(chainMask) { }
     /**
      *
      * @param keyBindings
@@ -71,8 +71,8 @@ public:
         ArrayList<Binding*>&
         members = {},
         const BindingFlags& flags = {}, uint32_t chainMask = 0, std::string name = ""): Binding(keyBindings, {},
-                flags, name),
-        members(members), hooks(hooks), chainMask(chainMask) { }
+    flags, name),
+    members(members), hooks(hooks), chainMask(chainMask) { }
     /**
      *
      *

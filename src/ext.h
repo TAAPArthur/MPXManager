@@ -7,6 +7,7 @@
 #ifndef MPX_EXT_H
 #define MPX_EXT_H
 #include <unordered_map>
+#include <stdint.h>
 
 /**
  * Used to place common code across all Indexes

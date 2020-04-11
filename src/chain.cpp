@@ -50,7 +50,7 @@ bool Chain::start(const UserEvent& event)const {
         globalChain.add(this);
     else
         getActiveChains().add(this);
-    return hooks.onStart({getWindowToActOn(event)}) && check(event);
+    return hooks.onStart({getWindowToActOn(event)})&& check(event);
 }
 bool Chain::end(bool abort)const {
     LOG(LOG_LEVEL_INFO, "Ending chain; Global: %d; Abort: %d", isGlobalChain(), abort);
@@ -66,10 +66,8 @@ bool Chain::end(bool abort)const {
     }
     for(Binding* member : members)
         member->ungrab();
-
     if(abort)
         hooks.onAbort();
-
     return hooks.onEnd();
 }
 bool Chain::trigger(const UserEvent& event)const {
@@ -88,7 +86,7 @@ void maybeAbortActiveChains() {
     for(Master* master : getAllMasters()) {
         const Chain* chain = getActiveChain(master);
         if(chain && chain->allowAbortionOnIdle()) {
-            INFO("Aborting chain: "<< chain);
+            INFO("Aborting chain: " << chain);
             chain->end(1);
         }
     }

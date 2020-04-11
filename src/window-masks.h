@@ -36,7 +36,6 @@
 #define HIDDEN_MASK 	(1U << 7)
 
 
-
 /**Marks the window as urgent*/
 #define URGENT_MASK 	(1U << 8)
 /**

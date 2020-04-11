@@ -81,7 +81,7 @@ struct ArrayList: std::vector<T> {
     /**
      * @param __l list of elements to add
      */
-    void addAll(std::initializer_list<T> __l) {
+    void addAll(std::vector<T>& __l) {
         for(auto t : __l)
             this->add(t);
     }

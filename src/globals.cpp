@@ -12,7 +12,8 @@ bool STEAL_WM_SELECTION = 0;
 std::string LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
 std::string MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
 std::string SHELL = "/bin/sh";
-std::string NOTIFY_CMD = "notify-send -h string:x-canonical-private-synchronous:MPX_NOTIFICATIONS -a " WINDOW_MANAGER_NAME;
+std::string NOTIFY_CMD = "notify-send -h string:x-canonical-private-synchronous:MPX_NOTIFICATIONS -a "
+    WINDOW_MANAGER_NAME;
 uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 5000;
 // TODO make configurable per window
 uint32_t CLONE_REFRESH_RATE = 15;
@@ -33,7 +34,8 @@ uint32_t POLL_INTERVAL = 10;
 uint32_t ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
 uint32_t ROOT_EVENT_MASKS = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
     XCB_EVENT_MASK_STRUCTURE_NOTIFY;
-WindowMask MASKS_TO_SYNC = MODAL_MASK | ABOVE_MASK | BELOW_MASK | HIDDEN_MASK | NO_TILE_MASK | STICKY_MASK | URGENT_MASK;
+WindowMask MASKS_TO_SYNC = MODAL_MASK | ABOVE_MASK | BELOW_MASK | HIDDEN_MASK | NO_TILE_MASK | STICKY_MASK |
+    URGENT_MASK;
 uint32_t SRC_INDICATION = 7;
 
 static volatile bool shuttingDown = 0;

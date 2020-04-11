@@ -400,7 +400,7 @@ struct BoundFunction {
      */
     int call(const BoundFunctionArg& arg)const;
     /// @copydoc call
-    int operator()(const BoundFunctionArg& arg={})const {
+    int operator()(const BoundFunctionArg& arg = {})const {
         return execute(arg);
     }
     /**

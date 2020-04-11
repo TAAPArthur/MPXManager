@@ -18,22 +18,7 @@ LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp rect.cpp slaves.cpp masters.cpp 
 LAYER2_SRCS := xsession.cpp test-functions.cpp devices.cpp device-grab.cpp bindings.cpp
 LAYER3_SRCS := window-properties.cpp wmfunctions.cpp state.cpp layouts.cpp wm-rules.cpp ewmh.cpp extra-rules.cpp
 LAYER4_SRCS := chain.cpp functions.cpp communications.cpp mpxmanager.cpp
-
-#ifndef NO_MPX
-LAYER5_SRCS += Extensions/mpx.cpp
-#endif
-#ifndef NO_WINDOW_CLONE
-LAYER5_SRCS += Extensions/window-clone.cpp
-#endif
-#ifndef NO_XMOUSE_CONTROL
-LAYER5_SRCS += Extensions/xmousecontrol.cpp
-#endif
-#ifndef NO_SESSION
-LAYER5_SRCS += Extensions/session.cpp
-#endif
-#ifndef NO_CONTAINERS
-LAYER5_SRCS += Extensions/containers.cpp
-#endif
+LAYER5_SRCS := Extensions/mpx.cpp Extensions/window-clone.cpp Extensions/xmousecontrol.cpp Extensions/session.cpp Extensions/containers.cpp
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
@@ -151,6 +136,7 @@ Extensions/Tests/%: Tests/Extensions/%
 %_code_coverage.out: %.cpp Tests/%_unit.cpp | unitTest
 	rm -f $@ *gcda
 	TEST_FILE=Tests/$*_unit.cpp $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
+	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 	[ -s  $$(basename -a $<).gcov ]
 	[ ! -s  $@ ]
 
@@ -158,6 +144,7 @@ Extensions/Tests/%: Tests/Extensions/%
 	rm -f $@ *gcda
 	TEST_FILE=Tests/$*_unit.cpp $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE, $<, Tests/$*_unit.cpp) 2>&1 | tee -a $@)
 	[ -s  $$(basename -a $<).gcov ]
+	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 	[ ! -s  $@ ]
 
 

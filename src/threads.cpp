@@ -45,7 +45,7 @@ void spawnThread(std::function<void()>func) {
     threads.push_back(std::thread(func));
 }
 void waitForAllThreadsToExit() {
-    for(std::thread&thread: threads)
+    for(std::thread& thread : threads)
         thread.join();
     threads.clear();
 }

@@ -254,8 +254,7 @@ MPX_TEST("moveNonTileableWindowsToWorkspaceBounds", {
     Monitor* m = getAllMonitors()[0];
     Rect dims = m->getBase();
     dims.x += m->getBase().width;
-    Monitor* m2 = new Monitor(1, dims);
-    getAllMonitors().add(m2);
+    Monitor* m2 = addFakeMonitor(dims, "fake");
     m2->assignWorkspace(getWorkspace(1));
     startWM();
     WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));

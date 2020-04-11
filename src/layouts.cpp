@@ -202,7 +202,6 @@ void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const 
         config[i] = values[i];
     transformConfig(state->getArgs(), state->monitor, config);
     applyMasksToConfig(winInfo, state->monitor, config);
-
     adjustBorders(state, config);
     applyTilingOverrideToConfig(winInfo, state->monitor, config);
     if(state->getArgs())

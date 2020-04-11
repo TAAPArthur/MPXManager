@@ -26,8 +26,8 @@ static void setup(void) {
 }
 static void cleanup() {
     requestShutdown();
-    addXMouseControlMask(1);
     removeXMouseControlMask(1);
+    addXMouseControlMask(1);
     fullCleanup();
 }
 
@@ -40,7 +40,7 @@ MPX_TEST("test_scroll", {
     };
     int NORMAL_MASK_LEN = 6;
     for(int i = 0; i < LEN(masks); i++) {
-        addXMouseControlMask(masks[i]);
+        ATOMIC(addXMouseControlMask(masks[i]));
         if(i < NORMAL_MASK_LEN)
             waitToReceiveInput(XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS, masks[i]);
         else {
@@ -58,19 +58,16 @@ MPX_TEST("test_mouse", {
         MOVE_UP_MASK | MOVE_DOWN_MASK, MOVE_LEFT_MASK | MOVE_RIGHT_MASK
     };
     int NORMAL_MASK_LEN = 6;
+    int16_t result[4];
     for(int i = 0; i < LEN(masks); i++) {
-        addXMouseControlMask(masks[i]);
+        ATOMIC(addXMouseControlMask(masks[i]));
         if(i < NORMAL_MASK_LEN) {
-            xcb_input_xi_query_pointer_reply_t* reply1 =
-                xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, root, getActiveMasterPointerID()), NULL);
+            assert(getMousePosition(getActiveMasterPointerID(), root, result));
             waitToReceiveInput(XCB_INPUT_XI_EVENT_MASK_MOTION, 0);
             waitToReceiveInput(XCB_INPUT_XI_EVENT_MASK_MOTION, 0);
-            xcb_input_xi_query_pointer_reply_t* reply2 =
-                xcb_input_xi_query_pointer_reply(dis, xcb_input_xi_query_pointer(dis, root, getActiveMasterPointerID()), NULL);
-            assert(((masks[i] & (MOVE_UP_MASK | MOVE_DOWN_MASK)) ? 1 : 0) == (reply1->root_y != reply2->root_y));
-            assert(((masks[i] & (MOVE_LEFT_MASK | MOVE_RIGHT_MASK)) ? 1 : 0) == (reply1->root_x != reply2->root_x));
-            free(reply1);
-            free(reply2);
+            assert(getMousePosition(getActiveMasterPointerID(), root, result + 2));
+            assert(((masks[i] & (MOVE_UP_MASK | MOVE_DOWN_MASK)) ? 1 : 0) == (result[1] != result[3]));
+            assert(((masks[i] & (MOVE_LEFT_MASK | MOVE_RIGHT_MASK)) ? 1 : 0) == (result[0] != result[2]));
         }
         else {
             msleep(100);
