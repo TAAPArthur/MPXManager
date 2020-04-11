@@ -19,14 +19,13 @@
 #include "workspaces.h"
 #include "xsession.h"
 
-void onXConnect(void) {
-    lowerWindow(getWindowDivider(1));
-    raiseWindow(getWindowDivider(0));
+void initState() {
     addDefaultMaster();
     initCurrentMasters();
     assert(getActiveMaster() != NULL);
     detectMonitors();
-    assignUnusedMonitorsToWorkspaces();
+}
+void onXConnect(void) {
     applyEventRules(SCREEN_CHANGE);
     registerForEvents();
     scan(root);
@@ -346,8 +345,10 @@ void addBasicRules(bool remove) {
     getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusInEvent), remove);
     getEventRules(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onFocusOutEvent), remove);
     getEventRules(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(onHiearchyChangeEvent), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace, HIGHEST_PRIORITY), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initState, HIGHEST_PRIORITY), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, HIGH_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(onXConnect, HIGH_PRIORITY), remove);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(assignDefaultLayoutsToWorkspace, HIGH_PRIORITY), remove);
     getEventRules(CLIENT_MAP_ALLOW).add(DEFAULT_EVENT(loadWindowProperties), remove);
     // From the ICCCM spec,
     // "The user will not be able to move, resize, restack, or transfer the input

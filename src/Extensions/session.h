@@ -14,7 +14,13 @@
 /**
  * Loads global MPX state that has been save via saveCustomState()
  */
-void loadCustomState(void);
+void loadSavedWindowState();
+
+/**
+ * Loads global MPX state that has been save via saveCustomState()
+ */
+void loadSavedNonWindowState();
+
 /**
  * Stores global MPX state so it can restored via loadCustomState()
  * The state is stored as properties of the root window
@@ -24,4 +30,14 @@ void saveCustomState(void);
  * Loads saved state on XConnection and saves after a batch of TILE_WORKSPACE
  */
 void addResumeCustomStateRules(bool remove = 0);
+
+/**
+ * Saves mapping from monitor bounds to workspace
+ */
+void saveMonitorWorkspaceMapping();
+
+/**
+ * Loads saved mapping of monitor bounds to workspace
+ */
+void loadSavedMonitorWorkspaceMapping();
 #endif
