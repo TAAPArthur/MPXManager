@@ -131,8 +131,8 @@ static void adjustBorders(const LayoutState* state, uint32_t config[CONFIG_LEN])
     if(state->getArgs()) {
         config[CONFIG_INDEX_BORDER] = state->getArgs()->noBorder ? 0 : DEFAULT_BORDER_WIDTH;
         if(!state->getArgs()->noAdjustForBorders) {
-            config[CONFIG_INDEX_WIDTH] -= config[CONFIG_INDEX_BORDER] * 2;
-            config[CONFIG_INDEX_HEIGHT] -= config[CONFIG_INDEX_BORDER] * 2;
+            config[CONFIG_INDEX_WIDTH] -= config[CONFIG_INDEX_BORDER];
+            config[CONFIG_INDEX_HEIGHT] -= config[CONFIG_INDEX_BORDER];
         }
     }
 }
