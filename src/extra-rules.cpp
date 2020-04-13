@@ -115,7 +115,9 @@ static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
         if(rect.isAtOrigin()) {
             Workspace* w = winInfo->getWorkspace();
             if(w && w->isVisible()) {
-                rect.translate(w->getMonitor()->getViewport().getTopLeftCorner());
+                rect.translate(w->getMonitor()->getViewport().getMidpoint());
+                rect.x -= rect.width / 2;
+                rect.y -= rect.height / 2;
                 setWindowPosition(winInfo->getID(), rect);
             }
         }

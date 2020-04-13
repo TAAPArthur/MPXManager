@@ -259,10 +259,11 @@ MPX_TEST("moveNonTileableWindowsToWorkspaceBounds", {
     startWM();
     WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
     waitUntilIdle();
-    assert(getRealGeometry(win).isAtOrigin());
+    assert(m->getBase().contains(getRealGeometry(win)));
     getActiveMaster()->setWorkspaceIndex(1);
     WindowID win2 = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DIALOG));
     waitUntilIdle();
+    assert(m2->getBase().contains(getRealGeometry(win2)));
     assert(getRealGeometry(win) != getRealGeometry(win2));
     assert(dims.intersects(getRealGeometry(win2)) || dims.contains(getRealGeometry(win2)));
 });

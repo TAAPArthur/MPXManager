@@ -119,13 +119,13 @@ struct Rect {
     /**
      * @return returns the top left point of bounded by this rect
      */
-    const Point getTopLeftCorner() const {
-        return {x, y};
+    const Point getMidpoint() const {
+        return {x + width / 2, y + height / 2};
     }
 
     /// @return getTopLeftCorner()
     operator const Point() const {
-        return getTopLeftCorner();
+        return {x, y};
     }
 
     /**
