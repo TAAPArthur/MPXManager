@@ -367,7 +367,7 @@ void raiseWindow(WindowInfo* winInfo, WindowID sibling, bool above) {
             sibling = getWindowDivider(above);
             above = !above;
         }
-        else if(above && !winInfo->hasMask(ABOVE_MASK) || !above && !winInfo->hasMask(BELOW_MASK))
+        else if(above && !winInfo->hasPartOfMask(TOP_LAYER_MASKS) || !above && !winInfo->hasMask(BOTTOM_LAYER_MASKS))
             sibling = getWindowDivider(above = !above);
     raiseWindow(winInfo->getID(), sibling, above);
 }

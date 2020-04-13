@@ -176,6 +176,23 @@ MPX_TEST("detect_many_masters", {
     assertEquals(getAllMasters().size(), MAX_NUMBER_OF_MASTER_DEVICES);
 });
 
+MPX_TEST_ITER("fullscreen_over_docks", 2, {
+    WindowID dock = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK));
+    setDockProperties(dock, DOCK_TOP, 100);
+    WindowID win = mapArbitraryWindow();
+    waitUntilIdle();
+    lock();
+    assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
+    getWindowInfo(dock)->addMask(ABOVE_MASK);
+    getWindowInfo(win)->addMask(_i ? ROOT_FULLSCREEN_MASK : FULLSCREEN_MASK);
+    retile();
+    unlock();
+    waitUntilIdle();
+    assert(getRealGeometry(win).contains(getRealGeometry(dock)));
+    WindowID stack[] = {dock, win};
+    assert(checkStackingOrder(stack, 2));
+});
+
 static void multiMonitorSetup() {
     MONITOR_DUPLICATION_POLICY = 0;
     setup();

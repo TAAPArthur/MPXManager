@@ -109,6 +109,12 @@
 ///the window is currently mapped
 #define MAPPED_MASK 	(1U << 31)
 
+
+/// Masks that all windows to enter the top layer
+#define TOP_LAYER_MASKS (FULLSCREEN_MASK | ROOT_FULLSCREEN_MASK | ABOVE_MASK )
+/// Masks that all windows to enter the bottom layer
+#define BOTTOM_LAYER_MASKS (BELOW_MASK)
+
 /// The minimum requirements to be reported has the focusedWindow
 #define FOCUSABLE_MASK  (INPUT_MASK|MAPPED_MASK)
 /// These masks indicate state beyond our control and should not be arbitrarily set
