@@ -193,6 +193,34 @@ MPX_TEST_ITER("fullscreen_over_docks", 2, {
     assert(checkStackingOrder(stack, 2));
 });
 
+MPX_TEST("transfer_focus_within_workspace", {
+    CRASH_ON_ERRORS = 0;
+    setLogLevel(LOG_LEVEL_NONE);
+    addFakeMonitor({100, 0, 100, 100});
+    assignUnusedMonitorsToWorkspaces();
+    WindowID win = mapArbitraryWindow();
+    WindowID win2 = mapArbitraryWindow();
+    WindowID win3 = mapArbitraryWindow();
+    waitUntilIdle();
+    lock();
+    for(WindowInfo* winInfo : getAllWindows())
+        isWindowMapped(*winInfo);
+    getWindowInfo(win2)->moveToWorkspace(1);
+    assert(focusWindow(win));
+    assert(focusWindow(win2));
+    assert(focusWindow(win3));
+    unlock();
+    waitUntilIdle();
+    assertEquals(getActiveMaster()->getFocusedWindow(), getWindowInfo(win3));
+    assertEquals(3, getActiveMaster()->getWindowStack().size());
+    destroyWindow(win3);
+    waitUntilIdle();
+    assertEquals(getActiveMaster()->getFocusedWindow(), getWindowInfo(win));
+    destroyWindow(win);
+    waitUntilIdle();
+    assertEquals(getActiveMaster()->getFocusedWindow(), getWindowInfo(win2));
+});
+
 static void multiMonitorSetup() {
     MONITOR_DUPLICATION_POLICY = 0;
     setup();
