@@ -73,6 +73,22 @@ MPX_TEST("ewmh_hooks", {
     focusWindow(mapWindow(createNormalWindow()));
     runEventLoop();
 });
+MPX_TEST("remember_mapped_windows", {
+    addBasicRules();
+    addEWMHRules();
+    addShutdownOnIdleRule();
+    WindowID win = mapWindow(createWindow());
+    WindowID win2 = mapWindow(createWindow());
+    xcb_unmap_notify_event_t event = {.response_type = XCB_UNMAP_NOTIFY, .window = win2};
+    catchError(xcb_send_event_checked(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event));
+    runEventLoop();
+    getAllWindows().deleteElements();
+    unmapWindow(win);
+    unmapWindow(win2);
+    scan(root);
+    assert(getWindowInfo(win)->hasMask(MAPPABLE_MASK));
+    assert(!getWindowInfo(win2)->hasMask(MAPPABLE_MASK));
+});
 MPX_TEST("test_sync_state", {
     addWorkspaces(2);
     saveXSession();

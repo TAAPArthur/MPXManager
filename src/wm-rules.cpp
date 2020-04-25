@@ -171,6 +171,7 @@ void onUnmapEvent(void) {
         if(isSyntheticEvent() || winInfo->isOverrideRedirectWindow()) {
             INFO("Marking window as withdrawn " << event->window);
             winInfo->removeMask(MAPPABLE_MASK);
+            applyEventRules(CLIENT_MAP_DISALLOW, winInfo);
         }
         if(winInfo->isDock())
             applyEventRules(SCREEN_CHANGE);

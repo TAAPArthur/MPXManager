@@ -76,6 +76,8 @@ extern xcb_atom_t WM_DELETE_WINDOW;
  * Atom for the MPX_WM_SELECTION for the default screen
  */
 extern xcb_atom_t WM_SELECTION_ATOM;
+/// WM_STATE property of the icccm spec
+extern xcb_atom_t WM_STATE;
 
 /**
  * MPX_WM_TAKE_FOCUS atom
@@ -147,81 +149,6 @@ static inline xcb_atom_t getAtom(std::string name) {
  * @return the name of the atom
  */
 std::string getAtomName(xcb_atom_t atom);
-
-/**
- * Loads and returns info for an X11 property
- *
- * Wraps xcb_get_property and related methods
- *
- * @param win the window the property is stored on
- * @param atom the atom we want
- * @param type the type of atom (ie XCB_ATOM_STRING)
- *
- * @return xcb_get_property_reply_t or NULL
- */
-std::shared_ptr<xcb_get_property_reply_t> getWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type);
-
-/**
- * Wrapper around getWindowProperty that retries the first value and converts it to an int
- *
- * @param win
- * @param atom
- * @param type
- *
- * @return the value of the window property
- */
-int getWindowPropertyValue(WindowID win, xcb_atom_t atom, xcb_atom_t type);
-/**
- * Wrapper around getWindowProperty that retries the first value and converts it to a string
- *
- * @param win
- * @param atom
- * @param type
- *
- * @return the value of the window property
- */
-std::string getWindowPropertyValueString(WindowID win, xcb_atom_t atom, xcb_atom_t type);
-
-/// When NDEBUG is set XCALL will call the checked version of X and check for errors
-#ifndef NDEBUG
-#define XCALL(X, args...) catchError(_CAT(X,_checked)(args))
-#else
-#define XCALL(X, args...) X(args)
-#endif
-/**
- *
- * Wrapper for xcb_change_property with XCB_PROP_MODE_REPLACE
- *
- * @tparam T
- * @param win
- * @param atom
- * @param type
- * @param arr a array of values to set to win
- * @param len the number of members of arr
- */
-template <typename T>
-void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type, T* arr, uint32_t len) {
-    XCALL(xcb_change_property, dis, XCB_PROP_MODE_REPLACE, win, atom, type, sizeof(T) * 8, len, arr);
-}
-
-/// @{
-/**
- * Wrapper for setWindowProperty
- *
- * @param win the window to set the property on
- * @param atom the atom to set
- * @param type the type of atom
- * @param value the value to post
- */
-static inline void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type, uint32_t value) {
-    setWindowProperty(win, atom, type, &value, 1);
-}
-
-static inline void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type, std::string value) {
-    setWindowProperty(win, atom, type, value.c_str(), value.length() + 1);
-}
-/// @}
-
 
 /**
  *
@@ -409,4 +336,88 @@ int destroyWindow(WindowID win);
  * @return 1 iff a connection to the xserver has been opened
  */
 bool hasXConnectionBeenOpened();
+
+/**
+ * Loads and returns info for an X11 property
+ *
+ * Wraps xcb_get_property and related methods
+ *
+ * @param win the window the property is stored on
+ * @param atom the atom we want
+ * @param type the type of atom (ie XCB_ATOM_STRING)
+ *
+ * @return xcb_get_property_reply_t or NULL
+ */
+std::shared_ptr<xcb_get_property_reply_t> getWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type);
+
+/**
+ * Wrapper around getWindowProperty that retries the first value and converts it to an int
+ *
+ * @param win
+ * @param atom
+ * @param type
+ *
+ * @return the value of the window property
+ */
+int getWindowPropertyValue(WindowID win, xcb_atom_t atom, xcb_atom_t type);
+/**
+ * Wrapper around getWindowProperty that retries the first value and converts it to a string
+ *
+ * @param win
+ * @param atom
+ * @param type
+ *
+ * @return the value of the window property
+ */
+std::string getWindowPropertyValueString(WindowID win, xcb_atom_t atom, xcb_atom_t type);
+
+/// When NDEBUG is set XCALL will call the checked version of X and check for errors
+#ifndef NDEBUG
+#define XCALL(X, args...) catchError(_CAT(X,_checked)(args))
+#else
+#define XCALL(X, args...) X(args)
+#endif
+/**
+ *
+ * Wrapper for xcb_change_property with XCB_PROP_MODE_REPLACE
+ *
+ * @tparam T
+ * @param win
+ * @param atom
+ * @param type
+ * @param arr a array of values to set to win
+ * @param len the number of members of arr
+ */
+template <typename T>
+void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type, T* arr, uint32_t len) {
+    XCALL(xcb_change_property, dis, XCB_PROP_MODE_REPLACE, win, atom, type, sizeof(T) * 8, len, arr);
+}
+
+/// @{
+/**
+ * Wrapper for setWindowProperty
+ *
+ * @param win the window to set the property on
+ * @param atom the atom to set
+ * @param type the type of atom
+ * @param value the value to post
+ */
+static inline void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type, uint32_t value) {
+    setWindowProperty(win, atom, type, &value, 1);
+}
+
+static inline void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t type, std::string value) {
+    setWindowProperty(win, atom, type, value.c_str(), value.length() + 1);
+}
+/// @}
+
+/**
+ * Removes the atom from the specified window
+ *
+ * @param win
+ * @param atom
+ */
+static inline void clearWindowProperty(WindowID win, xcb_atom_t atom) {
+    XCALL(xcb_delete_property, dis, win, atom);
+}
 #endif /* XSESSION_H_ */

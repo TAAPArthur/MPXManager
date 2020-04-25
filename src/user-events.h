@@ -37,6 +37,8 @@ enum {
     /// Triggered when the client allows the window to be mapped (MapRequest)
     /// Windows that circumvent MapRequest and go straight to MapNotify are implicitly allowed to be mapped
     CLIENT_MAP_ALLOW,
+    /// Triggered when the client allows the window to be mapped (Synthetic UnmapRequest)
+    CLIENT_MAP_DISALLOW,
     /// Triggered when loadWindowProperties() is called
     PROPERTY_LOAD,
     /// triggered when root screen is changed (indicated by a XCB_CONFIGURE_NOTIFY to the root window)

@@ -151,6 +151,22 @@ static void unrecordWindow(WindowInfo* winInfo) {
     mappedOrder.removeElement(winInfo->getID());
 }
 
+static void addDefaultMappableMask(WindowInfo* winInfo) {
+    if(getWindowPropertyValue(winInfo->getID(), WM_STATE, XCB_ATOM_CARDINAL))
+        winInfo->addMask(MAPPABLE_MASK);
+}
+
+static void setWMStateRules(bool remove) {
+    getEventRules(CLIENT_MAP_ALLOW).add({
+        [](WindowInfo * winInfo) {setWindowProperty(winInfo->getID(), WM_STATE, XCB_ATOM_CARDINAL, XCB_ICCCM_WM_STATE_NORMAL);},
+        "_setWindowState",
+    }, remove);
+    getEventRules(CLIENT_MAP_DISALLOW).add({
+        [](WindowInfo * winInfo) {clearWindowProperty(winInfo->getID(), WM_STATE);},
+        "_clearWindowState",
+    }, remove);
+}
+
 void addEWMHRules(bool remove) {
     getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHClientList), remove);
     getBatchEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(updateEWMHWorkspaceProperties), remove);
@@ -164,12 +180,14 @@ void addEWMHRules(bool remove) {
         remove);
     getEventRules(GENERIC_EVENT_OFFSET + XCB_INPUT_MOTION).add(DEFAULT_EVENT(updateWindowMoveResize), remove);
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setAllowedActions), remove);
+    getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(addDefaultMappableMask), remove);
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(setActiveProperties), remove);
     getEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(unrecordWindow), remove);
     getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(setSavedWorkspaceIndex), remove);
     getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(broadcastEWMHCompilence), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(syncState), remove);
+    setWMStateRules(remove);
 }
 
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {

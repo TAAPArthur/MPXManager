@@ -29,6 +29,7 @@ xcb_atom_t MPX_WM_STATE_ROOT_FULLSCREEN;
 xcb_atom_t WM_CHANGE_STATE;
 xcb_atom_t WM_DELETE_WINDOW;
 xcb_atom_t WM_SELECTION_ATOM;
+xcb_atom_t WM_STATE;
 xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_WINDOW_ROLE;
 
@@ -250,6 +251,7 @@ void openXDisplay(void) {
     CREATE_ATOM(MPX_WM_STATE_ROOT_FULLSCREEN);
     CREATE_ATOM(WM_CHANGE_STATE);
     CREATE_ATOM(WM_DELETE_WINDOW);
+    CREATE_ATOM(WM_STATE);
     CREATE_ATOM(WM_TAKE_FOCUS);
     CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
