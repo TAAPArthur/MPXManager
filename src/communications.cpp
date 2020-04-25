@@ -91,6 +91,7 @@ static UniqueArrayList<Option*> options = {
     {"log-level", +[](int i){setLogLevel((LogLevel)i);}, VAR_SETTER},
     {"lower", +[](WindowID id) {lowerWindow(id);}},
     {"next-win", []{shiftFocus(UP);}},
+    {"ping", []{DEBUG("pong");}},
     {"prev-win", []{shiftFocus(DOWN);}},
     {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
     {"raise", +[](WindowID id) {raiseWindow(id);}},

@@ -178,13 +178,5 @@ MPX_TEST("test_quit", {
     flush();
     assert(waitForChild(0) == 0);
 });
-MPX_TEST_ERR("test_restart", 27, {
-    static const char* const args[] = {SHELL.c_str(), "-c", "exit 27", NULL};
-    passedArguments = (char* const*)args;
-    numPassedArguments = LEN(args) - 1;
-    send("restart", "");
-    flush();
-    runEventLoop();
-});
 
 

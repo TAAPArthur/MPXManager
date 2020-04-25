@@ -114,15 +114,26 @@ libmpx-patch.so: Hacks/mpx-patch.c
 libmpx-test.so: Tests/test-preload.c
 	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out functional.out format doc-check
+test: libmpx-test.so code_coverage.out functional.out endToEndTest.out format doc-check
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
-functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.cpp Tests/compatibility_test.cpp |libmpx-patch.so
+functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.o Tests/compatibility_test.o |libmpx-patch.so
 	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functional.out: PRELOAD := $$(pwd)/libmpx-patch.so
 functional.out: functionalTest
 	$(call RUN_TEST, ./$^ )
+	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
+	touch $@
+
+endToEndTest: CPPFLAGS := ${TESTFLAGS}
+endToEndTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/endToEnd_test.o |libmpx-patch.so
+	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+
+endToEndTest.out: CPPFLAGS := ${TESTFLAGS}
+endToEndTest.out: PRELOAD := $$(pwd)/libmpx-patch.so
+endToEndTest.out: endToEndTest mpxmanager
+	$(call RUN_TEST, ./$< )
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 	touch $@
 
