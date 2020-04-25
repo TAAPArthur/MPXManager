@@ -193,6 +193,7 @@ void receiveClientMessage(void) {
             int returnValue = 0;
             if(option->flags & CONFIRM_EARLY) {
                 TRACE("sending early confirmation");
+                destroyWindow(getPrivateWindow());
                 sendConfirmation(win, 0);
                 flush();
             }
