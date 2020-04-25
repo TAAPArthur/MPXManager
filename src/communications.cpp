@@ -87,6 +87,7 @@ static UniqueArrayList<Option*> options = {
     {"focus-root", +[]() {return focusWindow(root);}},
     {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
     {"load", loadWindowProperties},
+    {"load-all", []{for(WindowInfo* winInfo : getAllWindows())loadWindowProperties(winInfo);}},
     {"log-level", +[](int i){setLogLevel((LogLevel)i);}, VAR_SETTER},
     {"lower", +[](WindowID id) {lowerWindow(id);}},
     {"next-win", []{shiftFocus(UP);}},
