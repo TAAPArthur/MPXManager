@@ -149,22 +149,16 @@ MPX_TEST("auto_clear_cache", {
     assertEquals(*winInfo, *findAndRaise({}, ACTION_ACTIVATE));
 });
 
-
-
-MPX_TEST("test_activate_top_bottom", {
-    assert(focusBottom());
-    assertWindowIsFocused(bottom->getID());
-    assert(focusTop());
-    assertWindowIsFocused(top->getID());
-    assert(focusBottom());
-    assertWindowIsFocused(bottom->getID());
-}
-);
-MPX_TEST("test_shift_top", {
+MPX_TEST("test_shift_top_and_focus", {
     getActiveMaster()->onWindowFocus(bottom->getID());
-    shiftTop();
-    assert(getActiveWindowStack()[0] == bottom);
-    assert(getActiveWindowStack()[1] == top);
+    shiftTopAndFocus();
+    assertEquals(getActiveWindowStack()[0], bottom);
+    assertEquals(getActiveWindowStack()[1], top);
+    assertEquals(getActiveWindowStack()[0]->getID(), getActiveFocus());
+    shiftTopAndFocus();
+    assertEquals(getActiveWindowStack()[0], top);
+    assertEquals(getActiveWindowStack()[1], bottom);
+    assertEquals(getActiveWindowStack()[0]->getID(), getActiveFocus());
 });
 MPX_TEST("test_shift_focus", {
     for(WindowInfo* winInfo : getActiveWindowStack()) {
@@ -184,16 +178,7 @@ MPX_TEST_ITER("test_shift_focus_null", 3, {
         for(WindowInfo* winInfo : getAllWindows())
             winInfo->addMask(HIDDEN_MASK);
     shiftFocus(1);
-    swapWithTop();
 });
-MPX_TEST("test_swap_top", {
-    getActiveMaster()->onWindowFocus(bottom->getID());
-    swapWithTop();
-    assert(getActiveWindowStack()[0] == bottom);
-    assert(getActiveWindowStack().back() == top);
-}
-);
-
 
 MPX_TEST("test_swap_position", {
     getActiveMaster()->onWindowFocus(bottom->getID());

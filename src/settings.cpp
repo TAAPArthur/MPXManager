@@ -29,11 +29,12 @@
 /// Add default chain bindings
 void addChainDefaultBindings() {
     Chain* DEFAULT_CHAIN_BINDINGS[] = {
-        new Chain({{Mod1Mask, XK_Tab}, {Mod1Mask | ShiftMask, XK_Tab}}, {}, {
+        new Chain({{Mod1Mask, XK_Tab}, {Mod1Mask | ShiftMask, XK_Tab}, {Mod4Mask, XK_Tab},}, {}, {
             Binding{Mod1Mask, XK_Tab, {cycleWindows, DOWN}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_cycleWindowsDown"}, \
             Binding{Mod1Mask | ShiftMask, XK_Tab, {cycleWindows, UP}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_cycleWindowsUp"}, \
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endCycleWindows}, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "_endCycleWindows" }, \
-            Binding{WILDCARD_MODIFIER, XK_Alt_L, {endActiveChain}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "_endChain" }, \
+            Binding{Mod4Mask, XK_Tab, []{cycleWindowsMatching(DOWN, matchesFocusedWindowClass);}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_cycleWindowsMDown"}, \
+            Binding{Mod4Mask | ShiftMask, XK_Tab, []{cycleWindowsMatching(UP, matchesFocusedWindowClass);}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_cycleWindowsUp"}, \
+            Binding{{{WILDCARD_MODIFIER, XK_Alt_L}, {WILDCARD_MODIFIER, XK_Super_L} }, []{endCycleWindows(); endActiveChain();}, {.passThrough = ALWAYS_PASSTHROUGH, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}, "_endCycleWindows" }, \
             Binding {WILDCARD_MODIFIER, 0, {}, {.passThrough = NO_PASSTHROUGH, .noGrab = 1}, "_absorbCycleWindows"}, \
         }, {}, XCB_INPUT_XI_EVENT_MASK_KEY_PRESS | XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE, "_cycleWindows"),
         new Chain{
@@ -124,8 +125,7 @@ void addDefaultBindings() {
         //{DEFAULT_MOD_MASK,Button2,BIND(resizeWindowWithMouse), .noGrab=1, .passThrough=1 ,.mask=XCB_INPUT_XI_EVENT_MASK_MOTION},
 
 
-        {DEFAULT_MOD_MASK, XK_Return, +[]() {shiftTop();}},
-        {DEFAULT_MOD_MASK | ShiftMask, XK_Return, +[]() {focusTop();}},
+        {DEFAULT_MOD_MASK, XK_Return, +[]() {shiftTopAndFocus();}},
 
         {DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_q, requestShutdown},
         {DEFAULT_MOD_MASK | ShiftMask, XK_q, []{restart();}},

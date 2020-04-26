@@ -16,35 +16,25 @@
 #include "wmfunctions.h"
 #include "workspaces.h"
 
-static int getNextIndexInStack(const ArrayList<WindowInfo*>& stack, int delta, bool filter = 0,
+static int getNextIndexInStack(const ArrayList<WindowInfo*>& stack, int delta, bool(*filter)(WindowInfo*) = NULL,
     WindowInfo* winInfo = getFocusedWindow()) {
     if(stack.empty())
         return -1;
     int index = winInfo ? stack.indexOf(winInfo) : -1;
     if(index == -1)
         index = delta > 0 ? -1 : 0;
-    int dir = delta == 0 ? 0 : delta > 0 ? 1 : -1;
     for(int i = stack.size() - 1; i >= 0; i--) {
-        int n = stack.getNextIndex(index, delta);
-        if(stack[n]->isCyclable() && (!filter || stack[n]->isActivatable())) {
-            return n;
-        }
-        delta += dir;
+        index = stack.getNextIndex(index, delta);
+        if(stack[index]->isActivatable() && (!filter || filter(stack[index])))
+            return index;
     }
     return -1;
 }
 
-bool hasInteractiveWindow(const ArrayList<WindowInfo*>& stack) {
-    for(WindowInfo* winInfo : stack)
-        if(winInfo->isCyclable())
-            return 1;
-    return 0;
-}
-
-void cycleWindows(int delta) {
+void cycleWindowsMatching(int delta, bool(*filter)(WindowInfo*)) {
     Master* master = getActiveMaster();
     master->setFocusStackFrozen(1);
-    int index = getNextIndexInStack(master->getWindowStack(), -delta, 1, master->getFocusedWindow());
+    int index = getNextIndexInStack(master->getWindowStack(), -delta, filter, master->getFocusedWindow());
     if(index >= 0)
         activateWindow(master->getWindowStack()[index]);
 }
@@ -165,28 +155,18 @@ bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType, bool s
     return 1;
 }
 
-
-
-int focusBottom(const ArrayList<WindowInfo*>& stack) {
-    return hasInteractiveWindow(stack) ? activateWindow(stack.back()) : 0;
-}
-int focusTop(const ArrayList<WindowInfo*>& stack) {
-    return hasInteractiveWindow(stack) ? activateWindow(stack[0]) : 0;
-}
-void shiftTop(ArrayList<WindowInfo*>& stack) {
-    if(hasInteractiveWindow(stack))
+void shiftTopAndFocus(ArrayList<WindowInfo*>& stack) {
+    if(stack.size()) {
         stack.shiftToHead(getNextIndexInStack(stack, stack[0] == getFocusedWindow()));
-}
-void swapWithTop(ArrayList<WindowInfo*>& stack) {
-    if(hasInteractiveWindow(stack))
-        stack.swap(0, getNextIndexInStack(stack, 0));
+        activateWindow(stack[0]);
+    }
 }
 void swapPosition(int dir, ArrayList<WindowInfo*>& stack) {
-    if(hasInteractiveWindow(stack))
+    if(stack.size())
         stack.swap(getNextIndexInStack(stack, 0), getNextIndexInStack(stack, dir));
 }
-int shiftFocus(int dir, ArrayList<WindowInfo*>& stack) {
-    int index = getNextIndexInStack(stack, dir, 1);
+int shiftFocus(int dir, bool(*filter)(WindowInfo*), ArrayList<WindowInfo*>& stack) {
+    int index = getNextIndexInStack(stack, dir, filter);
     return index != -1 ? activateWindow(stack[index]) : 0;
 }
 

@@ -68,6 +68,15 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION
  */
 bool findAndRaise(std::string s, RaiseOrRunType matchType = MATCHES_CLASS, WindowAction action = ACTION_ACTIVATE);
 /**
+ * Finds windows with the same class as the currenrtly focused window
+ * @see findAndRaise
+ *
+ * @param winInfo
+ *
+ * @return
+ */
+static inline bool findAndRaiseMatching(const WindowInfo* winInfo) {return findAndRaise(winInfo->getClassName());}
+/**
  * Tries to find a window by checking all the managed windows, and if it finds one it activates it
  *
  * @param rule
@@ -140,8 +149,10 @@ void endCycleWindows(Master* m = getActiveMaster());
 /**
  * Freezes and cycle through windows in the active master's& stack
  * @param delta
+ * @param filter only cycle throught windows matching filter
  */
-void cycleWindows(int delta);
+void cycleWindowsMatching(int delta, bool(*filter)(WindowInfo*) = NULL);
+static inline void cycleWindows(int delta) {cycleWindowsMatching(delta);}
 
 
 /**
@@ -190,37 +201,19 @@ void swapPosition(int dir, ArrayList<WindowInfo*>& stack = getActiveWindowStack(
 /**
  * Shifts the focus up or down the window& stack
  * @param index
+ * @param filter ignore windows not matching filter
  * @param stack
  * @return
  */
-int shiftFocus(int index, ArrayList<WindowInfo*>& stack = getActiveWindowStack());
+int shiftFocus(int index,  bool(*filter)(WindowInfo*) = NULL, ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 
 
 /**
- * Shifts the focused window to the top of the window& stack
+ * Shifts the focused window to the top of the window& stack if it isn't already
+ * If it is already at the top, then shifts the next window to the top and focuses it
  * @param stack
  */
-void shiftTop(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
-/**
- * Swaps the focused window with the top of the window& stack
- * @param stack
- */
-void swapWithTop(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
-
-
-
-/**
- * Activates the window at the bottom of the Workspace& stack
- * @param stack
- * @return 1 if successful
- */
-int focusBottom(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
-/**
- * Activates the window at the top of the workspace& stack
- * @param stack
- * @return 1 if successful
- */
-int focusTop(const ArrayList<WindowInfo*>& stack = getActiveWindowStack());
+void shiftTopAndFocus(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
 
 
 
@@ -252,5 +245,9 @@ static inline void swapWorkspace(int dir) {
  */
 static inline void shiftWorkspace(int dir) {
     swapMonitors(getActiveWorkspaceIndex(), (getAllWorkspaces().getNextIndex(getActiveWorkspaceIndex(), dir)));
+}
+
+static inline bool matchesFocusedWindowClass(WindowInfo* winInfo) {
+    return matchesClass(winInfo, getFocusedWindow()->getClassName());
 }
 #endif
