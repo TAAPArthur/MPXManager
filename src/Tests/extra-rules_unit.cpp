@@ -125,6 +125,17 @@ MPX_TEST_ITER("primary_monitor_windows", 2, {
     }
 });
 
+MPX_TEST("test_insertWindowsAtHeadOfStack", {
+    addEWMHRules();
+    addInsertWindowsAtHeadOfStackRule();
+    Window win = mapArbitraryWindow();
+    Window win2 = mapArbitraryWindow();
+    addShutdownOnIdleRule();
+    runEventLoop();
+    assertEquals(getActiveWindowStack()[0]->getID(), win2);
+    assertEquals(getActiveWindowStack()[1]->getID(), win);
+});
+
 MPX_TEST_ITER("test_auto_focus", 5, {
     addAutoFocusRule();
     WindowID focusHolder = mapArbitraryWindow();

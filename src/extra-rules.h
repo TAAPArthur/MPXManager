@@ -34,6 +34,13 @@ void addAvoidDocksRule(bool remove = 0);
 void addDesktopRule(bool remove = 0);
 
 /**
+ * Adds a WINDOW_WORKSPACE_CHANGE to move windows from the end of the window stack to the front
+ *
+ * @param remove
+ */
+void addInsertWindowsAtHeadOfStackRule(bool remove = 0);
+
+/**
  * Adds a XCB_INPUT_KEY_PRESS to abort processing if the event was a key repeat
  *
  * @param remove

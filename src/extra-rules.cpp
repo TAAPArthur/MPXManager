@@ -79,6 +79,16 @@ void addKeepTransientsOnTopRule(bool remove) {
     getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(keepTransientsOnTop), remove);
 }
 
+void addInsertWindowsAtHeadOfStackRule(bool remove) {
+    getEventRules(WINDOW_WORKSPACE_CHANGE).add({[](WindowInfo * winInfo) {
+        if(winInfo->getCreationTime() && winInfo->getWorkspaceIndex() != NO_WORKSPACE &&
+            winInfo->getWorkspace()->getWindowStack().back() == winInfo) {
+            auto& stack = winInfo->getWorkspace()->getWindowStack();
+            stack.shiftToHead(stack.size() - 1);
+        }
+    }, "_insertWindowsAtHeadOfStack"}, remove);
+}
+
 void autoFocus() {
     xcb_map_notify_event_t* event = (xcb_map_notify_event_t*)getLastEvent();
     WindowInfo* winInfo = getWindowInfo(event->window);
