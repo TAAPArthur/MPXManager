@@ -89,11 +89,7 @@ MPX_TEST_ITER("test_layouts", NUMBER_OF_LAYOUT_FAMILIES, {
         WindowInfo* winInfo = getWindowInfo(win);
         winInfo->moveToWorkspace(0);
         winInfo->addMask(FULLY_VISIBLE_MASK);
-        assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) >= i);
         retile();
-        flush();
-        assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == i);
-        assert(getNumberOfWindowsToTile(getActiveWindowStack(), NULL) == getActiveWindowStack().size());
         area = 0;
         ArrayList<Rect>rects;
         for(WindowInfo* winInfo : getActiveWindowStack()) {
@@ -263,7 +259,6 @@ MPX_TEST("test_maximized_floating_window", {
 });
 MPX_TEST("test_configure_dock", {
     mapArbitraryWindow();
-    flush();
     scan(root);
     WindowInfo* winInfo = getAllWindows()[0];
     winInfo->setTilingOverrideEnabled(3);
@@ -273,6 +268,26 @@ MPX_TEST("test_configure_dock", {
     arrangeNonTileableWindow(winInfo, monitor);
     assertEquals(monitor->getBase().x, getRealGeometry(winInfo).x);
     assertEquals(monitor->getBase().y, getRealGeometry(winInfo).y);
+});
+
+MPX_TEST_ITER("test_layout_filter", 3, {
+    addBasicRules();
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    mapArbitraryWindow();
+    scan(root);
+    for(WindowInfo* winInfo : getAllWindows())
+        winInfo->moveToWorkspace(getActiveWorkspaceIndex());
+    static WindowInfo* winInfo = getAllWindows()[_i];
+    assertEquals(winInfo->getWorkspaceIndex(), getActiveWorkspaceIndex());
+    auto layoutFunction = [](LayoutState * state) {
+        assertEquals(1, state->numWindows);
+        assertEquals(winInfo, state->stack[0]);
+    };
+    Layout l = Layout("", layoutFunction, {}, [](WindowInfo * winInfo2) {return winInfo2 == winInfo;});
+    setActiveLayout(&l);
+    retile();
+    setActiveLayout(NULL);
 });
 
 MPX_TEST_ITER("test_identity_transform_config", TRANSFORM_LEN * 2, {

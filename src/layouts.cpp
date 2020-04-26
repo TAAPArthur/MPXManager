@@ -14,6 +14,7 @@
 #include "workspaces.h"
 
 #define MAX(A,B) (A>=B?A:B)
+#define MIN(A,B) (A<=B?A:B)
 
 std::ostream& operator<<(std::ostream& strm, const Layout& layout) {
     return strm << layout.getName();
@@ -98,15 +99,6 @@ static int dimIndexToPos(int dim) {
 }
 
 
-int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, const LayoutArgs* args) {
-    int size = 0;
-    for(WindowInfo* winInfo : windowStack)
-        if(args && args->limit && size == args->limit)
-            break;
-        else if(winInfo->isTileable())
-            size++;
-    return size;
-}
 void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]) {
     if(args) {
         int endX = m->getViewport().x * 2 + m->getViewport().width;
@@ -273,18 +265,26 @@ void tileWorkspace(Workspace* workspace) {
         return;
     Monitor* m = workspace->getMonitor();
     assert(m);
-    ArrayList<WindowInfo*>& windowStack = workspace->getWindowStack();
+    ArrayList<WindowInfo*> windowStack = workspace->getWindowStack();
     if(windowStack.empty()) {
         TRACE("no windows in workspace");
         return;
     }
     Layout* layout = workspace->getActiveLayout();
     if(layout) {
-        int size = getNumberOfWindowsToTile(windowStack, &layout->getArgs());
-        LayoutState state = {.args = &layout->getArgs(), .monitor = m, .numWindows = size, .stack = windowStack};
-        if(size)
+        int maxWindowToTile = 0;
+        for(int i = windowStack.size() - 1; i >= 0; i--)
+            if(!layout->filterWindow(windowStack[i])) {
+                windowStack.shiftToEnd(i);
+            }
+            else if(windowStack[i]->isTileable())
+                maxWindowToTile++;
+        if(layout->getArgs().limit)
+            maxWindowToTile = MIN(maxWindowToTile, layout->getArgs().limit);
+        LayoutState state = {.args = &layout->getArgs(), .monitor = m, .numWindows = maxWindowToTile, .stack = windowStack};
+        if(maxWindowToTile)
             if(layout->getFunc()) {
-                LOG(LOG_LEVEL_DEBUG, "using '%s' layout: num win %d (max %d)", layout->getName().c_str(), size,
+                LOG(LOG_LEVEL_DEBUG, "using '%s' layout: num win %d (max %d)", layout->getName().c_str(), maxWindowToTile,
                     layout->getArgs().limit);
                 layout->apply(&state);
             }

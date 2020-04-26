@@ -166,7 +166,6 @@ MPX_TEST("test_tile_limit", {
 
     assertEquals(updateState(), 1);
     WindowID win3 = addVisibleWindow()->getID();
-    assertEquals(getNumberOfWindowsToTile(getActiveWorkspace()), 2);
 
     assertEquals(updateState(), 1);
     assertEquals(getRealGeometry(win3), getRealGeometry(win2));

@@ -118,14 +118,17 @@ private:
      * Used to restore args after they have been modified
      */
     LayoutArgs refArgs;
+    bool (*filter)(WindowInfo*);
 public:
     /**
      * @param name the name of the layout
      * @param layoutFunction the underlying layout function
      * @param args
+     * @param filter @see filterWindow
      */
-    Layout(std::string name, void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}): name(name),
-        layoutFunction(layoutFunction), args(args), refArgs(args) {
+    Layout(std::string name, void (*layoutFunction)(LayoutState*), LayoutArgs args = {0}, bool (*filter)(
+            WindowInfo*) = NULL): name(name),
+        layoutFunction(layoutFunction), args(args), refArgs(args), filter(filter) {
     }
 
     /// @return the name of the layout
@@ -136,6 +139,17 @@ public:
     bool operator==(const Layout& l)const {return name == l.name;};
     /// @return the backing function
     auto getFunc() {return layoutFunction;}
+
+    /**
+     * Returns true if the window passes the filter (which it does it not set) and should be tiled normally
+     * Windows that don't pass should be treated the same as those past the layout limit
+     *
+     * @param winInfo
+     *
+     * @return 1 if this window should be normally tiled
+     */
+    bool filterWindow(WindowInfo* winInfo) {return !filter || filter(winInfo);}
+
     /**
      * Tiles the windows of the stack specified by state
      *
@@ -227,20 +241,6 @@ void increaseLayoutArg(int index, int step, Layout* l = getActiveWorkspace()->ge
 void retile(void);
 
 
-/**
- *
- * @param windowStack the list of nodes that could possibly be tiled
- * @param args can control the max number of windows tiled (args->limit)
- * @return the number of windows that will be tiled
- */
-int getNumberOfWindowsToTile(ArrayList<WindowInfo*>& windowStack, const LayoutArgs* args);
-/**
- * @param w
- * @return the number of windows that will be tilled for the given workspace
- */
-static inline int getNumberOfWindowsToTile(Workspace* w) {
-    return getNumberOfWindowsToTile(w->getWindowStack(), w->getActiveLayout() ? &w->getActiveLayout()->getArgs() : NULL);
-}
 
 /**
  * Provides a transformation of config
