@@ -1,6 +1,6 @@
 #include <errno.h>
-#include <signal.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include "../arraylist.h"
 #include "../globals.h"
@@ -30,12 +30,6 @@ MPX_TEST_ITER_ERR("spawn_parent", 2, 0, {
     breakFork(1);
     int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
     assert(pid == 1);
-});
-MPX_TEST_ITER_ERR("spawn_env", 2, 0, {
-
-    onChildSpawn = []() {exit(0);};
-    int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
-    assert(pid);
 });
 MPX_TEST("notify", {
     suppressOutput();
@@ -88,7 +82,7 @@ MPX_TEST_ITER("spawn", 2, {
     assertEquals(waitForChild(0), 0);
 });
 MPX_TEST("spawn_pipe", {
-    const char values[2][256] = {"1\n", "2\n"};
+    const char values[2][256] = {"1", "2"};
     char buffer[2][256] = {0};
     if(!spawnPipe(NULL)) {
         printf(values[1]);
@@ -101,6 +95,14 @@ MPX_TEST("spawn_pipe", {
     assert(strcmp(buffer[1], values[1]) == 0);
     assertEquals(waitForChild(0), 0);
 });
+
+MPX_TEST_ERR("spawn_pipe_out_fds", 3, {
+    setLogLevel(LOG_LEVEL_NONE);
+    setenv("BREAK_PIPE", "1", 1);
+    spawnPipe(NULL);
+    assert(0);
+});
+
 MPX_TEST("spawn_pipe_close", {
     if(!spawnPipe(NULL)) {
         assert(!close(STATUS_FD_EXTERNAL_READ));
@@ -129,6 +131,13 @@ MPX_TEST_ITER("spawn_pipe_child_close", 2, {
         read(STATUS_FD_READ, buffer, LEN(buffer));
 });
 
+MPX_TEST_ITER_ERR("spawn_env_on_child_spawn", 2, 0, {
+    onChildSpawn = []() {quit(0);};
+    int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
+    assert(pid);
+});
+
+SET_ENV(NULL, simpleCleanup);
 MPX_TEST("spawn_env", {
     createSimpleEnv();
     LD_PRELOAD_INJECTION = 1;
@@ -141,6 +150,8 @@ MPX_TEST("spawn_env", {
         assert(getenv(DEFAULT_KEYBOARD_ENV_VAR_NAME));
         assert(getenv(DEFAULT_POINTER_ENV_VAR_NAME));
         std::string(getenv("LD_PRELOAD")).rfind(LD_PRELOAD_PATH, 0);
+        simpleCleanup();
+        quit(0);
     }
     assertEquals(waitForChild(0), 0);
 });
@@ -163,7 +174,7 @@ MPX_TEST_ITER_ERR("restart", 2, 10, {
         kill(getpid(), SIGUSR1);
     assert(0);
 });
-SET_ENV(suppressOutput, NULL);
+SET_ENV(suppressOutput, simpleCleanup);
 MPX_TEST_ITER_ERR("spawn_fail", 2, 1, {
     breakFork(-1);
     if(_i)

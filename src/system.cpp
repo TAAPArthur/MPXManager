@@ -26,9 +26,15 @@ int numPassedArguments;
 char* const* passedArguments;
 
 void (*onChildSpawn)(void) = setClientMasterEnvVar;
+void safePipe(int* fds) {
+    if(pipe(fds)) {
+        ERROR("Ran out of file descriptors");
+        exit(3);
+    }
+}
 void createStatusPipe() {
-    pipe(statusPipeFD);
-    pipe(statusPipeFD + 2);
+    safePipe(statusPipeFD);
+    safePipe(statusPipeFD + 2);
 }
 void resetPipe() {
     if(statusPipeFD[0]) {
@@ -92,7 +98,7 @@ void notify(std::string summary, std::string body) {
     spawn((NOTIFY_CMD + " '" + summary + "' '" + body + "'").c_str());
 }
 
-static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool noDup = 0) {
+static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool redirectIO = 0) {
     INFO("Spawning command " << command);
     if(spawnPipe) {
         resetPipe();
@@ -103,13 +109,14 @@ static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool noD
         if(spawnPipe) {
             close(STATUS_FD);
             close(STATUS_FD_READ);
-            if(!noDup) {
+            if(redirectIO) {
                 dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
                 dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
             }
         }
-        else
+        else {
             resetPipe();
+        }
         if(onChildSpawn)
             onChildSpawn();
         if(silent)
@@ -134,7 +141,7 @@ int spawn(const char* command, bool silent) {
     return _spawn(command, 0, silent);
 }
 int spawnPipe(const char* command, bool noDup) {
-    return _spawn(command, 1, 0, noDup);
+    return _spawn(command, 1, 0, !noDup);
 }
 
 int waitForChild(int pid) {

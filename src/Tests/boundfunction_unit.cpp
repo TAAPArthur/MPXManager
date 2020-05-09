@@ -18,11 +18,11 @@ MPX_TEST("print", {
 });
 MPX_TEST("boundFunction_eq", {
     std::string name = "name";
-    BoundFunction* b = new BoundFunction(incrementCount, name);
-    BoundFunction* b2 = new BoundFunction(*b);
-    assertEquals(b->getName(), name);
-    assertEquals(b2->getName(), b->getName());
-    assertEquals(*b2, *b);
+    BoundFunction b = BoundFunction(incrementCount, name);
+    BoundFunction b2 = BoundFunction(b);
+    assertEquals(b.getName(), name);
+    assertEquals(b2.getName(), b.getName());
+    assertEquals(b2, b);
 });
 ///Test to make sure callBoundedFunction() actually calls the right function
 MPX_TEST("test_call_bounded_function", {

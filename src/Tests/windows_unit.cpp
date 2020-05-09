@@ -8,6 +8,7 @@
 static void teardown() {
     suppressOutput();
     printSummary();
+    simpleCleanup();
 }
 
 SET_ENV(createSimpleEnv, teardown);

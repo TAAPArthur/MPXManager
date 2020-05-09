@@ -52,4 +52,6 @@ MPX_TEST("ring_buffer_half_full", {
             assertAndDelete(buffer.pop());
     }
     assert(buffer.peekEnd());
+    while(buffer.getSize())
+        assertAndDelete(buffer.pop());
 });

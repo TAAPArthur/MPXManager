@@ -99,6 +99,7 @@ MPX_TEST("test_scroll_scale", {
     addXMouseControlMask(SCROLL_UP_MASK);
     int scaleFactor = 4;
     adjustScrollSpeed(0);
+    consumeEvents();
     xmousecontrolUpdate();
     int num = consumeEvents();
     assert(num);

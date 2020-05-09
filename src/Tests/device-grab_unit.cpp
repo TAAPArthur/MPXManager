@@ -114,10 +114,12 @@ MPX_TEST("replay_events", {
     movePointer(1, 1, win);
     flush();
     if(!fork()) {
+        saveXSession();
         openXDisplay();
         passiveGrab(win, XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS);
         clickButton(1);
         waitToReceiveInput(XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS, 0);
+        closeConnection();
         exit(0);
     }
     runEventLoop();

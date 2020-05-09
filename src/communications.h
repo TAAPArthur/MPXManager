@@ -134,8 +134,6 @@ void receiveClientMessage(void);
 void send(std::string name, std::string value, WindowID active = 0);
 
 /**
- *
- *
  * @return a list of options the can be triggered
  */
 ArrayList<Option*>& getOptions();

@@ -1,5 +1,6 @@
 #include "../ext.h"
 #include "test-mpx-helper.h"
+#include "test-x-helper.h"
 #include "tester.h"
 
 
@@ -8,6 +9,7 @@ static void* id1 = (void*)1, *id2 = (void*)2;
 static void cleanup() {
     removeID(id1);
     removeID(id2);
+    cleanupXServer();
 }
 struct foo {
     int arr[12];

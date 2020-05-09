@@ -66,7 +66,7 @@ int spawn(const char* command);
  * @copydoc spawn(const char*)
  *
  * @param silent if 1, suppress output
- *
+ * @return the pid of the new process
  */
 int spawn(const char* command, bool silent);
 /**
@@ -77,7 +77,7 @@ static inline int spawnSilent(const char* command) {return spawn(command, 1);}
 
 /**
  * @copydoc spawn(const char*)
- * Like spawn but the child's stdin refers to our stdout
+ * Like spawn but the child's stdin/stdout refers to our STATUS_FD_EXTERNAL_READ/STATUS_FD_EXTERNAL_WRITE
  *
  * @param noDup if true, the stdout and stdout won't be dup2 to use the statusPipe
  * @return the pid of the new process

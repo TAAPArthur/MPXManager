@@ -44,9 +44,9 @@ static void listVarOptions() {
         if(option->getFlags() & VAR_SETTER)
             std::cout << "--" << option->getName() << std::endl;
 }
+
 /// list of startup options
 static UniqueArrayList<Option*> options = {
-    {"enable-inter-client-communication", addInterClientCommunicationRule},
     {"list-start-options", +[]() {std::cout >> options << "\n"; exit(0);}},
     {"list-options", +[]() {std::cout >> getOptions() << "\n"; exit(0);}},
     {"list-vars", +[]() {listVarOptions(); exit(0);}},

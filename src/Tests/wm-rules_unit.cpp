@@ -290,13 +290,15 @@ MPX_TEST("test_unmap", {
 });
 
 MPX_TEST("test_map_unmap_dock", {
-    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(incrementCount));
+    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     waitUntilIdle();
+    lock();
     setDockProperties(win, 0, 10);
     getWindowInfo(win)->setDock();
     getWindowInfo(win)->moveToWorkspace(0);
     mapWindow(win);
+    unlock();
     waitUntilIdle();
     assert(getAndResetCount());
     assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
@@ -411,12 +413,12 @@ MPX_TEST_ITER("test_master_device_add_remove", 2, {
 });
 MPX_TEST("test_focus_update", {
     WindowID wins[] = { mapArbitraryWindow(), mapArbitraryWindow()};
+    waitUntilIdle();
     for(WindowID win : wins) {
         focusWindow(win);
-        flush();
         waitUntilIdle();
         assert(getFocusedWindow());
-        assert(getFocusedWindow()->getID() == win);
+        assertEquals(getFocusedWindow()->getID(), win);
     }
 });
 MPX_TEST("selection_steal", {

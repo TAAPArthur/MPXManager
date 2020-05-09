@@ -143,6 +143,7 @@ MPX_TEST("test_stale", {
 
 MPX_TEST("bad_pid", {
     CRASH_ON_ERRORS = 0;
+    setLogLevel(LOG_LEVEL_NONE);
     catchError(xcb_ewmh_set_wm_pid_checked(ewmh, getPrivateWindow(), -1));
     send("dump", "");
     send("quit", "");

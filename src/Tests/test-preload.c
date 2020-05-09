@@ -15,3 +15,12 @@ INTERCEPT(__pid_t, fork){
         return BASE(fork)();
 }
 END_INTERCEPT
+
+INTERCEPT(__pid_t, pipe, int*fds){
+    char* var = getenv("BREAK_PIPE");
+    if(var)
+        return -1;
+    else
+        return BASE(pipe)(fds);
+}
+END_INTERCEPT
