@@ -139,9 +139,13 @@ std::string getWindowPropertyValueString(WindowID win, xcb_atom_t atom, xcb_atom
     return reply ? std::string((char*)xcb_get_property_value(reply.get())) : "";
 }
 
+uint32_t generateID() {
+    return xcb_generate_id(dis);
+}
+
 WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, uint32_t* valueList,
     const RectWithBorder& dims) {
-    WindowID win = xcb_generate_id(dis);
+    WindowID win = generateID();
     xcb_void_cookie_t c = xcb_create_window_checked(dis,
             XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
             win,

@@ -295,6 +295,12 @@ void getAtomsFromMask(WindowMask masks, ArrayList<xcb_atom_t>& arr, bool action 
 
 
 /**
+ * @return a unique X11 id
+ */
+uint32_t generateID();
+
+
+/**
  * @param parent
  * @param clazz
  * @param mask
