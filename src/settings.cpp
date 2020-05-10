@@ -82,7 +82,10 @@ void addChainDefaultBindings() {
     {DEFAULT_MOD_MASK, KEY_UP, +[](){swapPosition(UP);}}, \
     {DEFAULT_MOD_MASK, KEY_DOWN, +[](){swapPosition(DOWN);}}, \
     {DEFAULT_MOD_MASK, KEY_LEFT, +[](){shiftFocus(UP);}}, \
-    {DEFAULT_MOD_MASK, KEY_RIGHT, +[](){shiftFocus(DOWN);}}
+    {DEFAULT_MOD_MASK | ShiftMask, KEY_LEFT, +[](){shiftFocus(UP, matchesFocusedWindowClass);}}, \
+    {DEFAULT_MOD_MASK, KEY_RIGHT, +[](){shiftFocus(DOWN);}}, \
+    {DEFAULT_MOD_MASK | ShiftMask, KEY_RIGHT, +[](){shiftFocus(DOWN, matchesFocusedWindowClass);}} \
+
 /// add default bindings
 void addDefaultBindings() {
     Binding DEFAULT_BINDINGS[] = {
@@ -121,9 +124,6 @@ void addDefaultBindings() {
 
         {DEFAULT_MOD_MASK, XK_space, +[]() {cycleLayouts(DOWN);}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_space, +[]() {cycleLayouts(UP);}},
-
-        //{DEFAULT_MOD_MASK,Button2,BIND(resizeWindowWithMouse), .noGrab=1, .passThrough=1 ,.mask=XCB_INPUT_XI_EVENT_MASK_MOTION},
-
 
         {DEFAULT_MOD_MASK, XK_Return, +[]() {shiftTopAndFocus();}},
 
