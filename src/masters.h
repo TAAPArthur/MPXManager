@@ -158,20 +158,11 @@ public:
      */
     void setCurrentMode(int mode) {bindingMode = mode;}
     /**
-     * @copybrief setCurrentMode
-     * @param mode the mode of the binding that might be triggered
-     *
-     * @return true if the mode is currently allowed by this master
-     */
-    bool allowsMode(uint32_t mode) const {
-        return mode == ANY_MODE || bindingMode == mode;
-    }
-    /**
      * Returns the current binding mode for the active master
      *
      * @return
      */
-    int getCurrentMode(void) const {
+    uint32_t getCurrentMode(void) const {
         return bindingMode;
     }
     /**

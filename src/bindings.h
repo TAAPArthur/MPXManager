@@ -35,6 +35,7 @@ enum WindowParamType {
      */
     TARGET_WINDOW
 } ;
+
 /**
  * Compares Bindings with detail and mods to see if it should be triggered.
  * If bindings->mod ==anyModier, then it will match any modifiers.
@@ -48,12 +49,19 @@ struct UserEvent {
     Detail detail = 0;
     /// the mask to match
     uint32_t mask = 0;
-    /// @param keyRepeat if the event was a key repeat
+    /// keyRepeat if the event was a key repeat
     bool keyRepeat = 0;
+    /// only bindings with matching mode can be triggered
+    unsigned int mode = 0;
     /// the master who triggered this binding; should not be null
     Master* master = getActiveMaster();
     /// the window the binding was triggered on
     WindowInfo* winInfo = NULL;
+
+    /// @copydoc mode
+    uint32_t getMode() const { return mode;}
+    /// @copydoc mask
+    uint32_t getMask() const { return mask | keyRepeat;}
 };
 /**
  * Prints userEvent
@@ -65,13 +73,14 @@ struct UserEvent {
  */
 std::ostream& operator<<(std::ostream& stream, const UserEvent& userEvent);
 
+
 /**
  * Optional arguments to Bindings
  *
  * These are separated into their own class to make it easier to specify only some
  */
 struct BindingFlags {
-    /**Whether more bindings should be considered*/
+    /// Determines if more bindings will be processed if this one is triggered
     PassThrough passThrough = ALWAYS_PASSTHROUGH;
     /**Whether a device should be grabbed or not*/
     bool noGrab = 0;
@@ -85,6 +94,19 @@ struct BindingFlags {
     bool noKeyRepeat = 0;
     /// Binding will be triggered if the active master is in a compatible mode
     unsigned int mode = 0;
+
+    /// @return @copydoc passThrough
+    PassThrough getPassThrough()const { return passThrough;}
+    /// @return @copydoc mode
+    uint32_t getMode()const { return mode;}
+    /// @return @copydoc mask
+    uint32_t getMask() const { return mask | !noKeyRepeat;}
+    /**
+     * @param e
+     *
+     * @return 1 iff the event will trigger this binding
+     */
+    bool matches(const UserEvent& e) const;
 };
 
 /// holds a modifier and button/key
@@ -221,7 +243,7 @@ public:
     /// @copydoc BindingFlags::windowTarget
     WindowParamType getWindowTarget()const {return flags.windowTarget;}
     /// @copydoc BindingFlags::passThrough
-    PassThrough getPassThrough()const {return flags.passThrough;}
+    virtual PassThrough getPassThrough()const {return flags.passThrough;}
     /// @return if this Binding won't grap a button/key
     bool isNotGrabbable()const {return flags.noGrab;}
     /**

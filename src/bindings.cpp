@@ -54,11 +54,12 @@ std::ostream& operator<<(std::ostream& stream, const Binding& binding) {
         binding.boundFunction << "' " << binding.getMask()
         << "}" ;
 }
-
+bool BindingFlags::matches(const UserEvent& event) const {
+    return (getMask() == 0 || (getMask() & event.getMask()) == event.getMask()) &&
+        (getMode() == ANY_MODE || event.getMode() == ANY_MODE || event.getMode() == getMode());
+}
 bool Binding::matches(const UserEvent& event) const {
-    if((event.mask == 0 || getMask() & event.mask) &&
-        (!event.keyRepeat || event.keyRepeat == !flags.noKeyRepeat) &&
-        (!event.master || event.master->allowsMode(flags.mode)))
+    if(flags.matches(event))
         for(KeyBinding* key : getKeyBindings()) {
             if(key->matchesMod(event.mod) && (key->isWildcard() || key->getDetail() == event.detail))
                 return 1;
