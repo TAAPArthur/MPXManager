@@ -94,11 +94,8 @@ MPX_TEST("test_sync_state", {
     saveXSession();
     setShowingDesktop(0);
     assert(!isShowingDesktop());
-    assert(getActiveWorkspaceIndex() == 0);
     if(!fork()) {
         openXDisplay();
-        getActiveMaster()->setWorkspaceIndex(1);
-        setActiveProperties();
         setShowingDesktop(1);
         assert(isShowingDesktop());
         flush();
@@ -106,21 +103,8 @@ MPX_TEST("test_sync_state", {
         quit(0);
     }
     assertEquals(waitForChild(0), 0);
-    syncState();
-    assertEquals(getActiveWorkspaceIndex(), 1);
+    syncShowingDesktop();
     assert(isShowingDesktop());
-});
-MPX_TEST("test_invalid_state", {
-    WindowID win = mapArbitraryWindow();
-    xcb_ewmh_set_wm_desktop(ewmh, win, getNumberOfWorkspaces() + 1);
-    xcb_ewmh_set_current_desktop(ewmh, defaultScreenNumber, getNumberOfWorkspaces() + 1);
-    flush();
-
-    addEWMHRules();
-    syncState();
-    scan(root);
-    assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
-    assert(getWindowInfo(win)->getWorkspaceIndex() < getNumberOfWorkspaces());
 });
 SET_ENV(createXSimpleEnv, fullCleanup);
 MPX_TEST("isMPXManagerRunning", {

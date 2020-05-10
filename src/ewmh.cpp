@@ -54,6 +54,7 @@ void broadcastEWMHCompilence() {
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
     // Not strictly needed
     updateWorkspaceNames();
+    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
     setSupportedActions();
     DEBUG("Complied with EWMH/ICCCM specs");
 }
@@ -185,8 +186,8 @@ void addEWMHRules(bool remove) {
     getEventRules(UNREGISTER_WINDOW).add(DEFAULT_EVENT(unrecordWindow), remove);
     getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(setSavedWorkspaceIndex), remove);
     getEventRules(XCB_CLIENT_MESSAGE).add(DEFAULT_EVENT(onClientMessage), remove);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(broadcastEWMHCompilence), remove);
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(syncState), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(broadcastEWMHCompilence, HIGHER_PRIORITY), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(syncShowingDesktop), remove);
     setWMStateRules(remove);
 }
 
@@ -583,21 +584,8 @@ bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
         winInfo->addMask(mask);
     return winInfo->hasMask(mask);
 }
-void syncState() {
-    WorkspaceID currentWorkspace ;
-    if(!xcb_ewmh_get_current_desktop_reply(ewmh,
-            xcb_ewmh_get_current_desktop(ewmh, defaultScreenNumber),
-            &currentWorkspace, NULL)) {
-        currentWorkspace = getActiveWorkspaceIndex();
-    }
-    if(currentWorkspace >= getNumberOfWorkspaces())
-        currentWorkspace = getNumberOfWorkspaces() - 1;
-    xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
+void syncShowingDesktop() {
     unsigned int value = 0;
     xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
     setShowingDesktop(value);
-    LOG(LOG_LEVEL_INFO, "Current workspace is %d", currentWorkspace);
-    switchToWorkspace(currentWorkspace);
-    for(Master* m : getAllMasters())
-        m->onWindowFocus(getActiveFocus(m->getKeyboardID()));
 }

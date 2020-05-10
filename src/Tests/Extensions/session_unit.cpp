@@ -20,8 +20,10 @@ static const ArrayList<long>serializeState(uint8_t mask) {
     if(mask & 1) {
         list.add(getAllMasters().size());
         list.add(getActiveMaster()->getID());
+        list.add(getActiveMaster()->getWorkspaceIndex());
         for(Master* master : getAllMasters()) {
             list.add(master->getID());
+            list.add(master->getWorkspaceIndex());
             listsOfStacks.add(&master->getWindowStack());
         }
     }

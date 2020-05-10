@@ -332,7 +332,7 @@ bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
  */
 void setAllowedActions(WindowInfo* winInfo);
 /**
- * Sync EWMH global properties with our internal state
+ * Sync whether or not we are only showing the desktop
  */
-void syncState();
+void syncShowingDesktop();
 #endif /* EWMH_H_ */
