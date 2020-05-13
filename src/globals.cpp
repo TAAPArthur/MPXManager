@@ -6,22 +6,20 @@
 
 bool ALLOW_SETTING_UNSYNCED_MASKS = 0;
 bool LD_PRELOAD_INJECTION = 0;
-// TODO start up option
 bool RUN_AS_WM = 1;
 bool STEAL_WM_SELECTION = 0;
 std::string LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
-std::string MASTER_INFO_PATH = "$HOME/.mpxmanager/master-info.txt";
+std::string MASTER_INFO_PATH = "$HOME/.config/mpxmanager/master-info.txt";
 std::string SHELL = "/bin/sh";
 std::string NOTIFY_CMD = "notify-send -h string:x-canonical-private-synchronous:MPX_NOTIFICATIONS -a "
     WINDOW_MANAGER_NAME;
-uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 5000;
+uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
 // TODO make configurable per window
 uint32_t CLONE_REFRESH_RATE = 15;
 uint32_t CRASH_ON_ERRORS = 0;
 uint32_t DEFAULT_BORDER_COLOR = 0x0;
 uint32_t DEFAULT_BORDER_WIDTH = 1;
 uint32_t DEFAULT_MOD_MASK = Mod4Mask;
-// TODO start up option
 uint32_t DEFAULT_NUMBER_OF_WORKSPACES = 10;
 uint32_t DEFAULT_UNFOCUS_BORDER_COLOR = 0xDDDDDD;
 uint32_t EVENT_PERIOD = 100;
