@@ -2,9 +2,6 @@
 #include <string.h>
 #include "unistd.h"
 
-#ifndef NO_XRANDR
-#include <xcb/randr.h>
-#endif
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <X11/Xlib-xcb.h>
@@ -111,9 +108,6 @@ std::string getAtomName(xcb_atom_t atom) {
     std::string str = "";
     if(valueReply) {
         str = std::string(xcb_get_atom_name_name(valueReply), valueReply->name_len);
-        //*value = (char*)malloc((valueReply->name_len + 1) * sizeof(char));
-        //memcpy(*value, xcb_get_atom_name_name(valueReply), (valueReply->name_len)*sizeof(char));
-        //(*value)[valueReply->name_len] = 0;
         free(valueReply);
     }
     return str;
@@ -146,17 +140,8 @@ uint32_t generateID() {
 WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, uint32_t* valueList,
     const RectWithBorder& dims) {
     WindowID win = generateID();
-    xcb_void_cookie_t c = xcb_create_window_checked(dis,
-            XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
-            win,
-            parent,
-            dims.x, dims.y,
-            dims.width, dims.height,
-            dims.border,
-            clazz,
-            screen->root_visual,
-            mask, valueList);
-    catchError(c);
+    xcb_create_window(dis, XCB_COPY_FROM_PARENT, win, parent, dims.x, dims.y, dims.width, dims.height, dims.border, clazz,
+        screen->root_visual, mask, valueList);
     return win;
 }
 int destroyWindow(WindowID win) {
