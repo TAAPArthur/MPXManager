@@ -54,6 +54,10 @@ extern xcb_atom_t MPX_WM_INTERPROCESS_COM;
  */
 extern xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
 
+/// backs X_CENTERED_MASK
+extern xcb_atom_t MPX_WM_STATE_CENTER_X;
+/// backs Y_CENTERED_MASK
+extern xcb_atom_t MPX_WM_STATE_CENTER_Y;
 /**
  * Custom atom store in window's state to indicate that it should not be tiled
  */

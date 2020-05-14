@@ -21,6 +21,8 @@
 
 xcb_atom_t MPX_WM_INTERPROCESS_COM;
 xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
+xcb_atom_t MPX_WM_STATE_CENTER_X;
+xcb_atom_t MPX_WM_STATE_CENTER_Y;
 xcb_atom_t MPX_WM_STATE_NO_TILE;
 xcb_atom_t MPX_WM_STATE_ROOT_FULLSCREEN;
 xcb_atom_t WM_CHANGE_STATE;
@@ -67,11 +69,13 @@ static std::unordered_map<uint32_t, WindowMask> atomActionToMask;
 static void createMaskAtomMapping() {
     atomStateToMask[ewmh->_NET_WM_STATE_MODAL] = MODAL_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_ABOVE] = ABOVE_MASK | NO_TILE_MASK;
+    atomStateToMask[MPX_WM_STATE_CENTER_X] = X_CENTERED_MASK;
+    atomStateToMask[MPX_WM_STATE_CENTER_Y] = Y_CENTERED_MASK;
+    atomStateToMask[MPX_WM_STATE_NO_TILE] = NO_TILE_MASK;
+    atomStateToMask[MPX_WM_STATE_ROOT_FULLSCREEN] = ROOT_FULLSCREEN_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_BELOW] = BELOW_MASK | NO_TILE_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_FULLSCREEN] = FULLSCREEN_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_HIDDEN] = HIDDEN_MASK;
-    atomStateToMask[MPX_WM_STATE_NO_TILE] = NO_TILE_MASK;
-    atomStateToMask[MPX_WM_STATE_ROOT_FULLSCREEN] = ROOT_FULLSCREEN_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_STICKY] = STICKY_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_DEMANDS_ATTENTION] = URGENT_MASK;
     atomStateToMask[ewmh->_NET_WM_STATE_MAXIMIZED_HORZ] = X_MAXIMIZED_MASK;
@@ -236,6 +240,8 @@ void openXDisplay(void) {
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
     CREATE_ATOM(MPX_WM_INTERPROCESS_COM);
     CREATE_ATOM(MPX_WM_INTERPROCESS_COM_STATUS);
+    CREATE_ATOM(MPX_WM_STATE_CENTER_X);
+    CREATE_ATOM(MPX_WM_STATE_CENTER_Y);
     CREATE_ATOM(MPX_WM_STATE_NO_TILE);
     CREATE_ATOM(MPX_WM_STATE_ROOT_FULLSCREEN);
     CREATE_ATOM(WM_CHANGE_STATE);
