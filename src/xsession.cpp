@@ -19,6 +19,7 @@
 #include "xsession.h"
 
 
+xcb_atom_t MPX_IDLE_PROPERTY;
 xcb_atom_t MPX_WM_INTERPROCESS_COM;
 xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
 xcb_atom_t MPX_WM_STATE_CENTER_X;
@@ -238,6 +239,7 @@ void openXDisplay(void) {
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
+    CREATE_ATOM(MPX_IDLE_PROPERTY);
     CREATE_ATOM(MPX_WM_INTERPROCESS_COM);
     CREATE_ATOM(MPX_WM_INTERPROCESS_COM_STATUS);
     CREATE_ATOM(MPX_WM_STATE_CENTER_X);
@@ -421,6 +423,7 @@ static inline xcb_generic_event_t* getNextEvent() {
         }
         applyEventRules(TRUE_IDLE, NULL);
         idle++;
+        setWindowProperty(getPrivateWindow(), MPX_IDLE_PROPERTY, XCB_ATOM_CARDINAL, getIdleCount());
         flush();
         unlock();
         INFO("Idle " << idle);

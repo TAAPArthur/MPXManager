@@ -45,6 +45,10 @@ extern const int defaultScreenNumber;
 extern xcb_gcontext_t graphics_context;
 
 /**
+ * The value of this property is the idle counter
+ */
+extern xcb_atom_t MPX_IDLE_PROPERTY;
+/**
  * Atom used to differentiate custom client messages
  */
 extern xcb_atom_t MPX_WM_INTERPROCESS_COM;
