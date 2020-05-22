@@ -195,9 +195,11 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
         return;
     DEBUG("updating window workspace state: " << w->isVisible() << "; " << *winInfo);
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
-        mapWindow(winInfo->getID());
-        winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
-        updateFocusForAllMasters(NULL);
+        if(!winInfo->hasMask(MAPPED_MASK)) {
+            mapWindow(winInfo->getID());
+            winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
+            updateFocusForAllMasters(NULL);
+        }
     }
     else {
         if(winInfo->hasMask(STICKY_MASK)) {

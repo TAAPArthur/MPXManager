@@ -91,6 +91,19 @@ MPX_TEST_ITER("auto_focus_window_when_switching_workspace", 2, {
     assertEquals(getFocusedWindow(), winInfo);
     assertEquals(getActiveFocus(), winInfo->getID());
 });
+MPX_TEST_ITER("maintain_focus_when_moving_window_to_another_workspace", 2, {
+    MONITOR_DUPLICATION_POLICY = 0;
+    addFakeMonitor({100, 0, 100, 100});
+    assignUnusedMonitorsToWorkspaces();
+    mapWindow(createNormalWindow());
+    WindowID win = mapWindow(createNormalWindow());
+    waitUntilIdle();
+    assertEquals(getActiveFocus(), win);
+    ATOMIC(getWindowInfo(win)->moveToWorkspace(_i));
+    waitUntilIdle(true);
+    assertEquals(getActiveFocus(), win);
+});
+
 MPX_TEST("auto_focus", {
     lock();
     WindowID win = mapArbitraryWindow();
