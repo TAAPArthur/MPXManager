@@ -20,6 +20,7 @@
 
 
 xcb_atom_t MPX_IDLE_PROPERTY;
+xcb_atom_t MPX_RESTART_COUNTER;
 xcb_atom_t MPX_WM_INTERPROCESS_COM;
 xcb_atom_t MPX_WM_INTERPROCESS_COM_STATUS;
 xcb_atom_t MPX_WM_STATE_CENTER_X;
@@ -240,6 +241,7 @@ void openXDisplay(void) {
     cookie = xcb_ewmh_init_atoms(dis, ewmh);
     xcb_ewmh_init_atoms_replies(ewmh, cookie, NULL);
     CREATE_ATOM(MPX_IDLE_PROPERTY);
+    CREATE_ATOM(MPX_RESTART_COUNTER);
     CREATE_ATOM(MPX_WM_INTERPROCESS_COM);
     CREATE_ATOM(MPX_WM_INTERPROCESS_COM_STATUS);
     CREATE_ATOM(MPX_WM_STATE_CENTER_X);

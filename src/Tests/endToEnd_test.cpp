@@ -8,25 +8,10 @@
 #include "tester.h"
 
 
-static int idleCount;
 static void restartWM() {
     send("restart", "");
     WAIT_UNTIL_TRUE(!hasOutStandingMessages());
     WAIT_UNTIL_TRUE(isMPXManagerRunning());
-    idleCount = 0;
-}
-static WindowID getWMPrivateWindow() {
-    WindowID win;
-    xcb_ewmh_get_supporting_wm_check_reply(ewmh, xcb_ewmh_get_supporting_wm_check(ewmh, root), &win, NULL);
-    return win;
-}
-static int getWMIdleCount() {
-    return getWindowPropertyValue(getWMPrivateWindow(), MPX_IDLE_PROPERTY, XCB_ATOM_CARDINAL);
-}
-
-static inline void waitUntilWMIdle() {
-    WAIT_UNTIL_TRUE(idleCount != getWMIdleCount());
-    idleCount = getWMIdleCount();
 }
 static void ping() {
     send("ping", "");

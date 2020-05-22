@@ -454,15 +454,17 @@ static void clientSetup() {
     getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->moveToWorkspace(0);}));
     onSimpleStartup();
     addAutoTileRules();
-    startWM();
-    waitUntilIdle();
+    broadcastEWMHCompilence();
     if(!fork()) {
         saveXSession();
         ROOT_EVENT_MASKS = XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
         openXDisplay();
         registerForEvents();
+        waitUntilWMIdle();
     }
     else {
+        startWM();
+        waitUntilIdle();
         assert(waitForChild(0) == 0);
         fullCleanup();
         exit(0);
@@ -481,7 +483,6 @@ MPX_TEST("test_map_request_unregistered", {
     waitForNormalEvent(XCB_MAP_NOTIFY);
 });
 
-
 MPX_TEST("test_configure_request_no_error", {
     int values[] = {0, 0, 1000, 1000, 1, XCB_STACK_MODE_ABOVE};
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
@@ -489,6 +490,7 @@ MPX_TEST("test_configure_request_no_error", {
         XCB_CONFIG_WINDOW_BORDER_WIDTH | XCB_CONFIG_WINDOW_STACK_MODE;
     assert(!catchError(xcb_configure_window_checked(dis, createUnmappedWindow(), mask, values)));
 });
+
 MPX_TEST("test_configure_request", {
     CRASH_ON_ERRORS = 0;
     int value = 2;
@@ -497,13 +499,11 @@ MPX_TEST("test_configure_request", {
     int masks[] = {XCB_CONFIG_WINDOW_X, XCB_CONFIG_WINDOW_Y, XCB_CONFIG_WINDOW_WIDTH, XCB_CONFIG_WINDOW_HEIGHT,  XCB_CONFIG_WINDOW_BORDER_WIDTH};
     int defaultValues[] = {10, 11, 12, 13, 14};
     WindowID win = createNormalWindow();
-    msleep(1000);
     consumeEvents();
     for(int i = 0; i < LEN(masks); i++) {
         assert(!catchError(xcb_configure_window_checked(dis, win, allMasks, defaultValues)));
-        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
         assert(!catchError(xcb_configure_window_checked(dis, win, masks[i], &value)));
-        waitForNormalEvent(XCB_CONFIGURE_NOTIFY);
+        waitUntilWMIdle();
         xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, win), NULL);
         assert(reply);
         for(int n = 0; n < 5; n++)

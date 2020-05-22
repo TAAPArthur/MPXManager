@@ -49,6 +49,7 @@ void broadcastEWMHCompilence() {
         xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
     }
     setWindowClass(getPrivateWindow(), numPassedArguments ? passedArguments[0] : WINDOW_MANAGER_NAME, WINDOW_MANAGER_NAME);
+    setWindowProperty(getPrivateWindow(), MPX_RESTART_COUNTER, XCB_ATOM_CARDINAL, RESTART_COUNTER);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
     xcb_ewmh_set_supporting_wm_check(ewmh, getPrivateWindow(), getPrivateWindow());
     setWindowTitle(getPrivateWindow(), WINDOW_MANAGER_NAME);
