@@ -71,22 +71,6 @@ MPX_TEST_ITER("desktop_focus_transfer", 2, {
     assertEquals(*getFocusedWindow(), normalWin);
 });
 
-MPX_TEST_ITER("detect_dock", 2, {
-    addAvoidDocksRule();
-    WindowID win = mapWindow(createNormalWindow());
-    setWindowType(win, &ewmh->_NET_WM_WINDOW_TYPE_DOCK, 1);
-    assert(catchError(xcb_ewmh_set_wm_strut_checked(ewmh, win, 0, 0, 1, 0)) == 0);
-    scan(root);
-    assert(getWindowInfo(win)->isDock());
-    auto prop = getWindowInfo(win)->getDockProperties();
-    assert(prop);
-    for(int i = 0; i < 4; i++)
-        if(i == 2)
-            assert(prop[i] == 1);
-        else
-            assert(prop[i] == 0);
-});
-
 MPX_TEST_ITER("primary_monitor_windows", 2, {
     addAutoTileRules();
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(+[](WindowInfo * winInfo) {winInfo->addMask(PRIMARY_MONITOR_MASK);}));

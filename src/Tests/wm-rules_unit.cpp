@@ -122,6 +122,21 @@ MPX_TEST("load_properties_on_scan", {
     assert(getWindowInfo(win)->hasMask(WM_DELETE_WINDOW_MASK));
 });
 
+MPX_TEST_ITER("detect_dock", 2, {
+    WindowID win = mapWindow(createNormalWindow());
+    setWindowType(win, &ewmh->_NET_WM_WINDOW_TYPE_DOCK, 1);
+    assert(catchError(xcb_ewmh_set_wm_strut_checked(ewmh, win, 0, 0, 1, 0)) == 0);
+    scan(root);
+    assert(getWindowInfo(win)->isDock());
+    auto prop = getWindowInfo(win)->getDockProperties();
+    assert(prop);
+    for(int i = 0; i < 4; i++)
+        if(i == 2)
+            assert(prop[i] == 1);
+        else
+            assert(prop[i] == 0);
+});
+
 static inline void createWMEnvWithRunningWM() {
     POLL_COUNT = 1;
     POLL_INTERVAL = 10;

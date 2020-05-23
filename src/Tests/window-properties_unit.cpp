@@ -235,7 +235,10 @@ MPX_TEST_ITER("docks", 4 * 2, {
     }
     setDockProperties(win, i, size, full, start, end);
     setWindowType(win, ewmh->_NET_WM_WINDOW_TYPE_DOCK);
+    winInfo->setDock(0);
     loadWindowProperties(winInfo);
+    assert(getWindowInfo(win)->isDock());
+
     prop = getWindowInfo(win)->getDockProperties();
     assert(prop);
     assertEquals(prop[i], size);

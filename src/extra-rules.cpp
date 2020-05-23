@@ -38,20 +38,6 @@ void addDesktopRule(bool remove) {
     }, "_desktopTransferFocus"), remove);
 }
 
-void addAvoidDocksRule(bool remove) {
-    getEventRules(PROPERTY_LOAD).add(new BoundFunction(+[](WindowInfo * winInfo) {
-        assert(winInfo->getType());
-        if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
-            DEBUG("Marking window as dock");
-            winInfo->setDock();
-            winInfo->addMask(EXTERNAL_CONFIGURABLE_MASK);
-            removeBorder(winInfo->getID());
-            loadDockProperties(winInfo);
-            winInfo->removeFromWorkspace();
-        }
-    }, FUNC_NAME), remove);
-}
-
 static void stickyPrimaryMonitor() {
     Monitor* primary = getPrimaryMonitor();
     if(primary)

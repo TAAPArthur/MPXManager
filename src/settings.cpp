@@ -196,7 +196,6 @@ void addSuggestedRules() {
     addApplyChainBindingsRule();
     addAutoFocusRule();
     addAutoTileRules();
-    addAvoidDocksRule();
     addDesktopRule();
     addEWMHRules();
     addFloatRule();

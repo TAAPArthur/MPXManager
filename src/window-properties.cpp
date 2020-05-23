@@ -150,15 +150,17 @@ void loadWindowProperties(WindowInfo* winInfo) {
     xcb_window_t prop;
     if(xcb_icccm_get_wm_transient_for_reply(dis, xcb_icccm_get_wm_transient_for(dis, winInfo->getID()), &prop, NULL))
         winInfo->transientFor = prop;
+    bool result = !loadWindowType(winInfo);
+    winInfo->setImplicitType(result);
     loadProtocols(winInfo);
     loadWindowHints(winInfo);
     loadWindowSizeHints(winInfo);
     loadWindowRole(winInfo);
-    if(winInfo->isDock())
+    if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
+        DEBUG("Marking window as dock");
+        winInfo->setDock();
         loadDockProperties(winInfo);
-    bool result = !loadWindowType(winInfo);
-    winInfo->setImplicitType(result);
-    applyEventRules(PROPERTY_LOAD, winInfo);
+    }
 }
 void setBorderColor(WindowID win, unsigned int color) {
     if(color > 0xFFFFFF) {

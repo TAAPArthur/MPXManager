@@ -23,11 +23,6 @@ extern void (*printStatusMethod)();
  */
 void addAutoFocusRule(bool remove = 0) ;
 /**
- * Adds rules to have windows avoid docks (default)
- * @param remove
- */
-void addAvoidDocksRule(bool remove = 0);
-/**
  * Adds rules to the make Desktop windows behave like desktop window.
  * Adds STICKY, MAXIMIZED NO_TILE and BELOW masks and fixes the position at view port 0,0
  */

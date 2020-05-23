@@ -39,8 +39,6 @@ enum {
     CLIENT_MAP_ALLOW,
     /// Triggered when the client allows the window to be mapped (Synthetic UnmapRequest)
     CLIENT_MAP_DISALLOW,
-    /// Triggered when loadWindowProperties() is called
-    PROPERTY_LOAD,
     /// triggered when root screen is changed (indicated by a XCB_CONFIGURE_NOTIFY to the root window)
     SCREEN_CHANGE,
     /// called right after a window changes workspaces
