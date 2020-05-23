@@ -198,13 +198,6 @@ int getButtonDetailOrKeyCode(int buttonOrKey);
  * @return
  */
 xcb_window_t getPrivateWindow(void);
-
-/**
- * @param upper
- *
- * @return the window seperating the BELOW/ABOVE windows from the normal windows
- */
-WindowID getWindowDivider(bool upper);
 /**
  * @see catchError
  */

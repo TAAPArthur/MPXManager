@@ -28,6 +28,7 @@ void initState() {
 void onXConnect(void) {
     applyEventRules(SCREEN_CHANGE);
     registerForEvents();
+    getWindowDivider(0);
     scan(root);
 }
 
@@ -115,6 +116,8 @@ void onCreateEvent(void) {
         WindowInfo* winInfo = getWindowInfo(event->window);
         winInfo->setGeometry(&event->x);
         applyEventRules(WINDOW_MOVE, winInfo);
+        if(!winInfo->hasMask(ABOVE_MASK))
+            raiseWindow(winInfo);
     }
 }
 void onDestroyEvent(void) {
@@ -310,21 +313,17 @@ void assignDefaultLayoutsToWorkspace() {
             w->setActiveLayout(getRegisteredLayouts()[0]);
         }
 }
-void updateMapState(Workspace* w) {
-    for(WindowInfo* winInfo : w->getWindowStack())
-        if(winInfo->isOutOfSyncWithWorkspace())
-            updateWindowWorkspaceState(winInfo);
+
+void updateAllWindowWorkspaceState() {
+    for(WindowInfo* winInfo : getAllWindows()) {
+        updateWindowWorkspaceState(winInfo);
+    }
 }
 
 void addSyncMapStateRules(bool remove) {
-    getEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(syncMappedState), remove);
-    getEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateWindowWorkspaceState), remove);
-    getEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateMapState), remove);
-}
-
-void setDefaultStackPosition(WindowInfo* winInfo) {
-    if(winInfo->getParent() == root)
-        raiseWindow(winInfo, 0, !winInfo->hasMask(BELOW_MASK));
+    getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState), remove);
+    getBatchEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState), remove);
+    getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState), remove);
 }
 
 void addBasicRules(bool remove) {
@@ -361,7 +360,6 @@ void addBasicRules(bool remove) {
     addIgnoreInputOnlyWindowsRule(remove);
     addIgnoreOverrideRedirectWindowsRule(remove);
     getEventRules(PRE_REGISTER_WINDOW).add(DEFAULT_EVENT(listenForNonRootEventsFromWindow), remove);
-    getEventRules(POST_REGISTER_WINDOW).add(DEFAULT_EVENT(setDefaultStackPosition), remove);
     addApplyBindingsRule(remove);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY), remove);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks), remove);

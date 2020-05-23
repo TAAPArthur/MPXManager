@@ -381,9 +381,11 @@ MPX_TEST("test_switch_workspace_with_sticky_window", {
     focusWindow(normalWin);
     waitUntilIdle();
     ATOMIC(switchToWorkspace(1));
+    wakeupWM();
     waitUntilIdle();
     assertEquals(getActiveFocus(), stickyWin);
     ATOMIC(switchToWorkspace(0));
+    wakeupWM();
     waitUntilIdle();
     assertEquals(getActiveFocus(), stickyWin);
 });

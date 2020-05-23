@@ -56,15 +56,6 @@ WindowID getPrivateWindow(void) {
     return compliantWindowManagerIndicatorWindow;
 }
 
-static WindowID windowDivider[2] = {0};
-WindowID getWindowDivider(bool upper) {
-    if(!windowDivider[0]) {
-        windowDivider[1] = createOverrideRedirectWindow();
-        windowDivider[0] = createOverrideRedirectWindow();
-    }
-    return windowDivider[upper];
-}
-
 
 static std::unordered_map<uint32_t, WindowMask> atomStateToMask;
 static std::unordered_map<uint32_t, WindowMask> atomActionToMask;
@@ -279,8 +270,6 @@ void closeConnection(void) {
         free(ewmh);
         ewmh = NULL;
         compliantWindowManagerIndicatorWindow = 0;
-        windowDivider[0] = 0;
-        windowDivider[1] = 0;
         if(dpy)
             XCloseDisplay(dpy);
     }

@@ -126,19 +126,23 @@ MPX_TEST("mouse_enter", {
 MPX_TEST("swap_on_unmap", {
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     winInfo->moveToWorkspace(1);
-    waitUntilIdle(1);
+    wakeupWM();
+    waitUntilIdle();
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     assertEquals(cloneInfo->getWorkspaceIndex(), 1);
     ATOMIC(switchToWorkspace(1));
-    waitUntilIdle(1);
+    wakeupWM();
+    waitUntilIdle();
     assertEquals(winInfo->getWorkspaceIndex(), 1);
     assertEquals(cloneInfo->getWorkspaceIndex(), 0);
     ATOMIC(switchToWorkspace(2));
-    waitUntilIdle(1);
+    wakeupWM();
+    waitUntilIdle();
     assert(!winInfo->hasMask(MAPPED_MASK));
     assert(!cloneInfo->hasMask(MAPPED_MASK));
     ATOMIC(switchToWorkspace(0));
-    waitUntilIdle(1);
+    wakeupWM();
+    waitUntilIdle();
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     assertEquals(cloneInfo->getWorkspaceIndex(), 1);
 });

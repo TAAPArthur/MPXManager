@@ -92,13 +92,6 @@ void killClientOfWindowInfo(WindowInfo* winInfo);
  */
 void updateWindowWorkspaceState(WindowInfo* winInfo);
 /**
- * If the workspace is visible, map all MAPPABLE windows
- * Else unmap all windows
- *
- * @param workspace
- */
-void syncMappedState(Workspace* workspace);
-/**
  * For all masters focused on winInfoToIgnore, the focus will be shifted to the
  * first focusable window in the window stack not including winInfoToIgnore.
  * If there is no such window, focus will be transferred to defaultWinInfo instead.
@@ -165,6 +158,14 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
  * @param win
  */
 void removeBorder(WindowID win);
+
+
+/**
+ * @param upper iff true returns the boundary between the normal and top layer instead of the normal and bottom layer
+ *
+ * @return the window seperating the BELOW/ABOVE windows from the normal windows
+ */
+WindowID getWindowDivider(bool upper);
 /**
  * Raises or lowers the winInfo depending on above.
  * @param win

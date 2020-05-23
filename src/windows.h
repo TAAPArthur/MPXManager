@@ -307,8 +307,8 @@ public:
      * @return 1 iff whether the window is mapped doesn't match if its workspace is visible
      */
     bool isOutOfSyncWithWorkspace() {
-        return getWorkspace()->isVisible() ^
-            (!hasMask(HIDDEN_MASK) && hasMask(MAPPED_MASK));
+        return getWorkspace() ? getWorkspace()->isVisible() ^
+            (!hasMask(HIDDEN_MASK) && hasMask(MAPPED_MASK)) : 0;
     }
     /**
      * @return true if the user can interact (focus, type etc) with the window

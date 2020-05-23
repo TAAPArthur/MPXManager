@@ -94,23 +94,6 @@ MPX_TEST("test_window_scan", {
     assertEquals(getAllWindows().size(), 4);
 });
 
-MPX_TEST_ITER("syncMappedState", 2, {
-    WindowInfo* winInfo = new WindowInfo(createNormalWindow());
-    getAllWindows().add(winInfo);
-    if(_i)
-        winInfo->addMask(MAPPABLE_MASK);
-    winInfo->moveToWorkspace(0);
-    assert(winInfo->isNotInInvisibleWorkspace());
-    assert(getWorkspace(0)->isVisible());
-    syncMappedState(getWorkspace(0));
-    assert(isWindowMapped(winInfo->getID()) == _i);
-    getWorkspace(0)->setMonitor(NULL);
-    assert(!winInfo->isNotInInvisibleWorkspace());
-    syncMappedState(getWorkspace(0));
-    flush();
-    assert(!isWindowMapped(winInfo->getID()));
-});
-
 MPX_TEST("test_sticky_workspace_change", {
     WindowID win = mapArbitraryWindow();
     WindowInfo* winInfo = new WindowInfo(win);
@@ -160,13 +143,39 @@ MPX_TEST("test_workspace_change_focus", {
         winInfo->moveToWorkspace(0);
     }
     getAllWindows()[0]->moveToWorkspace(1);
+    applyBatchEventRules();
     assert(focusWindow(getAllWindows()[1]));
     assertEquals(getActiveFocus(), getAllWindows()[1]->getID());
     switchToWorkspace(1);
+    applyBatchEventRules();
 
     updateState();
     flush();
     assertEquals(getActiveFocus(), getAllWindows()[0]->getID());
+});
+MPX_TEST("test_destroy_focus", {
+    int num = 3;
+    for(int i = 0; i < num - 1; i++)
+        addFakeMonitor({0, 0, 100, 100});
+    addWorkspaces(num);
+    assignUnusedMonitorsToWorkspaces();
+    assert(!getWorkspace(num)->isVisible());
+    WindowID wins[] = {mapArbitraryWindow(), mapArbitraryWindow(), mapArbitraryWindow(), root};
+    assertEquals(LEN(wins), getNumberOfWorkspaces());
+    scan(root);
+    for(int i = LEN(wins) - 2; i >= 0; i--) {
+        auto* winInfo = getWindowInfo(wins[i]);
+        winInfo->addMask(INPUT_MASK);
+        winInfo->moveToWorkspace(i);
+        getActiveMaster()->onWindowFocus(winInfo->getID());
+        assert(focusWindow(winInfo));
+    }
+    for(int i = 0; i < num; i++) {
+        getActiveMaster()->onWindowFocus(wins[i]);
+        getWindowInfo(wins[i])->moveToWorkspace(num);
+        updateWindowWorkspaceState(getWindowInfo(wins[i]));
+        assertEquals(getActiveFocus(), wins[i + 1]);
+    }
 });
 
 SET_ENV(onSimpleStartup, fullCleanup);
@@ -209,16 +218,18 @@ MPX_TEST_ITER("test_sticky_window", 2, {
     getAllMasters().add(m);
     auto check = +[](int i) {
         WindowInfo* winInfo = getAllWindows()[0];
-        updateState();
-        assertEquals(winInfo->getWorkspaceIndex(), i % getNumberOfWorkspaces());
+        assertEquals(winInfo->getWorkspaceIndex(), i);
+        assert(isWindowMapped(winInfo->getID()));
         validate();
     };
     switchToWorkspace(2);
+    applyBatchEventRules();
     setActiveMaster(getAllMasters()[_i]);
     check(2);
     for(int i = 1; i < getNumberOfWorkspaces() + 1; i++) {
         switchToWorkspace(i % getNumberOfWorkspaces());
-        check(i);
+        applyBatchEventRules();
+        check(i % getNumberOfWorkspaces());
     }
 });
 MPX_TEST("test_sticky_workspaceless_window", {
@@ -237,7 +248,7 @@ MPX_TEST_ITER("test_workspace_activation", 3, {
     scan(root);
     WindowInfo* winInfo = getAllWindows()[0];
     WindowInfo* winInfo2 = getAllWindows()[1];
-    WindowID stackingOrder[3] = {winInfo->getID(), winInfo2->getID(), winInfo->getID()};
+    WindowID stackingOrder[] = {winInfo->getID(), winInfo2->getID()};
     if(_i) {
         winInfo->moveToWorkspace(0);
         winInfo2->moveToWorkspace(0);
@@ -245,10 +256,9 @@ MPX_TEST_ITER("test_workspace_activation", 3, {
             switchToWorkspace(1);
     }
     assert(activateWindow(winInfo));
-    assert(checkStackingOrder(stackingOrder + 1, 2));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo->getID());
     assert(activateWindow(winInfo2));
-    assert(checkStackingOrder(stackingOrder, 2));
+    assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo2->getID());
 });
 
@@ -262,7 +272,8 @@ MPX_TEST_ITER("test_raise_window_ignore_unmanaged", 2, {
     getEventRules(POST_REGISTER_WINDOW).clear();
     WindowID bottom = mapArbitraryWindow();
     WindowID top = mapArbitraryWindow();
-    WindowID stackingOrder[] = {createOverrideRedirectWindow(), getWindowDivider(1), bottom, top, getWindowDivider(0), createOverrideRedirectWindow()};
+    WindowID stackingOrder[] = {createOverrideRedirectWindow(), getWindowDivider(0), bottom, top, getWindowDivider(1), createOverrideRedirectWindow()};
+    lowerWindow(stackingOrder[0]);
     scan(root);
     if(_i) {
         raiseWindow(getWindowInfo(bottom));
@@ -274,6 +285,15 @@ MPX_TEST_ITER("test_raise_window_ignore_unmanaged", 2, {
         lowerWindow(getWindowInfo(bottom));
         assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
     }
+});
+
+MPX_TEST_ITER("window_divider", 2, {
+    assertEquals(getWindowDivider(0), getWindowDivider(0));
+    assertEquals(getWindowDivider(1), getWindowDivider(1));
+    assert(getWindowDivider(0) != getWindowDivider(1));
+    WindowID stack[] = {getWindowDivider(_i), getWindowDivider(!_i), getWindowDivider(_i)};
+    assertEquals(stack[0], stack[2]);
+    assert(checkStackingOrder(stack + _i, 2));
 });
 
 MPX_TEST("test_raise_window", {

@@ -4,6 +4,7 @@
 
 
 #include "bindings.h"
+#include "ext.h"
 #include "layouts.h"
 #include "logger.h"
 #include "monitors.h"
@@ -92,6 +93,22 @@ static inline void _printStateComparison(WorkspaceState* currentState, Workspace
     }
 }
 
+static void updateWindowsNotInWorkspaces() {
+    static Index<WindowMask> key;
+    for(WindowInfo* winInfo : getAllWindows()) {
+        if(!winInfo->getWorkspace()) {
+            auto* mask = get(key, winInfo);
+            if((winInfo->getMask() ^ *mask) & (BELOW_MASK | ABOVE_MASK)) {
+                raiseWindow(winInfo);
+                *mask = winInfo->getMask();
+            }
+        }
+        else {
+            remove(key, winInfo);
+        }
+    }
+}
+
 /**
  * Compares the current state with the last saved state.
  * The current state is then saved
@@ -140,5 +157,6 @@ static int compareState() {
 }
 
 int updateState() {
+    updateWindowsNotInWorkspaces();
     return compareState();
 }

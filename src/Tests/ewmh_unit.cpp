@@ -158,6 +158,7 @@ MPX_TEST("test_toggle_show_desktop", {
     WindowID stackingOrder[] = {desktop, win, desktop};
     flush();
     scan(root);
+    lowerWindow(getWindowInfo(desktop));
     raiseWindow(getWindowInfo(win));
     assert(checkStackingOrder(stackingOrder, 2));
     setShowingDesktop(1);

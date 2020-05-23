@@ -82,10 +82,12 @@ MPX_TEST_ITER("auto_focus_window_when_switching_workspace", 2, {
     focusWindow(winInfo);
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 0;
     ATOMIC(switchToWorkspace(other));
+    wakeupWM();
     waitUntilIdle();
     assert(getActiveFocus() != winInfo->getID());
     assert(!winInfo->hasMask(MAPPED_MASK));
     ATOMIC(switchToWorkspace(base));
+    wakeupWM();
     waitUntilIdle();
     assert(winInfo->hasMask(MAPPED_MASK));
     assertEquals(getFocusedWindow(), winInfo);
@@ -171,11 +173,13 @@ MPX_TEST_ITER("tile_invisible", 2, {
     waitUntilIdle();
     grabPointer();
     ATOMIC(getAllWindows()[0]->moveToWorkspace(1));
+    wakeupWM();
     waitUntilIdle();
     if(_i)
         sendChangeWorkspaceRequest(1);
     else
         ATOMIC(switchToWorkspace(1));
+    wakeupWM();
     waitUntilIdle();
     assertEquals(getActiveWorkspaceIndex(), 1);
     assertEquals(getRealGeometry(getAllWindows()[0]->getID()), getAllMonitors()[0]->getViewport());

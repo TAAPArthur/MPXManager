@@ -100,16 +100,6 @@ MPX_TEST("private_window", {
     assertEquals(pid, getpid());
 });
 
-MPX_TEST_ITER("window_divider", 2, {
-
-    assertEquals(getWindowDivider(0), getWindowDivider(0));
-    assertEquals(getWindowDivider(1), getWindowDivider(1));
-    assert(getWindowDivider(0) != getWindowDivider(1));
-    WindowID stack[] = {getWindowDivider(!_i), getWindowDivider(_i), getWindowDivider(!_i)};
-    assertEquals(stack[0], stack[2]);
-    assert(checkStackingOrder(stack + _i, 2));
-});
-
 MPX_TEST("event_names", {
     for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
         assert(eventTypeToString(i));

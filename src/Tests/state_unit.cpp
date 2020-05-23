@@ -54,6 +54,20 @@ MPX_TEST("test_state_change_num_windows", {
         assertEquals(getCount(), i + 1);
     }
 });
+MPX_TEST("test_raise_lower_workspaceless_windows", {
+
+    WindowInfo* winInfoAbove = new WindowInfo(createNormalWindow());
+    WindowInfo* winInfo = new WindowInfo(createNormalWindow());
+    WindowInfo* winInfoBelow = new WindowInfo(createNormalWindow());
+    winInfoAbove->addMask(ABOVE_MASK);
+    winInfoBelow->addMask(BELOW_MASK);
+    addWindowInfo(winInfo);
+    addWindowInfo(winInfoBelow);
+    addWindowInfo(winInfoAbove);
+    updateState();
+    WindowID stackingOrder[] = { winInfoBelow->getID(), winInfo->getID(), winInfoAbove->getID()};
+    assert(checkStackingOrder(stackingOrder, LEN(stackingOrder)));
+});
 MPX_TEST("test_mask_change", {
     WindowInfo* winInfo = addVisibleWindow(getActiveWorkspaceIndex());
     winInfo->addMask(MAPPED_MASK);
@@ -131,7 +145,6 @@ MPX_TEST("test_on_workspace_change", {
     for(int i = 0; i < size; i++) {
         switchToWorkspace(i);
         ATOMIC(assert(!updateState()));
-        waitUntilIdle();
     }
 });
 

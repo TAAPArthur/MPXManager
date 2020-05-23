@@ -94,11 +94,13 @@ MPX_TEST("mapWindowInsideContainer", {
 
 MPX_TEST_ITER("contain_self", 2, {
     containerWindowInfo->moveToWorkspace(containerMonitor->getWorkspace()->getID());
+    wakeupWM();
     waitUntilIdle();
     assert(getWindowInfo(normalWindow)->hasMask(MAPPED_MASK));
     if(_i) {
         ATOMIC(switchToWorkspace(3));
         ATOMIC(switchToWorkspace(containerMonitor->getWorkspace()->getID()));
+        wakeupWM();
         waitUntilIdle();
     }
 });
@@ -106,6 +108,7 @@ MPX_TEST_ITER("contain_self", 2, {
 MPX_TEST("unmapContainer", {
     assert(!getWorkspace(3)->isVisible());
     ATOMIC(switchToWorkspace(3));
+    wakeupWM();
     waitUntilIdle();
     assert(!getWindowInfo(normalWindow)->hasMask(MAPPED_MASK));
     assert(!containerWindowInfo->hasMask(MAPPED_MASK));

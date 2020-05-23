@@ -190,10 +190,9 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
 }
 
 void updateWindowWorkspaceState(WindowInfo* winInfo) {
-    Workspace* w = winInfo->getWorkspace();
-    if(!w)
+    if(!winInfo->isOutOfSyncWithWorkspace())
         return;
-    DEBUG("updating window workspace state: " << w->isVisible() << "; " << *winInfo);
+    DEBUG("updating window workspace state: " << winInfo->getWorkspace()->isVisible() << "; " << *winInfo);
     if(winInfo->isNotInInvisibleWorkspace() && winInfo->isMappable()) {
         if(!winInfo->hasMask(MAPPED_MASK)) {
             mapWindow(winInfo->getID());
@@ -202,27 +201,10 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
         }
     }
     else {
-        if(winInfo->hasMask(STICKY_MASK)) {
-            Workspace* w = getActiveWorkspace();
-            if(!w->isVisible())
-                w = getActiveWorkspace()->getNextWorkspace(1, VISIBLE);
-            if(w)
-                winInfo->moveToWorkspace(w->getID());
-            return;
-        }
         updateFocusForAllMasters(winInfo);
         unmapWindow(winInfo->getID());
         winInfo->removeMask(FULLY_VISIBLE_MASK | MAPPED_MASK);
     }
-}
-void syncMappedState(Workspace* workspace) {
-    DEBUG("Syncing map state: " << *workspace);
-    for(WindowInfo* winInfo : workspace->getWindowStack())
-        if(winInfo->hasMask(STICKY_MASK))
-            updateWindowWorkspaceState(winInfo);
-    for(WindowInfo* winInfo : workspace->getWindowStack())
-        if(!winInfo->hasMask(STICKY_MASK))
-            updateWindowWorkspaceState(winInfo);
 }
 
 void switchToWorkspace(int workspaceIndex) {
@@ -239,6 +221,9 @@ void switchToWorkspace(int workspaceIndex) {
                 currentIndex = visibleWorkspace->getID();
         }
         LOG(LOG_LEVEL_DEBUG, "Swapping visible workspace %d with %d", currentIndex, workspaceIndex);
+        for(WindowInfo* winInfo : getWorkspace(currentIndex)->getWindowStack())
+            if(winInfo->hasMask(STICKY_MASK))
+                winInfo->moveToWorkspace(workspaceIndex);
         swapMonitors(workspaceIndex, currentIndex);
     }
     getActiveMaster()->setWorkspaceIndex(workspaceIndex);
@@ -265,10 +250,8 @@ WindowID activateWindow(WindowInfo* winInfo) {
 void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
     assert(mask < 128);
-    if(mask) {
-        LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)", win, mask, __builtin_popcount(mask));
-        LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));
-    }
+    LOG(LOG_LEVEL_INFO, "Config %d: mask %d (%d bits)", win, mask, __builtin_popcount(mask));
+    LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, std::min(__builtin_popcount(mask), 7)));
     XCALL(xcb_configure_window, dis, win, mask, values);
 }
 void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition) {
@@ -360,21 +343,36 @@ void removeBorder(WindowID win) {
 }
 
 
+static WindowID windowDivider[2] = {0};
+WindowID getWindowDivider(bool upper) {
+    if(!windowDivider[0]) {
+        windowDivider[0] = createOverrideRedirectWindow();
+        lowerWindow(windowDivider[0]);
+        windowDivider[1] = createOverrideRedirectWindow();
+    }
+    return windowDivider[upper];
+}
+
 void raiseWindow(WindowID win, WindowID sibling, bool above) {
     uint32_t values[] = {sibling, above ? XCB_STACK_MODE_ABOVE : XCB_STACK_MODE_BELOW};
     int mask = XCB_CONFIG_WINDOW_STACK_MODE;
     if(sibling)
         mask |= XCB_CONFIG_WINDOW_SIBLING;
+    TRACE("Modifying window stacking order; win: " << win << " sibling: " << sibling << " Above:" << (int)above);
     configureWindow(win, mask, &values[!sibling]);
 }
 void raiseWindow(WindowInfo* winInfo, WindowID sibling, bool above) {
     if(!sibling)
-        if(winInfo->hasMask(ABOVE_MASK) && !above || winInfo->hasMask(BELOW_MASK) && above) {
+        if(!above  && winInfo->hasPartOfMask(TOP_LAYER_MASKS) || above && winInfo->hasPartOfMask(BOTTOM_LAYER_MASKS)) {
+            // lowering an TOP_LAYER or raises a BOTTOM_LAYER is really raising/lowering it relative to the UPPER/LOWER divider
+            above = !above;
+            sibling = getWindowDivider(above);
+        }
+    // raising a non TOP_LAYER or lowering a BOTTOM_LAYER is really lowering/raising it relative UPPER/LOWER divider
+        else if(above && !winInfo->hasPartOfMask(TOP_LAYER_MASKS) || !above && !winInfo->hasMask(BOTTOM_LAYER_MASKS)) {
             sibling = getWindowDivider(above);
             above = !above;
         }
-        else if(above && !winInfo->hasPartOfMask(TOP_LAYER_MASKS) || !above && !winInfo->hasMask(BOTTOM_LAYER_MASKS))
-            sibling = getWindowDivider(above = !above);
     raiseWindow(winInfo->getID(), sibling, above);
 }
 RectWithBorder getRealGeometry(WindowID id) {

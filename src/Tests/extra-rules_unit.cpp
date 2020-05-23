@@ -44,32 +44,6 @@ MPX_TEST("test_desktop_rule", {
     focusWindow(winInfo);
     assertEquals(getActiveFocus(), win);
 });
-MPX_TEST_ITER("desktop_focus_transfer", 2, {
-    assert(getAllMonitors().size() == 1);
-    addEWMHRules();
-    addDesktopRule();
-    startWM();
-    WindowID normalWin;
-    if(_i)
-        normalWin = mapArbitraryWindow();
-    WindowID win = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
-    if(!_i)
-        normalWin = mapArbitraryWindow();
-    waitUntilIdle();
-    assert(focusWindow(win));
-    assert(focusWindow(normalWin));
-    waitUntilIdle();
-    Workspace* emptyWorkspace = getActiveWorkspace()->getNextWorkspace(1, EMPTY);
-    assert(emptyWorkspace);
-    auto index = getActiveWorkspaceIndex();
-    ATOMIC(switchToWorkspace(*emptyWorkspace));
-    waitUntilIdle();
-    assertEquals(getActiveFocus(), win);
-    assertEquals(getFocusedWindow(), getWindowInfo(win));
-    ATOMIC(switchToWorkspace(index));
-    waitUntilIdle();
-    assertEquals(*getFocusedWindow(), normalWin);
-});
 
 MPX_TEST_ITER("primary_monitor_windows", 2, {
     addAutoTileRules();
@@ -177,24 +151,23 @@ MPX_TEST("test_transient_windows_always_above", {
     addKeepTransientsOnTopRule();
     WindowID win = mapArbitraryWindow();
     WindowID win2 = mapArbitraryWindow();
-    WindowID win3 = mapArbitraryWindow();
     setWindowTransientFor(win2, win);
     registerWindow(win, root);
     registerWindow(win2, root);
     WindowInfo* winInfo = getWindowInfo(win);
     WindowInfo* winInfo2 = getWindowInfo(win2);
-    winInfo->moveToWorkspace(getActiveWorkspaceIndex());
-    winInfo2->moveToWorkspace(getActiveWorkspaceIndex());
     loadWindowProperties(winInfo2);
     assert(winInfo2->getTransientFor() == winInfo->getID());
+    winInfo->moveToWorkspace(getActiveWorkspaceIndex());
     winInfo2->moveToWorkspace(getActiveWorkspaceIndex());
     assert(winInfo->isActivatable()&& winInfo2->isActivatable());
     assert(winInfo2->isMappable());
-    WindowID stack[] = {win, win2, win3};
+    lowerWindow(winInfo);
+    WindowID stack[] = {win, win2};
     startWM();
     waitUntilIdle();
     for(int i = 0; i < 4; i++) {
-        assert(checkStackingOrder(stack, 2));
+        assert(checkStackingOrder(stack, LEN(stack)));
         if(i % 2)
             activateWindow(winInfo);
         else
