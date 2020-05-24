@@ -20,6 +20,8 @@ int isInt(std::string str, bool* isNumeric);
 enum OptionFlags {
     /// if true and the command was sent, program will fork before executing this command and attempt redirect output to the caller's stdout
     FORK_ON_RECEIVE = 1 << 0,
+    /// Indicates an option that is a potential security vulnerability
+    UNSAFE = 1 << 1,
     /// Send confirmation before command is run
     CONFIRM_EARLY = 1 << 2,
     /// marks this function as one that only modifies a global variable

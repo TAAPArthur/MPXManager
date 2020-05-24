@@ -77,7 +77,7 @@ static UniqueArrayList<Option*> options = {
     {"dump", +[](std::string * s) {dumpWindow(*s);}, FORK_ON_RECEIVE},
     {"dump-master", +[]() {dumpMaster(getActiveMaster());}, FORK_ON_RECEIVE},
     {"dump-master", dumpMaster, FORK_ON_RECEIVE},
-    {"dump-options", +[](){std::cout << options << "\n";}, FORK_ON_RECEIVE},
+    {"dump-options", +[](){std::cout << options << std::endl;}, FORK_ON_RECEIVE},
     {"dump-rules", dumpRules, FORK_ON_RECEIVE},
     {"dump-stack", dumpWindowStack, FORK_ON_RECEIVE},
     {"dump-win", dumpSingleWindow, FORK_ON_RECEIVE},
@@ -85,7 +85,7 @@ static UniqueArrayList<Option*> options = {
     {"find-and-raise", [](std::string * str) {return findAndRaise(*str, MATCHES_CLASS, ACTION_ACTIVATE);}},
     {"focus", +[](WindowID id) {return focusWindow(id);}},
     {"focus-root", +[]() {return focusWindow(root);}},
-    {"list-options", +[](){std::cout >> options << "\n";}, FORK_ON_RECEIVE},
+    {"list-options", +[](){std::cout >> options << std::endl;}, FORK_ON_RECEIVE},
     {"load", loadWindowProperties},
     {"load-all", []{for(WindowInfo* winInfo : getAllWindows())loadWindowProperties(winInfo);}},
     {"log-level", +[](int i){setLogLevel((LogLevel)i);}, VAR_SETTER},
@@ -99,7 +99,7 @@ static UniqueArrayList<Option*> options = {
     {"raise", +[](WindowID id) {raiseWindow(id);}},
     {"request-shutdown", requestShutdown},
     {"restart", restart, CONFIRM_EARLY},
-    {"spawn", +[](std::string * str) {spawn(str->c_str());}},
+    {"spawn", +[](std::string * str) {std::cout << spawn(str->c_str()) << std::endl;}, UNSAFE},
     {"sum", printSummary, FORK_ON_RECEIVE},
     {"switch-workspace", switchToWorkspace},
     {"toggle-win", []{cycleWindows(UP); endCycleWindows();}},
@@ -190,7 +190,7 @@ void receiveClientMessage(void) {
             else
                 setActiveMasterByDeviceID(active);
         }
-        if(option) {
+        if(option && (ALLOW_UNSAFE_OPTIONS || !(option->flags & UNSAFE))) {
             DEBUG(*option);
             int childPID;
             int returnValue = 0;
@@ -202,8 +202,9 @@ void receiveClientMessage(void) {
             }
             if(!(option->flags & FORK_ON_RECEIVE)) {
                 returnValue = option->call(value);
+                if(!(option->flags & CONFIRM_EARLY))
+                    sendConfirmation(win, returnValue);
             }
-            // TODO stop forking
             else if(!(childPID = fork())) {
                 if(isLogging(LOG_LEVEL_WARN))
                     setLogLevel(LOG_LEVEL_WARN);
@@ -224,16 +225,19 @@ void receiveClientMessage(void) {
                 returnValue = option->call(value);
                 std::cout << std::flush;
                 close(STDOUT_FILENO);
-                exit(returnValue);
+                if(!(option->flags & CONFIRM_EARLY))
+                    sendConfirmation(win, returnValue);
+                exit(0);
             }
             else {
-                returnValue = waitForChild(childPID);
+                waitForChild(childPID);
             }
-            if(!(option->flags & CONFIRM_EARLY))
-                sendConfirmation(win, returnValue);
         }
         else {
-            LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'", name.c_str(), value.c_str());
+            if(option)
+                LOG(LOG_LEVEL_INFO, "option '%s' is unsafe and unsafe options are not allowed", name.c_str());
+            else
+                LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'", name.c_str(), value.c_str());
             sendConfirmation(win, INVALID_OPTION);
         }
     }

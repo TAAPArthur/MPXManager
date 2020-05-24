@@ -48,6 +48,9 @@
 /// corresponding mask or it is in MASK_TO_SYNC
 extern bool ALLOW_SETTING_UNSYNCED_MASKS;
 
+/// If false, then unsafe options won't be proccessed
+extern bool ALLOW_UNSAFE_OPTIONS;
+
 /// if true, then preload LD_PRELOAD_PATH
 extern bool LD_PRELOAD_INJECTION;
 /**

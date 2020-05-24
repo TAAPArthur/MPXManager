@@ -81,6 +81,15 @@ MPX_TEST("touch_fork_options", {
     }
 });
 
+MPX_TEST("touch_unsafe_options", {
+    ALLOW_UNSAFE_OPTIONS = 0;
+    addShutdownOnIdleRule();
+    checkAndSend("spawn", "exit 0");
+    runEventLoop();
+    assert(!hasOutStandingMessages());
+    assertEquals(INVALID_OPTION, getLastMessageExitCode());
+});
+
 MPX_TEST("test_send_receive", {
     POLL_COUNT = 10;
     SHELL = "";
