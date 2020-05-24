@@ -17,12 +17,12 @@ int fakeMain(ArrayList<const char*>args) {
     int result = _main(args.size() - 1, (char* const*)args.data());
     return result;
 }
-MPX_TEST_ERR("startup", 0, {
+MPX_TEST("startup", {
     ArrayList<const char*>args = { "" __FILE__, "--no-event-loop", NULL };
     mainAlias(args.size() - 1, (char* const*)args.data());
     exit(10);
 });
-MPX_TEST_ERR("startup_bad_option", 1, {
+MPX_TEST_ERR("startup_bad_option", INVALID_OPTION, {
     setLogLevel(LOG_LEVEL_NONE);
     ArrayList<const char*>args = { "" __FILE__, "--bad-option", NULL };
     mainAlias(args.size() - 1, (char* const*)args.data());
@@ -51,19 +51,20 @@ MPX_TEST("startup_set_vars", {
     assertEquals(MASTER_INFO_PATH, "/dev/null");
 });
 SET_ENV(+[] {setLogLevel(LOG_LEVEL_NONE);}, NULL);
-MPX_TEST_ITER_ERR("startup_set_vars_wrong_arg", 2, 1, {
+MPX_TEST_ITER_ERR("startup_set_vars_wrong_arg", 2, INVALID_OPTION, {
     fakeMain({(_i) ? "default-mod-mask" : "--default-mod-mask", "hi"});
 });
-MPX_TEST_ITER_ERR("startup_set_vars_missing_arg", 2, 1, {
+MPX_TEST_ITER_ERR("startup_set_vars_missing_arg", 2, INVALID_OPTION, {
     fakeMain({(_i) ? "default-mod-mask" : "--default-mod-mask"});
 });
-MPX_TEST_ITER_ERR("set_var_unknown", 2, 1, {
+MPX_TEST_ITER_ERR("set_var_unknown", 2, INVALID_OPTION, {
     assert(fakeMain({(_i) ? "__bad__value" : "--__bad__value"}));
 });
-MPX_TEST_ITER_ERR("set_var_unknown_with_arg", 2, 1, {
+MPX_TEST_ITER_ERR("set_var_unknown_with_arg", 2, INVALID_OPTION, {
     assert(fakeMain({(_i) ? "__bad__value" : "--__bad__value", "0"}));
 });
-MPX_TEST_ERR("timeout", 2, {
+MPX_TEST_ERR("wm_no_response", WM_NOT_RESPONDING, {
+    suppressOutput();
     assert(fakeMain({"log-level", "0"}));
 });
 static int otherMasterID = 0;

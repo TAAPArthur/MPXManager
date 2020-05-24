@@ -26,7 +26,7 @@ MPX_TEST_ITER_ERR("spawn_child", 2, 10, {
         spawn("exit 10");
     else spawnPipe("exit 10");
 });
-MPX_TEST_ITER_ERR("spawn_parent", 2, 0, {
+MPX_TEST_ITER("spawn_parent", 2, {
     breakFork(1);
     int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
     assert(pid == 1);
@@ -96,11 +96,10 @@ MPX_TEST("spawn_pipe", {
     assertEquals(waitForChild(0), 0);
 });
 
-MPX_TEST_ERR("spawn_pipe_out_fds", 3, {
+MPX_TEST_ERR("spawn_pipe_out_fds", SYS_CALL_FAILED, {
     setLogLevel(LOG_LEVEL_NONE);
     setenv("BREAK_PIPE", "1", 1);
     spawnPipe(NULL);
-    assert(0);
 });
 
 MPX_TEST("spawn_pipe_close", {
@@ -131,7 +130,7 @@ MPX_TEST_ITER("spawn_pipe_child_close", 2, {
         read(STATUS_FD_READ, buffer, LEN(buffer));
 });
 
-MPX_TEST_ITER_ERR("spawn_env_on_child_spawn", 2, 0, {
+MPX_TEST_ITER("spawn_env_on_child_spawn", 2, {
     onChildSpawn = []() {quit(0);};
     int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
     assert(pid);
@@ -171,21 +170,21 @@ MPX_TEST_ITER_ERR("restart", 2, 10, {
     if(_i)
         restart();
     else
-        kill(getpid(), SIGUSR1);
+        raise(SIGUSR1);
     assert(0);
 });
 SET_ENV(suppressOutput, simpleCleanup);
-MPX_TEST_ITER_ERR("spawn_fail", 2, 1, {
+MPX_TEST_ITER_ERR("spawn_fail", 2, SYS_CALL_FAILED, {
     breakFork(-1);
     if(_i)
         spawn("");
     else spawnPipe("");
 });
 MPX_TEST_ERR("seg_fault", SIGSEGV, {
-    kill(getpid(), SIGSEGV);
+    raise(SIGSEGV);
 });
 MPX_TEST_ERR("sig_term", SIGTERM, {
-    kill(getpid(), SIGTERM);
+    raise(SIGTERM);
 });
 MPX_TEST_ERR("assert_fail", SIGABRT, {
     assert(0);

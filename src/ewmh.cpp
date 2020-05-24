@@ -38,7 +38,7 @@ void broadcastEWMHCompilence() {
                     WM_SELECTION_ATOM), NULL);
         if(ownerReply->owner) {
             LOG(LOG_LEVEL_ERROR, "Selection %d is already owned by window %d", WM_SELECTION_ATOM, ownerReply->owner);
-            quit(1);
+            quit(WM_ALREADY_RUNNING);
         }
         free(ownerReply);
     }

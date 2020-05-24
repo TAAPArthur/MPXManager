@@ -28,6 +28,17 @@
 #%      mpx-restore   Like mpx-start but does not create any new masters
 #%      mpx-split   takes all slaves that are sending events and add them to a newly created master. To make the timeout longer, change the value of POLL_COUNT/POLL_INTERVAL via --set
 #%
+#% EXIT STATUS
+#%       The following exit values shall be returned:
+#%
+#%               0     Successful completion.
+#%               1     Display related error liking not being able to find the XServer or an X command failing
+#%               64    System call failed
+#%               65    Another WM is already running
+#%               66    WM is not responding to a request
+#%               67    An invalid option was specified
+#%               68    Validation failed
+#%
 #%Examples:
 #%    ${SCRIPT_NAME}              #start the window manager
 #%    ${SCRIPT_NAME} --set="VAR=VALUE"             #start the window manager and set VAR to VALUE

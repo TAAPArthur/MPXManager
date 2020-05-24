@@ -57,7 +57,7 @@ bool validate() {
 }
 void dieOnIntegrityCheckFail() {
     if(!validate())
-        quit(3);
+        quit(FAILED_VALIDATION);
 }
 void addDieOnIntegrityCheckFailRule(bool remove) {
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(dieOnIntegrityCheckFail), remove);

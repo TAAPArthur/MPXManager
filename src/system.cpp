@@ -28,8 +28,7 @@ char* const* passedArguments;
 void (*onChildSpawn)(void) = setClientMasterEnvVar;
 void safePipe(int* fds) {
     if(pipe(fds)) {
-        ERROR("Ran out of file descriptors");
-        exit(3);
+        err(SYS_CALL_FAILED, "Ran out of file descriptors");
     }
 }
 void createStatusPipe() {
@@ -124,10 +123,10 @@ static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool red
         if(command == NULL)
             return 0;
         execl(SHELL.c_str(), SHELL.c_str(), "-c", command, (char*)0);
-        err(1, "exec failed; Aborting");
+        err(SYS_CALL_FAILED, "exec failed; Aborting");
     }
     else if(pid < 0)
-        err(1, "error forking\n");
+        err(SYS_CALL_FAILED, "error forking\n");
     if(spawnPipe) {
         close(STATUS_FD_EXTERNAL_READ);
         close(STATUS_FD_EXTERNAL_WRITE);
@@ -158,7 +157,7 @@ void restart() {
     DEBUG("calling execv");
     if(passedArguments)
         execv(passedArguments[0], passedArguments);
-    err(1, "exec failed; Aborting");
+    err(SYS_CALL_FAILED, "exec failed; Aborting");
 }
 void quit(int exitCode) {
     DEBUG("Exiting");

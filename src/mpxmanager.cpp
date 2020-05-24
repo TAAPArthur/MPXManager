@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <getopt.h>
 #include <string.h>
+#include <err.h>
 
 
 #include "Extensions/mpx.h"
@@ -47,9 +48,9 @@ static void listVarOptions() {
 
 /// list of startup options
 static UniqueArrayList<Option*> options = {
-    {"list-start-options", +[]() {std::cout >> options << "\n"; exit(0);}},
-    {"list-options", +[]() {std::cout >> getOptions() << "\n"; exit(0);}},
-    {"list-vars", +[]() {listVarOptions(); exit(0);}},
+    {"list-start-options", +[]() {std::cout >> options << std::endl; exit(NORMAL_TERMINATION);}},
+    {"list-options", +[]() {std::cout >> getOptions() << std::endl; exit(NORMAL_TERMINATION);}},
+    {"list-vars", +[]() {listVarOptions(); exit(NORMAL_TERMINATION);}},
     {"no-event-loop", +[]() {RUN_EVENT_LOOP = 0;}},
     {"no-run-as-window-manager", clearWMSettings},
     {"replace", +[]() {STEAL_WM_SELECTION = 1;}},
@@ -113,7 +114,7 @@ static void parseArgs(int argc, char* const* argv) {
             LOG(LOG_LEVEL_TRACE, "processing %s", argv[i]);
             if(!(callStartupOption(options, argv, i) || callStartupOption(getOptions(), argv, i, 1))) {
                 LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.", argv[i]);
-                exit(1);
+                exit(INVALID_OPTION);
             }
             continue;
         }
@@ -121,7 +122,7 @@ static void parseArgs(int argc, char* const* argv) {
         std::string value(argv[i + 1] ? argv[i + 1] : "");
         if(!findOption(argv[i], value)) {
             LOG(LOG_LEVEL_ERROR, "Could not find matching options for %s.", argv[i]);
-            exit(1);
+            exit(INVALID_OPTION);
         }
         if(!hasXConnectionBeenOpened()) {
             openXDisplay();
@@ -154,8 +155,7 @@ int _main(int argc, char* const* argv) {
             while(isMPXManagerRunning() && hasOutStandingMessages())
                 msleep(100);
             if(hasOutStandingMessages()) {
-                ERROR("did not receive confirmation");
-                quit(2);
+                err(WM_NOT_RESPONDING, "WM did not confirm request(s)");
             }
             LOG(LOG_LEVEL_DEBUG, "WM Running: %d; Outstanding messages: %d", isMPXManagerRunning(), hasOutStandingMessages());
         }

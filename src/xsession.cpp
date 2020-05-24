@@ -188,7 +188,7 @@ void logError(xcb_generic_error_t* e, bool xlibError) {
         ERROR("Crashing on error");
         LOG_RUN(LOG_LEVEL_ERROR, printStackTrace());
         LOG_RUN(LOG_LEVEL_DEBUG, printSummary());
-        quit(1);
+        quit(X_ERROR);
     }
 }
 static int handleXLibError(Display* dpy __attribute__((unused)), XErrorEvent* e) {
@@ -222,7 +222,7 @@ void openXDisplay(void) {
     }
     if(!dpy) {
         ERROR(" Failed to connect to xserver");
-        exit(EXIT_FAILURE);
+        exit(X_ERROR);
     }
     dis = XGetXCBConnection(dpy);
     assert(!xcb_connection_has_error(dis));

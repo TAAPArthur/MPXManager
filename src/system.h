@@ -19,6 +19,17 @@
 
 #include <string>
 
+/// @{
+/// Exit codes
+#define NORMAL_TERMINATION  0
+#define X_ERROR             1
+#define SYS_CALL_FAILED     64
+#define WM_ALREADY_RUNNING  65
+#define WM_NOT_RESPONDING   66
+#define INVALID_OPTION      67
+#define FAILED_VALIDATION   68
+/// @}
+
 /// name of env variable that (if set) should be the default pointer
 #define DEFAULT_POINTER_ENV_VAR_NAME "CLIENT_POINTER"
 /// name of env variable that (if set) should be the default keyboard

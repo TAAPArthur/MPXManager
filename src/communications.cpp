@@ -95,7 +95,7 @@ static UniqueArrayList<Option*> options = {
     {"ping", []{DEBUG("pong");}},
     {"prev-win", []{shiftFocus(DOWN);}},
     {"prev-win-of-class", []{shiftFocus(DOWN, matchesFocusedWindowClass);}},
-    {"quit", +[]() {quit(0);}, CONFIRM_EARLY},
+    {"quit", +[]() {quit(NORMAL_TERMINATION);}, CONFIRM_EARLY},
     {"raise", +[](WindowID id) {raiseWindow(id);}},
     {"request-shutdown", requestShutdown},
     {"restart", restart, CONFIRM_EARLY},
@@ -197,7 +197,7 @@ void receiveClientMessage(void) {
             if(option->flags & CONFIRM_EARLY) {
                 TRACE("sending early confirmation");
                 destroyWindow(getPrivateWindow());
-                sendConfirmation(win, 0);
+                sendConfirmation(win, NORMAL_TERMINATION);
                 flush();
             }
             if(!(option->flags & FORK_ON_RECEIVE)) {
@@ -218,7 +218,7 @@ void receiveClientMessage(void) {
                 if(fd == -1 || dup2(fd, STDOUT_FILENO) == -1) {
                     LOG(LOG_LEVEL_WARN, "could not open %s for writing; could not call/set '%s' aborting", outputFile,
                         option->name.c_str());
-                    exit(1);
+                    exit(SYS_CALL_FAILED);
                 }
                 close(fd);
                 returnValue = option->call(value);
@@ -232,8 +232,10 @@ void receiveClientMessage(void) {
             if(!(option->flags & CONFIRM_EARLY))
                 sendConfirmation(win, returnValue);
         }
-        else
+        else {
             LOG(LOG_LEVEL_WARN, "could not find option matching '%s' '%s'", name.c_str(), value.c_str());
+            sendConfirmation(win, INVALID_OPTION);
+        }
     }
 }
 void addInterClientCommunicationRule(bool remove) {
