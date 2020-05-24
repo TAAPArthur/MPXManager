@@ -5,8 +5,8 @@
 #ifndef RING_BUFFER_H
 #define RING_BUFFER_H
 #include <assert.h>
-#include <cstdint>
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * This class is intended to have a 1 read thread and one thread write.

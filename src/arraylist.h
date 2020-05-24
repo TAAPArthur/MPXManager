@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include <type_traits>
 #include <vector>
 
 /**

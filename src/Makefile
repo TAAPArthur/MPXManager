@@ -1,5 +1,5 @@
-CC := g++ -std=gnu++17 -lstdc++
-CXX := ${CC}
+CXX ?= g++
+CXXFLAGS ?= -std=c++17 -lstdc++
 SHELL := /bin/bash
 DEBUGGING_FLAGS := -g -rdynamic -O0 -D_GLIBCXX_DEBUG
 RELEASE_FLAGS ?= -O2
@@ -88,6 +88,7 @@ mpxmanager.1: mpxmanager.sh
 mpxmanager.sh: mpxmanager.sh.template
 	cp $< $@
 	sed -i "s/CXX=.*/CXX='${CXX}'/g" mpxmanager.sh
+	sed -i "s/CXXFLAGS=.*/CXXFLAGS='${CXXFLAGS}'/g" mpxmanager.sh
 	sed -i "s/LDFLAGS=.*/LDFLAGS='${LDFLAGS}'/g" mpxmanager.sh
 	sed -i "s/CPPFLAGS=.*/CPPFLAGS='${CPPFLAGS}'/g" mpxmanager.sh
 	sed -i "s/GIT_HASH=.*/GIT_HASH=$$(git rev-parse --short HEAD)/g" mpxmanager.sh
@@ -99,26 +100,26 @@ mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.cpp c
 	sed -Ei "s/(varOptions)=.*/\1=\"$$(echo $$(./mpxmanager --list-vars 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: $(BASE_SRCS:.cpp=.o)
-	${CC} $^ -o $@ ${CPPFLAGS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} $^ -o $@ ${CPPFLAGS} ${LDFLAGS}
 
 
 libmpxmanager.so: $(BASE_SRCS:.cpp=.o)
-	${CC} -fPIC -shared -o libmpxmanager.so $^ ${CPPFLAGS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} -fPIC -shared -o libmpxmanager.so $^ ${CPPFLAGS} ${LDFLAGS}
 
 libmpxmanager.a: $(BASE_SRCS:.cpp=.o)
 	ar rcs libmpxmanager.a $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
-	${CC} -fPIC -shared -o $@ $^ ${CPPFLAGS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} -fPIC -shared -o $@ $^ ${CPPFLAGS} ${LDFLAGS}
 
 libmpx-test.so: Tests/test-preload.c
-	${CC} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 test: libmpx-test.so code_coverage.out functional.out endToEndTest.out format doc-check
 
 functionalTest: CPPFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.o Tests/compatibility_test.o |libmpx-patch.so
-	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functional.out: PRELOAD := $$(pwd)/libmpx-patch.so
 functional.out: functionalTest
@@ -128,7 +129,7 @@ functional.out: functionalTest
 
 endToEndTest: CPPFLAGS := ${TESTFLAGS}
 endToEndTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/endToEnd_test.o |libmpx-patch.so
-	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 endToEndTest.out: CPPFLAGS := ${TESTFLAGS}
 endToEndTest.out: PRELOAD := $$(pwd)/libmpx-patch.so
@@ -139,7 +140,7 @@ endToEndTest.out: endToEndTest mpxmanager
 
 unitTest: CPPFLAGS := ${TESTFLAGS}
 unitTest: Tests/tester.o   $(patsubst %.h,Tests/%_unit.o,$(patsubst %.cpp,Tests/%_unit.o,$(TEST_SRCS))) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
-	${CC} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+	${CXX} ${CXXFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 Extensions/Tests/%: Tests/Extensions/%
 	@true

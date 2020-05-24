@@ -105,6 +105,7 @@ getopts "$optspec" optchar || run $@
                     shift
                     [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
                     export CXX=
+                    export CXXFLAGS=
                     export CPPFLAGS=
                     export LDFLAGS=
                     if [[ ! -f $MPXMANAGER_LAST_COMPILED_VERSION || "$GIT_HASH" != $(cat $MPXMANAGER_LAST_COMPILED_VERSION) ]]; then
