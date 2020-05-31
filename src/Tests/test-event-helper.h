@@ -49,10 +49,6 @@ static inline void waitUntilWMIdle() {
     WAIT_UNTIL_TRUE(idleCount != getWMIdleCount());
     idleCount = getWMIdleCount();
 }
-static inline void wakeupWM() {
-    createOverrideRedirectWindow();
-    flush();
-}
 static inline void onSimpleStartup() {
     addDieOnIntegrityCheckFailRule();
     addBasicRules();

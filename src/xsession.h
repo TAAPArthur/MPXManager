@@ -432,4 +432,9 @@ static inline void setWindowProperty(WindowID win, xcb_atom_t atom, xcb_atom_t t
 static inline void clearWindowProperty(WindowID win, xcb_atom_t atom) {
     XCALL(xcb_delete_property, dis, win, atom);
 }
+
+static inline void wakeupWM() {
+    xcb_ewmh_send_client_message(dis, root, root, 1, 0, 0);
+    flush();
+}
 #endif /* XSESSION_H_ */
