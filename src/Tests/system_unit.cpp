@@ -10,6 +10,20 @@
 #include "test-mpx-helper.h"
 #include "tester.h"
 
+static void breakFork(int i) {
+    char strValue[8];
+    sprintf(strValue, "%d", i);
+    setenv("BREAK_FORK", strValue, 1);
+}
+
+static void breakPipe() {
+    setenv("BREAK_PIPE", "-1", 1);
+}
+
+static void breakExec() {
+    setenv("BREAK_EXEC", "-1", 1);
+}
+
 MPX_TEST("get_time", {
     unsigned int time = getTime();
     int delay = 12;
@@ -19,6 +33,18 @@ MPX_TEST("get_time", {
         time = getTime();
     }
 })
+
+MPX_TEST("failed_exec_spawn", {
+    suppressOutput();
+    breakExec();
+    assertEquals(SYS_CALL_FAILED, waitForChild(spawn("exit 10")));
+});
+
+MPX_TEST_ERR("failed_exec_restart", SYS_CALL_FAILED, {
+    suppressOutput();
+    breakExec();
+    restart();
+});
 
 MPX_TEST_ITER_ERR("spawn_child", 2, 10, {
     breakFork(0);
@@ -97,8 +123,8 @@ MPX_TEST("spawn_pipe", {
 });
 
 MPX_TEST_ERR("spawn_pipe_out_fds", SYS_CALL_FAILED, {
-    setLogLevel(LOG_LEVEL_NONE);
-    setenv("BREAK_PIPE", "1", 1);
+    suppressOutput();
+    breakPipe();
     spawnPipe(NULL);
 });
 

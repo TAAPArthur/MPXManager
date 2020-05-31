@@ -6,11 +6,6 @@
 #include "../system.h"
 #include "tester.h"
 
-void breakFork(int i) {
-    char strValue[8];
-    sprintf(strValue, "%d", i);
-    setenv("BREAK_FORK", strValue, 1);
-}
 static int TIMEOUT = 5;
 void* timer(void* f) {
     const volatile int* flag = (int*)f;

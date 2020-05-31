@@ -122,7 +122,8 @@ static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool red
             suppressOutput();
         if(command == NULL)
             return 0;
-        execl(SHELL.c_str(), SHELL.c_str(), "-c", command, (char*)0);
+        const char* const args[] = {SHELL.c_str(), "-c", command, NULL};
+        execv(SHELL.c_str(), (char* const*)args);
         err(SYS_CALL_FAILED, "exec failed; Aborting");
     }
     else if(pid < 0)

@@ -66,5 +66,4 @@ struct Test {
     int runTest(int rem);
     void printSummary(int i);
 };
-void breakFork(int i);
 #endif

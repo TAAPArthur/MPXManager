@@ -24,3 +24,12 @@ INTERCEPT(__pid_t, pipe, int*fds){
         return BASE(pipe)(fds);
 }
 END_INTERCEPT
+
+INTERCEPT(int, execv, const char *__path, char *const __argv[]) {
+    char* var = getenv("BREAK_EXEC");
+    if(var)
+        return -1;
+    else
+        return BASE(execv)(__path, __argv);
+}
+END_INTERCEPT
