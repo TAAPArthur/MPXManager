@@ -93,20 +93,23 @@ static inline void _printStateComparison(WorkspaceState* currentState, Workspace
     }
 }
 
-static void updateWindowsNotInWorkspaces() {
+static bool updateWindowsNotInWorkspaces() {
     static Index<WindowMask> key;
+    bool changed = 0;
     for(WindowInfo* winInfo : getAllWindows()) {
         if(!winInfo->getWorkspace()) {
             auto* mask = get(key, winInfo);
             if((winInfo->getMask() ^ *mask) & (BELOW_MASK | ABOVE_MASK)) {
                 raiseWindow(winInfo);
                 *mask = winInfo->getMask();
+                changed = 1;
             }
         }
         else {
             remove(key, winInfo);
         }
     }
+    return changed;
 }
 
 /**
@@ -157,6 +160,5 @@ static int compareState() {
 }
 
 int updateState() {
-    updateWindowsNotInWorkspaces();
-    return compareState();
+    return updateWindowsNotInWorkspaces() | compareState();
 }
