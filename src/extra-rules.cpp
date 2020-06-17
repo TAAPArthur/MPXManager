@@ -125,7 +125,7 @@ void addMoveNonTileableWindowsToWorkspaceBounds() {
 
 
 void addShutdownOnIdleRule(bool remove) {
-    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown), remove);
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(requestShutdown, LOWEST_PRIORITY), remove);
 }
 
 

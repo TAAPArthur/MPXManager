@@ -1,14 +1,16 @@
-#include "../../layouts.h"
-#include "../../ewmh.h"
-#include "../../wmfunctions.h"
-#include "../../devices.h"
-#include "../../masters.h"
-#include "../../wm-rules.h"
 #include "../../Extensions/session.h"
-#include "../tester.h"
+#include "../../devices.h"
+#include "../../ewmh.h"
+#include "../../extra-rules.h"
+#include "../../layouts.h"
+#include "../../masters.h"
+#include "../../state.h"
+#include "../../wm-rules.h"
+#include "../../wmfunctions.h"
+#include "../test-event-helper.h"
 #include "../test-mpx-helper.h"
 #include "../test-x-helper.h"
-#include "../test-event-helper.h"
+#include "../tester.h"
 static void loadCustomState() {
     loadSavedNonWindowState();
     loadSavedWindowState();
@@ -17,6 +19,8 @@ static void loadCustomState() {
 static const ArrayList<long>serializeState(uint8_t mask) {
     ArrayList<long> list;
     ArrayList<const ArrayList<WindowInfo*>*> listsOfStacks;
+    if(mask % 16 == 0)
+        mask = 15;
     if(mask & 1) {
         list.add(getAllMasters().size());
         list.add(getActiveMaster()->getID());
@@ -64,9 +68,11 @@ static void setup() {
 }
 
 SET_ENV(setup, fullCleanup);
-MPX_TEST_ITER("test_restore_state", 16, {
+MPX_TEST_ITER("test_restore_state", 2 * 16, {
+    bool explicitSave = _i & 16;
     int mask = _i;
     CRASH_ON_ERRORS = -1;
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 0;
     saveCustomState();
     flush();
     loadCustomState();
@@ -88,6 +94,7 @@ MPX_TEST_ITER("test_restore_state", 16, {
         getActiveMaster()->onWindowFocus(winInfo->getID());
     setActiveMaster(getAllMasters()[1]);
     getActiveMaster()->onWindowFocus(getAllWindows()[0]->getID());
+    getActiveMaster()->onWindowFocus(getAllWindows()[1]->getID());
     getAllWindows()[1]->moveToWorkspace(!getActiveWorkspaceIndex());
     getAllWindows()[0]->moveToWorkspace(getActiveWorkspaceIndex());
     char longName[512];
@@ -104,8 +111,17 @@ MPX_TEST_ITER("test_restore_state", 16, {
     const auto& list = serializeState(mask);
     raiseWindow(getAllWindows()[3]);
     lowerWindow(getAllWindows()[4]);
-    saveCustomState();
-    saveMonitorWorkspaceMapping();
+
+    if(explicitSave) {
+        addShutdownOnIdleRule();
+        runEventLoop();
+        const auto& list2 = serializeState(mask);
+        assertEquals(list, list2);
+    }
+    else {
+        saveCustomState();
+        saveMonitorWorkspaceMapping();
+    }
     flush();
     raiseWindow(getAllWindows()[0]);
     lowerWindow(getAllWindows()[1]);

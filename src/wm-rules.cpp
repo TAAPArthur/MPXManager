@@ -303,7 +303,7 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 }
 
 void addAutoTileRules(bool remove) {
-    getEventRules(PERIODIC).add(DEFAULT_EVENT(updateState), remove);
+    getEventRules(PERIODIC).add(DEFAULT_EVENT(updateState, LOWER_PRIORITY), remove);
 }
 void assignDefaultLayoutsToWorkspace() {
     for(Workspace* w : getAllWorkspaces())

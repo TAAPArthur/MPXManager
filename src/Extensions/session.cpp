@@ -269,9 +269,9 @@ void saveCustomState(void) {
     }
 }
 void addResumeCustomStateRules(bool remove) {
-    getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping), remove);
+    getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping, LOWEST_PRIORITY), remove);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(loadSavedMonitorWorkspaceMapping), remove);
-    getEventRules(PERIODIC).add(DEFAULT_EVENT(saveCustomState, LOW_PRIORITY), remove);
+    getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(saveCustomState, LOWER_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initSessionAtoms, HIGHEST_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadSavedNonWindowState, HIGHER_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadSavedWindowState), remove);

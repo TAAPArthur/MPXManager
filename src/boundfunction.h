@@ -26,6 +26,7 @@
 #define HIGH_PRIORITY    (-32)
 #define LOW_PRIORITY     ( 32)
 #define LOWER_PRIORITY   ( 64)
+#define LOWEST_PRIORITY  (127)
 /// @}
 
 /// @{
