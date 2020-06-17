@@ -133,7 +133,7 @@ void receiveClientMessage(void);
  * @param value
  * @param active
  */
-void send(std::string name, std::string value, WindowID active = 0);
+void send(std::string name, std::string value = "", WindowID active = 0);
 
 /**
  * @return a list of options the can be triggered

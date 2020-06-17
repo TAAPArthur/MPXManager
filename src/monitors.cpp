@@ -90,8 +90,8 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
         INFO("Monitor " << getID() << " was resized because of " << winInfo->getID() << "; new size is: " << getViewport());
     return changed;
 }
-void addRootMonitor() {
-    addFakeMonitor({0, 0, getRootWidth(), getRootHeight()}, "ROOT");
+Monitor* addRootMonitor() {
+    return addFakeMonitor({0, 0, getRootWidth(), getRootHeight()}, "ROOT");
 }
 void removeDuplicateMonitors(void) {
     if(!MONITOR_DUPLICATION_POLICY || !MONITOR_DUPLICATION_RESOLUTION) {

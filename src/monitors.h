@@ -127,6 +127,8 @@ public:
 };
 ///Masks used to determine the whether two monitors are duplicates
 enum MonitorDuplicationPolicy {
+    /// Monitors are never considered duplicates
+    NO_DUPS = 0,
     /// Monitors are duplicates if they have exactly the same base
     SAME_DIMS = 1,
     /// Monitors are duplicates if one monitor completely fits inside the other
@@ -214,7 +216,7 @@ void resizeAllMonitorsToAvoidStructs(WindowInfo* winInfo);
 /**
  * Adds a monitors with id 1 at pos 0,0 and size getRootWidth()xgetRootHeigh() if it doesn't already exists
  */
-void addRootMonitor();
+Monitor* addRootMonitor();
 /**
  * Sets the root width and height
  *

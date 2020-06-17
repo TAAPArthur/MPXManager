@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../bindings.h"
+#include "../communications.h"
 #include "../devices.h"
 #include "../ext.h"
 #include "../layouts.h"
@@ -276,3 +277,6 @@ void addResumeCustomStateRules(bool remove) {
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadSavedWindowState), remove);
 }
 
+__attribute__((constructor)) static void registerModes() {
+    addStartupMode("add-session-rules", [] {addResumeCustomStateRules();});
+}

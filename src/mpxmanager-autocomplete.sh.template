@@ -13,7 +13,7 @@ _mpxmanagerAutocomplete ()   #  By convention, the function name
     startOptions=
     varOptions=
     sendOptions=
-    bashOptions="-h --help -v --version --recompile --restart --force-restart --name --path"
+    bashOptions="-h --help --hash -v --version --recompile --restart --force-restart --name --path"
 
     if [[ "$cur" =~ --* ]]; then
         COMPREPLY=( $( compgen -W "$sendOptions $bashOptions $startOptions  $varOptions --" -- $cur ) )
