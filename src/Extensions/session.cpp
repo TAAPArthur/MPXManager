@@ -4,6 +4,7 @@
 
 #include "../bindings.h"
 #include "../devices.h"
+#include "../ext.h"
 #include "../layouts.h"
 #include "../logger.h"
 #include "../masters.h"
@@ -252,12 +253,17 @@ void saveCustomState(void) {
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, joiner.getBuffer(), joiner.getSize());
     setWindowProperty(root, MPX_WM_WORKSPACE_ORDER, XCB_ATOM_CARDINAL, workspaceWindows, numWorkspaceWindows);
+    static Index<WindowMask> index;
     for(WindowInfo* winInfo : getAllWindows()) {
         if(!winInfo->isNotManageable()) {
             WindowMask mask = ~EXTERNAL_MASKS & (uint32_t)winInfo->getMask();
             TRACE("Saving window masks for window: " << *winInfo);
-            setWindowProperty(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL, (int)mask);
-            setWindowProperty(winInfo->getID(), MPX_WM_MASKS_STR, ewmh->UTF8_STRING, (std::string)mask);
+            auto* prevMask = get(index, winInfo, 1, NULL);
+            if(*prevMask != mask) {
+                setWindowProperty(winInfo->getID(), MPX_WM_MASKS, XCB_ATOM_CARDINAL, (int)mask);
+                setWindowProperty(winInfo->getID(), MPX_WM_MASKS_STR, ewmh->UTF8_STRING, (std::string)mask);
+                *prevMask = mask;
+            }
         }
     }
 }
