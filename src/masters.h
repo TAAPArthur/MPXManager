@@ -140,6 +140,10 @@ public:
      * @return getTopOfFocusedStack iff it will return a window with FOCUSABLE_MASK or null
      */
     WindowInfo* getFocusedWindow(void);
+    /**
+     * @return the ID of the focused window or 0
+     */
+    WindowID getFocusedWindowID();
 
     /**
      * @return the time we noticed that the master focused its currently focused window

@@ -72,6 +72,34 @@ MPX_TEST("find_window", {
     assert(!findWindow(noMatches, getAllWindows(), &ignore));
     assert(!findWindow(noMatches, getAllWindows(), NULL));
 });
+
+MPX_TEST("find_and_raise_cycle", {
+    int (*matches)() = []() {return 1;};
+    for(WindowInfo* winInfo : getAllWindows())
+        getActiveMaster()->onWindowFocus(*winInfo);
+    WindowID order[] = {*middle, *top, *bottom};
+    for(int i = 0; i < 3; i++) {
+        for(WindowID win : order) {
+            assertEquals(*findAndRaise(matches), win);
+            getActiveMaster()->onWindowFocus(win);
+        }
+    }
+});
+MPX_TEST("find_and_raise_cycle_with_deletion", {
+    int (*matches)() = []() {return 1;};
+    for(WindowInfo* winInfo : getAllWindows())
+        getActiveMaster()->onWindowFocus(*winInfo);
+    for(int i = 0; i < getAllWindows().size(); i++)
+        findAndRaise(matches);
+    unregisterWindow(middle);
+    for(int i = 0; i < getAllWindows().size(); i++)
+        findAndRaise(matches);
+    unregisterWindow(bottom);
+    assertEquals(findAndRaise(matches), top);
+    assertEquals(findAndRaise(matches), top);
+    unregisterWindow(top);
+    assertEquals(findAndRaise(matches), nullptr);
+});
 MPX_TEST_ITER("find_and_raise_basic", 5, {
     static std::string titles[] = {"a", "c", "d"};
     int i = 0;

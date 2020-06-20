@@ -96,24 +96,27 @@ WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action, FindAnd
     if(!target) {
         target = findWindow(rule, getAllWindows(), windowsToIgnore, arg.includeNonActivatable);
         if(!target && windowsToIgnore && !windowsToIgnore->empty()) {
+            auto index = windowsToIgnore->indexOf(master->getFocusedWindowID());
             ArrayList<WindowInfo*> list;
-            for(WindowID win : *windowsToIgnore)
-                if(getWindowInfo(win))
-                    list.add(getWindowInfo(win));
+            for(int i = index + 1; i <= index + windowsToIgnore->size(); i++) {
+                WindowInfo* winInfo = getWindowInfo((*windowsToIgnore)[i % windowsToIgnore->size()]);
+                if(winInfo)
+                    list.add(winInfo);
+            }
             target = findWindow(rule,  list, NULL, arg.includeNonActivatable);
-            windowsToIgnore->clear();
             DEBUG("found window by bypassing ignore list");
         }
-        else
+        else if(target)
             DEBUG("found window globally");
     }
-    else DEBUG("found window locally");
+    else
+        DEBUG("found window locally");
     if(target) {
         assert(rule({.winInfo = target}));
         DEBUG("Applying action " << action << " to " << *target);
         applyAction(target, action);
         if(windowsToIgnore)
-            windowsToIgnore->add(target->getID());
+            windowsToIgnore->addUnique(target->getID());
     }
     else
         DEBUG("could not find window");

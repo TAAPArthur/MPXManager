@@ -46,7 +46,7 @@ public:
     /// @return the unique identifier
     uint32_t getID()const {return id;}
     /// @return the unique identifier
-    operator int()const {return getID();}
+    operator uint32_t ()const {return getID();}
     /// @return 1 iff the unique identifiers match
     bool operator==(const WMStruct& s)const {return id == s.id;}
     /// @param id

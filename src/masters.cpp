@@ -79,6 +79,10 @@ WindowInfo* Master::getFocusedWindow(void) {
         focusedWindowIndex < getWindowStack().size() ? getWindowStack()[focusedWindowIndex] : getWindowStack().back();
     return winInfo->isFocusable() ? winInfo : NULL;
 }
+
+WindowID Master::getFocusedWindowID() {
+    return getFocusedWindow() ? getFocusedWindow()->getID() : 0;
+}
 void Master::setFocusStackFrozen(int value) {
     if(freezeFocusStack != value) {
         freezeFocusStack = value;

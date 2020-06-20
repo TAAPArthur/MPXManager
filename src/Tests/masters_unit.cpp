@@ -41,6 +41,7 @@ MPX_TEST("onWindowFocus", {
             m->onWindowFocus(i);
             assert(m->getFocusedTime() >= time);
             assert(m->getFocusedWindow() == getWindowInfo(i));
+            assert(m->getFocusedWindowID() == getWindowInfo(i)->getID());
             time = getTime();
             m->onWindowFocus(0);
             assert(m->getFocusedTime() >= time);
@@ -53,6 +54,10 @@ MPX_TEST("onWindowFocus_bad", {
         getActiveMaster()->onWindowFocus(i);
 
     assert(getActiveMaster()->getWindowStack().size() == 0);
+});
+MPX_TEST("onWindowFocusNull", {
+    assert(!getActiveMaster()->getFocusedWindow());
+    assert(!getActiveMaster()->getFocusedWindowID());
 });
 MPX_TEST("masterWindowStackIter", {
     int i;
