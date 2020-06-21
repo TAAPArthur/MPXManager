@@ -72,7 +72,7 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
             if(counter == num)
                 break;
         }
-        if(adj && counter) {
+        else if(adj && counter) {
             WARN("results not adjacent");
             break;
         }

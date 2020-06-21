@@ -305,8 +305,10 @@ void tileWorkspace(Workspace* workspace) {
             if(winInfo->getWorkspace() == workspace) {
                 if(lowestAbove)
                     lowerWindow(winInfo, lowestAbove);
-                else
-                    raiseWindow(winInfo);
+                else {
+                    raiseWindow(winInfo, winInfo->hasPartOfMask(TOP_LAYER_MASKS | BOTTOM_LAYER_MASKS) ? 0 :
+                        workspace->getMonitor()->getStackingWindow());
+                }
                 lowestAbove =  winInfo->getID();
             }
         }

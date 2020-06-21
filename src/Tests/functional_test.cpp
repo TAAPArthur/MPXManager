@@ -124,6 +124,30 @@ MPX_TEST("test_dock_detection", {
     assert(winInfo->isDock());
 });
 
+MPX_TEST_ITER("stacking_order_with_transients_and_full_layout", 2, {
+    setActiveLayout(FULL);
+    WindowID win = mapArbitraryWindow();
+    WindowID win2 = mapArbitraryWindow();
+    WindowID win3 = mapArbitraryWindow();
+    setWindowTransientFor(win2, win);
+    waitUntilIdle();
+    WindowInfo* winInfo = getWindowInfo(win);
+    WindowInfo* winInfo2 = getWindowInfo(win2);
+    assert(winInfo2->getTransientFor() == winInfo->getID());
+    WindowID stack[] = {win, win2};
+    WindowID stackPossible[][3] = {{win, win2, win3}, {win3, win2, win}};
+    for(WindowInfo* winInfo : getAllWindows()) {
+        lock();
+        raiseWindow(winInfo, 0, _i);
+        retile();
+        unlock();
+        waitUntilIdle(1);
+        assert(checkStackingOrder(stack, LEN(stack)));
+        assert(checkStackingOrder(stackPossible[0], LEN(stackPossible[0])) ||
+            checkStackingOrder(stackPossible[1], LEN(stackPossible[1])));
+    }
+});
+
 MPX_TEST("default_active_layout", {
     for(Workspace* w : getAllWorkspaces())
         assert(w->getActiveLayout());

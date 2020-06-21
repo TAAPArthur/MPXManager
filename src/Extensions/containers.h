@@ -6,6 +6,7 @@
 #define MPX_EXT_CONTAINERS
 
 #include "../mywm-structs.h"
+#include "../boundfunction.h"
 
 /**
  * Creates a fake Monitor and WindowInfo that are linked
@@ -32,4 +33,32 @@ Monitor* getMonitorForContainer(WindowID win);
  */
 void addResumeContainerRules(bool remove = 0);
 
+
+/**
+ * Create a container and move all windows in the active workspace matching func to said container
+ * This is a no-op if containedWorkspace is the active workspace
+ *
+ * @param containedWorkspace
+ * @param func
+ * @param name name of container
+ *
+ * @return the monitor of the newly created container
+ */
+Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction& func, const char* name = NULL);
+/**
+ * Move all windows in container to the active workspace
+ *
+ * @param container
+ */
+void releaseWindows(Monitor* container);
+/**
+ * Move all windows in all containers to the active workspace
+ */
+void releaseAllWindows();
+/**
+ * Either activate the container window or the container workspace depending if winInfo is a contained window or a container
+ *
+ * @param winInfo The container window or a contained window
+ */
+void toggleContainer(WindowInfo* winInfo = getFocusedWindow());
 #endif

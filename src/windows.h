@@ -376,6 +376,13 @@ public:
      * @return the workspace the window is in or NULL
      */
     Workspace* getWorkspace(void)const;
+
+    /**
+     * @return Monitor of this window's workspace or null
+     */
+    Monitor* getMonitor(void)const {
+        return getWorkspace() ? getWorkspace()->getMonitor() : NULL;
+    };
     /**
      * @return true if the window is not in a workspace or is in a visible one
      */

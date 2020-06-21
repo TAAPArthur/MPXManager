@@ -31,21 +31,35 @@ private:
     bool fake = 0;
     uint32_t output = 0;
     bool inactive = 0;
+    /// Raise windows relative to this window (default 0)
+    WindowID stackingWindow = 0;
 public:
+
     /**
      * @param id the X unique id of the monitor
      * @param base the bounds the monitor occupies
      * @param primary 1 iff it is the primary monitor
      * @param name
      * @param fake
+     * @param stackingWindow
      *
      */
-    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = "", bool fake = 0): WMStruct(id),
+    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = "", bool fake = 0,
+        WindowID stackingWindow = 0): WMStruct(id),
         base(base),
         view(base),
-        primary(primary), name(name), fake(fake) {}
+        primary(primary), name(name), fake(fake), stackingWindow(stackingWindow) {}
 
     ~Monitor();
+
+    /**
+     * @param win the new value of stackingWindow
+     */
+    void setStackingWindow(WindowID win) { stackingWindow = win;}
+    /**
+     * @return WindowID that normal windows in the workspace associated with monitor should be tiled above
+     */
+    WindowID getStackingWindow() { return stackingWindow;}
     /**
      * Used to deterministically sort monitors
      * @param p

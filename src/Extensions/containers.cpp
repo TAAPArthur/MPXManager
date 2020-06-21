@@ -1,4 +1,5 @@
 #include "../boundfunction.h"
+#include "../layouts.h"
 #include "../logger.h"
 #include "../monitors.h"
 #include "../user-events.h"
@@ -9,7 +10,7 @@
 #include "../xsession.h"
 #include "containers.h"
 
-static std::string CONTAINER_NAME = "CONTAINER";
+static std::string CONTAINER_NAME_PREFIX = "CONTAINER: ";
 
 xcb_atom_t MPX_CONTAINER_WORKSPACE;
 static void initContainerAtoms() {
@@ -17,7 +18,9 @@ static void initContainerAtoms() {
 }
 
 struct Container : WindowInfo, Monitor {
-    Container(WindowID id, WindowID parent = 0): WindowInfo(id, parent), Monitor(id, {0, 0, 1, 1}, 0, CONTAINER_NAME, 1) {}
+    Container(WindowID id, WindowID parent = 0, std::string name = ""):
+        WindowInfo(id, parent),
+        Monitor(id, {0, 0, 1, 1}, 0, name, 1, id) {}
     virtual void setGeometry(const RectWithBorder geo) {
         WindowInfo::setGeometry(geo);
         setBase(geo);
@@ -58,11 +61,26 @@ Monitor* getMonitorForContainer(WindowID win) {
 }
 
 
-WindowID createContainer(bool doNotAssignWorkspace) {
-    WindowID win = createWindow(root, XCB_WINDOW_CLASS_INPUT_OUTPUT, XCB_CW_BACK_PIXEL, &screen->black_pixel);
-    Container* container = new Container(win, root);
-    setWindowTitle(win, CONTAINER_NAME);
-    container->addMask(INPUT_MASK | BELOW_MASK | MAPPABLE_MASK);
+WindowID createContainer(bool doNotAssignWorkspace, const char* name = NULL) {
+    if(name && getMonitorByName(name)) {
+        INFO("Container already exists");
+        return 0;
+    }
+    if(!name)
+        name = "";
+    WindowID win;
+    do {
+        win = createWindow(root, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+        if(getAllMonitors().find(win)) {
+            destroyWindow(win);
+            WARN("Failed to create container because a monitor the generated id was already taken");
+            continue;
+        }
+        break;
+    } while(true);
+    Container* container = new Container(win, root, name);
+    setWindowTitle(win, CONTAINER_NAME_PREFIX + name);
+    container->addMask(INPUT_MASK | MAPPABLE_MASK);
     if(!registerWindow(container))
         return 0;
     getAllMonitors().add(container);
@@ -76,6 +94,64 @@ WindowID createContainer(bool doNotAssignWorkspace) {
 }
 WindowID createContainer() {
     return createContainer(0);
+}
+
+Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction& func, const char* name) {
+    assert(containedWorkspace);
+    Workspace* workspace = getActiveWorkspace();
+    if(workspace == containedWorkspace)
+        return NULL;
+    Monitor* container = getMonitorForContainer(createContainer(1, name));
+    if(!container)
+        container = getMonitorByName(name);
+    if(!container)
+        return NULL;
+    if(!container->getWorkspace())
+        container->assignWorkspace(containedWorkspace);
+    for(int i = 0; i < workspace->getWindowStack().size(); i++) {
+        auto winInfo = workspace->getWindowStack()[i];
+        if(func({.winInfo = winInfo})) {
+            winInfo->moveToWorkspace(*containedWorkspace);
+            i--;
+        }
+    }
+    return container;
+}
+void releaseWindows(Monitor* container) {
+    const WindowInfo* containerWindow = getWindowInfoForContainer(container->getID());
+    if(containerWindow) {
+        if(container->getWorkspace() != containerWindow->getWorkspace())
+            while(container->getWorkspace()->getWindowStack().size())
+                container->getWorkspace()->getWindowStack()[0]->moveToWorkspace(containerWindow->getWorkspace()->getID());
+        if(getActiveWorkspace() == container->getWorkspace())
+            getActiveMaster()->setWorkspaceIndex(containerWindow->getWorkspaceIndex());
+        INFO("Destroying container: " << *containerWindow);
+        destroyWindow(*containerWindow);
+    }
+}
+void releaseAllWindows() {
+    for(Monitor* monitor : getAllMonitors()) {
+        if(getWindowInfoForContainer(*monitor))
+            releaseWindows(monitor);
+    }
+}
+void toggleContainer(WindowInfo* winInfo) {
+    Monitor* container = getMonitorForContainer(winInfo->getID());
+    Workspace* workspace = NULL;
+    if(container) {
+        DEBUG("toggleContainer: given container " << *container);
+        workspace = container->getWorkspace();
+    }
+    else if(winInfo->getMonitor()) {
+        WindowInfo* containerWindow = getWindowInfoForContainer(*winInfo->getMonitor());
+        if(containerWindow) {
+            DEBUG("toggleContainer: given window in container " << *winInfo);
+            workspace = containerWindow->getWorkspace();
+        }
+    }
+    if(workspace) {
+        activateWorkspace(*workspace);
+    }
 }
 
 static void saveContainers() {
@@ -93,12 +169,13 @@ static void saveContainers() {
 }
 static WindowInfo* loadContainerMonitors(Monitor* m) {
     INFO("Restoring container: " << *m);
-    WindowID win = createContainer(1);
-    auto index = getAllMonitors().indexOf(m);
-    getAllMonitors().swap(index, getAllMonitors().size() - 1);
-    getAllMonitors().pop();
-    getAllMonitors()[index]->assignWorkspace(m->getWorkspace());
-    delete m;
+    Workspace* workspace = m->getWorkspace();
+    auto name =  m->getName();
+    delete getAllMonitors().removeElement(m);
+    WindowID win = createContainer(1, name.c_str());
+    INFO("Created container: " << win);
+    if(workspace)
+        getMonitorForContainer(win)->assignWorkspace(workspace);
     return getWindowInfo(win);
 }
 void loadContainers() {
@@ -112,8 +189,15 @@ void loadContainers() {
                 loadContainerMonitors(m)->moveToWorkspace(index);
         }
 }
+void retileOnContainerMove(WindowInfo* winInfo) {
+    Monitor* containerMonitor = getMonitorForContainer(*winInfo);
+    if(containerMonitor && containerMonitor->getWorkspace()) {
+        tileWorkspace(containerMonitor->getWorkspace());
+    }
+}
 void addResumeContainerRules(bool remove) {
-    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initContainerAtoms, HIGH_PRIORITY), remove);
+    getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initContainerAtoms, HIGHEST_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadContainers, LOW_PRIORITY), remove);
+    getEventRules(WINDOW_MOVE).add(DEFAULT_EVENT(retileOnContainerMove), remove);
     getBatchEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveContainers, LOW_PRIORITY), remove);
 }
