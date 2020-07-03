@@ -106,6 +106,12 @@ static void loadSavedMasterWindows() {
                 master->onWindowFocus(wid[i]);
     }
 }
+static void restoreFocusColor() {
+    for(Master*master: getAllMasters()) {
+        if(master->getFocusedWindow())
+            setBorderColor(master->getFocusedWindowID(), master->getFocusColor());
+    }
+}
 static void loadSavedMasterWorkspaces() {
     TRACE("Loading Master Workspace indexes");
     auto reply = getWindowProperty(root, MPX_WM_MASTER_WORKSPACES, XCB_ATOM_CARDINAL);
@@ -193,6 +199,7 @@ void loadSavedWindowState(void) {
     loadSavedMasterWindows();
     loadSavedWorkspaceWindows();
     loadWindowMasks();
+    restoreFocusColor();
 }
 
 
