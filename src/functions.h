@@ -126,20 +126,9 @@ bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCH
  * @return 0 iff the program was spawned
  */
 static inline bool raiseOrRun(std::string s) {
-    return raiseOrRun(s, s, MATCHES_CLASS);
+    return raiseOrRun(s, s);
 }
-/**
- * Tries to raise a window with class (or resource) name equal to s.
- * If not it spawns s
- *
- * @param s the class or instance name to be raised or the program to spawn
- * @param silent if 1 redirect stderr and out of child process to /dev/null
- *
- * @return 0 iff the program was spawned
- */
-static inline bool raiseOrRun(std::string s, bool silent) {
-    return raiseOrRun(s, s, MATCHES_CLASS, silent);
-}
+
 /**
  * Call to stop cycling windows
  *
