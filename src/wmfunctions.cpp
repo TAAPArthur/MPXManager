@@ -229,6 +229,15 @@ void switchToWorkspace(int workspaceIndex) {
     getActiveMaster()->setWorkspaceIndex(workspaceIndex);
 }
 
+WindowID activateWorkspace(WorkspaceID workspaceIndex) {
+    switchToWorkspace(workspaceIndex);
+    for(WindowInfo* winInfo : getActiveMaster()->getWindowStack())
+        if(winInfo->getWorkspaceIndex() == workspaceIndex)
+            return activateWindow(winInfo);
+    INFO("activateWorkspace: no window was activated");
+    return 0;
+}
+
 WindowID activateWindow(WindowInfo* winInfo) {
     if(winInfo && winInfo->isActivatable()) {
         raiseWindow(winInfo);
@@ -237,9 +246,7 @@ WindowID activateWindow(WindowInfo* winInfo) {
             switchToWorkspace(winInfo->getWorkspaceIndex());
         }
         if(!winInfo->hasMask(MAPPED_MASK)) {
-            assert(winInfo->hasMask(MAPPABLE_MASK));
             mapWindow(winInfo->getID());
-            winInfo->addMask(MAPPABLE_MASK | MAPPED_MASK);
         }
         return focusWindow(winInfo) ? winInfo->getID() : 0;
     }

@@ -115,6 +115,17 @@ void switchToWorkspace(int workspaceIndex);
  */
 WindowID activateWindow(WindowInfo* winInfo);
 
+/**
+ * Combination of switchToWorkspace and activateWindow
+ *
+ * Switches to the specified workspace and activates the first window in the active master's windowStack that is in said workspace. If no such window is exists, no window is explictly activated;
+ *
+ * @param workspaceIndex
+ *
+ * @return The window that was activated or 0
+ */
+WindowID activateWorkspace(WorkspaceID workspaceIndex);
+
 
 
 /**

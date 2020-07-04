@@ -205,6 +205,26 @@ MPX_TEST("test_activate_window", {
     assertEquals(getActiveWorkspaceIndex(), 1);
 
 });
+
+MPX_TEST("test_activate_workspace", {
+    WindowID win = mapWindow(createNormalWindow());
+    WindowID win2 = mapWindow(createNormalWindow());
+    WindowID win3 = mapWindow(createNormalWindow());
+    scan(root);
+    getWindowInfo(win)->moveToWorkspace(1);
+    getWindowInfo(win3)->moveToWorkspace(0);
+    getWindowInfo(win2)->moveToWorkspace(0);
+    assertEquals(activateWorkspace(1), 0);
+    getActiveMaster()->onWindowFocus(win);
+    assertEquals(getActiveWorkspace()->getID(), 1);
+    assertEquals(activateWorkspace(0), 0);
+    getActiveMaster()->onWindowFocus(win3);
+    getActiveMaster()->onWindowFocus(win2);
+    assertEquals(activateWorkspace(1), win);
+    assertEquals(activateWorkspace(0), win2);
+
+});
+
 MPX_TEST_ITER("test_sticky_window", 2, {
     assert(getWorkspace(0)->isVisible());
     assert(!getWorkspace(1)->isVisible());
