@@ -140,7 +140,7 @@ void setWindowRole(WindowID wid, std::string s) {
 void loadWindowRole(WindowInfo* winInfo) {
     auto reply = getWindowProperty(winInfo->getID(), WM_WINDOW_ROLE, XCB_ATOM_STRING);
     if(reply)
-        winInfo->setRole((char*) xcb_get_property_value(&*reply));
+        winInfo->setRole(std::string((char*) xcb_get_property_value(&*reply), xcb_get_property_value_length(&*reply)));
 }
 
 void loadWindowProperties(WindowInfo* winInfo) {

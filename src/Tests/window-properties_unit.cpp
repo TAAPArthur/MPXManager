@@ -57,7 +57,7 @@ MPX_TEST("get_set_role", {
     WindowInfo* winInfo = new WindowInfo(win);
     getAllWindows().add(winInfo);
     loadWindowRole(winInfo);
-    assertEquals(role, winInfo->getRole());
+    assert(strcmp(role.c_str(), winInfo->getRole().c_str()) == 0);
 });
 MPX_TEST_ITER("get_set_type", 4, {
     WindowID win = createTypelessInputOnlyWindow();
