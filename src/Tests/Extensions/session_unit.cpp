@@ -49,6 +49,7 @@ static const ArrayList<long>serializeState(uint8_t mask) {
             list.add(monitor->getBase());
             list.add(monitor->getViewport());
             list.add(monitor->getWorkspace() ? monitor->getWorkspace()->getID() : 0);
+            list.add(std::hash<std::string> {}(monitor->getName()));
         }
     }
     if(mask & 8)

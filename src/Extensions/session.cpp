@@ -22,6 +22,8 @@
 xcb_atom_t MPX_WM_ACTIVE_MASTER;
 /// Atom to store fake monitors
 xcb_atom_t MPX_WM_FAKE_MONITORS;
+/// Atom to store fake monitors
+xcb_atom_t MPX_WM_FAKE_MONITORS_NAMES;
 /// Used to save raw window masks
 xcb_atom_t MPX_WM_MASKS;
 /// Str representation of MPX_WM_MASKS used solely for debugging
@@ -43,6 +45,7 @@ xcb_atom_t MPX_WM_WORKSPACE_ORDER;
 static void initSessionAtoms() {
     CREATE_ATOM(MPX_WM_ACTIVE_MASTER);
     CREATE_ATOM(MPX_WM_FAKE_MONITORS);
+    CREATE_ATOM(MPX_WM_FAKE_MONITORS_NAMES);
     CREATE_ATOM(MPX_WM_MASKS);
     CREATE_ATOM(MPX_WM_MASKS_STR);
     CREATE_ATOM(MPX_WM_MASTER_WINDOWS);
@@ -80,16 +83,24 @@ static void loadSavedLayoutOffsets() {
 static void loadSavedFakeMonitor() {
     TRACE("Loading fake monitor mappings");
     auto reply = getWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
+    auto replyNames = getWindowProperty(root, MPX_WM_FAKE_MONITORS_NAMES, ewmh->UTF8_STRING);
+
+
+    uint32_t index = 0;
+    char* strings = replyNames?(char*) xcb_get_property_value(replyNames.get()):NULL;
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(MonitorID) * 5) ; i++) {
             MonitorID* values = (MonitorID*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(MonitorID) * 5]);
             MonitorID id = values[0];
             values++;
             Monitor* m = getAllMonitors().find(id);
+
+            auto name = strings ? std::string(&strings[index]): "";
+            index += strlen(&strings[index]) + 1;
             if(m)
                 m->setBase(values);
             else
-                getAllMonitors().add(new Monitor(id, values, 0, "", 1));
+                getAllMonitors().add(new Monitor(id, values, 0, name, 1));
         }
 }
 static void loadSavedMasterWindows() {
@@ -239,11 +250,13 @@ void saveCustomState(void) {
         for(auto p = master->getWindowStack().rbegin(); p != master->getWindowStack().rend(); ++p)
             masterWindows[numMasterWindows++] = (*p)->getID();
     }
+    StringJoiner fakeMonitorJoiner;
     for(Monitor* monitor : getAllMonitors())
         if(monitor->isFake()) {
             fakeMonitors[numFakeMonitors++] = monitor->getID();
             for(int n = 0; n < 4; n++)
                 fakeMonitors[numFakeMonitors++] = monitor->getBase()[n];
+            fakeMonitorJoiner.add(monitor->getName());
         }
     StringJoiner joiner;
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
@@ -256,6 +269,7 @@ void saveCustomState(void) {
     }
     setWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
     setWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
+    setWindowProperty(root, MPX_WM_FAKE_MONITORS_NAMES, ewmh->UTF8_STRING, fakeMonitorJoiner.getBuffer(), fakeMonitorJoiner.getSize());
     setWindowProperty(root, MPX_WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
     setWindowProperty(root, MPX_WM_MASTER_WORKSPACES, XCB_ATOM_CARDINAL, masterWorkspaces, LEN(masterWorkspaces));
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
