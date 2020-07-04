@@ -185,7 +185,8 @@ void resetBorder(WindowID win) {
     }
     if(master)
         setBorderColor(win, master->getFocusColor());
-    setBorderColor(win, DEFAULT_UNFOCUS_BORDER_COLOR);
+    else
+        setBorderColor(win, DEFAULT_UNFOCUS_BORDER_COLOR);
 }
 
 xcb_size_hints_t* getWindowSizeHints(WindowInfo* winInfo) {
