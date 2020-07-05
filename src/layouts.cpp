@@ -203,8 +203,8 @@ void configureWindow(const LayoutState* state, const WindowInfo* winInfo, const 
             else
                 config[i] -= (&state->getArgs()->rightPadding)[i % 2] + (&state->getArgs()->leftPadding)[i % 2];
         }
-    config[CONFIG_INDEX_WIDTH] = MAX(1, config[CONFIG_INDEX_WIDTH]);
-    config[CONFIG_INDEX_HEIGHT] = MAX(1, config[CONFIG_INDEX_HEIGHT]);
+    config[CONFIG_INDEX_WIDTH] = MAX(1, (short)config[CONFIG_INDEX_WIDTH]);
+    config[CONFIG_INDEX_HEIGHT] = MAX(1, (short)config[CONFIG_INDEX_HEIGHT]);
     assert(winInfo->getID());
     configureWindow(winInfo->getID(), mask, config);
 }

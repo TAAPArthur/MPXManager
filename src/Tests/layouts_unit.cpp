@@ -64,6 +64,19 @@ MPX_TEST("tile", {
     setActiveLayout(NULL);
 });
 
+MPX_TEST_ITER("tile_small_monitor", NUMBER_OF_LAYOUT_FAMILIES, {
+    DEFAULT_BORDER_WIDTH = 1;
+    Rect base = {0, 0, 1, 1};
+    getWorkspace(0)->getMonitor()->setBase(base);
+    setActiveLayout(&LAYOUT_FAMILIES[_i]);
+    mapArbitraryWindow();
+    scan(root);
+    getAllWindows()[0]->moveToWorkspace(0);
+    retile();
+
+    assertEquals(getRealGeometry(getAllWindows()[0]), base);
+});
+
 /**
  * Test to ensure layouts take up the whole screen and that windows that if any windows overlap, they overlap completely
  */
