@@ -32,6 +32,8 @@ ArrayList<WindowID>* getClonesOfWindow(WindowInfo* winInfo, bool createNew) {
     return list;
 }
 
+uint32_t CLONE_REFRESH_RATE = 15;
+
 static void syncPropertiesWithParent(WindowInfo* clone, WindowInfo* parent) {
     assert(clone != parent);
     setWindowTitle(clone->getID(), parent->getTitle());
@@ -106,8 +108,8 @@ uint32_t updateAllClones(void) {
         }
     return count;
 }
+
 void autoUpdateClones() {
-    assert(CLONE_REFRESH_RATE);
     while(!isShuttingDown()) {
         lock();
         auto numClones = updateAllClones();

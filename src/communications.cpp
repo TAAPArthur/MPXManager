@@ -104,7 +104,6 @@ static UniqueArrayList<Option*> options = {
     {"switch-workspace", switchToWorkspace},
     {"toggle-win", []{cycleWindows(UP); endCycleWindows();}},
     _OPTION(AUTO_FOCUS_NEW_WINDOW_TIMEOUT),
-    _OPTION(CLONE_REFRESH_RATE),
     _OPTION(CRASH_ON_ERRORS),
     _OPTION(DEFAULT_BORDER_COLOR),
     _OPTION(DEFAULT_BORDER_WIDTH),

@@ -86,9 +86,6 @@ extern std::string SHELL;
 /// time (in seconds) between when windows is detected and mapped, that it will be auto focused (local state is updated immediately); set to -1 to disable
 extern uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT;
 
-/// How often we update the display on cloned windows (in ms)
-extern uint32_t CLONE_REFRESH_RATE;
-
 ///IF True we will crash if an error is received and a<<(error type) |CRASH_ON_ERRORS is nonzero
 /// This should only be used for testing as errors can happen just by
 /// the async nature of X11

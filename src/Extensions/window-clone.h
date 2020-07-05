@@ -20,6 +20,10 @@ struct CloneInfo {
     ///x,y offset for cloned windows; they will clone the original starting at this offset
     int offset[2];
 };
+
+/// How often autoUpdateClones will update cloned windows (in ms)
+extern uint32_t CLONE_REFRESH_RATE;
+
 /**
  * Creates a new window and immediate processes.
  *
@@ -110,4 +114,5 @@ void swapOnUnmapEvent(void);
  * @param winInfo
  */
 void killAllClones(WindowInfo* winInfo);
+
 #endif
