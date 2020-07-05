@@ -232,10 +232,9 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
     }
 }
 
-static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
+static void applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
     WindowID currentAbove = 0;
     WindowID currentBelow = 0;
-    WindowID lowestAbove = 0;
     for(WindowInfo* winInfo : list) {
         if(winInfo->hasMask(BELOW_MASK)) {
             lowerWindow(winInfo->getID(), currentBelow);
@@ -244,14 +243,28 @@ static WindowID applyAboveBelowMask(ArrayList<WindowInfo*>& list) {
         else if(winInfo->hasMask(ABOVE_MASK)) {
             if(!currentAbove) {
                 raiseWindow(winInfo);
-                lowestAbove =  currentAbove;
             }
             else
                 lowerWindow(winInfo->getID(), currentAbove);
             currentAbove = winInfo->getID();
         }
     }
-    return lowestAbove;
+}
+
+void raiseWindowInFocusOrder(Workspace* workspace) {
+    DEBUG("Raising windows of Workspace: " << workspace->getID());
+    WindowID lowestAbove = 0;
+    for(WindowInfo* winInfo : getActiveMaster()->getWindowStack()) {
+        if(winInfo->getWorkspace() == workspace) {
+            if(lowestAbove)
+                lowerWindow(winInfo, lowestAbove);
+            else {
+                raiseWindow(winInfo, winInfo->hasPartOfMask(TOP_LAYER_MASKS | BOTTOM_LAYER_MASKS) ? 0 :
+                    workspace->getMonitor()->getStackingWindow());
+            }
+            lowestAbove =  winInfo->getID();
+        }
+    }
 }
 
 void retile(void) {
@@ -299,19 +312,9 @@ void tileWorkspace(Workspace* workspace) {
         if(!winInfo->isTileable())
             arrangeNonTileableWindow(winInfo, m);
     }
-    WindowID lowestAbove = applyAboveBelowMask(windowStack);
+    applyAboveBelowMask(windowStack);
     if(layout && layout->getArgs().raiseFocused) {
-        for(WindowInfo* winInfo : getActiveMaster()->getWindowStack()) {
-            if(winInfo->getWorkspace() == workspace) {
-                if(lowestAbove)
-                    lowerWindow(winInfo, lowestAbove);
-                else {
-                    raiseWindow(winInfo, winInfo->hasPartOfMask(TOP_LAYER_MASKS | BOTTOM_LAYER_MASKS) ? 0 :
-                        workspace->getMonitor()->getStackingWindow());
-                }
-                lowestAbove =  winInfo->getID();
-            }
-        }
+        raiseWindowInFocusOrder(workspace);
     }
     applyEventRules(TILE_WORKSPACE, {.workspace = workspace});
 }

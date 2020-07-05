@@ -240,6 +240,12 @@ void increaseLayoutArg(int index, int step, Layout* l = getActiveWorkspace()->ge
  */
 void retile(void);
 
+/**
+ * Raise windows in workspace by the order in which they were last focused by the active master
+ *
+ * @param workspace
+ */
+void raiseWindowInFocusOrder(Workspace* workspace);
 
 
 /**

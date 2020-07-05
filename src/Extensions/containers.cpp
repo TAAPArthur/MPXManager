@@ -192,7 +192,8 @@ void loadContainers() {
 void retileOnContainerMove(WindowInfo* winInfo) {
     Monitor* containerMonitor = getMonitorForContainer(*winInfo);
     if(containerMonitor && containerMonitor->getWorkspace()) {
-        tileWorkspace(containerMonitor->getWorkspace());
+        INFO("Raising contained windows of " << *containerMonitor);
+        raiseWindowInFocusOrder(containerMonitor->getWorkspace());
     }
 }
 void addResumeContainerRules(bool remove) {

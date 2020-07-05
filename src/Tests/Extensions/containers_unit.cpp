@@ -276,6 +276,30 @@ MPX_TEST_ITER("contain_windows", 2, {
 
 });
 
+MPX_TEST("contain_windows_raise_on_tile", {
+
+    addAutoFocusRule();
+    normalWindow = mapArbitraryWindow();
+    Workspace* containedWorkspace = getWorkspace(1);
+    containedWorkspace->setActiveLayout(&GRID);
+    containerMonitor = containerWindowHelper("test", containedWorkspace, 2);
+
+    assertEquals(getActiveWorkspace(), getWindowInfo(normalWindow)->getWorkspace());
+    assertEquals(getActiveWorkspace()->getWindowStack().size(), 2);
+    assertEquals(containedWorkspace->getWindowStack().size(), 2);
+    assertEquals(getAllMonitors().size(), 2);
+    setActiveLayout(FULL);
+    ATOMIC(activateWindow(getWindowInfo(normalWindow)));
+    waitUntilIdle();
+
+    ATOMIC(activateWindow(getWindowInfoForContainer(*containerMonitor)));
+    waitUntilIdle();
+    for(WindowInfo* winInfo : containedWorkspace->getWindowStack()) {
+        WindowID stack[] = {*getWindowInfoForContainer(*containerMonitor), *winInfo};
+        assert(checkStackingOrder(stack, LEN(stack)));
+    }
+});
+
 MPX_TEST("contain_window_named", {
     lock();
     assert(containWindows(getWorkspace(1), {}, "test"));
