@@ -23,7 +23,9 @@ struct Container : WindowInfo, Monitor {
         Monitor(id, {0, 0, 1, 1}, 0, name, 1, id) {}
     virtual void setGeometry(const RectWithBorder geo) {
         WindowInfo::setGeometry(geo);
-        setBase(geo);
+        setBase(Rect(geo.x + (geo.width>geo.border?geo.border:0), geo.y + (geo.height>geo.border?geo.border:0),
+                    std::max(1, geo.width - geo.border* 2), std::max(1, geo.height - geo.border* 2)));
+        applyEventRules(SCREEN_CHANGE);
     }
     virtual void addMask(WindowMask mask) override {
         bool change = !hasMask(MAPPED_MASK) && (mask & MAPPED_MASK);

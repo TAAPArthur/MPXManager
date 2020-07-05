@@ -77,6 +77,13 @@ MPX_TEST("tile", {
     assertEquals(getRealGeometry(container).getArea(), containerMonitor->getBase().getArea());
     assertEquals(getRealGeometry(container).getArea(), getAllMonitors()[0]->getBase().getArea() / 2);
 });
+MPX_TEST_ITER("set_geometry", 4, {
+    uint16_t border = _i / 2 + 1;
+    uint16_t size = _i % 2 + 1;
+    RectWithBorder bounds = {0, 0, size, size, border};
+    containerWindowInfo->setGeometry(bounds);
+    assert(bounds.contains(containerMonitor->getBase()));
+});
 
 MPX_TEST("toggle_focus", {
     focusWindow(containerWindowInfo);
