@@ -98,7 +98,7 @@ extern uint32_t CRASH_ON_ERRORS;
 /**Border color for unfocused windows and windows whose last focused master is not set*/
 extern uint32_t DEFAULT_BORDER_COLOR;
 /**Border width when borders for windows*/
-extern uint32_t DEFAULT_BORDER_WIDTH;
+extern int16_t DEFAULT_BORDER_WIDTH;
 ///Default modifier for default bindings; Default is Mod4Mask (HYPER)
 extern uint32_t DEFAULT_MOD_MASK;
 ///Number of workspaces to create
