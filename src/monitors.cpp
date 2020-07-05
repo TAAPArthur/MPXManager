@@ -177,7 +177,7 @@ bool Monitor::isPrimary() const {
 void Monitor::reset() {
     memcpy(&view, &base, sizeof(base));
 }
-void Monitor::setBase(Rect rect) {
+void Monitor::setBase(const Rect& rect) {
     base = rect;
     reset();
 }

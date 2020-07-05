@@ -125,8 +125,7 @@ void updateFocusForAllMasters(WindowInfo* winInfo) {
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
     if(!winInfo)
         return 0;
-    WindowID winToRemove = winInfo->getID();
-    LOG(LOG_LEVEL_DEBUG, "window %d has been removed", winToRemove);
+    DEBUG("window " << *winInfo << "has been removed");
     if(!destroyed)
         unregisterForWindowEvents(winInfo->getID());
     bool result = 0;

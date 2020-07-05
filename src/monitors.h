@@ -90,11 +90,11 @@ public:
     /// @return the bounds of the monitor
     const Rect& getBase() const {return base;}
     /// @param rect the new bounds of the monitor
-    void setBase(Rect rect);
+    void setBase(const Rect& rect);
     /// @return the area in which windows will be tiled
     const Rect& getViewport()const {return view;}
     /// @param rect the new area in which windows will be tiled
-    void setViewport(Rect rect) {view = rect;}
+    void setViewport(const Rect& rect) {view = rect;}
     /**
      * if workspace is not null, the workspace will be displayed on this monitor;
      * Else an arbitrary unclaimed Workspace will be chosen
