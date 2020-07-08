@@ -151,6 +151,8 @@ enum MonitorDuplicationPolicy {
     CONTAINS_PROPER = 4,
     /// Monitors are duplicates if one intersects with the other.
     INTERSECTS = 8,
+    /// Consider fake monitors
+    CONSIDER_FAKES = 16,
 } ;
 /// Masks used to dictate how we deal with duplicates monitors
 enum MonitorDuplicationResolution {

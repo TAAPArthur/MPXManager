@@ -189,6 +189,16 @@ MPX_TEST("test_monitor_dup_remove_all", {
     removeDuplicateMonitors();
     assertEquals(getAllMonitors().size(), 1);
 });
+MPX_TEST("test_monitor_dup_remove_all", {
+    MONITOR_DUPLICATION_POLICY = INTERSECTS | CONTAINS | SAME_DIMS;
+    MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;
+    getAllMonitors().add(new Monitor(1, {1, 1, 1, 1}));
+    addFakeMonitor({1, 1, 1, 1});
+    addFakeMonitor({1, 1, 1, 1});
+    auto size =  getAllMonitors().size();
+    removeDuplicateMonitors();
+    assertEquals(getAllMonitors().size(), size);
+});
 MPX_TEST_ITER("test_monitor_intersection", 12, {
     int id = 2;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_LARGER;

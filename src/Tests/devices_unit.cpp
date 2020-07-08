@@ -225,24 +225,6 @@ MPX_TEST("test_monitor_add_remove", {
     detectMonitors();
     assertEquals(w, monitor->getWorkspace());
 });
-MPX_TEST("test_create_monitor", {
-    MONITOR_DUPLICATION_POLICY = CONTAINS | INTERSECTS;
-    MONITOR_DUPLICATION_RESOLUTION = TAKE_SMALLER;
-    detectMonitors();
-    assert(getAllMonitors().size() == 1);
-    Monitor* m = getAllMonitors()[0];
-    Rect bounds = {1, 1, 100, 100};
-    addFakeMonitor(bounds);
-    detectMonitors();
-    assert(getAllMonitors().size() == 1);
-    Monitor* newMonitor = getAllMonitors()[0];
-    assert(m != newMonitor);
-    assertEquals(newMonitor->getBase(), bounds);
-    removeAllFakeMonitors();
-    detectMonitors();
-    assert(getAllMonitors().size() == 1);
-    assert(getAllMonitors()[0]->getBase() != bounds);
-});
 MPX_TEST("test_create_monitor_persists", {
     MONITOR_DUPLICATION_POLICY = 0;
     detectMonitors();

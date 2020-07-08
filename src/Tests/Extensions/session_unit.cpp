@@ -223,7 +223,7 @@ MPX_TEST("test_restore_state_monitor_change", {
 });
 
 MPX_TEST("dock_undock", {
-    MONITOR_DUPLICATION_POLICY = CONTAINS | INTERSECTS;
+    MONITOR_DUPLICATION_POLICY = CONTAINS | INTERSECTS | CONSIDER_FAKES;
     MONITOR_DUPLICATION_RESOLUTION = TAKE_SMALLER;
     Rect rects[] = {{0, 0, 10, 10}, {10, 0, 10, 10}, {20, 0, 10, 10}};
     std::string names[] = {"m1", "m2", "m3"};
