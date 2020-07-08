@@ -87,7 +87,7 @@ bool BoundFunction::operator==(const BoundFunction& boundFunction)const {
     return boundFunction.name != "" && name == boundFunction.name;
 }
 std::ostream& operator<<(std::ostream& stream, const BoundFunction& boundFunction) {
-    return stream << boundFunction.getName();
+    return stream << boundFunction.getName() << " " << boundFunction.func;
 }
 void deleteAllRules() {
     for(int i = 0; i < NUMBER_OF_BATCHABLE_EVENTS; i++)

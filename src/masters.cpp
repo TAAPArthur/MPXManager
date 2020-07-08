@@ -27,11 +27,12 @@ void setActiveMaster(Master* newMaster) {
 }
 
 std::ostream& operator>>(std::ostream& strm, const Master& m) {
-    return strm << "ID:" << m.getID() << "(" << m.getPointerID() << "), name:" << m.getName();
+    return strm << "ID:" << m.getID() << "(" << m.getPointerID() << "), name: '" << m.getName() << "' Focused window: " <<
+        m.getFocusedWindowID();
 }
 std::ostream& operator<<(std::ostream& strm, const Master& m) {
     return strm >> m << ", color: " << m.getFocusColor() << ", window stack:"
-        >> m.windowStack << ", slaves: " >> m.getSlaves() << "}";
+        >> m.windowStack << ", slaves: " >> m.getSlaves();
 }
 
 void addDefaultMaster() {
@@ -72,7 +73,7 @@ void Master::clearFocusStack() {
 WindowInfo* Master::removeWindowFromFocusStack(WindowID win) {
     return windowStack.removeElement(win);
 }
-WindowInfo* Master::getFocusedWindow(void) {
+WindowInfo* Master::getFocusedWindow(void) const {
     if(windowStack.empty())
         return NULL;
     WindowInfo* winInfo = isFocusStackFrozen() &&
@@ -80,7 +81,7 @@ WindowInfo* Master::getFocusedWindow(void) {
     return winInfo->isFocusable() ? winInfo : NULL;
 }
 
-WindowID Master::getFocusedWindowID() {
+WindowID Master::getFocusedWindowID() const {
     return getFocusedWindow() ? getFocusedWindow()->getID() : 0;
 }
 void Master::setFocusStackFrozen(int value) {
