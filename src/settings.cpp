@@ -108,6 +108,8 @@ void addDefaultBindings() {
 
         {DEFAULT_MOD_MASK, XK_c, killClientOfWindowInfo, {.noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindowInfo, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
+        {DEFAULT_MOD_MASK | ControlMask, XK_c, destroyWindow, {.noKeyRepeat = 1}},
+        {DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_c, destroyWindow, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
         {DEFAULT_MOD_MASK, Button1, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK, Button3, floatWindow, { .passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, {.passThrough = ALWAYS_PASSTHROUGH, .mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
