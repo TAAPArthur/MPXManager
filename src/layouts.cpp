@@ -370,7 +370,7 @@ void column(LayoutState* state) {
         full(state);
         return;
     }
-    int numCol = state->getArgs()->arg == 0 ? log2(size + 1) : state->getArgs()->arg;
+    int numCol = MAX(size, state->getArgs()->arg == 0 ? log2(size + 1) : state->getArgs()->arg);
     int rem = numCol - size % numCol;
     // split of width(0) or height(1)
     int splitDim = state->getArgs()->getDimIndex();

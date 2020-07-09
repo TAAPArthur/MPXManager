@@ -74,7 +74,7 @@ struct LayoutArgs {
     /// generic argument
     float arg;
     /// generic argument
-    float argStep;
+    float argStep = 1;
     int getDimIndex()const {
         return dim == 0 ? CONFIG_INDEX_WIDTH : CONFIG_INDEX_HEIGHT;
     }
@@ -174,7 +174,8 @@ public:
 } ;
 
 ///@{ Default layouts
-extern Layout FULL, GRID, TWO_COL, THREE_COL, TWO_ROW, TWO_PANE, TWO_PLANE_H, MASTER, TWO_MASTER, TWO_MASTER_FLIPPED, TWO_MASTER_H;
+extern Layout FULL, GRID, TWO_COL, THREE_COL, TWO_ROW, TWO_PANE, TWO_PLANE_H, MASTER, TWO_MASTER, TWO_MASTER_FLIPPED,
+       TWO_MASTER_H;
 ///@}
 
 /**

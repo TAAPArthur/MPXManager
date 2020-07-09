@@ -124,6 +124,36 @@ MPX_TEST_ITER("test_layouts", NUMBER_OF_LAYOUT_FAMILIES, {
         rects.clear();
     }
 });
+MPX_TEST_ITER("test_layouts_with_param", NUMBER_OF_LAYOUT_FAMILIES, {
+    setActiveLayout(&LAYOUT_FAMILIES[_i]);
+    int size = 8;
+    for(int i = 0; i < size; i++) {
+        for(int i = 0; i < size; i++) {
+            retile();
+            increaseLayoutArg(LAYOUT_ARG, 1, getActiveLayout());
+            assert(getActiveLayout()->getArgs().arg);
+        }
+        getActiveLayout()->restoreArgs();
+        WindowID win = mapArbitraryWindow();
+        registerWindow(win, root);
+        getWindowInfo(win)->moveToWorkspace(getActiveWorkspaceIndex());
+    }
+});
+MPX_TEST_ITER("test_layouts_with_padding", NUMBER_OF_LAYOUT_FAMILIES * 5, {
+    setActiveLayout(&LAYOUT_FAMILIES[_i % NUMBER_OF_LAYOUT_FAMILIES]);
+    int index = LAYOUT_PADDING + _i / NUMBER_OF_LAYOUT_FAMILIES;
+    int size = 8;
+    for(int i = 0; i < size; i++) {
+        getActiveLayout()->restoreArgs();
+        WindowID win = mapArbitraryWindow();
+        registerWindow(win, root);
+        getWindowInfo(win)->moveToWorkspace(getActiveWorkspaceIndex());
+        for(int i = 0; i < size; i++) {
+            retile();
+            increaseLayoutArg(index, 1 << 12, getActiveLayout());
+        }
+    }
+});
 MPX_TEST_ITER("test_layouts_unmapped_windows", NUMBER_OF_LAYOUT_FAMILIES, {
     DEFAULT_BORDER_WIDTH = 0;
     Monitor* m = getAllMonitors()[0];
