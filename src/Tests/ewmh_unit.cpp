@@ -398,9 +398,12 @@ MPX_TEST("test_client_request_restack", {
     setActiveLayout(NULL);
     WindowInfo* winInfo = getAllWindows()[0];
     WindowInfo* winInfo2 = getAllWindows()[1];
-    winInfo2->moveToWorkspace(0);
     WindowID stackingOrder[] = {winInfo->getID(), winInfo2->getID(), winInfo->getID()};
+    lock();
+    winInfo2->moveToWorkspace(0);
     raiseWindow(winInfo2->getID());
+    unlock();
+    waitUntilIdle();
     assert(checkStackingOrder(stackingOrder, 2));
     winInfo->addMask(EXTERNAL_RAISE_MASK);
     //processConfigureRequest(winInfo->getID(), NULL, winInfo2->getID(), XCB_STACK_MODE_ABOVE,  XCB_CONFIG_WINDOW_STACK_MODE|XCB_CONFIG_WINDOW_SIBLING);
