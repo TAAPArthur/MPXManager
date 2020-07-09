@@ -23,11 +23,16 @@ std::ostream& operator<<(std::ostream& strm, const Layout& layout) {
 Layout FULL = {.name = "Full", .layoutFunction = full, .args = {.noBorder = 1, .raiseFocused = 1}},
        GRID = {.name = "Grid", .layoutFunction = column},
        TWO_COL = {.name = "2 Col", .layoutFunction = column, .args = {.dim = 0, .arg = {2}}},
+       THREE_COL = {.name = "2 Col", .layoutFunction = column, .args = {.dim = 0, .arg = {3}}},
        TWO_ROW = {.name = "2 Row", .layoutFunction = column, .args = {.dim = 1, .arg = {2}}},
        TWO_PANE = {.name = "2 Pane", .layoutFunction = column, .args = {.limit = 2, .dim = 0, .raiseFocused = 1, .arg = {2}}},
-       TWO_HPLANE = {.name = "2 HPane", .layoutFunction = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = {2} }},
-       MASTER = {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}, .argStep = {.1}}};
-static ArrayList<Layout*> registeredLayouts = {&FULL, &GRID, &TWO_ROW, &TWO_COL, &TWO_PANE, &TWO_HPLANE, &MASTER};
+       TWO_PANE_H = {.name = "2 HPane", .layoutFunction = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = {2} }},
+       MASTER = {.name = "Master", .layoutFunction = masterPane, .args = {.arg = {.7}, .argStep = {.1}}},
+       MASTER_H = {.name = "Master", .layoutFunction = masterPane, .args = {.dim = 1, .arg = {.7}, .argStep = {.1}}},
+       TWO_MASTER = {.name = "2 Master", .layoutFunction = masterPane, .args = {.limit = 2, .raiseFocused = 1, .arg = {.7}, .argStep = {.1}}},
+       TWO_MASTER_FLIPPED = {.name = "2 Master Flipped", .layoutFunction = masterPane, .args = {.limit = 2, .raiseFocused = 1, .transform = ROT_180, .arg = {.7}, .argStep = {.1}}},
+       TWO_MASTER_H = {.name = "2 HMaster", .layoutFunction = masterPane, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = {.7}, .argStep = {.1}}};
+static ArrayList<Layout*> registeredLayouts = {&FULL, &GRID, &TWO_ROW, &TWO_COL, &THREE_COL, &TWO_PANE, &TWO_PANE_H, &MASTER, &TWO_MASTER, &TWO_MASTER_FLIPPED,  &TWO_MASTER_H};
 
 void registeredLayout(Layout* layout) {
     registeredLayouts.add(layout);

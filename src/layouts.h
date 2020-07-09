@@ -174,7 +174,7 @@ public:
 } ;
 
 ///@{ Default layouts
-extern Layout FULL, GRID, TWO_ROW, TWO_COL, TWO_PANE, TWO_HPLANE, MASTER;
+extern Layout FULL, GRID, TWO_COL, THREE_COL, TWO_ROW, TWO_PANE, TWO_PLANE_H, MASTER, TWO_MASTER, TWO_MASTER_FLIPPED, TWO_MASTER_H;
 ///@}
 
 /**
