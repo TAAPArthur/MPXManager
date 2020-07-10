@@ -198,7 +198,39 @@ MPX_TEST("test_restore_state_monitor_change_fake", {
     assertEquals(getAllMonitors()[1]->getBase(), bounds2);
 });
 
-MPX_TEST("test_restore_state_monitor_change", {
+MPX_TEST("many_monitor_size_change", {
+    Monitor* monitor = getAllMonitors()[0];
+
+    switchToWorkspace(4);
+    monitor->setBase({0, 0, 10, 10});
+    startWM();
+    waitUntilIdle();
+    getAllMonitors().deleteElements();
+    lock();
+    detectMonitors();
+    applyEventRules(SCREEN_CHANGE);
+    loadSavedMonitorWorkspaceMapping();
+    wakeupWM();
+    unlock();
+    waitUntilIdle();
+    monitor = getAllMonitors()[0];
+    assertEquals(monitor->getWorkspace()->getID(), 4);
+})
+
+MPX_TEST("monitor_resize", {
+    Monitor* monitor = getAllMonitors()[0];
+    switchToWorkspace(4);
+    for(int16_t i = 0; i < 10; i++) {
+        monitor->setBase({i, i, 10, 10});
+        saveMonitorWorkspaceMapping();
+    }
+    getAllMonitors().deleteElements();
+    addFakeMonitor({0, 0, 10, 10});
+    loadSavedMonitorWorkspaceMapping();
+    assertEquals(getAllMonitors()[0]->getWorkspace()->getID(), 4);
+})
+
+MPX_TEST_ITER("test_restore_state_monitor_change", 2, {
     CRASH_ON_ERRORS = -1;
     Rect bounds[] = {{0, 20, 100, 100}, {0, 40, 100, 100}};
     MonitorID ids[] = {generateID(), generateID()};

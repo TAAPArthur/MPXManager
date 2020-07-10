@@ -308,8 +308,7 @@ void addAutoTileRules(bool remove) {
 void assignDefaultLayoutsToWorkspace() {
     for(Workspace* w : getAllWorkspaces())
         if(w->getLayouts().size() == 0 && w->getActiveLayout() == NULL) {
-            for(Layout* layout : getRegisteredLayouts())
-                w->getLayouts().add(layout);
+            w->getLayouts().addAll(getRegisteredLayouts());
             w->setActiveLayout(getRegisteredLayouts()[0]);
         }
 }

@@ -84,18 +84,15 @@ static void loadSavedFakeMonitor() {
     TRACE("Loading fake monitor mappings");
     auto reply = getWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL);
     auto replyNames = getWindowProperty(root, MPX_WM_FAKE_MONITORS_NAMES, ewmh->UTF8_STRING);
-
-
     uint32_t index = 0;
-    char* strings = replyNames?(char*) xcb_get_property_value(replyNames.get()):NULL;
+    char* strings = replyNames ? (char*) xcb_get_property_value(replyNames.get()) : NULL;
     if(reply)
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply.get()) / (sizeof(MonitorID) * 5) ; i++) {
             MonitorID* values = (MonitorID*) & (((char*)xcb_get_property_value(reply.get()))[i * sizeof(MonitorID) * 5]);
             MonitorID id = values[0];
             values++;
             Monitor* m = getAllMonitors().find(id);
-
-            auto name = strings ? std::string(&strings[index]): "";
+            auto name = strings ? std::string(&strings[index]) : "";
             index += strlen(&strings[index]) + 1;
             if(m)
                 m->setBase(values);
@@ -118,7 +115,7 @@ static void loadSavedMasterWindows() {
     }
 }
 static void restoreFocusColor() {
-    for(Master*master: getAllMasters()) {
+    for(Master* master : getAllMasters()) {
         if(master->getFocusedWindow())
             setBorderColor(master->getFocusedWindowID(), master->getFocusColor());
     }
@@ -167,7 +164,7 @@ void loadSavedMonitorWorkspaceMapping() {
     if(reply) {
         uint32_t len = xcb_get_property_value_length(reply.get()) / sizeof(short);
         auto data = (short*) xcb_get_property_value(reply.get());
-        for(int i = 0; i + 4 < len; i += 5) {
+        for(int i = 0; len >= 5 && i < len; i += 5) {
             WorkspaceID id = data[i];
             Rect bounds = &data[i + 1];
             Workspace* workspace = getWorkspace(id);
@@ -214,9 +211,9 @@ void loadSavedWindowState(void) {
 }
 
 
-static std::unordered_map<uint64_t, WorkspaceID> boundsToWorkspaceMapping;
 
 void saveMonitorWorkspaceMapping() {
+    static std::unordered_map<uint64_t, WorkspaceID> boundsToWorkspaceMapping;
     for(Monitor* monitor : getAllMonitors())
         if(monitor->getWorkspace()) {
             boundsToWorkspaceMapping[monitor->getBase()] = monitor->getWorkspace()->getID();
@@ -269,7 +266,8 @@ void saveCustomState(void) {
     }
     setWindowProperty(root, MPX_WM_ACTIVE_MASTER, XCB_ATOM_CARDINAL, getActiveMaster()->getID());
     setWindowProperty(root, MPX_WM_FAKE_MONITORS, XCB_ATOM_CARDINAL, fakeMonitors, numFakeMonitors);
-    setWindowProperty(root, MPX_WM_FAKE_MONITORS_NAMES, ewmh->UTF8_STRING, fakeMonitorJoiner.getBuffer(), fakeMonitorJoiner.getSize());
+    setWindowProperty(root, MPX_WM_FAKE_MONITORS_NAMES, ewmh->UTF8_STRING, fakeMonitorJoiner.getBuffer(),
+        fakeMonitorJoiner.getSize());
     setWindowProperty(root, MPX_WM_MASTER_WINDOWS, XCB_ATOM_CARDINAL, masterWindows, numMasterWindows);
     setWindowProperty(root, MPX_WM_MASTER_WORKSPACES, XCB_ATOM_CARDINAL, masterWorkspaces, LEN(masterWorkspaces));
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_INDEXES, XCB_ATOM_CARDINAL, layoutOffsets, LEN(layoutOffsets));
@@ -292,6 +290,7 @@ void saveCustomState(void) {
 void addResumeCustomStateRules(bool remove) {
     getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping, LOWEST_PRIORITY), remove);
     getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(loadSavedMonitorWorkspaceMapping), remove);
+    getBatchEventRules(SCREEN_CHANGE).add(DEFAULT_EVENT(saveMonitorWorkspaceMapping, LOWEST_PRIORITY), remove);
     getEventRules(TRUE_IDLE).add(DEFAULT_EVENT(saveCustomState, LOWER_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(initSessionAtoms, HIGHEST_PRIORITY), remove);
     getEventRules(X_CONNECTION).add(DEFAULT_EVENT(loadSavedNonWindowState, HIGHER_PRIORITY), remove);

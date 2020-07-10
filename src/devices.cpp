@@ -215,7 +215,7 @@ void detectMonitors(void) {
         if(!m) {
             m = new Monitor(monitorInfo->name, &monitorInfo->x);
             getAllMonitors().add(m);
-            DEBUG("New monitor detected " << monitorInfo->name);
+            DEBUG("New monitor detected: " << *m);
         }
         else m->setBase(*(Rect*)&monitorInfo->x);
         m->setName(getAtomName(monitorInfo->name));
