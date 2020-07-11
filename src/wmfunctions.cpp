@@ -102,28 +102,24 @@ void scan(xcb_window_t baseWindow) {
     }
 }
 
-static WindowInfo* focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
+static bool focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
     for(WindowInfo* winInfo : master->getWindowStack())
         if(winInfo != ignore && master->getWorkspaceIndex() == winInfo->getWorkspaceIndex() && winInfo->isFocusable() &&
             focusWindow(winInfo))
-            return winInfo;
+            return 1;
     for(WindowInfo* winInfo : master->getWindowStack())
         if(winInfo != ignore && winInfo->isNotInInvisibleWorkspace() && winInfo->isFocusable() && focusWindow(winInfo))
-            return winInfo;
-    return NULL;
+            return 1;
+    return 0;
 }
 void updateFocusForAllMasters(WindowInfo* winInfo) {
     DEBUG("Trying to update focus from " << (winInfo ? winInfo->getID() : 0));
     for(Master* master : getAllMasters())
-        if(!winInfo || master->getFocusedWindow() == winInfo) {
-            WindowInfo* focusedWindow = focusNextVisibleWindow(master, winInfo);
-            if(!focusedWindow)
+        if(!winInfo || master->getFocusedWindow() == winInfo)
+            if(!focusNextVisibleWindow(master, winInfo))
                 DEBUG("Could not find window to update focus to out of " << master->getWindowStack());
-            else {
+            else
                 DEBUG("Updated focus for master" << *master);
-                raiseWindow(focusedWindow);
-            }
-        }
 }
 
 bool unregisterWindow(WindowInfo* winInfo, bool destroyed) {
