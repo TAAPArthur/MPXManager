@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "bindings.h"
+#include "layouts.h"
 #include "communications.h"
 #include "devices.h"
 #include "functions.h"
@@ -90,9 +91,11 @@ static UniqueArrayList<Option*> options = {
     {"load-all", []{for(WindowInfo* winInfo : getAllWindows())loadWindowProperties(winInfo);}},
     {"log-level", +[](int i){setLogLevel((LogLevel)i);}, VAR_SETTER},
     {"lower", +[](WindowID id) {lowerWindow(id);}},
+    {"next-layout", []{INFO(*getActiveWorkspace()); cycleLayouts(UP);}},
     {"next-win", []{shiftFocus(UP);}},
     {"next-win-of-class", []{shiftFocus(UP, matchesFocusedWindowClass);}},
     {"ping", []{DEBUG("pong");}},
+    {"prev-layout", []{cycleLayouts(DOWN);}},
     {"prev-win", []{shiftFocus(DOWN);}},
     {"prev-win-of-class", []{shiftFocus(DOWN, matchesFocusedWindowClass);}},
     {"quit", +[]() {quit(NORMAL_TERMINATION);}, CONFIRM_EARLY},
