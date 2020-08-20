@@ -42,6 +42,7 @@ static inline long getWMIdleCount() {
 static inline void waitUntilWMIdle() {
     static int idleCount;
     static int restartCounter;
+    flush();
     if(restartCounter != getWindowPropertyValue(getWMPrivateWindow(), MPX_RESTART_COUNTER, XCB_ATOM_CARDINAL)) {
         idleCount = 0;
         restartCounter = getWindowPropertyValue(getWMPrivateWindow(), MPX_RESTART_COUNTER, XCB_ATOM_CARDINAL);
