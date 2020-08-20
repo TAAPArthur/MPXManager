@@ -146,3 +146,10 @@ MPX_TEST("swap_on_unmap", {
     assertEquals(winInfo->getWorkspaceIndex(), 0);
     assertEquals(cloneInfo->getWorkspaceIndex(), 1);
 });
+MPX_TEST("delete_parent_before_clone", {
+    CRASH_ON_ERRORS = 0;
+    auto clone = cloneInfo->getID();
+    destroyWindow(*winInfo);
+    waitUntilIdle();
+    assert(!getWindowInfo(clone));
+});

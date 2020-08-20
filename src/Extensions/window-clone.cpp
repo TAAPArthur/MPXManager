@@ -177,11 +177,24 @@ void swapOnUnmapEvent(void) {
             }
     }
 }
+
+void removeCloneOnDestroyEvent(void) {
+    xcb_unmap_notify_event_t* event = (xcb_unmap_notify_event_t*)getLastEvent();
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(winInfo) {
+        auto list = getClonesOfWindow(winInfo);
+        if(list)
+            for(WindowID cloneID : *list) {
+                destroyWindow(cloneID);
+            }
+    }
+}
 void addCloneRules(void) {
-    getEventRules(XCB_EXPOSE).add(DEFAULT_EVENT(onExpose));
     //getEventRules(XCB_INPUT_MOTION + GENERIC_EVENT_OFFSET).add( &swapWithOriginalRule);
-    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(swapOnMapEvent));
-    getEventRules(XCB_UNMAP_NOTIFY).add(DEFAULT_EVENT(swapOnUnmapEvent));
+    getEventRules(XCB_DESTROY_NOTIFY).add(DEFAULT_EVENT(removeCloneOnDestroyEvent, HIGH_PRIORITY));
+    getEventRules(XCB_EXPOSE).add(DEFAULT_EVENT(onExpose));
     getEventRules(XCB_INPUT_ENTER + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(swapWithOriginalOnEnter));
     getEventRules(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET).add(DEFAULT_EVENT(focusParent));
+    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(swapOnMapEvent));
+    getEventRules(XCB_UNMAP_NOTIFY).add(DEFAULT_EVENT(swapOnUnmapEvent));
 }
