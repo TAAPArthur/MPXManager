@@ -322,7 +322,7 @@ void updateAllWindowWorkspaceState() {
 void addSyncMapStateRules(bool remove) {
     getBatchEventRules(MONITOR_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState), remove);
     getBatchEventRules(WINDOW_WORKSPACE_CHANGE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState), remove);
-    getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState), remove);
+    getBatchEventRules(TILE_WORKSPACE).add(DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY), remove);
 }
 
 void addBasicRules(bool remove) {

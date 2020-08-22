@@ -69,6 +69,28 @@ MPX_TEST("auto_window_map", {
     assert(winInfo->getWorkspace());
     assert(winInfo->hasMask(MAPPED_MASK));
 });
+
+MPX_TEST("tile_before_map", {
+    lock();
+
+    static WindowID win = createNormalWindow();
+    auto dummyLayoutFunc = [](LayoutState* state){
+        assert(state);
+        assert(!isWindowMapped(win));
+    };
+    Layout testLayout = {.name = "Full", .layoutFunction = dummyLayoutFunc};
+    setActiveLayout(&testLayout);
+    if(!fork()) {
+        openXDisplay();
+        mapWindow(win);
+        flush();
+        exit(0);
+    }
+    assertEquals(0, waitForChild(0));
+    unlock();
+    waitUntilIdle();
+    setActiveLayout(NULL);
+});
 MPX_TEST_ITER("auto_focus_window_when_switching_workspace", 2, {
     WorkspaceID base = _i;
     WorkspaceID other = !_i;

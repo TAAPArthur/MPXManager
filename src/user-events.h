@@ -39,6 +39,8 @@ enum {
     CLIENT_MAP_ALLOW,
     /// Triggered when the client allows the window to be mapped (Synthetic UnmapRequest)
     CLIENT_MAP_DISALLOW,
+    /// Called after workspace is tilled.
+    TILE_WORKSPACE,
     /// triggered when root screen is changed (indicated by a XCB_CONFIGURE_NOTIFY to the root window)
     SCREEN_CHANGE,
     /// called right after a window changes workspaces
@@ -49,8 +51,6 @@ enum {
      * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. The other being that the WindowInfo object will be passed in when the rule is applied.
      */
     WINDOW_MOVE,
-    /// Called after workspace is tilled.
-    TILE_WORKSPACE,
     /// called after a set number of events or when the connection is idle
     PERIODIC,
     /// called when the connection is idle
@@ -62,5 +62,5 @@ enum {
     NUMBER_OF_MPX_EVENTS
 };
 /// The number of events that have batch rules
-#define NUMBER_OF_BATCHABLE_EVENTS PERIODIC
+#define NUMBER_OF_BATCHABLE_EVENTS IDLE
 #endif
