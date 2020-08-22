@@ -3,8 +3,8 @@
 #define MPX_THREADS
 
 #include <functional>
+#include <stdint.h>
 #include "time.h"
-#include "globals.h"
 
 /**
  * execute code in an atomic manner

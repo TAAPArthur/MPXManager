@@ -4,18 +4,19 @@
  */
 #ifndef MPXMANAGER_TIME_H_
 #define MPXMANAGER_TIME_H_
-#include <chrono>
-#include <thread>
+#include <time.h>
 #include <sys/time.h>
 
 /**
  * Sleep of mil milliseconds
- * @param mil number of milliseconds to sleep
+ * @param ms number of milliseconds to sleep
  */
-static inline void msleep(int mil) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(mil));
+static inline void msleep(int ms) {
+    struct timespec ts;
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = (ms % 1000) * 1000000;
+    while(nanosleep(&ts, &ts));
 }
-
 /**
  * Returns a monotonically increasing number that servers the time in ms.
  * @return the current time (ms)
