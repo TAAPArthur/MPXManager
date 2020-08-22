@@ -45,6 +45,18 @@
 /// The other end of STATUS_FD_READ
 #define STATUS_FD_EXTERNAL_WRITE statusPipeFD[3]
 
+/// enum to specify how pipes are handled
+enum ChildRedirection {
+    /// Don't redirect
+    NO_REDIRECTION = 0,
+    /// Redirect child input to STATUS_FD_EXTERNAL_READ
+    REDIRECT_CHILD_INPUT_ONLY,
+    /// Redirect child output to STATUS_FD_EXTERNAL_WRITE
+    REDIRECT_CHILD_OUTPUT_ONLY,
+    /// Redirect child input/output to STATUS_FD_EXTERNAL_READ/STATUS_FD_EXTERNAL_WRITE
+    REDIRECT_BOTH = 3
+};
+
 /// Used to track how many times this program has been restarted
 extern const int RESTART_COUNTER;
 ///Returns the field descriptors used to communicate WM status to an external program
@@ -90,10 +102,10 @@ static inline int spawnSilent(const char* command) {return spawn(command, 1);}
  * @copydoc spawn(const char*)
  * Like spawn but the child's stdin/stdout refers to our STATUS_FD_EXTERNAL_READ/STATUS_FD_EXTERNAL_WRITE
  *
- * @param noDup if true, the stdout and stdout won't be dup2 to use the statusPipe
+ * @param ioRedirection determines if there will be pipes setup between the parent and child process
  * @return the pid of the new process
  */
-int spawnPipe(const char* command, bool noDup = 0);
+int spawnPipe(const char* command, ChildRedirection ioRedirection = REDIRECT_BOTH);
 
 /**
  * Calls NOTIFY_CMD with summary and body
@@ -115,14 +127,6 @@ void suppressOutput(void) ;
  * @see waitpid()
  */
 int waitForChild(int pid);
-/**
- * Closes all pipes opened by createStatusPipe and zeros out statusPipeFD
- */
-void resetPipe();
-/**
- * pipes statusPipeFD to create 2 pipes for bi-directional communication with a process spawned by spawnPipe()
- */
-void createStatusPipe();
 /**
  * function to run in child after a fork/spawn call
  */

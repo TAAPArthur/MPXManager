@@ -71,28 +71,13 @@ MPX_TEST("spawn_wait", {
     assert(waitForChild(spawn("exit 1")) == 1);
     assert(waitForChild(spawn("exit 122")) == 122);
 });
-static void verifyResetPipe() {
-    for(int i : statusPipeFD)
-        assert(i == 0);
-}
-MPX_TEST("reset_pipe", {
-    spawnPipe("yes");
-    for(int i = 0; i < LEN(statusPipeFD); i++)
-        for(int j = i + 1; j < LEN(statusPipeFD); j++)
-            assert(i != statusPipeFD[j]);
-    for(int i : statusPipeFD)
-        assert(i);
-    resetPipe();
-    verifyResetPipe();
-    waitForChild(0);
-});
+
 MPX_TEST_ITER("spawn", 2, {
     const char value[] = "string";
     char buffer[LEN(value)] = {0};
 
     if(!spawnPipe(NULL)) {
         if(!spawn(NULL, _i)) {
-            verifyResetPipe();
             printf(value);
             exit(0);
         }
@@ -107,16 +92,28 @@ MPX_TEST_ITER("spawn", 2, {
         assert(strcmp(buffer, value) == 0);
     assertEquals(waitForChild(0), 0);
 });
-MPX_TEST("spawn_pipe", {
+
+MPX_TEST("spawn_pipe_input_only", {
     const char values[2][256] = {"1", "2"};
     char buffer[2][256] = {0};
-    if(!spawnPipe(NULL)) {
-        printf(values[1]);
+    if(!spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY)) {
         read(STDIN_FILENO, buffer[0], LEN(buffer[0]));
         assert(strcmp(buffer[0], values[0]) == 0);
         exit(0);
     }
+    assert(STATUS_FD);
     dprintf(STATUS_FD, values[0]);
+    assertEquals(waitForChild(0), 0);
+});
+
+MPX_TEST("spawn_pipe_output_only", {
+    const char values[2][256] = {"1", "2"};
+    char buffer[2][256] = {0};
+    if(!spawnPipe(NULL, REDIRECT_CHILD_OUTPUT_ONLY)) {
+        printf(values[1]);
+        exit(0);
+    }
+    assert(STATUS_FD_READ);
     read(STATUS_FD_READ, buffer[1], LEN(buffer[1]));
     assert(strcmp(buffer[1], values[1]) == 0);
     assertEquals(waitForChild(0), 0);
@@ -130,30 +127,21 @@ MPX_TEST_ERR("spawn_pipe_out_fds", SYS_CALL_FAILED, {
 
 MPX_TEST("spawn_pipe_close", {
     if(!spawnPipe(NULL)) {
-        assert(!close(STATUS_FD_EXTERNAL_READ));
-        assert(!close(STATUS_FD_EXTERNAL_WRITE));
-        assert(close(STATUS_FD));
-        assert(close(STATUS_FD_READ));
         exit(0);
     }
+    INFO(STATUS_FD_EXTERNAL_READ << " " << STATUS_FD << " " << STATUS_FD_READ << " " << STATUS_FD_EXTERNAL_WRITE);
     assert(close(STATUS_FD_EXTERNAL_READ));
     assert(close(STATUS_FD_EXTERNAL_WRITE));
     assert(!close(STATUS_FD));
     assert(!close(STATUS_FD_READ));
-    assert(waitForChild(0) == 0);
+    assertEquals(waitForChild(0), 0);
 });
 MPX_TEST_ITER("spawn_pipe_child_close", 2, {
-    if(!spawnPipe(NULL)) {
-        assert(!close(STATUS_FD_EXTERNAL_READ));
-        assert(!close(STATUS_FD_EXTERNAL_WRITE));
+    if(!spawnPipe(NULL, REDIRECT_BOTH)) {
         exit(0);
     }
     assert(waitForChild(0) == 0);
-    char buffer[8] = {0};
-    if(_i)
-        dprintf(STATUS_FD, "0\n");
-    else
-        read(STATUS_FD_READ, buffer, LEN(buffer));
+    dprintf(STATUS_FD, "0\n");
 });
 
 MPX_TEST_ITER("spawn_env_on_child_spawn", 2, {

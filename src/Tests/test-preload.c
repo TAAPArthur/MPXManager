@@ -25,6 +25,15 @@ INTERCEPT(__pid_t, pipe, int*fds){
 }
 END_INTERCEPT
 
+INTERCEPT(__pid_t, pipe2, int*fds, int __flags){
+    char* var = getenv("BREAK_PIPE");
+    if(var)
+        return -1;
+    else
+        return BASE(pipe2)(fds, __flags);
+}
+END_INTERCEPT
+
 INTERCEPT(int, execv, const char *__path, char *const __argv[]) {
     char* var = getenv("BREAK_EXEC");
     if(var)

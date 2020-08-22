@@ -70,7 +70,7 @@ MPX_TEST_ERR("wm_no_response", WM_NOT_RESPONDING, {
 static int otherMasterID = 0;
 static void setup() {
     addDieOnIntegrityCheckFailRule();
-    auto pid = spawnPipe(NULL, 1);
+    auto pid = spawnPipe(NULL);
     if(pid) {
         fakeMain({"--no-event-loop"});
         addInterClientCommunicationRule();

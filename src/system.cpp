@@ -27,24 +27,11 @@ char* const* passedArguments;
 
 void (*onChildSpawn)(void) = setClientMasterEnvVar;
 void safePipe(int* fds) {
-    if(pipe(fds)) {
+    if(pipe2(fds, O_CLOEXEC)) {
         err(SYS_CALL_FAILED, "Ran out of file descriptors");
     }
 }
-void createStatusPipe() {
-    safePipe(statusPipeFD);
-    safePipe(statusPipeFD + 2);
-}
-void resetPipe() {
-    if(statusPipeFD[0]) {
-        // other fields were closed right after a call to spawnPipe;
-        TRACE("reseting pipe");
-        close(STATUS_FD);
-        close(STATUS_FD_READ);
-        for(int i = LEN(statusPipeFD) - 1; i >= 0; i--)
-            statusPipeFD[i] = 0;
-    }
-}
+
 static inline void setEnvRect(const char* name, const Rect& rect) {
     const char var[4][32] = {"_%s_X", "_%s_Y", "_%s_WIDTH", "_%s_HEIGHT"};
     char strName[32];
@@ -97,24 +84,27 @@ void notify(std::string summary, std::string body) {
     spawn((NOTIFY_CMD + " '" + summary + "' '" + body + "'").c_str());
 }
 
-static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool redirectIO = 0) {
-    INFO("Spawning command " << command);
+
+static int _spawn(const char* command, ChildRedirection spawnPipe, bool silent = 0) {
+    INFO("Spawning command " << (command ? command : "(nil)"));
     if(spawnPipe) {
-        resetPipe();
-        createStatusPipe();
+        if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
+            DEBUG("Creating input pipes");
+            safePipe(statusPipeFD);
+        }
+        if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
+            DEBUG("Creating output pipes");
+            safePipe(statusPipeFD + 2);
+        }
     }
     int pid = fork();
     if(pid == 0) {
         if(spawnPipe) {
-            close(STATUS_FD);
-            close(STATUS_FD_READ);
-            if(redirectIO) {
+            if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
                 dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
-                dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
             }
-        }
-        else {
-            resetPipe();
+            if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH)
+                dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
         }
         if(onChildSpawn)
             onChildSpawn();
@@ -129,8 +119,12 @@ static int _spawn(const char* command, bool spawnPipe, bool silent = 0, bool red
     else if(pid < 0)
         err(SYS_CALL_FAILED, "error forking\n");
     if(spawnPipe) {
-        close(STATUS_FD_EXTERNAL_READ);
-        close(STATUS_FD_EXTERNAL_WRITE);
+        if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
+            close(STATUS_FD_EXTERNAL_WRITE);
+        }
+        if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
+            close(STATUS_FD_EXTERNAL_READ);
+        }
     }
     return pid;
 }
@@ -138,10 +132,10 @@ int spawn(const char* command) {
     return spawn(command, 0);
 }
 int spawn(const char* command, bool silent) {
-    return _spawn(command, 0, silent);
+    return _spawn(command, NO_REDIRECTION, silent);
 }
-int spawnPipe(const char* command, bool noDup) {
-    return _spawn(command, 1, 0, !noDup);
+int spawnPipe(const char* command, ChildRedirection redirection) {
+    return _spawn(command, redirection, 0);
 }
 
 int waitForChild(int pid) {
@@ -154,7 +148,6 @@ int waitForChild(int pid) {
 }
 
 void restart() {
-    resetPipe();
     DEBUG("calling execv");
     if(passedArguments)
         execv(passedArguments[0], passedArguments);
@@ -208,7 +201,7 @@ __attribute__((constructor)) static void set_handlers() {
     signal(SIGSEGV, handler);
     signal(SIGABRT, handler);
     signal(SIGTERM, handler);
-    signal(SIGPIPE, [](int) {resetPipe();});
+    signal(SIGPIPE, [](int) {STATUS_FD = 0; INFO("Received SIGPIPE");});
     createSigAction(SIGHUP, [](int) {restart();});
     createSigAction(SIGUSR1, [](int) {restart();});
     signal(SIGUSR2, [](int) {printStackTrace();});

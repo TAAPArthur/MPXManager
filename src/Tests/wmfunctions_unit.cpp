@@ -482,7 +482,7 @@ MPX_TEST("kill_window_bad", {
     killClientOfWindowInfo(&dummy);
 });
 
-MPX_TEST_ERR("test_kill_window", 1, {
+MPX_TEST_ERR("test_kill_own_window", 1, {
     suppressOutput();
     registerWindow(mapArbitraryWindow(), root);
     killClientOfWindowInfo(getAllWindows()[0]);
@@ -490,19 +490,20 @@ MPX_TEST_ERR("test_kill_window", 1, {
 });
 MPX_TEST("test_kill_window", {
     closeConnection();
-    setLogLevel(LOG_LEVEL_NONE);
     WindowID win = 0;
-    if(!spawnPipe(NULL)) {
+    int fds[2] = {0};
+    pipe(fds);
+    if(!spawn(NULL)) {
         openXDisplay();
         win = createNormalWindow();
         assert(win);
-        write(STATUS_FD_EXTERNAL_WRITE, &win, sizeof(win));
+        write(fds[1], &win, sizeof(win));
         suppressOutput();
         WAIT_UNTIL_TRUE(!waitForNormalEvent(1));
         closeConnection();
         quit(0);
     }
-    int result = read(STATUS_FD_READ, &win, sizeof(win));
+    int result = read(fds[0], &win, sizeof(win));
     if(result < sizeof(win)) {
         LOG(LOG_LEVEL_NONE, "killing failed %s", strerror(errno));
         assertEquals(result, sizeof(win));
@@ -521,7 +522,10 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
     bool sleep = _i & 2;
     bool ping = _i & 4;
     KILL_TIMEOUT = 100;
-    if(!spawnPipe(NULL)) {
+    int fds[4] = {0};
+    pipe(fds);
+    pipe(fds + 2);
+    if(!spawn(NULL)) {
         saveXSession();
         openXDisplay();
         WindowID win = mapArbitraryWindow();
@@ -529,13 +533,13 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
         xcb_icccm_set_wm_protocols(dis, win, ewmh->WM_PROTOCOLS, ping ? 2 : 1, atoms);
         flush();
         consumeEvents();
-        write(STATUS_FD_EXTERNAL_WRITE, &win, sizeof(win));
-        close(STATUS_FD_EXTERNAL_WRITE);
-        int result = read(STATUS_FD_EXTERNAL_READ, &win, sizeof(win));
+        write(fds[1], &win, sizeof(win));
+        close(fds[1]);
+        int result = read(fds[3], &win, sizeof(win));
         if(result < sizeof(win)) {
             assertEquals(result, sizeof(win));
         }
-        close(STATUS_FD_EXTERNAL_READ);
+        close(fds[3]);
         if(sleep) {
             msleep(KILL_TIMEOUT * 10);
             assert(!xcb_connection_has_error(dis));
@@ -553,7 +557,7 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
         }
     }
     WindowID win;
-    int result = read(STATUS_FD_READ, &win, sizeof(win));
+    int result = read(fds[0], &win, sizeof(win));
     if(result < sizeof(win)) {
         assertEquals(result, sizeof(win));
     }
@@ -567,8 +571,8 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
     assert(winInfo->hasMask(WM_DELETE_WINDOW_MASK));
     assertEquals(ping, winInfo->hasMask(WM_PING_MASK));
     consumeEvents();
-    write(STATUS_FD, &win, sizeof(win));
-    resetPipe();
+    write(fds[2], &win, sizeof(win));
+    close(fds[2]);
     if(!forceKill) {
         killClientOfWindowInfo(winInfo);
         flush();
