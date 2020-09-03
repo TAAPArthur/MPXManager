@@ -155,6 +155,8 @@ void addDefaultBindings() {
 
 
 void defaultPrintFunction(void) {
+    if(STATUS_FD == 0)
+        return;
     if(isLogging(LOG_LEVEL_DEBUG)) {
         dprintf(STATUS_FD, "[%d]: ", getIdleCount());
     }

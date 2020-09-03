@@ -104,6 +104,8 @@ MPX_TEST("spawn_pipe_input_only", {
     assert(STATUS_FD);
     dprintf(STATUS_FD, values[0]);
     assertEquals(waitForChild(0), 0);
+    assert(dprintf(STATUS_FD, values[0]) < 1);
+    assert(STATUS_FD == 0);
 });
 
 MPX_TEST("spawn_pipe_output_only", {
@@ -117,6 +119,16 @@ MPX_TEST("spawn_pipe_output_only", {
     read(STATUS_FD_READ, buffer[1], LEN(buffer[1]));
     assert(strcmp(buffer[1], values[1]) == 0);
     assertEquals(waitForChild(0), 0);
+});
+
+MPX_TEST_ITER("spawn_pipe_death", 4, {
+    int pid = spawnPipe(NULL, (ChildRedirection)_i);
+    if(!pid) {
+        while(true)
+            msleep(100);
+    }
+    kill(pid, SIGKILL);
+    assertEquals(waitForChild(0), 9);
 });
 
 MPX_TEST_ERR("spawn_pipe_out_fds", SYS_CALL_FAILED, {

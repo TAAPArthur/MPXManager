@@ -158,14 +158,9 @@ void quit(int exitCode) {
     exit(exitCode);
 }
 
-static bool caughtError = 0;
 static void handler(int sig) {
     LOG(LOG_LEVEL_ERROR, "Error: signal %d:", sig);
     LOG_RUN(LOG_LEVEL_WARN, printStackTrace());
-    if(caughtError) {
-        exit(sig);
-    }
-    caughtError = sig;
     printSummary();
     validate();
     if(sig == SIGSEGV || sig == SIGABRT)
@@ -198,11 +193,11 @@ static int initRestartCounter() {
 }
 const int RESTART_COUNTER = initRestartCounter();
 __attribute__((constructor)) static void set_handlers() {
-    signal(SIGSEGV, handler);
-    signal(SIGABRT, handler);
-    signal(SIGTERM, handler);
-    signal(SIGPIPE, [](int) {STATUS_FD = 0; INFO("Received SIGPIPE");});
+    createSigAction(SIGSEGV, handler);
+    createSigAction(SIGABRT, handler);
+    createSigAction(SIGTERM, handler);
+    createSigAction(SIGPIPE, [](int) {STATUS_FD = 0; INFO("Received SIGPIPE");});
     createSigAction(SIGHUP, [](int) {restart();});
     createSigAction(SIGUSR1, [](int) {restart();});
-    signal(SIGUSR2, [](int) {printStackTrace();});
+    createSigAction(SIGUSR2, [](int) {printStackTrace();});
 }
