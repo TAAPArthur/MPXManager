@@ -200,7 +200,10 @@ int focusWindow(WindowID win, Master* master) {
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME,
             master->getKeyboardID());
-    return !catchError(cookie);
+    bool success = !catchError(cookie);
+    if(success)
+        master->onWindowFocus(win);
+    return success ;
 }
 int focusWindow(WindowInfo* winInfo, Master* master) {
     if(!winInfo->isFocusAllowed())

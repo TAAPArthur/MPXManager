@@ -81,8 +81,7 @@ WindowInfo* Master::removeWindowFromFocusStack(WindowID win) {
 WindowInfo* Master::getFocusedWindow(void) const {
     if(windowStack.empty())
         return NULL;
-    WindowInfo* winInfo = isFocusStackFrozen() ? getWindowStack()[focusedWindowIndex] : getWindowStack().front();
-    return winInfo->isFocusable() ? winInfo : NULL;
+    return isFocusStackFrozen() ? getWindowStack()[focusedWindowIndex] : getWindowStack().front();
 }
 
 WindowID Master::getFocusedWindowID() const {

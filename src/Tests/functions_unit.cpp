@@ -56,6 +56,37 @@ MPX_TEST_ITER("cycle_window", 2, {
     assert(!getActiveMaster()->isFocusStackFrozen());
 });
 
+MPX_TEST_ITER("cycle_window_stress", 2, {
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
+    addAutoTileRules();
+    focusWindow(bottom);
+    focusWindow(middle);
+    focusWindow(top);
+    startWM();
+    waitUntilIdle();
+    assertEquals(getFocusedWindow(), top);
+    if(_i) {
+        lock();
+        middle->moveToWorkspace(1);
+        bottom->moveToWorkspace(2);
+        assertEquals(getFocusedWindow(), top);
+        unlock();
+        waitUntilIdle();
+    }
+    assertEquals(getFocusedWindow(), top);
+    WindowID stack[] = {middle->getID(), bottom->getID(), top->getID()};
+    assert(getActiveMaster()->getWindowStack().size());
+    for(WindowID active : stack) {
+        lock();
+        assert(getActiveMaster()->getWindowStack().size());
+        cycleWindows(DOWN);
+        assertEquals(getActiveFocus(), active);
+        assert(getActiveMaster()->isFocusStackFrozen());
+        unlock();
+    }
+    assertEquals(getActiveFocus(), top->getID());
+});
+
 void assertWindowIsFocused(WindowID win) {
     xcb_input_xi_get_focus_reply_t* reply = xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis,
                 getActiveMasterKeyboardID()), NULL);
