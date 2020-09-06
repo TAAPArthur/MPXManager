@@ -32,7 +32,7 @@ std::ostream& operator>>(std::ostream& strm, const Master& m) {
 }
 std::ostream& operator<<(std::ostream& strm, const Master& m) {
     return strm >> m << ", color: " << m.getFocusColor() << ", window stack:"
-        >> m.windowStack << ", slaves: " >> m.getSlaves();
+        >> m.windowStack << (m.focusedWindowIndex) << ", slaves: " >> m.getSlaves();
 }
 
 void addDefaultMaster() {
@@ -55,15 +55,17 @@ void Master::onWindowFocus(WindowID win) {
     int pos = getWindowStack().indexOf(winInfo);
     LOG(LOG_LEVEL_DEBUG, "updating focus for win %d at position %d out of %d", win, pos, getWindowStack().size());
     if(! isFocusStackFrozen()) {
-        if(pos == -1)
+        if(pos == -1) {
+            pos = getWindowStack().size();
             windowStack.add(winInfo);
-        else windowStack.shiftToEnd(pos);
+        }
+        windowStack.shiftToHead(pos);
     }
     else if(pos != -1)
         focusedWindowIndex = pos;
     else {
         windowStack.add(winInfo);
-        focusedWindowIndex = getWindowStack().size() - 1;
+        windowStack.shiftToPos(getWindowStack().size() - 1, focusedWindowIndex);
     }
     focusedTimeStamp = getTime();
 }
@@ -71,13 +73,15 @@ void Master::clearFocusStack() {
     windowStack.clear();
 }
 WindowInfo* Master::removeWindowFromFocusStack(WindowID win) {
+    if(focusedWindowIndex) {
+        focusedWindowIndex -= focusedWindowIndex >= getWindowStack().indexOf(win);
+    }
     return windowStack.removeElement(win);
 }
 WindowInfo* Master::getFocusedWindow(void) const {
     if(windowStack.empty())
         return NULL;
-    WindowInfo* winInfo = isFocusStackFrozen() &&
-        focusedWindowIndex < getWindowStack().size() ? getWindowStack()[focusedWindowIndex] : getWindowStack().back();
+    WindowInfo* winInfo = isFocusStackFrozen() ? getWindowStack()[focusedWindowIndex] : getWindowStack().front();
     return winInfo->isFocusable() ? winInfo : NULL;
 }
 
@@ -87,10 +91,10 @@ WindowID Master::getFocusedWindowID() const {
 void Master::setFocusStackFrozen(int value) {
     if(freezeFocusStack != value) {
         freezeFocusStack = value;
-        if(value)
-            focusedWindowIndex = getWindowStack().size();
-        else if(focusedWindowIndex < getWindowStack().size())
-            windowStack.shiftToEnd(focusedWindowIndex);
+        if(focusedWindowIndex < getWindowStack().size()) {
+            windowStack.shiftToHead(focusedWindowIndex);
+            focusedWindowIndex = 0;
+        }
     }
 }
 

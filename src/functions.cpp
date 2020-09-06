@@ -28,13 +28,14 @@ static int getNextIndexInStack(const ArrayList<WindowInfo*>& stack, int delta, b
         if(stack[index]->isActivatable() && (!filter || filter(stack[index])))
             return index;
     }
+    DEBUG("Could not find window");
     return -1;
 }
 
 void cycleWindowsMatching(int delta, bool(*filter)(WindowInfo*)) {
     Master* master = getActiveMaster();
     master->setFocusStackFrozen(1);
-    int index = getNextIndexInStack(master->getWindowStack(), -delta, filter, master->getFocusedWindow());
+    int index = getNextIndexInStack(master->getWindowStack(), delta, filter, master->getFocusedWindow());
     if(index >= 0)
         activateWindow(master->getWindowStack()[index]);
 }

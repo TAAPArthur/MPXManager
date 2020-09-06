@@ -220,9 +220,10 @@ void switchToWorkspace(int workspaceIndex) {
                 currentIndex = visibleWorkspace->getID();
         }
         LOG(LOG_LEVEL_DEBUG, "Swapping visible workspace %d with %d", currentIndex, workspaceIndex);
-        for(WindowInfo* winInfo : getWorkspace(currentIndex)->getWindowStack())
-            if(winInfo->hasMask(STICKY_MASK))
-                winInfo->moveToWorkspace(workspaceIndex);
+        auto& stack = getWorkspace(currentIndex)->getWindowStack();
+        for(int i = stack.size() - 1; i >= 0; i--)
+            if(stack[i]->hasMask(STICKY_MASK))
+                stack[i]->moveToWorkspace(workspaceIndex);
         swapMonitors(workspaceIndex, currentIndex);
     }
     getActiveMaster()->setWorkspaceIndex(workspaceIndex);

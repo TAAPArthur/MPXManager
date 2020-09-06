@@ -382,8 +382,8 @@ void onClientMessage(void) {
                 if(getActiveWorkspaceIndex() > newLastIndex)
                     getActiveMaster()->setWorkspaceIndex(newLastIndex);
                 for(uint32_t i = data.data32[0]; i < getNumberOfWorkspaces(); i++) {
-                    for(WindowInfo* winInfo : getWorkspace(i)->getWindowStack())
-                        winInfo->moveToWorkspace(newLastIndex);
+                    for(int j = getWorkspace(i)->getWindowStack().size() - 1; j >= 0; j--)
+                        getWorkspace(i)->getWindowStack()[j]->moveToWorkspace(newLastIndex);
                 }
                 removeWorkspaces(-delta);
             }

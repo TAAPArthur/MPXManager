@@ -44,7 +44,7 @@ private:
     ArrayList<Slave*>slaves;
 
     /**Stack of windows in order of most recently focused*/
-    ReverseArrayList<WindowInfo*>windowStack;
+    ArrayList<WindowInfo*>windowStack;
     /**
      * Contains the window with current focus,
      * will be same as top of window stack if freezeFocusStack==0
@@ -81,7 +81,7 @@ public:
      *
      * @return
      */
-    const ReverseArrayList<WindowInfo*>& getWindowStack(void) const {
+    const ArrayList<WindowInfo*>& getWindowStack(void) const {
         return windowStack;
     }
     /**

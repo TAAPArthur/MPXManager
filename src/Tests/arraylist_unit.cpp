@@ -228,17 +228,5 @@ MPX_TEST("swap", {
         assert(list.indexOf(&i) == i);
     }
 });
-MPX_TEST("iter", {
-    int i = *list[0];
-    ReverseArrayList<int*> rList;
-    for(auto p : list) {
-        assertEquals(*p, i++);
-        rList.add(p);
-    }
-    for(auto p : rList)
-        assertEquals(*p, --i);
-    for(auto iter = rList.rbegin(); iter != rList.rend(); ++iter)
-        assertEquals(**iter, i++);
-});
 MPX_TEST("add_flags", {
 });

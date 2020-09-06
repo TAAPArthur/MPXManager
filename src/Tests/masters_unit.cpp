@@ -105,7 +105,7 @@ MPX_TEST("freeze_focus_stack", {
     assert(!getActiveMaster()->isFocusStackFrozen());
     assert(getFocusedWindow() == getWindowInfo(2));
 
-    ArrayList<WindowInfo*>expected = ArrayList<WindowInfo*>({getWindowInfo(1), getWindowInfo(3), getWindowInfo(2)});
+    ArrayList<WindowInfo*>expected = ArrayList<WindowInfo*>({getWindowInfo(2), getWindowInfo(3), getWindowInfo(1)});
     assert(expected == getActiveMaster()->getWindowStack());
 
 });
@@ -119,7 +119,7 @@ MPX_TEST("test_focus_delete", {
         getActiveMaster()->onWindowFocus(winInfo->getID());
     assert(getFocusedWindow() == getWindowInfo(1));
     //head is 1
-    // stack bottom -> top 3 2 1
+    // stack top -> bottom 1 2 3
     getActiveMaster()->setFocusStackFrozen(true);
     getActiveMaster()->onWindowFocus(2);
     assert(getFocusedWindow() == getWindowInfo(2));

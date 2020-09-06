@@ -13,37 +13,6 @@
 #include <vector>
 
 /**
- * Reversible iterator
- */
-template<class T>
-struct Iterator {
-    /// backing pointer
-    const T* p;
-    /// iff true the iterator will iterate backwards
-    const bool reverse;
-    /**
-     * Constructs an iterator starting at p
-     * @param p backing pointer. Should be the first element in the array
-     * @param reverse whether to reverse the iteration or not.
-     */
-    Iterator(const T* p, bool reverse = 0): p(p), reverse(reverse) {}
-    /// Move to the next element
-    Iterator operator ++() {
-        auto temp = *this;
-        reverse ? p-- : p++;
-        return temp;
-    }
-    /// compares backing pointer
-    bool operator ==(const Iterator& other)const {return p == other.p;}
-    /// compares backing pointer
-    bool operator !=(const Iterator& other)const {return !(*this == other);}
-    /// returns object backed backing pointer
-    const T& operator*() {return *p;}
-    /// returns backing pointer
-    T* operator->() {return p;}
-};
-
-/**
  * Wrapper around std::vector with some Java-like methods
  * This class doesn't not support NULL values
  */
@@ -83,22 +52,6 @@ struct ArrayList: std::vector<T> {
     void addAll(const std::vector<T>& __l) {
         for(auto t : __l)
             this->add(t);
-    }
-    /// Reverse iterator
-    virtual Iterator<T> rbegin() const {
-        return Iterator(this->data() + this->size() - 1, 1);
-    }
-    /// Reverse iterator end
-    virtual Iterator<T> rend() const {
-        return this->data() - 1;
-    }
-    /// normal iterator end
-    virtual Iterator<T> begin() const {
-        return Iterator(this->data());
-    }
-    /// normal iterator end
-    virtual Iterator<T> end() const {
-        return this->data() + this->size();
     }
     /// Copies value to the heap and adds into according to remove
     template<typename U = T>
@@ -282,14 +235,22 @@ struct ArrayList: std::vector<T> {
         add(remove(index));
     }
     /**
+     * Moves the index-th element to position endingPos.
+     * @param index a valid position in the array >= endingPos
+     * @param endingPos
+     */
+    void shiftToPos(uint32_t index, int endingPos) {
+        T newHead = (*this)[ index];
+        for(int i = index; i > endingPos; i--)
+            (*this)[i] = (*this)[i - 1];
+        (*this)[endingPos] = newHead;
+    }
+    /**
      * Removes the index-th element and re-inserts it at the head of the list
      * @param index
      */
     void shiftToHead(uint32_t index) {
-        T newHead = (*this)[ index];
-        for(int i = index; i > 0; i--)
-            (*this)[i] = (*this)[i - 1];
-        (*this)[0] = newHead;
+        shiftToPos(index, 0);
     }
     /**
      * Sort the members of this list in ascending order using the '<' operator
@@ -337,28 +298,6 @@ struct ArrayList: std::vector<T> {
      */
     bool operator !=(const ArrayList<T>& list)const {
         return !(*this == list);
-    }
-};
-/**
- * Subclass of ArrayList that iterates in the reverse order
- */
-template<class T>
-struct ReverseArrayList: ArrayList<T> {
-    /// Returns an iterator from end to start
-    Iterator<T> begin() const override {
-        return ArrayList<T>::rbegin();
-    }
-    /// counterpart of begin
-    Iterator<T> end() const override {
-        return ArrayList<T>::rend();
-    }
-    /// Returns start to end
-    Iterator<T> rbegin() const override {
-        return ArrayList<T>::begin();
-    }
-    /// counterpart of end
-    Iterator<T> rend() const override {
-        return ArrayList<T>::end();
     }
 };
 /**
