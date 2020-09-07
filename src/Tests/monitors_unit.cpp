@@ -130,6 +130,13 @@ MPX_TEST("large_dock", {
     assert(monitor->getBase() != monitor->getViewport());
 });
 
+MPX_TEST("propertyless_dock", {
+    WindowInfo winInfo = WindowInfo(1);
+    Monitor monitor = Monitor(1, {0, 0, 1, 1});
+    winInfo.setDock();
+    assert(!monitor.resizeToAvoidDock(&winInfo));
+});
+
 
 MPX_TEST("get_set_base", {
     Monitor* m = new Monitor(1, {0, 0, 1, 1});

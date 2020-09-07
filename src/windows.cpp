@@ -125,11 +125,16 @@ WindowInfo::~WindowInfo() {
     removeFromWorkspace();
     removeID(this);
 }
+static Index<int[12]> key;
 void WindowInfo::setDockProperties(int* properties, int numberOfProperties) {
-    memset(getDockProperties(1), 0, 12 * sizeof(int));
-    memcpy(getDockProperties(1), properties, numberOfProperties * sizeof(int));
+    if(properties) {
+        memset(getDockProperties(1), 0, 12 * sizeof(int));
+        memcpy(getDockProperties(1), properties, numberOfProperties * sizeof(int));
+    }
+    else {
+        remove(key, this);
+    }
 }
 int* WindowInfo::getDockProperties(bool createNew) const {
-    static Index<int[12]> key;
     return *get(key, this, createNew);
 }

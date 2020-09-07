@@ -57,6 +57,8 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
         return 0;
     bool changed = 0;
     auto properties = winInfo->getDockProperties();
+    if(!properties)
+        return 0;
     for(int i = 0; i < 4; i++) {
         int dim = properties[i];
         if(dim == 0)

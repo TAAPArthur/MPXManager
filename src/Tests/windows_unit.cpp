@@ -87,6 +87,15 @@ MPX_TEST_ITER("dock_properties", 2, {
     prop = winInfo->getDockProperties();
     assertEquals(memcmp(arr, prop, sizeof(arr)), 0);
 });
+
+MPX_TEST("dock_properties_clear", {
+    WindowInfo* winInfo = new WindowInfo(1);
+    int arr[12] = {0};
+    winInfo->setDockProperties(arr, 12);
+    assert(winInfo->getDockProperties());
+    winInfo->setDockProperties(NULL, 0);
+    assert(!winInfo->getDockProperties());
+});
 MPX_TEST_ITER("override_redirect", 3, {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);
