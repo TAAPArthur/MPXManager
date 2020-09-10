@@ -163,15 +163,24 @@ MPX_TEST_ITER("spawn_env_on_child_spawn", 2, {
 });
 
 SET_ENV(NULL, simpleCleanup);
-MPX_TEST("spawn_env", {
+MPX_TEST_ITER("spawn_env", 2, {
+
+    bool large = _i;
     createSimpleEnv();
     LD_PRELOAD_INJECTION = 1;
-    getAllWindows().add(new WindowInfo(1));
+    getAllWindows().add(new WindowInfo(large ? 1 << 31 : 1));
     getAllWindows()[0]->addMask(FOCUSABLE_MASK);
     getActiveMaster()->onWindowFocus(getAllWindows()[0]->getID());
-    getAllMonitors().add(new Monitor(1, {0, 0, 0, 0}, ""));
+    getAllMonitors().add(new Monitor(1, {0, 0, 1, (uint16_t)(large ? -1 : 1)}, ""));
     assignUnusedMonitorsToWorkspaces();
     if(!spawn(NULL)) {
+        char buffer[255];
+        sprintf(buffer, "%d", getActiveMasterKeyboardID());
+        assert(getenv("_WIN_ID"));
+        assert(getenv("_WIN_TITLE"));
+        assert(getenv("_WIN_CLASS"));
+        assert(getenv("_WIN_INSTANCE"));
+        assert(getenv("_ROOT_X"));
         assert(getenv(DEFAULT_KEYBOARD_ENV_VAR_NAME));
         assert(getenv(DEFAULT_POINTER_ENV_VAR_NAME));
         std::string(getenv("LD_PRELOAD")).rfind(LD_PRELOAD_PATH, 0);

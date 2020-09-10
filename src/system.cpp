@@ -35,22 +35,22 @@ void safePipe(int* fds) {
 static inline void setEnvRect(const char* name, const Rect& rect) {
     const char var[4][32] = {"_%s_X", "_%s_Y", "_%s_WIDTH", "_%s_HEIGHT"};
     char strName[32];
-    char strValue[8];
+    char strValue[16];
     for(int n = 0; n < 4; n++) {
         sprintf(strName, var[n], name);
-        sprintf(strValue, "%d", rect[n]);
+        sprintf(strValue, "%ud", rect[n]);
         setenv(strName, strValue, 1);
     }
 }
 void setClientMasterEnvVar(void) {
-    char strValue[8];
+    static char strValue[32];
     if(getActiveMaster()) {
-        sprintf(strValue, "%d", getActiveMasterKeyboardID());
+        sprintf(strValue, "%ud", getActiveMasterKeyboardID());
         setenv(DEFAULT_KEYBOARD_ENV_VAR_NAME, strValue, 1);
-        sprintf(strValue, "%d", getActiveMasterPointerID());
+        sprintf(strValue, "%ud", getActiveMasterPointerID());
         setenv(DEFAULT_POINTER_ENV_VAR_NAME, strValue, 1);
         if(getFocusedWindow()) {
-            sprintf(strValue, "%d", getFocusedWindow()->getID());
+            sprintf(strValue, "%ud", getFocusedWindow()->getID());
             setenv("_WIN_ID", strValue, 1);
             setenv("_WIN_TITLE", getFocusedWindow()->getTitle().c_str(), 1);
             setenv("_WIN_CLASS", getFocusedWindow()->getClassName().c_str(), 1);

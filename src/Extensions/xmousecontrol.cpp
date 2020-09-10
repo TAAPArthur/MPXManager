@@ -118,14 +118,12 @@ bool xmousecontrolUpdate(void) {
     return update;
 }
 void runXMouseControl() {
-    INFO("Starting thread XMouseControl");
     while(!isShuttingDown()) {
         lock();
         auto update = xmousecontrolUpdate();
         unlock();
         signaler.sleepOrWait(update, XMOUSE_CONTROL_UPDATER_INTERVAL);
     }
-    INFO("Ending thread XMouseControl");
 }
 void addStartXMouseControlRule() {
     getEventRules(X_CONNECTION).add({[]() {spawnThread(runXMouseControl);}, FUNC_NAME});
