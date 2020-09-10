@@ -39,10 +39,10 @@ enum {
     CLIENT_MAP_ALLOW,
     /// Triggered when the client allows the window to be mapped (Synthetic UnmapRequest)
     CLIENT_MAP_DISALLOW,
-    /// Called after workspace is tilled.
-    TILE_WORKSPACE,
     /// triggered when root screen is changed (indicated by a XCB_CONFIGURE_NOTIFY to the root window)
     SCREEN_CHANGE,
+    /// Called after workspace is tilled.
+    TILE_WORKSPACE,
     /// called right after a window changes workspaces
     WINDOW_WORKSPACE_CHANGE,
     /// called right after a monitor changes workspaces

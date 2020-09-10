@@ -524,11 +524,3 @@ MPX_TEST("test_configure_request", {
         free(reply);
     }
 });
-
-MPX_TEST("event_order", {
-    assert(TILE_WORKSPACE < SCREEN_CHANGE);
-    assert(TILE_WORKSPACE < WINDOW_WORKSPACE_CHANGE);
-    assert(TILE_WORKSPACE < MONITOR_WORKSPACE_CHANGE);
-    assert(TILE_WORKSPACE > CLIENT_MAP_ALLOW);
-    assert(TILE_WORKSPACE > CLIENT_MAP_DISALLOW);
-});
