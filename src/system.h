@@ -79,6 +79,14 @@ void quit(int exitCode)__attribute__((__noreturn__));
 void restart()__attribute__((__noreturn__));
 
 /**
+ * Waits for the child process given by pid to terminate
+ * @param pid the child
+ * @return the pid of the terminated child or -1 on error
+ * @see waitpid()
+ */
+int waitForChild(int pid);
+
+/**
  * Forks and, if command is not NULL, exec command in SHELL
  * The command run shall terminate independently of the parent.
  * @param command
@@ -88,24 +96,23 @@ int spawn(const char* command);
 /**
  * @copydoc spawn(const char*)
  *
+ * @param preserveSession if true, spawn won't double fork
  * @param silent if 1, suppress output
  * @return the pid of the new process
  */
-int spawn(const char* command, bool silent);
-/**
- * wrapper for spawn(command, 1)
- * @param command
- */
-static inline int spawnSilent(const char* command) {return spawn(command, 1);}
+int spawn(const char* command, bool preserveSession, bool silent = 0);
+
+static inline int spawnAndWait(const char* command) {return waitForChild(spawn(command, 1));}
 
 /**
  * @copydoc spawn(const char*)
  * Like spawn but the child's stdin/stdout refers to our STATUS_FD_EXTERNAL_READ/STATUS_FD_EXTERNAL_WRITE
  *
  * @param ioRedirection determines if there will be pipes setup between the parent and child process
+ * @param preserveSession if true, spawn won't double fork
  * @return the pid of the new process
  */
-int spawnPipe(const char* command, ChildRedirection ioRedirection = REDIRECT_BOTH);
+int spawnPipe(const char* command, ChildRedirection ioRedirection = REDIRECT_BOTH, bool preserveSession = 0);
 
 /**
  * Calls NOTIFY_CMD with summary and body
@@ -114,19 +121,12 @@ int spawnPipe(const char* command, ChildRedirection ioRedirection = REDIRECT_BOT
  * @param summary
  * @param body
  */
-void notify(std::string summary, std::string body);
+int notify(std::string summary, std::string body);
 
 /**
  * Dups stdout and stderror to /dev/null
  */
 void suppressOutput(void) ;
-/**
- * Waits for the child process given by pid to terminate
- * @param pid the child
- * @return the pid of the terminated child or -1 on error
- * @see waitpid()
- */
-int waitForChild(int pid);
 /**
  * function to run in child after a fork/spawn call
  */

@@ -37,7 +37,7 @@ MPX_TEST("get_time", {
 MPX_TEST("failed_exec_spawn", {
     suppressOutput();
     breakExec();
-    assertEquals(SYS_CALL_FAILED, waitForChild(spawn("exit 10")));
+    assertEquals(SYS_CALL_FAILED, spawnAndWait("exit 10"));
 });
 
 MPX_TEST_ERR("failed_exec_restart", SYS_CALL_FAILED, {
@@ -57,27 +57,55 @@ MPX_TEST_ITER("spawn_parent", 2, {
     int pid = _i ? spawn("exit 10") : spawnPipe("exit 10");
     assert(pid == 1);
 });
+
+MPX_TEST("child_can_outlive_parent", {
+    int fds[4];
+    int buffer;
+    pipe(fds);
+    pipe(fds + 2);
+
+    if(!fork()) {
+        if(!spawn(NULL)) {
+            int result = read(fds[0], &buffer, sizeof(buffer));
+            assertEquals(result, sizeof(buffer));
+            write(fds[3], &buffer, sizeof(buffer));
+        }
+        exit(10);
+    }
+    assertEquals(waitForChild(0), 10);
+    write(fds[1], &buffer, sizeof(buffer));
+    int result = read(fds[2], &buffer, sizeof(buffer));
+    assertEquals(result, sizeof(buffer));
+});
+
+MPX_TEST("no_zombies", {
+    for(int i=0;i<10;i++){
+        spawn("exit 0");
+    }
+    assertEquals(0, spawnAndWait("exit 0"));
+    assertEquals(-1, waitpid(-1, NULL, WNOHANG));
+});
+
 MPX_TEST("notify", {
     suppressOutput();
     NOTIFY_CMD = "echo";
-    notify("110", "");
-    assertEquals(0, waitForChild(0));
-    notify("", "110");
-    assertEquals(0, waitForChild(0));
+    assertEquals(0, waitForChild(notify("110", "")));
+    assertEquals(0, waitForChild(notify("", "110")));
 });
 
 MPX_TEST("spawn_wait", {
-    assert(waitForChild(spawn("exit 0")) == 0);
-    assert(waitForChild(spawn("exit 1")) == 1);
-    assert(waitForChild(spawn("exit 122")) == 122);
+    assert(spawnAndWait("exit 0") == 0);
+    assert(spawnAndWait("exit 1") == 1);
+    assert(spawnAndWait("exit 122") == 122);
 });
 
 MPX_TEST_ITER("spawn", 2, {
     const char value[] = "string";
     char buffer[LEN(value)] = {0};
 
-    if(!spawnPipe(NULL)) {
-        if(!spawn(NULL, _i)) {
+    int pid;
+    if(!(pid = spawnPipe(NULL))) {
+        if(!spawn(NULL, 1,  _i)) {
             printf(value);
             exit(0);
         }
@@ -90,13 +118,13 @@ MPX_TEST_ITER("spawn", 2, {
         assertEquals(result, 0);
     else
         assert(strcmp(buffer, value) == 0);
-    assertEquals(waitForChild(0), 0);
+    assertEquals(waitForChild(pid), 0);
 });
 
 MPX_TEST("spawn_pipe_input_only", {
     const char values[2][256] = {"1", "2"};
     char buffer[2][256] = {0};
-    if(!spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY)) {
+    if(!spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY, 1)) {
         read(STDIN_FILENO, buffer[0], LEN(buffer[0]));
         assert(strcmp(buffer[0], values[0]) == 0);
         exit(0);
@@ -111,7 +139,7 @@ MPX_TEST("spawn_pipe_input_only", {
 MPX_TEST("spawn_pipe_output_only", {
     const char values[2][256] = {"1", "2"};
     char buffer[2][256] = {0};
-    if(!spawnPipe(NULL, REDIRECT_CHILD_OUTPUT_ONLY)) {
+    if(!spawnPipe(NULL, REDIRECT_CHILD_OUTPUT_ONLY, 1)) {
         printf(values[1]);
         exit(0);
     }
@@ -122,13 +150,13 @@ MPX_TEST("spawn_pipe_output_only", {
 });
 
 MPX_TEST_ITER("spawn_pipe_death", 4, {
-    int pid = spawnPipe(NULL, (ChildRedirection)_i);
+    int pid = spawnPipe(NULL, (ChildRedirection)_i, 1);
     if(!pid) {
         while(true)
             msleep(100);
     }
     kill(pid, SIGKILL);
-    assertEquals(waitForChild(0), 9);
+    assertEquals(waitForChild(pid), 9);
 });
 
 MPX_TEST_ERR("spawn_pipe_out_fds", SYS_CALL_FAILED, {
@@ -138,7 +166,8 @@ MPX_TEST_ERR("spawn_pipe_out_fds", SYS_CALL_FAILED, {
 });
 
 MPX_TEST("spawn_pipe_close", {
-    if(!spawnPipe(NULL)) {
+    int pid = spawnPipe(NULL);
+    if(!pid) {
         exit(0);
     }
     INFO(STATUS_FD_EXTERNAL_READ << " " << STATUS_FD << " " << STATUS_FD_READ << " " << STATUS_FD_EXTERNAL_WRITE);
@@ -146,10 +175,10 @@ MPX_TEST("spawn_pipe_close", {
     assert(close(STATUS_FD_EXTERNAL_WRITE));
     assert(!close(STATUS_FD));
     assert(!close(STATUS_FD_READ));
-    assertEquals(waitForChild(0), 0);
+    assertEquals(waitForChild(pid), 0);
 });
 MPX_TEST_ITER("spawn_pipe_child_close", 2, {
-    if(!spawnPipe(NULL, REDIRECT_BOTH)) {
+    if(!spawnPipe(NULL, REDIRECT_BOTH, 1)) {
         exit(0);
     }
     assert(waitForChild(0) == 0);
@@ -173,7 +202,8 @@ MPX_TEST_ITER("spawn_env", 2, {
     getActiveMaster()->onWindowFocus(getAllWindows()[0]->getID());
     getAllMonitors().add(new Monitor(1, {0, 0, 1, (uint16_t)(large ? -1 : 1)}, ""));
     assignUnusedMonitorsToWorkspaces();
-    if(!spawn(NULL)) {
+    int pid = spawn(NULL);
+    if(!pid) {
         char buffer[255];
         sprintf(buffer, "%d", getActiveMasterKeyboardID());
         assert(getenv("_WIN_ID"));
@@ -187,7 +217,7 @@ MPX_TEST_ITER("spawn_env", 2, {
         simpleCleanup();
         quit(0);
     }
-    assertEquals(waitForChild(0), 0);
+    assertEquals(waitForChild(pid), 0);
 });
 
 MPX_TEST("quit", {

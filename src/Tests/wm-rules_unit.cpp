@@ -387,10 +387,10 @@ MPX_TEST("test_switch_workspace_with_sticky_window", {
 });
 
 MPX_TEST("test_screen_configure", {
-    waitForChild(spawn("xrandr --noprimary &> /dev/null"));
+    assertEquals(0, spawnAndWait("xrandr --noprimary &> /dev/null"));
     waitUntilIdle(1);
     assert(!getAllMonitors()[0]->isPrimary());
-    waitForChild(spawn("xrandr --output $MONITOR_NAME --primary &> /dev/null"));
+    assertEquals(0, spawnAndWait(("xrandr --output $MONITOR_NAME --primary &> /dev/null")));
     waitUntilIdle();
     assert(getAllMonitors()[0]->isPrimary());
 });
@@ -526,9 +526,9 @@ MPX_TEST("test_configure_request", {
 });
 
 MPX_TEST("event_order", {
-        assert(TILE_WORKSPACE < SCREEN_CHANGE);
-        assert(TILE_WORKSPACE < WINDOW_WORKSPACE_CHANGE);
-        assert(TILE_WORKSPACE < MONITOR_WORKSPACE_CHANGE);
-        assert(TILE_WORKSPACE > CLIENT_MAP_ALLOW);
-        assert(TILE_WORKSPACE > CLIENT_MAP_DISALLOW);
+    assert(TILE_WORKSPACE < SCREEN_CHANGE);
+    assert(TILE_WORKSPACE < WINDOW_WORKSPACE_CHANGE);
+    assert(TILE_WORKSPACE < MONITOR_WORKSPACE_CHANGE);
+    assert(TILE_WORKSPACE > CLIENT_MAP_ALLOW);
+    assert(TILE_WORKSPACE > CLIENT_MAP_DISALLOW);
 });

@@ -147,16 +147,15 @@ bool findAndRaise(std::string s, RaiseOrRunType matchType, WindowAction action) 
     const BoundFunction f = {getMatchType(matchType), s, "raiseOrRunCheck",  PASSTHROUGH_IF_TRUE};
     return findAndRaise(f, action);
 }
-bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType, bool silent) {
+int raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType, bool silent, bool preserveSession) {
     if(s[0] == '$') {
         auto c = getenv(s.substr(1).c_str());
         s = c ? c : "";
     }
     if(!findAndRaise(s, matchType)) {
-        spawn(cmd.c_str(), silent);
-        return 0;
+        return spawn(cmd.c_str(), silent, preserveSession);
     }
-    return 1;
+    return 0;
 }
 
 void shiftTopAndFocus(ArrayList<WindowInfo*>& stack) {

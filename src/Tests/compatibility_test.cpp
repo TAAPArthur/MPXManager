@@ -22,7 +22,8 @@ MPX_TEST_ITER("dump_focus", 3, {
     assertEquals(getActiveFocus(DEFAULT_KEYBOARD), root);
     assertEquals(getActiveFocus(), root);
     assert(DEFAULT_POINTER != getActiveMasterPointerID());
-    if(!spawn(NULL)) {
+    int pid = spawn(NULL);
+    if(!pid) {
         if(_i == 0) {
             openXDisplay();
             assertEquals(getClientPointerForWindow(0), getActiveMasterPointerID());
@@ -43,7 +44,7 @@ MPX_TEST_ITER("dump_focus", 3, {
         }
         exit(0);
     }
-    assertEquals(waitForChild(0), 0);
+    assertEquals(waitForChild(pid), 0);
     assertEquals(getActiveFocus(DEFAULT_KEYBOARD), root);
     assertEquals(getActiveFocus(), win);
 });
@@ -53,7 +54,8 @@ MPX_TEST_ITER("grab", 3, {
     assert(DEFAULT_POINTER != getActiveMasterPointerID());
     assert(!grabPointer(DEFAULT_POINTER));
     assert(!grabKeyboard(DEFAULT_KEYBOARD));
-    if(!spawn(NULL)) {
+    int pid = spawn(NULL);
+    if(!pid) {
         if(_i == 0) {
             auto dpy = XOpenDisplay(NULL);
             assert(!XGrabKeyboard(dpy, root, GrabModeSync, 1, GrabModeSync, 0));
@@ -71,5 +73,5 @@ MPX_TEST_ITER("grab", 3, {
         }
         exit(0);
     }
-    assertEquals(waitForChild(0), 0);
+    assertEquals(waitForChild(pid), 0);
 });

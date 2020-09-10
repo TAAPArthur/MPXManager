@@ -80,12 +80,12 @@ void suppressOutput(void) {
     assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDOUT_FILENO) == STDOUT_FILENO);
 }
 
-void notify(std::string summary, std::string body) {
-    spawn((NOTIFY_CMD + " '" + summary + "' '" + body + "'").c_str());
+int notify(std::string summary, std::string body) {
+    return spawn((NOTIFY_CMD + " '" + summary + "' '" + body + "'").c_str());
 }
 
 
-static int _spawn(const char* command, ChildRedirection spawnPipe, bool silent = 0) {
+static int _spawn(const char* command, ChildRedirection spawnPipe, bool preserveSession = 0, bool silent = 0) {
     INFO("Spawning command " << (command ? command : "(nil)"));
     if(spawnPipe) {
         if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
@@ -99,6 +99,9 @@ static int _spawn(const char* command, ChildRedirection spawnPipe, bool silent =
     }
     int pid = fork();
     if(pid == 0) {
+        if(!preserveSession)
+            if(fork())
+                exit(0);
         if(spawnPipe) {
             if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
                 dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
@@ -126,16 +129,18 @@ static int _spawn(const char* command, ChildRedirection spawnPipe, bool silent =
             close(STATUS_FD_EXTERNAL_READ);
         }
     }
+    if(!preserveSession)
+        waitForChild(pid);
     return pid;
 }
 int spawn(const char* command) {
-    return spawn(command, 0);
+    return spawn(command, 0, 0);
 }
-int spawn(const char* command, bool silent) {
-    return _spawn(command, NO_REDIRECTION, silent);
+int spawn(const char* command, bool preserveSession, bool silent) {
+    return _spawn(command, NO_REDIRECTION, preserveSession, silent);
 }
-int spawnPipe(const char* command, ChildRedirection redirection) {
-    return _spawn(command, redirection, 0);
+int spawnPipe(const char* command, ChildRedirection redirection, bool preserveSession) {
+    return _spawn(command, redirection, preserveSession);
 }
 
 int waitForChild(int pid) {

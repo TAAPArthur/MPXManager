@@ -190,9 +190,10 @@ MPX_TEST_ITER("raiseOrRun", 16, {
         setenv(envVar.c_str(), s.c_str(), 1);
         s = "$" + envVar;
     }
-    assertEquals(!run, raiseOrRun(s, cmd, type));
+    int pid = raiseOrRun(s, cmd, type, 1,  1);
+    assertEquals(!run, !pid);
     if(run)
-        assertEquals(waitForChild(0), 1);
+        assertEquals(waitForChild(pid), 1);
 });
 MPX_TEST("auto_clear_cache", {
     assert(getFocusedWindow());

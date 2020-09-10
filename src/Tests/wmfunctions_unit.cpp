@@ -493,7 +493,7 @@ MPX_TEST("test_kill_window", {
     WindowID win = 0;
     int fds[2] = {0};
     pipe(fds);
-    if(!spawn(NULL)) {
+    if(!fork()) {
         openXDisplay();
         win = createNormalWindow();
         assert(win);
@@ -525,7 +525,7 @@ MPX_TEST_ITER("test_delete_window_request", 8, {
     int fds[4] = {0};
     pipe(fds);
     pipe(fds + 2);
-    if(!spawn(NULL)) {
+    if(!fork()) {
         saveXSession();
         openXDisplay();
         WindowID win = mapArbitraryWindow();

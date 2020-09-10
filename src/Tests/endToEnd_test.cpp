@@ -40,7 +40,7 @@ MPX_TEST_ITER("init_stacking_order", 2, {
 
 uint32_t wmPid;
 static void initSetup() {
-    wmPid = spawn("./mpxmanager");
+    wmPid = spawn("./mpxmanager", 1, 1);
     openXDisplay();
     WAIT_UNTIL_TRUE(isMPXManagerRunning());
     sendChangeWorkspaceRequest(0);

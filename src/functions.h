@@ -113,10 +113,12 @@ bool matchesRole(WindowInfo* winInfo, std::string str);
  * @param cmd command to spawn
  * @param matchType whether to use matchesClass or matchesTitle
  * @param silent if 1 redirect stderr and out of child process to /dev/null
+ * @param preserveSession if true, spawn won't double fork
  *
- * @return 1 iff a window was found
+ * @return 0 iff a window was found else the pid of the spawned process
  */
-bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCHES_CLASS, bool silent = 1);
+int raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCHES_CLASS, bool silent = 1,
+    bool preserveSession = 0);
 /**
  * Tries to raise a window with class (or resource) name equal to s.
  * If not it spawns s
@@ -125,7 +127,7 @@ bool raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCH
  *
  * @return 0 iff the program was spawned
  */
-static inline bool raiseOrRun(std::string s) {
+static inline int raiseOrRun(std::string s) {
     return raiseOrRun(s, s);
 }
 

@@ -200,7 +200,7 @@ MPX_TEST("test_sorted_monitors", {
 MPX_TEST("test_detect_monitors", {
     close(2);
     MONITOR_DUPLICATION_POLICY = 0;
-    waitForChild(spawn("xsane-xrandr --auto split-monitor W 3 &>/dev/null"));
+    assertEquals(0, spawnAndWait("xsane-xrandr --auto split-monitor W 3 &>/dev/null"));
     detectMonitors();
     for(Monitor* m : getAllMonitors())
         assert(m->getName() != "");
@@ -208,10 +208,10 @@ MPX_TEST("test_detect_monitors", {
 MPX_TEST("test_detect_removed_monitors", {
     close(2);
     MONITOR_DUPLICATION_POLICY = 0;
-    waitForChild(spawn("xsane-xrandr add-monitor 0 0 10 10 &>/dev/null"));
+    assertEquals(0, spawnAndWait("xsane-xrandr add-monitor 0 0 10 10 &>/dev/null"));
     detectMonitors();
     assertEquals(getAllMonitors().size(), 2);
-    waitForChild(spawn("xsane-xrandr clear"));
+    assertEquals(0, spawnAndWait("xsane-xrandr clear"));
     detectMonitors();
     assertEquals(getAllMonitors().size(), 1);
 });
