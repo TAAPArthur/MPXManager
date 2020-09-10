@@ -67,7 +67,7 @@ MPX_TEST_ITER("test_avoid_docks", 4 * 2 + 2, {
         properties[i] = dockSize;
         properties[i * 2 + 4] = 0;
         properties[i * 2 + 4 + 1] = notFull ? dim : 0;
-        info->setDockProperties(properties, 12);
+        info->setDockProperties(properties, 1);
         resizeAllMonitorsToAvoidAllDocks();
         assert(monitor->getBase() == base);
         assert(otherMonitor->getBase() == other);
@@ -99,7 +99,7 @@ MPX_TEST_ITER("avoid_docks_ignore", 2, {
     WindowInfo* winInfo = new WindowInfo(1);
     assert(addWindowInfo(winInfo));
     winInfo->setDock();
-    winInfo->setDockProperties(properties, 4);
+    winInfo->setDockProperties(properties, 0);
     if(_i)
         winInfo->moveToWorkspace(1);
     else
@@ -119,7 +119,7 @@ MPX_TEST("large_dock", {
     WindowInfo* winInfo = new WindowInfo(1);
     assert(addWindowInfo(winInfo));
     winInfo->setDock();
-    winInfo->setDockProperties(properties, 4);
+    winInfo->setDockProperties(properties, 0);
     uint16_t rootBounds[2] = {dim, dim };
     setRootDims(rootBounds);
     static Rect base = {0, 0, dim, dim};

@@ -15,6 +15,22 @@
 #include "workspaces.h"
 
 
+///Types of docks
+enum DockType {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} ;
+/// Holder for dock metadata
+struct DockProperties {
+    /// Determines which edge of the screen the dock is for
+    DockType type;
+    /// How far the dock extends from the edge. If 0, the dock isn't active
+    uint16_t thickness = 0;
+    /// offset into the specified edge where the dock starts
+    uint16_t start;
+    /// offset into the specified edge where the dock ends
+    uint16_t end;
+    /// @return 1 iff the dock is active
+    operator bool () const { return thickness; }
+};
+
 /**
  * @return a list of windows
  */
@@ -68,6 +84,7 @@ private:
     RectWithBorder tilingOverride = {};
     /** The last know size of the window */
     RectWithBorder geometry = {};
+    DockProperties dockProperties;
 
     /**
      * The window this window is a transient for
@@ -415,16 +432,16 @@ public:
      *
      * @return size 12 array representing dock properties
      */
-    int* getDockProperties(bool createNew = 0) const;
+    const DockProperties& getDockProperties() const { return dockProperties;}
     /**
      * Add properties to winInfo that will be used to avoid docks
-     * @param numberOfProperties number of properties
      * @param properties list of properties
+     * @param full whether properties is of size 4 of 12
      * @see xcb_ewmh_wm_strut_partial_t
      * @see xcb_ewmh_get_extents_reply_t
      * @see avoidStruct
      */
-    void setDockProperties(int* properties, int numberOfProperties);
+    void setDockProperties(int* properties, bool full);
 } ;
 
 /**

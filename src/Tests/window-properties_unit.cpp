@@ -228,11 +228,8 @@ MPX_TEST_ITER("docks", 4 * 2, {
     WindowInfo* winInfo = getWindowInfo(win);
     winInfo->setDock();
     loadDockProperties(winInfo);
-    auto* prop = getWindowInfo(win)->getDockProperties();
-    if(prop) {
-        for(int i = 0; i < 4; i++)
-            assert(prop[i] == 0);
-    }
+    auto prop = getWindowInfo(win)->getDockProperties();
+    assert(!prop);
     setDockProperties(win, i, size, full, start, end);
     setWindowType(win, ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     winInfo->setDock(0);
@@ -241,9 +238,9 @@ MPX_TEST_ITER("docks", 4 * 2, {
 
     prop = getWindowInfo(win)->getDockProperties();
     assert(prop);
-    assertEquals(prop[i], size);
-    assertEquals(prop[i * 2 + 4], start);
-    assertEquals(prop[i * 2 + 5], end);
+    assertEquals(prop.thickness, size);
+    assertEquals(prop.start, start);
+    assertEquals(prop.end, end);
 });
 
 MPX_TEST_ITER("user_time", 2, {

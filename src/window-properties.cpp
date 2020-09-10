@@ -224,12 +224,12 @@ int loadDockProperties(WindowInfo* winInfo) {
     xcb_ewmh_wm_strut_partial_t strut;
     if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
             xcb_ewmh_get_wm_strut_partial(ewmh, win), &strut, NULL)) {
-        winInfo->setDockProperties((int*)&strut, sizeof(xcb_ewmh_wm_strut_partial_t) / sizeof(int));
+        winInfo->setDockProperties((int*)&strut, 1);
     }
     else if(xcb_ewmh_get_wm_strut_reply(ewmh,
             xcb_ewmh_get_wm_strut(ewmh, win),
             (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
-        winInfo->setDockProperties((int*)&strut, sizeof(xcb_ewmh_get_extents_reply_t) / sizeof(int));
+        winInfo->setDockProperties((int*)&strut, 0);
     else {
         TRACE("could not read struct data");
         winInfo->setDockProperties(NULL, 0);

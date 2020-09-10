@@ -122,7 +122,7 @@ MPX_TEST("load_properties_on_scan", {
     assert(getWindowInfo(win)->hasMask(WM_DELETE_WINDOW_MASK));
 });
 
-MPX_TEST_ITER("detect_dock", 2, {
+MPX_TEST("detect_dock", {
     WindowID win = mapWindow(createNormalWindow());
     setWindowType(win, &ewmh->_NET_WM_WINDOW_TYPE_DOCK, 1);
     assert(catchError(xcb_ewmh_set_wm_strut_checked(ewmh, win, 0, 0, 1, 0)) == 0);
@@ -130,11 +130,7 @@ MPX_TEST_ITER("detect_dock", 2, {
     assert(getWindowInfo(win)->isDock());
     auto prop = getWindowInfo(win)->getDockProperties();
     assert(prop);
-    for(int i = 0; i < 4; i++)
-        if(i == 2)
-            assert(prop[i] == 1);
-        else
-            assert(prop[i] == 0);
+    assertEquals(prop.type, DOCK_TOP);
 });
 
 static inline void createWMEnvWithRunningWM() {
@@ -246,7 +242,7 @@ MPX_TEST("test_property_update_dock", {
     int size = 20;
     setDockProperties(win, 0, size);
     waitUntilIdle();
-    assertEquals(getWindowInfo(win)->getDockProperties()[0], size);
+    assertEquals(getWindowInfo(win)->getDockProperties().thickness, size);
     assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
     getWindowInfo(win)->removeFromWorkspace();
     unmapWindow(win);

@@ -169,9 +169,6 @@ extern uint32_t MONITOR_DUPLICATION_POLICY;
 /// Given to monitors are duplicates, how do we determine which one to keep
 extern uint32_t MONITOR_DUPLICATION_RESOLUTION;
 
-///Types of docks
-enum DockTypes {DOCK_LEFT, DOCK_RIGHT, DOCK_TOP, DOCK_BOTTOM} ;
-
 
 /**
  * @return  the primary monitor or NULL

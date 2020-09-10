@@ -74,24 +74,22 @@ MPX_TEST_ITER("dock_properties", 2, {
     WindowInfo* winInfo = new WindowInfo(1);
     getAllWindows().add(winInfo);
     winInfo->setDock(_i);
-    auto* prop = winInfo->getDockProperties();
-    assert(prop == NULL);
+    auto prop = winInfo->getDockProperties();
+    assert(!prop);
     int arr[12] = {0};
-    winInfo->setDockProperties(arr, 12);
+    winInfo->setDockProperties(arr, 1);
     prop = winInfo->getDockProperties();
-    assert(prop != NULL);
-    assertEquals(memcmp(arr, prop, sizeof(arr)), 0);
+    assert(!prop);
     arr[1] = 1;
-    assertEquals(memcmp(winInfo->getDockProperties(), prop, sizeof(arr)), 0);
-    winInfo->setDockProperties(arr, 12);
-    prop = winInfo->getDockProperties();
-    assertEquals(memcmp(arr, prop, sizeof(arr)), 0);
+    assert(!prop);
+    winInfo->setDockProperties(arr, 1);
+    assert(winInfo->getDockProperties());
 });
 
 MPX_TEST("dock_properties_clear", {
     WindowInfo* winInfo = new WindowInfo(1);
-    int arr[12] = {0};
-    winInfo->setDockProperties(arr, 12);
+    int arr[12] = {1};
+    winInfo->setDockProperties(arr, 1);
     assert(winInfo->getDockProperties());
     winInfo->setDockProperties(NULL, 0);
     assert(!winInfo->getDockProperties());

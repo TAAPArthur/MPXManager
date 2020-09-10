@@ -48,11 +48,9 @@ std::ostream& operator<<(std::ostream& stream, const WindowInfo& winInfo) {
         stream << " InputOnly";
     if(winInfo.isDock()) {
         stream << " Dock";
-        auto properties = winInfo.getDockProperties(false);
+        auto properties = winInfo.getDockProperties();
         if(properties) {
-            for(int i = 0; i < 4; i++)
-                if(properties[i])
-                    stream << "{" << i << ": " << properties[i * 2 + 4] << ", " << properties[i * 2 + 5] << "}";
+            stream << "{" << properties.type << ": " << properties.start << ", " << properties.end << "}";
         }
     }
     if(winInfo.isOverrideRedirectWindow())
@@ -125,16 +123,18 @@ WindowInfo::~WindowInfo() {
     removeFromWorkspace();
     removeID(this);
 }
-static Index<int[12]> key;
-void WindowInfo::setDockProperties(int* properties, int numberOfProperties) {
+void WindowInfo::setDockProperties(int* properties, bool partial) {
     if(properties) {
-        memset(getDockProperties(1), 0, 12 * sizeof(int));
-        memcpy(getDockProperties(1), properties, numberOfProperties * sizeof(int));
+        for(int i = 0; i < 4; i++) {
+            if(properties[i]) {
+                this->dockProperties = {(DockType)i, (uint16_t)properties[i], 0, 0};
+                if(partial) {
+                    this->dockProperties.start = properties[4 + i * 2];
+                    this->dockProperties.end = properties[4 + i * 2 + 1];
+                }
+                return;
+            }
+        }
     }
-    else {
-        remove(key, this);
-    }
-}
-int* WindowInfo::getDockProperties(bool createNew) const {
-    return *get(key, this, createNew);
+    this->dockProperties.thickness = 0;
 }

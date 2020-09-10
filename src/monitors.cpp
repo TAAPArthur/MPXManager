@@ -55,42 +55,36 @@ bool Monitor::resizeToAvoidDock(WindowInfo* winInfo) {
     if(winInfo->getWorkspace() && winInfo->getWorkspace()->getMonitor() != this ||
         !winInfo->getWorkspace() && winInfo->hasMask(PRIMARY_MONITOR_MASK) && !isPrimary())
         return 0;
-    bool changed = 0;
-    auto properties = winInfo->getDockProperties();
+    const DockProperties& properties = winInfo->getDockProperties();
     if(!properties)
         return 0;
-    for(int i = 0; i < 4; i++) {
-        int dim = properties[i];
-        if(dim == 0)
-            continue;
-        bool fromPositiveSide = (i == DOCK_LEFT) || (i == DOCK_TOP);
-        bool offset = (i == DOCK_TOP) || (i == DOCK_BOTTOM);
-        int start = properties[i * 2 + 4];
-        int end = properties[i * 2 + 4 + 1];
-        if(end == 0)
-            end = offset ? getRootWidth() : getRootHeight();
-        assert(start <= end);
-        short int values[] = {0, 0, 0, 0};
-        values[offset] = fromPositiveSide ? 0 : (offset ? getRootHeight() : getRootWidth()) - dim;
-        values[!offset] = start;
-        values[offset + 2] = dim;
-        values[!offset + 2] = end - start;
-        if(!view.intersects(*(Rect*)values))
-            continue;
-        int intersectionWidth = fromPositiveSide ?
-            dim - (&view.x)[offset] :
-            (&view.x)[offset] + (&view.width)[offset] - values[offset];
-        assert(intersectionWidth > 0);
-        (&view.width)[offset] -= intersectionWidth;
-        if((&view.width)[offset] == 0)
-            (&view.width)[offset] = 1;
-        if(fromPositiveSide)
-            (&view.x)[offset] = dim;
-        changed = 1;
-    }
-    if(changed)
-        INFO("Monitor " << getID() << " was resized because of " << winInfo->getID() << "; new size is: " << getViewport());
-    return changed;
+    DockType i = properties.type;
+    int dim = properties.thickness;
+    bool fromPositiveSide = (i == DOCK_LEFT) || (i == DOCK_TOP);
+    bool offset = (i == DOCK_TOP) || (i == DOCK_BOTTOM);
+    int start = properties.start;
+    int end = properties.end;
+    if(end == 0)
+        end = offset ? getRootWidth() : getRootHeight();
+    assert(start <= end);
+    short int values[] = {0, 0, 0, 0};
+    values[offset] = fromPositiveSide ? 0 : (offset ? getRootHeight() : getRootWidth()) - dim;
+    values[!offset] = start;
+    values[offset + 2] = dim;
+    values[!offset + 2] = end - start;
+    if(!view.intersects(*(Rect*)values))
+        return 0;
+    int intersectionWidth = fromPositiveSide ?
+        dim - (&view.x)[offset] :
+        (&view.x)[offset] + (&view.width)[offset] - values[offset];
+    assert(intersectionWidth > 0);
+    (&view.width)[offset] -= intersectionWidth;
+    if((&view.width)[offset] == 0)
+        (&view.width)[offset] = 1;
+    if(fromPositiveSide)
+        (&view.x)[offset] = dim;
+    INFO("Monitor " << getID() << " was resized because of " << winInfo->getID() << "; new size is: " << getViewport());
+    return 1;
 }
 Monitor* addRootMonitor() {
     return addFakeMonitor({0, 0, getRootWidth(), getRootHeight()}, "ROOT");
