@@ -106,7 +106,9 @@ MPX_TEST_ITER("auto_focus_window_when_switching_workspace", 2, {
     ATOMIC(switchToWorkspace(other));
     wakeupWM();
     waitUntilIdle();
+    assert(!getActiveWindowStack().size());
     assert(getActiveFocus() != winInfo->getID());
+    assertEquals(root, getActiveFocus());
     assert(!winInfo->hasMask(MAPPED_MASK));
     ATOMIC(switchToWorkspace(base));
     wakeupWM();

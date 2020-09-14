@@ -103,6 +103,10 @@ void scan(xcb_window_t baseWindow) {
 }
 
 static bool focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
+    if(ignore != master->getFocusedWindow() && master->getFocusedWindow()->isNotInInvisibleWorkspace() &&
+        focusWindow(master->getFocusedWindow())) {
+        return 1;
+    }
     for(WindowInfo* winInfo : master->getWindowStack())
         if(winInfo != ignore && master->getWorkspaceIndex() == winInfo->getWorkspaceIndex() && winInfo->isFocusable() &&
             focusWindow(winInfo))

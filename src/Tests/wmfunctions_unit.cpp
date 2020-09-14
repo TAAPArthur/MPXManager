@@ -282,6 +282,20 @@ MPX_TEST_ITER("test_workspace_activation", 3, {
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), winInfo2->getID());
 });
 
+MPX_TEST("test_updateFocusForAllMasters", {
+    addWorkspaces(1);
+    WindowID win = mapArbitraryWindow();
+    WindowID win2 = mapArbitraryWindow();
+    scan(root);
+    getActiveMaster()->onWindowFocus(win);
+    getActiveMaster()->onWindowFocus(win2);
+    updateFocusForAllMasters(NULL);
+    assertEquals(getActiveFocus(), win2);
+    updateFocusForAllMasters(getWindowInfo(win2));
+    assertEquals(getActiveFocus(), win);
+
+});
+
 static void createWMEnv(void) {
     createXSimpleEnv();
     registerForWindowEvents(root, ROOT_EVENT_MASKS);

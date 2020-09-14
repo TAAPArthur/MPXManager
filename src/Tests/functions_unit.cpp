@@ -56,6 +56,41 @@ MPX_TEST_ITER("cycle_window", 2, {
     assert(!getActiveMaster()->isFocusStackFrozen());
 });
 
+MPX_TEST_ITER("cycle_window_many", 2, {
+    AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
+    for(int i = 0; i < 2; i++)
+        mapWindow(createNormalWindow());
+    startWM();
+    waitUntilIdle();
+
+    lock();
+    for(WindowInfo* winInfo : getAllWindows()) {
+        focusWindow(winInfo);
+    }
+    getAllWindows()[1]->moveToWorkspace(1);
+    getAllWindows()[2]->moveToWorkspace(1);
+    unlock();
+    waitUntilIdle();
+    int arr[getAllWindows().size()] = {};
+    int N = 3;
+    WindowID lastWindowFocused = getFocusedWindow()->getID();
+    for(int i = 0; i < getAllWindows().size()*N - 1; i++) {
+        lock();
+        assertEquals(lastWindowFocused, getFocusedWindow()->getID());
+        cycleWindows(DOWN);
+        lastWindowFocused = getFocusedWindow()->getID();
+        int index = getAllWindows().indexOf(getFocusedWindow());
+        assert(index >= 0);
+        arr[index]++;
+        for(int n = 0; n < LEN(arr); n++) {
+            assert(arr[index] - arr[n] <= 1);
+        }
+        unlock();
+        if(_i)
+            waitUntilIdle();
+    }
+});
+
 MPX_TEST_ITER("cycle_window_stress", 2, {
     AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
     addAutoTileRules();
