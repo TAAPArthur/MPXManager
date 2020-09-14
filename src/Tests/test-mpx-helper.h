@@ -1,51 +1,59 @@
 #ifndef MPX_TEST_MPX_HELPER
 #define MPX_TEST_MPX_HELPER
 
-#include "../debug.h"
-#include "../logger.h"
+#include "../util/debug.h"
+#include "../util/logger.h"
 #include "../masters.h"
 #include "../monitors.h"
 #include "../mywm-structs.h"
-#include "../system.h"
-#include "../threads.h"
 #include "../windows.h"
 #include "../workspaces.h"
+#include "tester.h"
+
+#define assertEqualsRect(A,B)do{RectWithBorder __b=B; dumpRect(A);dumpRect(__b);assertEquals(*(long*)&A, *(long*)&__b);}while(0)
+static inline WindowInfo* addFakeWindowInfo(WindowID win) {
+    return newWindowInfo(win, 0, 0);
+}
+
+
+static inline Master* addFakeMaster(MasterID pointerID, MasterID keyboardID) {
+    return newMaster(pointerID, keyboardID, "");
+}
+static inline Monitor* addDummyMonitor() {
+    return addFakeMonitor((Rect) {0, 0, 1, 1});
+}
+static inline WindowInfo* getWindowByIndex(int index) {
+    return getElement(getAllWindows(), index);
+}
+static inline void destroyAllLists() {
+    setActiveMaster(NULL);
+    FOR_EACH_R(Monitor*, monitor, getAllMonitors()) {
+        freeMonitor(monitor);
+    }
+    FOR_EACH_R(WindowInfo*, winInfo, getAllWindows()) {
+        freeWindowInfo(winInfo);
+    }
+    FOR_EACH_R(Slave*, slave, getAllSlaves()) {
+        freeSlave(slave);
+    }
+    assert(!getAllSlaves()->size);
+    FOR_EACH_R(Master*, master, getAllMasters()) {
+        freeMaster(master);
+    }
+    removeWorkspaces(getNumberOfWorkspaces() - 1);
+    if(getNumberOfWorkspaces()) {
+        extern ArrayList workspaces;
+        void freeWorkspace(Workspace * workspace);
+        freeWorkspace(pop(&workspaces));
+    }
+}
 
 static inline void createSimpleEnv(void) {
     addDefaultMaster();
     addWorkspaces(1);
 }
-static inline bool addWindowInfo(WindowInfo* winInfo) {
-    return getAllWindows().addUnique(winInfo);
-}
-static inline void destroyAllLists() {
-    setActiveMaster(NULL);
-    getAllSlaves().deleteElements();
-    getAllMasters().deleteElements();
-    extern ArrayList<Workspace*> workspaces;
-    workspaces.deleteElements();
-    getAllWindows().deleteElements();
-    getAllMonitors().deleteElements();
-}
 static inline void simpleCleanup() {
-    validate();
-    suppressOutput();
-    printSummary();
     destroyAllLists();
 }
-static volatile int count = 0;
-static inline void incrementCount(void) {
-    LOG_RUN(0, printStackTrace());
-    count++;
-}
-static inline void decrementCount(void) {
-    LOG_RUN(0, printStackTrace());
-    count--;
-}
-static inline int getCount() {return count;}
-static inline int getAndResetCount() {
-    auto c = count;
-    count = 0;
-    return c;
-}
+static inline void fail() {assert(0);}
 #endif

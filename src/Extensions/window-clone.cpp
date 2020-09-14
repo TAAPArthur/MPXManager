@@ -198,3 +198,22 @@ void addCloneRules(void) {
     getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(swapOnMapEvent));
     getEventRules(XCB_UNMAP_NOTIFY).add(DEFAULT_EVENT(swapOnUnmapEvent));
 }
+
+
+
+void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2) {
+    TRACE("swapping windows %d %d", winInfo1->id, winInfo2->id);
+    Workspace* w1 = getWorkspaceOfWindow(winInfo1);
+    Workspace* w2 = getWorkspaceOfWindow(winInfo2);
+    if(w1 && w2) {
+        swapElements(
+            getWorkspaceWindowStack(w1),
+            getIndex(getWorkspaceWindowStack(w1), winInfo1, sizeof(WindowID)),
+            getWorkspaceWindowStack(w2),
+            getIndex(getWorkspaceWindowStack(w1), winInfo2, sizeof(WindowID))
+        );
+    }
+    RectWithBorder geo = getRealGeometry(winInfo2->id);
+    setWindowPosition(winInfo2->id, getRealGeometry(winInfo1->id));
+    setWindowPosition(winInfo1->id, geo);
+}

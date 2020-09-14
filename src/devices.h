@@ -7,32 +7,27 @@
 #ifndef MPX_DEVICES_H_
 #define MPX_DEVICES_H_
 
-#include <string>
-
-#include "arraylist.h"
+#include "util/arraylist.h"
 #include "masters.h"
 #include "monitors.h"
 #include "mywm-structs.h"
-#include "xsession.h"
+#include "xutil/xsession.h"
 
+
+void registerMasterDevice(MasterID id);
 
 /**
  * Creates a master device with the specified name
  * @param name the user set prefix of the master device pair
  */
-void createMasterDevice(std::string name);
+void createMasterDevice(const char* name);
 /**
  * Attaches the specified slave to the specified master
  * @param slaveID valid slaveID
  * @param masterID valid MasterID
  */
-void attachSlaveToMaster(SlaveID slaveID, MasterID masterID);
-/**
- * Disassociates a slave from its master
- *
- * @param slaveID
- */
-void floatSlave(SlaveID slaveID) ;
+void attachSlaveToMasterDevice(SlaveID slaveID, MasterID masterID);
+
 /**
  * Attaches slave to master
  * If master is NULL, slave becomes floating
@@ -42,18 +37,24 @@ void floatSlave(SlaveID slaveID) ;
  */
 void attachSlaveToMaster(Slave* slave, Master* master);
 /**
+ * Disassociates a slave from its master
+ *
+ * @param slaveID
+ */
+void floatSlave(SlaveID slaveID) ;
+/**
  * Sends a XIChangeHierarchy request to remove the specified master.
  * The internal state will not be updated until we receive a Hierarchy change event
  * @param id
  * @param returnPointer
  * @param returnKeyboard
  */
-void destroyMasterDevice(MasterID id, int returnPointer, int returnKeyboard);
+void destroyMasterDevice2(MasterID id, int returnPointer, int returnKeyboard);
+static inline void destroyMasterDevice(MasterID id) {destroyMasterDevice2(id, DEFAULT_POINTER, DEFAULT_KEYBOARD);}
 /**
  * Calls destroyMasterDevice for all non default masters
  */
 void destroyAllNonDefaultMasters(void);
-
 
 /**
  * Add all existing masters to the list of master devices
@@ -63,15 +64,13 @@ void initCurrentMasters(void);
  * Sets the active master to be the device associated with deviceID
  * @param deviceID either master keyboard or slave keyboard (or master pointer)id
  */
-void setActiveMasterByDeviceID(MasterID deviceID);
+bool setActiveMasterByDeviceID(MasterID deviceID);
 /**
  * @param id a MasterID or a SlaveID
  *
  * @return the active master to be the device associated with deviceID
  */
 Master* getMasterByDeviceID(MasterID id) ;
-
-
 
 /**
  * Gets the pointer position relative to a given window
@@ -84,23 +83,11 @@ bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]);
 /**
  * Wrapper for getMousePosition
  *
- * @param m
- * @param relativeWindow
  * @param result where the x,y location will be stored
  *
  * @return 1 if result now contains position
  */
-static inline bool getMousePosition(Master* m, int relativeWindow, int16_t result[2]) {
-    return getMousePosition(m->getPointerID(), relativeWindow, result);
-}
-/**
- * Wrapper for getMousePosition
- *
- * @param result where the x,y location will be stored
- *
- * @return 1 if result now contains position
- */
-static inline bool getMousePosition(int16_t result[2]) {
+static inline bool getActiveMousePosition(int16_t result[2]) {
     return getMousePosition(getActiveMasterPointerID(), root, result);
 }
 
@@ -110,7 +97,7 @@ static inline bool getMousePosition(int16_t result[2]) {
  * @param window
  * @param id
  */
-void setClientPointerForWindow(WindowID window, MasterID id = getActiveMasterPointerID());
+void setClientPointerForWindow(WindowID window, MasterID id);
 /**
  *
  *
@@ -132,21 +119,6 @@ Master* getClientMaster(WindowID win) ;
  * @param id a keyboard master device
  * @return the current window focused by the given keyboard device
  */
-WindowID getActiveFocus(MasterID id = getActiveMasterKeyboardID());
-
-/**
- * Makes the output primary
- * Wraps xcb_randr_set_output_primary
- *
- * @param output
- */
-void setPrimaryOutput(uint32_t output);
-/**
- * Makes the monitor primary. If monitor is NULL, then there will be no primary monitor
- * This is different than Monitor::setPrimary in that in changes the X11 state instead of our local state
- *
- * @param monitor a valid monitor or NULL
- */
-void setPrimary(const Monitor* monitor);
+WindowID getActiveFocus(MasterID id);
 
 #endif /* DEVICES_H_ */

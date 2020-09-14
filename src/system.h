@@ -16,8 +16,7 @@
  */
 #ifndef MPX_SYSTEM
 #define MPX_SYSTEM
-
-#include <string>
+#include <stdbool.h>
 
 /// @{
 /// Exit codes
@@ -46,7 +45,7 @@
 #define STATUS_FD_EXTERNAL_WRITE statusPipeFD[3]
 
 /// enum to specify how pipes are handled
-enum ChildRedirection {
+typedef enum {
     /// Don't redirect
     NO_REDIRECTION = 0,
     /// Redirect child input to STATUS_FD_EXTERNAL_READ
@@ -55,17 +54,17 @@ enum ChildRedirection {
     REDIRECT_CHILD_OUTPUT_ONLY,
     /// Redirect child input/output to STATUS_FD_EXTERNAL_READ/STATUS_FD_EXTERNAL_WRITE
     REDIRECT_BOTH = 3
-};
+} ChildRedirection ;
 
 /// Used to track how many times this program has been restarted
-extern const int RESTART_COUNTER;
+extern int RESTART_COUNTER;
 ///Returns the field descriptors used to communicate WM status to an external program
 extern int statusPipeFD[4];
 
 /// the number of arguments passed into the main method
 extern int numPassedArguments;
 /// the argument list passed into the main method
-extern char* const* passedArguments;
+extern const char* const* passedArguments;
 /**
  * exits the application
  * @param exitCode exit status of the program
@@ -100,9 +99,9 @@ int spawn(const char* command);
  * @param silent if 1, suppress output
  * @return the pid of the new process
  */
-int spawn(const char* command, bool preserveSession, bool silent = 0);
+int spawnChild(const char* command);
 
-static inline int spawnAndWait(const char* command) {return waitForChild(spawn(command, 1));}
+static inline int spawnAndWait(const char* command) {return waitForChild(spawnChild(command));}
 
 /**
  * @copydoc spawn(const char*)
@@ -112,7 +111,7 @@ static inline int spawnAndWait(const char* command) {return waitForChild(spawn(c
  * @param preserveSession if true, spawn won't double fork
  * @return the pid of the new process
  */
-int spawnPipe(const char* command, ChildRedirection ioRedirection = REDIRECT_BOTH, bool preserveSession = 0);
+int spawnPipe(const char* command, ChildRedirection ioRedirection);
 
 /**
  * Calls NOTIFY_CMD with summary and body
@@ -121,7 +120,7 @@ int spawnPipe(const char* command, ChildRedirection ioRedirection = REDIRECT_BOT
  * @param summary
  * @param body
  */
-int notify(std::string summary, std::string body);
+int notify(const char* summary, const char* body);
 
 /**
  * Dups stdout and stderror to /dev/null
@@ -135,5 +134,17 @@ extern void (*onChildSpawn)(void);
  * Set environment vars such to help old clients know which master device to use
  */
 void setClientMasterEnvVar(void);
+
+void set_handlers();
+
+/**
+ * Used to create a signal handler for functions that don't return
+ *
+ * @param sig the signal to catch
+ * @param handler the callback function
+ *
+ * @return 0 on success or the result from sigaction
+ */
+int createSigAction(int sig, void(*callback)(int));
 
 #endif

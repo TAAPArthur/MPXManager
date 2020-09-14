@@ -1,9 +1,0 @@
-MPXMANAGER_BIN_NAME ?= mpxmanager
-
-all: mpxmanager
-
-mpxmanager: $(patsubst %.cpp,%.o,$(wildcard *.cpp)) | /usr/lib/libmpxmanager.a
-	${CXX} $^ -o $(MPXMANAGER_BIN_NAME) ${CPPFLAGS} ${LDFLAGS} ${MPX_LDFLAGS} -lmpxmanager
-
-clean:
-	rm *.o

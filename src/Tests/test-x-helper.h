@@ -6,31 +6,28 @@
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xinput.h>
+#include <X11/XF86keysym.h>
+#include <X11/keysym.h>
 
 #include <assert.h>
 #include <err.h>
 #include "test-mpx-helper.h"
+#include "tester.h"
 #include "../globals.h"
-#include "../xsession.h"
-#include "../logger.h"
+#include "../util/threads.h"
+#include "../xutil/xsession.h"
+#include "../xutil/window-properties.h"
 #include "../system.h"
 #include "../masters.h"
-#include "../device-grab.h"
 #include "../bindings.h"
 #include "../devices.h"
 #include "../user-events.h"
 
-static void inline saveXSession() {
-    static auto _dpy = dpy;
-    static auto _dis = dis;
-    static auto _ewmh = ewmh;
-    assert(_dpy && _dis && _ewmh);
-}
-static inline int _createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input = 1,
-    xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_ONLY, xcb_atom_t type = ewmh->_NET_WM_WINDOW_TYPE_NORMAL) {
+static inline int _createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input,
+    xcb_window_class_t clazz, xcb_atom_t type) {
     assert(ignored < 2);
     assert(dis);
-    WindowID window = createWindow(parent, clazz, XCB_CW_OVERRIDE_REDIRECT, &ignored);
+    WindowID window = createWindow(parent, clazz, XCB_CW_OVERRIDE_REDIRECT, &ignored, (Rect) {0, 0, 1, 1});
     xcb_icccm_wm_hints_t hints = {.input = input, .initial_state = mapped};
     catchError(xcb_icccm_set_wm_hints_checked(dis, window, &hints));
     if(!userIgnored && !ignored)
@@ -41,22 +38,22 @@ static inline WindowID createWindowWithType(xcb_atom_t atom) {
     return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, atom);
 }
 static inline WindowID createNormalWindow(void) {
-    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 static inline WindowID createInputOnlyWindow(void) {
-    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
+    return _createWindow(root, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_ONLY, ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 static inline WindowID createTypelessInputOnlyWindow(void) {
-    return _createWindow(root, 1, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_ONLY);
+    return _createWindow(root, 1, 0, 1, 1, XCB_WINDOW_CLASS_INPUT_ONLY, ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 static inline WindowID createNormalSubWindow(int parent) {
-    return _createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    return _createWindow(parent, 1, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 static inline WindowID  createUnmappedWindow(void) {
-    return _createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT);
+    return _createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 static inline WindowID mapArbitraryWindow() {return mapWindow(createNormalWindow());}
-static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bool adj = 0) {
+static inline bool _checkStackingOrder(const WindowID* stackingOrder, int num, bool adj) {
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);
     if(!reply) {
@@ -77,15 +74,22 @@ static inline bool checkStackingOrder(const WindowID* stackingOrder, int num, bo
             break;
         }
     }
-    free(reply);
     if(counter != num) {
         LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Window Stack  ", children, numberOfChildren));
         LOG_RUN(LOG_LEVEL_DEBUG, PRINT_ARR("Expected Stack", stackingOrder, num));
-        LOG(LOG_LEVEL_DEBUG, "%d vs %d\n", counter, num);
+        DEBUG("%d vs %d\n", counter, num);
     }
+    free(reply);
     return counter == num;
 }
-static inline WindowID setDockProperties(WindowID win, int i, int size, bool full = 0, int start = 0, int end = 0) {
+
+static inline bool checkStackingOrder(const WindowID* stackingOrder, int num) {
+    return _checkStackingOrder(stackingOrder, num, 0);
+}
+static inline bool checkStackingOrderAbj(const WindowID* stackingOrder, int num) {
+    return _checkStackingOrder(stackingOrder, num, 1);
+}
+static inline WindowID setEWMHDockProperties(WindowID win, int i, int size, bool full, int start, int end) {
     assert(i >= 0);
     assert(i < 4);
     int strut[12] = {0};
@@ -110,7 +114,7 @@ static inline int consumeEvents() {
         e = xcb_poll_for_event(dis);
         if(e) {
             numEvents++;
-            LOG(LOG_LEVEL_TRACE, "Event ignored %d %s\n",
+            TRACE("Event ignored %d %s\n",
                 e->response_type, eventTypeToString(e->response_type & 127));
             free(e);
         }
@@ -121,10 +125,7 @@ static inline int consumeEvents() {
 }
 static inline void cleanupXServer() {
     destroyAllNonDefaultMasters();
-    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
-        getEventRules(i).deleteElements();
-        getBatchEventRules(i).deleteElements();
-    }
+    closeConnection();
     simpleCleanup();
 }
 static inline void createXSimpleEnv(void) {
@@ -132,5 +133,16 @@ static inline void createXSimpleEnv(void) {
     createSimpleEnv();
     addRootMonitor();
     assignUnusedMonitorsToWorkspaces();
+}
+static inline bool isWindowMapped(WindowID win) {
+    xcb_get_window_attributes_reply_t* reply;
+    reply = xcb_get_window_attributes_reply(dis, xcb_get_window_attributes(dis, win), NULL);
+    bool result = reply->map_state != XCB_MAP_STATE_UNMAPPED;
+    free(reply);
+    return result;
+}
+
+static inline WindowInfo* addWindow(WindowID win) {
+    return newWindowInfo(win, root, 0);
 }
 #endif

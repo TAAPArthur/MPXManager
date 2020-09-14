@@ -11,108 +11,20 @@
 
 
 /**
- * Handles the case where we get an unchecked error by logging the error
- */
-void onError(void);
-
-
-/**
- * Keeps visibility masks in sync with XServer state
- */
-void onVisibilityEvent(void);
-
-/**
- * Processes a window to see if we should keep track of it
- */
-void onCreateEvent(void);
-/**
- * Removes the destroyed window
- */
-void onDestroyEvent(void);
-
-/**
- * Keeps mapped masks in sync with XServer state
- */
-void onMapEvent(void);
-/**
- * Keeps mapped masks in sync with XServer state
- */
-void onUnmapEvent(void);
-/**
- * Called when a client application changes the window's state from unmapped to mapped.
- */
-void onMapRequestEvent(void);
-/**
- * updates window geometry
- */
-void onConfigureNotifyEvent(void);
-/**
- * Set initial window config
- */
-void onConfigureRequestEvent(void);
-/**
- * Updates properties of the given window
- */
-void onPropertyEvent(void);
-/**
- * Calls requestShutdown if we have lost the WM_SELECTION
- * @return 1 if a shutdown wasn't requested
- */
-bool onSelectionClearEvent(void);
-
-/**
- * Default method for key/button press/release and mouse motion events
- * After some processing, we check to see if the key/mod/mask combination matches any key bindings via checkBindigs()
- */
-void onDeviceEvent(void);
-
-/**
- * Removes/adds windows from our list of managed windows when it is reparented
- * Use with XCB_REPARENT_NOTIFY
- */
-
-void onReparentEvent(void);
-/**
- * Updates the border color of the new window
- */
-void onFocusInEvent(void);
-/**
- * Updates the border color of the (old) focused window to not reflect the current master
- */
-void onFocusOutEvent(void);
-/**
- * Default method called on hierarchy change events which refer to modifications of master/slave device(s)
- * The event right before this method should be a xcb_input_hierarchy_event_t event
- * This method keeps our state synced with the X Sever state for master addition/removal
- */
-void onHiearchyChangeEvent(void);
-
-/**
  * Adds onDeviceEvent for the appropriate rules
  */
 void addDefaultDeviceRules();
-
-
-/**
- * Default hook that will be called on connection to the XServer.
- * It scans for existing windows and applies the default tiling layout to existing workspaces
- */
-void onXConnect(void);
 
 /**
  * Adds a bunch of rules needed for the WM to function as expected
  * The majority are wrappers to map X11 event to the corresponding function
  */
-void addBasicRules(bool remove = 0);
+void addBasicRules();
 /**
  * Register ROOT_EVENT_MASKS
  * @see ROOT_EVENT_MASKS
  */
 void registerForEvents();
-/**
- * Calls grab for all getDeviceBindings()
- */
-void grabDeviceBindings();
 /**
  * Listens for NON_ROOT_EVENT_MASKS and NON_ROOT_DEVICE_EVENT_MASKS
  *
@@ -122,33 +34,32 @@ void grabDeviceBindings();
 bool listenForNonRootEventsFromWindow(WindowInfo* winInfo);
 
 /**
- * Attempts to translate the generic event receive into an extension event and applies corresponding Rules.
- */
-void onGenericEvent(void);
-
-/**
  * Rules to automatically tile workspaces when they have changed
  *
  * @param remove
  */
-void addAutoTileRules(bool remove = 0);
+void addAutoTileRules();
 /**
- * Adds a PRE_REGISTER_WINDOW rule to ignore override redirect windows
+ * Adds a POST_REGISTER_WINDOW rule to ignore override redirect windows
  *
  * This method is enabled by default although it reduces functionality.
  *
  * From the ICCCM spec,
  * "The user will not be able to move, resize, restack, or transfer the input
  * focus to override-redirect windows, since the window manager is not managing them"
- * This is interrupted it as it being safe to simply ignore such windows. However,
+ * This is interpreted as it being safe to simply ignore such windows.
+ *
+ * In the same breath we are ignoring input only windows as they will never be mapped and aren't interesting
+ *
+ * TODO move comment
+ * However,
  * there are cases where one may want apply rules like ALWAYS_ON_TOP_MASK to these windows.
  * For such reasons, there are other rule in addBasicRules that will help keep sane
  * behavior even if this rule is removed.
  * @param remove
  *
- * @return
  */
-bool addIgnoreOverrideRedirectWindowsRule(bool remove = 0);
+void addIgnoreOverrideRedirectAndInputOnlyWindowsRule();
 /**
  * Adds a PRE_REGISTER_WINDOW rule indicating that override redirect windows should not be managed.
  * This should prevent them from being automatically added to workspaces/auto focused
@@ -157,14 +68,7 @@ bool addIgnoreOverrideRedirectWindowsRule(bool remove = 0);
  *
  * @return
  */
-bool addDoNotManageOverrideRedirectWindowsRule(bool remove = 0) ;
-
-/**
- * Adds a PRE_REGISTER window rule to ignore input only windows
- * @param remove
- * @return
- */
-bool addIgnoreInputOnlyWindowsRule(bool remove = 0);
+bool addDoNotManageOverrideRedirectWindowsRule() ;
 
 /**
  * Adds DEVICE_EVENT rule to trigger any of getDeviceBindings() using getLastUserEvent
@@ -172,5 +76,5 @@ bool addIgnoreInputOnlyWindowsRule(bool remove = 0);
  * @see checkBindings()
  * @param remove
  */
-void addApplyBindingsRule(bool remove = 0);
+void addApplyBindingsRule();
 #endif /* DEFAULT_RULES_H_ */

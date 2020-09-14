@@ -114,5 +114,11 @@ void swapOnUnmapEvent(void);
  * @param winInfo
  */
 void killAllClones(WindowInfo* winInfo);
+/**
+ * Swaps the workspaces and positions in said workspaces between the two windows
+ * @param winInfo1
+ * @param winInfo2
+ */
+void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
 
 #endif

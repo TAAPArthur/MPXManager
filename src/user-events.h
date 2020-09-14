@@ -14,7 +14,7 @@
 /// max value of supported X events (not total events)
 #define LAST_REAL_EVENT (GENERIC_EVENT_OFFSET+XI_LASTEVENT+1)
 
-enum {
+typedef enum {
     /**
      * X11 events that are >= LASTEvent
      * In other words events that are unknown/unaccounted for.
@@ -23,11 +23,6 @@ enum {
     EXTRA_EVENT = 1,
     /// Called on startup after the x11 display has been opened
     X_CONNECTION = LAST_REAL_EVENT,
-    /**
-     * Called before the newly created window has been added to our internal lists
-     * If the result of these rules is 0, then the window won't be added to out list
-     */
-    PRE_REGISTER_WINDOW,
     /// Called after the newly created window has been added to our internal lists
     POST_REGISTER_WINDOW,
     /// Called right before a window is remove from our internal lists
@@ -51,8 +46,6 @@ enum {
      * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. The other being that the WindowInfo object will be passed in when the rule is applied.
      */
     WINDOW_MOVE,
-    /// called after a set number of events or when the connection is idle
-    PERIODIC,
     /// called when the connection is idle
     IDLE,
     /// called when the connection is idle (even after the calls to IDLE. )
@@ -60,7 +53,5 @@ enum {
     TRUE_IDLE,
     /// max value of supported events
     NUMBER_OF_MPX_EVENTS
-};
-/// The number of events that have batch rules
-#define NUMBER_OF_BATCHABLE_EVENTS IDLE
+} UserEvent;
 #endif

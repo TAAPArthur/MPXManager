@@ -5,9 +5,16 @@
 #ifndef MYWM_STRUCTS_H
 #define MYWM_STRUCTS_H
 
-#include "arraylist.h"
-#include <iostream>
+#include <stdint.h>
+#include "util/arraylist.h"
 
+#define LEN(X) (sizeof(X) / sizeof((X)[0]))
+#define MAX_NAME_LEN 255
+
+#define MAX(A,B) (A>=B?A:B)
+#define MIN(A,B) (A<=B?A:B)
+
+#define MIN_NAME_LEN(X) (MAX_NAME_LEN-1<X?MAX_NAME_LEN-1:X)
 /// typeof WindowInfo::id
 typedef unsigned int WindowID;
 /// typeof Master::id
@@ -20,125 +27,53 @@ typedef unsigned int WorkspaceID;
 typedef unsigned int MonitorID;
 /// holds current time in mills
 typedef unsigned long TimeStamp;
+typedef uint32_t WindowMask;
 
-struct Monitor;
-struct Layout;
-struct Master;
-struct Slave;
-struct WindowInfo;
-struct Workspace;
+typedef struct Monitor Monitor;
+typedef struct Layout Layout;
+typedef struct Master Master;
+typedef struct Slave Slave;
+typedef struct WindowInfo WindowInfo;
+typedef struct Workspace Workspace;
 
-/**
- * Superclass of all structs with an X counterpart
- */
-struct WMStruct {
-protected:
-    /// unique identifier
-    const uint32_t id;
-public:
-    /**
-     *
-     *
-     * @param id the unique id
-     */
-    WMStruct(uint32_t id): id(id) {};
-    virtual ~WMStruct() = default;
-    /// @return the unique identifier
-    uint32_t getID()const {return id;}
-    /// @return the unique identifier
-    operator uint32_t ()const {return getID();}
-    /// @return 1 iff the unique identifiers match
-    bool operator==(const WMStruct& s)const {return id == s.id;}
-    /// @param id
-    /// @return 1 iff the unique identifier matches id
-    bool operator==(const uint32_t& id)const {return this->id == id;}
-};
 
-/// @{
-/**
- * Prints object
- * @return
- */
-std::ostream& operator<<(std::ostream&, const Monitor&);
-std::ostream& operator>>(std::ostream&, const Monitor&);
-std::ostream& operator<<(std::ostream&, const Layout&);
-std::ostream& operator<<(std::ostream&, const Master&);
-std::ostream& operator>>(std::ostream&, const Master&);
-std::ostream& operator<<(std::ostream&, const Slave&);
-std::ostream& operator<<(std::ostream&, const WindowInfo&);
-std::ostream& operator>>(std::ostream&, const WindowInfo&);
-std::ostream& operator<<(std::ostream&, const Workspace&);
-std::ostream& operator>>(std::ostream&, const Workspace&);
-/// @}
+#define __FUNC_CAT_HELPER(x, y, z) x##y##z
+#define __FUNC_CAT(x, y, z) __FUNC_CAT_HELPER(x, y, z)
+#define __DECLARE_GET_X_BY_NAME(X) \
+X* __FUNC_CAT(get,X,ByName)(const char* name)
+
+#define __DEFINE_GET_X_BY_NAME(X) \
+X* __FUNC_CAT(get,X,ByName)(const char* name) { \
+    const ArrayList* arr =__FUNC_CAT(getAll, X, s)(); \
+    for(int i = 0; i < arr->size; i++) { \
+        X* p= getElement(arr, i); \
+        if(strcmp(p->name, name) == 0) \
+            return p; \
+    } \
+    return NULL; \
+}
 
 /**
- * For each member in list, deference member and print
- *
- * @tparam T
- * @param stream
- * @param list
- *
- * @return
+ * @return a list of all workspaces
  */
-template<class T>
-std::ostream& operator<<(std::ostream& stream, const ArrayList<T>& list) {
-    stream << "{ ";
-    for(uint32_t i = 0; i < list.size(); i++)
-        stream << (i ? ", " : "") << "{" << list[i] << "}";
-    stream << " }";
-    return stream;
-}
+const ArrayList* getAllWorkspaces();
+
 /**
- * For each member in list, deference member and print
- *
- * @tparam T
- * @param stream
- * @param list
- *
- * @return
+ * @return a list of windows
  */
-template<class T>
-std::ostream& operator<<(std::ostream& stream, const ArrayList<T*>& list) {
-    stream << "{ ";
-    for(uint32_t i = 0; i < list.size(); i++)
-        stream << (i ? ", " : "") << *list[i];
-    stream << " }";
-    return stream;
-}
+const ArrayList* getAllWindows();
+
 /**
- * For each member in list, deference member and print int representation
- *
- * @tparam T
- * @param stream
- * @param list
- *
- * @return
+ * Returns a struct with stored metadata on the given window
+ * @param win
+ * @return pointer to struct with info on the given window
  */
-template<class T>
-std::enable_if_t < std::is_convertible<T, int>::value, std::ostream& >
-operator>>(std::ostream& stream, const ArrayList<T*>& list) {
-    stream << "{ ";
-    for(uint32_t i = 0; i < list.size(); i++)
-        stream << (i ? ", " : "") << (int)*list[i];
-    stream << " }";
-    return stream;
+static inline WindowInfo* getWindowInfo(WindowID win) {
+    return findElement(getAllWindows(), &win, sizeof(WindowID));
 }
-/**
- * For each member in list, deference member and print string representation
- *
- * @tparam T
- * @param stream
- * @param list
- *
- * @return
- */
-template<class T>
-std::enable_if_t < std::is_convertible<T, std::string>::value, std::ostream& >
-operator>>(std::ostream& stream, const ArrayList<T*>& list) {
-    stream << "{ ";
-    for(uint32_t i = 0; i < list.size(); i++)
-        stream << (i ? ", " : "") << (std::string)*list[i];
-    stream << " }";
-    return stream;
-}
+
+__DECLARE_GET_X_BY_NAME(Master);
+__DECLARE_GET_X_BY_NAME(Monitor);
+__DECLARE_GET_X_BY_NAME(Slave);
+__DECLARE_GET_X_BY_NAME(Workspace);
 #endif

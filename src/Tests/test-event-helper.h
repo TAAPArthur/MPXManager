@@ -3,60 +3,23 @@
 
 #include <assert.h>
 #include "../bindings.h"
-#include "../debug.h"
-#include "../device-grab.h"
+#include "../xutil/device-grab.h"
 #include "../globals.h"
-#include "../logger.h"
 #include "../masters.h"
 #include "../system.h"
-#include "../test-functions.h"
+#include "../xevent.h"
+#include "../xutil/test-functions.h"
 #include "../user-events.h"
-#include "../wm-rules.h"
-#include "../xsession.h"
-#include "../time.h"
+#include "../util/time.h"
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
 #include "tester.h"
 
-static inline void waitUntilIdle(bool safe = 0) {
+static inline void waitUntilIdle() {
     flush();
     static int idleCount;
-    if(safe && idleCount == getIdleCount()) {
-        msleep(100);
-        if(idleCount == getIdleCount())
-            return;
-    }
     WAIT_UNTIL_TRUE(idleCount != getIdleCount());
     idleCount = getIdleCount();
-}
-
-static inline WindowID getWMPrivateWindow() {
-    WindowID win;
-    xcb_ewmh_get_supporting_wm_check_reply(ewmh, xcb_ewmh_get_supporting_wm_check(ewmh, root), &win, NULL);
-    return win;
-}
-static inline long getWMIdleCount() {
-    return getWindowPropertyValue(getWMPrivateWindow(), MPX_IDLE_PROPERTY, XCB_ATOM_CARDINAL);
-}
-
-static inline void waitUntilWMIdle() {
-    static int idleCount;
-    static int restartCounter;
-    flush();
-    if(restartCounter != getWindowPropertyValue(getWMPrivateWindow(), MPX_RESTART_COUNTER, XCB_ATOM_CARDINAL)) {
-        idleCount = 0;
-        restartCounter = getWindowPropertyValue(getWMPrivateWindow(), MPX_RESTART_COUNTER, XCB_ATOM_CARDINAL);
-    }
-    WAIT_UNTIL_TRUE(idleCount != getWMIdleCount());
-    idleCount = getWMIdleCount();
-}
-static inline void onSimpleStartup() {
-    addDieOnIntegrityCheckFailRule();
-    addBasicRules();
-    addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
-    addDefaultMaster();
-    openXDisplay();
-    assignUnusedMonitorsToWorkspaces();
 }
 
 static inline void exitFailure() {
@@ -66,32 +29,7 @@ static inline void exitFailure() {
 static inline void startWM() {
     spawnThread(runEventLoop);
 }
-static inline void fullCleanup() {
-    DEBUG("full cleanup");
-    if(!isLogging(LOG_LEVEL_DEBUG))
-        setLogLevel(LOG_LEVEL_NONE);
-    requestShutdown();
-    if(getIdleCount() && ewmh) {
-        registerForWindowEvents(root, ROOT_EVENT_MASKS);
-        wakeupWM();
-    }
-    waitForAllThreadsToExit();
-    DEBUG("validating state");
-    validate();
-    DEBUG("Clearing bindings");
-    getDeviceBindings().deleteElements();
-    DEBUG("Checking bound function names");
-    for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++) {
-        for(const BoundFunction* b : getEventRules(i))
-            if(b->func)
-                assert(b->getName() != "");
-        for(const BoundFunction* b : getBatchEventRules(i))
-            if(b->func)
-                assert(b->getName() != "");
-    }
-    DEBUG("cleaning up xserver");
-    cleanupXServer();
-}
+/*
 static inline void triggerBinding(Binding* b, WindowID win = root) {
     if(b->getMask() & XCB_INPUT_XI_EVENT_MASK_MOTION) {
         movePointer(10, 10, win);
@@ -112,17 +50,18 @@ static inline void triggerAllBindings(int mask, WindowID win = root) {
     }
     xcb_flush(dis);
 }
+*/
 
 
-static inline xcb_generic_event_t* getNextDeviceEvent() {
+static inline void* getNextDeviceEvent() {
     flush();
     xcb_generic_event_t* event = xcb_wait_for_event(dis);
-    DEBUG("Event received" << (int)((xcb_generic_event_t*)event)->response_type);
+    DEBUG("Event received %d", ((xcb_generic_event_t*)event)->response_type);
     if(((xcb_generic_event_t*)event)->response_type == XCB_GE_GENERIC) {
-        auto type = loadGenericEvent((xcb_ge_generic_event_t*)event);
+        int type = loadGenericEvent((xcb_ge_generic_event_t*)event);
         xcb_input_key_press_event_t* dEvent = (xcb_input_key_press_event_t*) event;
         assertEquals(type, GENERIC_EVENT_OFFSET + dEvent->event_type);
-        LOG(LOG_LEVEL_DEBUG, "Detail %d Device type %d (%d) %s", dEvent->detail, dEvent->deviceid, dEvent->sourceid,
+        DEBUG("Detail %d Device type %d (%d) %s", dEvent->detail, dEvent->deviceid, dEvent->sourceid,
             eventTypeToString(GENERIC_EVENT_OFFSET + dEvent->event_type));
     }
     else if(((xcb_generic_event_t*)event)->response_type == 0) {
@@ -132,12 +71,12 @@ static inline xcb_generic_event_t* getNextDeviceEvent() {
     }
     return event;
 }
-static inline void waitToReceiveInput(int mask, int detailMask = 0) {
+static inline void waitToReceiveInput(int mask, int detailMask) {
     flush();
-    LOG(LOG_LEVEL_TRACE, "waiting for input %d\n\n", mask);
+    TRACE("waiting for input %d\n\n", mask);
     while(mask || detailMask) {
         xcb_input_key_press_event_t* e = (xcb_input_key_press_event_t*)getNextDeviceEvent();
-        LOG(LOG_LEVEL_TRACE, "type %d (%d); detail %d remaining mask:%d %d\n", e->response_type, (1 << e->event_type),
+        TRACE("type %d (%d); detail %d remaining mask:%d %d\n", e->response_type, (1 << e->event_type),
             e->detail,
             mask, detailMask);
         mask &= ~(1 << e->event_type);
@@ -149,13 +88,13 @@ static inline void waitToReceiveInput(int mask, int detailMask = 0) {
 
 static inline int waitForNormalEvent(int type) {
     flush();
-    LOG(LOG_LEVEL_TRACE, "Waiting for event of type %d\n", type);
+    TRACE("Waiting for event of type %d\n", type);
     while(type) {
         xcb_generic_event_t* e = xcb_wait_for_event(dis);
-        LOG(LOG_LEVEL_TRACE, "Found event %p\n", e);
+        TRACE("Found event %p\n", e);
         if(!e)
             return 0;
-        LOG(LOG_LEVEL_TRACE, "type %d (%d) %s\n", e->response_type, e->response_type & 127,
+        TRACE("type %d (%d) %s\n", e->response_type, e->response_type & 127,
             eventTypeToString(e->response_type & 127));
         int t = e->response_type & 127;
         free(e);
@@ -164,13 +103,14 @@ static inline int waitForNormalEvent(int type) {
     }
     return 1;
 }
-static inline void generateMotionEvents(int num = 100000) {
+static inline void generateMotionEvents(int num) {
     for(int i = 0; i < num; i++) {
         movePointerRelative(1, 1);
         movePointerRelative(-1, -1);
     }
     flush();
 }
+/*
 namespace TestGrabs {
 #define ALL_MASKS KEYBOARD_MASKS|POINTER_MASKS
 #include <X11/keysym.h>
@@ -253,4 +193,5 @@ static inline void testGrabDetailExclusive(int _i, bool binding) {
         }
 }
 }
+*/
 #endif

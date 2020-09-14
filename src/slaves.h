@@ -4,77 +4,46 @@
 #ifndef MPX_SLAVES_H
 #define MPX_SLAVES_H
 #include "mywm-structs.h"
-#include <string>
+#include "util/arraylist.h"
+#include <stdbool.h>
 
 /**
  * @return a list of all slaves
  */
-ArrayList<Slave*>& getAllSlaves();
+const ArrayList* getAllSlaves();
 /**
  * Upon creation/master id update slaves will be automatically associated with
  * their (new) master; When the slave is destructed, the master will lose all refs to the slave
  */
-struct Slave : WMStruct {
-private:
+typedef struct Slave {
+    const MasterID id;
     ///the id of the associated master device
-    MasterID attachment = 0;
+    MasterID attachment;
     /// Whether this is a keyboard(1) or a pointer device(0)
-    bool keyboard;
+    const bool keyboard;
     ///the name of the slave device
-    std::string name;
-public:
-    /**
-     * @param id unique id
-     * @param masterID id of associated master or 0 for a floating slave
-     * @param keyboard if the slave is a keyboard device
-     * @param name the name of the device
-     */
-    Slave(SlaveID id, MasterID masterID, bool keyboard, std::string name = ""): WMStruct(id), keyboard(keyboard),
-        name(name) {
-        setMasterID(masterID);
-    }
-    /**
-     * Disassociates itself from its master;
-     */
-    ~Slave();
-    /**
-     * @return if this is a keyboard device
-     */
-    bool isKeyboardDevice()const {return keyboard;}
-    /**
-     * @return the id of the associated master or 0;
-     */
-    MasterID getMasterID()const {return attachment;}
-    /**
-     * @return the master associated with this slave or NULL
-     */
-    Master* getMaster()const;
-    /**
-     * If id, then this slave is assosiated with the master with this id.
-     * Else this slave is disassociaated with its current master.
-     * @param id of the new master or 0
-     */
-    void setMasterID(MasterID id);
-    /**
-      @return the name of the slave
-     */
-    std::string getName(void)const {return name;}
-    /**
-     * Checks to see if the device is prefixed with XTEST
-     * @return 1 iff str is the name of a test slave as opposed to one backed by a physical device
-     */
-    static bool isTestDevice(std::string name);
-};
-
+    char name[MAX_NAME_LEN];
+} Slave ;
 /**
+ * Allocates a new Slave on the heap and registers it
+ *
+ * @param id
+ * @param attachment
+ * @param keyboard
  * @param name
  *
- * @return The first slave with name matching name or null
+ * @return
  */
-static inline Slave* getSlaveByName(std::string name) {
-    for(Slave* slave : getAllSlaves())
-        if(slave->getName() == name)
-            return slave;
-    return NULL;
-}
+Slave* newSlave(const MasterID id, MasterID attachment, bool keyboard, const char* name);
+/**
+ * Unregisters the slaves and removes the struct and internal memory
+ * @param slave
+ */
+void freeSlave(Slave* slave);
+/**
+ * Checks to see if the device is prefixed with XTEST
+ * @return 1 iff str is the name of a test slave as opposed to one backed by a physical device
+ */
+bool isTestDevice(const char* name);
+
 #endif

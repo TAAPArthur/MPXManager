@@ -8,8 +8,8 @@
 #include <X11/X.h>
 #include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
-#include <string>
-#include "window-masks.h"
+#include "mywm-structs.h"
+#include <stdbool.h>
 
 /// Sets of masks that only a WM should have
 #define WM_MASKS (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_STRUCTURE_NOTIFY)
@@ -72,16 +72,16 @@ extern bool STEAL_WM_SELECTION;
 
 
 /// the path of the lib to preload
-extern std::string LD_PRELOAD_PATH;
+extern const char* LD_PRELOAD_PATH;
 
 /// File path of config file dictating ideal master(s)/slaves configuration
-extern std::string MASTER_INFO_PATH;
+extern const char* MASTER_INFO_PATH;
 
 /// The notification cmd (and options) to use with the notify()
-extern std::string NOTIFY_CMD;
+extern const char* NOTIFY_CMD;
 
 /// The default SHELL; This defaults to the SHELL environment var
-extern std::string SHELL;
+extern const char* SHELL;
 
 /// time (in seconds) between when windows is detected and mapped, that it will be auto focused (local state is updated immediately); set to -1 to disable
 extern uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT;
@@ -97,20 +97,14 @@ extern uint32_t DEFAULT_BORDER_COLOR;
 /**Border width when borders for windows*/
 extern int16_t DEFAULT_BORDER_WIDTH;
 ///Default modifier for default bindings; Default is Mod4Mask (HYPER)
-extern uint32_t DEFAULT_MOD_MASK;
+//
+#define DEFAULT_MOD_MASK (Mod4Mask)
 ///Number of workspaces to create
 extern uint32_t DEFAULT_NUMBER_OF_WORKSPACES;
 
 
 /**Border color for unfocused windows and windows whose last focused master is not set*/
 extern uint32_t DEFAULT_UNFOCUS_BORDER_COLOR;
-
-/**
- * After this number of events (or when the connection is idle) PERIODIC events with will be triggered.
- * Setting to 0 disables PERIODIC events.
- * Setting to 1 will allow code to be run after every X event received
- */
-extern uint32_t EVENT_PERIOD;
 
 
 ///Masks to ignore; Default is Mod2Mask (NUM_LOCK)
@@ -151,14 +145,4 @@ extern WindowMask MASKS_TO_SYNC;
  * 4 Pager
  */
 extern uint32_t SRC_INDICATION;
-
-
-/**
- * Requests all threads to terminate
- */
-void requestShutdown(void);
-/**
- * Indicate to threads that the system is shutting down;
- */
-bool isShuttingDown(void);
 #endif

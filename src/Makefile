@@ -1,35 +1,33 @@
-CXX ?= g++
-CXXFLAGS ?= -std=c++17 -lstdc++
+CC ?= gcc
 SHELL := /bin/bash
-DEBUGGING_FLAGS := -g -rdynamic -O0 -D_GLIBCXX_DEBUG
+DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
-ERROR_FLAGS := -Werror -Wall -Wextra
-CPPFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
+IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-missing-braces -Wno-sign-compare
+ERROR_FLAGS := -Wall -Werror
+CFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
-TESTFLAGS := ${CPPFLAGS} ${DEBUGGING_FLAGS} --coverage -lm
+TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} --coverage -lm -lscutest
 NON_X_LDFLAGS := -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lxdo
 
-LAYER0_SRCS := globals.cpp logger.cpp debug.cpp settings.cpp
-LAYER1_SRCS := ringbuffer.h arraylist.h ext.cpp rect.cpp slaves.cpp masters.cpp workspaces.cpp windows.cpp monitors.cpp boundfunction.cpp system.cpp threads.cpp
-LAYER2_SRCS := xsession.cpp test-functions.cpp devices.cpp device-grab.cpp bindings.cpp
-LAYER3_SRCS := window-properties.cpp wmfunctions.cpp state.cpp layouts.cpp wm-rules.cpp ewmh.cpp extra-rules.cpp
-LAYER4_SRCS := chain.cpp functions.cpp communications.cpp mpxmanager.cpp
-LAYER5_SRCS := Extensions/mpx.cpp Extensions/window-clone.cpp Extensions/xmousecontrol.cpp Extensions/session.cpp Extensions/containers.cpp Extensions/compatibility-rules.cpp
+LAYER0_SRCS :=  globals.c util/threads.c util/rect.h util/logger.c util/debug.c settings.c
+LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
+LAYER1_SRCS := util/arraylist.c boundfunction.c
+LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
+LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c
+LAYER4_SRCS := wm-rules.c
+LAYER5_SRCS := functions.c communications.c mpxmanager.c
+LAYER6_SRCS := Extensions/ewmh.c Extensions/ewmh-full.c Extensions/compatibility-rules.c Extensions/extra-rules.c Extensions/mpx.c Extensions/session.c #Extensions/window-clone.c Extensions/xmousecontrol.c Extensions/containers.c
 
-TEST_SRCS := ${LAYER1_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
-TOP_LAYER_SRCS := settings.cpp mpxmanager.cpp
+TEST_SRCS := ${LAYER1_SRCS} ${LAYER11_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
+TOP_LAYER_SRCS := settings.c mpxmanager.c
 BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
-SRCS := ${BASE_SRCS} config.cpp
-
-PRELOAD := $$(pwd)/libmpx-test.so
-CHECK_TEST_COVERAGE = (gcov -mr $(2) $(1) 2> /dev/null  | grep -v '100.00%' |grep -B 1 "Lines e" |grep -A1 $(1) && echo "test coverage is not high enough" && cat $$(basename -a $(1)).gcov |grep -C5 "\#\#\#\#" && echo "$$((100 - $$(grep -c '\#\#\#\#' $$(basename -a $(1)).gcov)*100/$$(wc -l $$(basename -a $(1)).gcov | cut -d' ' -f1)))%")
+SRCS := ${BASE_SRCS} config.c
 
 MEM_CHECK = valgrind -q  --error-exitcode=123
-RUN_TEST = LD_PRELOAD=$(PRELOAD) xvfb-run -w 0 -a $(if $(QUICK),  $(MEM_CHECK) $(1) 20,$(1))
+RUN_TEST = xvfb-run -w 0 -a $(if $(QUICK),  $(MEM_CHECK) $(1) 20,$(1))
 
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
@@ -40,18 +38,20 @@ ifeq ($(QUICK),1)
 	MEM_CHECK = valgrind -q  --error-exitcode=123
 else ifeq ($(QUICK),2)
 	MEM_CHECK = valgrind -q --leak-check=full --errors-for-leak-kinds=definite --show-leak-kinds=definite --error-exitcode=123
+else ifeq ($(QUICK),3)
+	MEM_CHECK = gdb
 endif
 
 ifeq ($(DEBUG),1)
-  CPPFLAGS += ${DEBUGGING_FLAGS}
+  CFLAGS += ${DEBUGGING_FLAGS}
 else ifeq ($(DEBUG),2)
-  CPPFLAGS += ${DEBUGGING_FLAGS} -DNDEBUG
+  CFLAGS += ${DEBUGGING_FLAGS} -DNDEBUG
 else ifeq ($(DEBUG),3)
-  CPPFLAGS += ${RELEASE_FLAGS} -O2
+  CFLAGS += ${RELEASE_FLAGS} -O2
 else ifeq ($(DEBUG),4)
-  CPPFLAGS += ${TESTFLAGS}
+  CFLAGS += ${TESTFLAGS}
 else
-  CPPFLAGS += ${RELEASE_FLAGS} -DNDEBUG
+  CFLAGS += ${RELEASE_FLAGS} -DNDEBUG
 endif
 
 
@@ -74,7 +74,7 @@ uninstall:
 	rm -f "$(DESTDIR)/usr/lib/libmpxmanager.a"
 	rm -f "$(DESTDIR)/usr/lib/libmpx-patch.so"
 	rm -frd "$(DESTDIR)/usr/include/$(pkgname)"
-	rm -f "$(DESTDIR)/usr/share/$(pkgname)/sample-config.cpp"
+	rm -f "$(DESTDIR)/usr/share/$(pkgname)/sample-config.c"
 	rm -f "$(DESTDIR)/usr/share/man/man1/mpxmanager.1"
 	rm -f "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
 	rm -f "$(DESTDIR)/usr/bin/$(pkgname)"
@@ -88,90 +88,66 @@ mpxmanager.1: mpxmanager.sh
 mpxmanager.sh: mpxmanager.sh.template
 	cp $< $@
 	sed -i "s/CXX=.*/CXX='${CXX}'/g" mpxmanager.sh
-	sed -i "s/CXXFLAGS=.*/CXXFLAGS='${CXXFLAGS}'/g" mpxmanager.sh
+	sed -i "s/CFLAGS=.*/CFLAGS='${CFLAGS}'/g" mpxmanager.sh
 	sed -i "s/LDFLAGS=.*/LDFLAGS='${LDFLAGS}'/g" mpxmanager.sh
 	sed -i "s/CPPFLAGS=.*/CPPFLAGS='${CPPFLAGS}'/g" mpxmanager.sh
 	sed -i "s/GIT_HASH=.*/GIT_HASH=$$(git rev-parse --short HEAD)/g" mpxmanager.sh
 
-mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.cpp communications.cpp | mpxmanager
+mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.c communications.c | mpxmanager
 	cp $< $@
 	sed -i "s/startOptions=.*/startOptions=\"$$(echo $$(./mpxmanager --list-start-options 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'| sed -E 's/((\w|-)+\W)/--\1/g'))\"/g"  mpxmanager-autocomplete.sh
 	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 | sed 's/[,}{]//g' ))\"/g"  mpxmanager-autocomplete.sh
 	sed -Ei "s/(varOptions)=.*/\1=\"$$(echo $$(./mpxmanager --list-vars 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
-mpxmanager: $(BASE_SRCS:.cpp=.o)
-	${CXX} ${CXXFLAGS} $^ -o $@ ${CPPFLAGS} ${LDFLAGS}
+mpxmanager: $(BASE_SRCS:.c=.o)
+	${CC} ${CFLAGS} $^ -o $@ ${LDFLAGS}
 
 
-libmpxmanager.so: $(BASE_SRCS:.cpp=.o)
-	${CXX} ${CXXFLAGS} -fPIC -shared -o libmpxmanager.so $^ ${CPPFLAGS} ${LDFLAGS}
+libmpxmanager.so: $(BASE_SRCS:.c=.o)
+	${CC} ${CFLAGS} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
 
-libmpxmanager.a: $(BASE_SRCS:.cpp=.o)
+libmpxmanager.a: $(BASE_SRCS:.c=.o)
 	ar rcs libmpxmanager.a $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
-	${CXX} ${CXXFLAGS} -fPIC -shared -o $@ $^ ${CPPFLAGS} ${LDFLAGS}
+	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${CFLAGS} ${LDFLAGS}
 
-libmpx-test.so: Tests/test-preload.c
-	${CXX} ${CXXFLAGS} -fPIC -shared $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-test: libmpx-test.so code_coverage.out functional.out endToEndTest.out format doc-check
+test: CFLAGS := ${TESTFLAGS}
+test: unitTest.out functional.out unitTestExtensions.out #endToEndTest.out # doc-check
 
-functionalTest: CPPFLAGS := ${TESTFLAGS}
-functionalTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/functional_test.o Tests/compatibility_test.o |libmpx-patch.so
-	${CXX} ${CXXFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+functionalTest: CFLAGS := ${TESTFLAGS}
+functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o Tests/compatibility_test.o |libmpx-patch.so
+	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functional.out: PRELOAD := $$(pwd)/libmpx-patch.so
 functional.out: functionalTest
 	$(call RUN_TEST, ./$^ )
-	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
-	touch $@
 
-endToEndTest: CPPFLAGS := ${TESTFLAGS}
-endToEndTest: $(BASE_SRCS:.cpp=.o) Tests/tester.o Tests/endToEnd_test.o |libmpx-patch.so
-	${CXX} ${CXXFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+endToEndTest: CFLAGS := ${TESTFLAGS}
+endToEndTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/endToEnd_test.o |libmpx-patch.so
+	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-endToEndTest.out: CPPFLAGS := ${TESTFLAGS}
+endToEndTest.out: CFLAGS := ${TESTFLAGS}
 endToEndTest.out: PRELOAD := $$(pwd)/libmpx-patch.so
 endToEndTest.out: endToEndTest mpxmanager
 	$(call RUN_TEST, ./$< )
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 	touch $@
 
-unitTest: CPPFLAGS := ${TESTFLAGS}
-unitTest: Tests/tester.o   $(patsubst %.h,Tests/%_unit.o,$(patsubst %.cpp,Tests/%_unit.o,$(TEST_SRCS))) $(TEST_SRCS:.cpp=.o) $(LAYER0_SRCS:.cpp=.o) | libmpx-test.so
-	${CXX} ${CXXFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+unitTest: CFLAGS := ${TESTFLAGS}
+unitTest: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(TEST_SRCS)) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o) | libmpx-test.so
+	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-Extensions/Tests/%: Tests/Extensions/%
-	@true
-
-%_code_coverage.out: %.cpp Tests/%_unit.cpp | unitTest
-	rm -f $@ *gcda
-	TEST_FILE=Tests/$*_unit.cpp $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE,$<) 2>&1 | tee -a $@)
-	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
-	[ -s  $$(basename -a $<).gcov ]
-	[ ! -s  $@ ]
-
-%_code_coverage.out: %.h Tests/%_unit.cpp  | unitTest
-	rm -f $@ *gcda
-	TEST_FILE=Tests/$*_unit.cpp $(call RUN_TEST, ./unitTest ) && ($(call CHECK_TEST_COVERAGE, $<, Tests/$*_unit.cpp) 2>&1 | tee -a $@)
-	[ -s  $$(basename -a $<).gcov ]
-	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
-	[ ! -s  $@ ]
+unitTest.out: unitTest
+	$(call RUN_TEST, ./unitTest )
+	$(if $(TEST_FUNC),exit 1)
 
 
-code_coverage.out: unitTest $(patsubst %.h,%_code_coverage.out,${TEST_SRCS}) $(patsubst %.cpp,%_code_coverage.out,${TEST_SRCS})
-
-FORMATTER := astyle --project "$$file" >/dev/null ; rm -f "$$file.orig" || true
-
-format:
-	cd ..;while read file; do \
-		$(FORMATTER);\
-	done < <(git diff --name-only|grep -E '\.(c|h|cpp)$$')
-
-format-all:
-	find . \( -name '*.cpp' -o -name '*.h' \) -exec bash -c 'file="$$0"; $(FORMATTER);' {} \;
-
+code_coverage.out: unitTest
+	gcov -mr *
+	grep "#####:" *c.gcov > $@
+	grep "#####:" *c.gcov |wc -l
 
 package:
 	+$(MAKE) -j1 -C .. $@
@@ -181,7 +157,7 @@ doc-check:
 	+$(MAKE) -j1 -C .. $@
 
 
-.PHONY: test all clean-test clean doc format format-all install package
+.PHONY: test *.out all clean doc install package
 
 .DELETE_ON_ERROR:
 

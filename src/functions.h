@@ -21,28 +21,30 @@
 #define DOWN 1
 
 /// arguments to findAndRaise
-enum WindowAction {
+typedef enum WindowAction {
     /// @{ performs the specified action
     ACTION_NONE, ACTION_RAISE, ACTION_FOCUS, ACTION_ACTIVATE, ACTION_LOWER
     /// @}
-};
+} WindowAction ;
 
 /// Flags to findAndRaise
-struct FindAndRaiseArg {
+typedef struct FindAndRaiseArg {
     /// checkLocalFirst checks the master window stack before checking all windows
-    bool checkLocalFirst = 1;
-    /// cache ignores recently chosen windows. The cache is cleared if the focused window doesn't match rule or a window cannot be found otherwise
-    bool cache = 1;
+    bool skipMasterStack;
     /// only consider activatable windows
-    bool includeNonActivatable = 0;
-};
+    bool includeNonActivatable;
+} FindAndRaiseArg ;
 
 /// Determines what WindowInfo field to match on
-enum RaiseOrRunType {
-    MATCHES_TITLE,
+typedef enum RaiseOrRunType {
     MATCHES_CLASS,
+    MATCHES_TITLE,
     MATCHES_ROLE,
-} ;
+} RaiseOrRunType ;
+typedef struct {
+    bool(*func)();
+    Arg arg;
+} FindWindowArg;
 /**
  * Attempts to find a that rule matches a managed window.
  * First the active Master's window& stack is checked ignoring the master's window cache.
@@ -54,50 +56,23 @@ enum RaiseOrRunType {
  * @param master
  * @return 1 if a matching window was found
  */
-WindowInfo* findAndRaise(const BoundFunction& rule, WindowAction action = ACTION_ACTIVATE, FindAndRaiseArg arg = {},
-    Master* master = getActiveMaster());
+WindowInfo* findAndRaise(const FindWindowArg* rule, WindowAction action, FindAndRaiseArg arg);
 
 
-/**
- * Wrapper around findAndRaise
- * @param s string to match against
- * @param matchType what property of the window to match
- * @param action what to do if a window was found
- *
- * @return if a matching window was found
- */
-bool findAndRaise(std::string s, RaiseOrRunType matchType = MATCHES_CLASS, WindowAction action = ACTION_ACTIVATE);
-/**
- * Finds windows with the same class as the currenrtly focused window
- * @see findAndRaise
- *
- * @param winInfo
- *
- * @return
- */
-static inline bool findAndRaiseMatching(const WindowInfo* winInfo) {return findAndRaise(winInfo->getClassName());}
-/**
- * Tries to find a window by checking all the managed windows, and if it finds one it activates it
- *
- * @param rule
- *
- * @return the window found or NULL
- */
-static inline WindowInfo* findAndRaiseSimple(const BoundFunction& rule) {return findAndRaise(rule, ACTION_ACTIVATE, {.checkLocalFirst = 0, .cache = 0}, 0);}
 /**
  * @param winInfo
  * @param str
  *
  * @return 1 iff the window class or instance name is equal to str
  */
-bool matchesClass(WindowInfo* winInfo, std::string str);
+bool matchesClass(WindowInfo* winInfo, const char* str);
 /**
  * @param winInfo
  * @param str
  *
  * @return if the window title is equal to str
  */
-bool matchesTitle(WindowInfo* winInfo, std::string str);
+bool matchesTitle(WindowInfo* winInfo, const char* str);
 
 /**
  * @param winInfo
@@ -105,7 +80,7 @@ bool matchesTitle(WindowInfo* winInfo, std::string str);
  *
  * @return if the window role is equal to str
  */
-bool matchesRole(WindowInfo* winInfo, std::string str);
+bool matchesRole(WindowInfo* winInfo, const char* str);
 /**
  * Tries to raise a window that matches s. If it cannot find one, spawn cmd
  *
@@ -117,8 +92,7 @@ bool matchesRole(WindowInfo* winInfo, std::string str);
  *
  * @return 0 iff a window was found else the pid of the spawned process
  */
-int raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCHES_CLASS, bool silent = 1,
-    bool preserveSession = 0);
+int raiseOrRun2(const char* s, const char* cmd, RaiseOrRunType matchType);
 /**
  * Tries to raise a window with class (or resource) name equal to s.
  * If not it spawns s
@@ -127,23 +101,14 @@ int raiseOrRun(std::string s, std::string cmd, RaiseOrRunType matchType = MATCHE
  *
  * @return 0 iff the program was spawned
  */
-static inline int raiseOrRun(std::string s) {
-    return raiseOrRun(s, s);
-}
-
-/**
- * Call to stop cycling windows
- *
- * Unfreezes the master window& stack
- */
-void endCycleWindows(Master* m = getActiveMaster());
+static inline int raiseOrRun(const char* s) { return raiseOrRun2(s, s, MATCHES_CLASS); }
 /**
  * Freezes and cycle through windows in the active master's& stack
  * @param delta
  * @param filter only cycle throught windows matching filter
  */
-void cycleWindowsMatching(int delta, bool(*filter)(WindowInfo*) = NULL);
-static inline void cycleWindows(int delta) {cycleWindowsMatching(delta);}
+void cycleWindowsMatching(int delta, bool(*filter)(WindowInfo*));
+static inline void cycleWindows(int delta) {cycleWindowsMatching(delta, NULL);}
 
 
 /**
@@ -153,14 +118,14 @@ static inline void cycleWindows(int delta) {cycleWindowsMatching(delta);}
  *
  * @return 1 iff there was an urgent window
  */
-bool activateNextUrgentWindow(WindowAction action = ACTION_ACTIVATE);
+bool activateNextUrgentWindow(void);
 /**
  * Removes HIDDEN_MASK from a recent hidden window
  * @param action
  *
  * @return 1 a window was found and changed
  */
-bool popHiddenWindow(WindowAction action = ACTION_ACTIVATE);
+bool popHiddenWindow(void);
 
 //////Run or Raise code
 
@@ -172,8 +137,7 @@ bool popHiddenWindow(WindowAction action = ACTION_ACTIVATE);
  * @param includeNonActivatable
  * @return the first window that matches rule or NULL
  */
-WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& searchList,
-    ArrayList<WindowID>* ignoreList = NULL, bool includeNonActivatable = 0);
+WindowInfo* findWindow(const FindWindowArg* rule, const ArrayList* searchList, bool includeNonActivatable);
 
 
 /**
@@ -181,14 +145,18 @@ WindowInfo* findWindow(const BoundFunction& rule, const ArrayList<WindowInfo*>& 
  * @param winInfo
  * @param name
  */
-void sendWindowToWorkspaceByName(WindowInfo* winInfo, std::string name);
+void sendWindowToWorkspaceByName(WindowInfo* winInfo, const char* name);
 
 /**
  * Swap the active window with the window dir windows away from its current position in the worked space& stack. The stack wraps around if needed
  * @param dir
  * @param stack
  */
-void swapPosition(int dir, ArrayList<WindowInfo*>& stack = getActiveWindowStack());
+void swapPosition(int dir);
+
+static inline bool matchesFocusedWindowClass(WindowInfo* winInfo) {
+    return matchesClass(winInfo, getFocusedWindow()->className);
+}
 /**
  * Shifts the focus up or down the window& stack
  * @param index
@@ -196,7 +164,8 @@ void swapPosition(int dir, ArrayList<WindowInfo*>& stack = getActiveWindowStack(
  * @param stack
  * @return
  */
-int shiftFocus(int index,  bool(*filter)(WindowInfo*) = NULL, ArrayList<WindowInfo*>& stack = getActiveWindowStack());
+void shiftFocus(int dir, bool(*filter)(WindowInfo*));
+static inline void shiftFocusToNextClass(int dir) {shiftFocus(dir, matchesFocusedWindowClass);};
 
 
 /**
@@ -204,7 +173,7 @@ int shiftFocus(int index,  bool(*filter)(WindowInfo*) = NULL, ArrayList<WindowIn
  * If it is already at the top, then shifts the next window to the top and focuses it
  * @param stack
  */
-void shiftTopAndFocus(ArrayList<WindowInfo*>& stack = getActiveWindowStack());
+void shiftTopAndFocus();
 
 
 
@@ -226,7 +195,7 @@ void centerMouseInWindow(WindowInfo* winInfo);
  * @param dir either UP or DOWN
  */
 static inline void swapWorkspace(int dir) {
-    switchToWorkspace(getAllWorkspaces().getNextIndex(getActiveWorkspaceIndex(), dir));
+    switchToWorkspace(getNextIndex(getAllWorkspaces(), getActiveWorkspaceIndex(), dir));
 }
 
 /**
@@ -235,10 +204,6 @@ static inline void swapWorkspace(int dir) {
  * @param dir either UP or DOWN
  */
 static inline void shiftWorkspace(int dir) {
-    swapMonitors(getActiveWorkspaceIndex(), (getAllWorkspaces().getNextIndex(getActiveWorkspaceIndex(), dir)));
-}
-
-static inline bool matchesFocusedWindowClass(WindowInfo* winInfo) {
-    return matchesClass(winInfo, getFocusedWindow()->getClassName());
+    swapMonitors(getActiveWorkspaceIndex(), (getNextIndex(getAllWorkspaces(), getActiveWorkspaceIndex(), dir)));
 }
 #endif

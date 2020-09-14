@@ -4,35 +4,18 @@
  */
 #ifndef WORKSPACES_H
 #define WORKSPACES_H
+#include <assert.h>
 
 #include "mywm-structs.h"
 #include "window-masks.h"
-#include "monitors.h"
 #include "masters.h"
-#include <string>
-#include <assert.h>
+#include "util/arraylist.h"
 
 /// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
 #ifndef NO_WORKSPACE
 #define NO_WORKSPACE ((WorkspaceID)-1)
 #endif
 //
-///@see Workspace::getNextWorkspace()
-enum WorkSpaceFilter {
-    ///only return visible workspaces
-    VISIBLE = 1,
-    ///only return invisible workspaces
-    HIDDEN = 2,
-    ///only return non empty workspaces
-    NON_EMPTY = 4,
-    ///only return empty workspaces
-    EMPTY = 8,
-} ;
-
-/**
- * @return a list of all workspaces
- */
-const ArrayList<Workspace*>& getAllWorkspaces();
 /**
  *
  * @return the number of workspaces
@@ -57,12 +40,12 @@ void removeWorkspaces(int num);
  *
  * All windows in this workspace are treated as if they had this mask in addition to any mask they may already have
  */
-struct Workspace : WMStruct, HasMask {
-private:
+struct Workspace {
+    WorkspaceID id;
     ///user facing name of the workspace
-    std::string name;
+    char name[MAX_NAME_LEN];
     ///the monitor the workspace is on
-    Monitor* monitor = NULL;
+    Monitor* monitor;
 
     /** if the workspace is mapped
      *
@@ -70,118 +53,113 @@ private:
      * This field is here to sync the two states
      *
      */
-    bool mapped = 0;
+    bool mapped ;
 
     ///an windows stack
-    ArrayList<WindowInfo*> windows;
+    ArrayList windows;
 
     ///the currently applied layout; does not have to be in layouts
-    Layout* activeLayout = NULL;
+    Layout* activeLayout ;
     ///a circular list of layouts to cycle through
-    ArrayList<Layout*> layouts;
+    ArrayList layouts;
     /// offset into layouts when cycling
-    uint32_t layoutOffset = 0;
-
-public:
-    /**
-     * Creates a new Workspace with id equal the current number of workspaces
-     * and name with the string conversion of its id
-     *
-     */
-    Workspace(): WMStruct(getNumberOfWorkspaces()), name(std::to_string(id + 1)) { }
-    /**
-     * @return the monitor associate with the given workspace if any
-     */
-    Monitor* getMonitor() const {return monitor;};
-    /// returns the name of this workspace
-    const std::string& getName()const {return name;};
-    /// @param n the new name of the workspace
-    void setName(std::string n) {name = n;};
-
-    /**
-     * Get the next workspace in the given direction according to the filters
-     * @param dir the interval of workspaces to check
-     * @param mask species a filter for workspaces @see WorkspaceFilter
-     * @return the next workspace in the given direction that matches the criteria
-     */
-    Workspace* getNextWorkspace(int dir, int mask) const;
-    /**
-     * @return 1 iff the workspace has been assigned a monitor
-     */
-    bool isVisible()const {
-        return this->getMonitor() && this->getMonitor()->isActive();
-    }
-    /**
-     * @return the windows stack of the workspace
-     */
-    ArrayList<WindowInfo*>& getWindowStack() {return windows;}
-    /**
-     * Prints the workspace
-     *
-     * @param strm
-     * @param w
-     *
-     * @return
-     */
-    friend std::ostream& operator<<(std::ostream& strm, const Workspace& w) ;
-    /**
-     * Assigns a workspace to a monitor. The workspace is now considered visible
-     * @param m
-     */
-    void setMonitor(Monitor* m);
-    /**
-     * The currently used layout for the workspace.
-     * Note that this layout does not have to be in the list of layout for the active workspace
-     * @param layout the new active layout
-     */
-    void setActiveLayout(Layout* layout) {
-        activeLayout = layout;
-    }
-    /**
-     *
-     * @return the active layout for the active workspace
-     */
-    Layout* getActiveLayout(void)const {return activeLayout;}
-    /**
-     * @param mask
-     * @return true if there exists at least one window in workspace with the given mask
-     */
-    bool hasWindowWithMask(WindowMask mask) ;
-
-    /**
-     * @return layouts of w
-     */
-    ArrayList<Layout*>& getLayouts() {
-        return layouts;
-    }
-    /**
-     * Set the next layout in the list to be the active layout
-     *
-     * @param dir -1, 0 or 1
-     */
-    void cycleLayouts(int dir);
-    /**
-     * Set the layout specified by offset to be the active layout
-     *
-     * @param offset
-     */
-    void setLayoutOffset(int offset);
-    /**
-     * Returns what would be the new active layout if cycleClayouts(0) was set,
-     * which does not have to be the currently active layout
-     * @return the layout at position offset
-     */
-    uint32_t getLayoutOffset() {return layoutOffset;}
-    /**
-     * If layout != getActiveLayout(), then make layout the new active layout
-     * Else call cycleWindow(0)
-     *
-     * @param layout
-     *
-     * @return 1 iff the layout changed
-     */
-    bool toggleLayout(Layout* layout);
+    uint32_t layoutOffset ;
+    WindowMask mask;
 };
+
+
+/**
+ * @param index
+ * @return the workspace at a given index
+ */
+static inline Workspace* getWorkspace(WorkspaceID index) {
+    return index < getAllWorkspaces()->size ? getElement(getAllWorkspaces(), index) : NULL;
+}
+
+/**
+ * @return the windows stack of the workspace
+ */
+ArrayList* getWorkspaceWindowStack(Workspace* workspace);
+
+/// @return the active Workspace or NULL
+static inline Workspace* getActiveWorkspace(void) {return getWorkspace(getActiveWorkspaceIndex());}
+/// @return the workspace of the active master
+static inline ArrayList* getActiveWindowStack() {return getWorkspaceWindowStack(getActiveWorkspace());}
+
+/**
+ * @return the monitor associate with the given workspace if any
+ */
+Monitor* getMonitor(Workspace*);
+/**
+ * Assigns a workspace to a monitor. The workspace is now considered visible
+ * @param m
+ */
+void setMonitor(Workspace* workspace, Monitor* m);
+
+/**
+ * @return 1 iff the workspace has been assigned a monitor
+ */
+bool isWorkspaceVisible();
+
+/**
+ * The currently used layout for the workspace.
+ * Note that this layout does not have to be in the list of layout for the active workspace
+ * @param layout the new active layout
+ */
+void setLayout(Workspace* workspace, Layout* layout);
+/**
+ *
+ * @return the active layout for the active workspace
+ */
+Layout* getLayout(Workspace* workspace);
+static inline Layout* getActiveLayout() { return getLayout(getActiveWorkspace());};
+
+/**
+ *
+ * @return the active layout for the active workspace
+ */
+void addLayout(Workspace* workspace, Layout* layout);
+
+/**
+ * @param mask
+ * @return true if there exists at least one window in workspace with the given mask
+ */
+bool hasWindowWithMask(Workspace* workspace, WindowMask mask) ;
+/**
+ * Set the layout specified by offset to be the active layout
+ *
+ * @param offset
+ */
+void setLayoutOffset(Workspace* workspace, int offset);
+/**
+ * Returns what would be the new active layout if cycleLayouts(0) was set,
+ * which does not have to be the currently active layout
+ * @return the layout at position offset
+ */
+uint32_t getLayoutOffset(Workspace* workspace);
+/**
+ * If layout != getActiveLayout(), then make layout the new active layout
+ * Else call cycleWindow(0)
+ *
+ * @param layout
+ *
+ * @return 1 iff the layout changed
+ */
+bool toggleLayout(Workspace* workspace, Layout* layout);
+static inline bool toggleActiveLayout(Layout* layout) {
+    return toggleLayout(getActiveWorkspace(), layout);
+}
+
+/**
+ * Set the next layout in the list to be the active layout
+ *
+ * @param dir -1, 0 or 1
+ */
+void cycleLayouts(Workspace* workspace, int dir);
+static inline void cycleActiveLayouts(int dir) {
+    cycleLayouts(getActiveWorkspace(), dir);
+}
+
 
 
 
@@ -190,26 +168,32 @@ public:
  * @param index1
  * @param index2
  */
-void swapMonitors(WorkspaceID index1, WorkspaceID index2 = getActiveMaster()->getWorkspaceIndex());
+void swapMonitors(WorkspaceID index1, WorkspaceID index2);
+static inline void swapActiveMonitor(WorkspaceID index2) {swapMonitors(getActiveWorkspaceIndex(), index2);};
 
 
 /**
- * @param name
- *
- * @return the workspace with the specified name
+ * Adds the states give by mask to the window
+ * @param mask
  */
-Workspace* getWorkspaceByName(std::string name);
-/**
- * @param index
- * @return the workspace at a given index
- */
-static inline Workspace* getWorkspace(WorkspaceID index) {
-    return index < getAllWorkspaces().size() ? getAllWorkspaces()[index] : NULL;
+static inline void addWorkspaceMask(Workspace* workspace, WindowMask mask) {
+    workspace->mask |= mask;
 }
-
-
-/// @return the active Workspace or NULL
-static inline Workspace* getActiveWorkspace(void) {return getWorkspace(getActiveWorkspaceIndex());}
-/// @return the workspace of the active master
-static inline ArrayList<WindowInfo*>& getActiveWindowStack() {return getActiveWorkspace()->getWindowStack();}
+/**
+ * Removes the states give by mask from the window
+ * @param mask
+ */
+static inline void removeWorkspaceMask(Workspace* workspace, WindowMask mask) {
+    workspace->mask &= ~mask;
+}
+/**
+ * Adds or removes the mask depending if the window already contains
+ * the complete mask
+ * @param mask
+ */
+static inline void toggleWorkspaceMask(Workspace* workspace, WindowMask mask) {
+    if((workspace->mask & mask) == mask)
+        removeWorkspaceMask(workspace, mask);
+    else addWorkspaceMask(workspace, mask);
+}
 #endif

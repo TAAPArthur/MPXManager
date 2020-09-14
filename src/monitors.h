@@ -5,21 +5,20 @@
 #ifndef MONITORS_H_
 #define MONITORS_H_
 
-#include <string>
-
 #include "mywm-structs.h"
-#include "rect.h"
+#include "util/rect.h"
+#include "util/arraylist.h"
 
 /**
  *
  * @return list of all monitors
  */
-ArrayList<Monitor*>& getAllMonitors(void);
+ArrayList* getAllMonitors(void);
 /**
  * Represents a rectangular region where workspaces will be tiled
  */
-struct Monitor : WMStruct {
-private:
+struct Monitor {
+    const MonitorID id;
     /**The unmodified size of the monitor*/
     Rect base;
     /** The modified size of the monitor after docks are avoided */
@@ -27,118 +26,59 @@ private:
     /**1 iff the monitor is the primary*/
     bool primary;
     /// human readable name given by the XServer
-    std::string name;
-    bool fake = 0;
-    uint32_t output = 0;
-    bool inactive = 0;
+    char name[MAX_NAME_LEN];
+    const bool fake;
+    bool _mark;
+    uint32_t output;
+    bool inactive;
     /// Raise windows relative to this window (default 0)
-    WindowID stackingWindow = 0;
-public:
-
-    /**
-     * @param id the X unique id of the monitor
-     * @param base the bounds the monitor occupies
-     * @param primary 1 iff it is the primary monitor
-     * @param name
-     * @param fake
-     * @param stackingWindow
-     *
-     */
-    Monitor(MonitorID id, Rect base, bool primary = 0, std::string name = "", bool fake = 0,
-        WindowID stackingWindow = 0): WMStruct(id),
-        base(base),
-        view(base),
-        primary(primary), name(name), fake(fake), stackingWindow(stackingWindow) {}
-
-    ~Monitor();
-
-    /**
-     * @param win the new value of stackingWindow
-     */
-    void setStackingWindow(WindowID win) { stackingWindow = win;}
-    /**
-     * @return WindowID that normal windows in the workspace associated with monitor should be tiled above
-     */
-    WindowID getStackingWindow() { return stackingWindow;}
-    /**
-     * Used to deterministically sort monitors
-     * @param p
-     * @return
-     */
-    bool operator<(const Monitor& p) {
-        if(base.y == p.base.y)
-            if(base.x == p.base.x)
-                return id < p.id;
-            else return base.x < p.base.x;
-        return base.y < p.base.y;
-    }
-    /// @return true if the monitor isn't backed by X
-    bool isFake()const { return fake;}
-    /// @return the first backing output or 0
-    uint32_t getOutput()const { return output;}
-    /// @return the first backing output or 0
-    void setOutput(uint32_t output) { this->output = output;}
-    /**
-     * Returns the workspace currently displayed by the monitor or null
-     * @return
-     */
-    Workspace* getWorkspace(void) const;
-    /// @return the human readable name
-    const std::string& getName() const {return name;}
-    /// @param str the new name of the monitor
-    void setName(std::string str) {name = str;}
-    /// @return the bounds of the monitor
-    const Rect& getBase() const {return base;}
-    /// @param rect the new bounds of the monitor
-    void setBase(const Rect& rect);
-    /// @return the area in which windows will be tiled
-    const Rect& getViewport()const {return view;}
-    /// @param rect the new area in which windows will be tiled
-    void setViewport(const Rect& rect) {view = rect;}
-    /**
-     * if workspace is not null, the workspace will be displayed on this monitor;
-     * Else an arbitrary unclaimed Workspace will be chosen
-     *
-     * @param workspace
-     */
-    void assignWorkspace(Workspace* workspace = NULL);
-    /**
-     * @return True if the monitor is marked as primary
-     */
-    bool isPrimary() const;
-    /**
-     * Marks this monitor as the primary. There can only be 1 primary monitor, so the current primary monitor will lose its status
-     *
-     * @param primary the value of primary
-     */
-    void setPrimary(bool primary = true);
-    /**
-     * Resets the viewport to be the size of the rectangle
-     */
-    void reset();
-    /**
-     * Adjusts the viewport so that it doesn't intersect any docs
-     *
-     * @return 1 iff the size changed
-     */
-    bool resizeToAvoidAllDocks();
-    /**
-     *
-     * Adjusts the viewport so that it doesn't intersect winInfo
-     *
-     * @param winInfo WindowInfo
-     *
-     * @return 1 iff the size changed
-     */
-    bool resizeToAvoidDock(WindowInfo* winInfo);
-    /// @return true iff a Workspace with this monitor can be considered visibile
-    virtual bool isActive() const {return !inactive;}
-    /**
-     * @param b sets the value of active
-     * @see isActive
-     */
-    void setActive(bool b) {inactive = !b;}
+    WindowID stackingWindow;
 };
+
+Monitor* newMonitor(MonitorID id, Rect base, bool primary, const char* name, bool fake);
+void freeMonitor(Monitor* monitor);
+
+/**
+ * @param win the new value of stackingWindow
+ */
+void setStackingWindow(Monitor* monitor, WindowID win);
+/**
+ * @return WindowID that normal windows in the workspace associated with monitor should be tiled above
+ */
+WindowID getStackingWindow(Monitor* monitor);
+/// @return true if the monitor isn't backed by X
+bool isFakeMonitor(Monitor* monitor);
+/**
+ * Returns the workspace currently displayed by the monitor or null
+ * @return
+ */
+Workspace* getWorkspaceOfMonitor(Monitor* monitor);
+/**
+ * if workspace is not null, the workspace will be displayed on this monitor;
+ * Else an arbitrary unclaimed Workspace will be chosen
+ *
+ * @param workspace
+ */
+void assignWorkspace(Monitor* monitor, Workspace* workspace);
+/**
+ * @return True if the monitor is marked as primary
+ */
+bool isPrimary(Monitor* monitor);
+/**
+ * Marks this monitor as the primary. There can only be 1 primary monitor, so the current primary monitor will lose its status
+ *
+ * @param monitor the primary monitor or 0
+ */
+void setPrimary(MonitorID monitor);
+/**
+ * Adjusts the viewport so that it doesn't intersect any docs
+ *
+ * @return 1 iff the size changed
+ */
+bool resizeToAvoidAllDocks(Monitor* monitor);
+/// @return true iff a Workspace with this monitor can be considered visibile
+bool isMonitorActive(Monitor* monitor);
+
 ///Masks used to determine the whether two monitors are duplicates
 enum MonitorDuplicationPolicy {
     /// Monitors are never considered duplicates
@@ -152,7 +92,7 @@ enum MonitorDuplicationPolicy {
     /// Monitors are duplicates if one intersects with the other.
     INTERSECTS = 8,
     /// Consider fake monitors
-    CONSIDER_FAKES = 16,
+    CONSIDER_ONLY_NONFAKES = 16,
 } ;
 /// Masks used to dictate how we deal with duplicates monitors
 enum MonitorDuplicationResolution {
@@ -179,7 +119,7 @@ Monitor* getPrimaryMonitor() ;
  */
 static inline Workspace* getPrimaryWorkspace() {
     Monitor* m = getPrimaryMonitor();
-    return m ? m->getWorkspace() : NULL;
+    return m ? getWorkspaceOfMonitor(m) : NULL;
 }
 
 /**
@@ -215,10 +155,7 @@ void resizeAllMonitorsToAvoidAllDocks(void);
  * @param winInfo the dock to avoid
  * @see resizeMonitorToAvoidStruct
  */
-static inline void resizeAllMonitorsToAvoidDock(WindowInfo* winInfo) {
-    for(Monitor* m : getAllMonitors())
-        m->resizeToAvoidDock(winInfo);
-}
+void resizeAllMonitorsToAvoidDock(WindowInfo* winInfo);
 /**
  * Resizes all monitors such that its viewport does not intersect the given dock
  *
@@ -235,7 +172,7 @@ Monitor* addRootMonitor();
  *
  * @param s an array of size 2
  */
-void setRootDims(uint16_t* s);
+void setRootDims(const uint16_t* s);
 /**
  *
  * @return the width of the root window
@@ -254,20 +191,8 @@ uint16_t getRootHeight(void);
  * @param bounds the position of the new monitor
  * @param name
  */
-Monitor* addFakeMonitor(Rect bounds, std::string name = "");
-/**
- * Clears all fake monitors
- */
-void removeAllFakeMonitors();
+Monitor* addFakeMonitorWithName(Rect bounds, const char* name);
+static inline Monitor* addFakeMonitor(Rect bounds) {return addFakeMonitorWithName(bounds, "");}
 
-/**
- * @param name
- * @return the first monitor with matching name or NULL
- */
-static inline Monitor* getMonitorByName(std::string name) {
-    for(Monitor* monitor : getAllMonitors())
-        if(monitor->getName() == name)
-            return monitor;
-    return NULL;
-}
+void setBase(Monitor* monitor, const Rect rect);
 #endif

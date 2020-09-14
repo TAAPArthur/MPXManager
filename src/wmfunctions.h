@@ -11,22 +11,15 @@
 #include "windows.h"
 #include "masters.h"
 
-
 /**
- * Called after a window has been successfully registered
  *
- * if newlyCreated is true, then a createEvent should have been detected for this window.
- * The window's creation time will be set to the current time
- * Else hints are loaded for this window. If this window is currently in the MappedState, then we set the appropriate masks, loadProperties and run CLIENT_MAP_ALLOW
  *
- * If the function hasn't short circuited, then POST_REGISTER_WINDOW rules are triggered
- *
- * @param winInfo
- * @param newlyCreated
- *
- * @return 1 if this function wasn't short circuited
+ * @return 1 iff there is a running instance of MPXManager and it is acting like a window manger (RUN_AS_WM==1)
  */
-bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
+bool isMPXManagerRunning(void);
+
+void ownSelection(xcb_atom_t selectionAtom);
+
 /**
  * Performs checks on the window and adds it to the our managed list if it passes.
  *
@@ -47,7 +40,7 @@ bool postRegisterWindow(WindowInfo* winInfo, bool newlyCreated);
  *
  * @return the result of POST_REGISTER_WINDOW or 0 if it was never called
  */
-bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr = NULL);
+bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr);
 /**
  * Used to register a window when more information is know that just the window id and parent
  *
@@ -56,7 +49,7 @@ bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_rep
  *
  * @return
  */
-bool registerWindow(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr = NULL);
+bool registerWindowInfo(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* attr);
 
 /**
  * Queries the XServer for all direct children of baseWindow
@@ -69,21 +62,7 @@ void scan(xcb_window_t baseWindow);
  * @param destroyed a hint as to wheter the window has been destroyed by X. This should only be true if a destroy event was received
  * @return 1 iff the window was already in our records
  */
-bool unregisterWindow(WindowInfo* winInfo, bool destroyed = 0) ;
-
-/**
- * Send a kill signal to the client with the window
- * @param win
- * @return 0 on success or the error
- */
-int killClientOfWindow(WindowID win);
-
-/**
- * Sends a WM_DELETE_WINDOW message or sends a kill requests
- * @param winInfo
- * @see killWindow();
- */
-void killClientOfWindowInfo(WindowInfo* winInfo);
+bool unregisterWindow(WindowInfo* winInfo, bool destroyed) ;
 
 /**
  * Updates the map state of the window to be in sync with its workspace.
@@ -111,9 +90,9 @@ void switchToWorkspace(int workspaceIndex);
 /**
  * Switch to the workspace of winInfo (is it has one) and raise and focus winInfo
  * @param winInfo
- * @return the id of the activated window or 0 if no window was activated
+ * @return 1 or 0 if no window was activated
  */
-WindowID activateWindow(WindowInfo* winInfo);
+bool activateWindow(WindowInfo* winInfo);
 
 /**
  * Combination of switchToWorkspace and activateWindow
@@ -140,15 +119,8 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]);
  *
  * @param win
  * @param geo
- * @param onlyPosition if true, then only x,y position will be modified
  */
-void setWindowPosition(WindowID win, const RectWithBorder geo, bool onlyPosition = 0);
-/**
- * Swaps the workspaces and positions in said workspaces between the two windows
- * @param winInfo1
- * @param winInfo2
- */
-void swapWindows(WindowInfo* winInfo1, WindowInfo* winInfo2);
+void setWindowPosition(WindowID win, const RectWithBorder geo);
 /**
  * Filters the configure request to allowed actions then configures the window
  * The request is filtered by the mask on win if it is registered
@@ -164,14 +136,6 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
 
 
 /**
- * Sets the border width to 0
- *
- * @param win
- */
-void removeBorder(WindowID win);
-
-
-/**
  * @param upper iff true returns the boundary between the normal and top layer instead of the normal and bottom layer
  *
  * @return the window seperating the BELOW/ABOVE windows from the normal windows
@@ -183,24 +147,36 @@ WindowID getWindowDivider(bool upper);
  * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
  * @param above whether to raise or lower the window
  */
-void raiseWindow(WindowID win, WindowID sibling = 0, bool above = 1);
+void raiseLowerWindow(WindowID win, WindowID sibling, bool above);
 /**
  * Raises or lowers the winInfo depending on above.
  * @param winInfo
  * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
  * @param above whether to raise or lower the window
  */
-void raiseWindow(WindowInfo* winInfo, WindowID sibling = 0, bool above = 1);
+void raiseLowerWindowInfo(WindowInfo* winInfo, WindowID sibling, bool above);
 
 /**
  * @param win
  * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
  * @see raiseWindowInfo
  */
-static inline void lowerWindow(WindowID win, WindowID sibling = 0) {
-    raiseWindow(win, sibling, 0);
+static inline void raiseWindow(WindowID win, WindowID sibling) {
+    raiseLowerWindow(win, sibling, 1);
 }
-static inline void lowerWindow(WindowInfo* winInfo, WindowID sibling = 0) {
-    raiseWindow(winInfo, sibling, 0);
+static inline void raiseWindowInfo(WindowInfo* winInfo, WindowID sibling) {
+    raiseLowerWindowInfo(winInfo, sibling, 1);
+}
+
+/**
+ * @param win
+ * @param sibling the window to move above/below. If 0, then the window will be moved to top/bottom of the stack
+ * @see raiseWindowInfo
+ */
+static inline void lowerWindow(WindowID win, WindowID sibling) {
+    raiseLowerWindow(win, sibling, 0);
+}
+static inline void lowerWindowInfo(WindowInfo* winInfo, WindowID sibling) {
+    raiseLowerWindowInfo(winInfo, sibling, 0);
 }
 #endif

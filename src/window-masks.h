@@ -5,10 +5,6 @@
 #ifndef WINDOW_MASKS_H_
 #define WINDOW_MASKS_H_
 
-#include <string>
-#include <assert.h>
-#include "mywm-structs.h"
-
 /// Max number of window masks
 #define NUM_WINDOW_MASKS  32
 
@@ -98,11 +94,6 @@
 #define WM_DELETE_WINDOW_MASK 	(1U << 26)
 /**Used in conjunction with WM_DELETE_WINDOW_MASK to kill the window */
 #define WM_PING_MASK 	(1U << 27)
-
-///Keeps track on the visibility state of the window
-#define PARTIALLY_VISIBLE_MASK 	(1U << 28)
-///Keeps track on the visibility state of the window
-#define FULLY_VISIBLE_MASK 	(1U << 29 | PARTIALLY_VISIBLE_MASK)
 ///Indicates the window is not withdrawn
 #define MAPPABLE_MASK 	(1U << 30)
 ///the window is currently mapped
@@ -117,150 +108,10 @@
 /// The minimum requirements to be reported has the focusedWindow
 #define FOCUSABLE_MASK  (INPUT_MASK|MAPPED_MASK)
 /// These masks indicate state beyond our control and should not be arbitrarily set
-#define EXTERNAL_MASKS 	(INPUT_MASK|WM_TAKE_FOCUS_MASK|WM_DELETE_WINDOW_MASK|WM_PING_MASK|FULLY_VISIBLE_MASK|MAPPABLE_MASK|MAPPED_MASK)
+#define EXTERNAL_MASKS 	(INPUT_MASK|WM_TAKE_FOCUS_MASK|WM_DELETE_WINDOW_MASK|WM_PING_MASK|MAPPABLE_MASK|MAPPED_MASK)
 /// A change in these masks may cause windows to be retiled
 #define RETILE_MASKS 	(MAXIMIZED_MASK | ALL_NO_TILE_MASKS | MAPPABLE_MASK)
 /// set all masks
 #define ALL_MASK        (-1)
 
-/**
- * Contains an bitwise or of WindowMasks
- */
-struct WindowMask {
-    /// | of WindowMasks
-    uint32_t mask;
-    /**
-     * @param m the starting mask
-     */
-    WindowMask(uint32_t m = 0): mask(m) {}
-    /**
-     * @return bit mask
-     */
-    operator uint32_t() const {return mask;}
-    /**
-     * @param m the bits to and to mask
-     * @return
-     */
-    WindowMask& operator &=(uint32_t m) {mask &= m; return *this;}
-    /**
-     * @param m the bits to or with mask
-     * @return
-     */
-    WindowMask& operator |=(uint32_t m) {mask |= m; return *this;}
-    /**
-     * @return a string representation of mask
-     */
-    operator std::string() const {
-#define _PRINT_MASK(windowMask) if( windowMask != 0 && (windowMask & M) == (uint32_t)windowMask || windowMask==0 && M==0){s+=#windowMask " ";M&=~windowMask;}
-        uint32_t M = mask;
-        std::string s = std::to_string(mask ? __builtin_popcount(mask) : 0) + " bits: ";
-        _PRINT_MASK(NO_MASK);
-        _PRINT_MASK(MAXIMIZED_MASK);
-        _PRINT_MASK(X_MAXIMIZED_MASK);
-        _PRINT_MASK(Y_MAXIMIZED_MASK);
-        _PRINT_MASK(CENTERED_MASK);
-        _PRINT_MASK(X_CENTERED_MASK);
-        _PRINT_MASK(Y_CENTERED_MASK);
-        _PRINT_MASK(FULLSCREEN_MASK);
-        _PRINT_MASK(ROOT_FULLSCREEN_MASK);
-        _PRINT_MASK(FLOATING_MASK);
-        _PRINT_MASK(MODAL_MASK);
-        _PRINT_MASK(BELOW_MASK);
-        _PRINT_MASK(ABOVE_MASK);
-        _PRINT_MASK(NO_TILE_MASK);
-        _PRINT_MASK(STICKY_MASK);
-        _PRINT_MASK(PRIMARY_MONITOR_MASK);
-        _PRINT_MASK(HIDDEN_MASK);
-        _PRINT_MASK(EXTERNAL_CONFIGURABLE_MASK);
-        _PRINT_MASK(EXTERNAL_RESIZE_MASK);
-        _PRINT_MASK(EXTERNAL_MOVE_MASK);
-        _PRINT_MASK(EXTERNAL_BORDER_MASK);
-        _PRINT_MASK(EXTERNAL_RAISE_MASK);
-        _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK);
-        _PRINT_MASK(INPUT_MASK);
-        _PRINT_MASK(NO_RECORD_FOCUS_MASK);
-        _PRINT_MASK(NO_ACTIVATE_MASK);
-        _PRINT_MASK(WM_TAKE_FOCUS_MASK);
-        _PRINT_MASK(WM_DELETE_WINDOW_MASK);
-        _PRINT_MASK(WM_PING_MASK);
-        _PRINT_MASK(FULLY_VISIBLE_MASK);
-        _PRINT_MASK(PARTIALLY_VISIBLE_MASK);
-        _PRINT_MASK(MAPPED_MASK);
-        _PRINT_MASK(MAPPABLE_MASK);
-        _PRINT_MASK(URGENT_MASK);
-        assert(!M);
-        return s;
-    }
-};
-/**
- * prints WindowMask
- *
- * @param stream
- * @param mask
- *
- * @return
- */
-static inline std::ostream& operator<<(std::ostream& stream, const WindowMask& mask) {
-    return stream << (std::string)mask;
-}
-
-/**
- * Abstract class for Workspace and WindowInfo which have WindowMasks
- */
-struct HasMask {
-private:
-    /**
-     * bitmap of window properties
-     */
-    WindowMask mask = 0;
-public:
-    virtual ~HasMask() = default;
-    /**
-     * @returns the full mask of the given window
-     */
-    WindowMask getMask(void)const {
-        return mask;
-    }
-    /**
-     * @param mask
-     * @return the intersection of mask and the window mask
-     */
-    virtual WindowMask hasPartOfMask(WindowMask mask)const {
-        return getMask()& mask;
-    }
-
-    /**
-     *
-     * @param mask
-     * @return 1 iff the window containers the complete mask
-     */
-    bool hasMask(WindowMask mask) const {
-        return hasPartOfMask(mask) == mask;
-    }
-
-    /**
-     * Adds the states give by mask to the window
-     * @param mask
-     */
-    virtual void addMask(WindowMask mask) {
-        this->mask |= mask;
-    }
-    /**
-     * Removes the states give by mask from the window
-     * @param mask
-     */
-    virtual void removeMask(WindowMask mask) {
-        this->mask &= ~mask;
-    }
-    /**
-     * Adds or removes the mask depending if the window already contains
-     * the complete mask
-     * @param mask
-     */
-    void toggleMask(WindowMask mask) {
-        if((getMask() & mask) == mask)
-            removeMask(mask);
-        else addMask(mask);
-    }
-};
 #endif

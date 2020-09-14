@@ -4,7 +4,6 @@
  */
 #ifndef STATE_H
 #define STATE_H
-#include <cstdint>
 
 /**
  * Calls onChange (if not NULL) for every (currently visible) workspace changed since
@@ -18,6 +17,6 @@
  * that has changed
  * @return 1 iff the state has actually changed
  */
-int updateState();
+static inline int updateState() {return 1;}
 
 #endif
