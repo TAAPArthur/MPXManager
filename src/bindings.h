@@ -50,6 +50,7 @@ typedef struct BindingFlags {
     bool grabDevice;
     bool popChain;
     bool shortCircuit;
+    uint16_t ignoreMod;
     EventWindow windowToPass;
 } BindingFlags ;
 typedef struct {

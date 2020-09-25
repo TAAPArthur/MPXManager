@@ -38,25 +38,12 @@ static inline bool matchesFlags(const BindingFlags* flags, const BindingEvent* e
 }
 bool matches(Binding* binding, const BindingEvent* event) {
     if(matchesFlags(&binding->flags, event))
-        if(binding->mod == WILDCARD_MODIFIER || binding->mod == (event->mod & ~IGNORE_MASK)
+        if((binding->mod == WILDCARD_MODIFIER || binding->mod == (event->mod & ~IGNORE_MASK & ~binding->flags.ignoreMod))
             && (!binding->buttonOrKey || getDetail(binding) == event->detail))
             return 1;
     return 0;
 }
 
-/*
-WindowInfo* getWindowToActOn(Binding*binding, const BindingEvent* event){
-    switch(target ? TARGET_WINDOW : getWindowTarget()) {
-        default:
-        case DEFAULT_WINDOW:
-            return getKeyboardMask(getMask()) ? event.master ? event.master->getFocusedWindow() : NULL : event.winInfo;
-        case FOCUSED_WINDOW:
-            return event.master ? event.master->getFocusedWindow() : NULL;
-        case TARGET_WINDOW:
-            return target ? getWindowInfo(*target) : event.winInfo;
-    }
-}
-*/
 
 void grabChain(Binding* binding, bool ungrab) {
     if(ungrab) {
@@ -74,7 +61,26 @@ void grabChain(Binding* binding, bool ungrab) {
                 grabDevice(getActiveMasterKeyboardID(), KEYBOARD_MASKS);
     }
 }
-
+static void callBinding(const Binding* binding, const BindingEvent* event) {
+    switch(binding->flags.windowToPass) {
+        case NO_WINDOW:
+            (void)binding->func.func(binding->arg, binding->arg2);
+            break;
+        case DEFAULT_WINDOW:
+        case FOCUSED_WINDOW:
+            if(getFocusedWindow())
+                (void)binding->func.func(getFocusedWindow(), binding->arg, binding->arg2);
+            else
+                INFO("Not calling matching binding because windowInfo is NULL");
+            break;
+        case EVENT_WINDOW:
+            if(event->winInfo)
+                (void)binding->func.func(event->winInfo, binding->arg, binding->arg2);
+            else
+                INFO("Not calling matching binding because windowInfo is NULL");
+            break;
+    }
+}
 bool checkBindings(const BindingEvent* event) {
     ArrayList* masterBindings = globalMasterChainBindings.size ? &globalMasterChainBindings : &
         (event->master ? event->master :
@@ -89,21 +95,23 @@ bool checkBindings(const BindingEvent* event) {
         if(matches(binding, event)) {
             TRACE("Found match");
             LOG_RUN(LOG_LEVEL_TRACE, dumbBinding(binding));
-            (void)binding->func.func(binding->arg, binding->arg2);
+            callBinding(binding, event);
             if(binding->flags.popChain) {
-                INFO("Chain ended");
-                pop(masterBindings);
-                grabAllBindings(binding->chainMembers.bindings, binding->chainMembers.size, 1);
-                grabChain(binding, 1);
+                assert(masterBindings->size);
+                Binding* parent = pop(masterBindings);
+                assert(parent->chainMembers.size);
+                grabAllBindings(parent->chainMembers.bindings, parent->chainMembers.size, 1);
+                grabChain(parent, 1);
+                INFO("Chain ended; Size %d, Global: %d", parent->chainMembers.size, parent->flags.mask & 1);
             }
             if(binding->chainMembers.size) {
-                INFO("Starting chain Global: %d", binding->flags.mask & 1);
+                INFO("Starting chain; Size %d, Global: %d", binding->chainMembers.size, binding->flags.mask & 1);
+                grabChain(binding, 0);
+                grabAllBindings(binding->chainMembers.bindings, binding->chainMembers.size, 0);
                 if(binding->flags.mask & 1)
                     push(&globalMasterChainBindings, binding);
                 else
                     push(masterBindings, binding);
-                grabChain(binding, 0);
-                grabAllBindings(binding->chainMembers.bindings, binding->chainMembers.size, 0);
                 if(!binding->flags.shortCircuit) {
                     INFO("Entering into chain immediately");
                     return checkBindings(event);
@@ -128,9 +136,11 @@ int grabBinding(Binding* binding, bool ungrab) {
     }
     if(getDetail(binding) && !binding->flags.noGrab) {
         if(!ungrab)
-            return grabDetail(binding->flags.targetID, getDetail(binding), binding->mod, binding->flags.mask);
+            return grabDetail(binding->flags.targetID, getDetail(binding), binding->mod, binding->flags.mask,
+                    binding->flags.ignoreMod);
         else
-            return ungrabDetail(binding->flags.targetID, getDetail(binding), binding->mod, binding->flags.mask);
+            return ungrabDetail(binding->flags.targetID, getDetail(binding), binding->mod, binding->flags.ignoreMod,
+                    getKeyboardMask(binding->flags.mask));
     }
     return 0;
 }
@@ -138,6 +148,8 @@ int grabBinding(Binding* binding, bool ungrab) {
 int grabAllBindings(Binding* bindings, int numBindings, bool ungrab) {
     int errors = 0;
     if(!bindings) {
+        assert(!numBindings);
+        INFO("Grabing/Ungrabbing all global bindings %d", ungrab);
         FOR_EACH(Binding*, b, &globalBindings) {
             errors += grabBinding(b, ungrab);
         }

@@ -46,7 +46,7 @@ int ungrabDevice(MasterID id);
  * @param maskValue specifies what type of event we are interested in
  * @return 0 iff the grab succeeded
  */
-int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskValue);
+int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskValue, uint32_t ignoreMod);
 /**
  * Ungrabs the specified detail/mod combination
  * @param deviceID the device id to grab (supports special ids)
@@ -55,7 +55,7 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
  * @param isKeyboard used to tell if a key or button should be grabbed
  * @return 1 iff the grab succeeded
  */
-int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboard);
+int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t ignoreMod, bool isKeyboard);
 
 /**
  * Replays current pointer event to children of the grab window

@@ -34,27 +34,29 @@ int ungrabDevice(MasterID id) {
     return XIUngrabDevice(dpy, id, 0);
 }
 
-int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskValue) {
+int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskValue, uint32_t ignoreMod) {
     XIEventMask eventMask = {deviceID, 2, (unsigned char*)& maskValue};
-    XIGrabModifiers modifiers[2] = {{mod}, {mod | IGNORE_MASK}};
+    XIGrabModifiers modifiers[4] = {{mod}, {mod | IGNORE_MASK}, {mod | ignoreMod}, {mod | IGNORE_MASK | ignoreMod} };
     TRACE("Grabbing device:%d detail:%d mod:%d mask: %d %d",
         deviceID, detail, mod, maskValue, getKeyboardMask(maskValue));
+    int size = ignoreMod ? LEN(modifiers) : LEN(modifiers) / 2;
     if(!getKeyboardMask(maskValue))
         return XIGrabButton(dpy, deviceID, detail, root, 0,
                 maskValue & XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE ? XIGrabModeAsync : XIGrabModeSync, XIGrabModeAsync, 1, &eventMask,
-                2, modifiers);
+                size, modifiers);
     else
         return XIGrabKeycode(dpy, deviceID, detail, root, XIGrabModeAsync, XIGrabModeAsync,
-                1, &eventMask, 2, modifiers);
+                1, &eventMask, size, modifiers);
 }
-int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, bool isKeyboard) {
+int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t ignoreMod, bool isKeyboard) {
     DEBUG("UNGrabbing device:%d detail:%d mod:%d %d",
         deviceID, detail, mod, isKeyboard);
-    XIGrabModifiers modifiers[2] = {{mod}, {mod | IGNORE_MASK}};
+    XIGrabModifiers modifiers[4] = {{mod}, {mod | IGNORE_MASK}, {mod | ignoreMod}, {mod | IGNORE_MASK | ignoreMod} };
+    int size = ignoreMod ? LEN(modifiers) : LEN(modifiers) / 2;
     if(!isKeyboard)
-        return XIUngrabButton(dpy, deviceID, detail, root, 2, modifiers);
+        return XIUngrabButton(dpy, deviceID, detail, root, size, modifiers);
     else
-        return XIUngrabKeycode(dpy, deviceID, detail, root, 2, modifiers);
+        return XIUngrabKeycode(dpy, deviceID, detail, root, size, modifiers);
 }
 void replayPointerEvent() {
     TRACE("Replaying pointer events");
