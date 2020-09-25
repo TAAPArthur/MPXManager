@@ -78,6 +78,10 @@ typedef struct Master {
     /**When true, the focus stack won't be updated on focus change*/
     bool freezeFocusStack;
 
+
+
+    void* windowMoveResizer;
+
     /// Index of active workspace;
     WorkspaceID activeWorkspaceIndex;
     ArrayList bindings;

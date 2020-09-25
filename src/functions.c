@@ -5,15 +5,17 @@
 #include "functions.h"
 #include "globals.h"
 #include "layouts.h"
-#include "util/logger.h"
 #include "masters.h"
 #include "monitors.h"
 #include "system.h"
-#include "xutil/test-functions.h"
-#include "xutil/window-properties.h"
+#include "util/logger.h"
 #include "windows.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
+#include "xevent.h"
+#include "xutil/device-grab.h"
+#include "xutil/test-functions.h"
+#include "xutil/window-properties.h"
 
 static int getNextIndexInStack(const ArrayList* stack, int delta, bool(*filter)(WindowInfo*)) {
     WindowInfo* winInfo = getFocusedWindow();
@@ -180,3 +182,113 @@ void activateWorkspaceUnderMouse(void) {
         switchToWorkspace(getWorkspaceOfMonitor(smallestMonitor)->id);
 }
 
+
+
+
+typedef struct RefWindowMouse {
+    WindowID win;
+    Rect ref;
+    short mousePos[2];
+    char change;
+    bool move;
+    //bool btn;
+    uint32_t lastSeqNumber;
+} RefWindowMouse;
+static RefWindowMouse* getRef() {
+    return getActiveMaster()->windowMoveResizer;
+}
+static void removeRef() {
+    free(getActiveMaster()->windowMoveResizer);
+    getActiveMaster()->windowMoveResizer = NULL;
+}
+static inline Rect calculateNewPosition(const RefWindowMouse* refStruct, const short newMousePos[2],
+    bool* hasChanged) {
+    *hasChanged = 0;
+    Rect _result = refStruct->ref;
+    short* result = &_result.x;
+    int mask[] = {1, 2};
+    for(int i = 0; i < 2; i++) {
+        short delta = newMousePos[i] - refStruct->mousePos[i];
+        if(!(refStruct->change & mask[i]) && delta) {
+            *hasChanged = 1;
+            if(refStruct->move)
+                result[i] += delta;
+            else if((signed)(delta + result[2 + i]) < 0) {
+                result[i] += delta + result[i + 2];
+                result[i + 2 ] = -delta - result[i + 2];
+            }
+            else
+                result[i + 2] += delta;
+            if(result[i + 2] == 0)
+                result[i + 2] = 1;
+        }
+    }
+    return _result;
+}
+bool shouldUpdate(RefWindowMouse* refStruct) {
+    if(getLastDetectedEventSequenceNumber() <= refStruct->lastSeqNumber) {
+        return 0;
+    }
+    refStruct->lastSeqNumber = getLastDetectedEventSequenceNumber();
+    return 1;
+}
+/*
+bool detectWindowMoveResizeButtonRelease(Master* m) {
+    xcb_input_button_release_event_t* event = (xcb_input_button_release_event_t*)getLastEvent();
+    auto ref = getRef(m);
+    if(ref) {
+        if(ref->btn && ref->btn == event->detail) {
+            commitWindowMoveResize(m);
+            return 0;
+        }
+    }
+    return 1;
+}
+*/
+
+void startWindowMoveResize(WindowInfo* winInfo, bool move, int change) {
+    WindowID win = winInfo->id;
+    DEBUG("Starting WM move/resize; Master: %d", getActiveMasterKeyboardID());
+    short pos[2] = {0, 0};
+    getMousePosition(getActiveMasterPointerID(), root, pos);
+    RefWindowMouse temp = {.win = win, .ref = getRealGeometry(win), {pos[0], pos[1]}, .change = change, move};
+    getActiveMaster()->windowMoveResizer = malloc(sizeof(RefWindowMouse));
+    *((RefWindowMouse*)getActiveMaster()->windowMoveResizer) = temp;
+}
+void commitWindowMoveResize() {
+    DEBUG("Committing WM move/resize; Master: %d", getActiveMasterKeyboardID());
+    /* TODO
+    if(ref->btn)
+        ungrabDevice(m->getPointerID());
+    */
+    removeRef();
+}
+void cancelWindowMoveResize() {
+    RefWindowMouse* ref = getRef();
+    if(ref) {
+        DEBUG("Canceling WM move/resize; Master: %d", getActiveMasterKeyboardID());
+        setWindowPosition(ref->win, ref->ref);
+        /* TODO
+        if(ref->btn)
+            ungrabDevice(m->getPointerID());
+            */
+        removeRef();
+    }
+}
+
+void updateWindowMoveResize() {
+    RefWindowMouse* ref = getRef();
+    if(ref) {
+        TRACE("Updating WM move/resize; Master: %d", getActiveMasterKeyboardID());
+        if(!shouldUpdate(ref))
+            return;
+        short pos[2];
+        if(getMousePosition(getActiveMasterPointerID(), root, pos)) {
+            bool change = 0;
+            RectWithBorder r = calculateNewPosition(ref, pos, &change);
+            assert(r.width && r.height);
+            if(change)
+                setWindowPosition(ref->win, r);
+        }
+    }
+}

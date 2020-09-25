@@ -41,6 +41,8 @@ void freeMaster(Master* master) {
     if(getActiveMaster() == master)
         setActiveMaster(getHead(getAllMasters()));
     removeElement(&masterList, master, sizeof(MasterID));
+    if(master->windowMoveResizer)
+        free(master->windowMoveResizer);
     free(master);
 }
 

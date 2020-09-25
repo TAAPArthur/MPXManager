@@ -111,7 +111,7 @@ WorkspaceID getSavedWorkspaceIndex(WindowID win) {
     return workspaceIndex;
 }
 void setSavedWorkspaceIndex(WindowInfo* winInfo) {
-    xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, getWorkspaceIndex(winInfo));
+    xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, getWorkspaceIndexOfWindow(winInfo));
 }
 void autoResumeWorkspace(WindowInfo* winInfo) {
     if(getWorkspaceOfWindow(winInfo)) {
@@ -276,115 +276,6 @@ void moveWindowWithMouse(WindowInfo* winInfo);
 void resizeWindowWithMouse(WindowInfo* winInfo);
 
 /*
-
-struct RefWindowMouse {
-    WindowID win;
-    RectWithBorder ref;
-    short mousePos[2];
-    bool change[2];
-    bool move;
-    bool btn;
-    uint32_t lastSeqNumber;
-    RectWithBorder calculateNewPosition(const short newMousePos[2], bool* hasChanged) {
-        *hasChanged = 0;
-        assert(win);
-        RectWithBorder result = RectWithBorder(ref);
-        for(int i = 0; i < 2; i++) {
-            short delta = newMousePos[i] - mousePos[i];
-            if(change[i] && delta) {
-                *hasChanged = 1;
-                if(move)
-                    result[i] += delta;
-                else if((signed)(delta + result[2 + i]) < 0) {
-                    result[i] += delta + result[i + 2];
-                    result[i + 2 ] = -delta - result[i + 2];
-                }
-                else
-                    result[i + 2] += delta;
-                if(result[i + 2] == 0)
-                    result[i + 2] = 1;
-            }
-        }
-        return result;
-    }
-    const RectWithBorder getRef() {return ref;}
-    bool shouldUpdate() {
-        if(getLastDetectedEventSequenceNumber() <= lastSeqNumber) {
-            return 0;
-        }
-        lastSeqNumber = getLastDetectedEventSequenceNumber();
-        return 1;
-    }
-};
-
-static Index<RefWindowMouse> key;
-static RefWindowMouse* getRef(Master* m, bool createNew = 0) {
-    return get(key, m, createNew);
-}
-static void removeRef(Master* m) {
-    remove(key, m);
-}
-
-bool detectWindowMoveResizeButtonRelease(Master* m) {
-    xcb_input_button_release_event_t* event = (xcb_input_button_release_event_t*)getLastEvent();
-    auto ref = getRef(m);
-    if(ref) {
-        if(ref->btn && ref->btn == event->detail) {
-            commitWindowMoveResize(m);
-            return 0;
-        }
-    }
-    return 1;
-}
-
-void startWindowMoveResize(WindowInfo* winInfo, bool move, bool changeX, bool changeY, bool btn, Master* m) {
-    DEBUG("Starting WM move/resize; Master: " << m->id);
-    auto ref = getRef(m, 1);
-    short pos[2] = {0, 0};
-    getMousePosition(m, root, pos);
-    *ref = (RefWindowMouse) {winInfo->id, getRealGeometry(winInfo->id), {pos[0], pos[1]}, {changeX, changeY}, move, btn};
-    if(btn)
-        grabDevice(m->getPointerID(), POINTER_MASKS);
-}
-void commitWindowMoveResize(Master* m) {
-    auto ref = getRef(m);
-    if(ref) {
-        DEBUG("Committing WM move/resize; Master: " << m->id);
-        if(ref->btn)
-            ungrabDevice(m->getPointerID());
-        removeRef(m);
-    }
-}
-void cancelWindowMoveResize(Master* m) {
-    auto ref = getRef(m);
-    if(ref) {
-        DEBUG("Canceling WM move/resize; Master: " << m->id);
-        RectWithBorder r = ref->getRef();
-        processConfigureRequest(ref->win, r, 0, 0,
-            XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
-        if(ref->btn)
-            ungrabDevice(m->getPointerID());
-        removeRef(m);
-    }
-}
-
-void updateWindowMoveResize(Master* m) {
-    auto ref = getRef(m);
-    if(ref) {
-        TRACE("Updating WM move/resize; Master: " << m->id);
-        if(!ref->shouldUpdate())
-            return;
-        short pos[2];
-        if(getMousePosition(m, root, pos)) {
-            bool change = 0;
-            RectWithBorder r = ref->calculateNewPosition(pos, &change);
-            assert(r.width && r.height);
-            if(change)
-                processConfigureRequest(ref->win, r, 0, 0,
-                    XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
-        }
-    }
-}
 
 void updateXWindowStateForAllWindows() {
     static std::unordered_map<WindowID, uint32_t> savedWindowMasks;

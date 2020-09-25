@@ -9,10 +9,10 @@
 #include <string.h>
 #include <xcb/xcb_ewmh.h>
 
-#include "boundfunction.h"
-#include "masters.h"
-#include "mywm-structs.h"
-#include "windows.h"
+#include "../boundfunction.h"
+#include "../masters.h"
+#include "../mywm-structs.h"
+#include "../windows.h"
 
 /**
  *
@@ -100,61 +100,6 @@ void onClientMessage(xcb_client_message_event_t* event);
 /// the default source when sending a WM request
 extern xcb_ewmh_client_source_type_t source;
 
-
-/**
- * Starts a window move-resize request
- *
- * The current window position and mouse position is stored. ON subsequent calls
- * to updateWindowMoveResize the window position will be change by the delta in the mouse position.
- *
- * If this method is called twice, the previous stored value is forgotten.
- * This method does not itself affect the window position
- *
- * @param winInfo
- * @param move whether to move (change position) or resize (change width/height)
- * @param allowMoveX allow x position/width to be changed
- * @param allowMoveY allow y position/height to be changed
- * @param btn
- * @param m
- */
-void startWindowMoveResize(WindowInfo* winInfo, bool move, bool disallowMoveX, bool disallowMoveY, bool btn, Master* m);
-/**
- * Update a window-move resize with the new mouse position.
- * If a request has not been started (@see startWindowMoveResize) this method is a no-op
- * The current master position is calculated, and the window is move/resized according to the displacement of the current position and the stored position.
- *
- * If the mouse delta is 0, this is a no-op
- * If the resize would cause dimension to be exactly 0, that dimension would have size 1
- * If the resize make a dimension negative, the window is moved and resized in a standard manner
- * @param m
- */
-void updateWindowMoveResize(Master* m) ;
-/**
- * Commits the window-move resize
- * Subsequent calls to updateWindowMoveResize or cancelWindowMoveResize won't have any effect
- *
- * @param m
- */
-void commitWindowMoveResize(Master* m) ;
-
-/**
- * A DEVICE_EVENT function that will triggered commitWindowMoveResize when the client specified button is released
- * @param m
- *
- * @return 1 iff commitWindowMoveResize was called
- */
-bool detectWindowMoveResizeButtonRelease(Master* m);
-/**
- * Cancels the window-move resize operation
- *
- * The window is reverted to its original position/size it had when startWindowMoveResize was called
- *
- * Subsequent calls to updateWindowMoveResize or commitWindowMoveResize won't have any effect
- *
- *
- * @param m
- */
-void cancelWindowMoveResize(Master* m);
 /**
  * Sets the WM_STATE from the window masks
  */

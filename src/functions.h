@@ -206,4 +206,62 @@ static inline void swapWorkspace(int dir) {
 static inline void shiftWorkspace(int dir) {
     swapMonitors(getActiveWorkspaceIndex(), (getNextIndex(getAllWorkspaces(), getActiveWorkspaceIndex(), dir)));
 }
+
+
+/**
+ * Starts a window move-resize request
+ *
+ * The current window position and mouse position is stored. ON subsequent calls
+ * to updateWindowMoveResize the window position will be change by the delta in the mouse position.
+ *
+ * If this method is called twice, the previous stored value is forgotten.
+ * This method does not itself affect the window position
+ *
+ * @param winInfo
+ * @param move whether to move (change position) or resize (change width/height)
+ * @param allowMoveX allow x position/width to be changed
+ * @param allowMoveY allow y position/height to be changed
+ * @param btn
+ * @param m
+ */
+void startWindowMoveResize(WindowInfo* winInfo, bool move, int disallowMove);
+static inline void startWindowMove(WindowInfo* winInfo) {startWindowMoveResize(winInfo, 1, 0);}
+static inline void startWindowResize(WindowInfo* winInfo) {startWindowMoveResize(winInfo, 0, 0);}
+/**
+ * Update a window-move resize with the new mouse position.
+ * If a request has not been started (@see startWindowMoveResize) this method is a no-op
+ * The current master position is calculated, and the window is move/resized according to the displacement of the current position and the stored position.
+ *
+ * If the mouse delta is 0, this is a no-op
+ * If the resize would cause dimension to be exactly 0, that dimension would have size 1
+ * If the resize make a dimension negative, the window is moved and resized in a standard manner
+ * @param m
+ */
+void updateWindowMoveResize() ;
+/**
+ * Commits the window-move resize
+ * Subsequent calls to updateWindowMoveResize or cancelWindowMoveResize won't have any effect
+ *
+ * @param m
+ */
+void commitWindowMoveResize() ;
+
+/**
+ * A DEVICE_EVENT function that will triggered commitWindowMoveResize when the client specified button is released
+ * @param m
+ *
+ * @return 1 iff commitWindowMoveResize was called
+ */
+bool detectWindowMoveResizeButtonRelease();
+/**
+ * Cancels the window-move resize operation
+ *
+ * The window is reverted to its original position/size it had when startWindowMoveResize was called
+ *
+ * Subsequent calls to updateWindowMoveResize or commitWindowMoveResize won't have any effect
+ *
+ *
+ * @param m
+ */
+void cancelWindowMoveResize();
 #endif

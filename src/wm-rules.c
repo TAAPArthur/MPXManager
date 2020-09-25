@@ -103,9 +103,9 @@ void onDestroyEvent(xcb_destroy_notify_event_t* event) {
 
 
 void onDeviceEvent(xcb_input_key_press_event_t* event) {
-    TRACE("device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d",
+    TRACE("device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d Detail %d Mod %d (%d)",
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
-        event->root, event->event, event->child);
+        event->root, event->event, event->child, event->detail, event->mods.effective, event->mods.base);
     setActiveMasterByDeviceID(event->deviceid);
     int i;
     int list[] = {0, event->root, event->event, event->child};

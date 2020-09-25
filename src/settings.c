@@ -27,35 +27,33 @@
 //static Binding CYCLE_WINDOWCHAIN_BINDINGS[] = {
 static Binding CHAIN_BINDINGS[] = {
     {
-        Mod1Mask, XK_Tab, setFocusStackFrozen, {1}, .flags.grabDevice = 1, .chainMembers = CHAIN_MEM(
+        Mod1Mask, XK_Tab, setFocusStackFrozen, {1}, .flags = {.grabDevice = 1, .ignoreMod = ShiftMask}, .chainMembers = CHAIN_MEM(
         {Mod1Mask, XK_Tab, cycleWindows, {DOWN}, .flags = {.noGrab = 1}},
         {Mod1Mask | ShiftMask, XK_Tab, cycleWindows, {UP}, .flags = {.noGrab = 1}},
         {WILDCARD_MODIFIER, XK_Alt_L, setFocusStackFrozen, {0}, .flags = {.noGrab = 1, .popChain = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
         )
     },
     {
-        Mod4Mask, XK_Tab, setFocusStackFrozen, {1}, .flags.grabDevice = 1, .chainMembers = CHAIN_MEM(
+        Mod4Mask, XK_Tab, setFocusStackFrozen, {1}, .flags = {.grabDevice = 1, .ignoreMod = ShiftMask}, .chainMembers = CHAIN_MEM(
         {Mod4Mask, XK_Tab, shiftFocusToNextClass, {DOWN}, .flags = {.noGrab = 1}},
         {Mod4Mask | ShiftMask, XK_Tab, shiftFocusToNextClass, {UP}, .flags = {.noGrab = 1}},
         {WILDCARD_MODIFIER, XK_Super_L, setFocusStackFrozen, {0}, .flags = {.noGrab = 1, .popChain = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
         )
     },
-    /* TODO readd
     {
-        DEFAULT_MOD_MASK, Button1, startWindowMoveResize, {1}, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = CHAIN_MEM(
+        DEFAULT_MOD_MASK, Button1, startWindowMove, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = CHAIN_MEM(
         {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, .flags = {.shortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
         {WILDCARD_MODIFIER, 0, commitWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
         )
     },
     {
-        DEFAULT_MOD_MASK, Button3, startWindowMoveResize, {0}, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = CHAIN_MEM(
+        DEFAULT_MOD_MASK, Button3, startWindowResize, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = CHAIN_MEM(
         {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, .flags = {.shortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
         {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
         {WILDCARD_MODIFIER, 0, commitWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
         )
     },
-    */
 };
 
 void recompileAndRestart() {

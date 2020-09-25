@@ -4,6 +4,7 @@
 #include "../layouts.h"
 #include "../windows.h"
 #include "../wm-rules.h"
+#include "../settings.h"
 #include "../wmfunctions.h"
 #include "test-event-helper.h"
 #include "tester.h"
@@ -391,37 +392,41 @@ SCUTEST(add_hidden_mask) {
     assert(!winInfo->hasMask(HIDDEN_MASK));
     unlock();
 }
+*/
+
 
 static void bindingsSetup() {
     ROOT_DEVICE_EVENT_MASKS = 0;
-    setup();
+    addShutdownOnIdleRule();
+    loadSettings();
+    onStartup();
 }
-SET_ENV(bindingsSetup, fullCleanup);
+SCUTEST_SET_ENV(bindingsSetup, cleanupXServer);
 SCUTEST_ITER(cycle_window, 3) {
     mapArbitraryWindow();
-    waitUntilIdle();
-    sendKeyPress(getKeyCode(XK_Alt_L));
+    sendKeyPress(getKeyCode(XK_Alt_L), getActiveMasterKeyboardID());
     if(_i == 2) {
-        sendKeyPress(getKeyCode(XK_Shift_L));
+        sendKeyPress(getKeyCode(XK_Shift_L), getActiveMasterKeyboardID());
     }
     for(int i = 0; i <= _i; i++) {
-        typeKey(getKeyCode(XK_Tab));
-        waitUntilIdle();
-        assert(getActiveChain());
-        assertEquals(getNumberOfActiveChains(), 1);
+        typeKey(getKeyCode(XK_Tab), getActiveMasterKeyboardID());
+        runEventLoop();
+        assertEquals(getActiveMaster()->bindings.size, 1);
     }
-    assert(getActiveMaster()->isFocusStackFrozen());
-    sendKeyRelease(getKeyCode(XK_Tab));
-    sendKeyRelease(getKeyCode(XK_Alt_L));
-    waitUntilIdle();
-    assert(!getActiveMaster()->isFocusStackFrozen());
-    assert(!getActiveChain());
+    assert(isFocusStackFrozen());
+    sendKeyRelease(getKeyCode(XK_Tab), getActiveMasterKeyboardID());
+    sendKeyRelease(getKeyCode(XK_Alt_L), getActiveMasterKeyboardID());
+    runEventLoop();
+    assert(!isFocusStackFrozen());
+    assertEquals(getActiveMaster()->bindings.size, 0);
 }
 SCUTEST_ITER(move_window, 2) {
-    sendKeyPress(getKeyCode(XK_Super_L));
+    POLL_COUNT = 1;
+    sendKeyPress(getKeyCode(XK_Super_L), getActiveMasterKeyboardID());
     bool move = !_i % 2;
     WindowID win = mapArbitraryWindow();
-    waitUntilIdle();
+    setWindowPosition(win, (Rect) {0, 0, 10, 10});
+    runEventLoop();
     RectWithBorder rect = getRealGeometry(win);
     if(move) {
         rect.x++;
@@ -431,17 +436,31 @@ SCUTEST_ITER(move_window, 2) {
         rect.width++;
         rect.height++;
     }
-    movePointer(1, 1, win);
-    sendButtonPress(move ? Button1 : Button3);
-    waitUntilIdle();
-
+    warpPointer(1, 1, win, getActiveMasterPointerID());
+    sendButtonPress(move ? Button1 : Button3, getActiveMasterPointerID());
+    runEventLoop();
     movePointerRelative(1, 1);
-    waitUntilIdle();
-    assertEquals(rect, getRealGeometry(win));
-    sendButtonRelease(move ? Button1 : Button3);
-    waitUntilIdle();
+    runEventLoop();
+    assertEqualsRect(rect, getRealGeometry(win));
+    sendButtonRelease(move ? Button1 : Button3, getActiveMasterPointerID());
+    runEventLoop();
     movePointerRelative(1, 1);
-    waitUntilIdle(1);
-    assertEquals(rect, getRealGeometry(win));
+    runEventLoop();
+    assertEqualsRect(rect, getRealGeometry(win));
 }
-*/
+SCUTEST(test_destroy_master_during_chain) {
+    createMasterDevice("test");
+    initCurrentMasters();
+    setActiveMaster(getMasterByName("test"));
+    POLL_COUNT = 1;
+    sendKeyPress(getKeyCode(XK_Super_L), getActiveMasterKeyboardID());
+    bool move = !_i % 2;
+    WindowID win = mapArbitraryWindow();
+    setWindowPosition(win, (Rect) {0, 0, 10, 10});
+    runEventLoop();
+    warpPointer(1, 1, win, getActiveMasterPointerID());
+    sendButtonPress(move ? Button1 : Button3, getActiveMasterPointerID());
+    runEventLoop();
+    destroyMasterDevice(getActiveMasterKeyboardID());
+    runEventLoop();
+}
