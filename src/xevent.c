@@ -91,7 +91,6 @@ static inline xcb_generic_event_t* getNextEvent() {
         event = pollForEvent();
     if(!event && !xcb_connection_has_error(dis)) {
         lock();
-        applyBatchEventRules();
         if(applyEventRules(IDLE, NULL)) {
             flush();
             event = pollForEvent();

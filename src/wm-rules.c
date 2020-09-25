@@ -251,6 +251,7 @@ void addSyncMapStateRules() {
 }
 
 void addBasicRules() {
+    addEvent(IDLE, DEFAULT_EVENT(applyBatchEventRules));
     addEvent(0, DEFAULT_EVENT(logError));
     addEvent(XCB_CREATE_NOTIFY, DEFAULT_EVENT(onCreateEvent));
     addEvent(XCB_DESTROY_NOTIFY, DEFAULT_EVENT(onDestroyEvent));
