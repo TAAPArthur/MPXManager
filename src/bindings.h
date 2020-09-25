@@ -120,4 +120,8 @@ bool checkBindings(const BindingEvent* userEvent);
 
 
 
+void enterChain(Binding* binding, ArrayList* masterBindings);
+
+
+
 #endif

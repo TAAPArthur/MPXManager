@@ -11,4 +11,5 @@ typedef struct StringJoiner {
 void addString(StringJoiner* array, const char* str);
 
 const char* getBuffer(StringJoiner* array);
+void freeBuffer(StringJoiner* array);
 #endif

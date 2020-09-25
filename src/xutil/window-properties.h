@@ -212,4 +212,13 @@ int killClientOfWindow(WindowID win);
  * @see killWindow();
  */
 void killClientOfWindowInfo(WindowInfo* winInfo);
+
+
+/**
+ * Reads (one of) the struct property to loads the info into properties and
+ * add a dock to the list of docks.
+ * @param info the dock
+ * @return true if properties were successfully loaded
+ */
+int loadDockProperties(WindowInfo* info);
 #endif

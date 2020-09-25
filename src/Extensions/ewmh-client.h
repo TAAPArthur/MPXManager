@@ -1,9 +1,9 @@
 #ifndef MPX_EWMH_CLIENT_H_
 #define MPX_EWMH_CLIENT_H_
-#include "mywm-structs.h"
 #include <xcb/xcb_ewmh.h>
-#include "windows.h"
-#include "xsession.h"
+#include "../mywm-structs.h"
+#include "../windows.h"
+#include "../xutil/xsession.h"
 #include "ewmh.h"
 
 /**
@@ -13,7 +13,7 @@
  */
 static inline void sendActivateWindowRequest(WindowID wid) {
     xcb_ewmh_request_change_active_window(ewmh, defaultScreenNumber, wid, source, 0,
-        getFocusedWindow() ? getFocusedWindow()->getID() : root);
+        getFocusedWindow() ? getFocusedWindow()->id : root);
 }
 /**
  * Wrapper for xcb_ewmh_request_change_wm_state

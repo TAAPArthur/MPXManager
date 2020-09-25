@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "boundfunction.h"
+#include "boundfunction.h"
 #include "util/logger.h"
 #include "masters.h"
 #include "user-events.h"
@@ -68,7 +68,7 @@ void moveToWorkspace(WindowInfo* winInfo, WorkspaceID destIndex) {
         DEBUG("Moving %d to workspace %d from %d", winInfo->id, destIndex, getWorkspaceIndexOfWindow(winInfo));
         removeFromWorkspace(winInfo);
         addElement(&getWorkspace(destIndex)->windows, winInfo);
-        // TODO applyEventRulesContext(WINDOW_WORKSPACE_CHANGE, (Context) {.winInfo = winInfo});
+        applyEventRules(WINDOW_WORKSPACE_CHANGE, winInfo);
     }
 }
 
@@ -98,4 +98,8 @@ WindowMask getEffectiveMask(const WindowInfo* winInfo) {
         mask |= workspace->mask;
     }
     return mask;
+}
+
+WindowMask getMasksToSync(WindowInfo* winInfo) {
+    return hasMask(winInfo, SYNC_ALL_MASKS) ? (WindowMask) - 1 : MASKS_TO_SYNC;
 }

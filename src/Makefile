@@ -13,13 +13,13 @@ NON_X_LDFLAGS := -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lxdo
 
 LAYER0_SRCS :=  globals.c util/threads.c util/rect.h util/logger.c util/debug.c settings.c
-LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
+LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c xutil/string-array.c
 LAYER1_SRCS := util/arraylist.c boundfunction.c
 LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
 LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c
 LAYER4_SRCS := wm-rules.c
 LAYER5_SRCS := functions.c communications.c mpxmanager.c
-LAYER6_SRCS := Extensions/ewmh.c Extensions/ewmh-full.c Extensions/compatibility-rules.c Extensions/extra-rules.c Extensions/mpx.c Extensions/session.c #Extensions/window-clone.c Extensions/xmousecontrol.c Extensions/containers.c
+LAYER6_SRCS := Extensions/ewmh.c Extensions/ewmh-full.c Extensions/compatibility-rules.c Extensions/extra-rules.c Extensions/mpx.c Extensions/session.c Extensions/window-clone.c Extensions/xmousecontrol.c Extensions/containers.c
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER11_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.c mpxmanager.c
@@ -141,6 +141,14 @@ unitTest: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(TEST_SRCS)) $(TEST_SR
 
 unitTest.out: unitTest
 	$(call RUN_TEST, ./unitTest )
+	$(if $(TEST_FUNC),exit 1)
+
+unitTestExtensions: CFLAGS := ${TESTFLAGS}
+unitTestExtensions: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(LAYER6_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o) | libmpx-test.so
+	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+
+unitTestExtensions.out: unitTestExtensions
+	$(call RUN_TEST, ./$^)
 	$(if $(TEST_FUNC),exit 1)
 
 

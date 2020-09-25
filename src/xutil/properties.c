@@ -11,6 +11,7 @@
 #include "xsession.h"
 
 
+static char __buffer[MAX_NAME_LEN];
 void dumpAtoms(const xcb_atom_t* atoms, int numberOfAtoms) {
     printf("Atoms %d:", numberOfAtoms);
     char buffer[MAX_NAME_LEN];
@@ -29,6 +30,8 @@ xcb_atom_t getAtom(const char* name) {
     return atom;
 }
 char* getAtomName(xcb_atom_t atom, char* buffer) {
+    if(!buffer)
+        buffer = __buffer;
     xcb_get_atom_name_reply_t* valueReply = xcb_get_atom_name_reply(dis, xcb_get_atom_name(dis, atom), NULL);
     if(valueReply) {
         strncpy(buffer, xcb_get_atom_name_name(valueReply), MIN_NAME_LEN(valueReply->name_len));

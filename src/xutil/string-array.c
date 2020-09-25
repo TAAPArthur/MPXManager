@@ -19,3 +19,6 @@ void addString(StringJoiner* array, const char* str) {
 const char* getBuffer(StringJoiner* array) {
     return array->__buffer;
 }
+void freeBuffer(StringJoiner* array) {
+    free(array->__buffer);
+}

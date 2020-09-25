@@ -123,14 +123,6 @@ static inline Workspace* getPrimaryWorkspace() {
 }
 
 /**
- * Reads (one of) the struct property to loads the info into properties and
- * add a dock to the list of docks.
- * @param info the dock
- * @return true if properties were successfully loaded
- */
-int loadDockProperties(WindowInfo* info);
-
-/**
  * Removes monitors that are duplicates according to MONITOR_DUPLICATION_POLICY
  * and MONITOR_DUPLICATION_RESOLUTION
  */

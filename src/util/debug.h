@@ -52,4 +52,6 @@ void dumpMaster(Master* master) ;
  * @return the string representation of type if known
  */
 const char* eventTypeToString(int type);
+
+const char* getMaskAsString(WindowMask mask, char* buff);
 #endif

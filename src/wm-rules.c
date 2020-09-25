@@ -165,13 +165,9 @@ void onMapRequestEvent(xcb_map_request_event_t* event) {
 void onPropertyEvent(xcb_property_notify_event_t* event) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     // only reload properties if a window is mapped
-    if(winInfo && isMappable(winInfo)) {
+    if(winInfo && hasMask(winInfo, MAPPED_MASK)) {
         if(event->atom == ewmh->_NET_WM_NAME || event->atom == XCB_ATOM_WM_NAME)
             loadWindowTitle(winInfo);
-        if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
-            if(winInfo->dock)
-                loadDockProperties(winInfo);
-        }
         else if(event->atom == XCB_ATOM_WM_HINTS)
             loadWindowHints(winInfo);
     }

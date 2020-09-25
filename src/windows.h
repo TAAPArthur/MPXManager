@@ -46,6 +46,7 @@ struct WindowInfo {
      * bitmap of window properties
      */
     WindowMask mask;
+    WindowMask savedMask;
     /// set to 1 iff the window is a dock
     bool dock;
     /// 1 iff override_redirect flag set
@@ -297,4 +298,7 @@ static inline bool isActivatable(const WindowInfo* winInfo) {
 static inline bool isFocusable(const WindowInfo* winInfo) {
     return hasPartOfMask(winInfo, FOCUSABLE_MASK);
 }
+
+/// @return the masks this window will sync with X
+WindowMask getMasksToSync(WindowInfo* winInfo);
 #endif

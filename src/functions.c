@@ -247,13 +247,15 @@ bool detectWindowMoveResizeButtonRelease(Master* m) {
 */
 
 void startWindowMoveResize(WindowInfo* winInfo, bool move, int change) {
-    WindowID win = winInfo->id;
-    DEBUG("Starting WM move/resize; Master: %d", getActiveMasterKeyboardID());
-    short pos[2] = {0, 0};
-    getMousePosition(getActiveMasterPointerID(), root, pos);
-    RefWindowMouse temp = {.win = win, .ref = getRealGeometry(win), {pos[0], pos[1]}, .change = change, move};
-    getActiveMaster()->windowMoveResizer = malloc(sizeof(RefWindowMouse));
-    *((RefWindowMouse*)getActiveMaster()->windowMoveResizer) = temp;
+    if(!getRef()) {
+        WindowID win = winInfo->id;
+        DEBUG("Starting WM move/resize; Master: %d", getActiveMasterKeyboardID());
+        short pos[2] = {0, 0};
+        getMousePosition(getActiveMasterPointerID(), root, pos);
+        RefWindowMouse temp = {.win = win, .ref = getRealGeometry(win), {pos[0], pos[1]}, .change = change, move};
+        getActiveMaster()->windowMoveResizer = malloc(sizeof(RefWindowMouse));
+        *((RefWindowMouse*)getActiveMaster()->windowMoveResizer) = temp;
+    }
 }
 void commitWindowMoveResize() {
     DEBUG("Committing WM move/resize; Master: %d", getActiveMasterKeyboardID());

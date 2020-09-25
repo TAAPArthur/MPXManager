@@ -81,6 +81,15 @@ static void callBinding(const Binding* binding, const BindingEvent* event) {
             break;
     }
 }
+void enterChain(Binding* binding, ArrayList* masterBindings) {
+    INFO("Starting chain; Size %d, Global: %d", binding->chainMembers.size, binding->flags.mask & 1);
+    grabChain(binding, 0);
+    grabAllBindings(binding->chainMembers.bindings, binding->chainMembers.size, 0);
+    if(binding->flags.mask & 1)
+        push(&globalMasterChainBindings, binding);
+    else
+        push(masterBindings, binding);
+}
 bool checkBindings(const BindingEvent* event) {
     ArrayList* masterBindings = globalMasterChainBindings.size ? &globalMasterChainBindings : &
         (event->master ? event->master :
@@ -105,13 +114,7 @@ bool checkBindings(const BindingEvent* event) {
                 INFO("Chain ended; Size %d, Global: %d", parent->chainMembers.size, parent->flags.mask & 1);
             }
             if(binding->chainMembers.size) {
-                INFO("Starting chain; Size %d, Global: %d", binding->chainMembers.size, binding->flags.mask & 1);
-                grabChain(binding, 0);
-                grabAllBindings(binding->chainMembers.bindings, binding->chainMembers.size, 0);
-                if(binding->flags.mask & 1)
-                    push(&globalMasterChainBindings, binding);
-                else
-                    push(masterBindings, binding);
+                enterChain(binding, masterBindings);
                 if(!binding->flags.shortCircuit) {
                     INFO("Entering into chain immediately");
                     return checkBindings(event);

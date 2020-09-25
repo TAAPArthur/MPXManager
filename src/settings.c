@@ -24,7 +24,8 @@
 #include "wmfunctions.h"
 #include "workspaces.h"
 
-//static Binding CYCLE_WINDOWCHAIN_BINDINGS[] = {
+#define START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS \
+    CHAIN_MEM( {WILDCARD_MODIFIER, 0, updateWindowMoveResize, .flags = {.shortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}}, {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}}, {WILDCARD_MODIFIER, 0, commitWindowMoveResize, .flags = {.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .popChain = 1}},)
 static Binding CHAIN_BINDINGS[] = {
     {
         Mod1Mask, XK_Tab, setFocusStackFrozen, {1}, .flags = {.grabDevice = 1, .ignoreMod = ShiftMask}, .chainMembers = CHAIN_MEM(
@@ -41,20 +42,13 @@ static Binding CHAIN_BINDINGS[] = {
         )
     },
     {
-        DEFAULT_MOD_MASK, Button1, startWindowMove, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = CHAIN_MEM(
-        {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, .flags = {.shortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-        {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
-        {WILDCARD_MODIFIER, 0, commitWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
-        )
+        DEFAULT_MOD_MASK, Button1, startWindowMove, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS
     },
     {
-        DEFAULT_MOD_MASK, Button3, startWindowResize, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = CHAIN_MEM(
-        {DEFAULT_MOD_MASK, 0, updateWindowMoveResize, .flags = {.shortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}},
-        {WILDCARD_MODIFIER, XK_Escape, cancelWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
-        {WILDCARD_MODIFIER, 0, commitWindowMoveResize, .flags = {.noGrab = 1, .popChain = 1}},
-        )
+        DEFAULT_MOD_MASK, Button3, startWindowResize, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS
     },
 };
+Binding* startWindowMoveBinding = CHAIN_BINDINGS + 2;
 
 void recompileAndRestart() {
     if(spawnAndWait("mpxmanager --recompile") == 0)

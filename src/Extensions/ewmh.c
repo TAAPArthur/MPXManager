@@ -1,24 +1,26 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 
-#include "util/arraylist.h"
-#include "bindings.h"
-#include "devices.h"
+#include "../util/arraylist.h"
+#include "../util/debug.h"
+#include "../bindings.h"
+#include "../devices.h"
 #include "ewmh.h"
-#include "globals.h"
-#include "util/logger.h"
-#include "system.h"
-#include "time.h"
-#include "user-events.h"
-#include "xutil/window-properties.h"
-#include "xutil/string-array.h"
-#include "windows.h"
-#include "wmfunctions.h"
-#include "xutil/xsession.h"
+#include "../globals.h"
+#include "../util/logger.h"
+#include "../system.h"
+#include "../util/time.h"
+#include "../user-events.h"
+#include "../xutil/window-properties.h"
+#include "../xutil/string-array.h"
+#include "../windows.h"
+#include "../wmfunctions.h"
+#include "../functions.h"
+#include "../xutil/xsession.h"
 
 xcb_ewmh_client_source_type_t source = XCB_EWMH_CLIENT_SOURCE_TYPE_OTHER;
 
-bool isMPXManagerRunning(void) {
+bool isMPXManagerRunningAsWM(void) {
     xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
                 WM_SELECTION_ATOM), NULL);
     bool result = 0;
@@ -34,21 +36,7 @@ void broadcastEWMHCompilence() {
     DEBUG("Complying with EWMH");
     //functionless window required by EWMH spec
     //we set its class to input only and set override redirect so we (and anyone else ignore it)
-    if(!STEAL_WM_SELECTION) {
-        xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
-                    WM_SELECTION_ATOM), NULL);
-        if(ownerReply->owner) {
-            ERROR("Selection %d is already owned by window %d", WM_SELECTION_ATOM, ownerReply->owner);
-            quit(WM_ALREADY_RUNNING);
-        }
-        free(ownerReply);
-    }
-    DEBUG("Setting selection owner");
-    if(catchError(xcb_set_selection_owner_checked(dis, getPrivateWindow(), WM_SELECTION_ATOM,
-                XCB_CURRENT_TIME)) == 0) {
-        unsigned int data[5] = {XCB_CURRENT_TIME, WM_SELECTION_ATOM, getPrivateWindow()};
-        xcb_ewmh_send_client_message(dis, root, root, WM_SELECTION_ATOM, 5, data);
-    }
+    ownSelection(WM_SELECTION_ATOM);
     setWindowClass(getPrivateWindow(), numPassedArguments ? passedArguments[0] : WINDOW_MANAGER_NAME, WINDOW_MANAGER_NAME);
     setWindowPropertyInt(getPrivateWindow(), MPX_RESTART_COUNTER, XCB_ATOM_CARDINAL, RESTART_COUNTER);
     xcb_ewmh_set_supporting_wm_check(ewmh, root, getPrivateWindow());
@@ -75,7 +63,6 @@ void setActiveProperties() {
         lastActiveWorkspaceIndex = getActiveWorkspaceIndex();
     }
 }
-/*
 static void updateEWMHWorkspaceProperties() {
     xcb_ewmh_coordinates_t viewPorts[getNumberOfWorkspaces()];
     xcb_ewmh_geometry_t workAreas[getNumberOfWorkspaces()];
@@ -90,13 +77,13 @@ static void updateEWMHWorkspaceProperties() {
     // root screen
     xcb_ewmh_set_desktop_geometry(ewmh, defaultScreenNumber, getRootWidth(), getRootHeight());
 }
-*/
 void updateWorkspaceNames() {
-    StringJoiner joiner;
+    StringJoiner joiner = {0};
     FOR_EACH(Workspace*, w, getAllWorkspaces()) {
         addString(&joiner, w->name);
     }
     xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, joiner.bufferSize, getBuffer(&joiner));
+    freeBuffer(&joiner);
 }
 
 WorkspaceID getSavedWorkspaceIndex(WindowID win) {
@@ -114,7 +101,7 @@ void setSavedWorkspaceIndex(WindowInfo* winInfo) {
     xcb_ewmh_set_wm_desktop(ewmh, winInfo->id, getWorkspaceIndexOfWindow(winInfo));
 }
 void autoResumeWorkspace(WindowInfo* winInfo) {
-    if(getWorkspaceOfWindow(winInfo)) {
+    if(!getWorkspaceOfWindow(winInfo)) {
         moveToWorkspace(winInfo, getSavedWorkspaceIndex(winInfo->id));
     }
 }
@@ -134,7 +121,6 @@ static inline const char* getSourceTypeName(xcb_ewmh_client_source_type_t source
  * @param source
  * @return
  */
-/*
 static bool allowRequestFromSource(int source) {
     INFO("Got request from %s", getSourceTypeName((xcb_ewmh_client_source_type_t)source));
     return SRC_INDICATION & (1 << (source));
@@ -144,7 +130,7 @@ void onClientMessage(xcb_client_message_event_t* event) {
     xcb_client_message_data_t data = event->data;
     xcb_window_t win = event->window;
     Atom message = event->type;
-    INFO("Received client message for window: %d message: %s", win, getAtomName(message));
+    INFO("Received client message for window: %d message: %s", win, getAtomName(message, NULL));
     WindowInfo* winInfo = getWindowInfo(win);
     if(message == ewmh->_NET_CURRENT_DESKTOP)
         switchToWorkspace(data.data32[0]);
@@ -199,12 +185,20 @@ void onClientMessage(xcb_client_message_event_t* event) {
             bool disallowMoveY = XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT == dir || XCB_EWMH_WM_MOVERESIZE_SIZE_LEFT == dir ;
             bool move = dir == XCB_EWMH_WM_MOVERESIZE_MOVE || dir == XCB_EWMH_WM_MOVERESIZE_MOVE_KEYBOARD;
             Master* m = getClientMaster(win);
-            if(dir == XCB_EWMH_WM_MOVERESIZE_CANCEL)
-                cancelWindowMoveResize(m);
+            setActiveMaster(m);
+            if(dir == XCB_EWMH_WM_MOVERESIZE_CANCEL) {
+                extern Binding* startWindowMoveBinding;
+                if(m->bindings.size)
+                    if(peek(&m->bindings) == startWindowMoveBinding || peek(&m->bindings) == startWindowMoveBinding + 1)
+                        pop(&m->bindings);
+                cancelWindowMoveResize();
+            }
             else {
                 int btn = data.data32[3] ? data.data32[3] : 1;
                 INFO("Starting WM move/resize with button %d (%d)", btn, data.data32[3]);
-                startWindowMoveResize(winInfo, move, disallowMoveX, disallowMoveY, btn, m);
+                startWindowMoveResize(winInfo, move, (disallowMoveY << 1) | disallowMoveX);
+                extern Binding* startWindowMoveBinding;
+                enterChain(startWindowMoveBinding + !move, &m->bindings);
             }
         }
     }
@@ -224,9 +218,9 @@ void onClientMessage(xcb_client_message_event_t* event) {
         int num = data.data32[2] == 0 ? 1 : 2;
         if(winInfo) {
             if(allowRequestFromSource(data.data32[3])) {
-                WindowMask mask = winInfo->getMask();
+                WindowMask mask = winInfo->mask;
                 bool added = setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
-                if(mask != winInfo->getMask())
+                if(mask != winInfo->mask)
                     setXWindowStateFromMask(winInfo, &data.data32[1], added ? num : 0);
             }
             else
@@ -236,10 +230,10 @@ void onClientMessage(xcb_client_message_event_t* event) {
     else if(message == WM_CHANGE_STATE) {
         if(winInfo && allowRequestFromSource(XCB_EWMH_CLIENT_SOURCE_TYPE_NONE))
             if(data.data32[0] == XCB_ICCCM_WM_STATE_ICONIC) {
-                if(winInfo->getMasksToSync() & HIDDEN_MASK) {
+                if(getMasksToSync(winInfo) & HIDDEN_MASK) {
                     INFO("Received request to iconify window; marking window as HIDDEN");
-                    winInfo->addMask(HIDDEN_MASK);
-                    setXWindowStateFromMask(winInfo);
+                    addMask(winInfo, HIDDEN_MASK);
+                    setXWindowStateFromMask(winInfo, NULL, 0);
                 }
                 else
                     INFO("Received request to iconify window; ignored");
@@ -262,35 +256,59 @@ void onClientMessage(xcb_client_message_event_t* event) {
     }
     //ignored (we are allowed to) ewmh->_NET_DESKTOP_GEOMETRY, ewmh->_NET_DESKTOP_VIEWPORT
 }
-*/
 
-/**
- * Will shift the position of the window in response the change in mouse movements
- * @param winInfo
- */
-void moveWindowWithMouse(WindowInfo* winInfo);
-/**
- * Will change the size of the window in response the change in mouse movements
- * @param winInfo
- */
-void resizeWindowWithMouse(WindowInfo* winInfo);
-
-/*
+void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len) {
+    INFO("Setting X State for window %d from masks  %d", winInfo->id, winInfo->mask);
+    xcb_ewmh_get_atoms_reply_t reply;
+    bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    xcb_atom_t windowState[sizeof(WindowMask) * 8 + (hasState ? reply.atoms_len : 0)];
+    int n = 0;
+    if(hasState) {
+        LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(reply.atoms, reply.atoms_len));
+        for(uint32_t i = 0; i < reply.atoms_len; i++) {
+            if((getMaskFromAtom(reply.atoms[i]) & getMasksToSync(winInfo)) == 0)
+                windowState[n++] = reply.atoms[i];
+        }
+        xcb_ewmh_get_atoms_reply_wipe(&reply);
+    }
+    if(ALLOW_SETTING_UNSYNCED_MASKS) {
+        for(uint32_t i = 0; i < len; i++)
+            if((getMaskFromAtom(atoms[i]) & getMasksToSync(winInfo)) == 0)
+                windowState[n++] = atoms[i];
+    }
+    n += getAtomsFromMask(winInfo->mask & getMasksToSync(winInfo), 0, windowState + n);
+    xcb_ewmh_set_wm_state(ewmh, winInfo->id, n, windowState);
+    dumpAtoms(windowState, n);
+}
 
 void updateXWindowStateForAllWindows() {
-    static std::unordered_map<WindowID, uint32_t> savedWindowMasks;
-    for(WindowInfo* winInfo : getAllWindows()) {
-        if(winInfo->hasMask(MAPPABLE_MASK) && !winInfo->isNotManageable()) {
-            if(!savedWindowMasks.count(winInfo->id) ||
-                (winInfo->getMask() & winInfo->getMasksToSync()) != savedWindowMasks[winInfo->id]) {
-                setXWindowStateFromMask(winInfo);
-            }
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        if(hasMask(winInfo, MAPPABLE_MASK)) {
+            if((winInfo->mask ^ winInfo->savedMask) & getMasksToSync(winInfo))
+                setXWindowStateFromMask(winInfo, NULL, 0);
         }
     }
-    savedWindowMasks.clear();
-    for(WindowInfo* winInfo : getAllWindows())
-        if(winInfo->hasMask(MAPPABLE_MASK))
-            savedWindowMasks[winInfo->id] = winInfo->getMask() & winInfo->getMasksToSync();
+}
+
+bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
+    assert(numberOfAtoms);
+    INFO("Setting window masks for window %d %s current masks %d from %d atoms; Action %d", winInfo->id, winInfo->title,
+        winInfo->mask,  numberOfAtoms, action);
+    dumpAtoms(atoms, numberOfAtoms);
+    WindowMask mask = 0;
+    for(unsigned int i = 0; i < numberOfAtoms; i++) {
+        mask |= getMaskFromAtom(atoms[i]);
+    }
+    DEBUG("Pre filtered masks: %d", mask);
+    mask &= getMasksToSync(winInfo);
+    DEBUG("Filtered masks: %d", mask);
+    if(action == XCB_EWMH_WM_STATE_TOGGLE)
+        toggleMask(winInfo, mask);
+    else if(action == XCB_EWMH_WM_STATE_REMOVE)
+        removeMask(winInfo, mask);
+    else
+        addMask(winInfo, mask);
+    return hasMask(winInfo, mask);
 }
 void loadSavedAtomState(WindowInfo* winInfo) {
     xcb_ewmh_get_atoms_reply_t reply;
@@ -300,48 +318,27 @@ void loadSavedAtomState(WindowInfo* winInfo) {
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
 }
-void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len) {
-    INFO("Setting X State for window " << winInfo->id << " from masks " << winInfo->getMask());
-    xcb_ewmh_get_atoms_reply_t reply;
-    bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
-    ArrayList<xcb_atom_t> windowState;
-    if(hasState) {
-        DEBUG("Current state atoms" << getAtomsAsString(reply.atoms, reply.atoms_len));
-        for(uint32_t i = 0; i < reply.atoms_len; i++) {
-            if((getMaskFromAtom(reply.atoms[i]) & winInfo->getMasksToSync()) == 0)
-                windowState.add(reply.atoms[i]);
-        }
-        xcb_ewmh_get_atoms_reply_wipe(&reply);
-    }
-    if(ALLOW_SETTING_UNSYNCED_MASKS) {
-        for(uint32_t i = 0; i < len; i++)
-            if((getMaskFromAtom(atoms[i]) & winInfo->getMasksToSync()) == 0)
-                windowState.add(atoms[i]);
-    }
-    getAtomsFromMask(winInfo->getMask() & winInfo->getMasksToSync(), windowState);
-    xcb_ewmh_set_wm_state(ewmh, winInfo->id, windowState.size(), windowState.data());
-    DEBUG("New Atoms" << getAtomsAsString(windowState.data(), windowState.size()));
+static void setWMState(WindowInfo* winInfo) {
+    setWindowPropertyInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL, XCB_ICCCM_WM_STATE_NORMAL);
+}
+static void clearWMState(WindowInfo* winInfo) {
+    clearWindowProperty(winInfo->id, WM_STATE);
 }
 
-bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, uint32_t numberOfAtoms, int action) {
-    assert(numberOfAtoms);
-    INFO("Setting window masks for window " << winInfo->id << " " << winInfo->getTitle() << " current masks " <<
-        winInfo->getMask() << " from " << numberOfAtoms << " atom(s) "
-        << getAtomsAsString(atoms, numberOfAtoms) << "Action: " << action);
-    WindowMask mask = 0;
-    for(unsigned int i = 0; i < numberOfAtoms; i++) {
-        mask |= getMaskFromAtom(atoms[i]);
+static void rememberMappedWindows(WindowInfo* winInfo) {
+    if(getWindowPropertyValueInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL))
+        addMask(winInfo, MAPPABLE_MASK);
+}
+
+void updateDockProperties(xcb_property_notify_event_t* event) {
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    // only reload properties if a window is mapped
+    if(winInfo && hasMask(winInfo, MAPPED_MASK)) {
+        if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
+            if(winInfo->dock)
+                loadDockProperties(winInfo);
+        }
     }
-    DEBUG("Pre filtered masks: " << mask);
-    mask &= winInfo->getMasksToSync();
-    DEBUG("Filtered masks: " << mask);
-    if(action == XCB_EWMH_WM_STATE_TOGGLE)
-        winInfo->toggleMask(mask);
-    else if(action == XCB_EWMH_WM_STATE_REMOVE)
-        winInfo->removeMask(mask);
-    else
-        winInfo->addMask(mask);
-    return winInfo->hasMask(mask);
 }
 
 void addEWMHRules() {
@@ -350,12 +347,12 @@ void addEWMHRules() {
     addBatchEvent(TILE_WORKSPACE, DEFAULT_EVENT(updateXWindowStateForAllWindows));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(autoResumeWorkspace));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadSavedAtomState));
-    addEvent(GENERIC_EVENT_OFFSET + XCB_INPUT_BUTTON_RELEASE, DEFAULT_EVENT(detectWindowMoveResizeButtonRelease));
-    addEvent(GENERIC_EVENT_OFFSET + XCB_INPUT_MOTION, DEFAULT_EVENT(updateWindowMoveResize));
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(setWMState));
+    addEvent(CLIENT_MAP_DISALLOW, DEFAULT_EVENT(clearWMState));
+    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(rememberMappedWindows));
     addEvent(TRUE_IDLE, DEFAULT_EVENT(setActiveProperties));
     addEvent(WINDOW_WORKSPACE_CHANGE, DEFAULT_EVENT(setSavedWorkspaceIndex));
     addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(onClientMessage));
+    addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(updateDockProperties));
     addEvent(X_CONNECTION, DEFAULT_EVENT(broadcastEWMHCompilence, HIGHER_PRIORITY));
 }
-
-*/

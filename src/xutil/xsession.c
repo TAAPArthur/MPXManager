@@ -106,9 +106,11 @@ int getAtomsFromMask(WindowMask mask, bool action, xcb_atom_t* arr) {
     AtomMaskPair* pair = action ? atomActionToMask : atomStateToMask;
     size_t size = action ? LEN(atomActionToMask) : LEN(atomStateToMask);
     int count = 0;
-    for(int i = 0; i < size; i++)
-        if(pair[i].mask & mask == pair[i].mask)
+    for(int i = 0; i < size; i++) {
+        if((pair[i].mask & mask) == pair[i].mask)
             arr[count++] = pair[i].atom;
+    }
+    DEBUG("getAtomsFromMask found %d atoms for Mask %s", count, getMaskAsString(mask, NULL));
     return count;
 }
 

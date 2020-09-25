@@ -1,32 +1,20 @@
-
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
+#include <xcb/xcb_icccm.h>
+#include "../util/arraylist.h"
+#include "ewmh.h"
+#include "../util/logger.h"
+#include "../util/time.h"
+#include "../user-events.h"
+#include "../wmfunctions.h"
+#include "../xutil/xsession.h"
 
 //static ArrayList<WindowID> mappedOrder;
 static void addDefaultMappableMask(WindowInfo* winInfo) {
     if(getWindowPropertyValueInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL))
-        winInfo->addMask(MAPPABLE_MASK);
+        addMask(winInfo, MAPPABLE_MASK);
 }
 
-static void setWMStateRules(bool remove) {
-    getEventRules(CLIENT_MAP_ALLOW).add({
-        [](WindowInfo * winInfo) {setWindowProperty(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL, XCB_ICCCM_WM_STATE_NORMAL);},
-        "_setWindowState",
-    }, remove);
-    getEventRules(CLIENT_MAP_DISALLOW).add({
-        [](WindowInfo * winInfo) {clearWindowProperty(winInfo->id, WM_STATE);},
-        "_clearWindowState",
-    }, remove);
-}
-
-static void recordWindow(WindowInfo* winInfo) {
-    if(!winInfo->isNotManageable())
-        mappedOrder.addUnique(winInfo->id);
-}
-
-static void unrecordWindow(WindowInfo* winInfo) {
-    mappedOrder.removeElement(winInfo->id);
-}
 
 void setSupportedActions() {
     xcb_atom_t net_atoms[] = {
@@ -89,25 +77,21 @@ void setAllowedActions(WindowInfo* winInfo) {
 }
 
 void updateEWMHClientList() {
-    xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, mappedOrder.size(), (WindowID*)mappedOrder.data());
-}
-
-void addEWMHRules() {
-    addBatchEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
-    addBatchEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
-    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(recordWindow));
-    addEvent(PRE_REGISTER_WINDOW, DEFAULT_EVENT(addDefaultMappableMask));
-    addEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(unrecordWindow));
-    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(setAllowedActions));
-    addEvent(X_CONNECTION, DEFAULT_EVENT(syncShowingDesktop));
+    WindowID ids[getAllWindows()->size];
+    int i = 0;
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        ids[i++] = winInfo->id;
+    }
+    xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, i, ids);
 }
 
 
 void setShowingDesktop(int value) {
     INFO("setting showing desktop %d", value);
-    for(WindowInfo* winInfo : getAllWindows())
-        if(winInfo->getType() == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
-            raiseWindow(winInfo, 0, value);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
+            raiseLowerWindowInfo(winInfo, 0, value);
+    }
     xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
 }
 
@@ -117,12 +101,16 @@ bool isShowingDesktop(void) {
     return value;
 }
 
+void syncShowingDesktop() {
+    unsigned int value = 0;
+    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
+    setShowingDesktop(value);
+}
+
 void onClientMessage2(xcb_client_message_event_t* event) {
     xcb_client_message_data_t data = event->data;
     xcb_window_t win = event->window;
     Atom message = event->type;
-    INFO("Received client message for window: %d message: %s", win, getAtomName(message));
-    WindowInfo* winInfo = getWindowInfo(win);
     if(message == ewmh->WM_PROTOCOLS) {
         if(data.data32[0] == ewmh->_NET_WM_PING) {
             if(win == root) {
@@ -130,7 +118,7 @@ void onClientMessage2(xcb_client_message_event_t* event) {
                 WindowInfo* winInfo = getWindowInfo(data.data32[2]);
                 if(winInfo) {
                     DEBUG("Updated ping timestamp for window %d\n", winInfo->id);
-                    winInfo->setPingTimeStamp(getTime());
+                    winInfo->pingTimeStamp = getTime();
                 }
             }
             else if(win == getPrivateWindow()) {
@@ -142,8 +130,11 @@ void onClientMessage2(xcb_client_message_event_t* event) {
     }
 }
 
-void syncShowingDesktop() {
-    unsigned int value = 0;
-    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
-    setShowingDesktop(value);
+void addMoreEWMHRules() {
+    addBatchEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
+    addBatchEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
+    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(addDefaultMappableMask, HIGHER_PRIORITY));
+    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(setAllowedActions));
+    addEvent(X_CONNECTION, DEFAULT_EVENT(syncShowingDesktop));
+    addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(onClientMessage2));
 }
