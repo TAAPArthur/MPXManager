@@ -5,6 +5,7 @@
 #include "test-event-helper.h"
 #include "test-wm-helper.h"
 #include "../wm-rules.h"
+#include "../layouts.h"
 #include "../wmfunctions.h"
 
 static void setupEnvWithBasicRules() {
@@ -115,6 +116,40 @@ SCUTEST(test_switching_workspaces) {
     runEventLoop();
     assert(isWindowMapped(win));
     assert(!isWindowMapped(win2));
+}
+static void setupEnvWithAutoTileRules() {
+    addAutoTileRules();
+    setupEnvWithBasicRules();
+    addEvent(TILE_WORKSPACE, DEFAULT_EVENT(incrementCount));
+}
+SCUTEST_SET_ENV(setupEnvWithAutoTileRules, cleanupXServer);
+SCUTEST(test_auto_tile, .iter = 4) {
+    WindowID win = mapWindow(createNormalWindow());
+    WindowID win2 = createNormalWindow();
+    runEventLoop();
+    assertEquals(0, getCount());
+    moveToWorkspace(getWindowInfo(win), 0);
+    runEventLoop();
+    assertEquals(1, getCount());
+    mapWindow(createNormalWindow());
+    runEventLoop();
+    assertEquals(1, getCount());
+    switch(_i) {
+        case 0:
+            moveToWorkspace(getWindowInfo(win2), 0);
+            break;
+        case 1:
+            addMask(getWindowInfo(win), FLOATING_MASK);
+            break;
+        case 2:
+            toggleActiveLayout(&GRID);
+            break;
+        case 3:
+            getMonitor(getActiveWorkspace())->view = (Rect) {0, 0, 1, 1};
+            break;
+    }
+    runEventLoop();
+    assertEquals(2, getCount());
 }
 static Binding bindings[] = {
     {0, 1, incrementCount},

@@ -38,8 +38,10 @@ typedef enum {
     SCREEN_CHANGE,
     /// Called after workspace is tilled.
     TILE_WORKSPACE,
-    /// called right after a window changes workspaces
-    WINDOW_WORKSPACE_CHANGE,
+    /// Called when a window leaves a workspace
+    WORKSPACE_WINDOW_REMOVE,
+    /// Called when a window joins a workspace
+    WORKSPACE_WINDOW_ADD,
     /// called right after a monitor changes workspaces
     MONITOR_WORKSPACE_CHANGE,
     /**

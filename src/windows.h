@@ -180,12 +180,6 @@ static inline void setTilingOverride(WindowInfo* winInfo, const RectWithBorder t
     winInfo->tilingOverride = tileOverride;
 }
 /**
- *
- * @return the workspace index the window is in or NO_WORKSPACE
- */
-WorkspaceID getWorkspaceIndexOfWindow(const WindowInfo* winInfo);
-Workspace* getWorkspaceOfWindow(const WindowInfo* winInfo);
-/**
  * @return true if the window is not in a workspace or is in a visible one
  */
 bool isNotInInvisibleWorkspace(WindowInfo* winInfo);
@@ -301,4 +295,6 @@ static inline bool isFocusable(const WindowInfo* winInfo) {
 
 /// @return the masks this window will sync with X
 WindowMask getMasksToSync(WindowInfo* winInfo);
+
+void saveAllWindowMasks();
 #endif

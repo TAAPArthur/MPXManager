@@ -293,19 +293,38 @@ void retile(void) {
     tileWorkspace(getActiveWorkspace());
 }
 
+bool isWorkspaceDirty(Workspace* workspace) {
+    if(workspace->dirty || workspace->lastTiledLayout != getLayout(workspace))
+        return 1;
+    if(isWorkspaceVisible(workspace) && *(long*)&getMonitor(workspace)->view != *(long*)&workspace->lastBounds)
+        return 1;
+    FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace)) {
+        if((winInfo->mask ^ winInfo->savedMask) & RETILE_MASKS)
+            return 1;
+    }
+    return 0;
+}
+void retileAllDirtyWorkspaces() {
+    FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
+        if(isWorkspaceDirty(workspace))
+            tileWorkspace(workspace);
+    }
+}
+
+
 void tileWorkspace(Workspace* workspace) {
     assert(workspace);
     DEBUG("Tiling workspace %d", workspace->id);
-    if(!isWorkspaceVisible(workspace))
-        return;
-    Monitor* m = getMonitor(workspace);
-    assert(m);
     ArrayList* windowStack = getWorkspaceWindowStack(workspace);
-    if(!windowStack->size) {
-        TRACE("no windows in workspace");
+    if(!isWorkspaceVisible(workspace) || !windowStack->size) {
+        TRACE("Cannot tile workspace; Visibile %d; Size %d", !isWorkspaceVisible(workspace), windowStack->size);
         return;
     }
-    Layout* layout = getActiveLayout(workspace);
+    Monitor* m = getMonitor(workspace);
+    Layout* layout = getLayout(workspace);
+    workspace->dirty = 0;
+    workspace->lastTiledLayout = layout;
+    workspace->lastBounds = m->view;
     if(layout) {
         int maxWindowToTile = 0;
         FOR_EACH(WindowInfo*, winInfo, windowStack) {

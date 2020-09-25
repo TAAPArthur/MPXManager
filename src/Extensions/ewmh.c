@@ -351,7 +351,7 @@ void addEWMHRules() {
     addEvent(CLIENT_MAP_DISALLOW, DEFAULT_EVENT(clearWMState));
     addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(rememberMappedWindows));
     addEvent(TRUE_IDLE, DEFAULT_EVENT(setActiveProperties));
-    addEvent(WINDOW_WORKSPACE_CHANGE, DEFAULT_EVENT(setSavedWorkspaceIndex));
+    addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(setSavedWorkspaceIndex));
     addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(onClientMessage));
     addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(updateDockProperties));
     addEvent(X_CONNECTION, DEFAULT_EVENT(broadcastEWMHCompilence, HIGHER_PRIORITY));

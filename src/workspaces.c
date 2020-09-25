@@ -63,6 +63,23 @@ ArrayList* getWorkspaceWindowStack(Workspace* workspace) {
     return &workspace->windows;
 }
 
+Workspace* getWorkspaceOfWindow(const WindowInfo* winInfo) {
+    FOR_EACH(Workspace*, w, getAllWorkspaces()) {
+        if(findElement(getWorkspaceWindowStack(w), winInfo, sizeof(WindowID)))
+            return w;
+    }
+    return NULL;
+}
+
+WorkspaceID getWorkspaceIndexOfWindow(const WindowInfo* winInfo) {
+    Workspace* w = getWorkspaceOfWindow(winInfo);
+    return w ? w->id : NO_WORKSPACE;
+}
+
+void markWorkspaceOfWindowDirty(WindowInfo* winInfo) {
+    getWorkspaceOfWindow(winInfo)->dirty = 1;
+}
+
 void addLayout(Workspace* workspace, Layout* layout) {
     addElement(&workspace->layouts, layout);
 }

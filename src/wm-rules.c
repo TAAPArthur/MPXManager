@@ -10,7 +10,6 @@
 #include "masters.h"
 #include "monitors.h"
 #include "mywm-structs.h"
-#include "state.h"
 #include "system.h"
 #include "time.h"
 #include "user-events.h"
@@ -224,12 +223,14 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 }
 
 void addAutoTileRules() {
-    // TODO switch to IDLE
-    // getEventRules(PERIODIC).add(DEFAULT_EVENT(updateState, LOWER_PRIORITY), remove);
+    addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
+    addEvent(WORKSPACE_WINDOW_REMOVE, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
+    addBatchEvent(IDLE, DEFAULT_EVENT(retileAllDirtyWorkspaces));
+    addBatchEvent(IDLE, DEFAULT_EVENT(saveAllWindowMasks, LOWER_PRIORITY));
 }
 void assignDefaultLayoutsToWorkspace() {
     FOR_EACH(Workspace*, w, getAllWorkspaces()) {
-        if(w->layouts.size == 0 && getActiveLayout(w) == NULL) {
+        if(w->layouts.size == 0 && getLayout(w) == NULL) {
             FOR_EACH(Layout*, l, getRegisteredLayouts()) {
                 addLayout(w, l);
             }
@@ -246,7 +247,7 @@ void updateAllWindowWorkspaceState() {
 
 void addSyncMapStateRules() {
     addBatchEvent(MONITOR_WORKSPACE_CHANGE, DEFAULT_EVENT(updateAllWindowWorkspaceState));
-    addBatchEvent(WINDOW_WORKSPACE_CHANGE, DEFAULT_EVENT(updateAllWindowWorkspaceState));
+    addBatchEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(updateAllWindowWorkspaceState));
     addBatchEvent(TILE_WORKSPACE, DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY));
 }
 

@@ -10,6 +10,7 @@
 #include "window-masks.h"
 #include "masters.h"
 #include "util/arraylist.h"
+#include "util/rect.h"
 
 /// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
 #ifndef NO_WORKSPACE
@@ -54,6 +55,9 @@ struct Workspace {
      *
      */
     bool mapped ;
+    Layout* lastTiledLayout;
+    Rect lastBounds;
+    bool dirty;
 
     ///an windows stack
     ArrayList windows;
@@ -80,6 +84,13 @@ static inline Workspace* getWorkspace(WorkspaceID index) {
  * @return the windows stack of the workspace
  */
 ArrayList* getWorkspaceWindowStack(Workspace* workspace);
+
+/**
+ *
+ * @return the workspace index the window is in or NO_WORKSPACE
+ */
+WorkspaceID getWorkspaceIndexOfWindow(const WindowInfo* winInfo);
+Workspace* getWorkspaceOfWindow(const WindowInfo* winInfo);
 
 /// @return the active Workspace or NULL
 static inline Workspace* getActiveWorkspace(void) {return getWorkspace(getActiveWorkspaceIndex());}
@@ -112,7 +123,7 @@ void setLayout(Workspace* workspace, Layout* layout);
  * @return the active layout for the active workspace
  */
 Layout* getLayout(Workspace* workspace);
-static inline Layout* getActiveLayout() { return getLayout(getActiveWorkspace());};
+static inline Layout* getActiveLayout(void) { return getLayout(getActiveWorkspace());};
 
 /**
  *
@@ -196,4 +207,5 @@ static inline void toggleWorkspaceMask(Workspace* workspace, WindowMask mask) {
         removeWorkspaceMask(workspace, mask);
     else addWorkspaceMask(workspace, mask);
 }
+void markWorkspaceOfWindowDirty(WindowInfo* winInfo);
 #endif

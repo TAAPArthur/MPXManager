@@ -32,17 +32,6 @@ void freeWindowInfo(WindowInfo* winInfo) {
     removeElement(&windows, winInfo, sizeof(WindowID));
     free(winInfo);
 }
-Workspace* getWorkspaceOfWindow(const WindowInfo* winInfo) {
-    FOR_EACH(Workspace*, w, getAllWorkspaces())
-    if(findElement(getWorkspaceWindowStack(w), &winInfo->id, sizeof(WindowID)))
-        return w;
-    return NULL;
-}
-
-WorkspaceID getWorkspaceIndexOfWindow(const WindowInfo* winInfo) {
-    Workspace* w = getWorkspaceOfWindow(winInfo);
-    return w ? w->id : NO_WORKSPACE;
-}
 
 bool isNotInInvisibleWorkspace(WindowInfo* winInfo) {
     if(getWorkspaceIndexOfWindow(winInfo) == NO_WORKSPACE)
@@ -52,8 +41,10 @@ bool isNotInInvisibleWorkspace(WindowInfo* winInfo) {
 
 void removeFromWorkspace(WindowInfo* winInfo) {
     Workspace* w = getWorkspaceOfWindow(winInfo);
-    if(w)
+    if(w) {
+        applyEventRules(WORKSPACE_WINDOW_REMOVE, winInfo);
         removeIndex(getWorkspaceWindowStack(w), getIndex(getWorkspaceWindowStack(w), &winInfo->id, sizeof(WindowID)));
+    }
 }
 
 void moveToWorkspace(WindowInfo* winInfo, WorkspaceID destIndex) {
@@ -68,7 +59,7 @@ void moveToWorkspace(WindowInfo* winInfo, WorkspaceID destIndex) {
         DEBUG("Moving %d to workspace %d from %d", winInfo->id, destIndex, getWorkspaceIndexOfWindow(winInfo));
         removeFromWorkspace(winInfo);
         addElement(&getWorkspace(destIndex)->windows, winInfo);
-        applyEventRules(WINDOW_WORKSPACE_CHANGE, winInfo);
+        applyEventRules(WORKSPACE_WINDOW_ADD, winInfo);
     }
 }
 
@@ -102,4 +93,9 @@ WindowMask getEffectiveMask(const WindowInfo* winInfo) {
 
 WindowMask getMasksToSync(WindowInfo* winInfo) {
     return hasMask(winInfo, SYNC_ALL_MASKS) ? (WindowMask) - 1 : MASKS_TO_SYNC;
+}
+void saveAllWindowMasks() {
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        winInfo->savedMask = winInfo->mask;
+    }
 }

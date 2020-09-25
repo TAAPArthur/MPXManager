@@ -239,4 +239,6 @@ void column(LayoutState* state);
  */
 void masterPane(LayoutState* state);
 
+void retileAllDirtyWorkspaces();
+
 #endif /* LAYOUTS_H_ */
