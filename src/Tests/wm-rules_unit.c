@@ -7,8 +7,10 @@
 #include "../wm-rules.h"
 #include "../layouts.h"
 #include "../wmfunctions.h"
+#include "../layouts.h"
 
 static void setupEnvWithBasicRules() {
+    registerDefaultLayouts();
     addBasicRules();
     addWorkspaces(1);
     addShutdownOnIdleRule();
@@ -21,11 +23,9 @@ SCUTEST(test_init_state) {
     assert(getAllWorkspaces()->size);
     assert(getAllMonitors()->size);
     assert(getAllMasters()->size);
-    /*TODO
     FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
         assert(getLayout(workspace));
     }
-    */
 }
 
 SCUTEST(test_create_window_destroy) {

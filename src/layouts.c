@@ -27,7 +27,7 @@ Layout FULL = {.name = "Full", .func = full, .args = {.noBorder = 1, .raiseFocus
        TWO_MASTER_FLIPPED = {.name = "2 Master Flipped", .func = masterPane, .args = {.limit = 2, .raiseFocused = 1, .transform = ROT_180, .arg = .7, .argStep = .1}},
        TWO_MASTER_H = {.name = "2 HMaster", .func = masterPane, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = .7, .argStep = .1}};
 static Layout* defaultLayouts[] = {&FULL, &GRID, &TWO_ROW, &TWO_COL, &THREE_COL, &TWO_PANE, &TWO_PANE_H, &MASTER, &TWO_MASTER, &TWO_MASTER_FLIPPED,  &TWO_MASTER_H};
-ArrayList registeredLayouts = {.maxSize = LEN(defaultLayouts)};
+static ArrayList registeredLayouts;
 
 void registerLayout(Layout* layout) {
     addElement(&registeredLayouts, layout);

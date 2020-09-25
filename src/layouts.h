@@ -241,4 +241,6 @@ void masterPane(LayoutState* state);
 
 void retileAllDirtyWorkspaces();
 
+void registerDefaultLayouts();
+
 #endif /* LAYOUTS_H_ */

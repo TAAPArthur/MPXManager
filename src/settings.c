@@ -210,6 +210,7 @@ void (*startupMethod)();
 void onStartup(void) {
     INFO("Starting up");
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
+    registerDefaultLayouts();
     addBasicRules();
     if(!RUN_AS_WM)
         ROOT_EVENT_MASKS &= ~WM_MASKS;
