@@ -27,14 +27,6 @@ void restoreMPX(void);
  */
 void startMPX(void);
 /**
- * Removes all masters devices except the default
- */
-void stopMPX(void);
-/**
- * Calls stopMPX() and startMPX()
- */
-void restartMPX(void);
-/**
  * Saves the current master/slave configurations for later use
  */
 int saveMPXMasterInfo(void);
@@ -45,22 +37,13 @@ int loadMPXMasterInfo(void);
 /**
  * Creates a new master and marks it
  */
-void startSplitMaster(void);
-/**
- * Attaches the slave that triggered the current device event to the marked master if it is not null
- */
-void attachActiveSlaveToMarkedMaster() ;
-/**
- * Removes all the event rules created by splitMaster()
- */
-void endSplitMaster(void);
+void splitMaster(void);
 
-/**
- * @param slaveName
- *
- * @return the master or NULL
- */
-Master* getMasterForSlave(const char* slaveName);
+Master* getLastChildOfMaster();
+
+void toggleParentMaster(void);
+void toggleChildMaster(void);
+
 
 /**
  * Swap the ids of master devices backed by master1 and master2
@@ -70,18 +53,14 @@ Master* getMasterForSlave(const char* slaveName);
  * @param master1
  * @param master2
  */
-void swapDeviceID(Master* master1, Master* master2);
-/**
- * Swaps slaves with the master dir indexes away from the active master
- *
- * @param master
- * @param dir
- */
-void swapSlaves(Master* master, int dir) ;
-/**
- * Attaches the slave that triggered the current device event to the master dir away from the active master
- *
- * @param dir
- */
-void cycleSlave(int dir) ;
+void swapXDevices(Master* master1, Master* master2);
+void swapXDevicesWithChild();
+
+void attachActiveSlaveToLastChildOfMaster();
+
+#define SPLIT_MASTER_BINDING(M, K) {M,K, startSplitMaster, .flags = {.grabDevice = 1}, .chainMembers = CHAIN_MEM( \
+        {WILDCARD_MODIFIER, XK_Escape, .flags={.popChain=1, .shortCircuit=1}}, \
+        {WILDCARD_MODIFIER, 0, attachActiveSlaveToLastChildOfMaster,} \
+        ) \
+}
 #endif

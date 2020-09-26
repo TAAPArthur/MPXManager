@@ -23,6 +23,16 @@ void freeSlave(Slave* slave) {
     removeElement(&slaveList, slave, sizeof(SlaveID));
     free(slave);
 }
+Slave* getSlaveByID(SlaveID id) {
+    FOR_EACH(Slave*, slave, getAllSlaves()) {
+        if(slave->id == id) {
+            return slave;
+        }
+    }
+    return NULL;
+}
+
+
 
 static int endsWith(const char* str, const char* suffix) {
     size_t lenstr = strlen(str);

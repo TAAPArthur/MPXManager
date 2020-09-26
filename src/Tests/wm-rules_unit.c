@@ -55,6 +55,16 @@ SCUTEST(test_unmap) {
     waitUntilIdle();
     assert(!hasPartOfMask(getWindowInfo(win), MAPPED_MASK | MAPPABLE_MASK));
 }
+SCUTEST(test_hierarchy_change) {
+    createMasterDevice("test");
+    createMasterDevice("test2");
+    initCurrentMasters();
+    destroyAllNonDefaultMasters();
+    createMasterDevice("test");
+    createMasterDevice("test2");
+    runEventLoop();
+    assertEquals(getAllMasters()->size, 3);
+}
 
 SCUTEST(test_focus_window) {
     createMasterDevice("test");

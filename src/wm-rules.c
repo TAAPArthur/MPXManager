@@ -34,33 +34,35 @@ void onXConnect(void) {
     scan(root);
 }
 
-void onHiearchyChangeEvent(void) {
-    /* TODO renable
-    xcb_input_hierarchy_event_t* event = (xcb_input_hierarchy_event_t*)getLastEvent();
-    if(event->flags & (XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED | XCB_INPUT_HIERARCHY_MASK_SLAVE_ADDED)) {
-        DEBUG("detected new master");
-        initCurrentMasters();
-        return;
-    }
+void onHierarchyChangeEvent(xcb_input_hierarchy_event_t* event) {
     xcb_input_hierarchy_info_iterator_t iter = xcb_input_hierarchy_infos_iterator(event);
     while(iter.rem) {
         if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_MASTER_REMOVED) {
             DEBUG("Master %d %d has been removed", iter.data->deviceid, iter.data->attachment);
-            delete getAllMasters().removeElement(iter.data->deviceid);
+            if(getMasterByID(iter.data->deviceid))
+                freeMaster(getMasterByID(iter.data->deviceid));
         }
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_REMOVED) {
             DEBUG("Slave %d %d has been removed", iter.data->deviceid, iter.data->attachment);
-            delete getAllSlaves().removeElement(iter.data->deviceid);
+            if(getSlaveByID(iter.data->deviceid))
+                freeSlave(getSlaveByID(iter.data->deviceid));
         }
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_ATTACHED) {
-            getAllSlaves().find(iter.data->deviceid)->setMasterID(iter.data->attachment);
+            Slave* slave = getSlaveByID(iter.data->deviceid);
+            if(slave)
+                setMasterForSlave(slave, iter.data->attachment);
         }
         else if(iter.data->flags & XCB_INPUT_HIERARCHY_MASK_SLAVE_DETACHED) {
-            getAllSlaves().find(iter.data->deviceid)->setMasterID(0);
+            Slave* slave = getSlaveByID(iter.data->deviceid);
+            if(slave)
+                setMasterForSlave(slave, 0);
         }
         xcb_input_hierarchy_info_next(&iter);
     }
-    */
+    if(event->flags & (XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED | XCB_INPUT_HIERARCHY_MASK_SLAVE_ADDED)) {
+        DEBUG("detected new master");
+        initCurrentMasters();
+    }
 }
 
 
@@ -106,6 +108,7 @@ void onDeviceEvent(xcb_input_key_press_event_t* event) {
         event->sequence, event->event_type, event->deviceid, event->sourceid, event->flags,
         event->root, event->event, event->child, event->detail, event->mods.effective, event->mods.base);
     setActiveMasterByDeviceID(event->deviceid);
+    getActiveMaster()->lastActiveSlave = event->deviceid != event->sourceid ? event->sourceid : 0;
     int i;
     int list[] = {0, event->root, event->event, event->child};
     WindowInfo* winInfo = NULL;
@@ -271,7 +274,7 @@ void addBasicRules() {
     addEvent(XCB_SELECTION_CLEAR, DEFAULT_EVENT(onSelectionClearEvent));
     addEvent(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onFocusInEvent));
     addEvent(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onFocusOutEvent));
-    addEvent(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onHiearchyChangeEvent));
+    addEvent(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onHierarchyChangeEvent));
     addEvent(X_CONNECTION, DEFAULT_EVENT(assignDefaultLayoutsToWorkspace, HIGHER_PRIORITY));
     addEvent(X_CONNECTION, DEFAULT_EVENT(initState, HIGHEST_PRIORITY));
     addEvent(X_CONNECTION, DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, HIGH_PRIORITY));

@@ -40,6 +40,8 @@ Slave* newSlave(const MasterID id, MasterID attachment, bool keyboard, const cha
  * @param slave
  */
 void freeSlave(Slave* slave);
+
+Slave* getSlaveByID(SlaveID id);
 /**
  * Checks to see if the device is prefixed with XTEST
  * @return 1 iff str is the name of a test slave as opposed to one backed by a physical device

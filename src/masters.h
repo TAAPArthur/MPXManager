@@ -80,6 +80,7 @@ typedef struct Master {
 
 
 
+    SlaveID lastActiveSlave;
     void* windowMoveResizer;
 
     /// Index of active workspace;
