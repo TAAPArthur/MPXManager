@@ -149,7 +149,7 @@ static inline Layout* getActiveLayout() {return getActiveWorkspace()->getActiveL
  * All default layouts are considered registered
  * @param layout
  */
-void registeredLayout(Layout* layout);
+void registerLayout(Layout* layout);
 /**
  * @return list of registered layouts
  */

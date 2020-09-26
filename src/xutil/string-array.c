@@ -22,3 +22,15 @@ const char* getBuffer(StringJoiner* array) {
 void freeBuffer(StringJoiner* array) {
     free(array->__buffer);
 }
+
+bool isInBuffer(StringJoiner* array, const char* str) {
+    int offset = 0;
+    while(offset < array->usedBufferSize) {
+        const char* element = getBuffer(array) + offset;
+        int len = strlen(element);
+        if(strcmp(str, element) == 0)
+            return 1;
+        offset += len + 1;
+    }
+    return 0;
+}

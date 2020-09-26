@@ -73,5 +73,8 @@ void clearArray(ArrayList* array);
 static inline uint32_t getNextIndex(const ArrayList* array, int current, int delta) {
     return (current + delta + array->size) % array->size;
 }
+static inline void* getNextElement(const ArrayList* array, int current, int delta) {
+    return getElement(array, (current + delta + array->size) % array->size);
+}
 
 #endif

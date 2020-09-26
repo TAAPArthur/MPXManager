@@ -175,6 +175,8 @@ static inline uint32_t getActiveMode(void) {
  * @param win
  */
 void onWindowFocus(WindowID win);
+
+void onWindowFocusForMaster(WindowID win, Master* master);
 /**
  * Clears the focus stack
  */

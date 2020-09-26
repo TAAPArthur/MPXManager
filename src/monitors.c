@@ -17,6 +17,13 @@ ArrayList* getAllMonitors(void) {
     return &monitors;
 }
 
+__DEFINE_GET_X_BY_NAME(Monitor)
+
+
+Monitor* getMonitorByID(MonitorID id) {
+    return findElement(getAllMonitors(), &id, sizeof(MonitorID));
+}
+
 uint32_t MONITOR_DUPLICATION_POLICY = SAME_DIMS;
 uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 

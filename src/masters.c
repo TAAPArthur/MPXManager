@@ -52,8 +52,7 @@ void addDefaultMaster() {
     if(getActiveMaster() == NULL)
         setActiveMaster(m);
 }
-void onWindowFocus(WindowID win) {
-    Master* master = getActiveMaster();
+void onWindowFocusForMaster(WindowID win, Master* master) {
     WindowInfo* winInfo = getWindowInfo(win);
     if(!winInfo)
         return;
@@ -72,6 +71,10 @@ void onWindowFocus(WindowID win) {
         addElementAt(&master->windowStack, winInfo, master->focusedWindowIndex);
     }
     master->focusedTimeStamp = getTime();
+}
+void onWindowFocus(WindowID win) {
+    Master* master = getActiveMaster();
+    onWindowFocusForMaster(win, master);
 }
 void clearFocusStack(Master* master) {
     clearArray(&master->windowStack);

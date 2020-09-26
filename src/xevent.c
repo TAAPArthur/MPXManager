@@ -141,6 +141,7 @@ void runEventLoop() {
         unlock();
 #ifdef DEBUG
         XSync(dpy, 0);
+        fflush(NULL);
 #endif
         TRACE("event processed");
     }

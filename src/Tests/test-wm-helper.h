@@ -78,4 +78,16 @@ static inline void fullCleanup() {
     cleanupXServer();
 }
 
+static inline void resetState() {
+    destroyAllLists();
+    createSimpleEnv();
+}
+
+static inline void verifyWindowStack(ArrayList* stack, const WindowID win[3]) {
+    int i = 0;
+    FOR_EACH(WindowInfo*, winInfo, stack) {
+        assertEquals(winInfo->id, win[i++]);
+    }
+}
+
 #endif

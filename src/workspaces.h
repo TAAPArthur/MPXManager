@@ -160,6 +160,8 @@ bool toggleLayout(Workspace* workspace, Layout* layout);
 static inline bool toggleActiveLayout(Layout* layout) {
     return toggleLayout(getActiveWorkspace(), layout);
 }
+static inline void setActiveLayout(Layout* layout) { setLayout(getActiveWorkspace(), layout); }
+
 
 /**
  * Set the next layout in the list to be the active layout

@@ -114,14 +114,19 @@ void dumpRect(Rect rect) {
     printf(" { %d, %d, %u, %u}", rect.x, rect.y, rect.width, rect.height);
 }
 void dumpMonitor(Monitor* monitor) {
-    printf("Monitor %d%s %s", monitor->id, (isPrimary(monitor) ? "*" : monitor->fake ? "?" : ""),  monitor->name);
+    printf("Monitor %d%s %s ", monitor->id, (isPrimary(monitor) ? "!" : monitor->fake ? "?" : ""), monitor->name);
+    if(getWorkspaceOfMonitor(monitor))
+        printf("Workspace: %d ", getWorkspaceOfMonitor(monitor)->id);
+    if(!isMonitorActive(monitor))
+        printf("inactive ");
     dumpRect(monitor->base);
     if(*(long*)&monitor->base != *(long*)&monitor->view)
         dumpRect(monitor->base);
+    printf("\n");
 }
 
 void dumpWorkspace(Workspace* workspace) {
-    printf("ID: %d; name: '%s' Windows: {", workspace->id, workspace->name);
+    printf("ID: %d%s; name: '%s' Windows: {", workspace->id, isWorkspaceVisible(workspace) ? "*" : "", workspace->name);
     if(getWorkspaceWindowStack(workspace)->size) {
         FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace))
         printf(" %d", winInfo->id);
@@ -131,13 +136,16 @@ void dumpWorkspace(Workspace* workspace) {
 void dumpMaster(Master* master) {
     if(!master)
         master = getActiveMaster();
-    printf("Master %d (%d) %s", master->id, master->pointerID, master->name);
-    printf("Slaves");
-    FOR_EACH(Slave*, slave, getSlaves(master))
-    printf(" %d", slave->id);
-    FOR_EACH(WindowInfo*, winInfo, getMasterWindowStack(master))
-    printf(" %d", winInfo->id);
-    printf("\n");
+    printf("Master %d (%d) %s %06x ", master->id, master->pointerID, master->name, master->focusColor);
+    printf("Slaves: {");
+    FOR_EACH(Slave*, slave, getSlaves(master)) {
+        printf(" %d", slave->id);
+    }
+    printf("} Windows: {");
+    FOR_EACH(WindowInfo*, winInfo, getMasterWindowStack(master)) {
+        printf(" %d", winInfo->id);
+    }
+    printf("}\n");
 }
 void dumpWindowInfo(WindowInfo* winInfo) {
     printf("{ID %d%s", winInfo->id, (isTileable(winInfo) ? "*" : !isMappable(winInfo) ? "?" :  ""));
@@ -146,6 +154,8 @@ void dumpWindowInfo(WindowInfo* winInfo) {
     if(winInfo->role[0])
         printf("Role '%s'", winInfo->role);
     printf(" %s", getMaskAsString(winInfo->mask, buffer));
+    printf("Geometry: ");
+    dumpRect(winInfo->geometry);
     printf("}\n");
 }
 void dumpWindowFilter(WindowMask filterMask) {

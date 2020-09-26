@@ -14,6 +14,7 @@
  * @return list of all monitors
  */
 ArrayList* getAllMonitors(void);
+Monitor* getMonitorByID(MonitorID id);
 /**
  * Represents a rectangular region where workspaces will be tiled
  */
