@@ -306,7 +306,7 @@ bool isWorkspaceDirty(Workspace* workspace) {
 }
 void retileAllDirtyWorkspaces() {
     FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
-        if(isWorkspaceDirty(workspace))
+        if(isWorkspaceVisible(workspace) && getWorkspaceWindowStack(workspace)->size && isWorkspaceDirty(workspace))
             tileWorkspace(workspace);
     }
 }

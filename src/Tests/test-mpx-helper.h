@@ -12,7 +12,7 @@
 
 #define assertEqualsRect(A,B)do{Rect __b=B; dumpRect(A);dumpRect(__b);assertEquals(*(long*)&A, *(long*)&__b);}while(0)
 static inline WindowInfo* addFakeWindowInfo(WindowID win) {
-    return newWindowInfo(win, 0, 0);
+    return newWindowInfo(win, 0);
 }
 
 

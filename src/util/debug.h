@@ -15,6 +15,8 @@ void dumpRect(Rect rect);
  * @param win
  */
 void dumpWindow(WindowID win) ;
+
+void dumpWindowInfo(WindowInfo* winInfo);
 /**
  * Prints all with that have filterMask (if filterMask is 0, print all windows)
  *

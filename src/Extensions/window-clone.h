@@ -5,21 +5,7 @@
  */
 #ifndef MAXMANAGER_WINDOW_CLONE_
 #define MAXMANAGER_WINDOW_CLONE_
-#include <assert.h>
-
-#include <xcb/xcb.h>
-
 #include "../mywm-structs.h"
-
-/// Holds meta data mapping a clone to its parent
-struct CloneInfo {
-    /// ID of the clone window
-    WindowID clone;
-    /// ID of the original window
-    WindowID original;
-    ///x,y offset for cloned windows; they will clone the original starting at this offset
-    int offset[2];
-};
 
 /// How often autoUpdateClones will update cloned windows (in ms)
 extern uint32_t CLONE_REFRESH_RATE;
@@ -34,26 +20,7 @@ extern uint32_t CLONE_REFRESH_RATE;
  *
  * @return a clone of winInfo
  */
-WindowInfo* cloneWindow(WindowInfo* winInfo, WindowID parent = 0);
-
-/**
- *
- *
- * @param winInfo
- * @param createNew
- *
- * @return a list of clones for the given window or null
- */
-ArrayList<WindowID>* getClonesOfWindow(WindowInfo* winInfo, bool createNew = 0);
-/**
- *
- *
- * @param winInfo a window clone
- * @param createNew
- *
- * @return information about the clone
- */
-CloneInfo* getCloneInfo(WindowInfo* winInfo, bool createNew = 1);
+WindowInfo* cloneWindow(WindowInfo* winInfo);
 
 /**
  * Updates the displayed image for all cloned windows
@@ -61,7 +28,7 @@ CloneInfo* getCloneInfo(WindowInfo* winInfo, bool createNew = 1);
  * @param winInfo
  * @return number of clones updated
  */
-uint32_t updateAllClonesOfWindow(WindowInfo* winInfo);
+void updateAllClonesOfWindow(WindowInfo* winInfo);
 /**
  * Updates the displayed image for all cloned windows.
  * Will also garbage collect deleted clone metadata
@@ -69,14 +36,12 @@ uint32_t updateAllClonesOfWindow(WindowInfo* winInfo);
  */
 uint32_t updateAllClones(void);
 
+void updateAllClonesOfWindow(WindowInfo* parent);
+
 /**
  * Auto update cloned window every CLONE_REFRESH_RATE ms
  */
 void autoUpdateClones();
-/**
- * Call autoUpdateClones in a new thread
- */
-void startAutoUpdatingClones(void);
 /**
  * Add rules for seamless interaction with cloned windows
  *
@@ -84,29 +49,6 @@ void startAutoUpdatingClones(void);
  * Clones will be repainted when original is exposed
  */
 void addCloneRules(void);
-/**
- * Updates clones when parent is exposed
- */
-void onExpose(void);
-/**
- * Swaps clone with original
- */
-void swapWithOriginalOnEnter(void);
-
-/**
- * Redirects clone focus to its parent
- * Should be triggered on focus in events
- */
-void focusParent(void);
-
-/**
- * If the clone is mapped and the parent is not, they are swapped.
- */
-void swapOnMapEvent(void);
-/**
- * If the clone is mapped and the parent is not, they are swapped.
- */
-void swapOnUnmapEvent(void);
 
 /**
  * Destroy all cloned windows

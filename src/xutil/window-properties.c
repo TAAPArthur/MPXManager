@@ -276,7 +276,7 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
 }
 
 Rect getRealGeometry(WindowID id) {
-    Rect rect;
+    Rect rect = {0};
     xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, id), NULL);
     if(reply) {
         rect = *(Rect*)&reply->x;

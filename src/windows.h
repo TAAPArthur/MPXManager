@@ -30,8 +30,6 @@ typedef struct DockProperties {
 ///holds data on a window
 struct WindowInfo {
     const WindowID id;
-    /**Window id used to determine changes in window layouts */
-    const WindowID effectiveID;
     /// the parent of this window
     WindowID parent;
     /**
@@ -101,7 +99,7 @@ static inline void setGeometry(WindowInfo* winInfo, const short* s) { winInfo->g
  * @param parent WindowID of the parent (or 0 if you don't care)
  * @param effectiveID the id used to detect state changes; if 0, it will be id
  */
-WindowInfo* newWindowInfo(WindowID id, WindowID parent, WindowID effectiveID);
+WindowInfo* newWindowInfo(WindowID id, WindowID parent);
 /**
  * Removes this window from Workspace & Master stack(s)
  */

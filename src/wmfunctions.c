@@ -91,7 +91,7 @@ bool registerWindowInfo(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* 
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr) {
     assert(!getWindowInfo(win) && "Window registered exists");
     TRACE("processing %d (%x)", win, win);
-    return registerWindowInfo(newWindowInfo(win, parent, win), attr);
+    return registerWindowInfo(newWindowInfo(win, parent), attr);
 }
 void scan(xcb_window_t baseWindow) {
     assert(baseWindow);

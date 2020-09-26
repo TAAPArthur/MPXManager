@@ -143,6 +143,6 @@ static inline bool isWindowMapped(WindowID win) {
 }
 
 static inline WindowInfo* addWindow(WindowID win) {
-    return newWindowInfo(win, root, 0);
+    return newWindowInfo(win, root);
 }
 #endif

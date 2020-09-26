@@ -29,7 +29,8 @@ void* findElement(const ArrayList* array, const void* p, size_t size) {
 }
 
 void* removeElement(ArrayList* array, const void* p, size_t size) {
-    return removeIndex(array, getIndex(array, p, size));
+    int index = getIndex(array, p, size);
+    return index != -1 ? removeIndex(array, index) : NULL;
 }
 void* removeIndex(ArrayList* array, uint32_t index) {
     void* value = getElement(array, index);
@@ -50,6 +51,7 @@ void addElementAt(ArrayList* array, void* value, uint32_t index) {
     shiftToPos(array, array->size - 1, index);
 }
 void swapElements(ArrayList* array1, uint32_t index1, ArrayList* array2,  uint32_t index2) {
+    assert(index1 < array1->size && index2 < array2->size);
     void* temp = array1->__arr[index1];
     array1->__arr[index1] = array2->__arr[index2];
     array2->__arr[index2] = temp;

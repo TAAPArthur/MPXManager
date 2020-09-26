@@ -39,9 +39,6 @@
 /// the default screen index
 extern const int defaultScreenNumber;
 
-///global graphics context
-extern xcb_gcontext_t graphics_context;
-
 /**
  * The value of this property is the idle counter
  */

@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "boundfunction.h"
+#include "globals.h"
 #include "util/logger.h"
 #include "masters.h"
 #include "user-events.h"
@@ -16,9 +17,9 @@ const ArrayList* getAllWindows(void) {
     return &windows;
 }
 
-WindowInfo* newWindowInfo(WindowID id, WindowID parent, WindowID effectiveID) {
+WindowInfo* newWindowInfo(WindowID id, WindowID parent) {
     WindowInfo* winInfo = malloc(sizeof(WindowInfo));
-    WindowInfo temp = {.id = id, .parent = parent, .effectiveID = effectiveID };
+    WindowInfo temp = {.id = id, .parent = parent};
     memmove(winInfo, &temp, sizeof(WindowInfo));
     addElement(&windows, winInfo);
     return winInfo;

@@ -98,7 +98,7 @@ SCUTEST(test_activate_workspace) {
 
 SCUTEST(test_sticky_workspace_change) {
     WindowID win = mapArbitraryWindow();
-    WindowInfo* winInfo = newWindowInfo(win, root, win);
+    WindowInfo* winInfo = addWindow(win);
     moveToWorkspace(winInfo, 0);
     addMask(winInfo, STICKY_MASK);
     for(int i = 0; i < getNumberOfWorkspaces(); i++) {

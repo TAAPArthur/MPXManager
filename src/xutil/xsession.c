@@ -34,7 +34,6 @@ xcb_atom_t WM_STATE;
 xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_WINDOW_ROLE;
 
-xcb_gcontext_t graphics_context;
 Display* dpy;
 xcb_connection_t* dis;
 WindowID root;
@@ -114,17 +113,6 @@ int getAtomsFromMask(WindowMask mask, bool action, xcb_atom_t* arr) {
     return count;
 }
 
-static xcb_gcontext_t create_graphics_context(void) {
-    uint32_t mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND | XCB_GC_GRAPHICS_EXPOSURES;
-    uint32_t values[3] = { screen->black_pixel, screen->white_pixel, 0};
-    graphics_context = xcb_generate_id(dis);
-    xcb_void_cookie_t cookie = xcb_create_gc_checked(dis,
-            graphics_context, root,
-            mask, values);
-    catchError(cookie);
-    return graphics_context;
-}
-
 bool hasXConnectionBeenOpened() {
     return dpy ? 1 : 0;
 }
@@ -176,7 +164,6 @@ void openXDisplay(void) {
     WM_SELECTION_ATOM = getAtom(selectionName);
     sprintf(selectionName, "MPX_WM_S%d", defaultScreenNumber);
     MPX_WM_SELECTION_ATOM = getAtom(selectionName);
-    create_graphics_context();
     XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
     XSetErrorHandler(handleXLibError);
     compliantWindowManagerIndicatorWindow = 0;
