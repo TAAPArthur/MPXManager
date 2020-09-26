@@ -177,6 +177,8 @@ void shiftTopAndFocus();
 
 
 
+
+Monitor* getSmallestMonitorContainingRect(const Rect rect);
 /**
  * activates the workspace that contains the mouse pointer
  * @see getLastKnownMasterPosition()

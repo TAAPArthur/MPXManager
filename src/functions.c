@@ -166,17 +166,22 @@ void sendWindowToWorkspaceByName(WindowInfo* winInfo, const char* name) {
 void centerMouseInWindow(WindowInfo* winInfo) {
     warpPointer(winInfo->geometry.width / 2, winInfo->geometry.height / 2, winInfo->id, getActiveMasterPointerID());
 }
+Monitor* getSmallestMonitorContainingRect(const Rect rect) {
+    Monitor* smallestMonitor = NULL;
+    FOR_EACH(Monitor*, m, getAllMonitors()) {
+        if(intersects(m->base, rect) && getWorkspaceOfMonitor(m))
+            if(!smallestMonitor || getArea(smallestMonitor->base) > getArea(m->base))
+                smallestMonitor = m;
+    }
+    return smallestMonitor;
+}
 void activateWorkspaceUnderMouse(void) {
     short pos[2];
     Master* master = getActiveMaster();
     Monitor* smallestMonitor = NULL;
     if(getMousePosition(getPointerID(master), root, pos)) {
-        Rect rect = {pos[0], pos[1], 1, 1};
-        FOR_EACH(Monitor*, m, getAllMonitors()) {
-            if(intersects(m->base, rect) && getWorkspaceOfMonitor(m))
-                if(!smallestMonitor || getArea(smallestMonitor->base) > getArea(m->base))
-                    smallestMonitor = m;
-        }
+        Rect rect = {pos[0], pos[1], 0, 0};
+        smallestMonitor = getSmallestMonitorContainingRect(rect);
     }
     if(smallestMonitor)
         switchToWorkspace(getWorkspaceOfMonitor(smallestMonitor)->id);
