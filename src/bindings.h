@@ -25,12 +25,6 @@ typedef enum EventWindow {
     FOCUSED_WINDOW,
     EVENT_WINDOW,
 } EventWindow;
-
-typedef union Arg {
-    int i;
-    const char* str;
-    void* p;
-} Arg;
 /**
  * Optional arguments to Bindings
  *

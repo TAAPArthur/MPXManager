@@ -37,6 +37,13 @@ typedef struct WindowInfo WindowInfo;
 typedef struct Workspace Workspace;
 
 
+typedef union Arg {
+    int i;
+    const char* str;
+    void* p;
+} Arg;
+
+
 #define __FUNC_CAT_HELPER(x, y, z) x##y##z
 #define __FUNC_CAT(x, y, z) __FUNC_CAT_HELPER(x, y, z)
 #define __DECLARE_GET_X_BY_NAME(X) \

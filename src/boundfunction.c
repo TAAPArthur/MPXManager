@@ -59,9 +59,9 @@ static bool applyRules(ArrayList* rules, void* p) {
         pushContext(func->name);
         bool abort = 0;
         if(func->intFunc)
-            abort = func->func.intFunc(p) == BF_STOP;
+            abort = func->func.intFunc(p, func->arg) == BF_STOP;
         else
-            func->func.func(p);
+            func->func.func(p, func->arg);
         popContext();
         if(abort) {
             INFO("Rules aborted early due to: %s", func->name);

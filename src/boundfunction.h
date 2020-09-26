@@ -35,6 +35,7 @@ typedef struct BoundFunction {
     const char* name;
     bool intFunc;
     FunctionPriority priority;
+    Arg arg;
 } BoundFunction;
 /// @{
 /// Creates a BoundFunction with a name based on F with a preset priority
