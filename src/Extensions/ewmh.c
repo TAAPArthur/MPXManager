@@ -341,6 +341,25 @@ void updateDockProperties(xcb_property_notify_event_t* event) {
     }
 }
 
+
+void autoFocus(xcb_map_notify_event_t* event) {
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(!winInfo || !getUserTime(winInfo->id) || !isNotInInvisibleWorkspace(winInfo))
+        return;
+    long delta = getTime() - winInfo->creationTime;
+    if(hasMask(winInfo, INPUT_MASK)) {
+        if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
+            Master* master = getClientMaster(winInfo->id);
+            if(master && focusWindowInfo(winInfo, master)) {
+                INFO("auto focused window %d (Detected %ldms ago)", winInfo->id, delta);
+                raiseWindowInfo(winInfo, 0);
+            }
+        }
+        else
+            DEBUG("did not auto focus window %d (Detected %ldms ago)", winInfo->id, delta);
+    }
+}
+
 void addEWMHRules() {
     addBatchEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(updateEWMHWorkspaceProperties));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(updateEWMHWorkspaceProperties));
@@ -353,6 +372,7 @@ void addEWMHRules() {
     addEvent(TRUE_IDLE, DEFAULT_EVENT(setActiveProperties));
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(setSavedWorkspaceIndex));
     addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(onClientMessage));
+    addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(autoFocus));
     addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(updateDockProperties));
     addEvent(X_CONNECTION, DEFAULT_EVENT(broadcastEWMHCompilence, HIGHER_PRIORITY));
 }

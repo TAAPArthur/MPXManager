@@ -222,6 +222,12 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
     return result;
 }
 
+void addNonDocksToActiveWorkspace(WindowInfo* winInfo) {
+    if(!getWorkspaceOfWindow(winInfo) && !winInfo->dock) {
+        moveToWorkspace(winInfo, getActiveWorkspaceIndex());
+    }
+}
+
 void addAutoTileRules() {
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
     addEvent(WORKSPACE_WINDOW_REMOVE, DEFAULT_EVENT(markWorkspaceOfWindowDirty));

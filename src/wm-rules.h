@@ -77,4 +77,6 @@ bool addDoNotManageOverrideRedirectWindowsRule() ;
  * @param remove
  */
 void addApplyBindingsRule();
+
+void addNonDocksToActiveWorkspace(WindowInfo* winInfo);
 #endif /* DEFAULT_RULES_H_ */

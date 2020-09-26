@@ -135,4 +135,6 @@ void setAllowedActions(WindowInfo* winInfo);
  * Sync whether or not we are only showing the desktop
  */
 void syncShowingDesktop();
+
+void autoFocus(xcb_map_notify_event_t* event);
 #endif /* EWMH_H_ */

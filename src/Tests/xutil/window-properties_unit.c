@@ -211,32 +211,6 @@ SCUTEST(test_focus_window_bad) {
     assert(focusWindow(createNormalWindow()) == 0);
 }
 
-SCUTEST_ITER(docks, 4 * 2) {
-    WindowID win = createNormalWindow();
-    int i = _i / 2;
-    int full = _i % 2;
-    int size = 10;
-    int start = full ? 1 : 0;
-    int end = full ? 2 : 0;
-    mapWindow(win);
-    scan(root);
-    WindowInfo* winInfo = getWindowInfo(win);
-    winInfo->setDock();
-    loadDockProperties(winInfo);
-    auto prop = getWindowInfo(win)->getDockProperties();
-    assert(!prop);
-    setDockProperties(win, i, size, full, start, end);
-    setWindowType(win, ewmh->_NET_WM_WINDOW_TYPE_DOCK);
-    winInfo->setDock(0);
-    loadWindowProperties(winInfo);
-    assert(getWindowInfo(win)->isDock());
-    prop = getWindowInfo(win)->getDockProperties();
-    assert(prop);
-    assertEquals(prop.thickness, size);
-    assertEquals(prop.start, start);
-    assertEquals(prop.end, end);
-}
-
 SCUTEST_ITER(user_time, 2) {
     WindowID win = createNormalWindow();
     assertEquals(getUserTime(win), 1);

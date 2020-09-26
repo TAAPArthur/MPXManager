@@ -187,9 +187,10 @@ void loadNormalSettings() {
     addBindings(CHAIN_BINDINGS, LEN(CHAIN_BINDINGS));
 }
 void addSuggestedRules() {
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(addNonDocksToActiveWorkspace, LOWER_PRIORITY));
+    addAutoTileRules();
     /* TODO
     addAutoFocusRule();
-    addAutoTileRules();
     addDesktopRule();
     addEWMHRules();
     addFloatRule();

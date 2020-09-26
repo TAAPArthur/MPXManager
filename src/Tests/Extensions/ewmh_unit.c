@@ -113,6 +113,45 @@ SCUTEST_ITER(auto_resume_workspace, 2) {
 }
 
 
+SCUTEST_ITER(test_auto_focus, 5) {
+    WindowID focusHolder = mapArbitraryWindow();
+    focusWindow(focusHolder, getActiveMaster());
+    Window win = mapArbitraryWindow();
+    registerWindow(win, root, NULL);
+    assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
+    xcb_map_notify_event_t event = {.window = win};
+    bool autoFocused = 1;
+    Master* master = getActiveMaster();
+    switch(_i) {
+        case 0:
+            AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
+            break;
+        case 1:
+            AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
+            break;
+        case 2:
+            AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 0;
+            autoFocused = 0;
+            break;
+        case 3:
+            AUTO_FOCUS_NEW_WINDOW_TIMEOUT = -1;
+            autoFocused = 0;
+            event.window = 0;
+            break;
+        case 4:
+            AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
+            createMasterDevice("test");
+            initCurrentMasters();
+            master = getElement(getAllMasters(), 1);
+            setClientPointerForWindow(win, master->id);
+            break;
+    }
+    addMask(getWindowInfo(win), INPUT_MASK | MAPPABLE_MASK | MAPPED_MASK);
+    applyEventRules(XCB_MAP_NOTIFY, &event);
+    assert(autoFocused == (win == getActiveFocus(master->id)));
+}
+
+
 SCUTEST(test_sync_window_state) {
     assert(MASKS_TO_SYNC);
     assert(!getAllWindows()->size);

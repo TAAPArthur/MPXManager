@@ -74,29 +74,6 @@ void addInsertWindowsAtHeadOfStackRule(bool remove) {
         }
     }, "_insertWindowsAtHeadOfStack"}, remove);
 }
-
-void autoFocus() {
-    xcb_map_notify_event_t* event = (xcb_map_notify_event_t*)getLastEvent();
-    WindowInfo* winInfo = getWindowInfo(event->window);
-    if(!winInfo || !getUserTime(winInfo->getID()) || !winInfo->isNotInInvisibleWorkspace())
-        return;
-    long delta = getTime() - winInfo->getCreationTime();
-    if(!winInfo->isNotManageable() && winInfo->hasMask(INPUT_MASK)) {
-        if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
-            Master* master = getClientMaster(winInfo->getID());
-            if(master && focusWindow(winInfo, master)) {
-                LOG(LOG_LEVEL_INFO, "auto focused window %d (Detected %ldms ago)", winInfo->getID(), delta);
-                raiseWindow(winInfo);
-                getActiveMaster()->onWindowFocus(winInfo->getID());
-            }
-        }
-        else
-            LOG(LOG_LEVEL_DEBUG, "did not auto focus window %d (Detected %ldms ago)", winInfo->getID(), delta);
-    }
-}
-void addAutoFocusRule(bool remove) {
-    getEventRules(XCB_MAP_NOTIFY).add(DEFAULT_EVENT(autoFocus), remove);
-}
 static bool isNotRepeatedKey() {
     xcb_input_key_press_event_t* event = (xcb_input_key_press_event_t*)getLastEvent();
     return !(event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT);

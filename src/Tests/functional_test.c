@@ -10,7 +10,6 @@
 #include "tester.h"
 
 
-/*
 int _main(int argc, char* const* argv) ;
 
 static const char* const args[] = {"" __FILE__, "--no-event-loop"};
@@ -20,7 +19,7 @@ static void initSetup() {
     assert(getActiveMaster());
     assert(getNumberOfWorkspaces());
 }
-SCUTEST_SET_ENV(initSetup, fullCleanup);
+SCUTEST_SET_ENV(initSetup, cleanupXServer);
 SCUTEST_ITER(auto_tile_with_dock, 4) {
     assignUnusedMonitorsToWorkspaces();
     bool premap = _i % 2;
@@ -28,22 +27,22 @@ SCUTEST_ITER(auto_tile_with_dock, 4) {
     WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
     if(premap)
         mapWindow(win);
-    setDockProperties(win, DOCK_TOP, 100);
+    setEWMHDockProperties(win, DOCK_TOP, 100, 0, 0, 0);
     WindowID win2 = mapArbitraryWindow();
     WindowID win3 = mapArbitraryWindow();
     scan(root);
-
     if(consume)
         consumeEvents();
     if(!premap)
         mapWindow(win);
     startWM();
     waitUntilIdle(1);
-    Monitor* m = getAllMonitors()[0];
-    assert(m->getBase() != getAllMonitors()[0]->getViewport());
-    assert(m->getViewport().contains(getRealGeometry(win2)));
-    assert(m->getViewport().contains(getRealGeometry(win3)));
+    Monitor* m = getHead(getAllMonitors());
+    assert(*(long*)&m->base != *(long*)&m->view);
+    assert(contains(m->view, getRealGeometry(win2)));
+    assert(contains(m->view, getRealGeometry(win3)));
 }
+/*
 
 static void setup() {
     initSetup();
@@ -393,6 +392,17 @@ SCUTEST(add_hidden_mask) {
     unlock();
 }
 */
+
+
+SCUTEST(test_dock_not_auto_in_workspace) {
+    void func(WindowInfo * winInfo) {
+        winInfo->dock = 1;
+    }
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(func, HIGHEST_PRIORITY));
+    WindowID win = mapWindow(createNormalWindow());
+    runEventLoop();
+    assert(!getWorkspaceOfWindow(getWindowInfo(win)));
+}
 
 
 static void bindingsSetup() {
