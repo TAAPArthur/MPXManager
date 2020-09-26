@@ -182,7 +182,9 @@ xcb_size_hints_t* getWindowSizeHints(WindowInfo* winInfo);
  * @param id
  * @return the live window geometry
  */
-RectWithBorder getRealGeometry(WindowID id) ;
+Rect getRealGeometry(WindowID id) ;
+
+uint16_t getWindowBorder(WindowID id);
 
 /**
  * @param win

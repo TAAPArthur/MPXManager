@@ -292,7 +292,7 @@ void updateWindowMoveResize() {
         short pos[2];
         if(getMousePosition(getActiveMasterPointerID(), root, pos)) {
             bool change = 0;
-            RectWithBorder r = calculateNewPosition(ref, pos, &change);
+            Rect r = calculateNewPosition(ref, pos, &change);
             assert(r.width && r.height);
             if(change)
                 setWindowPosition(ref->win, r);

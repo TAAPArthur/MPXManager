@@ -147,7 +147,7 @@ SCUTEST(test_configure_windows, .iter = 3) {
         fail = 1;
     }
     processConfigureRequest(win, &values.x, 0, 0, mask);
-    RectWithBorder rect = getRealGeometry(win);
+    Rect rect = getRealGeometry(win);
     if(fail)
         assertEqualsRect(rect, original);
     else

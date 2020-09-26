@@ -20,15 +20,7 @@ typedef struct Rect {
     uint16_t width;
     /// height of the bounding box
     uint16_t height;
-    /// The border of this rect
-    uint16_t border;
-    /**
-     * A bit mask representing weather x through height should be interrupted as a
-     * percent when computing getRelativeRegion
-     */
-    uint8_t percent;
 } Rect;
-typedef Rect RectWithBorder;
 
 /**
  * Copies the values of this rect into arr

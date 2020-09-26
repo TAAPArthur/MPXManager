@@ -87,12 +87,14 @@ struct WindowInfo {
     /// 5 bits each to enable 1 element of config and 5 bits for toggle absolute vs relative
     uint16_t tilingOverrideEnabled;
     /** Set to override tiling */
-    RectWithBorder tilingOverride;
+    Rect tilingOverride;
+    uint16_t tilingOverrideBorder;
+    uint8_t tilingOverridePercent;
     /** The last know size of the window */
-    RectWithBorder geometry;
+    Rect geometry;
     DockProperties dockProperties;
 };
-static inline void setGeometry(WindowInfo* winInfo, const short* s) { winInfo->geometry = *(RectWithBorder*)s;}
+static inline void setGeometry(WindowInfo* winInfo, const short* s) { winInfo->geometry = *(Rect*)s;}
 
 /**
  * @param id unique X11 id the id of the window
@@ -169,15 +171,28 @@ static inline uint8_t getTilingOverrideMask(const WindowInfo* winInfo) {
  * Returns User set geometry that will override that generated when tiling
  * @see WindowInfo->config
  */
-static inline const RectWithBorder* getTilingOverride(const WindowInfo* winInfo) {
+static inline const Rect* getTilingOverride(const WindowInfo* winInfo) {
     return &winInfo->tilingOverride;
+}
+static inline uint8_t getTilingOverridePercent(const WindowInfo* winInfo) {
+    return winInfo->tilingOverridePercent;
+}
+static inline uint16_t getTilingOverrideBorder(const WindowInfo* winInfo) {
+    return winInfo->tilingOverrideBorder;
 }
 /**
  * Sets window geometry that will replace that which is generated when tiling
  * @param tileOverride
  */
-static inline void setTilingOverride(WindowInfo* winInfo, const RectWithBorder tileOverride) {
+static inline void setTilingOverride(WindowInfo* winInfo, const Rect tileOverride) {
     winInfo->tilingOverride = tileOverride;
+}
+
+static inline void setTilingOverrideBorder(WindowInfo* winInfo, uint16_t border) {
+    winInfo->tilingOverrideBorder = border;
+}
+static inline void setTilingOverridePercent(WindowInfo* winInfo, uint8_t percent) {
+    winInfo->tilingOverridePercent = percent;
 }
 /**
  * @return true if the window is not in a workspace or is in a visible one

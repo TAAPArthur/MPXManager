@@ -257,7 +257,7 @@ uint32_t generateID();
  */
 //WindowID createWindow(WindowID parent = root, xcb_window_class_t clazz = XCB_WINDOW_CLASS_INPUT_OUTPUT, uint32_t mask = 0, uint32_t* valueList = NULL, const RectWithBorder& dims = {0, 0, 150, 150, 0});
 WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, uint32_t* valueList,
-    const RectWithBorder dims);
+    const Rect dims);
 
 static inline WindowID createOverrideRedirectWindow() {
     uint32_t overrideRedirect = 1;

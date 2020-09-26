@@ -131,7 +131,7 @@ void addIgnoreKeyRepeat() {
 
 static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
     if(!isTileable(winInfo)) {
-        RectWithBorder rect = getRealGeometry(winInfo->id);
+        Rect rect = getRealGeometry(winInfo->id);
         if(rect.x == 0 && rect.y == 0) {
             Workspace* w = getWorkspaceOfWindow(winInfo);
             if(w && isWorkspaceVisible(w)) {

@@ -47,7 +47,7 @@ SCUTEST_ITER(test_layouts, NUMBER_OF_LAYOUT_FAMILIES) {
         assert(isTileable(winInfo));
         retile();
         int area = 0;
-        RectWithBorder rects[getActiveWindowStack()->size];
+        Rect rects[getActiveWindowStack()->size];
         int numUniqueRects = 0;
         FOR_EACH(WindowInfo*, winInfo, getActiveWindowStack()) {
             Rect r = getRealGeometry(winInfo->id);
@@ -77,7 +77,7 @@ SCUTEST_ITER(test_layouts_with_param, NUMBER_OF_LAYOUT_FAMILIES) {
 SCUTEST_ITER(test_layouts_unmapped_windows, NUMBER_OF_LAYOUT_FAMILIES) {
     DEFAULT_BORDER_WIDTH = 0;
     toggleActiveLayout(&LAYOUT_FAMILIES[_i]);
-    RectWithBorder rect = {0, 0, 1, 1};
+    Rect rect = {0, 0, 1, 1};
     Window unmapped = createUnmappedWindow();
     setWindowPosition(unmapped, rect);
     mapArbitraryWindow();
@@ -87,7 +87,7 @@ SCUTEST_ITER(test_layouts_unmapped_windows, NUMBER_OF_LAYOUT_FAMILIES) {
         moveToWorkspace(winInfo, getActiveWorkspaceIndex());
     }
     retile();
-    RectWithBorder geo = getRealGeometry(unmapped);
+    Rect geo = getRealGeometry(unmapped);
     assertEquals(*(long*)&rect, *(long*)&geo);
 }
 
@@ -110,16 +110,17 @@ SCUTEST_ITER(test_fixed_position_windows, NUMBER_OF_LAYOUT_FAMILIES + 1) {
     mapArbitraryWindow();
     flush();
     scan(root);
-    RectWithBorder config = {1, 2, 3, 4, 5};
+    Rect config = {1, 2, 3, 4};
     WindowInfo* winInfo = getHead(getAllWindows());
     if(_i == NUMBER_OF_LAYOUT_FAMILIES)
         floatWindow(winInfo);
     moveToWorkspace(winInfo, 0);
     setTilingOverrideEnabled(winInfo, 31);
     setTilingOverride(winInfo, config);
+    setTilingOverrideBorder(winInfo, 5);
     toggleActiveLayout(&LAYOUT_FAMILIES[_i % NUMBER_OF_LAYOUT_FAMILIES ]);
     retile();
-    RectWithBorder actualConfig = getRealGeometry(winInfo->id);
+    Rect actualConfig = getRealGeometry(winInfo->id);
     assertEqualsRect(config, actualConfig);
 }
 SCUTEST(test_fixed_position_windows_relative) {
@@ -129,24 +130,24 @@ SCUTEST(test_fixed_position_windows_relative) {
     mapArbitraryWindow();
     flush();
     scan(root);
-    RectWithBorder config;
+    Rect config;
     Rect expectedConfig = {0, 0, 0, 0};
     WindowInfo* winInfo = getHead(getAllWindows());
     if(_i) {
         setTilingOverrideEnabled(winInfo, 31);
-        config = (RectWithBorder) {-1, 0, 0, -1};
+        config = (Rect) {-1, 0, 0, -1};
         expectedConfig = (Rect) {bounds.x + bounds.width + config.x, bounds.y, bounds.width, bounds.height + config.height};
     }
     else {
         setTilingOverrideEnabled(winInfo, -1);
-        config = (RectWithBorder) {-1, -1, 0, 0};
+        config = (Rect) {-1, -1, 0, 0};
         expectedConfig = (Rect) {bounds.x + config.x, bounds.y + config.y, bounds.width, bounds.height };
     }
     floatWindow(winInfo);
     moveToWorkspace(winInfo, 0);
     setTilingOverride(winInfo, config);
     retile();
-    RectWithBorder actualConfig = getRealGeometry(winInfo->id);
+    Rect actualConfig = getRealGeometry(winInfo->id);
     assertEqualsRect(expectedConfig, actualConfig);
 }
 
@@ -159,11 +160,11 @@ SCUTEST(test_maximized_floating_window) {
     floatWindow(winInfo);
     addMask(winInfo, X_MAXIMIZED_MASK);
     moveToWorkspace(winInfo, 0);
-    RectWithBorder bounds = {1, 2, 3, 4};
+    Rect bounds = {1, 2, 3, 4};
     setWindowPosition(winInfo->id, bounds);
     toggleActiveLayout(&FULL);
     retile();
-    RectWithBorder expectedConfig = bounds;
+    Rect expectedConfig = bounds;
     expectedConfig.width = getMonitor(getWorkspace(0))->view.width;
     assertEqualsRect(expectedConfig, getRealGeometry(winInfo->id));
 }
@@ -207,10 +208,10 @@ SCUTEST(floating_windows) {
     }
     setTilingOverrideEnabled(getWindowInfo(win2), 1 << CONFIG_INDEX_BORDER);
     int customBorder = 5;
-    setTilingOverride(getWindowInfo(win2), (RectWithBorder) {0, 0, 0, 0, customBorder});
+    setTilingOverrideBorder(getWindowInfo(win2), customBorder);
     retile();
-    assertEquals(getRealGeometry((win)).border, DEFAULT_BORDER_WIDTH);
-    assertEquals(getRealGeometry((win2)).border, customBorder);
+    assertEquals(getWindowBorder((win)), DEFAULT_BORDER_WIDTH);
+    assertEquals(getWindowBorder((win2)), customBorder);
 }
 
 SCUTEST(test_tile_windows) {
@@ -233,7 +234,7 @@ SCUTEST(test_tile_windows) {
 }
 
 
-static RectWithBorder baseConfig;
+static Rect baseConfig;
 static void dummyLayout(LayoutState* state) {
     tileWindow(state, getHead(state->stack), (short*)&baseConfig);
 };
@@ -242,29 +243,28 @@ SCUTEST_ITER(test_privileged_windows_size, 9 * 2) {
     _i /= 2;
     Monitor* m = getHead(getAllMonitors());
     assert(m);
-    RectWithBorder view = {10, 20, 30, 40};
+    Rect view = {10, 20, 30, 40};
     m->view = (view);
     WindowInfo* winInfo = addWindow(mapWindow(createNormalWindow()));
-    RectWithBorder startingPos = {0, 10, 150, 200};
+    Rect startingPos = {0, 10, 150, 200};
     setWindowPosition(winInfo->id, startingPos);
     moveToWorkspace(winInfo, getActiveWorkspaceIndex());
-baseConfig = extra == NO_MASK ? (RectWithBorder) {20, 30, 40, 50}:
-    startingPos;
+    baseConfig = (extra == NO_MASK ? (Rect) {20, 30, 40, 50}: startingPos);
     Layout l = {"", .func = dummyLayout, {.noBorder = 1}};
     toggleActiveLayout(&l);
     DEFAULT_BORDER_WIDTH = 1;
     struct {
         WindowMask mask;
-        const RectWithBorder dims;
+        const Rect dims;
     } arr[] = {
         {0, baseConfig},
 
-        {X_CENTERED_MASK | extra, {m->view.x + m->view.width / 2, baseConfig.y, baseConfig.width, baseConfig.height, DEFAULT_BORDER_WIDTH }},
-        {Y_CENTERED_MASK | extra, {baseConfig.x, m->view.y + m->view.height / 2, baseConfig.width, baseConfig.height, DEFAULT_BORDER_WIDTH}},
-        {CENTERED_MASK | extra, {m->view.x + m->view.width / 2, m->view.y + m->view.height / 2, baseConfig.width, baseConfig.height, DEFAULT_BORDER_WIDTH}},
-        {X_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->view.width, baseConfig.height, DEFAULT_BORDER_WIDTH }},
-        {Y_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, baseConfig.width, m->view.height, DEFAULT_BORDER_WIDTH}},
-        {MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->view.width, m->view.height, DEFAULT_BORDER_WIDTH}},
+        {X_CENTERED_MASK | extra, {m->view.x + m->view.width / 2, baseConfig.y, baseConfig.width, baseConfig.height}},
+        {Y_CENTERED_MASK | extra, {baseConfig.x, m->view.y + m->view.height / 2, baseConfig.width, baseConfig.height}},
+        {CENTERED_MASK | extra, {m->view.x + m->view.width / 2, m->view.y + m->view.height / 2, baseConfig.width, baseConfig.height}},
+        {X_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->view.width, baseConfig.height}},
+        {Y_MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, baseConfig.width, m->view.height}},
+        {MAXIMIZED_MASK | extra, {baseConfig.x, baseConfig.y, m->view.width, m->view.height}},
         {FULLSCREEN_MASK | extra, m->base},
         {ROOT_FULLSCREEN_MASK | extra, {0, 0, getRootWidth(), getRootHeight()}},
     };

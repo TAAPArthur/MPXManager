@@ -437,7 +437,7 @@ SCUTEST_ITER(move_window, 2) {
     WindowID win = mapArbitraryWindow();
     setWindowPosition(win, (Rect) {0, 0, 10, 10});
     runEventLoop();
-    RectWithBorder rect = getRealGeometry(win);
+    Rect rect = getRealGeometry(win);
     if(move) {
         rect.x++;
         rect.y++;

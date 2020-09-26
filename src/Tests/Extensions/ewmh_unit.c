@@ -425,7 +425,7 @@ SCUTEST_ITER(wm_move_resize_window, 4) {
     int deltaX = 10;
     int deltaY = 20;
     WindowInfo* winInfo = getHead(getAllWindows());
-    RectWithBorder rect = getRealGeometry(winInfo->id);
+    Rect rect = getRealGeometry(winInfo->id);
     if(_i) {
         rect.width += deltaX * (_i & 1);
         rect.height += deltaY * (_i & 2 ? 1 : 0);
@@ -458,7 +458,7 @@ SCUTEST(wm_move_resize_window_invert) {
     movePointer(20, 40);
     WindowInfo* winInfo = getHead(getAllWindows());
     setWindowPosition(winInfo->id, (Rect) {10, 20, 10, 20});
-    RectWithBorder rect = {0, 0, 10, 20};
+    Rect rect = {0, 0, 10, 20};
     xcb_ewmh_moveresize_direction_t action = XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT;
     sendWMMoveResizeRequest(winInfo->id, 0, 0, action, 1);
     runEventLoop();
@@ -468,7 +468,7 @@ SCUTEST(wm_move_resize_window_invert) {
 }
 SCUTEST_ITER(wm_move_resize_window_cancel_commit, 2) {
     WindowInfo* winInfo = getHead(getAllWindows());
-    RectWithBorder rect = getRealGeometry(winInfo->id);
+    Rect rect = getRealGeometry(winInfo->id);
     sendWMMoveResizeRequest(winInfo->id, 0, 0, XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT, 1);
     runEventLoop();
     movePointer(10, 10);
@@ -496,7 +496,7 @@ SCUTEST(wm_move_resize_window_no_change) {
 SCUTEST(wm_move_resize_window_zero) {
     WindowInfo* winInfo = getHead(getAllWindows());
     setWindowPosition(winInfo->id, (Rect) {0, 0, 150, 150});
-    RectWithBorder rect = getRealGeometry(winInfo->id);
+    Rect rect = getRealGeometry(winInfo->id);
     movePointer(rect.width, rect.height);
     startWindowResize(winInfo);
     movePointer(0, 0);

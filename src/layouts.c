@@ -172,12 +172,12 @@ static uint32_t applyMasksToConfig(const WindowInfo* winInfo, const Monitor* m, 
         XCB_CONFIG_WINDOW_BORDER_WIDTH;
 }
 
-static inline Rect getRelativeRegion(const Rect bounds, const Rect region) {
+static inline Rect getRelativeRegion(const Rect bounds, const Rect region, bool percent) {
     Rect config = {0, 0, 0, 0};
     for(int i = 0; i < 4; i++) {
         short fixedValue = (&region.x)[i];
         short refEndPoint = (&bounds.x)[i % 2 + 2];
-        (&config.x)[i] = region.percent & (1 << i) ?
+        (&config.x)[i] = percent & (1 << i) ?
             (&region.x)[i] * (&bounds.x)[i % 2 + 2] / 100 :
             fixedValue < 0 ? fixedValue + refEndPoint : fixedValue ;
         if(i < 2)
@@ -190,12 +190,12 @@ static inline Rect getRelativeRegion(const Rect bounds, const Rect region) {
 static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor* m, uint32_t* config) {
     if(!getTilingOverrideMask(winInfo))
         return;
-    RectWithBorder tilingOverride = *getTilingOverride(winInfo);
+    Rect tilingOverride = *getTilingOverride(winInfo);
     Rect bounds = m->view;
     if(winInfo->dock || getWorkspaceOfWindow(winInfo) || hasPartOfMask(winInfo, ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
         for(int i = 0; i < 5; i++)
             (&bounds.x)[i] = config[i];
-    Rect region = getRelativeRegion(bounds, tilingOverride);
+    Rect region = getRelativeRegion(bounds, tilingOverride, getTilingOverridePercent(winInfo));
     for(int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
         if(isTilingOverrideEnabledAtIndex(winInfo, i))
             if(!isTilingOverrideRelativeAtIndex(winInfo, i))
@@ -203,7 +203,7 @@ static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor
             else
                 config[i] += (&tilingOverride.x)[i];
     if(isTilingOverrideEnabledAtIndex(winInfo, CONFIG_INDEX_BORDER))
-        config[CONFIG_INDEX_BORDER] = tilingOverride.border;
+        config[CONFIG_INDEX_BORDER] = getTilingOverrideBorder(winInfo);
 }
 
 void tileWindow(const LayoutState* state, const WindowInfo* winInfo, const short values[CONFIG_LEN]) {

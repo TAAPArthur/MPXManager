@@ -113,7 +113,7 @@ void scan(xcb_window_t baseWindow) {
             if(registerWindow(children[i], baseWindow, attr)) {
                 xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, children[i]), NULL);
                 if(reply) {
-                    getWindowInfo(children[i])->geometry = *(RectWithBorder*)&reply->x;
+                    getWindowInfo(children[i])->geometry = *(Rect*)&reply->x;
                     free(reply);
                 }
             }
@@ -252,8 +252,8 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, __builtin_popcount(mask)));
     XCALL(xcb_configure_window, dis, win, mask, values);
 }
-void setWindowPosition(WindowID win, const RectWithBorder geo) {
-    uint32_t values[5];
+void setWindowPosition(WindowID win, const Rect geo) {
+    uint32_t values[4];
     copyTo(&geo, 1, values);
     uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
     configureWindow(win, mask, values);

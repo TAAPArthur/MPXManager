@@ -120,7 +120,7 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]);
  * @param win
  * @param geo
  */
-void setWindowPosition(WindowID win, const RectWithBorder geo);
+void setWindowPosition(WindowID win, const Rect geo);
 /**
  * Filters the configure request to allowed actions then configures the window
  * The request is filtered by the mask on win if it is registered

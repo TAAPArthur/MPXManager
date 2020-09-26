@@ -245,9 +245,9 @@ uint32_t generateID() {
 }
 
 WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, uint32_t* valueList,
-    const RectWithBorder dims) {
+    const Rect dims) {
     WindowID win = generateID();
-    xcb_create_window(dis, XCB_COPY_FROM_PARENT, win, parent, dims.x, dims.y, dims.width, dims.height, dims.border, clazz,
+    xcb_create_window(dis, XCB_COPY_FROM_PARENT, win, parent, dims.x, dims.y, dims.width, dims.height, 0, clazz,
         screen->root_visual, mask, valueList);
     return win;
 }
@@ -275,13 +275,22 @@ void killClientOfWindowInfo(WindowInfo* winInfo) {
     killClientOfWindow(winInfo->id);
 }
 
-RectWithBorder getRealGeometry(WindowID id) {
-    RectWithBorder rect;
+Rect getRealGeometry(WindowID id) {
+    Rect rect;
     xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, id), NULL);
     if(reply) {
-        rect = *(RectWithBorder*)&reply->x;
+        rect = *(Rect*)&reply->x;
         free(reply);
     }
     return rect;
+}
+uint16_t getWindowBorder(WindowID id) {
+    int border = 0;
+    xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, id), NULL);
+    if(reply) {
+        border = reply->border_width;
+        free(reply);
+    }
+    return border ;
 }
 
