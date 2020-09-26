@@ -12,7 +12,7 @@
  * Creates a fake Monitor and WindowInfo that are linked
  * @return a window id
  */
-WindowID createContainer();
+WindowID createSimpleContainer();
 /**
  * Checks to see if the monitor id corresponds to a container
  * @param mon
@@ -31,7 +31,7 @@ Monitor* getMonitorForContainer(WindowID win);
  *
  * @param remove
  */
-void addResumeContainerRules(bool remove = 0);
+void addResumeContainerRules();
 
 
 /**
@@ -44,7 +44,7 @@ void addResumeContainerRules(bool remove = 0);
  *
  * @return the monitor of the newly created container
  */
-Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction& func, const char* name = NULL);
+Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction* func, const char* name);
 /**
  * Move all windows in container to the active workspace
  *
@@ -60,5 +60,5 @@ void releaseAllWindows();
  *
  * @param winInfo The container window or a contained window
  */
-void toggleContainer(WindowInfo* winInfo = getFocusedWindow());
+void toggleContainer(WindowInfo* winInfo);
 #endif
