@@ -66,8 +66,7 @@ static inline void* getNextDeviceEvent() {
     }
     else if(((xcb_generic_event_t*)event)->response_type == 0) {
         ERROR("error waiting on event");
-        setLastEvent(event);
-        applyEventRules(0, NULL);
+        applyEventRules(0, &event);
     }
     return event;
 }

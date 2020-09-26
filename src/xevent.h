@@ -42,17 +42,6 @@ void runEventLoop();
  */
 int loadGenericEvent(xcb_ge_generic_event_t* event);
 /**
- *Set the last event received.
- * @param event the last event received
- * @see getLastEvent
- */
-void setLastEvent(void* event);
-/**
- * Retrieves the last event received
- * @see getLastEvent
- */
-xcb_generic_event_t* getLastEvent(void);
-/**
  * @return the sequence number of the last event that started being processed
  */
 uint16_t getCurrentSequenceNumber(void);
