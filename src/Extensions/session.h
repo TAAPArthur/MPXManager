@@ -29,7 +29,7 @@ void saveCustomState(void);
 /**
  * Loads saved state on XConnection and saves after a batch of TILE_WORKSPACE
  */
-void addResumeCustomStateRules(bool remove = 0);
+void addResumeCustomStateRules();
 
 /**
  * Saves mapping from monitor bounds to workspace

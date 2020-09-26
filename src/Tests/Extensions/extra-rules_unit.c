@@ -109,12 +109,6 @@ SCUTEST_ITER(primary_monitor_windows, 2) {
     }
 }
 
-void verifyWindowStack(ArrayList* stack, const WindowID win[3]) {
-    int i = 0;
-    FOR_EACH(WindowInfo*, winInfo, stack) {
-        assertEquals(winInfo->id, win[i++]);
-    }
-}
 SCUTEST(test_insertWindowsAtHeadOfStack, .iter = 3) {
     Window win1 = mapArbitraryWindow();
     Window winFocused = mapArbitraryWindow();
