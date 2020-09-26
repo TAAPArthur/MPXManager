@@ -118,8 +118,13 @@ static int _spawn(const char* command, ChildRedirection spawnPipe, bool preserve
             onChildSpawn();
         if(silent)
             suppressOutput();
-        if(command == NULL)
+        if(command == NULL) {
+            if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH)
+                close(STATUS_FD);
+            if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH)
+                close(STATUS_FD_READ);
             return 0;
+        }
         const char* const args[] = {SHELL, "-c", command, NULL};
         execv(args[0], (char* const*)args);
         err(SYS_CALL_FAILED, "exec failed; Aborting");
