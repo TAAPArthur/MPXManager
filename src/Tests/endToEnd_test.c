@@ -38,7 +38,6 @@ SCUTEST(remember_mapped_windows) {
     unmapWindow(win);
     restartWM();
     waitUntilWMIdle();
-    kill(wmPid, SIGUSR2);
     assert(isWindowMapped(win));
 }
 

@@ -62,12 +62,6 @@ static void setup() {
     }
 }
 SCUTEST_SET_ENV(setup, cleanupXServer);
-SCUTEST(test_send_function, .timeout = 5) {
-    assertEquals(0, MAIN("dump"));
-    assertEquals(0, MAIN("request-shutdown"));
-    INFO("down");
-    exit(0);
-}
-SCUTEST(replace) {
+SCUTEST(test_replace) {
     assertEquals(0, MAIN("--no-event-loop", "--replace"));
 }
