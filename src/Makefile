@@ -12,8 +12,8 @@ TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} --coverage -lm -lscutest
 NON_X_LDFLAGS := -pthread
 LDFLAGS :=  ${NON_X_LDFLAGS} -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lxdo
 
-LAYER0_SRCS :=  globals.c util/threads.c util/rect.h util/logger.c util/debug.c settings.c
-LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c xutil/string-array.c
+LAYER0_SRCS :=  globals.c util/threads.c util/rect.h util/string-array.c util/logger.c util/debug.c settings.c
+LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
 LAYER1_SRCS := util/arraylist.c boundfunction.c
 LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
 LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c

@@ -12,7 +12,7 @@
 #include "../util/time.h"
 #include "../user-events.h"
 #include "../xutil/window-properties.h"
-#include "../xutil/string-array.h"
+#include "../util/string-array.h"
 #include "../windows.h"
 #include "../wmfunctions.h"
 #include "../functions.h"

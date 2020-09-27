@@ -8,9 +8,9 @@
 #include "../masters.h"
 #include "../windows.h"
 #include "../slaves.h"
-#include "../xutil/test-functions.h"
-#include "../xutil/string-array.h"
+#include "../util/string-array.h"
 #include "../util/time.h"
+#include "../xutil/test-functions.h"
 #include "../xutil/xsession.h"
 #include "mpx.h"
 
