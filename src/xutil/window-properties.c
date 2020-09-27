@@ -46,6 +46,7 @@ bool getWindowTitle(WindowID win, char* title) {
     xcb_get_property_cookie_t cookie = xcb_ewmh_get_wm_name(ewmh, win);
     if(xcb_ewmh_get_wm_name_reply(ewmh, cookie, &wtitle, NULL)) {
         strncpy(title, wtitle.strings, MIN_NAME_LEN(wtitle.strings_len));
+        title[MIN_NAME_LEN(wtitle.strings_len)] = 0;
         xcb_ewmh_get_utf8_strings_reply_wipe(&wtitle);
         return 1;
     }
@@ -54,6 +55,7 @@ bool getWindowTitle(WindowID win, char* title) {
         cookie = xcb_icccm_get_wm_name(dis, win);
         if(xcb_icccm_get_wm_name_reply(dis, cookie, &icccName, NULL)) {
             strncpy(title, icccName.name, MIN_NAME_LEN(icccName.name_len));
+            title[MIN_NAME_LEN(icccName.name_len)] = 0;
             xcb_icccm_get_text_property_reply_wipe(&icccName);
             return 1;
         }

@@ -28,6 +28,7 @@ SCUTEST(test_lose_wm_selection, .iter = 2, .timeout = 10) {
         openXDisplay();
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
         broadcastEWMHCompilence();
+        assert(isMPXManagerRunningAsWM());
         assertEquals(0, kill(pid, SIGUSR1));
         int exitCode = waitForChild(0);
         if(STEAL_WM_SELECTION) {
@@ -57,6 +58,7 @@ SCUTEST_ITER(test_set_workspace_names, 2) {
         assertEquals(0, strcmp(w->name, &names.strings[index]));
         index += strlen(w->name) + 1;
     }
+    assertEquals(names.strings_len, index);
     xcb_ewmh_get_utf8_strings_reply_wipe(&names);
 }
 
@@ -82,6 +84,55 @@ static void ewmhSetup() {
     onSimpleStartup();
 }
 SCUTEST_SET_ENV(ewmhSetup, cleanupXServer);
+
+SCUTEST(client_list) {
+    for(int i = 0; i < 10; i++)
+        createNormalWindow();
+    runEventLoop();
+    xcb_ewmh_get_windows_reply_t reply;
+    assert(xcb_ewmh_get_client_list_reply(ewmh, xcb_ewmh_get_client_list(ewmh, defaultScreenNumber), &reply, NULL));
+    int size = reply.windows_len;
+    assertEquals(size, getAllWindows()->size);
+    verifyWindowStack(getAllWindows(), reply.windows);
+    xcb_ewmh_get_windows_reply_wipe(&reply);
+    // we get focus out event before destroy event
+    CRASH_ON_ERRORS = 0;
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        destroyWindowInfo(winInfo);
+    }
+    runEventLoop();
+    assert(xcb_ewmh_get_client_list_reply(ewmh, xcb_ewmh_get_client_list(ewmh, defaultScreenNumber), &reply, NULL));
+    assertEquals(reply.windows_len, 0);
+    xcb_ewmh_get_windows_reply_wipe(&reply);
+}
+SCUTEST(test_toggle_show_desktop) {
+    WindowID win = mapWindow(createNormalWindow());
+    WindowID desktop = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DESKTOP));
+    WindowID stackingOrder[] = {desktop, win, desktop};
+    flush();
+    scan(root);
+    lowerWindowInfo(getWindowInfo(desktop), 0);
+    raiseWindowInfo(getWindowInfo(win), 0);
+    assert(checkStackingOrder(stackingOrder, 2));
+    setShowingDesktop(1);
+    flush();
+    assert(isShowingDesktop());
+    assert(checkStackingOrder(stackingOrder + 1, 2));
+    setShowingDesktop(0);
+    flush();
+    assert(!isShowingDesktop());
+    assert(checkStackingOrder(stackingOrder, 2));
+}
+
+SCUTEST(test_client_show_desktop) {
+    xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 1);
+    flush();
+    runEventLoop();
+    assert(isShowingDesktop());
+    xcb_ewmh_request_change_showing_desktop(ewmh, defaultScreenNumber, 0);
+    runEventLoop();
+    assert(!isShowingDesktop());
+}
 SCUTEST(test_rememeber_mapped_windows) {
     addWorkspaces(2);
     WindowID win = mapArbitraryWindow();
@@ -211,10 +262,9 @@ SCUTEST_ITER_ERR(test_client_close_window, 2, 1) {
 static void clientMessageSetup() {
     CRASH_ON_ERRORS = -1;
     SRC_INDICATION = -1;
-    MASKS_TO_SYNC = -1;
+    MASKS_TO_SYNC = ~EXTERNAL_MASKS;
     addEWMHRules();
-    onSimpleStartup();
-    addShutdownOnIdleRule();
+    onDefaultStartup();
     // TODO addAutoTileRules();
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
@@ -231,6 +281,9 @@ static void clientMessageSetup() {
 }
 
 SCUTEST_SET_ENV(clientMessageSetup, simpleCleanup);
+SCUTEST(test_mpx_manger_running_as_wm) {
+    assert(isMPXManagerRunningAsWM());
+}
 
 SCUTEST_ITER(test_client_activate_window, 2) {
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
@@ -255,8 +308,8 @@ SCUTEST(test_client_activate_window_bad) {
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), *(WindowID*)getHead(getAllWindows()));
 }
 
-/* TODO
 SCUTEST(test_client_change_desktop) {
+    CRASH_ON_ERRORS = 0;
     for(int i = 0; i < getNumberOfWorkspaces(); i++) {
         sendChangeWorkspaceRequest(i);
         flush();
@@ -267,11 +320,12 @@ SCUTEST(test_client_change_desktop) {
     assert(getActiveWorkspaceIndex() < getNumberOfWorkspaces());
 }
 SCUTEST_ITER(test_client_change_num_desktop, 2) {
+    CRASH_ON_ERRORS = 0;
     assert(getNumberOfWorkspaces() >= 2);
     switchToWorkspace(_i);
     runEventLoop();
     for(int n = 0; n < 2; n++) {
-        for(int i = 1; i < 10; i++) {
+        for(int i = 1; i < 3; i++) {
             sendChangeNumWorkspaceRequestAbs(i);
             flush();
             runEventLoop();
@@ -280,7 +334,6 @@ SCUTEST_ITER(test_client_change_num_desktop, 2) {
         }
     }
 }
-*/
 
 SCUTEST(test_client_set_sticky_window) {
     mapArbitraryWindow();
@@ -320,30 +373,24 @@ SCUTEST_ITER(test_client_set_window_state, 3) {
     WindowInfo* winInfo = getHead(getAllWindows());
     sendChangeWindowStateRequest(winInfo->id, XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_STICKY, 0);
 }
-/* TODO
 SCUTEST_ITER(test_client_set_window_state2, 2) {
     WindowInfo* winInfo = getHead(getAllWindows());
     bool allowRequest = _i;
     if(!allowRequest)
         SRC_INDICATION = 0;
     xcb_ewmh_wm_state_action_t states[] = {XCB_EWMH_WM_STATE_ADD, XCB_EWMH_WM_STATE_REMOVE, XCB_EWMH_WM_STATE_TOGGLE, XCB_EWMH_WM_STATE_TOGGLE};
-    WindowID ignoredWindow = createOverrideRedirectWindow();
     for(int i = 0; i < LEN(states); i++) {
-        WindowInfo fakeWinInfo = {.id = ignoredWindow};
-        sendChangeWindowStateRequest(fakeWinInfo.getID(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
+        sendChangeWindowStateRequest(createOverrideRedirectWindow(), states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
             ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
         sendChangeWindowStateRequest(winInfo->id, states[i], ewmh->_NET_WM_STATE_MAXIMIZED_HORZ,
             ewmh->_NET_WM_STATE_MAXIMIZED_VERT);
-        waitUntilIdle();
+        runEventLoop();
         if(i % 2 == 0 && allowRequest)
-            assert(hasMask(winInfo,X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
+            assert(hasMask(winInfo, X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
         else
-            assert(!hasPartOfMask(winInfo,X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
-        loadSavedAtomState(&fakeWinInfo);
-        assert(!fakeWinInfo.hasMask(X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
+            assert(!hasPartOfMask(winInfo, X_MAXIMIZED_MASK | Y_MAXIMIZED_MASK));
     }
 }
-*/
 SCUTEST_ITER(change_wm_state, 2) {
     Window win = mapArbitraryWindow();
     if(!_i)

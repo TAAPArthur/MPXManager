@@ -26,8 +26,10 @@ bool isMPXManagerRunningAsWM(void) {
     bool result = 0;
     if(ownerReply && ownerReply->owner) {
         char buffer[MAX_NAME_LEN];
-        if(getWindowTitle(ownerReply->owner, buffer))
+        if(getWindowTitle(ownerReply->owner, buffer)) {
+            INFO("Found WM with name %s", buffer);
             result = strcmp(buffer, WINDOW_MANAGER_NAME) == 0;
+        }
     }
     free(ownerReply);
     return result;
@@ -45,7 +47,6 @@ void broadcastEWMHCompilence() {
     // Not strictly needed
     updateWorkspaceNames();
     xcb_ewmh_set_number_of_desktops(ewmh, defaultScreenNumber, getNumberOfWorkspaces());
-    setSupportedActions();
     DEBUG("Complied with EWMH/ICCCM specs");
 }
 
@@ -82,7 +83,7 @@ void updateWorkspaceNames() {
     FOR_EACH(Workspace*, w, getAllWorkspaces()) {
         addString(&joiner, w->name);
     }
-    xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, joiner.bufferSize, getBuffer(&joiner));
+    xcb_ewmh_set_desktop_names(ewmh, defaultScreenNumber, joiner.usedBufferSize, getBuffer(&joiner));
     freeBuffer(&joiner);
 }
 
@@ -258,7 +259,8 @@ void onClientMessage(xcb_client_message_event_t* event) {
 }
 
 void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len) {
-    INFO("Setting X State for window %d from masks  %d", winInfo->id, winInfo->mask);
+    INFO("Setting X State for window %d from masks  %d %s", winInfo->id, winInfo->mask,
+        getMaskAsString(winInfo->mask & getMasksToSync(winInfo), NULL));
     xcb_ewmh_get_atoms_reply_t reply;
     bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
     xcb_atom_t windowState[sizeof(WindowMask) * 8 + (hasState ? reply.atoms_len : 0)];
@@ -341,6 +343,27 @@ void updateDockProperties(xcb_property_notify_event_t* event) {
     }
 }
 
+void setShowingDesktop(int value) {
+    INFO("setting showing desktop %d", value);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_DESKTOP)
+            raiseLowerWindowInfo(winInfo, 0, value);
+    }
+    xcb_ewmh_set_showing_desktop(ewmh, defaultScreenNumber, value);
+}
+
+bool isShowingDesktop(void) {
+    unsigned int value = 0;
+    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
+    return value;
+}
+
+void syncShowingDesktop() {
+    unsigned int value = 0;
+    xcb_ewmh_get_showing_desktop_reply(ewmh, xcb_ewmh_get_showing_desktop(ewmh, defaultScreenNumber), &value, NULL);
+    setShowingDesktop(value);
+}
+
 
 void autoFocus(xcb_map_notify_event_t* event) {
     WindowInfo* winInfo = getWindowInfo(event->window);
@@ -360,10 +383,22 @@ void autoFocus(xcb_map_notify_event_t* event) {
     }
 }
 
+
+void updateEWMHClientList() {
+    WindowID ids[getAllWindows()->size];
+    int i = 0;
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        ids[i++] = winInfo->id;
+    }
+    xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, i, ids);
+}
+
 void addEWMHRules() {
+    addBatchEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList, LOWER_PRIORITY));
     addBatchEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(updateEWMHWorkspaceProperties));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(updateEWMHWorkspaceProperties));
-    addBatchEvent(TILE_WORKSPACE, DEFAULT_EVENT(updateXWindowStateForAllWindows));
+    addBatchEvent(IDLE, DEFAULT_EVENT(updateXWindowStateForAllWindows));
+    addBatchEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(autoResumeWorkspace));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadSavedAtomState));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(setWMState));
@@ -375,4 +410,5 @@ void addEWMHRules() {
     addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(autoFocus));
     addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(updateDockProperties));
     addEvent(X_CONNECTION, DEFAULT_EVENT(broadcastEWMHCompilence, HIGHER_PRIORITY));
+    addEvent(X_CONNECTION, DEFAULT_EVENT(syncShowingDesktop));
 }

@@ -65,7 +65,7 @@ static inline void resetState() {
     createSimpleEnv();
 }
 
-static inline void verifyWindowStack(ArrayList* stack, const WindowID win[3]) {
+static inline void verifyWindowStack(const ArrayList* stack, const WindowID win[3]) {
     int i = 0;
     FOR_EACH(WindowInfo*, winInfo, stack) {
         assertEquals(winInfo->id, win[i++]);

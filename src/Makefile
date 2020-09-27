@@ -18,7 +18,7 @@ LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
 LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c
 LAYER4_SRCS := wm-rules.c
 LAYER5_SRCS := functions.c communications.c mpxmanager.c
-LAYER6_SRCS := Extensions/ewmh.c Extensions/ewmh-full.c Extensions/compatibility-rules.c Extensions/extra-rules.c Extensions/mpx.c Extensions/session.c Extensions/window-clone.c Extensions/containers.c
+LAYER6_SRCS := Extensions/ewmh.c Extensions/compatibility-rules.c Extensions/extra-rules.c Extensions/mpx.c Extensions/session.c Extensions/window-clone.c Extensions/containers.c
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER11_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.c mpxmanager.c

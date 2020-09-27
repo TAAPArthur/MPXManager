@@ -126,7 +126,10 @@ void dumpMonitor(Monitor* monitor) {
 }
 
 void dumpWorkspace(Workspace* workspace) {
-    printf("ID: %d%s; name: '%s' Windows: {", workspace->id, isWorkspaceVisible(workspace) ? "*" : "", workspace->name);
+    printf("ID: %d%s; name: '%s' ", workspace->id, isWorkspaceVisible(workspace) ? "*" : "", workspace->name);
+    if(workspace->mask)
+        printf(" %s", getMaskAsString(workspace->mask, buffer));
+    printf("Windows: {");
     if(getWorkspaceWindowStack(workspace)->size) {
         FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace))
         printf(" %d", winInfo->id);

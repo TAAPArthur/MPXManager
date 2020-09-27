@@ -19,7 +19,7 @@
  *
  * @return 1 iff there is a running instance of MPXManager and it is acting like a window manger (RUN_AS_WM==1)
  */
-bool isMPXManagerRunning(void);
+bool isMPXManagerRunningAsWM(void);
 
 /**
  * Do everything needed to comply when EWMH.

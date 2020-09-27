@@ -93,7 +93,7 @@ WindowMask getEffectiveMask(const WindowInfo* winInfo) {
 }
 
 WindowMask getMasksToSync(WindowInfo* winInfo) {
-    return hasMask(winInfo, SYNC_ALL_MASKS) ? (WindowMask) - 1 : MASKS_TO_SYNC;
+    return hasMask(winInfo, SYNC_ALL_MASKS) ? (WindowMask) ~EXTERNAL_MASKS : MASKS_TO_SYNC;
 }
 void saveAllWindowMasks() {
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
