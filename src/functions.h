@@ -44,7 +44,7 @@ typedef enum RaiseOrRunType {
 typedef struct {
     bool(*func)();
     Arg arg;
-} FindWindowArg;
+} WindowFunctionArg;
 /**
  * Attempts to find a that rule matches a managed window.
  * First the active Master's window& stack is checked ignoring the master's window cache.
@@ -56,7 +56,7 @@ typedef struct {
  * @param master
  * @return 1 if a matching window was found
  */
-WindowInfo* findAndRaise(const FindWindowArg* rule, WindowAction action, FindAndRaiseArg arg);
+WindowInfo* findAndRaise(const WindowFunctionArg* rule, WindowAction action, FindAndRaiseArg arg);
 
 
 /**
@@ -137,7 +137,7 @@ bool popHiddenWindow(void);
  * @param includeNonActivatable
  * @return the first window that matches rule or NULL
  */
-WindowInfo* findWindow(const FindWindowArg* rule, const ArrayList* searchList, bool includeNonActivatable);
+WindowInfo* findWindow(const WindowFunctionArg* rule, const ArrayList* searchList, bool includeNonActivatable);
 
 
 /**

@@ -7,6 +7,7 @@
 
 #include "../mywm-structs.h"
 #include "../boundfunction.h"
+#include "../functions.h"
 
 /**
  * Creates a fake Monitor and WindowInfo that are linked
@@ -44,7 +45,7 @@ void addResumeContainerRules();
  *
  * @return the monitor of the newly created container
  */
-Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction* func, const char* name);
+Monitor* containWindows(Workspace* containedWorkspace, WindowFunctionArg arg, const char* name);
 /**
  * Move all windows in container to the active workspace
  *

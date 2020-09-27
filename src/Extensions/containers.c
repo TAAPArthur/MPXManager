@@ -95,7 +95,7 @@ WindowID createSimpleContainer() {
     return createContainer(CONTAINER_NAME_PREFIX, NULL, NULL);
 }
 
-Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction* func, const char* name) {
+Monitor* containWindows(Workspace* containedWorkspace, WindowFunctionArg arg, const char* name) {
     assert(containedWorkspace);
     Workspace* workspace = getActiveWorkspace();
     if(workspace == containedWorkspace)
@@ -105,7 +105,7 @@ Monitor* containWindows(Workspace* containedWorkspace, const BoundFunction* func
         return NULL;
     for(int i = 0; i < getWorkspaceWindowStack(workspace)->size; i++) {
         WindowInfo* winInfo = getElement(getWorkspaceWindowStack(workspace), i);
-        if(callBoundFunction(func, winInfo)) {
+        if(arg.func(winInfo, arg)) {
             moveToWorkspace(winInfo, containedWorkspace->id);
             i--;
         }

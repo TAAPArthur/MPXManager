@@ -24,9 +24,6 @@ typedef int8_t FunctionPriority;
 #define LOWEST_PRIORITY  (127)
 /// @}
 
-#define BF_CONT 1
-#define BF_STOP 0
-
 typedef struct BoundFunction {
     union {
         void(*func)();
@@ -35,6 +32,7 @@ typedef struct BoundFunction {
     const char* name;
     bool intFunc;
     FunctionPriority priority;
+    char abort;
     Arg arg;
 } BoundFunction;
 /// @{
@@ -86,6 +84,4 @@ void applyBatchEventRules(void);
  * @return the result
  */
 bool applyEventRules(UserEvent type, void* p);
-
-bool callBoundFunction(const BoundFunction* func, void* p);
 #endif

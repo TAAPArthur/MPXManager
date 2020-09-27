@@ -65,7 +65,7 @@ static void applyAction(WindowInfo* winInfo, WindowAction action) {
     }
 }
 
-WindowInfo* findWindow(const FindWindowArg* rule, const ArrayList* searchList, bool includeNonActivatable) {
+WindowInfo* findWindow(const WindowFunctionArg* rule, const ArrayList* searchList, bool includeNonActivatable) {
     FOR_EACH(WindowInfo*, winInfo, searchList) {
         if((includeNonActivatable || isActivatable(winInfo)) && rule->func(winInfo, rule->arg)) {
             return winInfo;
@@ -73,7 +73,7 @@ WindowInfo* findWindow(const FindWindowArg* rule, const ArrayList* searchList, b
     }
     return NULL;
 }
-WindowInfo* findAndRaise(const FindWindowArg* rule, WindowAction action, const FindAndRaiseArg arg) {
+WindowInfo* findAndRaise(const WindowFunctionArg* rule, WindowAction action, const FindAndRaiseArg arg) {
     WindowInfo* target = NULL;
     if(!arg.skipMasterStack)
         target = findWindow(rule, getMasterWindowStack(getActiveMaster()), arg.includeNonActivatable);
@@ -118,18 +118,18 @@ int raiseOrRun2(const char* s, const char* cmd, RaiseOrRunType matchType) {
         const char* c = getenv(s + 1);
         s = c ? c : "";
     }
-    FindWindowArg arg = {getMatchType(matchType), .arg.str = s};
+    WindowFunctionArg arg = {getMatchType(matchType), .arg.str = s};
     if(!findAndRaise(&arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0})) {
         return spawn(cmd);
     }
     return 0;
 }
 bool activateNextUrgentWindow() {
-    FindWindowArg arg = {hasMask, URGENT_MASK};
+    WindowFunctionArg arg = {hasMask, URGENT_MASK};
     return findAndRaise(&arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0});
 }
 bool popHiddenWindow() {
-    FindWindowArg arg = {hasMask, HIDDEN_MASK};
+    WindowFunctionArg arg = {hasMask, HIDDEN_MASK};
     WindowInfo* winInfo = findAndRaise(&arg, ACTION_NONE, (FindAndRaiseArg) {.includeNonActivatable = 1});
     if(winInfo) {
         removeMask(winInfo, HIDDEN_MASK);

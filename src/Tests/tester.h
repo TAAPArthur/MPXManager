@@ -30,8 +30,6 @@
     }\
 }while(0)
 
-static inline bool returnCont() {return BF_CONT;}
-static inline bool returnStop() {return BF_STOP;}
 static inline bool returnFalse() {return 0;}
 static inline bool returnTrue() {return 1;}
 static volatile int count = 0;

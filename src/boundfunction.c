@@ -52,20 +52,16 @@ void clearAllRules() {
     }
 }
 
-bool callBoundFunction(const BoundFunction* func, void* p) {
-    bool abort = 0;
-    if(func->intFunc)
-        abort = func->func.intFunc(p, func->arg) == BF_STOP;
-    else
-        func->func.func(p, func->arg);
-    return abort;
-}
 static bool applyRules(ArrayList* rules, void* p) {
     INFO("Attempting to apply %d rules", rules->size);
     FOR_EACH(BoundFunction*, func, rules) {
         DEBUG("Running func: %s %p", func->name, p);
         pushContext(func->name);
-        int abort = callBoundFunction(func, p);
+        int abort = 0;
+        if(func->intFunc)
+            abort = !func->func.intFunc(p, func->arg) && func->abort;
+        else
+            func->func.func(p, func->arg);
         popContext();
         if(abort) {
             INFO("Rules aborted early due to: %s", func->name);

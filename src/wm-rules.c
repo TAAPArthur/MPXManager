@@ -300,13 +300,14 @@ void addBasicRules() {
 bool ignoreOverrideRedirectAndInputOnlyWindowWindowsRule(WindowInfo* winInfo) {
     if(isOverrideRedirectWindow(winInfo) || isInputOnlyWindow(winInfo)) {
         unregisterWindow(winInfo, 1);
-        return BF_STOP;
+        return 0;
     }
-    return BF_CONT;
+    return 1;
 }
 
 void addIgnoreOverrideRedirectAndInputOnlyWindowsRule() {
-    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(ignoreOverrideRedirectAndInputOnlyWindowWindowsRule, HIGHER_PRIORITY));
+    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(ignoreOverrideRedirectAndInputOnlyWindowWindowsRule, HIGHER_PRIORITY,
+            .abort = 1));
 }
 
 

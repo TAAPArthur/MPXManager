@@ -273,6 +273,5 @@ SCUTEST(contain_windows_raise_on_tile) {
 
 SCUTEST(contain_windows_to_self) {
     mapArbitraryWindow();
-    BoundFunction func = DEFAULT_EVENT(returnTrue);
-    assert(!containWindows(getActiveWorkspace(), &func, ""));
+    assert(!containWindows(getActiveWorkspace(), (WindowFunctionArg) {returnTrue}, ""));
 }
