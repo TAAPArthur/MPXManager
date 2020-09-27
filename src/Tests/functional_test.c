@@ -18,6 +18,7 @@ static void initSetup() {
     _main(2, (char* const*)args);
     assert(getActiveMaster());
     assert(getNumberOfWorkspaces());
+    addShutdownOnIdleRule();
 }
 SCUTEST_SET_ENV(initSetup, cleanupXServer);
 SCUTEST_ITER(auto_tile_with_dock, 4) {
@@ -35,8 +36,7 @@ SCUTEST_ITER(auto_tile_with_dock, 4) {
         consumeEvents();
     if(!premap)
         mapWindow(win);
-    startWM();
-    waitUntilIdle(1);
+    runEventLoop();
     Monitor* m = getHead(getAllMonitors());
     assert(*(long*)&m->base != *(long*)&m->view);
     assert(contains(m->view, getRealGeometry(win2)));
