@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <assert.h>
 #include <err.h>
 #include <fcntl.h>
@@ -26,10 +25,12 @@ static char buffer[255] = {};
 
 void (*onChildSpawn)(void) = setClientMasterEnvVar;
 void safePipe(int* fds) {
-    if(pipe2(fds, O_CLOEXEC)) {
+    if(pipe(fds)) {
         perror(NULL);
         err(SYS_CALL_FAILED, "Ran out of file descriptors");
     }
+    fcntl(fds[0], F_SETFD, O_CLOEXEC);
+    fcntl(fds[1], F_SETFD, O_CLOEXEC);
     INFO("Created pipes %d\n", fds[1]);
 }
 
