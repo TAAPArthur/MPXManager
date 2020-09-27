@@ -256,6 +256,7 @@ void updateAllWindowWorkspaceState() {
 
 void addSyncMapStateRules() {
     addBatchEvent(MONITOR_WORKSPACE_CHANGE, DEFAULT_EVENT(updateAllWindowWorkspaceState));
+    addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(updateAllWindowWorkspaceState));
     addBatchEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(updateAllWindowWorkspaceState));
     addBatchEvent(TILE_WORKSPACE, DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY));
 }
