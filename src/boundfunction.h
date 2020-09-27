@@ -86,4 +86,6 @@ void applyBatchEventRules(void);
  * @return the result
  */
 bool applyEventRules(UserEvent type, void* p);
+
+bool callBoundFunction(const BoundFunction* func, void* p);
 #endif
