@@ -14,18 +14,18 @@
 #include "wmfunctions.h"
 #include "workspaces.h"
 
-Layout FULL = {.name = "Full", .func = full, .args = {.noBorder = 1, .raiseFocused = 1}},
+Layout FULL = {.name = "Full", .func = full, .args = {.noBorder = 1}},
        GRID = {.name = "Grid", .func = column},
        TWO_COL = {.name = "2 Col", .func = column, .args = {.dim = 0, .arg = 2}},
        THREE_COL = {.name = "2 Col", .func = column, .args = {.dim = 0, .arg = 3}},
        TWO_ROW = {.name = "2 Row", .func = column, .args = {.dim = 1, .arg = 2}},
-       TWO_PANE = {.name = "2 Pane", .func = column, .args = {.limit = 2, .dim = 0, .raiseFocused = 1, .arg = 2}},
-       TWO_PANE_H = {.name = "2 HPane", .func = column, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = 2 }},
+       TWO_PANE = {.name = "2 Pane", .func = column, .args = {.limit = 2, .dim = 0, .arg = 2}},
+       TWO_PANE_H = {.name = "2 HPane", .func = column, .args = {.limit = 2, .dim = 1, .arg = 2 }},
        MASTER = {.name = "Master", .func = masterPane, .args = {.arg = .7, .argStep = .1}},
        MASTER_H = {.name = "Master", .func = masterPane, .args = {.dim = 1, .arg = .7, .argStep = .1}},
-       TWO_MASTER = {.name = "2 Master", .func = masterPane, .args = {.limit = 2, .raiseFocused = 1, .arg = .7, .argStep = .1}},
-       TWO_MASTER_FLIPPED = {.name = "2 Master Flipped", .func = masterPane, .args = {.limit = 2, .raiseFocused = 1, .transform = ROT_180, .arg = .7, .argStep = .1}},
-       TWO_MASTER_H = {.name = "2 HMaster", .func = masterPane, .args = {.limit = 2, .dim = 1, .raiseFocused = 1, .arg = .7, .argStep = .1}};
+       TWO_MASTER = {.name = "2 Master", .func = masterPane, .args = {.limit = 2, .arg = .7, .argStep = .1}},
+       TWO_MASTER_FLIPPED = {.name = "2 Master Flipped", .func = masterPane, .args = {.limit = 2, .transform = ROT_180, .arg = .7, .argStep = .1}},
+       TWO_MASTER_H = {.name = "2 HMaster", .func = masterPane, .args = {.limit = 2, .dim = 1, .arg = .7, .argStep = .1}};
 static Layout* defaultLayouts[] = {&FULL, &GRID, &TWO_ROW, &TWO_COL, &THREE_COL, &TWO_PANE, &TWO_PANE_H, &MASTER, &TWO_MASTER, &TWO_MASTER_FLIPPED,  &TWO_MASTER_H};
 static ArrayList registeredLayouts;
 
@@ -85,9 +85,6 @@ void increaseLayoutArg(int index, int step, Layout* l) {
                 break;
             case LAYOUT_DIM:
                 l->args.dim = !l->args.dim;
-                break;
-            case LAYOUT_RAISE_FOCUSED:
-                l->args.raiseFocused = !l->args.raiseFocused;
                 break;
             case LAYOUT_TRANSFORM:
                 l->args.transform = (Transform)((l->args.transform + step % TRANSFORM_LEN + TRANSFORM_LEN) % TRANSFORM_LEN) ;
@@ -273,22 +270,6 @@ static void applyAboveBelowMask(ArrayList* list) {
     }
 }
 
-void raiseWindowInFocusOrder(Workspace* workspace) {
-    DEBUG("Raising windows of Workspace: %d ", workspace->id);
-    WindowID lowestAbove = 0;
-    FOR_EACH(WindowInfo*, winInfo, getActiveMasterWindowStack()) {
-        if(getWorkspaceOfWindow(winInfo) == workspace) {
-            if(lowestAbove)
-                lowerWindowInfo(winInfo, lowestAbove);
-            else {
-                raiseWindowInfo(winInfo, hasPartOfMask(winInfo, TOP_LAYER_MASKS | BOTTOM_LAYER_MASKS) ? 0 :
-                    getMonitor(workspace)->stackingWindow);
-            }
-            lowestAbove =  winInfo->id;
-        }
-    }
-}
-
 void retile(void) {
     tileWorkspace(getActiveWorkspace());
 }
@@ -360,9 +341,6 @@ void tileWorkspace(Workspace* workspace) {
             arrangeNonTileableWindow(winInfo, m);
     }
     applyAboveBelowMask(windowStack);
-    if(layout && layout->args.raiseFocused) {
-        raiseWindowInFocusOrder(workspace);
-    }
     applyEventRules(TILE_WORKSPACE, workspace);
 }
 

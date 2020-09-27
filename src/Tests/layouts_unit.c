@@ -91,20 +91,6 @@ SCUTEST_ITER(test_layouts_unmapped_windows, NUMBER_OF_LAYOUT_FAMILIES) {
     assertEquals(*(long*)&rect, *(long*)&geo);
 }
 
-SCUTEST(raise_focused) {
-    toggleActiveLayout(&FULL);
-    assert(getActiveLayout()->args.raiseFocused);
-    Window ids[] = {mapArbitraryWindow(), mapArbitraryWindow(), mapArbitraryWindow()};
-    scan(root);
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())
-    moveToWorkspace(winInfo, 0);
-    onWindowFocus(ids[2]);
-    onWindowFocus(ids[1]);
-    retile();
-    WindowID stack[] = {ids[0], ids[2], ids[1]};
-    assert(checkStackingOrder(stack, LEN(stack)));
-}
-
 SCUTEST_ITER(test_fixed_position_windows, NUMBER_OF_LAYOUT_FAMILIES + 1) {
     DEFAULT_BORDER_WIDTH = 0;
     mapArbitraryWindow();

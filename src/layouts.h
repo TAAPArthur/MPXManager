@@ -45,7 +45,6 @@ typedef enum {
     LAYOUT_NO_BORDER,
     LAYOUT_NO_ADJUST_FOR_BORDERS,
     LAYOUT_DIM,
-    LAYOUT_RAISE_FOCUSED,
     LAYOUT_TRANSFORM,
     LAYOUT_ARG,
 } LayoutArgIndex ;
@@ -67,8 +66,6 @@ typedef struct {
     bool noAdjustForBorders;
     /// if set layouts based on X/WIDTH will use Y/HEIGHT instead
     bool dim;
-    /// will raise the focused window
-    bool raiseFocused;
     /// the transformation (about the center of the monitor) to apply to all window positions
     Transform transform;
     /// generic argument
@@ -175,13 +172,6 @@ static inline void increaseActiveLayoutArg(int index, int step) { increaseLayout
  * Manually retile the active workspace
  */
 void retile(void);
-
-/**
- * Raise windows in workspace by the order in which they were last focused by the active master
- *
- * @param workspace
- */
-void raiseWindowInFocusOrder(Workspace* workspace);
 
 
 /**

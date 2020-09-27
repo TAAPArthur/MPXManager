@@ -176,13 +176,6 @@ void loadContainers() {
         }
     free(reply);
 }
-void retileOnContainerMove(WindowInfo* winInfo) {
-    Monitor* containerMonitor = getMonitorForContainer(winInfo->id);
-    if(containerMonitor && getWorkspaceOfMonitor(containerMonitor)) {
-        INFO("Raising contained windows of %d", containerMonitor->id);
-        raiseWindowInFocusOrder(getWorkspaceOfMonitor(containerMonitor));
-    }
-}
 void addResumeContainerRules() {
     addEvent(X_CONNECTION, DEFAULT_EVENT(initContainerAtoms, HIGHEST_PRIORITY));
     addEvent(X_CONNECTION, DEFAULT_EVENT(loadContainers, LOW_PRIORITY));
@@ -190,6 +183,5 @@ void addResumeContainerRules() {
     addEvent(XCB_UNMAP_NOTIFY, DEFAULT_EVENT(onContainerUnmapEvent));
     addEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(onContainerUnregegister));
     addEvent(WINDOW_MOVE, DEFAULT_EVENT(updateContainerMonitorOnWindowMove));
-    addEvent(WINDOW_MOVE, DEFAULT_EVENT(retileOnContainerMove));
     addBatchEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(saveContainers, LOW_PRIORITY));
 }
