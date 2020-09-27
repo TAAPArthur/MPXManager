@@ -69,10 +69,11 @@ void setClientMasterEnvVar(void) {
         if(LD_PRELOAD_INJECTION) {
             const char* previousPreload = getenv("LD_PRELOAD");
             const char* preload_str = LD_PRELOAD_PATH;
-            char* buffer = NULL;;
+            char* buffer = NULL;
             if(previousPreload && previousPreload[0]) {
-                buffer = strdup(LD_PRELOAD_PATH);
-                buffer = realloc(buffer, strlen(previousPreload) + strlen(LD_PRELOAD_PATH));
+                buffer = calloc(1, strlen(previousPreload) + strlen(LD_PRELOAD_PATH) + 1);
+                strcat(buffer, LD_PRELOAD_PATH);
+                strcat(buffer, ":");
                 strcat(buffer, previousPreload);
                 preload_str = buffer;
             }
