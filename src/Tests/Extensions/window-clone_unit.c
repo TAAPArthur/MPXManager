@@ -60,7 +60,7 @@ SCUTEST_ITER(test_simple_kill_clone, 2) {
 }
 
 SCUTEST(focus_clone) {
-    focusWindowInfo(cloneInfo, getActiveMaster());
+    focusWindowInfo(cloneInfo);
     runEventLoop();
     assertEquals(getFocusedWindow(), winInfo);
 }

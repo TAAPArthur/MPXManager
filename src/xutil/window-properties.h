@@ -159,13 +159,15 @@ void setWorkspaceNames(char* names[], int numberOfNames);
  * @param master the master who gets the focus
  * @return 1 iff no error was detected
  */
-int focusWindow(WindowID win, Master* master);
+int focusWindowAsMaster(WindowID win, Master* master);
+static inline int focusWindow(WindowID win) {return focusWindowAsMaster(win, getActiveMaster());}
 /**
  * Focus the given window
  * This method is different from focusWindow in that it allows different protocols for
  * focusing the window based on window masks
  */
-int focusWindowInfo(WindowInfo* winInfo, Master* master);
+int focusWindowInfoAsMaster(WindowInfo* winInfo, Master* master);
+static inline int focusWindowInfo(WindowInfo* winInfo) {return focusWindowInfoAsMaster(winInfo, getActiveMaster());}
 
 /**
  * Returns the cached window size hints

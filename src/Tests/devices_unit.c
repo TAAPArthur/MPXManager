@@ -74,9 +74,9 @@ SCUTEST(master_by_name) {
 }
 
 SCUTEST(get_active_focus) {
-    assert(focusWindow(root, getActiveMaster()));
+    assert(focusWindow(root));
     flush();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), root);
+    assertEquals(getActiveFocus(), root);
 }
 
 

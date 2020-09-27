@@ -152,10 +152,10 @@ SCUTEST_ITER(auto_resume_workspace, 2) {
 
 SCUTEST_ITER(test_auto_focus, 5) {
     WindowID focusHolder = mapArbitraryWindow();
-    focusWindow(focusHolder, getActiveMaster());
+    focusWindow(focusHolder);
     Window win = mapArbitraryWindow();
     registerWindow(win, root, NULL);
-    assert(focusHolder == getActiveFocus(getActiveMasterKeyboardID()));
+    assert(focusHolder == getActiveFocus());
     xcb_map_notify_event_t event = {.window = win};
     bool autoFocused = 1;
     Master* master = getActiveMaster();
@@ -185,7 +185,7 @@ SCUTEST_ITER(test_auto_focus, 5) {
     }
     addMask(getWindowInfo(win), INPUT_MASK | MAPPABLE_MASK | MAPPED_MASK);
     applyEventRules(XCB_MAP_NOTIFY, &event);
-    assert(autoFocused == (win == getActiveFocus(master->id)));
+    assert(autoFocused == (win == getActiveFocusOfMaster(master->id)));
 }
 
 
@@ -256,8 +256,8 @@ static void clientMessageSetup() {
     WindowID win2 = mapWindow(createNormalWindow());
     scan(root);
     assertEquals(getAllWindows()->size, 2);
-    assert(focusWindow(win1, getActiveMaster()));
-    assert(focusWindow(win2, getActiveMaster()));
+    assert(focusWindow(win1));
+    assert(focusWindow(win2));
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
         assert(getWorkspaceOfWindow(winInfo));
     }
@@ -291,7 +291,7 @@ SCUTEST(test_client_activate_window_bad) {
     sendActivateWindowRequest(0);
     sendActivateWindowRequest(1);
     runEventLoop();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), *(WindowID*)getHead(getAllWindows()));
+    assertEquals(getActiveFocus(), *(WindowID*)getHead(getAllWindows()));
 }
 
 SCUTEST(test_client_change_desktop) {

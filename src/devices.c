@@ -176,7 +176,7 @@ MasterID getClientPointerForWindow(WindowID win) {
 Master* getClientMaster(WindowID win) {
     return getMasterByID(getClientPointerForWindow(win));
 }
-WindowID getActiveFocus(MasterID id) {
+WindowID getActiveFocusOfMaster(MasterID id) {
     WindowID win = 0;
     xcb_input_xi_get_focus_reply_t* reply;
     reply = xcb_input_xi_get_focus_reply(dis, xcb_input_xi_get_focus(dis, id), NULL);

@@ -148,7 +148,7 @@ void focusParent(xcb_input_focus_in_event_t* event) {
     if(clone) {
         WindowInfo* parent = getParent(clone);
         if(parent && hasMask(parent, MAPPED_MASK))
-            focusWindowInfo(parent, getActiveMaster());
+            focusWindowInfo(parent);
     }
 }
 void swapOnMapEvent(xcb_map_notify_event_t* event) {

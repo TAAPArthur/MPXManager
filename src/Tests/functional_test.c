@@ -65,12 +65,12 @@ SCUTEST_ITER(maintain_focus_when_moving_window_to_another_workspace, 2) {
     mapWindow(createNormalWindow());
     WindowID win = mapWindow(createNormalWindow());
     scan(root);
-    focusWindow(win, getActiveMaster());
+    focusWindow(win);
     runEventLoop();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+    assertEquals(getActiveFocus(), win);
     moveToWorkspace(getWindowInfo(win), _i);
     runEventLoop();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+    assertEquals(getActiveFocus(), win);
 }
 
 SCUTEST(click_to_focus) {
@@ -96,7 +96,7 @@ SCUTEST(transfer_focus_within_workspace) {
     runEventLoop();
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
         isWindowMapped(winInfo->id);
-        focusWindow(winInfo->id, getActiveMaster());
+        focusWindow(winInfo->id);
     }
     moveToWorkspace(getWindowInfo(win2), 1);
     runEventLoop();

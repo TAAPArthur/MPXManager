@@ -56,12 +56,12 @@ SCUTEST(remember_focus) {
     addDefaultMaster();
     WindowID win = mapArbitraryWindow();
     waitUntilWMIdle();
-    focusWindow(win, getActiveMaster());
+    focusWindow(win);
     waitUntilWMIdle();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+    assertEquals(getActiveFocus(), win);
     restartWM();
     assert(isWindowMapped(win));
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+    assertEquals(getActiveFocus(), win);
 }
 
 SCUTEST_ITER(wm_restart_recursive, 3) {

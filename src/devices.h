@@ -119,6 +119,7 @@ Master* getClientMaster(WindowID win) ;
  * @param id a keyboard master device
  * @return the current window focused by the given keyboard device
  */
-WindowID getActiveFocus(MasterID id);
+WindowID getActiveFocusOfMaster(MasterID id);
+static inline WindowID getActiveFocus(void) {return getActiveFocusOfMaster(getActiveMasterKeyboardID());};
 
 #endif /* DEVICES_H_ */

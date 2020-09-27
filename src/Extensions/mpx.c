@@ -145,8 +145,8 @@ void swapXDevices(Master* master1, Master* master2) {
         return;
     DEBUG("Swapping %d(%d) with %d (%d)", master1->id, getPointerID(master1), master2->id, getPointerID(master2));
     //swap keyboard focus
-    xcb_input_xi_set_focus(dis, getActiveFocus(master1->id), 0, master2->id);
-    xcb_input_xi_set_focus(dis, getActiveFocus(master2->id), 0, master2->id);
+    xcb_input_xi_set_focus(dis, getActiveFocusOfMaster(master1->id), 0, master2->id);
+    xcb_input_xi_set_focus(dis, getActiveFocusOfMaster(master2->id), 0, master2->id);
     short pos1[2];
     short pos2[2];
     if(getMousePosition(getPointerID(master1), root, pos1) && getMousePosition(getPointerID(master2), root, pos2)) {

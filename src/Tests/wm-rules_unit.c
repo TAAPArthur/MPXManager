@@ -88,19 +88,19 @@ SCUTEST(test_focus_window) {
     WindowID win2 = mapWindow(createNormalWindow());
     runEventLoop();
     for(int i = 0; i < 2; i++) {
-        focusWindow(win, getActiveMaster());
+        focusWindow(win);
         runEventLoop();
         assertEquals(getFocusedWindow(), getWindowInfo(win));
-        assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+        assertEquals(getActiveFocus(), win);
         setActiveMaster(getElement(getAllMasters(), 0));
     }
-    focusWindow(win2, getActiveMaster());
+    focusWindow(win2);
     runEventLoop();
     assertEquals(getFocusedWindow(), getWindowInfo(win2));
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win2);
+    assertEquals(getActiveFocus(), win2);
     setActiveMaster(getElement(getAllMasters(), 1));
     assertEquals(getFocusedWindow(), getWindowInfo(win));
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+    assertEquals(getActiveFocus(), win);
 }
 
 SCUTEST(test_focus_transfer_on_destroy) {
@@ -111,15 +111,15 @@ SCUTEST(test_focus_transfer_on_destroy) {
     WindowID win2 = mapWindow(createNormalWindow());
     runEventLoop();
     FOR_EACH(Master*, master, getAllMasters()) {
-        focusWindow(win, master);
+        focusWindowAsMaster(win, master);
     }
-    focusWindow(win2, getActiveMaster());
-    focusWindow(win2, getMasterByName("test"));
-    focusWindow(win, getMasterByName("test"));
+    focusWindow(win2);
+    focusWindowAsMaster(win2, getMasterByName("test"));
+    focusWindowAsMaster(win, getMasterByName("test"));
     destroyWindow(win2);
     runEventLoop();
     FOR_EACH(Master*, master, getAllMasters()) {
-        assertEquals(win, getActiveFocus(getKeyboardID(master)));
+        assertEquals(win, getActiveFocusOfMaster(getKeyboardID(master)));
         assertEquals(win, getFocusedWindowOfMaster(master)->id);
     }
 }

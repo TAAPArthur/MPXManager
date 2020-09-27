@@ -130,16 +130,17 @@ void scan(xcb_window_t baseWindow) {
 static bool focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
     if(getFocusedWindowOfMaster(master) && ignore != getFocusedWindowOfMaster(master) &&
         isNotInInvisibleWorkspace(getFocusedWindowOfMaster(master)) &&
-        focusWindowInfo(getFocusedWindowOfMaster(master), master)) {
+        focusWindowInfoAsMaster(getFocusedWindowOfMaster(master), master)) {
         return 1;
     }
     FOR_EACH(WindowInfo*, winInfo, getMasterWindowStack(master)) {
         if(winInfo != ignore && getMasterWorkspaceIndex(master) == getWorkspaceIndexOfWindow(winInfo) && isFocusable(winInfo) &&
-            focusWindowInfo(winInfo, master))
+            focusWindowInfoAsMaster(winInfo, master))
             return 1;
     }
     FOR_EACH(WindowInfo*, winInfo, getMasterWindowStack(master)) {
-        if(winInfo != ignore && isNotInInvisibleWorkspace(winInfo) && isFocusable(winInfo) && focusWindowInfo(winInfo, master))
+        if(winInfo != ignore && isNotInInvisibleWorkspace(winInfo) && isFocusable(winInfo) &&
+            focusWindowInfoAsMaster(winInfo, master))
             return 1;
     }
     return 0;
@@ -243,7 +244,7 @@ bool activateWindow(WindowInfo* winInfo) {
         if(!hasMask(winInfo, MAPPED_MASK)) {
             mapWindow(winInfo->id);
         }
-        return focusWindowInfo(winInfo, getActiveMaster());
+        return focusWindowInfo(winInfo);
     }
     return 0;
 }

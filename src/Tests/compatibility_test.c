@@ -5,17 +5,17 @@
 static void setup() {
     LD_PRELOAD_INJECTION = 1;
     createXSimpleEnv();
-    focusWindow(root, getActiveMaster());
+    focusWindow(root);
     createMasterDevice("name");
     initCurrentMasters();
     setActiveMaster(getElement(getAllMasters(), 1));
-    focusWindow(root, getActiveMaster());
+    focusWindow(root);
 }
 SCUTEST_SET_ENV(setup, cleanupXServer);
 
 SCUTEST_ITER(grab, 3) {
-    assertEquals(getActiveFocus(DEFAULT_KEYBOARD), root);
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), root);
+    assertEquals(getActiveFocusOfMaster(DEFAULT_KEYBOARD), root);
+    assertEquals(getActiveFocus(), root);
     assert(DEFAULT_POINTER != getActiveMasterPointerID());
     assert(!grabPointer(DEFAULT_POINTER));
     assert(!grabKeyboard(DEFAULT_KEYBOARD));

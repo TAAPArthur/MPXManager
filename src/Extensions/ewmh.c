@@ -362,7 +362,7 @@ void autoFocus(xcb_map_notify_event_t* event) {
     if(hasMask(winInfo, INPUT_MASK)) {
         if(delta < AUTO_FOCUS_NEW_WINDOW_TIMEOUT) {
             Master* master = getClientMaster(winInfo->id);
-            if(master && focusWindowInfo(winInfo, master)) {
+            if(master && focusWindowInfoAsMaster(winInfo, master)) {
                 INFO("auto focused window %d (Detected %ldms ago)", winInfo->id, delta);
                 raiseWindowInfo(winInfo, 0);
             }

@@ -48,7 +48,7 @@ void printStatusMethod(void) {
         dprintf(STATUS_FD, "^fg(%s)%s^fg()", "green", getFocusedWindow()->title);
     }
     else {
-        dprintf(STATUS_FD, "Focused on %0xd (root: %0xd)", getActiveFocus(getActiveMasterKeyboardID()), root);
+        dprintf(STATUS_FD, "Focused on %0xd (root: %0xd)", getActiveFocus(), root);
     }
     dprintf(STATUS_FD, "\n");
 }

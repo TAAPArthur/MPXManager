@@ -79,16 +79,16 @@ SCUTEST_ITER(set_geometry, 4) {
 }
 
 SCUTEST(toggle_focus) {
-    focusWindowInfo(containerWindowInfo, getActiveMaster());
+    focusWindowInfo(containerWindowInfo);
     runEventLoop();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), container);
+    assertEquals(getActiveFocus(), container);
     assertEquals(getFocusedWindow(), containerWindowInfo);
     toggleContainer(getFocusedWindow());
     runEventLoop();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), containedWindow);
+    assertEquals(getActiveFocus(), containedWindow);
     toggleContainer(getFocusedWindow());
     runEventLoop();
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), container);
+    assertEquals(getActiveFocus(), container);
 }
 
 SCUTEST_ITER(release_container, 2) {
@@ -154,7 +154,7 @@ SCUTEST_ITER(contain_self, 3) {
         switchToWorkspace(getWorkspaceOfMonitor(containerMonitor)->id);
     }
     else if(_i) {
-        focusWindow(normalWindow, getActiveMaster());
+        focusWindow(normalWindow);
         raiseWindowInfo(containerWindowInfo, 0);
     }
     runEventLoop();

@@ -21,7 +21,7 @@ static void functionSetup() {
     scan(root);
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
         moveToWorkspace(winInfo, 0);
-        focusWindowInfo(winInfo, getActiveMaster());
+        focusWindowInfo(winInfo);
     }
     top = getElement(getActiveWindowStack(), 0);
     middle = getElement(getActiveWindowStack(), 1);
@@ -43,19 +43,19 @@ SCUTEST_ITER(cycle_window, 2) {
     }
     onWindowFocus(middle->id);
     onWindowFocus(top->id);
-    focusWindowInfo(top, getActiveMaster());
+    focusWindowInfo(top);
     assertEquals(getFocusedWindow(), top);
     WindowID stack[] = {middle->id, bottom->id, top->id};
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), stack[LEN(stack) - 1]);
+    assertEquals(getActiveFocus(), stack[LEN(stack) - 1]);
     runEventLoop();
     setFocusStackFrozen(1);
     for(int i = 0; i < LEN(stack); i++) {
         cycleWindows(DOWN);
-        assertEquals(getActiveFocus(getActiveMasterKeyboardID()), stack[i]);
+        assertEquals(getActiveFocus(), stack[i]);
         runEventLoop();
     }
     cycleWindows(UP);
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), stack[1]);
+    assertEquals(getActiveFocus(), stack[1]);
 }
 
 SCUTEST(cycle_window_many, .iter = 2) {
@@ -63,7 +63,7 @@ SCUTEST(cycle_window_many, .iter = 2) {
     for(int i = 0; i < 2; i++)
         registerWindow(mapWindow(createNormalWindow()), root, NULL);
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
-        focusWindowInfo(winInfo, getActiveMaster());
+        focusWindowInfo(winInfo);
         moveToWorkspace(winInfo, 0);
     }
     moveToWorkspace(getElement(getAllWindows(), 1), 1);
@@ -133,11 +133,11 @@ SCUTEST(test_shift_top_and_focus) {
     shiftTopAndFocus();
     assertEquals(getElement(getActiveWindowStack(), 0), bottom);
     assertEquals(getElement(getActiveWindowStack(), 1), top);
-    assertEquals(bottom->id, getActiveFocus(getActiveMasterKeyboardID()));
+    assertEquals(bottom->id, getActiveFocus());
     shiftTopAndFocus();
     assertEquals(getElement(getActiveWindowStack(), 0), top);
     assertEquals(getElement(getActiveWindowStack(), 1), bottom);
-    assertEquals(top->id, getActiveFocus(getActiveMasterKeyboardID()));
+    assertEquals(top->id, getActiveFocus());
 }
 SCUTEST_ITER(test_shift_focus_null, 3) {
     if(_i == 0)
@@ -205,5 +205,5 @@ SCUTEST(pop_hidden) {
 SCUTEST(activate_urgent) {
     addMask(middle, URGENT_MASK);
     assert(activateNextUrgentWindow());
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), middle->id);
+    assertEquals(getActiveFocus(), middle->id);
 }

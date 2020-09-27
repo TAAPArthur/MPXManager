@@ -57,7 +57,7 @@ SCUTEST(test_restore_master_focus_stack) {
     FOR_EACH(Master*, master, getAllMasters()) {
         WindowID win = mapWindow(createNormalWindow());
         registerWindow(win, root, NULL);
-        focusWindow(win, master);
+        focusWindowAsMaster(win, master);
     }
     runEventLoop();
     FOR_EACH(Master*, master, getAllMasters()) {

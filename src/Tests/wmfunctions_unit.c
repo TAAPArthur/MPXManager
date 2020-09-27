@@ -245,8 +245,8 @@ SCUTEST(test_updateFocusForAllMasters) {
     onWindowFocus(win);
     onWindowFocus(win2);
     updateFocusForAllMasters(NULL);
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win2);
+    assertEquals(getActiveFocus(), win2);
     updateFocusForAllMasters(getWindowInfo(win2));
-    assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
+    assertEquals(getActiveFocus(), win);
 }
 

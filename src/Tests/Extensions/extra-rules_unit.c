@@ -37,7 +37,7 @@ SCUTEST(test_print_status, .iter = 3) {
         mapWindow(createNormalWindow());
         runEventLoop();
         setActiveWorkspaceIndex(1);
-        focusWindow(mapWindow(createNormalWindow()), getActiveMaster());
+        focusWindow(mapWindow(createNormalWindow()));
         runEventLoop();
         setActiveWorkspaceIndex(2);
         setActiveMaster(getElement(getAllMasters(), 1));
@@ -115,7 +115,7 @@ SCUTEST(test_insertWindowsAtHeadOfStack, .iter = 3) {
     Window win3 = mapArbitraryWindow();
     runEventLoop();
     verifyWindowStack(getActiveWindowStack(), (WindowID[]) {win1, winFocused, win3});
-    focusWindow(winFocused, getActiveMaster());
+    focusWindow(winFocused);
     addInsertWindowsAtPositionRule(_i);
     Window winNew = mapArbitraryWindow();
     runEventLoop();

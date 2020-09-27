@@ -52,7 +52,7 @@ static void applyAction(WindowInfo* winInfo, WindowAction action) {
             activateWindow(winInfo);
             break;
         case ACTION_FOCUS:
-            focusWindowInfo(winInfo, getActiveMaster());
+            focusWindowInfo(winInfo);
             break;
         case ACTION_LOWER:
             lowerWindowInfo(winInfo, 0);

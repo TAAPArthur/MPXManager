@@ -188,16 +188,16 @@ void resetBorder(WindowID win) {
 }
 
 //TODO consider moving to devices
-int focusWindow(WindowID win, Master* master) {
+int focusWindowAsMaster(WindowID win, Master* master) {
     DEBUG("Trying to set focus to %d for master %d", win, master->id);
     assert(win);
     xcb_void_cookie_t cookie = xcb_input_xi_set_focus_checked(dis, win, XCB_CURRENT_TIME, getKeyboardID(master));
     return !catchError(cookie);
 }
-int focusWindowInfo(WindowInfo* winInfo, Master* master) {
+int focusWindowInfoAsMaster(WindowInfo* winInfo, Master* master) {
     if(!hasPartOfMask(winInfo, INPUT_MASK | WM_TAKE_FOCUS_MASK))
         return 0;
-    if(focusWindow(winInfo->id, master)) {
+    if(focusWindowAsMaster(winInfo->id, master)) {
         onWindowFocus(winInfo->id);
         if(hasMask(winInfo, WM_TAKE_FOCUS_MASK)) {
             //TODO MPX support
