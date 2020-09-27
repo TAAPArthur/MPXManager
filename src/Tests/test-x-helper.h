@@ -14,7 +14,6 @@
 #include "test-mpx-helper.h"
 #include "tester.h"
 #include "../globals.h"
-#include "../util/threads.h"
 #include "../xutil/xsession.h"
 #include "../xutil/window-properties.h"
 #include "../system.h"
@@ -105,7 +104,6 @@ static inline WindowID setEWMHDockProperties(WindowID win, int i, int size, bool
 }
 
 static inline int consumeEvents() {
-    lock();
     flush();
     XSync(dpy, 0);
     xcb_generic_event_t* e;
@@ -120,7 +118,6 @@ static inline int consumeEvents() {
         }
         else break;
     }
-    unlock();
     return numEvents;
 }
 static inline void cleanupXServer() {

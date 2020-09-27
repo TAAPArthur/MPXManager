@@ -10,7 +10,6 @@
 #include "../util/time.h"
 #include "../wm-rules.h"
 #include "test-mpx-helper.h"
-#include "../util/threads.h"
 #include "../xevent.h"
 #include "../settings.h"
 #include "test-x-helper.h"

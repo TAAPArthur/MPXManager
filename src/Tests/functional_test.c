@@ -52,10 +52,10 @@ static void setup() {
 }
 SET_ENV(setup, fullCleanup);
 SCUTEST(auto_window_map) {
-    lock();
+
     WindowID win = createNormalWindow();
     scan(root);
-    unlock();
+
     waitUntilIdle();
     WindowInfo* winInfo = getWindowInfo(win);
     assert(winInfo);
@@ -64,7 +64,7 @@ SCUTEST(auto_window_map) {
 }
 
 SCUTEST(tile_before_map) {
-    lock();
+
 
     static WindowID win = createNormalWindow();
     auto dummyLayoutFunc = [](LayoutState * state) {
@@ -80,7 +80,7 @@ SCUTEST(tile_before_map) {
         exit(0);
     }
     assertEquals(0, waitForChild(0));
-    unlock();
+
     waitUntilIdle();
     setActiveLayout(NULL);
 }
@@ -124,10 +124,10 @@ SCUTEST_ITER(maintain_focus_when_moving_window_to_another_workspace, 2) {
 }
 
 SCUTEST(auto_focus) {
-    lock();
+
     WindowID win = mapArbitraryWindow();
     setUserTime(win, 1);
-    unlock();
+
     waitUntilIdle();
     WindowInfo* winInfo = getWindowInfo(win);
     assert(winInfo);
@@ -154,10 +154,10 @@ SCUTEST_ITER(stacking_order_with_transients_and_full_layout, 2) {
     WindowID stack[] = {win, win2};
     WindowID stackPossible[][3] = {{win, win2, win3}, {win3, win2, win}};
     for(WindowInfo* winInfo : getAllWindows()) {
-        lock();
+
         raiseWindow(winInfo, 0, _i);
         retile();
-        unlock();
+
         waitUntilIdle(1);
         assert(checkStackingOrder(stack, LEN(stack)));
         assert(checkStackingOrder(stackPossible[0], LEN(stackPossible[0])) ||
@@ -239,12 +239,12 @@ SCUTEST_ITER(fullscreen_over_docks, 2) {
     setDockProperties(dock, DOCK_TOP, 100);
     WindowID win = mapArbitraryWindow();
     waitUntilIdle();
-    lock();
+
     assert(getAllMonitors()[0]->getBase() != getAllMonitors()[0]->getViewport());
     getWindowInfo(dock)->addMask(ABOVE_MASK);
     getWindowInfo(win)->addMask(_i ? ROOT_FULLSCREEN_MASK : FULLSCREEN_MASK);
     retile();
-    unlock();
+
     waitUntilIdle();
     assert(getRealGeometry(win).contains(getRealGeometry(dock)));
     WindowID stack[] = {dock, win};
@@ -260,14 +260,14 @@ SCUTEST(transfer_focus_within_workspace) {
     WindowID win2 = mapArbitraryWindow();
     WindowID win3 = mapArbitraryWindow();
     waitUntilIdle();
-    lock();
+
     for(WindowInfo* winInfo : getAllWindows())
         isWindowMapped(*winInfo);
     getWindowInfo(win2)->moveToWorkspace(1);
     assert(focusWindow(win));
     assert(focusWindow(win2));
     assert(focusWindow(win3));
-    unlock();
+
     waitUntilIdle();
     assertEquals(getActiveMaster()->getFocusedWindow(), getWindowInfo(win3));
     assertEquals(3, getActiveMaster()->getWindowStack().size());
@@ -282,22 +282,22 @@ SCUTEST(transfer_focus_within_workspace) {
 static void multiMonitorSetup() {
     MONITOR_DUPLICATION_POLICY = 0;
     setup();
-    lock();
+
     addFakeMonitor({100, 0, 100, 100});
     addFakeMonitor({100, 0, 100, 100});
     detectMonitors();
     assertEquals(getAllMonitors().size(), 3);
     getActiveMaster()->setWorkspaceIndex(3);
     assignUnusedMonitorsToWorkspaces();
-    unlock();
+
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
         mapArbitraryWindow();
     waitUntilIdle();
     assertEquals(getActiveWorkspace()->getWindowStack().size(), getAllWindows().size());
-    lock();
+
     for(int i = 0; i < getNumberOfWorkspaces(); i++)
         getAllWindows()[i]->moveToWorkspace(i);
-    unlock();
+
     waitUntilIdle();
 }
 SET_ENV(multiMonitorSetup, fullCleanup);
@@ -370,26 +370,26 @@ SCUTEST_ITER(remove_all_monitors, 2) {
 }
 SCUTEST(add_hidden_mask) {
     MASKS_TO_SYNC = -1;
-    lock();
+
     WindowInfo* winInfo = getActiveWorkspace()->getWindowStack()[0];
     assert(winInfo->hasMask(MAPPED_MASK));
     winInfo->addMask(HIDDEN_MASK);
 
     wakeupWM();
-    unlock();
+
     waitUntilIdle();
     assert(!winInfo->hasMask(MAPPED_MASK));
-    lock();
+
     winInfo->removeMask(HIDDEN_MASK);
 
     wakeupWM();
-    unlock();
+
     waitUntilIdle();
     assert(winInfo->hasMask(MAPPED_MASK));
-    lock();
+
     loadSavedAtomState(winInfo);
     assert(!winInfo->hasMask(HIDDEN_MASK));
-    unlock();
+
 }
 */
 

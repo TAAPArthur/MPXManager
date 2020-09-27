@@ -11,7 +11,6 @@
 #include "devices.h"
 #include "layouts.h"
 #include "util/logger.h"
-#include "util/threads.h"
 #include "masters.h"
 #include "monitors.h"
 #include "settings.h"
@@ -183,7 +182,5 @@ void onStartup(void) {
         ROOT_EVENT_MASKS &= ~WM_MASKS;
     if(startupMethod)
         startupMethod();
-    lock();
     openXDisplay();
-    unlock();
 }

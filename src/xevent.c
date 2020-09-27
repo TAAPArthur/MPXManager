@@ -11,7 +11,6 @@
 #include "monitors.h"
 #include "user-events.h"
 #include "util/logger.h"
-#include "util/threads.h"
 #include "util/time.h"
 #include "xevent.h"
 #include "xutil/xsession.h"
@@ -90,12 +89,10 @@ static inline xcb_generic_event_t* getNextEvent() {
     if(!event)
         event = pollForEvent();
     if(!event && !xcb_connection_has_error(dis)) {
-        lock();
         if(applyEventRules(IDLE, NULL)) {
             flush();
             event = pollForEvent();
             if(event) {
-                unlock();
                 return event;
             }
         }
@@ -103,7 +100,6 @@ static inline xcb_generic_event_t* getNextEvent() {
         idle++;
         setWindowPropertyInt(getPrivateWindow(), MPX_IDLE_PROPERTY, XCB_ATOM_CARDINAL, getIdleCount());
         flush();
-        unlock();
         INFO("Idle %d", idle);
         if(!isShuttingDown())
             event = waitForEvent();
@@ -132,13 +128,11 @@ void runEventLoop() {
             break;
         }
         int type = event->response_type & 127;
-        lock();
         // TODO pre event processing rule
         type = type < LASTEvent ? type : EXTRA_EVENT;
         lastEventSequenceNumber = event->sequence;
         applyEventRules(type, event);
         free(event);
-        unlock();
 #ifdef DEBUG
         XSync(dpy, 0);
         fflush(NULL);

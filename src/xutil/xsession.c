@@ -11,7 +11,6 @@
 #include "../monitors.h"
 #include "../boundfunction.h"
 #include "../system.h"
-#include "../util/threads.h"
 #include "../util/debug.h"
 #include "../util/time.h"
 #include "../user-events.h"

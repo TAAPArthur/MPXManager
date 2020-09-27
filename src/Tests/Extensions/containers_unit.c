@@ -117,7 +117,7 @@ SCUTEST_ITER(stacking_order, 2) {
     WindowID stack[] = {container, containedWindow};
     focusWindow(containedWindow);
     waitUntilIdle();
-    lock();
+
     if(_i) {
         setActiveLayout(FULL);
         raiseWindow(getWindowInfo(container));
@@ -126,7 +126,7 @@ SCUTEST_ITER(stacking_order, 2) {
     else {
         activateWindow(getWindowInfo(container));
     }
-    unlock();
+
     waitUntilIdle();
     assert(checkStackingOrder(stack, LEN(stack), 1));
 }
