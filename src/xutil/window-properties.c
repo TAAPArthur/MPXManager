@@ -86,9 +86,6 @@ void loadWindowHints(WindowInfo* winInfo) {
             addMask(winInfo, URGENT_MASK);
         }
         winInfo->groupID = hints.window_group;
-        // TODO remove
-        if(hints.initial_state == XCB_ICCCM_WM_STATE_NORMAL)
-            addMask(winInfo, MAPPABLE_MASK);
         if(hints.input)
             addMask(winInfo, INPUT_MASK);
         else
