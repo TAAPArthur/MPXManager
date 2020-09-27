@@ -12,11 +12,9 @@
 #include "masters.h"
 
 /**
- *
- *
- * @return 1 iff there is a running instance of MPXManager and it is acting like a window manger (RUN_AS_WM==1)
+ * @return private window of wm if there is a running instance of MPXManager and it is acting like a window manger (RUN_AS_WM==1)
  */
-bool isMPXManagerRunning(void);
+WindowID isMPXManagerRunning(void);
 
 void ownSelection(xcb_atom_t selectionAtom);
 

@@ -8,66 +8,59 @@
 #include <signal.h>
 
 
+uint32_t wmPid;
 static void restartWM() {
+    WindowID win = getWMPrivateWindow();
+    setWindowPropertyInt(win, WM_STATE, XCB_ATOM_CARDINAL, 1);
     send("restart", "");
     WAIT_UNTIL_TRUE(!hasOutStandingMessages());
+    WAIT_UNTIL_TRUE(!getWindowPropertyValueInt(win, WM_STATE, XCB_ATOM_CARDINAL));
     WAIT_UNTIL_TRUE(isMPXManagerRunning());
+    WAIT_UNTIL_TRUE(getWMIdleCount());
 }
 static void cleanup() {
-    send("quit", "");
+    assert(wmPid);
+    kill(wmPid, SIGINT);
     WAIT_UNTIL_TRUE(!isMPXManagerRunning());
 }
 
-SCUTEST_SET_ENV(openXDisplay, cleanup, .timeout = 10);
-
-SCUTEST_ITER(init_stacking_order, 2) {
-    WindowID dock = mapWindow(createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK));
-    if(_i) {
-        spawn("./mpxmanager");
-        WAIT_UNTIL_TRUE(isMPXManagerRunning());
-        waitUntilWMIdle();
-    }
-    WindowID win1 = mapArbitraryWindow();
-    WindowID win2 = mapArbitraryWindow();
-    if(!_i) {
-        waitForChild(spawnChild("./mpxmanager --die-on-idle --log-level 2"));
-    }
-    else
-        waitUntilWMIdle();
-    WindowID relativePos[] = {win1, win2, dock};
-    assert(checkStackingOrder(relativePos, LEN(relativePos)));
-}
-
-uint32_t wmPid;
 static void initSetup() {
-    wmPid = spawnChild("./mpxmanager");
+    wmPid = spawnChild("./mpxmanager --log-level 0");
     openXDisplay();
     WAIT_UNTIL_TRUE(isMPXManagerRunning());
     waitUntilWMIdle();
 }
-SCUTEST_SET_ENV(initSetup, cleanup);
-/*TODO
-SCUTEST_ITER(remember_mapped_windows, 4) {
-    WindowID win[] = {mapArbitraryWindow(), createNormalWindow(), mapArbitraryWindow(), mapWindow(createWindow())};
-    for(int i = 0; i < LEN(win); i++)
-        sendChangeWindowWorkspaceRequest(win[i], i);
+SCUTEST_SET_ENV(initSetup, cleanup, .timeout = 4);
+SCUTEST(remember_mapped_windows) {
+    Window win = mapWindow(createNormalWindow());
     waitUntilWMIdle();
-    assert(isWindowMapped(win[0]));
-    mapWindow(win[1]);
+    assert(isWindowMapped(win));
+    unmapWindow(win);
     restartWM();
-    sendChangeWorkspaceRequest(_i);
     waitUntilWMIdle();
-    assert(isWindowMapped(win[_i]));
+    kill(wmPid, SIGUSR2);
+    assert(isWindowMapped(win));
 }
-*/
+
+SCUTEST(test_long_lived) {
+    for(int i = 0; i < 3; i++) {
+        mapWindow(createNormalWindow());
+        waitUntilWMIdle();
+    }
+    spawnAndWait("./mpxmanager sum");
+    Window win = mapWindow(createNormalWindow());
+    waitUntilWMIdle();
+    assert(isWindowMapped(win));
+}
 
 SCUTEST(remember_focus) {
     addDefaultMaster();
     WindowID win = mapArbitraryWindow();
     waitUntilWMIdle();
+    focusWindow(win, getActiveMaster());
+    waitUntilWMIdle();
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
     restartWM();
-    waitUntilWMIdle();
     assert(isWindowMapped(win));
     assertEquals(getActiveFocus(getActiveMasterKeyboardID()), win);
 }

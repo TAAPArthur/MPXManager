@@ -26,16 +26,16 @@
 #include "system.h"
 #include "xutil/xsession.h"
 
-bool isMPXManagerRunning(void) {
+WindowID isMPXManagerRunning(void) {
     xcb_get_selection_owner_reply_t* ownerReply = xcb_get_selection_owner_reply(dis, xcb_get_selection_owner(dis,
                 MPX_WM_SELECTION_ATOM), NULL);
-    bool result = 0;
-    INFO("here\n");
+    WindowID win = 0;
     if(ownerReply && ownerReply->owner) {
-        result = getWindowPropertyValueInt(ownerReply->owner, ewmh->_NET_WM_PID, XCB_ATOM_CARDINAL);
+        if(getWindowPropertyValueInt(ownerReply->owner, ewmh->_NET_WM_PID, XCB_ATOM_CARDINAL))
+            win = ownerReply->owner;
     }
     free(ownerReply);
-    return result;
+    return win;
 }
 
 void ownSelection(xcb_atom_t selectionAtom) {
@@ -81,12 +81,15 @@ bool registerWindowInfo(WindowInfo* winInfo, xcb_get_window_attributes_reply_t* 
         winInfo->creationTime = getTime();
     else
         loadWindowHints(winInfo);
-    if(hasMask(winInfo, MAPPABLE_MASK)) {
-        DEBUG("Window is mappable %d", winInfo->id);
-        if(!applyEventRules(CLIENT_MAP_ALLOW, winInfo))
-            return 0;
+    if(applyEventRules(POST_REGISTER_WINDOW, winInfo)) {
+        if(hasMask(winInfo, MAPPABLE_MASK)) {
+            DEBUG("Window is mappable %d", winInfo->id);
+            if(!applyEventRules(CLIENT_MAP_ALLOW, winInfo))
+                return 0;
+        }
+        return 1;
     }
-    return applyEventRules(POST_REGISTER_WINDOW, winInfo);
+    return 0;
 }
 bool registerWindow(WindowID win, WindowID parent, xcb_get_window_attributes_reply_t* attr) {
     assert(!getWindowInfo(win) && "Window registered exists");
