@@ -12,6 +12,22 @@
 
 
 SCUTEST_SET_ENV(onDefaultStartup, cleanupXServer);
+SCUTEST(test_tile_before_map) {
+    WindowID win = mapWindow(createNormalWindow());
+    registerWindow(win, root, NULL);
+    assert(getWorkspaceOfWindow(getWindowInfo(win)));
+    switchToWorkspace(1);
+    runEventLoop();
+    setWindowPosition(win, (Rect) {0, 1, 2, 3});
+    switchToWorkspace(0);
+    markWorkspaceOfWindowDirty(getWindowInfo(win));
+    consumeEvents();
+    addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(fail));
+    addEvent(XCB_CONFIGURE_NOTIFY, DEFAULT_EVENT(incrementCount));
+    addEvent(XCB_CONFIGURE_NOTIFY, DEFAULT_EVENT(requestShutdown));
+    runEventLoop();
+    assert(getCount());
+}
 SCUTEST_ITER(auto_tile_with_dock, 4) {
     assignUnusedMonitorsToWorkspaces();
     bool premap = _i % 2;

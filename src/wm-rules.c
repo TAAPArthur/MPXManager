@@ -234,7 +234,7 @@ void addNonDocksToActiveWorkspace(WindowInfo* winInfo) {
 void addAutoTileRules() {
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
     addEvent(WORKSPACE_WINDOW_REMOVE, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
-    addBatchEvent(IDLE, DEFAULT_EVENT(retileAllDirtyWorkspaces));
+    addEvent(IDLE, DEFAULT_EVENT(retileAllDirtyWorkspaces, HIGH_PRIORITY));
     addBatchEvent(IDLE, DEFAULT_EVENT(saveAllWindowMasks, LOWER_PRIORITY));
 }
 void assignDefaultLayoutsToWorkspace() {

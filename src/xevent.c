@@ -120,7 +120,6 @@ void runEventLoop() {
     flush();
     shuttingDown = 0;
     xcb_generic_event_t* event = NULL;
-    applyBatchEventRules();
     while(!isShuttingDown() && dis) {
         event = getNextEvent();
         if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
