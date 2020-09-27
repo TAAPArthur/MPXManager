@@ -75,6 +75,7 @@ SCUTEST(mouse_enter) {
     assert(!contains(getRealGeometry(cloneInfo->id), mouse));
 }
 SCUTEST(swap_on_unmap) {
+    POLL_COUNT = 3;
     moveToWorkspace(winInfo, 1);
     runEventLoop();
     assertEquals(getWorkspaceIndexOfWindow(winInfo), 0);

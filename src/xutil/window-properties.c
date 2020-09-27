@@ -251,6 +251,9 @@ WindowID createWindow(WindowID parent, xcb_window_class_t clazz, uint32_t mask, 
         screen->root_visual, mask, valueList);
     return win;
 }
+void destroyWindowInfo(WindowInfo* winInfo) {
+    destroyWindow(winInfo->id);
+}
 int destroyWindow(WindowID win) {
     assert(win);
     DEBUG("Destroying window %d", win);

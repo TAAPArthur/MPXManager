@@ -292,9 +292,6 @@ void addBasicRules() {
     addApplyBindingsRule(remove);
     addIgnoreOverrideRedirectAndInputOnlyWindowsRule();
     addSyncMapStateRules();
-    /* TODO readd
-    addDoNotManageOverrideRedirectWindowsRule();
-    */
 }
 
 bool ignoreOverrideRedirectAndInputOnlyWindowWindowsRule(WindowInfo* winInfo) {
@@ -309,30 +306,3 @@ void addIgnoreOverrideRedirectAndInputOnlyWindowsRule() {
     addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(ignoreOverrideRedirectAndInputOnlyWindowWindowsRule, HIGHER_PRIORITY,
             .abort = 1));
 }
-
-
-/* TODO Enable
-bool addDoNotManageOverrideRedirectWindowsRule(bool remove) {
-    return getEventRules(PRE_REGISTER_WINDOW).add({
-        +[](WindowInfo * winInfo) {if(isOverrideRedirectWindow(winInfo))setNotManageable(winInfo);},
-        FUNC_NAME,
-    }, remove);
-}
-bool addIgnoreOverrideRedirectWindowsRule(bool remove) {
-    return getEventRules(PRE_REGISTER_WINDOW).add({
-        +[](WindowInfo * winInfo) {return !isOverrideRedirectWindow(winInfo);},
-        FUNC_NAME,
-        PASSTHROUGH_IF_TRUE,
-        HIGH_PRIORITY,
-    }, remove);
-}
-
-bool addIgnoreInputOnlyWindowsRule(bool remove) {
-    return getEventRules(PRE_REGISTER_WINDOW).add({
-        +[](WindowInfo * winInfo) {return !isInputOnly(winInfo);},
-        FUNC_NAME,
-        PASSTHROUGH_IF_TRUE,
-        HIGH_PRIORITY
-    }, remove);
-}
-*/

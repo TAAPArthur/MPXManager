@@ -264,10 +264,6 @@ void startWindowMoveResize(WindowInfo* winInfo, bool move, int change) {
 }
 void commitWindowMoveResize() {
     DEBUG("Committing WM move/resize; Master: %d", getActiveMasterKeyboardID());
-    /* TODO
-    if(ref->btn)
-        ungrabDevice(m->getPointerID());
-    */
     removeRef();
 }
 void cancelWindowMoveResize() {
@@ -275,10 +271,6 @@ void cancelWindowMoveResize() {
     if(ref) {
         DEBUG("Canceling WM move/resize; Master: %d", getActiveMasterKeyboardID());
         setWindowPosition(ref->win, ref->ref);
-        /* TODO
-        if(ref->btn)
-            ungrabDevice(m->getPointerID());
-            */
         removeRef();
     }
 }

@@ -12,7 +12,7 @@
 #include "../test-wm-helper.h"
 #include "../tester.h"
 
-SCUTEST_SET_ENV(onDefaultStartup, fullCleanup);
+SCUTEST_SET_ENV(onDefaultStartup, simpleCleanup);
 SCUTEST(test_print_status, .iter = 3) {
     addPrintStatusRule();
     int pid;

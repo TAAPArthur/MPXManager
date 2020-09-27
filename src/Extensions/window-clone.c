@@ -78,14 +78,13 @@ WindowInfo* cloneWindow(WindowInfo* winInfo) {
     assert(winInfo);
     DEBUG("Cloning window %d", winInfo->id);
     uint32_t values[1] = {winInfo->overrideRedirect};
-    WindowID win = createWindow(winInfo->parent, winInfo->inputOnly ? XCB_WINDOW_CLASS_INPUT_ONLY :
-            XCB_WINDOW_CLASS_INPUT_OUTPUT, XCB_CW_OVERRIDE_REDIRECT, values, winInfo->geometry);
+    WindowID win = createWindow(winInfo->parent, XCB_WINDOW_CLASS_INPUT_OUTPUT, XCB_CW_OVERRIDE_REDIRECT, values,
+            winInfo->geometry);
     xcb_icccm_wm_hints_t hints = {.input = hasMask(winInfo, INPUT_MASK)};
     catchError(xcb_icccm_set_wm_hints_checked(dis, win, &hints));
     WindowInfo* clone = newWindowInfo(win, winInfo->parent);
     syncPropertiesWithParent(clone->id, winInfo);
     addMask(clone, winInfo->mask & EXTERNAL_MASKS);
-    // TODO
     if(getWorkspaceOfWindow(winInfo))
         moveToWorkspace(clone, getWorkspaceIndexOfWindow(winInfo));
     if(hasMask(winInfo, MAPPED_MASK))

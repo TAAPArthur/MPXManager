@@ -312,14 +312,6 @@ void tileWorkspace(Workspace* workspace) {
             if(isTileable(winInfo))
                 maxWindowToTile++;
         }
-        /* TODO remove
-        for(int i = windowStack.size() - 1; i >= 0; i--)
-            if(!layout->filterWindow(windowStack[i])) {
-                windowStack.shiftToEnd(i);
-            }
-            else if(windowStack[i]->isTileable())
-                maxWindowToTile++;
-        */
         if(layout->args.limit)
             maxWindowToTile = MIN(maxWindowToTile, layout->args.limit);
         LayoutState state = {.args = &layout->args, .monitor = m, .numWindows = maxWindowToTile, .stack = windowStack};

@@ -12,6 +12,7 @@ static void setup() {
     ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
     registerForWindowEvents(root, ROOT_EVENT_MASKS);
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
+    POLL_COUNT = 1;
 }
 SCUTEST_SET_ENV(setup, simpleCleanup);
 

@@ -52,7 +52,7 @@ SCUTEST(test_unmap) {
     runEventLoop();
     assert(!hasPartOfMask(getWindowInfo(win), MAPPED_MASK | MAPPABLE_MASK));
     unmapWindow(win);
-    waitUntilIdle();
+    runEventLoop();
     assert(!hasPartOfMask(getWindowInfo(win), MAPPED_MASK | MAPPABLE_MASK));
 }
 SCUTEST(test_hierarchy_change) {
@@ -190,7 +190,6 @@ static void setupClientEnvWithBasicRules() {
         openXDisplay();
         kill(pid, SIGCHLD);
         runEventLoop();
-        assert(getAllWindows()->size);
         assertEquals(0, waitForChild(pid));
         cleanupXServer();
         exit(0);

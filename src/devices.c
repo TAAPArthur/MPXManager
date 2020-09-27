@@ -67,12 +67,6 @@ void destroyAllNonDefaultMasters(void) {
     }
 }
 
-
-
-bool isKnownDevice(MasterID id) {
-    return getMasterByID(id) || findElement(getAllSlaves(), &id, sizeof(MasterID));
-}
-
 void registerMasterDevice(MasterID id) {
     /*
     xcb_input_xi_query_device_cookie_t cookie=xcb_input_xi_query_device(dis, XIAllMasterDevices);

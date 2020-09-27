@@ -108,27 +108,6 @@ void freeWindowInfo(WindowInfo* winInfo);
 static inline bool isOverrideRedirectWindow(WindowInfo* winInfo) {return winInfo->overrideRedirect;};
 static inline bool isInputOnlyWindow(WindowInfo* winInfo) {return winInfo->inputOnly;};
 
-
-/**
- * Indicates that this window has the override_redirect bit set
- *
- */
-/*TODO
-void markAsOverrideRedirect() {
-    addMask(FLOATING_MASK | STICKY_MASK);
-    overrideRedirect = 1;
-}
-*/
-/**
- * Marks the window as input only.
- * InputOnly windows cannot have a border
- */
-/*void markAsInputOnly() {
-    inputOnly = 1;
-    setTilingOverrideEnabled(1 << 4, 1);
-    tilingOverride.border = 0;
-}
-*/
 /**
  * Enables/Disables tiling to be overridden at the indexes corresponding to mask
  *

@@ -292,35 +292,10 @@ int processConfigureRequest(WindowID win, const short values[5], WindowID siblin
     DEBUG("processing configure request window %d", win);
     uint32_t actualValues[7];
     WindowInfo* winInfo = getWindowInfo(win);
-    /* TODO remove
-    if(!winInfo) {
-        WindowInfo fake = WindowInfo(0, 0);
-        fake.addMask(EXTERNAL_CONFIGURABLE_MASK);
-        filterConfigValues(actualValues, &fake, values, sibling, stackMode, configMask);
-        configureWindow(win, configMask, actualValues);
-        return configMask;
-    }
-    */
     int mask = filterConfigValues(actualValues, winInfo, values, sibling, stackMode, configMask);
     DEBUG("Mask filtered from %d to %d", configMask, mask);
     if(mask) {
         configureWindow(win, mask, actualValues);
-        /*
-        TRACE("re-configure window %d configMask: %d", win, mask);
-        if(mask & XCB_CONFIG_WINDOW_STACK_MODE) {
-            Workspace* workspace = getWorkspace(winInfo);
-            if(workspace)
-                if(sibling == XCB_NONE) {
-                    int i = getWindowStack(workspace).indexOf(winInfo);
-                    if(stackMode == XCB_STACK_MODE_ABOVE)
-                        getWindowStack(workspace).shiftToHead(i);
-                    else
-                        getWindowStack(workspace).shiftToEnd(i);
-                }
-                else WARN("not updating workspace window stack to reflect sibling change: win %d, sibling %d", win,
-                             sibling);
-        }
-        */
     }
     else {
         INFO("configure request denied for window %d; configMasks %d (%d)", win, mask, configMask);

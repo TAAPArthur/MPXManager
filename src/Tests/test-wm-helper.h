@@ -59,23 +59,6 @@ static inline void wakeupWM() {
     xcb_ewmh_send_client_message(dis, root, root, 1, 0, 0);
     flush();
 }
-static inline void fullCleanup() {
-    DEBUG("full cleanup");
-    if(!isLogging(LOG_LEVEL_DEBUG))
-        setLogLevel(LOG_LEVEL_NONE);
-    requestShutdown();
-    if(getIdleCount() && ewmh) {
-        registerForWindowEvents(root, ROOT_EVENT_MASKS);
-        wakeupWM();
-    }
-    waitForAllThreadsToExit();
-    DEBUG("validating state");
-    DEBUG("Clearing bindings");
-    clearBindings();
-    DEBUG("Checking bound function names");
-    DEBUG("cleaning up xserver");
-    cleanupXServer();
-}
 
 static inline void resetState() {
     destroyAllLists();

@@ -65,12 +65,12 @@ static inline xcb_generic_event_t* pollForEvent() {
     xcb_generic_event_t* event;
     TRACE("Polling for event");
     for(int i = POLL_COUNT - 1; i >= 0; i--) {
-        msleep(POLL_INTERVAL);
         event = xcb_poll_for_event(dis);
         if(event) {
             enqueueEvents();
             return event;
         }
+        msleep(POLL_INTERVAL);
     }
     return NULL;
 }
@@ -117,6 +117,7 @@ bool isShuttingDown(void) {
     return shuttingDown;
 }
 void runEventLoop() {
+    flush();
     shuttingDown = 0;
     xcb_generic_event_t* event = NULL;
     applyBatchEventRules();

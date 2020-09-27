@@ -230,7 +230,7 @@ static void clientMessageSetup() {
     runEventLoop();
 }
 
-SCUTEST_SET_ENV(clientMessageSetup, fullCleanup);
+SCUTEST_SET_ENV(clientMessageSetup, simpleCleanup);
 
 SCUTEST_ITER(test_client_activate_window, 2) {
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
@@ -319,7 +319,6 @@ SCUTEST_ITER(test_client_set_window_state, 3) {
     source = (xcb_ewmh_client_source_type_t)_i;
     WindowInfo* winInfo = getHead(getAllWindows());
     sendChangeWindowStateRequest(winInfo->id, XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_STICKY, 0);
-    waitUntilIdle();
 }
 /* TODO
 SCUTEST_ITER(test_client_set_window_state2, 2) {
@@ -391,7 +390,6 @@ SCUTEST(test_client_request_frame_extents) {
     WindowInfo* winInfo = getHead(getAllWindows());
     xcb_ewmh_request_frame_extents(ewmh, defaultScreenNumber, winInfo->id);
     flush();
-    waitUntilIdle();
 }
 
 SCUTEST(test_client_request_restack) {
@@ -412,7 +410,6 @@ SCUTEST(test_client_request_restack) {
 }
 SCUTEST(test_client_request_restack_bad) {
     xcb_ewmh_request_restack_window(ewmh, defaultScreenNumber, 0, 0, XCB_STACK_MODE_ABOVE);
-    waitUntilIdle();
 }
 
 static void wmMoveSetup() {
@@ -420,7 +417,7 @@ static void wmMoveSetup() {
     movePointer(0, 0);
     floatWindow(getHead(getAllWindows()));
 }
-SCUTEST_SET_ENV(wmMoveSetup, fullCleanup);
+SCUTEST_SET_ENV(wmMoveSetup, simpleCleanup);
 SCUTEST_ITER(wm_move_resize_window, 4) {
     int deltaX = 10;
     int deltaY = 20;
@@ -452,7 +449,6 @@ SCUTEST_ITER(wm_move_resize_window, 4) {
 }
 SCUTEST(wm_move_resize_window_bad) {
     sendWMMoveResizeRequest(0, 0, 0, XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOMRIGHT, 1);
-    waitUntilIdle();
 }
 SCUTEST(wm_move_resize_window_invert) {
     movePointer(20, 40);

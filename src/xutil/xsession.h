@@ -282,6 +282,8 @@ void unmapWindow(WindowID id);
  */
 int destroyWindow(WindowID win);
 
+void destroyWindowInfo(WindowInfo* winInfo);
+
 /**
  * @return 1 iff a connection to the xserver has been opened
  */

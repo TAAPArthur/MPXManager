@@ -33,7 +33,7 @@ SCUTEST(bad_pid) {
     CRASH_ON_ERRORS = 0;
     catchError(xcb_ewmh_set_wm_pid_checked(ewmh, getPrivateWindow(), -1));
     send("dump", "");
-    send("quit", "");
+    addShutdownOnIdleRule();
     runEventLoop();
 }
 
@@ -55,9 +55,5 @@ SCUTEST(test_bad_options) {
     }
     flush();
     addShutdownOnIdleRule();
-    runEventLoop();
-}
-SCUTEST(test_send_quit) {
-    send("quit", "");
     runEventLoop();
 }

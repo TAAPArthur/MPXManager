@@ -31,7 +31,7 @@ static void functionSetup() {
     runEventLoop();
 }
 
-SCUTEST_SET_ENV(functionSetup, fullCleanup);
+SCUTEST_SET_ENV(functionSetup, simpleCleanup);
 
 SCUTEST_ITER(cycle_window, 2) {
     if(_i) {

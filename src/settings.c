@@ -9,6 +9,7 @@
 #include "functions.h"
 #include "globals.h"
 #include "devices.h"
+#include "communications.h"
 #include "layouts.h"
 #include "util/logger.h"
 #include "masters.h"
@@ -100,16 +101,15 @@ Binding DEFAULT_BINDINGS[] = {
 
     {DEFAULT_MOD_MASK, XK_c, killClientOfWindowInfo, .flags = {.windowToPass = FOCUSED_WINDOW, .noKeyRepeat = 1}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_c, killClientOfWindowInfo, .flags = { .windowToPass = EVENT_WINDOW, .noKeyRepeat = 1}},
-    //{DEFAULT_MOD_MASK | ControlMask, XK_c, destroyWindow, {.noKeyRepeat = 1}},
-    //{DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_c, destroyWindow, { .windowTarget = TARGET_WINDOW, .noKeyRepeat = 1}},
+    {DEFAULT_MOD_MASK | ControlMask, XK_c, destroyWindowInfo, .flags = {.windowToPass = FOCUSED_WINDOW, .noKeyRepeat = 1}},
+    {DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_c, destroyWindowInfo, .flags = { .windowToPass = EVENT_WINDOW, .noKeyRepeat = 1}},
     {DEFAULT_MOD_MASK, Button1, floatWindow, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK, Button3, floatWindow, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK, XK_t, sinkWindow, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | Mod1Mask, XK_t, toggleMask, {STICKY_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},
-    // TODO readd
-    //{DEFAULT_MOD_MASK, XK_u, activateNextUrgentWindow},
-    //{DEFAULT_MOD_MASK | ShiftMask, XK_y, popHiddenWindow},
+    {DEFAULT_MOD_MASK, XK_u, .func.funcBool = activateNextUrgentWindow},
+    {DEFAULT_MOD_MASK | ShiftMask, XK_y, {.funcBool = popHiddenWindow}},
     {DEFAULT_MOD_MASK, XK_y, toggleMask, HIDDEN_MASK, .flags = {.windowToPass = FOCUSED_WINDOW}},
 
     {DEFAULT_MOD_MASK, XK_F11, .func.funcBool = toggleActiveLayout, {.p = &FULL}},
@@ -146,27 +146,13 @@ Binding DEFAULT_BINDINGS[] = {
 
 void loadNormalSettings() {
     INFO("Loading normal settings");
-    //TODO
-    //printStatusMethod = defaultPrintFunction;
     addBindings(DEFAULT_BINDINGS, LEN(DEFAULT_BINDINGS));
     addBindings(CHAIN_BINDINGS, LEN(CHAIN_BINDINGS));
 }
 void addSuggestedRules() {
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(addNonDocksToActiveWorkspace, LOWER_PRIORITY));
     addAutoTileRules();
-    /* TODO
-    addAutoFocusRule();
-    addDesktopRule();
-    addEWMHRules();
-    addFloatRule();
-    addIgnoreInputOnlyWindowsRule();
-    addIgnoreNonTopLevelWindowsRule();
     addInterClientCommunicationRule();
-    addKeepTransientsOnTopRule();
-    addMoveNonTileableWindowsToWorkspaceBounds();
-    addPrintStatusRule();
-    addStickyPrimaryMonitorRule();
-    */
 }
 void __attribute__((weak)) loadSettings(void) {
     addSuggestedRules();
