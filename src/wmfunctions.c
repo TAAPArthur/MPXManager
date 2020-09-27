@@ -217,17 +217,18 @@ void switchToWorkspace(int workspaceIndex) {
     setActiveWorkspaceIndex(workspaceIndex);
 }
 
-/*TODO remove
 bool activateWorkspace(WorkspaceID workspaceIndex) {
     switchToWorkspace(workspaceIndex);
     FOR_EACH(WindowInfo*, winInfo, getActiveMasterWindowStack()) {
         if(getWorkspaceIndexOfWindow(winInfo) == workspaceIndex)
             return activateWindow(winInfo);
     }
+    ArrayList* list = getWorkspaceWindowStack(getWorkspace(workspaceIndex));
+    if(list->size)
+        return activateWindow(getHead(list));
     INFO("activateWorkspace: no window was activated");
     return 0;
 }
-*/
 
 bool activateWindow(WindowInfo* winInfo) {
     if(winInfo && isActivatable(winInfo)) {

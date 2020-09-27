@@ -103,7 +103,7 @@ bool activateWindow(WindowInfo* winInfo);
  *
  * @return The window that was activated or 0
  */
-WindowID activateWorkspace(WorkspaceID workspaceIndex);
+bool activateWorkspace(WorkspaceID workspaceIndex);
 
 
 
