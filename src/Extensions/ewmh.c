@@ -320,17 +320,6 @@ void loadSavedAtomState(WindowInfo* winInfo) {
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
 }
-static void setWMState(WindowInfo* winInfo) {
-    setWindowPropertyInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL, XCB_ICCCM_WM_STATE_NORMAL);
-}
-static void clearWMState(WindowInfo* winInfo) {
-    clearWindowProperty(winInfo->id, WM_STATE);
-}
-
-static void rememberMappedWindows(WindowInfo* winInfo) {
-    if(getWindowPropertyValueInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL))
-        addMask(winInfo, MAPPABLE_MASK);
-}
 
 void updateDockProperties(xcb_property_notify_event_t* event) {
     WindowInfo* winInfo = getWindowInfo(event->window);
@@ -401,9 +390,6 @@ void addEWMHRules() {
     addBatchEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(autoResumeWorkspace));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadSavedAtomState));
-    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(setWMState));
-    addEvent(CLIENT_MAP_DISALLOW, DEFAULT_EVENT(clearWMState));
-    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(rememberMappedWindows));
     addEvent(TRUE_IDLE, DEFAULT_EVENT(setActiveProperties));
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(setSavedWorkspaceIndex));
     addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(onClientMessage));

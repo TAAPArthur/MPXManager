@@ -55,6 +55,20 @@ SCUTEST(test_unmap) {
     runEventLoop();
     assert(!hasPartOfMask(getWindowInfo(win), MAPPED_MASK | MAPPABLE_MASK));
 }
+SCUTEST(test_rememeber_mapped_windows) {
+    addWorkspaces(2);
+    WindowID win = mapArbitraryWindow();
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    assert(hasMask(winInfo, MAPPABLE_MASK | MAPPABLE_MASK));
+    moveToWorkspace(winInfo, 1);
+    switchToWorkspace(1);
+    runEventLoop();
+    assert(hasMask(winInfo, MAPPABLE_MASK));
+    unregisterWindow(winInfo, 1);
+    scan(root);
+    assert(hasMask(getWindowInfo(win), MAPPABLE_MASK));
+}
 SCUTEST(test_hierarchy_change) {
     createMasterDevice("test");
     createMasterDevice("test2");

@@ -133,20 +133,6 @@ SCUTEST(test_client_show_desktop) {
     runEventLoop();
     assert(!isShowingDesktop());
 }
-SCUTEST(test_rememeber_mapped_windows) {
-    addWorkspaces(2);
-    WindowID win = mapArbitraryWindow();
-    scan(root);
-    WindowInfo* winInfo = getWindowInfo(win);
-    assert(hasMask(winInfo, MAPPABLE_MASK | MAPPABLE_MASK));
-    moveToWorkspace(winInfo, 1);
-    switchToWorkspace(1);
-    runEventLoop();
-    assert(hasMask(winInfo, MAPPABLE_MASK));
-    unregisterWindow(winInfo, 1);
-    scan(root);
-    assert(hasMask(getWindowInfo(win), MAPPABLE_MASK));
-}
 
 SCUTEST_ITER(auto_resume_workspace, 2) {
     addWorkspaces(2);

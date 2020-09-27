@@ -261,6 +261,23 @@ void addSyncMapStateRules() {
     addBatchEvent(TILE_WORKSPACE, DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY));
 }
 
+static void setWMState(WindowInfo* winInfo) {
+    setWindowPropertyInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL, XCB_ICCCM_WM_STATE_NORMAL);
+}
+static void clearWMState(WindowInfo* winInfo) {
+    clearWindowProperty(winInfo->id, WM_STATE);
+}
+
+static void rememberMappedWindows(WindowInfo* winInfo) {
+    if(getWindowPropertyValueInt(winInfo->id, WM_STATE, XCB_ATOM_CARDINAL))
+        addMask(winInfo, MAPPABLE_MASK);
+}
+void addRememberMappedWindowsRule() {
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(setWMState));
+    addEvent(CLIENT_MAP_DISALLOW, DEFAULT_EVENT(clearWMState));
+    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(rememberMappedWindows, HIGHER_PRIORITY));
+}
+
 void addBasicRules() {
     addEvent(IDLE, DEFAULT_EVENT(applyBatchEventRules));
     addEvent(0, DEFAULT_EVENT(logError));
@@ -288,6 +305,7 @@ void addBasicRules() {
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         addEvent(GENERIC_EVENT_OFFSET + i, DEFAULT_EVENT(onDeviceEvent));
     }
+    addRememberMappedWindowsRule();
     addXIEventSupport();
     addApplyBindingsRule(remove);
     addIgnoreOverrideRedirectAndInputOnlyWindowsRule();
