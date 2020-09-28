@@ -69,6 +69,7 @@ static Option baseOptions[] = {
     {"dump-win", dumpWindow,  .flags = FORK_ON_RECEIVE | REQUEST_INT},
     //{"find", [](const char * * str) {return findAndRaise(*str, MATCHES_CLASS, ACTION_NONE);}},
     //{"find-and-raise", [](const char * * str) {return findAndRaise(*str, MATCHES_CLASS, ACTION_ACTIVATE);}},
+    {"focus-win", (void(*)())focusWindow, .flags = REQUEST_INT},
     {"log-level", setLogLevel, .flags = VAR_SETTER | REQUEST_INT},
     {"lower", lowerWindow, .flags = REQUEST_INT},
     {"next-layout", cycleLayouts, UP},
@@ -157,10 +158,14 @@ void receiveClientMessage(xcb_client_message_event_t* event) {
         const Option* option = findOption(name, value);
         if(active) {
             WindowInfo* winInfo = getWindowInfo(active);
-            if(winInfo)
+            if(winInfo) {
+                INFO("Find client master for %d", winInfo->id);
                 setActiveMasterByDeviceID(getClientPointerForWindow(winInfo->id));
-            else
+            }
+            else {
+                INFO("Setting active master to %d", active);
                 setActiveMasterByDeviceID(active);
+            }
         }
         if(option && (ALLOW_UNSAFE_OPTIONS || !(option->flags & UNSAFE))) {
             INFO("Executing %s", option->name);

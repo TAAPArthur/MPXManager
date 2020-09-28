@@ -26,7 +26,7 @@ static void cleanup() {
 
 static void initSetup() {
     wmPid = spawnChild("./mpxmanager --log-level 0");
-    openXDisplay();
+    createXSimpleEnv();
     WAIT_UNTIL_TRUE(isMPXManagerRunning());
     waitUntilWMIdle();
 }
@@ -53,7 +53,6 @@ SCUTEST(test_long_lived) {
 }
 
 SCUTEST(remember_focus) {
-    addDefaultMaster();
     WindowID win = mapArbitraryWindow();
     waitUntilWMIdle();
     focusWindow(win);
@@ -77,6 +76,16 @@ SCUTEST_ITER(wm_restart_recursive, 3) {
         WAIT_UNTIL_TRUE(!getWindowPropertyValueInt(win, WM_WINDOW_ROLE, XCB_ATOM_CARDINAL));
         WAIT_UNTIL_TRUE(isMPXManagerRunning());
     }
+}
+SCUTEST(test_send_as) {
+    char buffer[255];
+    createMasterDevice("test");
+    createMasterDevice("test2");
+    initCurrentMasters();
+    sprintf(buffer, "./mpxmanager --log-level 0 --as %d focus-win %d", getMasterByName("test")->id, root);
+    spawnAndWait(buffer);
+    assertEquals(getActiveFocusOfMaster(getMasterByName("test")->id), root);
+    assert(getActiveFocusOfMaster(getMasterByName("test2")->id) != root);
 }
 
 SCUTEST(no_expose_on_restart) {

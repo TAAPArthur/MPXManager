@@ -4,6 +4,7 @@
 #include "test-event-helper.h"
 #include "test-x-helper.h"
 #include "../communications.h"
+#include "../wmfunctions.h"
 
 int _main(int argc, char* const* argv) ;
 
@@ -40,6 +41,7 @@ SCUTEST_ITER(lists, LEN(autoCompleteHelpers)) {
 SCUTEST_ERR(wm_no_response, WM_NOT_RESPONDING) {
     assert(MAIN("log-level", "0"));
 }
+static WindowID win;
 static void setup() {
     int pid = spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY);
     if(pid) {
@@ -48,7 +50,9 @@ static void setup() {
         MAIN("--no-event-loop");
         createMasterDevice("test");
         initCurrentMasters();
-        write(STATUS_FD, &pid, sizeof(pid));
+        win = mapWindow(createNormalWindow());
+        registerWindow(win, root, NULL);
+        write(STATUS_FD, &win, sizeof(win));
         runEventLoop();
         assert(isShuttingDown());
         assertEquals(0, waitForChild(pid));
@@ -56,8 +60,9 @@ static void setup() {
         quit(0);
     }
     else {
-        int result = read(STATUS_FD_EXTERNAL_READ, &pid, sizeof(pid));
-        assertEquals(result, sizeof(pid));
+        int result = read(STDIN_FILENO, &win, sizeof(win));
+        assertEquals(result, sizeof(win));
+        assert(win);
         clearAllRules();
     }
 }

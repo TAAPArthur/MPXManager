@@ -29,6 +29,31 @@ SCUTEST(test_send_receive_func) {
     assert(!hasOutStandingMessages());
 }
 
+SCUTEST(test_send_receive_as, .iter = 2) {
+    addShutdownOnIdleRule();
+    WindowID win = mapWindow(createNormalWindow());
+    createMasterDevice("test");
+    initCurrentMasters();
+    char buffer[16];
+    FOR_EACH(Master*, master, getAllMasters()) {
+        sprintf(buffer, "%d", win);
+        if(_i) {
+            WindowID id = mapWindow(createNormalWindow());
+            registerWindow(id, root, NULL);
+            setClientPointerForWindow(id, master->id);
+            flush();
+            sendAs("focus-win", buffer, id);
+        }
+        else {
+            sendAs("focus-win", buffer, master->id);
+        }
+        flush();
+        runEventLoop();
+        assertEquals(getActiveFocusOfMaster(master->id), win);
+        assert(!hasOutStandingMessages());
+    }
+}
+
 SCUTEST(bad_pid) {
     CRASH_ON_ERRORS = 0;
     catchError(xcb_ewmh_set_wm_pid_checked(ewmh, getPrivateWindow(), -1));
