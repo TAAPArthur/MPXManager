@@ -120,13 +120,10 @@ extern uint32_t NON_ROOT_DEVICE_EVENT_MASKS;
 /**Mask of all events we listen for on non-root windows*/
 extern uint32_t NON_ROOT_EVENT_MASKS;
 /**
- * Indicates how long we should poll for events before switching to blocking
- * We will wait POLL_INTERVAL ms POLL_COUNT times (for a total of POLL_COUNT*POLL_INTERVAL ms)
- * before deciding that a event connection is idle
+ * Indicates how long we have to wait for a new event before we trigger IDLE rules and if there is still
+ * no event how much further we have to wait for TRUE_IDLE
  */
-extern uint32_t POLL_COUNT;
-/// @copydoc POLL_COUNT
-extern uint32_t POLL_INTERVAL;
+extern uint32_t IDLE_TIMEOUT;
 /**Mask of all events we listen for on relating to Master devices
  * and the root window.
  */

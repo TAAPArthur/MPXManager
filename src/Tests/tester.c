@@ -3,7 +3,6 @@
 
 #include "tester.h"
 int main() {
-    POLL_COUNT = 2;
     char* logLevelStr = getenv("LOG_LEVEL");;
     if(logLevelStr)
         setLogLevel(atoi(logLevelStr));

@@ -155,7 +155,6 @@ SCUTEST_ITER(cycle_window, 3) {
     assertEquals(getActiveMaster()->bindings.size, 0);
 }
 SCUTEST_ITER(move_window, 2) {
-    POLL_COUNT = 1;
     sendKeyPress(getKeyCode(XK_Super_L), getActiveMasterKeyboardID());
     bool move = !_i % 2;
     WindowID win = mapArbitraryWindow();
@@ -186,7 +185,6 @@ SCUTEST(test_destroy_master_during_chain) {
     createMasterDevice("test");
     initCurrentMasters();
     setActiveMaster(getMasterByName("test"));
-    POLL_COUNT = 1;
     sendKeyPress(getKeyCode(XK_Super_L), getActiveMasterKeyboardID());
     bool move = !_i % 2;
     WindowID win = mapArbitraryWindow();

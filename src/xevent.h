@@ -11,7 +11,9 @@
 #define MPX_EVENT_QUEUE_SIZE (1 << 10)
 
 
+void addExtraEvent(int fd, int mask,  void(*callBack)());
 
+void setIdleProperty();
 void addXIEventSupport();
 
 /**

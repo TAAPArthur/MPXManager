@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
-#include "unistd.h"
+#include <sys/poll.h>
+#include <unistd.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
@@ -15,6 +16,14 @@
 #include "xevent.h"
 #include "xutil/xsession.h"
 
+
+static volatile bool shuttingDown;
+void requestShutdown() {
+    shuttingDown = 1;
+}
+bool isShuttingDown(void) {
+    return shuttingDown;
+}
 static volatile int idle;
 int getIdleCount() {
     return idle;
@@ -56,94 +65,127 @@ static xcb_generic_event_t* popEvent() {
 }
 
 
-static inline void enqueueEvents(void) {
-    TRACE("Reading events on the X queue");
-    while(pushEvent(xcb_poll_for_queued_event(dis)));
-    TRACE("Finished reading events off of the X queue");
+struct {
+    struct pollfd pollFDs[255];
+    void(*extraEventCallBacks[255])();
+    int numberOfFDsToPoll;
+} eventFDInfo = {.numberOfFDsToPoll = 1};
+static int xFD;
+void addExtraEvent(int fd, int mask,  void(*callBack)()) {
+    int index = eventFDInfo.numberOfFDsToPoll++;
+    eventFDInfo.pollFDs[index] = (struct pollfd) {fd, mask};
+    eventFDInfo.extraEventCallBacks[index] = callBack;
 }
-static inline xcb_generic_event_t* pollForEvent() {
-    xcb_generic_event_t* event;
-    TRACE("Polling for event");
-    for(int i = POLL_COUNT - 1; i >= 0; i--) {
-        event = xcb_poll_for_event(dis);
-        if(event) {
-            enqueueEvents();
-            return event;
-        }
-        msleep(POLL_INTERVAL);
+static void removeExtraEvent(int index) {
+    for(int i = index + 1; i < eventFDInfo.numberOfFDsToPoll; i++) {
+        eventFDInfo.pollFDs[i - 1] = eventFDInfo.pollFDs[i];
+        eventFDInfo.extraEventCallBacks[i - 1] = eventFDInfo.extraEventCallBacks[i];
     }
-    return NULL;
+    eventFDInfo.numberOfFDsToPoll--;
 }
-static inline xcb_generic_event_t* waitForEvent() {
-    xcb_generic_event_t* event = xcb_wait_for_event(dis);
+
+static inline int processEvents(int timeout) {
+    int numEvents;
+    assert(eventFDInfo.numberOfFDsToPoll);
+    TRACE("polling for %d events timeout %d", eventFDInfo.numberOfFDsToPoll, timeout);
+    if((numEvents = poll(eventFDInfo.pollFDs, eventFDInfo.numberOfFDsToPoll, timeout))) {
+        TRACE("FD poll returned %d events out of %d", numEvents, eventFDInfo.numberOfFDsToPoll);
+        for(int i = eventFDInfo.numberOfFDsToPoll - 1; i >= 0; i--) {
+            if(eventFDInfo.pollFDs[i].revents) {
+                if(eventFDInfo.pollFDs[i].revents & eventFDInfo.pollFDs[i].events) {
+                    eventFDInfo.extraEventCallBacks[i](eventFDInfo.pollFDs[i].fd, eventFDInfo.pollFDs[i].revents);
+                }
+                if(eventFDInfo.pollFDs[i].revents & (POLLERR | POLLNVAL | POLLHUP)) {
+                    WARN("Removing extra event index %d", i);
+                    removeExtraEvent(i);
+                }
+            }
+        }
+    }
+    return numEvents;
+}
+
+static inline xcb_generic_event_t* pollForXEvent(void) {
+    TRACE("Polling for event");
+    xcb_generic_event_t* event = xcb_poll_for_event(dis);
     if(event) {
-        enqueueEvents();
+        TRACE("Reading events on the X queue");
+        while(pushEvent(xcb_poll_for_queued_event(dis)));
+        TRACE("Finished reading events off of the X queue");
     }
     return event;
 }
 
-static inline xcb_generic_event_t* getNextEvent() {
+xcb_generic_event_t* getXEvent(void) {
     xcb_generic_event_t* event = NULL;
     if(!isEventQueueEmpty())
         event = popEvent();
     if(!event)
-        event = pollForEvent();
-    if(!event && !xcb_connection_has_error(dis)) {
-        if(applyEventRules(IDLE, NULL)) {
-            flush();
-            event = pollForEvent();
-            if(event) {
-                return event;
-            }
-        }
-        applyEventRules(TRUE_IDLE, NULL);
-        idle++;
-        setWindowPropertyInt(getPrivateWindow(), MPX_IDLE_PROPERTY, XCB_ATOM_CARDINAL, getIdleCount());
-        flush();
-        INFO("Idle %d", idle);
-        if(!isShuttingDown())
-            event = waitForEvent();
-    }
+        event = pollForXEvent();
     return event;
 }
 
-
-
-static volatile bool shuttingDown;
-void requestShutdown() {
-    shuttingDown = 1;
+void processXEvent(xcb_generic_event_t* event) {
+    int type = event->response_type & 127;
+    // TODO pre event processing rule
+    type = type < LASTEvent ? type : EXTRA_EVENT;
+    lastEventSequenceNumber = event->sequence;
+    applyEventRules(type, event);
+    free(event);
+#ifdef DEBUG
+    XSync(dpy, 0);
+    fflush(NULL);
+#endif
 }
-bool isShuttingDown(void) {
-    return shuttingDown;
+void processXEvents(void) {
+    xcb_generic_event_t* event = NULL;
+    TRACE("Process X events");
+    while(!isShuttingDown()) {
+        event = getXEvent();
+        if(!event)
+            break;
+        processXEvent(event);
+    }
+    TRACE("Finished Process X events");
+}
+
+void setIdleProperty() {
+    setWindowPropertyInt(getPrivateWindow(), MPX_IDLE_PROPERTY, XCB_ATOM_CARDINAL, getIdleCount());
 }
 void runEventLoop() {
+    xFD = xcb_get_file_descriptor(dis);
+    eventFDInfo.pollFDs[0] = (struct pollfd) {xFD, POLLIN};
+    eventFDInfo.extraEventCallBacks[0] = processXEvents;
     flush();
     shuttingDown = 0;
-    xcb_generic_event_t* event = NULL;
-    while(!isShuttingDown() && dis) {
-        event = getNextEvent();
-        if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
-            if(event)
-                free(event);
-            break;
+    INFO("Starting event loop");
+    while(!isShuttingDown()) {
+        assert(isEventQueueEmpty());
+        if(processEvents(IDLE_TIMEOUT)) {
+            continue;
         }
-        int type = event->response_type & 127;
-        // TODO pre event processing rule
-        type = type < LASTEvent ? type : EXTRA_EVENT;
-        lastEventSequenceNumber = event->sequence;
-        applyEventRules(type, event);
-        free(event);
-#ifdef DEBUG
-        XSync(dpy, 0);
-        fflush(NULL);
-#endif
-        TRACE("event processed");
+        applyEventRules(IDLE, NULL);
+        flush();
+        if(pushEvent(xcb_poll_for_queued_event(dis))) {
+            processXEvents();
+            continue;
+        }
+        if(processEvents(IDLE_TIMEOUT)) {
+            continue;
+        }
+        idle++;
+        applyEventRules(TRUE_IDLE, NULL);
+        DEBUG("Idle %d", idle);
+        flush();
+        if(!isShuttingDown()) {
+            if(pushEvent(xcb_poll_for_event(dis))) {
+                processXEvents();
+                continue;
+            }
+            processEvents(-1);
+        }
     }
-    if(isShuttingDown() || xcb_connection_has_error(dis) || !event) {
-        if(isShuttingDown())
-            INFO("shutting down");
-    }
-    INFO("Exited event loop");
+    INFO("Exiting event loop");
 }
 
 void onGenericEvent(xcb_ge_generic_event_t* event) {

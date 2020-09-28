@@ -59,7 +59,7 @@ SCUTEST_ITER(cycle_window, 2) {
 }
 
 SCUTEST(cycle_window_many, .iter = 2) {
-    POLL_COUNT = 0;
+    IDLE_TIMEOUT = 0;
     for(int i = 0; i < 2; i++)
         registerWindow(mapWindow(createNormalWindow()), root, NULL);
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {

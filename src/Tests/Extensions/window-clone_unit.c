@@ -19,7 +19,6 @@ static WindowInfo* winInfo;
 static WindowInfo* cloneInfo;
 
 static void setup() {
-    POLL_COUNT = 1;
     CRASH_ON_ERRORS = -1;
     addCloneRules();
     onDefaultStartup();
@@ -75,7 +74,6 @@ SCUTEST(mouse_enter) {
     assert(!contains(getRealGeometry(cloneInfo->id), mouse));
 }
 SCUTEST(swap_on_unmap) {
-    POLL_COUNT = 3;
     moveToWorkspace(winInfo, 1);
     runEventLoop();
     assertEquals(getWorkspaceIndexOfWindow(winInfo), 0);

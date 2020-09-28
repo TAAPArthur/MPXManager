@@ -17,7 +17,6 @@ static void setup() {
 SCUTEST_SET_ENV(setup, cleanupXServer);
 
 SCUTEST(test_send_receive_func) {
-    POLL_COUNT = 1;
     checkAndSend("dump", "");
     checkAndSend("dump", "0");
     checkAndSend("dump", "test");

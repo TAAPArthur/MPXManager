@@ -1,18 +1,18 @@
+#include <sys/eventfd.h>
+#include <sys/poll.h>
+#include <unistd.h>
 
 #include "tester.h"
 #include "test-x-helper.h"
 #include "test-event-helper.h"
 
-#include <unistd.h>
 static void setup() {
     openXDisplay();
-    setLogLevel(LOG_LEVEL_TRACE);
     addShutdownOnIdleRule();
     addXIEventSupport();
     ROOT_DEVICE_EVENT_MASKS = XCB_INPUT_XI_EVENT_MASK_HIERARCHY;
     registerForWindowEvents(root, ROOT_EVENT_MASKS);
     passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);
-    POLL_COUNT = 1;
 }
 SCUTEST_SET_ENV(setup, simpleCleanup);
 
@@ -29,6 +29,13 @@ SCUTEST(test_synthetic_event) {
     runEventLoop();
     assert(getCount());
 }
+SCUTEST(test_idle, .iter = 2, .timeout = 1) {
+    if(_i)
+        addEvent(IDLE, DEFAULT_EVENT(incrementCount));
+    else
+        addEvent(TRUE_IDLE, DEFAULT_EVENT(incrementCount));
+    runEventLoop();
+}
 
 static void test_xi_event_helper(xcb_input_hierarchy_event_t* event) {
     assert(event);
@@ -43,12 +50,6 @@ SCUTEST(test_xi_event) {
     assert(getCount());
 }
 
-static void resendEvent(xcb_generic_event_t* event) {
-    assert(event);
-    event->response_type++;
-    xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
-}
-
 SCUTEST(test_backlog_of_events, .iter = 3, .timeout = 5) {
     int totalEvents = MPX_EVENT_QUEUE_SIZE * (_i + 1);
     addEvent(XCB_UNMAP_NOTIFY, DEFAULT_EVENT(incrementCount));
@@ -58,12 +59,51 @@ SCUTEST(test_backlog_of_events, .iter = 3, .timeout = 5) {
     runEventLoop();
     assertEquals(totalEvents, getCount());
 }
-SCUTEST(test_idle) {
-    xcb_generic_event_t event = {.response_type = XCB_UNMAP_NOTIFY};
-    xcb_send_event(dis, 0, root, ROOT_EVENT_MASKS, (char*) &event);
-    flush();
-    addEvent(XCB_UNMAP_NOTIFY, DEFAULT_EVENT(resendEvent));
-    addEvent(XCB_UNMAP_NOTIFY + 1, DEFAULT_EVENT(resendEvent));
-    addEvent(XCB_UNMAP_NOTIFY + 2, DEFAULT_EVENT(requestShutdown));
-    runEventLoop();
+
+SCUTEST_SET_ENV(NULL, simpleCleanup, .timeout = 1);
+static int fds[4];
+static void verifyFDs(int i, int mask) {
+    assertEquals(fds[0], i);
+    assertEquals(mask, POLLIN);
+}
+SCUTEST(test_extra_events) {
+    pipe(fds);
+    pipe(fds + 2);
+    if(fork()) {
+        addExtraEvent(fds[0], POLLIN, incrementCount);
+        addExtraEvent(fds[0], POLLIN, verifyFDs);
+        addExtraEvent(fds[0], POLLIN, incrementCount);
+        addExtraEvent(fds[2], POLLIN, requestShutdown);
+        openXDisplay();
+        runEventLoop();
+        assertEquals(2, getCount());
+        assertEquals(0, waitForChild(0));
+        return;
+    }
+    // wakeup WM
+    write(fds[1], &fds, sizeof(int));
+    write(fds[1], &fds, sizeof(int));
+    write(fds[3], &fds, sizeof(int));
+    exit(0);
+}
+SCUTEST(test_extra_events_close) {
+    pipe(fds);
+    pipe(fds + 2);
+    if(fork()) {
+        close(fds[1]);
+        addExtraEvent(fds[0], POLLIN | POLLHUP, incrementCount);
+        addExtraEvent(fds[1], POLLIN, incrementCount);
+        addExtraEvent(fds[2], POLLIN, requestShutdown);
+        addExtraEvent(fds[0], POLLIN, incrementCount);
+        openXDisplay();
+        runEventLoop();
+        assertEquals(1, getCount());
+        assertEquals(0, waitForChild(0));
+        return;
+    }
+    close(fds[0]);
+    close(fds[1]);
+    // wakeup WM
+    write(fds[3], &fds, sizeof(int));
+    exit(0);
 }

@@ -279,6 +279,7 @@ void addRememberMappedWindowsRule() {
 }
 
 void addBasicRules() {
+    addEvent(TRUE_IDLE, DEFAULT_EVENT(setIdleProperty, LOWER_PRIORITY));
     addEvent(IDLE, DEFAULT_EVENT(applyBatchEventRules));
     addEvent(0, DEFAULT_EVENT(logError));
     addEvent(XCB_CREATE_NOTIFY, DEFAULT_EVENT(onCreateEvent));
