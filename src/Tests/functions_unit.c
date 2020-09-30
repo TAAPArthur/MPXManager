@@ -26,8 +26,6 @@ static void functionSetup() {
     top = getElement(getActiveWindowStack(), 0);
     middle = getElement(getActiveWindowStack(), 1);
     bottom = getElement(getActiveWindowStack(), 2);
-    assert(top);
-    assert(bottom);
     runEventLoop();
 }
 
@@ -150,12 +148,29 @@ SCUTEST_ITER(test_shift_focus_null, 3) {
     }
     shiftFocus(1, NULL);
 }
+SCUTEST(test_skip_non_focusable) {
+    focusWindowInfo(top);
+    focusWindowInfo(bottom);
+    removeMask(middle, INPUT_MASK);
+    runEventLoop();
+    shiftFocus(1, NULL);
+    runEventLoop();
+    assertEquals(getFocusedWindow(), top);
+    shiftFocus(1, NULL);
+    runEventLoop();
+    assertEquals(getFocusedWindow(), bottom);
+}
 
 SCUTEST(test_swap_position) {
     onWindowFocus(bottom->id);
     swapPosition(1);
     assert(getElement(getActiveWindowStack(), 0) == bottom);
     assert(pop(getActiveWindowStack()) == top);
+}
+
+SCUTEST(test_swap_position_unfocused) {
+    // don't crash
+    swapPosition(1);
 }
 
 SCUTEST(test_activate_workspace_with_mouse_smallest) {

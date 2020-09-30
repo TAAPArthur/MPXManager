@@ -18,12 +18,12 @@
 #include "xutil/window-properties.h"
 
 static int getNextIndexInStack(const ArrayList* stack, int delta, bool(*filter)(WindowInfo*)) {
-    WindowInfo* winInfo = getFocusedWindow();
-    int index = winInfo ? getIndex(stack, winInfo, sizeof(WindowID)) : -1;
+    int index = getFocusedWindow() ? getIndex(stack, getFocusedWindow(), sizeof(WindowID)) : -1;
     if(index == -1)
         index = delta > 0 ? -1 : 0;
-    FOR_EACH(WindowInfo*, winInfo, stack) {
+    for(int i = 0; i < stack->size; i++) {
         index = getNextIndex(stack, index, delta);
+        WindowInfo* winInfo = getElement(stack, index);
         if(isActivatable(winInfo) && (!filter || filter(winInfo))) {
             return index;
         }
@@ -138,7 +138,9 @@ void shiftTopAndFocus() {
 void swapPosition(int dir) {
     ArrayList* stack = getActiveWindowStack();
     if(stack->size) {
-        swapElements(stack, getNextIndexInStack(stack, 0, NULL), stack, getNextIndexInStack(stack, dir, NULL));
+        int index = getNextIndexInStack(stack, 0, NULL);
+        if(index != -1)
+            swapElements(stack, index, stack, getNextIndexInStack(stack, dir, NULL));
     }
 }
 void shiftFocus(int dir, bool(*filter)(WindowInfo*)) {
