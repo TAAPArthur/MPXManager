@@ -139,7 +139,7 @@ void removeDuplicateMonitors(void) {
             if((m1->fake || m2->fake) && (MONITOR_DUPLICATION_POLICY & CONSIDER_ONLY_NONFAKES))
                 continue;
             bool dup =
-                (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && (*(long*)&m1->base == *(long*)&m2->base) ||
+                (MONITOR_DUPLICATION_POLICY & SAME_DIMS) && memcmp(&m1->base, &m2->base, sizeof(Rect)) == 0 ||
                 (MONITOR_DUPLICATION_POLICY & INTERSECTS) && intersects(m1->base, m2->base) ||
                 (MONITOR_DUPLICATION_POLICY & CONTAINS) && (contains(m1->base, m2->base) || contains(m2->base, m1->base)) ||
                 (MONITOR_DUPLICATION_POLICY & CONTAINS_PROPER) && (containsProper(m1->base, m2->base) ||

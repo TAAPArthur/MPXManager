@@ -277,7 +277,7 @@ void retile(void) {
 bool isWorkspaceDirty(Workspace* workspace) {
     if(workspace->dirty || workspace->lastTiledLayout != getLayout(workspace))
         return 1;
-    if(isWorkspaceVisible(workspace) && *(long*)&getMonitor(workspace)->view != *(long*)&workspace->lastBounds)
+    if(isWorkspaceVisible(workspace) && memcmp(&getMonitor(workspace)->view, &workspace->lastBounds, sizeof(Rect)) != 0)
         return 1;
     FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace)) {
         if((winInfo->mask ^ winInfo->savedMask) & RETILE_MASKS)
@@ -390,7 +390,7 @@ void column(LayoutState* state) {
         full(state);
         return;
     }
-    int numCol = MAX(size, state->args->arg == 0 ? log2(size + 1) : state->args->arg);
+    int numCol = MAX(size, state->args->arg == 0 ? 31 - __builtin_clz(size + 1) : state->args->arg);
     int rem = numCol - size % numCol;
     // split of width(0) or height(1)
     int splitDim = getDimIndex(state->args);

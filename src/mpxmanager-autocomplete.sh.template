@@ -11,7 +11,6 @@ _mpxmanagerAutocomplete ()   #  By convention, the function name
     firstArg=${COMP_WORDS[1]}
 
     startOptions=
-    varOptions=
     sendOptions=
     bashOptions="-h --help --hash -v --version --recompile --restart --force-restart --name --path"
 

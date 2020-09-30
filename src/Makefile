@@ -22,7 +22,7 @@ LAYER6_SRCS := Extensions/ewmh.c Extensions/compatibility-rules.c Extensions/ext
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER11_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.c mpxmanager.c
-BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS}
+BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS} ${LAYER6_SRCS}
 SRCS := ${BASE_SRCS} config.c
 
 MEM_CHECK = valgrind -q  --error-exitcode=123
@@ -61,6 +61,8 @@ all: mpxmanager
 install-headers:
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/Extensions" Extensions/*.h
+	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/util" util/*.h
+	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/xutil" xutil/*.h
 
 install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
@@ -86,17 +88,14 @@ mpxmanager.1: mpxmanager.sh
 
 mpxmanager.sh: mpxmanager.sh.template
 	cp $< $@
-	sed -i "s/CXX=.*/CXX='${CXX}'/g" mpxmanager.sh
-	sed -i "s/CFLAGS=.*/CFLAGS='${CFLAGS}'/g" mpxmanager.sh
-	sed -i "s/LDFLAGS=.*/LDFLAGS='${LDFLAGS}'/g" mpxmanager.sh
-	sed -i "s/CPPFLAGS=.*/CPPFLAGS='${CPPFLAGS}'/g" mpxmanager.sh
+	sed -i "s/CFLAGS:-__place__holder/CFLAGS:-'${CFLAGS}'/g" mpxmanager.sh
+	sed -i "s/LDFLAGS:-__place__holder/LDFLAGS:-'${LDFLAGS}'/g" mpxmanager.sh
 	sed -i "s/GIT_HASH=.*/GIT_HASH=$$(git rev-parse --short HEAD)/g" mpxmanager.sh
 
 mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.c communications.c | mpxmanager
 	cp $< $@
 	sed -i "s/startOptions=.*/startOptions=\"$$(echo $$(./mpxmanager --list-start-options 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'| sed -E 's/((\w|-)+\W)/--\1/g'))\"/g"  mpxmanager-autocomplete.sh
 	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 | sed 's/[,}{]//g' ))\"/g"  mpxmanager-autocomplete.sh
-	sed -Ei "s/(varOptions)=.*/\1=\"$$(echo $$(./mpxmanager --list-vars 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'))\"/g"  mpxmanager-autocomplete.sh
 
 mpxmanager: $(BASE_SRCS:.c=.o)
 	${CC} ${CFLAGS} $^ -o $@ ${LDFLAGS}
@@ -109,7 +108,7 @@ libmpxmanager.a: $(BASE_SRCS:.c=.o)
 	ar rcs libmpxmanager.a $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
-	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${CFLAGS} ${LDFLAGS}
+	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS}
 
 
 test: CFLAGS := ${TESTFLAGS}
@@ -119,23 +118,21 @@ functionalTest: CFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o Tests/compatibility_test.o |libmpx-patch.so
 	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
-functional.out: PRELOAD := $$(pwd)/libmpx-patch.so
 functional.out: functionalTest
-	$(call RUN_TEST, ./$^ )
+	LD_PRELOAD=$$(pwd)/libmpx-patch.so $(call RUN_TEST, ./$^ )
 
 endToEndTest: CFLAGS := ${TESTFLAGS}
 endToEndTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/endToEnd_test.o |libmpx-patch.so
 	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 endToEndTest.out: CFLAGS := ${TESTFLAGS}
-endToEndTest.out: PRELOAD := $$(pwd)/libmpx-patch.so
 endToEndTest.out: endToEndTest mpxmanager
 	$(call RUN_TEST, ./$< )
 	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
 	touch $@
 
 unitTest: CFLAGS := ${TESTFLAGS}
-unitTest: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(TEST_SRCS)) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o) | libmpx-test.so
+unitTest: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(TEST_SRCS)) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
 	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 unitTest.out: unitTest
@@ -143,7 +140,7 @@ unitTest.out: unitTest
 	$(if $(TEST_FUNC),exit 1)
 
 unitTestExtensions: CFLAGS := ${TESTFLAGS}
-unitTestExtensions: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(LAYER6_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o) | libmpx-test.so
+unitTestExtensions: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(LAYER6_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
 	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 unitTestExtensions.out: unitTestExtensions

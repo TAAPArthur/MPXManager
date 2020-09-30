@@ -120,8 +120,8 @@ void dumpMonitor(Monitor* monitor) {
     if(!isMonitorActive(monitor))
         printf("inactive ");
     dumpRect(monitor->base);
-    if(*(long*)&monitor->base != *(long*)&monitor->view)
-        dumpRect(monitor->base);
+    if(memcmp(&monitor->base, &monitor->view, sizeof(Rect)))
+        dumpRect(monitor->view);
     printf("\n");
 }
 

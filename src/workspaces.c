@@ -129,4 +129,7 @@ void swapMonitors(WorkspaceID index1, WorkspaceID index2) {
     if(!monitor2)
         setMonitor(getWorkspace(index1), monitor2);
 }
+void setWorkspaceName(WorkspaceID id, const char* name) {
+    strcpy(getWorkspace(id)->name, name);
+}
 

@@ -104,10 +104,8 @@ getopts "$optspec" optchar || run $@
                     mkdir -p $MPXMANAGER_HOME
                     shift
                     [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
-                    export CXX=
-                    export CXXFLAGS=
-                    export CPPFLAGS=
-                    export LDFLAGS=
+                    export CFLAGS=${CFLAGS:-__place__holder}
+                    export LDFLAGS=${LDFLAGS:-__place__holder}
                     if [[ ! -f $MPXMANAGER_LAST_COMPILED_VERSION || "$GIT_HASH" != $(cat $MPXMANAGER_LAST_COMPILED_VERSION) ]]; then
                         make -f /usr/share/mpxmanager/sample-makefile -C $MPXMANAGER_HOME clean
                         echo -n $GIT_HASH > $MPXMANAGER_LAST_COMPILED_VERSION

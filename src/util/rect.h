@@ -7,6 +7,7 @@
 #define MPX_RECT_H_
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 /**
  * holds top-left coordinates and width/height of the bounding box
@@ -21,6 +22,9 @@ typedef struct Rect {
     /// height of the bounding box
     uint16_t height;
 } Rect;
+static inline bool isRectEqual(Rect a, Rect b) {
+    return memcmp(&a, &b, sizeof(Rect)) == 0;
+}
 
 /**
  * Copies the values of this rect into arr
