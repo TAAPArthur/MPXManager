@@ -30,7 +30,7 @@ static ArrayList masterInfoList;
 static MPXMasterInfo* newMPXMasterInfo(const char* name, int focusColor) {
     MPXMasterInfo* info = calloc(sizeof(MPXMasterInfo), 1);
     info->focusColor = focusColor;
-    strncpy(info->masterName, name, MAX_NAME_LEN - 1);
+    strcpy(info->masterName, name);
     addElement(&masterInfoList, info);
     return info;
 }
