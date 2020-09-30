@@ -117,8 +117,8 @@ Binding DEFAULT_BINDINGS[] = {
     {DEFAULT_MOD_MASK | ShiftMask, XK_F, toggleMask, {ROOT_FULLSCREEN_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_F11, toggleMask, {FULLSCREEN_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},
 
-    {DEFAULT_MOD_MASK, XK_space, cycleLayouts, {DOWN}},
-    {DEFAULT_MOD_MASK | ShiftMask, XK_space, cycleLayouts, {UP}},
+    {DEFAULT_MOD_MASK, XK_space, cycleActiveLayouts, {DOWN}},
+    {DEFAULT_MOD_MASK | ShiftMask, XK_space, cycleActiveLayouts, {UP}},
 
     {DEFAULT_MOD_MASK, XK_Return, shiftTopAndFocus},
 
