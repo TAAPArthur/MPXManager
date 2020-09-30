@@ -51,11 +51,7 @@ typedef struct {
     struct Binding* bindings;
     int size;
 } ChainMembers;
-typedef struct Binding {
-    /**Modifier to match on*/
-    Modifier mod;
-    /**Either Button or KeySym to match**/
-    ButtonOrKeySym buttonOrKey;
+typedef struct BindingFunc {
     union {
         void(*func)();
         int(*funcInt)();
@@ -63,6 +59,14 @@ typedef struct Binding {
     } func;
     Arg arg;
     Arg arg2;
+} BindingFunc;
+
+typedef struct Binding {
+    /**Modifier to match on*/
+    Modifier mod;
+    /**Either Button or KeySym to match**/
+    ButtonOrKeySym buttonOrKey;
+    BindingFunc func;
     BindingFlags flags;
     ChainMembers chainMembers;
     /**Converted detail of key bindings. Should not be set manually*/
@@ -115,6 +119,11 @@ bool checkBindings(const BindingEvent* userEvent);
 
 
 void enterChain(Binding* binding, ArrayList* masterBindings);
+
+void callBindingWithWindow(const BindingFunc* bindingFunc, EventWindow windowToPass, const BindingEvent* event);
+static inline void callBinding(const BindingFunc* bindingFunc) {
+    callBindingWithWindow(bindingFunc, NO_WINDOW, NULL);
+}
 
 
 

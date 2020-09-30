@@ -172,6 +172,7 @@ void cycleLayouts(Workspace* workspace, int dir);
 static inline void cycleActiveLayouts(int dir) {
     cycleLayouts(getActiveWorkspace(), dir);
 }
+static inline void toggleActiveLayoutOrCycle(Layout* layout) {if(!toggleActiveLayout(layout))cycleActiveLayouts(1);}
 
 
 

@@ -96,7 +96,7 @@ Binding DEFAULT_BINDINGS[] = {
     STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
 
     {WILDCARD_MODIFIER, Button1, activateWorkspaceUnderMouse, .flags = {.shortCircuit = 0, .noGrab = 1}},
-    {WILDCARD_MODIFIER, Button1, .func.funcBool = activateWindow, .flags = {.shortCircuit = 0, .noGrab = 1,  .windowToPass = EVENT_WINDOW, }},
+    {WILDCARD_MODIFIER, Button1, {.func.funcBool = activateWindow}, .flags = {.shortCircuit = 0, .noGrab = 1,  .windowToPass = EVENT_WINDOW, }},
     {0, Button1, replayPointerEvent},
 
     {DEFAULT_MOD_MASK, XK_c, killClientOfWindowInfo, .flags = {.windowToPass = FOCUSED_WINDOW, .noKeyRepeat = 1}},
@@ -108,11 +108,11 @@ Binding DEFAULT_BINDINGS[] = {
     {DEFAULT_MOD_MASK | ShiftMask, Button1, sinkWindow, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK, XK_t, sinkWindow, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | Mod1Mask, XK_t, toggleMask, {STICKY_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},
-    {DEFAULT_MOD_MASK, XK_u, .func.funcBool = activateNextUrgentWindow},
-    {DEFAULT_MOD_MASK | ShiftMask, XK_y, {.funcBool = popHiddenWindow}},
+    {DEFAULT_MOD_MASK, XK_u, {.func.funcBool = activateNextUrgentWindow}},
+    {DEFAULT_MOD_MASK | ShiftMask, XK_y, {.func.funcBool = popHiddenWindow}},
     {DEFAULT_MOD_MASK, XK_y, toggleMask, HIDDEN_MASK, .flags = {.windowToPass = FOCUSED_WINDOW}},
 
-    {DEFAULT_MOD_MASK, XK_F11, .func.funcBool = toggleActiveLayout, {.p = &FULL}},
+    {DEFAULT_MOD_MASK, XK_F11, {.func.funcBool = toggleActiveLayout, {.p = &FULL}}},
     {DEFAULT_MOD_MASK, XK_F, toggleMask, {FULLSCREEN_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_F, toggleMask, {ROOT_FULLSCREEN_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_F11, toggleMask, {FULLSCREEN_MASK}, .flags = {.windowToPass = FOCUSED_WINDOW}},

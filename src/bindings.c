@@ -61,21 +61,21 @@ void grabChain(Binding* binding, bool ungrab) {
                 grabDevice(getActiveMasterKeyboardID(), KEYBOARD_MASKS);
     }
 }
-static void callBinding(const Binding* binding, const BindingEvent* event) {
-    switch(binding->flags.windowToPass) {
+void callBindingWithWindow(const BindingFunc* bindingFunc, EventWindow windowToPass, const BindingEvent* event) {
+    switch(windowToPass) {
         case NO_WINDOW:
-            (void)binding->func.func(binding->arg, binding->arg2);
+            (void)bindingFunc->func.func(bindingFunc->arg, bindingFunc->arg2);
             break;
         case DEFAULT_WINDOW:
         case FOCUSED_WINDOW:
             if(getFocusedWindow())
-                (void)binding->func.func(getFocusedWindow(), binding->arg, binding->arg2);
+                (void)bindingFunc->func.func(getFocusedWindow(), bindingFunc->arg, bindingFunc->arg2);
             else
                 INFO("Not calling matching binding because windowInfo is NULL");
             break;
         case EVENT_WINDOW:
             if(event->winInfo)
-                (void)binding->func.func(event->winInfo, binding->arg, binding->arg2);
+                (void)bindingFunc->func.func(event->winInfo, bindingFunc->arg, bindingFunc->arg2);
             else
                 INFO("Not calling matching binding because windowInfo is NULL");
             break;
@@ -104,7 +104,7 @@ bool checkBindings(const BindingEvent* event) {
         if(matches(binding, event)) {
             TRACE("Found match");
             LOG_RUN(LOG_LEVEL_TRACE, dumbBinding(binding));
-            callBinding(binding, event);
+            callBindingWithWindow(&binding->func, binding->flags.windowToPass, event);
             if(binding->flags.popChain) {
                 assert(masterBindings->size);
                 Binding* parent = pop(masterBindings);
