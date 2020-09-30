@@ -163,19 +163,21 @@ void dumpWindowInfo(WindowInfo* winInfo) {
     printf("}\n");
 }
 void dumpWindowFilter(WindowMask filterMask) {
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())
-    if(!filterMask || hasMask(winInfo, filterMask))
-        dumpWindowInfo(winInfo);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        if(!filterMask || hasMask(winInfo, filterMask))
+            dumpWindowInfo(winInfo);
+    }
 }
 void dumpWindowByClass(const char* match) {
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows())
-    if(!strcmp(winInfo->className, match) || !strcmp(winInfo->instanceName, match))
-        dumpWindowInfo(winInfo);
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        if(!strcmp(winInfo->className, match) || !strcmp(winInfo->instanceName, match))
+            dumpWindowInfo(winInfo);
+    }
 }
 void dumpWindow(WindowID win) {
     WindowInfo* winInfo = getWindowInfo(win);
     if(!winInfo) {
-        printf("Could not find window");
+        printf("Could not find window\n");
         return;
     }
     dumpWindowInfo(winInfo);

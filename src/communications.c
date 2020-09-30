@@ -62,8 +62,8 @@ void callOption(const Option* o, const char* p) {
 }
 
 static Option baseOptions[] = {
-    {"dump", dumpWindow, MAPPABLE_MASK, .flags = FORK_ON_RECEIVE},
-    {"dump", dumpWindow, .flags = FORK_ON_RECEIVE | REQUEST_STR},
+    {"dump", dumpWindowFilter, MAPPABLE_MASK, .flags = FORK_ON_RECEIVE},
+    {"dump", dumpWindowByClass, .flags = FORK_ON_RECEIVE | REQUEST_STR},
     {"dump-master", dumpMaster, 0, .flags = FORK_ON_RECEIVE},
     {"dump-rules", dumpRules,  .flags = FORK_ON_RECEIVE},
     {"dump-win", dumpWindow,  .flags = FORK_ON_RECEIVE | REQUEST_INT},
@@ -179,6 +179,7 @@ void receiveClientMessage(xcb_client_message_event_t* event) {
             fflush(NULL);
             int stdout = -1;
             if((option->flags & FORK_ON_RECEIVE)) {
+                fflush(NULL);
                 stdout = dup(STDOUT_FILENO);
                 char outputFile[64] = {"/dev/null"};
                 if(callerPID) {
@@ -199,6 +200,7 @@ void receiveClientMessage(xcb_client_message_event_t* event) {
             }
             callOption(option, value);
             if((option->flags & FORK_ON_RECEIVE)) {
+                fflush(NULL);
                 if(dup2(stdout, STDOUT_FILENO) == -1) {
                     perror("Could not revert back stdout");
                 }
