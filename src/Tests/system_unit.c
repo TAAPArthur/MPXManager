@@ -35,7 +35,7 @@ SCUTEST(test_child_can_outlive_parent) {
     pipe(fds);
     pipe(fds + 2);
     if(!fork()) {
-        if(!spawn(NULL)) {
+        if(!spawnChild(NULL)) {
             int result = read(fds[0], &buffer, sizeof(buffer));
             assertEquals(result, sizeof(buffer));
             write(fds[3], &buffer, sizeof(buffer));
@@ -131,7 +131,7 @@ SCUTEST_ITER(spawn_env, 2) {
     onWindowFocus(winInfo->id);
     addFakeMonitor((Rect) {0, 0, 1, (uint16_t)(large ? -1 : 1)});
     assignUnusedMonitorsToWorkspaces();
-    int pid = spawn(NULL);
+    int pid = spawnChild(NULL);
     if(!pid) {
         char buffer[255];
         sprintf(buffer, "%d", getActiveMasterKeyboardID());

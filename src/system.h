@@ -91,7 +91,7 @@ int waitForChild(int pid);
  * @param command
  * @return the pid of the new process
  */
-int spawn(const char* command);
+void spawn(const char* command);
 /**
  * @copydoc spawn(const char*)
  *

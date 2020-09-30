@@ -146,8 +146,8 @@ static int _spawn(const char* command, ChildRedirection spawnPipe, bool preserve
     return pid;
 }
 
-int spawn(const char* command) {
-    return _spawn(command, 0, 0, 0);
+void spawn(const char* command) {
+    _spawn(command, 0, 0, 0);
 }
 int spawnChild(const char* command) {
     return _spawn(command, NO_REDIRECTION, 1, 0);
