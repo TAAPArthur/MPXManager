@@ -25,7 +25,7 @@ void addWorkspaces(int num) {
     for(int i = 0; i < num; i++) {
         Workspace* workspace = malloc(sizeof(Workspace));
         *workspace = (Workspace) {.id = getAllWorkspaces()->size};
-        sprintf(workspace->name, "%d", workspace->id);
+        sprintf(workspace->name, "%d", workspace->id + 1);
         addElement(&workspaces, workspace);
     }
 }

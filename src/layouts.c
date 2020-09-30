@@ -169,7 +169,7 @@ static uint32_t applyMasksToConfig(const WindowInfo* winInfo, const Monitor* m, 
         XCB_CONFIG_WINDOW_BORDER_WIDTH;
 }
 
-static inline Rect getRelativeRegion(const Rect bounds, const Rect region, bool percent) {
+Rect getRelativeRegion(const Rect bounds, const Rect region, bool percent) {
     Rect config = {0, 0, 0, 0};
     for(int i = 0; i < 4; i++) {
         short fixedValue = (&region.x)[i];

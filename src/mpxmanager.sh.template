@@ -79,7 +79,7 @@ displayHash(){
 
 MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-mpxmanager}
 MPXMANAGER_HOME=${MPXMANAGER_HOME:-$HOME/.config/mpxmanager}
-MPXMANAGER_CONFIG=${MPXMANAGER_CONFIG:-$MPXMANAGER_HOME/config.cpp}
+MPXMANAGER_CONFIG=${MPXMANAGER_CONFIG:-$MPXMANAGER_HOME/config.c}
 MPXMANAGER_LAST_COMPILED_VERSION=$MPXMANAGER_HOME/.last_compiled_verision
 optspec=":vhs-:"
 
@@ -103,7 +103,7 @@ getopts "$optspec" optchar || run $@
                 recompile)
                     mkdir -p $MPXMANAGER_HOME
                     shift
-                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.cpp $MPXMANAGER_CONFIG
+                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.c $MPXMANAGER_CONFIG
                     export CFLAGS=${CFLAGS:-__place__holder}
                     export LDFLAGS=${LDFLAGS:-__place__holder}
                     if [[ ! -f $MPXMANAGER_LAST_COMPILED_VERSION || "$GIT_HASH" != $(cat $MPXMANAGER_LAST_COMPILED_VERSION) ]]; then

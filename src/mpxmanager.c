@@ -1,7 +1,3 @@
-/**
- * @file mpxmanager.cpp
- * Entry point for MPXManager
- */
 #include <assert.h>
 #include <getopt.h>
 #include <string.h>

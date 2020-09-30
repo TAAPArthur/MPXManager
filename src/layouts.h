@@ -233,4 +233,18 @@ void retileAllDirtyWorkspaces();
 
 void registerDefaultLayouts();
 
+/**
+ * If percent, the field corresponding to the bitmask will be treated as a percent of region.
+ * ie Rect(0, 25, 50, 100).getRelativeRegion({0, 0, 100, 200}) will yield {0, 50, 50, 200} if percent is 31
+ * Else If region contains only positive numbers, then region is returned
+ * Else If region contains negative numbers then it "wraps around" ie {-1, -1, 1, 1} refers the to the bottom right region
+ * and {1, 1, -1, -1} refers to everything except the top-left most region
+ * If a region has 0 for the width or height, then that index is set to this rect's width/height
+ *
+ * @param region
+ *
+ * @return the region described by region
+ */
+Rect getRelativeRegion(const Rect bounds, const Rect region, bool percent);
+
 #endif /* LAYOUTS_H_ */
