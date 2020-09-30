@@ -29,8 +29,8 @@ void safePipe(int* fds) {
         perror(NULL);
         err(SYS_CALL_FAILED, "Ran out of file descriptors");
     }
-    fcntl(fds[0], F_SETFD, O_CLOEXEC);
-    fcntl(fds[1], F_SETFD, O_CLOEXEC);
+    fcntl(fds[0], F_SETFD, FD_CLOEXEC);
+    fcntl(fds[1], F_SETFD, FD_CLOEXEC);
     INFO("Created pipes %d\n", fds[1]);
 }
 
