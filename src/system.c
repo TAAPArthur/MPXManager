@@ -156,11 +156,6 @@ int spawnPipe(const char* command, ChildRedirection redirection) {
     return _spawn(command, redirection, 1, 0);
 }
 
-int notify(const char* summary, const char* body) {
-    sprintf(buffer, "%s '%s' '%s'", NOTIFY_CMD, summary, body);
-    return spawn(buffer);
-}
-
 int waitForChild(int pid) {
     DEBUG("Waiting for process: %d", pid);
     int status = 0;

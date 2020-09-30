@@ -114,15 +114,6 @@ static inline int spawnAndWait(const char* command) {return waitForChild(spawnCh
 int spawnPipe(const char* command, ChildRedirection ioRedirection);
 
 /**
- * Calls NOTIFY_CMD with summary and body
- *
- * NOTIFY_CMD is a cmd like notify-send to give the user notifications
- * @param summary
- * @param body
- */
-int notify(const char* summary, const char* body);
-
-/**
  * Dups stdout and stderror to /dev/null
  */
 void suppressOutput(void) ;

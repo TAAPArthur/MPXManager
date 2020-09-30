@@ -77,9 +77,6 @@ extern const char* LD_PRELOAD_PATH;
 /// File path of config file dictating ideal master(s)/slaves configuration
 extern const char* MASTER_INFO_PATH;
 
-/// The notification cmd (and options) to use with the notify()
-extern const char* NOTIFY_CMD;
-
 /// The default SHELL; This defaults to the SHELL environment var
 extern const char* SHELL;
 

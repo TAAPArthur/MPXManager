@@ -12,8 +12,6 @@ bool STEAL_WM_SELECTION = 0;
 int16_t DEFAULT_BORDER_WIDTH = 1;
 const char* LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
 const char* MASTER_INFO_PATH = "$HOME/.config/mpxmanager/master-info.txt";
-const char* NOTIFY_CMD = "notify-send -h string:x-canonical-private-synchronous:MPX_NOTIFICATIONS -a "
-    WINDOW_MANAGER_NAME;
 const char* SHELL = "/bin/sh";
 uint32_t AUTO_FOCUS_NEW_WINDOW_TIMEOUT = 1000;
 uint32_t CRASH_ON_ERRORS = 0;

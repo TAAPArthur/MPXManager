@@ -56,13 +56,6 @@ SCUTEST(test_no_zombies) {
     assertEquals(-1, waitpid(-1, NULL, WNOHANG));
 }
 
-SCUTEST(test_notify) {
-    suppressOutput();
-    NOTIFY_CMD = "echo";
-    assertEquals(0, waitForChild(notify("110", "")));
-    assertEquals(0, waitForChild(notify("", "110")));
-}
-
 SCUTEST(test_spawn_wait) {
     assert(spawnAndWait("exit 0") == 0);
     assert(spawnAndWait("exit 1") == 1);
