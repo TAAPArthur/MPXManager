@@ -35,12 +35,6 @@ typedef struct FindAndRaiseArg {
     bool includeNonActivatable;
 } FindAndRaiseArg ;
 
-/// Determines what WindowInfo field to match on
-typedef enum RaiseOrRunType {
-    MATCHES_CLASS,
-    MATCHES_TITLE,
-    MATCHES_ROLE,
-} RaiseOrRunType ;
 typedef struct {
     bool(*func)();
     Arg arg;
@@ -92,7 +86,8 @@ bool matchesRole(WindowInfo* winInfo, const char* str);
  *
  * @return 0 iff a window was found else the pid of the spawned process
  */
-int raiseOrRun2(const char* s, const char* cmd, RaiseOrRunType matchType);
+int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, const char*));
+
 /**
  * Tries to raise a window with class (or resource) name equal to s.
  * If not it spawns s
@@ -101,7 +96,10 @@ int raiseOrRun2(const char* s, const char* cmd, RaiseOrRunType matchType);
  *
  * @return 0 iff the program was spawned
  */
-static inline int raiseOrRun(const char* s) { return raiseOrRun2(s, s, MATCHES_CLASS); }
+static inline void raiseOrRun(const char* s) { raiseOrRunFunc(s, s, matchesClass); }
+static inline void raiseOrRun2(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, matchesClass); }
+static inline void raiseOrRunRole(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, matchesRole); }
+static inline void raiseOrRunTitle(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, matchesTitle); }
 /**
  * Freezes and cycle through windows in the active master's& stack
  * @param delta

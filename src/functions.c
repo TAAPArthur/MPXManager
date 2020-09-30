@@ -102,25 +102,15 @@ bool matchesRole(WindowInfo* winInfo, const char* str) {
     return strcmp(winInfo->role, str) == 0;
 }
 
-static inline bool(*getMatchType(RaiseOrRunType matchType))(WindowInfo*, const char*) {
-    switch(matchType) {
-        default:
-        case MATCHES_CLASS:
-            return matchesClass;
-        case MATCHES_TITLE:
-            return matchesTitle;
-        case MATCHES_ROLE:
-            return matchesRole;
-    }
-}
-int raiseOrRun2(const char* s, const char* cmd, RaiseOrRunType matchType) {
+int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, const char*)) {
     if(s[0] == '$') {
         const char* c = getenv(s + 1);
         s = c ? c : "";
     }
-    WindowFunctionArg arg = {getMatchType(matchType), .arg.str = s};
+    WindowFunctionArg arg = {func, .arg.str = s};
     if(!findAndRaise(&arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0})) {
-        return spawn(cmd);
+        spawn(cmd);
+        return 1;
     }
     return 0;
 }

@@ -109,7 +109,6 @@ SCUTEST_ITER(test_raiseOrRun, 16) {
     bool env = _i & 2;
     bool title = _i & 4;
     bool role = _i & 8;
-    RaiseOrRunType type =  role ? MATCHES_ROLE  : title ? MATCHES_TITLE : MATCHES_CLASS;
     if(!run) {
         if(role)
             setWindowRole(winInfo->id, s);
@@ -124,7 +123,7 @@ SCUTEST_ITER(test_raiseOrRun, 16) {
         setenv(envVar, s, 1);
         s = sAsEnvVar;
     }
-    int pid = raiseOrRun2(s, cmd, type);
+    int pid = raiseOrRunFunc(s, cmd, role ? matchesRole : title ? matchesTitle : matchesClass);
     assertEquals(!run, !pid);
 }
 
