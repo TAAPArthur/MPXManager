@@ -221,18 +221,21 @@ void switchToWorkspace(int workspaceIndex) {
     setActiveWorkspaceIndex(workspaceIndex);
 }
 
-bool activateWorkspace(WorkspaceID workspaceIndex) {
+void activateWorkspace(WorkspaceID workspaceIndex) {
     switchToWorkspace(workspaceIndex);
     FOR_EACH(WindowInfo*, winInfo, getActiveMasterWindowStack()) {
-        if(getWorkspaceIndexOfWindow(winInfo) == workspaceIndex)
-            return activateWindow(winInfo);
+        if(getWorkspaceIndexOfWindow(winInfo) == workspaceIndex) {
+            activateWindow(winInfo);
+            return;
+        }
     }
     ArrayList* list = getWorkspaceWindowStack(getWorkspace(workspaceIndex));
     if(list->size)
-        return activateWindow(getHead(list));
-    INFO("activateWorkspace: no window was activated");
-    return 0;
+        activateWindow(getHead(list));
+    else
+        INFO("activateWorkspace: no window was activated");
 }
+
 
 bool activateWindow(WindowInfo* winInfo) {
     if(winInfo && isActivatable(winInfo)) {
@@ -247,6 +250,9 @@ bool activateWindow(WindowInfo* winInfo) {
         return focusWindowInfo(winInfo);
     }
     return 0;
+}
+void activateWindowUnchecked(WindowInfo* winInfo) {
+    activateWindow(winInfo);
 }
 
 

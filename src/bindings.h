@@ -52,11 +52,7 @@ typedef struct {
     int size;
 } ChainMembers;
 typedef struct BindingFunc {
-    union {
-        void(*func)();
-        int(*funcInt)();
-        bool(*funcBool)();
-    } func;
+    void(*func)();
     Arg arg;
     Arg arg2;
 } BindingFunc;

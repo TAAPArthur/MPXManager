@@ -230,11 +230,11 @@ SCUTEST(test_send_to_workspace_by_name) {
 SCUTEST(pop_hidden) {
     WindowInfo* winInfo = getHead(getAllWindows());
     addMask(winInfo, HIDDEN_MASK);
-    assert(popHiddenWindow());
+    popHiddenWindow();
     assert(!hasMask(winInfo, HIDDEN_MASK));
 }
 SCUTEST(activate_urgent) {
     addMask(middle, URGENT_MASK);
-    assert(activateNextUrgentWindow());
+    activateNextUrgentWindow();
     assertEquals(getActiveFocus(), middle->id);
 }

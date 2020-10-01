@@ -92,6 +92,8 @@ void switchToWorkspace(int workspaceIndex);
  */
 bool activateWindow(WindowInfo* winInfo);
 
+void activateWindowUnchecked(WindowInfo* winInfo);
+
 /**
  * Combination of switchToWorkspace and activateWindow
  *
@@ -99,9 +101,8 @@ bool activateWindow(WindowInfo* winInfo);
  *
  * @param workspaceIndex
  *
- * @return The window that was activated or 0
  */
-bool activateWorkspace(WorkspaceID workspaceIndex);
+void activateWorkspace(WorkspaceID workspaceIndex);
 
 
 

@@ -64,18 +64,18 @@ void grabChain(Binding* binding, bool ungrab) {
 void callBindingWithWindow(const BindingFunc* bindingFunc, EventWindow windowToPass, const BindingEvent* event) {
     switch(windowToPass) {
         case NO_WINDOW:
-            (void)bindingFunc->func.func(bindingFunc->arg, bindingFunc->arg2);
+            bindingFunc->func(bindingFunc->arg, bindingFunc->arg2);
             break;
         case DEFAULT_WINDOW:
         case FOCUSED_WINDOW:
             if(getFocusedWindow())
-                (void)bindingFunc->func.func(getFocusedWindow(), bindingFunc->arg, bindingFunc->arg2);
+                bindingFunc->func(getFocusedWindow(), bindingFunc->arg, bindingFunc->arg2);
             else
                 INFO("Not calling matching binding because windowInfo is NULL");
             break;
         case EVENT_WINDOW:
             if(event->winInfo)
-                (void)bindingFunc->func.func(event->winInfo, bindingFunc->arg, bindingFunc->arg2);
+                bindingFunc->func(event->winInfo, bindingFunc->arg, bindingFunc->arg2);
             else
                 INFO("Not calling matching binding because windowInfo is NULL");
             break;

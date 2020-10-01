@@ -116,14 +116,14 @@ static inline void cycleWindows(int delta) {cycleWindowsMatching(delta, NULL);}
  *
  * @return 1 iff there was an urgent window
  */
-bool activateNextUrgentWindow(void);
+void activateNextUrgentWindow(void);
 /**
  * Removes HIDDEN_MASK from a recent hidden window
  * @param action
  *
  * @return 1 a window was found and changed
  */
-bool popHiddenWindow(void);
+void popHiddenWindow(void);
 
 //////Run or Raise code
 
