@@ -75,6 +75,9 @@ WorkspaceID getWorkspaceIndexOfWindow(const WindowInfo* winInfo) {
     Workspace* w = getWorkspaceOfWindow(winInfo);
     return w ? w->id : NO_WORKSPACE;
 }
+void markActiveWorkspaceDirty() {
+    getActiveWorkspace()->dirty = 1;
+}
 
 void markWorkspaceOfWindowDirty(WindowInfo* winInfo) {
     getWorkspaceOfWindow(winInfo)->dirty = 1;

@@ -210,6 +210,8 @@ static inline void toggleWorkspaceMask(Workspace* workspace, WindowMask mask) {
         removeWorkspaceMask(workspace, mask);
     else addWorkspaceMask(workspace, mask);
 }
+
+void markActiveWorkspaceDirty();
 void markWorkspaceOfWindowDirty(WindowInfo* winInfo);
 void setWorkspaceName(WorkspaceID id, const char* name);
 #endif

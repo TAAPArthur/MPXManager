@@ -133,14 +133,17 @@ void shiftTopAndFocus() {
     if(stack->size) {
         shiftToHead(stack, getNextIndexInStack(stack, getHead(stack) == getFocusedWindow(), NULL));
         activateWindow(getHead(stack));
+        markActiveWorkspaceDirty();
     }
 }
 void swapPosition(int dir) {
     ArrayList* stack = getActiveWindowStack();
     if(stack->size) {
         int index = getNextIndexInStack(stack, 0, NULL);
-        if(index != -1)
+        if(index != -1) {
             swapElements(stack, index, stack, getNextIndexInStack(stack, dir, NULL));
+            markActiveWorkspaceDirty();
+        }
     }
 }
 void shiftFocus(int dir, bool(*filter)(WindowInfo*)) {
