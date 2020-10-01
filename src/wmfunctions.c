@@ -146,13 +146,14 @@ static bool focusNextVisibleWindow(Master* master, WindowInfo* ignore) {
     return 0;
 }
 void updateFocusForAllMasters(WindowInfo* winInfo) {
-    DEBUG("Trying to update focus from %d", (winInfo ? winInfo->id : 0));
     FOR_EACH(Master*, master, getAllMasters()) {
-        if(!winInfo || getFocusedWindowOfMaster(master) == winInfo)
+        if(getFocusedWindowOfMaster(master) == winInfo) {
+            DEBUG("Trying to update focus from %d for Master %d", (winInfo ? winInfo->id : 0), master->id);
             if(!focusNextVisibleWindow(master, winInfo))
                 DEBUG("Could not find window to update focus for master %d", master->id);
             else
                 DEBUG("Updated focus for master %d", master->id);
+        }
     }
 }
 
@@ -185,7 +186,6 @@ void updateWindowWorkspaceState(WindowInfo* winInfo) {
         if(!hasMask(winInfo, MAPPED_MASK)) {
             mapWindow(winInfo->id);
             addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
-            updateFocusForAllMasters(NULL);
         }
     }
     else {

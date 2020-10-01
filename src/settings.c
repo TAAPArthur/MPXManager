@@ -60,9 +60,10 @@ void recompileAndRestart() {
  * @param N the workspace to switch to/act on
  */
 #define WORKSPACE_OPERATION(K,N) \
-    {DEFAULT_MOD_MASK, K, switchToWorkspace, {N}}, \
+    {DEFAULT_MOD_MASK, K, {.func.funcBool=activateWorkspace, {N}}}, \
     {DEFAULT_MOD_MASK|ShiftMask, K, moveToWorkspace, {N}, .flags.windowToPass=FOCUSED_WINDOW}, \
-    {DEFAULT_MOD_MASK|ControlMask, K, swapActiveMonitor, {N}}
+    {DEFAULT_MOD_MASK|ControlMask, K, swapActiveMonitor, {N}}, \
+    {DEFAULT_MOD_MASK|ControlMask|ShiftMask, K, switchToWorkspace, {N}}
 
 /**
  * Creates a set of bindings related to the windowStack

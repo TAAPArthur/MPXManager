@@ -244,8 +244,6 @@ SCUTEST(test_updateFocusForAllMasters) {
     scan(root);
     onWindowFocus(win);
     onWindowFocus(win2);
-    updateFocusForAllMasters(NULL);
-    assertEquals(getActiveFocus(), win2);
     updateFocusForAllMasters(getWindowInfo(win2));
     assertEquals(getActiveFocus(), win);
 }

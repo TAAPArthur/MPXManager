@@ -232,14 +232,25 @@ void addNonDocksToActiveWorkspace(WindowInfo* winInfo) {
 }
 
 
-void updateAllWindowWorkspaceState() {
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
-        updateWindowWorkspaceState(winInfo);
+void updateAllWindowWorkspaceState(int unmapped) {
+    FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
+        if(isWorkspaceVisible(workspace) == !unmapped) {
+            FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace)) {
+                updateWindowWorkspaceState(winInfo);
+            }
+        }
     }
+}
+void updateAllWindowInVisibleWorkspace() {
+    updateAllWindowWorkspaceState(0);
+}
+void updateAllWindowInInVisibleWorkspace() {
+    updateAllWindowWorkspaceState(1);
 }
 
 void addSyncMapStateRules() {
-    addBatchEvent(IDLE, DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY));
+    addBatchEvent(IDLE, DEFAULT_EVENT(updateAllWindowInVisibleWorkspace, LOWER_PRIORITY));
+    addBatchEvent(IDLE, DEFAULT_EVENT(updateAllWindowInInVisibleWorkspace, LOWER_PRIORITY));
 }
 void addAutoTileRules() {
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(markWorkspaceOfWindowDirty));

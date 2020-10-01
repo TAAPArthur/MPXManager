@@ -51,6 +51,22 @@ SCUTEST_ITER(maintain_focus_when_moving_window_to_another_workspace, 2) {
     runEventLoop();
     assertEquals(getActiveFocus(), win);
 }
+SCUTEST(test_remember_last_focused_window_in_workspace2, .iter = 2) {
+    WindowID win[] = {createNormalWindow(), createNormalWindow(), createNormalWindow()};
+    switchToWorkspace(_i);
+    runEventLoop();
+    for(int i = LEN(win) - 1; i >= 0; --i)
+        focusWindow(mapWindow(win[i]));
+    focusWindow(mapWindow(win[1]));
+    runEventLoop();
+    activateWorkspace(!_i);
+    runEventLoop();
+    assertEquals(getActiveFocus(), root);
+    activateWorkspace(_i);
+    runEventLoop();
+    assertEquals(getActiveFocus(), getFocusedWindow()->id);
+    assertEquals(getActiveFocus(), win[1]);
+}
 
 SCUTEST(click_to_focus) {
     setActiveLayout(&GRID);
