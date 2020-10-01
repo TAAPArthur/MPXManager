@@ -112,7 +112,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 
 
 test: CFLAGS := ${TESTFLAGS}
-test: unitTest.out functional.out unitTestExtensions.out #endToEndTest.out # doc-check
+test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out # doc-check
 
 functionalTest: CFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o Tests/compatibility_test.o |libmpx-patch.so
