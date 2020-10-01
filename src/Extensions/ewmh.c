@@ -321,6 +321,28 @@ void loadSavedAtomState(WindowInfo* winInfo) {
     }
 }
 
+void loadDockProperties(WindowInfo* winInfo) {
+    if(!winInfo->dock)
+        return;
+    TRACE("Reloading dock properties");
+    xcb_window_t win = winInfo->id;
+    xcb_ewmh_wm_strut_partial_t strut;
+    if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
+            xcb_ewmh_get_wm_strut_partial(ewmh, win), &strut, NULL)) {
+        setDockProperties(winInfo, (int*)&strut, 1);
+    }
+    else if(xcb_ewmh_get_wm_strut_reply(ewmh,
+            xcb_ewmh_get_wm_strut(ewmh, win),
+            (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
+        setDockProperties(winInfo, (int*)&strut, 0);
+    else {
+        TRACE("could not read struct data");
+        setDockProperties(winInfo, NULL, 0);
+        return;
+    }
+    if(hasMask(winInfo, MAPPED_MASK))
+        applyEventRules(SCREEN_CHANGE, NULL);
+}
 void updateDockProperties(xcb_property_notify_event_t* event) {
     WindowInfo* winInfo = getWindowInfo(event->window);
     // only reload properties if a window is mapped
@@ -389,6 +411,7 @@ void addEWMHRules() {
     addBatchEvent(IDLE, DEFAULT_EVENT(updateXWindowStateForAllWindows));
     addBatchEvent(UNREGISTER_WINDOW, DEFAULT_EVENT(updateEWMHClientList));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(autoResumeWorkspace));
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadDockProperties));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadSavedAtomState));
     addEvent(TRUE_IDLE, DEFAULT_EVENT(setActiveProperties));
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(setSavedWorkspaceIndex));

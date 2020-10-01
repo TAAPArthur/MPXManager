@@ -28,27 +28,6 @@ SCUTEST(test_tile_before_map) {
     runEventLoop();
     assert(getCount());
 }
-SCUTEST_ITER(auto_tile_with_dock, 4) {
-    assignUnusedMonitorsToWorkspaces();
-    bool premap = _i % 2;
-    bool consume = _i / 2;
-    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
-    if(premap)
-        mapWindow(win);
-    setEWMHDockProperties(win, DOCK_TOP, 100, 0, 0, 0);
-    WindowID win2 = mapArbitraryWindow();
-    WindowID win3 = mapArbitraryWindow();
-    scan(root);
-    if(consume)
-        consumeEvents();
-    if(!premap)
-        mapWindow(win);
-    runEventLoop();
-    Monitor* m = getHead(getAllMonitors());
-    assert(*(long*)&m->base != *(long*)&m->view);
-    assert(contains(m->view, getRealGeometry(win2)));
-    assert(contains(m->view, getRealGeometry(win3)));
-}
 SCUTEST(auto_window_map) {
     WindowID win = mapWindow(createNormalWindow());
     scan(root);

@@ -79,9 +79,8 @@ SCUTEST(test_sync_state) {
 }
 
 static void ewmhSetup() {
-    addShutdownOnIdleRule();
     addEWMHRules();
-    onSimpleStartup();
+    onDefaultStartup();
 }
 SCUTEST_SET_ENV(ewmhSetup, cleanupXServer);
 
@@ -229,6 +228,36 @@ SCUTEST_ITER(docks, 4 * 2) {
     assertEquals(prop->thickness, 1);
     assertEquals(prop->start, 1);
     assertEquals(prop->end, 1);
+}
+SCUTEST_ITER(auto_tile_with_dock, 5) {
+    assignUnusedMonitorsToWorkspaces();
+    addAutoTileRules();
+    bool premap = _i & 1;
+    bool consume = _i & 2;
+    WindowID win = createWindowWithType(ewmh->_NET_WM_WINDOW_TYPE_DOCK);
+    if(premap)
+        mapWindow(win);
+    setEWMHDockProperties(win, DOCK_TOP, 100, 0, 0, 0);
+    WindowID win2 = mapArbitraryWindow();
+    WindowID win3 = mapArbitraryWindow();
+    Monitor* m = getHead(getAllMonitors());
+    void func(WindowInfo * winInfo) {
+        assert(memcmp(&m->base, &winInfo->geometry, sizeof(Rect)));
+    }
+    addEvent(WINDOW_MOVE, DEFAULT_EVENT(func, LOWEST_PRIORITY));
+    if(_i < 4) {
+        scan(root);
+        if(consume)
+            consumeEvents();
+        if(!premap)
+            mapWindow(win);
+    }
+    else
+        mapWindow(win);
+    runEventLoop();
+    assert(memcmp(&m->base, &m->view, sizeof(Rect)));
+    assert(contains(m->view, getRealGeometry(win2)));
+    assert(contains(m->view, getRealGeometry(win3)));
 }
 
 SCUTEST_SET_ENV(onSimpleStartup, cleanupXServer);
@@ -506,12 +535,12 @@ SCUTEST_ITER(wm_move_resize_window_cancel_commit, 2) {
     if(_i)
         commitWindowMoveResize();
     Rect temp = getRealGeometry(winInfo->id);
-    assert(*(long*)&rect != *(long*)&temp);
+    assert(memcmp(&rect, &temp, sizeof(Rect)));
     sendWMMoveResizeRequest(winInfo->id, 0, 0, XCB_EWMH_WM_MOVERESIZE_CANCEL, 1);
     runEventLoop();
     if(_i) {
         temp = getRealGeometry(winInfo->id);
-        assert(*(long*)&rect != *(long*)&temp);
+        assert(memcmp(&rect, &temp, sizeof(Rect)));
     }
     else
         assertEqualsRect(rect, getRealGeometry(winInfo->id));

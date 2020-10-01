@@ -9,6 +9,12 @@
 #include "bindings.h"
 #include "mywm-structs.h"
 
+/**
+ * Load various window properties
+ * This should be called when a window is requested to be mapped
+ * @param winInfo
+ */
+void loadWindowProperties(WindowInfo* winInfo);
 
 /**
  * Adds onDeviceEvent for the appropriate rules

@@ -7,12 +7,11 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
+#include <stdbool.h>
 
 #include "../mywm-structs.h"
-#include "../user-events.h"
-#include "../windows.h"
-#include "../window-masks.h"
-#include "xsession.h"
+#include "../util/rect.h"
+#include "../masters.h"
 
 /**
  * Sets the win to be a transient for transientTo
@@ -60,7 +59,8 @@ static inline void setWindowType(WindowID win, xcb_atom_t atom) {setWindowTypes(
  *
  * @return 1 iff the class info was successfully loaded
  */
-bool loadClassInfo(WindowID win, char* className, char* instanceName);
+bool getClassInfo(WindowID win, char* className, char* instanceName);
+
 /**
  * Returns the name of the window in a str that needs to be freeded
  *
@@ -70,36 +70,7 @@ bool loadClassInfo(WindowID win, char* className, char* instanceName);
  */
 bool getWindowTitle(WindowID win, char* title);
 
-/**
- * Loads type name and atom value for a given window
- * If the window type is not set, the type is set to _NET_WM_WINDOW_TYPE_DIALOG or _NET_WM_WINDOW_TYPE_NORMAL depending if the window is transient or not
- *
- * @param winInfo
- * @return 1 the window type was set for the window
- */
-bool loadWindowType(WindowInfo* winInfo) ;
-
-/**
- * Load various window properties
- * This should be called when a window is requested to be mapped
- * @param winInfo
- */
-void loadWindowProperties(WindowInfo* winInfo);
-/**
- * Loads normal hints
- * Loads grouptID, input and window state for a given window
- * @param winInfo
- * @see loadWindowProperties
- */
-void loadWindowHints(WindowInfo* winInfo);
-/**
- * Loads the window title
- *
- * @param winInfo
- * @see loadWindowProperties
- */
-void loadWindowTitle(WindowInfo* winInfo) ;
-
+xcb_atom_t getWindowType(WindowID win);
 /**
  * Sets WM_WINDOW_ROLE to role on wid
  *
@@ -107,12 +78,6 @@ void loadWindowTitle(WindowInfo* winInfo) ;
  * @param role
  */
 void setWindowRole(WindowID wid, const char* role);
-/**
- * Reads WM_WINDOW_ROLE from the approriate window and updates winInfo
- *
- * @param winInfo
- */
-void loadWindowRole(WindowInfo* winInfo);
 
 /**
  * Sets the border color for the given window
@@ -132,19 +97,6 @@ void setBorder(WindowID win);
  * @param win
  */
 void resetBorder(WindowID win);
-
-/**
- * Adds the FLOATING_MASK to a given window
- */
-static inline void floatWindow(WindowInfo* winInfo) {
-    addMask(winInfo, FLOATING_MASK);
-}
-/**
- * Removes any all all masks that would cause the window to not be tiled
- */
-static inline void sinkWindow(WindowInfo* winInfo) {
-    removeMask(winInfo, FLOATING_MASK | ALL_NO_TILE_MASKS);
-}
 
 /**
  * Assigns names to the first n workspaces
@@ -179,6 +131,13 @@ static inline int focusWindowInfo(WindowInfo* winInfo) {return focusWindowInfoAs
  * @return
  */
 xcb_size_hints_t* getWindowSizeHints(WindowInfo* winInfo);
+/**
+ * Loads normal hints
+ * Loads grouptID, input and window state for a given window
+ * @param winInfo
+ * @see loadWindowProperties
+ */
+void loadWindowHints(WindowInfo* winInfo);
 
 /**
  * @param id
@@ -217,12 +176,4 @@ int killClientOfWindow(WindowID win);
  */
 void killClientOfWindowInfo(WindowInfo* winInfo);
 
-
-/**
- * Reads (one of) the struct property to loads the info into properties and
- * add a dock to the list of docks.
- * @param info the dock
- * @return true if properties were successfully loaded
- */
-int loadDockProperties(WindowInfo* info);
 #endif

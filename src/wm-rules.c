@@ -169,7 +169,7 @@ void onPropertyEvent(xcb_property_notify_event_t* event) {
     // only reload properties if a window is mapped
     if(winInfo && hasMask(winInfo, MAPPED_MASK)) {
         if(event->atom == ewmh->_NET_WM_NAME || event->atom == XCB_ATOM_WM_NAME)
-            loadWindowTitle(winInfo);
+            getWindowTitle(winInfo->id, winInfo->title);
         else if(event->atom == XCB_ATOM_WM_HINTS)
             loadWindowHints(winInfo);
     }
@@ -231,10 +231,20 @@ void addNonDocksToActiveWorkspace(WindowInfo* winInfo) {
     }
 }
 
+
+void updateAllWindowWorkspaceState() {
+    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
+        updateWindowWorkspaceState(winInfo);
+    }
+}
+
+void addSyncMapStateRules() {
+    addBatchEvent(IDLE, DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY));
+}
 void addAutoTileRules() {
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
     addEvent(WORKSPACE_WINDOW_REMOVE, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
-    addEvent(IDLE, DEFAULT_EVENT(retileAllDirtyWorkspaces, HIGH_PRIORITY));
+    addBatchEvent(IDLE, DEFAULT_EVENT(retileAllDirtyWorkspaces));
     addBatchEvent(IDLE, DEFAULT_EVENT(saveAllWindowMasks, LOWER_PRIORITY));
 }
 void assignDefaultLayoutsToWorkspace() {
@@ -248,17 +258,29 @@ void assignDefaultLayoutsToWorkspace() {
     }
 }
 
-void updateAllWindowWorkspaceState() {
-    FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
-        updateWindowWorkspaceState(winInfo);
+void loadWindowProperties(WindowInfo* winInfo) {
+    TRACE("loading window properties %d", winInfo->id);
+    getClassInfo(winInfo->id, winInfo->className, winInfo->instanceName);
+    getWindowTitle(winInfo->id, winInfo->title);
+    xcb_window_t prop;
+    if(xcb_icccm_get_wm_transient_for_reply(dis, xcb_icccm_get_wm_transient_for(dis, winInfo->id), &prop, NULL))
+        winInfo->transientFor = prop;
+    winInfo->type = getWindowType(winInfo->id);
+    if(!winInfo->type) {
+        TRACE("could not read window type; using default based on transient being set to %d",
+            winInfo->transientFor);
+        winInfo->type = winInfo->transientFor ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
+        winInfo->implicitType = 1;
     }
-}
-
-void addSyncMapStateRules() {
-    addBatchEvent(MONITOR_WORKSPACE_CHANGE, DEFAULT_EVENT(updateAllWindowWorkspaceState));
-    addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(updateAllWindowWorkspaceState));
-    addBatchEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(updateAllWindowWorkspaceState));
-    addBatchEvent(TILE_WORKSPACE, DEFAULT_EVENT(updateAllWindowWorkspaceState, LOWER_PRIORITY));
+    getAtomName(winInfo->type, winInfo->typeName);
+    // TODO loadProtocols(winInfo);
+    loadWindowHints(winInfo);
+    // TODO loadWindowSizeHints(winInfo);
+    getWindowPropertyString(winInfo->id, WM_WINDOW_ROLE, XCB_ATOM_STRING, winInfo->role);
+    if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
+        DEBUG("Marking window as dock");
+        winInfo->dock = 1;
+    }
 }
 
 static void setWMState(WindowInfo* winInfo) {
@@ -298,7 +320,7 @@ void addBasicRules() {
     addEvent(X_CONNECTION, DEFAULT_EVENT(initState, HIGHEST_PRIORITY));
     addEvent(X_CONNECTION, DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, HIGH_PRIORITY));
     addEvent(X_CONNECTION, DEFAULT_EVENT(onXConnect, HIGH_PRIORITY));
-    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadWindowProperties));
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadWindowProperties, HIGHER_PRIORITY));
     addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(listenForNonRootEventsFromWindow, HIGHER_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks));

@@ -2,18 +2,12 @@
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 
-#include "device-grab.h"
-#include "../util/logger.h"
-#include "../monitors.h"
-#include "../mywm-structs.h"
-#include "../system.h"
-#include "../util/time.h"
-#include "../user-events.h"
-#include "../boundfunction.h"
-#include "../window-masks.h"
 #include "window-properties.h"
-#include "../windows.h"
 #include "xsession.h"
+#include "../util/logger.h"
+#include "../util/time.h"
+#include "../windows.h"
+
 
 void setWindowTransientFor(WindowID win, WindowID transientTo) {
     xcb_icccm_set_wm_transient_for(dis, win, transientTo);
@@ -30,7 +24,7 @@ void setWindowTitle(WindowID win, const char* title) {
 void setWindowTypes(WindowID win, xcb_atom_t* atoms, int num) {
     xcb_ewmh_set_wm_window_type(ewmh, win, num, atoms);
 }
-bool loadClassInfo(WindowID win, char* className, char* instanceName) {
+bool getClassInfo(WindowID win, char* className, char* instanceName) {
     xcb_icccm_get_wm_class_reply_t prop;
     xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_class(dis, win);
     if(xcb_icccm_get_wm_class_reply(dis, cookie, &prop, NULL)) {
@@ -62,24 +56,16 @@ bool getWindowTitle(WindowID win, char* title) {
     }
     return 0;
 }
-bool loadWindowType(WindowInfo* winInfo) {
+xcb_atom_t getWindowType(WindowID win) {
     xcb_ewmh_get_atoms_reply_t name;
-    bool failed = 0;
+    xcb_atom_t atom = 0;
     if(xcb_ewmh_get_wm_window_type_reply(ewmh,
-            xcb_ewmh_get_wm_window_type(ewmh, winInfo->id), &name, NULL)) {
-        winInfo->type = name.atoms[0];
+            xcb_ewmh_get_wm_window_type(ewmh, win), &name, NULL)) {
+        atom = name.atoms[0];
         xcb_ewmh_get_atoms_reply_wipe(&name);
     }
-    else {
-        TRACE("could not read window type; using default based on transient being set to %d",
-            winInfo->transientFor);
-        winInfo->type = winInfo->transientFor ? ewmh->_NET_WM_WINDOW_TYPE_DIALOG : ewmh->_NET_WM_WINDOW_TYPE_NORMAL;
-        failed = 1;
-    }
-    getAtomName(winInfo->type, winInfo->typeName);
-    return !failed;
+    return atom;
 }
-
 
 void loadWindowHints(WindowInfo* winInfo) {
     xcb_icccm_wm_hints_t hints;
@@ -94,6 +80,8 @@ void loadWindowHints(WindowInfo* winInfo) {
             removeMask(winInfo, INPUT_MASK);
     }
 }
+
+
 /* TODO
 static void loadWindowSizeHints(WindowInfo* winInfo) {
     xcb_size_hints_t sizeHints;
@@ -129,37 +117,11 @@ static void loadProtocols(WindowInfo* winInfo) {
     }
 }
 */
-void loadWindowTitle(WindowInfo* winInfo) {
-    getWindowTitle(winInfo->id, winInfo->title);
-}
 
 void setWindowRole(WindowID wid, const char* s) {
     setWindowPropertyString(wid, WM_WINDOW_ROLE, XCB_ATOM_STRING, s);
 }
 
-void loadWindowRole(WindowInfo* winInfo) {
-    getWindowPropertyString(winInfo->id, WM_WINDOW_ROLE, XCB_ATOM_STRING, winInfo->role);
-}
-
-void loadWindowProperties(WindowInfo* winInfo) {
-    TRACE("loading window properties %d", winInfo->id);
-    loadClassInfo(winInfo->id, winInfo->className, winInfo->instanceName);
-    loadWindowTitle(winInfo);
-    xcb_window_t prop;
-    if(xcb_icccm_get_wm_transient_for_reply(dis, xcb_icccm_get_wm_transient_for(dis, winInfo->id), &prop, NULL))
-        winInfo->transientFor = prop;
-    bool result = !loadWindowType(winInfo);
-    winInfo->implicitType = result;
-    // TODO loadProtocols(winInfo);
-    loadWindowHints(winInfo);
-    // TODO loadWindowSizeHints(winInfo);
-    loadWindowRole(winInfo);
-    if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
-        DEBUG("Marking window as dock");
-        winInfo->dock = 1;
-        loadDockProperties(winInfo);
-    }
-}
 void setBorderColor(WindowID win, unsigned int color) {
     if(color > 0xFFFFFF) {
         WARN("Color %d is out f range", color);
@@ -207,27 +169,6 @@ int focusWindowInfoAsMaster(WindowInfo* winInfo, Master* master) {
         return 1;
     }
     return 0;
-}
-int loadDockProperties(WindowInfo* winInfo) {
-    TRACE("Reloading dock properties");
-    xcb_window_t win = winInfo->id;
-    xcb_ewmh_wm_strut_partial_t strut;
-    if(xcb_ewmh_get_wm_strut_partial_reply(ewmh,
-            xcb_ewmh_get_wm_strut_partial(ewmh, win), &strut, NULL)) {
-        setDockProperties(winInfo, (int*)&strut, 1);
-    }
-    else if(xcb_ewmh_get_wm_strut_reply(ewmh,
-            xcb_ewmh_get_wm_strut(ewmh, win),
-            (xcb_ewmh_get_extents_reply_t*) &strut, NULL))
-        setDockProperties(winInfo, (int*)&strut, 0);
-    else {
-        TRACE("could not read struct data");
-        setDockProperties(winInfo, NULL, 0);
-        return 0;
-    }
-    if(hasMask(winInfo, MAPPED_MASK))
-        applyEventRules(SCREEN_CHANGE, NULL);
-    return 1;
 }
 
 uint32_t getUserTime(WindowID win) {

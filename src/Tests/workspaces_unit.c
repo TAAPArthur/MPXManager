@@ -9,7 +9,7 @@ static Layout* fakeLayouts[2] = {NULL, (void*)1};
 SCUTEST_SET_ENV(addDefaultMaster, simpleCleanup);
 SCUTEST(test_workspace_add_remove) {
     addWorkspaces(1);
-    assert(getWorkspaceByName("0"));
+    assert(getWorkspaceByName("1"));
     int starting = getNumberOfWorkspaces();
     for(int i = 1; i < 10; i++) {
         addWorkspaces(1);
