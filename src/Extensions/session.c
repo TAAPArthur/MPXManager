@@ -127,7 +127,6 @@ static void loadSavedMasterWindows() {
         WindowID* wid = (WindowID*)xcb_get_property_value(reply);
         TRACE("Found %ld properties", xcb_get_property_value_length(reply) / sizeof(int));
         for(uint32_t i = 0; i < xcb_get_property_value_length(reply) / sizeof(int); i++) {
-            printf("%d %d %d\n", i, wid[i], master ? master->id : 0);
             if(wid[i] == 0) {
                 master = getMasterByID(wid[++i]);
             }
@@ -302,7 +301,7 @@ void saveCustomState(void) {
         masterWindows[numMasterWindows++] = master->id;
         masterWorkspaces[2 * i] = master->id;
         masterWorkspaces[2 * i + 1] = getMasterWorkspaceIndex(master);
-        FOR_EACH(WindowInfo*, winInfo, getMasterWindowStack(master)) {
+        FOR_EACH_R(WindowInfo*, winInfo, getMasterWindowStack(master)) {
             masterWindows[numMasterWindows++] = winInfo->id;
         }
     }

@@ -46,21 +46,25 @@ SCUTEST(test_long_lived) {
         mapWindow(createNormalWindow());
         waitUntilWMIdle();
     }
-    spawnAndWait("./mpxmanager sum");
-    Window win = mapWindow(createNormalWindow());
-    waitUntilWMIdle();
-    assert(isWindowMapped(win));
+    assertEquals(0, spawnAndWait("./mpxmanager sum"));
 }
 
-SCUTEST(remember_focus) {
+SCUTEST(remember_focus, .iter = 2) {
     WindowID win = mapArbitraryWindow();
     waitUntilWMIdle();
+    if(_i) {
+        WindowID win2 = mapArbitraryWindow();
+        waitUntilWMIdle();
+        focusWindow(win2);
+    }
     focusWindow(win);
     waitUntilWMIdle();
     assertEquals(getActiveFocus(), win);
-    restartWM();
-    assert(isWindowMapped(win));
-    assertEquals(getActiveFocus(), win);
+    for(int i = 0; i < 2; i++) {
+        restartWM();
+        assert(isWindowMapped(win));
+        assertEquals(getActiveFocus(), win);
+    }
 }
 
 SCUTEST_ITER(wm_restart_recursive, 3) {

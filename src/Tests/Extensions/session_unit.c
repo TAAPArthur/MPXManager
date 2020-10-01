@@ -54,18 +54,28 @@ SCUTEST(test_restore_master_focus_stack) {
     createMasterDevice("test");
     createMasterDevice("test2");
     initCurrentMasters();
+    WindowID wins[] = {createNormalWindow(), createNormalWindow(), createNormalWindow()};
+    int i = 0;
     FOR_EACH(Master*, master, getAllMasters()) {
         WindowID win = mapWindow(createNormalWindow());
         registerWindow(win, root, NULL);
         focusWindowAsMaster(win, master);
+        mapWindow(wins[i]);
+        registerWindow(wins[i], root, NULL);
+        focusWindowAsMaster(wins[i], master);
+        i++;
     }
     runEventLoop();
     FOR_EACH(Master*, master, getAllMasters()) {
-        assert(getMasterWindowStack(master)->size);
+        assertEquals(getMasterWindowStack(master)->size, 2);
     }
     saveResetReloadState();
+    i = 0;
     FOR_EACH(Master*, master, getAllMasters()) {
-        assert(getMasterWindowStack(master)->size);
+        assertEquals(getMasterWindowStack(master)->size, 2);
+        assertEquals(getFocusedWindowOfMaster(master)->id, wins[i]);
+        assertEquals(getActiveFocusOfMaster(master->id), wins[i]);
+        i++;
     }
 }
 
