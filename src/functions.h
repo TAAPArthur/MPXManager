@@ -254,4 +254,18 @@ bool detectWindowMoveResizeButtonRelease();
  * @param m
  */
 void cancelWindowMoveResize();
+
+
+/**
+ * Adds the FLOATING_MASK to a given window
+ */
+static inline void floatWindow(WindowInfo* winInfo) {
+    addMask(winInfo, FLOATING_MASK);
+}
+/**
+ * Removes any all all masks that would cause the window to not be tiled
+ */
+static inline void sinkWindow(WindowInfo* winInfo) {
+    removeMask(winInfo, FLOATING_MASK | ALL_NO_TILE_MASKS);
+}
 #endif

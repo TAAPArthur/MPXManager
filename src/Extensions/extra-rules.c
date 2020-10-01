@@ -5,6 +5,7 @@
 #include "../layouts.h"
 #include "../masters.h"
 #include "../monitors.h"
+#include "../functions.h"
 #include "../mywm-structs.h"
 #include "../system.h"
 #include "../user-events.h"

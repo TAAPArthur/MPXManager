@@ -5,6 +5,7 @@
 #include "../../Extensions/ewmh.h"
 #include "../../Extensions/extra-rules.h"
 #include "../../globals.h"
+#include "../../functions.h"
 #include "../../layouts.h"
 #include "../../wm-rules.h"
 #include "../../wmfunctions.h"

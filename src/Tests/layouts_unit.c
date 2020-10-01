@@ -2,6 +2,7 @@
 #include "../layouts.h"
 #include "../monitors.h"
 #include "../wmfunctions.h"
+#include "../functions.h"
 #include "test-event-helper.h"
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
