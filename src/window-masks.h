@@ -39,8 +39,6 @@
  * (it is move added between workspaces to stay on its monitor)
  */
 #define STICKY_MASK 	(1U << 9)
-/// will cause WindowInfo::isSpecial to return 1
-#define SPECIAL_MASK 	(1U << 10)
 /// will cause all masks to be synced regardless of MASKS_TO_SYNC
 #define SYNC_ALL_MASKS 	(1U << 11)
 /// corresponds to modal state
@@ -86,14 +84,6 @@
 
 /**The window can receive input focus*/
 #define INPUT_MASK 	(1U << 24)
-
-/**The WM send a client message after focusing the window*/
-#define WM_TAKE_FOCUS_MASK 	(1U << 25)
-
-/**The WM will not forcibly delete windows immediately but request the application dies*/
-#define WM_DELETE_WINDOW_MASK 	(1U << 26)
-/**Used in conjunction with WM_DELETE_WINDOW_MASK to kill the window */
-#define WM_PING_MASK 	(1U << 27)
 ///Indicates the window is not withdrawn
 #define MAPPABLE_MASK 	(1U << 30)
 ///the window is currently mapped
@@ -108,7 +98,7 @@
 /// The minimum requirements to be reported has the focusedWindow
 #define FOCUSABLE_MASK  (INPUT_MASK|MAPPED_MASK)
 /// These masks indicate state beyond our control and should not be arbitrarily set
-#define EXTERNAL_MASKS 	(INPUT_MASK|WM_TAKE_FOCUS_MASK|WM_DELETE_WINDOW_MASK|WM_PING_MASK|MAPPABLE_MASK|MAPPED_MASK)
+#define EXTERNAL_MASKS 	(INPUT_MASK|MAPPABLE_MASK|MAPPED_MASK)
 /// A change in these masks may cause windows to be retiled
 #define RETILE_MASKS 	(MAXIMIZED_MASK | ALL_NO_TILE_MASKS | MAPPABLE_MASK)
 /// set all masks

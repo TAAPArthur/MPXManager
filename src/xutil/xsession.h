@@ -88,11 +88,6 @@ extern xcb_atom_t MPX_WM_SELECTION_ATOM;
 /// WM_STATE property of the icccm spec
 extern xcb_atom_t WM_STATE;
 
-/**
- * MPX_WM_TAKE_FOCUS atom
- * Used to send client messages to direct focus of an application
-*/
-extern xcb_atom_t WM_TAKE_FOCUS;
 /// Some windows have a applications specified role, (like browser) stored in this atom
 extern xcb_atom_t WM_WINDOW_ROLE;
 

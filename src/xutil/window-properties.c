@@ -157,15 +157,10 @@ int focusWindowAsMaster(WindowID win, Master* master) {
     return !catchError(cookie);
 }
 int focusWindowInfoAsMaster(WindowInfo* winInfo, Master* master) {
-    if(!hasPartOfMask(winInfo, INPUT_MASK | WM_TAKE_FOCUS_MASK))
+    if(!hasPartOfMask(winInfo, INPUT_MASK))
         return 0;
     if(focusWindowAsMaster(winInfo->id, master)) {
         onWindowFocus(winInfo->id);
-        if(hasMask(winInfo, WM_TAKE_FOCUS_MASK)) {
-            //TODO MPX support
-            uint32_t data[] = {WM_TAKE_FOCUS, getTime()};
-            xcb_ewmh_send_client_message(dis, winInfo->id, winInfo->id, ewmh->WM_PROTOCOLS, 2, data);
-        }
         return 1;
     }
     return 0;

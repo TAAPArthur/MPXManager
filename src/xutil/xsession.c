@@ -30,7 +30,6 @@ xcb_atom_t WM_DELETE_WINDOW;
 xcb_atom_t WM_SELECTION_ATOM;
 xcb_atom_t MPX_WM_SELECTION_ATOM;
 xcb_atom_t WM_STATE;
-xcb_atom_t WM_TAKE_FOCUS;
 xcb_atom_t WM_WINDOW_ROLE;
 
 Display* dpy;
@@ -153,7 +152,6 @@ void openXDisplay(void) {
     CREATE_ATOM(WM_CHANGE_STATE);
     CREATE_ATOM(WM_DELETE_WINDOW);
     CREATE_ATOM(WM_STATE);
-    CREATE_ATOM(WM_TAKE_FOCUS);
     CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
     setRootDims(&screen->width_in_pixels);
