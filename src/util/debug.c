@@ -152,12 +152,18 @@ void dumpMaster(Master* master) {
     printf("}\n");
 }
 void dumpWindowInfo(WindowInfo* winInfo) {
-    printf("{ID %d%s", winInfo->id, (isTileable(winInfo) ? "*" : !isMappable(winInfo) ? "?" :  ""));
+    printf("{ID %d%s ", winInfo->id, (isTileable(winInfo) ? "*" : !isMappable(winInfo) ? "?" :  ""));
     if(winInfo->type)
-        printf("Title '%s' Class '%s' '%s'", winInfo->title, winInfo->className, winInfo->instanceName);
+        printf("Title '%s' Class '%s' '%s' ", winInfo->title, winInfo->className, winInfo->instanceName);
     if(winInfo->role[0])
-        printf("Role '%s'", winInfo->role);
-    printf(" %s", getMaskAsString(winInfo->mask, buffer));
+        printf("Role '%s' ", winInfo->role);
+    if(winInfo->dock) {
+        printf("Dock ");
+    }
+    if(winInfo->type) {
+        printf("Type %d %d", winInfo->type, winInfo->implicitType);
+    }
+    printf("%s ", getMaskAsString(winInfo->mask, buffer));
     printf("Geometry: ");
     dumpRect(winInfo->geometry);
     printf("}\n");
@@ -187,7 +193,7 @@ void printSummary(void) {
     printf("Summary");
     printf("\nSlaves:\n");
     FOR_EACH(Slave*, slave, getAllSlaves()) {
-        printf("\nID: %d; Master %d; Keyboard %d; %s\n", slave->id, slave->attachment, slave->keyboard, slave->name);
+        printf("ID: %d; Master %d; Keyboard %d; %s\n", slave->id, slave->attachment, slave->keyboard, slave->name);
     }
     printf("\nMasters:\n");
     FOR_EACH(Master*, master, getAllMasters()) {
