@@ -111,11 +111,11 @@ int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, cons
     return 0;
 }
 void activateNextUrgentWindow() {
-    WindowFunctionArg arg = {hasMask, URGENT_MASK};
+    WindowFunctionArg arg = {hasMask, {URGENT_MASK}};
     findAndRaise(arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0});
 }
 void popHiddenWindow() {
-    WindowFunctionArg arg = {hasMask, HIDDEN_MASK};
+    WindowFunctionArg arg = {hasMask, {HIDDEN_MASK}};
     WindowInfo* winInfo = findAndRaise(arg, ACTION_NONE, (FindAndRaiseArg) {.includeNonActivatable = 1});
     if(winInfo) {
         removeMask(winInfo, HIDDEN_MASK);

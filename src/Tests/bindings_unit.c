@@ -11,25 +11,25 @@
 SCUTEST_SET_ENV(createXSimpleEnv, cleanupXServer);
 
 SCUTEST_ITER(test_grab_ungrab_bindings, 2) {
-    Binding sampleBinding = {0, XK_A, incrementCount, .flags = {.noGrab = 1}};
+    Binding sampleBinding = {0, XK_A, {incrementCount}, .flags = {.noGrab = 1}};
     assertEquals(0, grabBinding(&sampleBinding, 0));
     assert(sampleBinding.detail);
     assertEquals(0, grabBinding(&sampleBinding, 1));
 }
 
 static Binding sampleBindings[] = {
-    {0, 1, incrementCount},
-    {0, 1, incrementCount},
+    {0, 1, {incrementCount}},
+    {0, 1, {incrementCount}},
     {
-        0, 2, incrementCount, .chainMembers = CHAIN_MEM(
-        {0, 2, incrementCount},
-        {0, 3, incrementCount, .flags.popChain = 1},
+        0, 2, {incrementCount}, .chainMembers = CHAIN_MEM(
+        {0, 2, {incrementCount}},
+        {0, 3, {incrementCount}, .flags.popChain = 1},
         )
     },
     {
-        0, 4, incrementCount, .flags.mask = 1, .chainMembers = CHAIN_MEM(
-        {0, 4, incrementCount},
-        {0, 3, incrementCount, .flags.popChain = 1},
+        0, 4, {incrementCount}, .flags.mask = 1, .chainMembers = CHAIN_MEM(
+        {0, 4, {incrementCount}},
+        {0, 3, {incrementCount}, .flags.popChain = 1},
         )
     },
 };

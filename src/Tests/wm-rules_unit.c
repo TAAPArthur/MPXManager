@@ -176,8 +176,8 @@ SCUTEST(test_auto_tile, .iter = 4) {
     assertEquals(2, getCount());
 }
 static Binding bindings[] = {
-    {0, 1, incrementCount},
-    {0, XK_A, incrementCount}
+    {0, 1, {incrementCount}},
+    {0, XK_A, {incrementCount}}
 };
 static void setupEnvWithBasicRulesAndBindings() {
     addBindings(bindings, LEN(bindings));

@@ -6,6 +6,7 @@
 #ifndef MAXMANAGER_WINDOW_CLONE_
 #define MAXMANAGER_WINDOW_CLONE_
 #include "../mywm-structs.h"
+#include "../masters.h"
 
 /// How often autoUpdateClones will update cloned windows (in ms)
 extern uint32_t CLONE_REFRESH_RATE;
@@ -21,6 +22,7 @@ extern uint32_t CLONE_REFRESH_RATE;
  * @return a clone of winInfo
  */
 WindowInfo* cloneWindow(WindowInfo* winInfo);
+static inline void cloneFocusedWindow() {cloneWindow(getFocusedWindow());}
 
 /**
  * Updates the displayed image for all cloned windows

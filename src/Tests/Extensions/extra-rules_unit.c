@@ -76,7 +76,7 @@ SCUTEST(test_desktop_rule) {
 
 SCUTEST_ITER(primary_monitor_windows, 2) {
     addStickyPrimaryMonitorRule();
-    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(addMask, HIGHER_PRIORITY, .arg = PRIMARY_MONITOR_MASK));
+    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(addMask, HIGHER_PRIORITY, .arg = {PRIMARY_MONITOR_MASK}));
     setPrimary(addFakeMonitor((Rect) {100, 100, 200, 200})->id);
     addFakeMonitor((Rect) {300, 100, 100, 100});
     Monitor* realMonitor = getHead(getAllMonitors());

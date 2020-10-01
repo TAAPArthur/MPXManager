@@ -4,7 +4,7 @@ DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-missing-braces -Wno-sign-compare
+IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
 ERROR_FLAGS := -Wall -Werror
 CFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 

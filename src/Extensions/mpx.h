@@ -58,9 +58,9 @@ void swapXDevicesWithChild();
 
 void attachActiveSlaveToLastChildOfMaster();
 
-#define SPLIT_MASTER_BINDING(M, K) {M,K, splitMaster, .flags = {.grabDevice = 1}, .chainMembers = CHAIN_MEM( \
+#define SPLIT_MASTER_BINDING(M, K) {M,K, {splitMaster}, .flags = {.grabDevice = 1}, .chainMembers = CHAIN_MEM( \
         {WILDCARD_MODIFIER, XK_Escape, .flags={.popChain=1, .shortCircuit=1}}, \
-        {WILDCARD_MODIFIER, 0, attachActiveSlaveToLastChildOfMaster,} \
+        {WILDCARD_MODIFIER, 0, {attachActiveSlaveToLastChildOfMaster}} \
         ) \
 }
 #endif

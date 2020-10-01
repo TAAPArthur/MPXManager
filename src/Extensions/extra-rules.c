@@ -120,7 +120,7 @@ void shiftWindowToPositionInWorkspaceStack(WindowInfo* winInfo, InsertWindowPosi
     }
 }
 void addInsertWindowsAtPositionRule(InsertWindowPosition arg) {
-    addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(shiftWindowToPositionInWorkspaceStack, HIGH_PRIORITY, .arg = arg));
+    addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(shiftWindowToPositionInWorkspaceStack, HIGH_PRIORITY, .arg = {arg}));
 }
 
 static bool isNotRepeatedKey(xcb_input_key_press_event_t* event) {
