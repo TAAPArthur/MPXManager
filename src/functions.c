@@ -17,27 +17,32 @@
 #include "xutil/test-functions.h"
 #include "xutil/window-properties.h"
 
-static int getNextIndexInStack(const ArrayList* stack, int delta, bool(*filter)(WindowInfo*)) {
+static int getNextIndexInStack2(const ArrayList* stack, int delta, const WindowFunctionArg rule,
+    bool includeNonActivatable) {
     int index = getFocusedWindow() ? getIndex(stack, getFocusedWindow(), sizeof(WindowID)) : -1;
     if(index == -1)
         index = delta > 0 ? -1 : 0;
     for(int i = 0; i < stack->size; i++) {
         index = getNextIndex(stack, index, delta);
         WindowInfo* winInfo = getElement(stack, index);
-        if(isActivatable(winInfo) && (!filter || filter(winInfo))) {
+        if((includeNonActivatable || isActivatable(winInfo)) && (!rule.func || rule.func(winInfo, rule.arg))) {
             return index;
         }
     }
     DEBUG("Could not find window");
     return -1;
 }
-static WindowInfo* getNextWindowInStack(const ArrayList* stack, int delta, bool(*filter)(WindowInfo*)) {
-    int index = getNextIndexInStack(stack, delta, filter);
+static int getNextIndexInStack(const ArrayList* stack, int delta, bool(*filter)(WindowInfo*)) {
+    return getNextIndexInStack2(stack, delta, (WindowFunctionArg) {filter}, 0);
+}
+static WindowInfo* getNextWindowInStack(const ArrayList* stack, int delta, const WindowFunctionArg rule,
+    bool includeNonActivatable) {
+    int index = getNextIndexInStack2(stack, delta, rule, includeNonActivatable);
     return index != -1 ? getElement(stack, index) : NULL;
 }
 
 void cycleWindowsMatching(int delta, bool(*filter)(WindowInfo*)) {
-    WindowInfo* winInfo = getNextWindowInStack(getActiveMasterWindowStack(), delta, filter);
+    WindowInfo* winInfo = getNextWindowInStack(getActiveMasterWindowStack(), delta, (WindowFunctionArg) {filter}, 0);
     if(winInfo)
         activateWindow(winInfo);
 }
@@ -64,21 +69,12 @@ static void applyAction(WindowInfo* winInfo, WindowAction action) {
             break;
     }
 }
-
-WindowInfo* findWindow(const WindowFunctionArg* rule, const ArrayList* searchList, bool includeNonActivatable) {
-    FOR_EACH(WindowInfo*, winInfo, searchList) {
-        if((includeNonActivatable || isActivatable(winInfo)) && rule->func(winInfo, rule->arg)) {
-            return winInfo;
-        }
-    }
-    return NULL;
-}
-WindowInfo* findAndRaise(const WindowFunctionArg* rule, WindowAction action, const FindAndRaiseArg arg) {
+WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, const FindAndRaiseArg arg) {
     WindowInfo* target = NULL;
     if(!arg.skipMasterStack)
-        target = findWindow(rule, getMasterWindowStack(getActiveMaster()), arg.includeNonActivatable);
+        target = getNextWindowInStack(getMasterWindowStack(getActiveMaster()), 1, rule, arg.includeNonActivatable);
     if(!target) {
-        target = findWindow(rule, getAllWindows(), arg.includeNonActivatable);
+        target = getNextWindowInStack(getAllWindows(), 1, rule, arg.includeNonActivatable);
         if(target)
             DEBUG("found window globally");
     }
@@ -108,7 +104,7 @@ int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, cons
         s = c ? c : "";
     }
     WindowFunctionArg arg = {func, .arg.str = s};
-    if(!findAndRaise(&arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0})) {
+    if(!findAndRaise(arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0})) {
         spawn(cmd);
         return 1;
     }
@@ -116,11 +112,11 @@ int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, cons
 }
 bool activateNextUrgentWindow() {
     WindowFunctionArg arg = {hasMask, URGENT_MASK};
-    return findAndRaise(&arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0});
+    return findAndRaise(arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0});
 }
 bool popHiddenWindow() {
     WindowFunctionArg arg = {hasMask, HIDDEN_MASK};
-    WindowInfo* winInfo = findAndRaise(&arg, ACTION_NONE, (FindAndRaiseArg) {.includeNonActivatable = 1});
+    WindowInfo* winInfo = findAndRaise(arg, ACTION_NONE, (FindAndRaiseArg) {.includeNonActivatable = 1});
     if(winInfo) {
         removeMask(winInfo, HIDDEN_MASK);
         applyAction(winInfo, ACTION_ACTIVATE);
@@ -148,7 +144,7 @@ void swapPosition(int dir) {
 }
 void shiftFocus(int dir, bool(*filter)(WindowInfo*)) {
     ArrayList* stack = getActiveWindowStack();
-    WindowInfo* winInfo = getNextWindowInStack(stack, dir, filter);
+    WindowInfo* winInfo = getNextWindowInStack(stack, dir, (WindowFunctionArg) {filter}, 0);
     if(winInfo)
         activateWindow(winInfo);
 }

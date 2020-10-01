@@ -125,6 +125,23 @@ SCUTEST_ITER(test_raiseOrRun, 16) {
     assertEquals(!run, !pid);
 }
 
+SCUTEST(test_raiseOrRun_diff) {
+    const char* str = "role";
+    FOR_EACH_R(WindowInfo*, winInfo, getAllWindows()) {
+        setWindowRole(winInfo->id, str);
+        loadWindowProperties(winInfo);
+        focusWindowInfo(winInfo);
+    }
+    runEventLoop();
+    assertEquals(getFocusedWindow()->id, top->id);
+    assert(!raiseOrRunFunc(str, NULL, matchesRole));
+    runEventLoop();
+    assertEquals(getFocusedWindow()->id, middle->id);
+    assert(!raiseOrRunFunc(str, NULL, matchesRole));
+    runEventLoop();
+    assertEquals(getFocusedWindow()->id, top->id);
+}
+
 SCUTEST(test_shift_top_and_focus) {
     onWindowFocus(bottom->id);
     shiftTopAndFocus();

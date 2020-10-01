@@ -50,7 +50,7 @@ typedef struct {
  * @param master
  * @return 1 if a matching window was found
  */
-WindowInfo* findAndRaise(const WindowFunctionArg* rule, WindowAction action, FindAndRaiseArg arg);
+WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, FindAndRaiseArg arg);
 
 
 /**
@@ -126,16 +126,6 @@ bool activateNextUrgentWindow(void);
 bool popHiddenWindow(void);
 
 //////Run or Raise code
-
-/**
- * Checks to see if any window in searchList matches rule ignoring any in ignoreList
- * @param rule
- * @param searchList
- * @param ignoreList can be NULL
- * @param includeNonActivatable
- * @return the first window that matches rule or NULL
- */
-WindowInfo* findWindow(const WindowFunctionArg* rule, const ArrayList* searchList, bool includeNonActivatable);
 
 
 /**
