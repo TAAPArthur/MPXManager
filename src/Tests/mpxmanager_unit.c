@@ -43,7 +43,7 @@ SCUTEST_ERR(wm_no_response, WM_NOT_RESPONDING) {
 }
 static WindowID win;
 static void setup() {
-    int pid = spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY);
+    int pid = spawnPipeChild(NULL, REDIRECT_CHILD_INPUT_ONLY);
     if(pid) {
         setLogLevel(LOG_LEVEL_WARN);
         addInterClientCommunicationRule();

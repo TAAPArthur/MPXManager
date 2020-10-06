@@ -152,7 +152,10 @@ void spawn(const char* command) {
 int spawnChild(const char* command) {
     return _spawn(command, NO_REDIRECTION, 1, 0);
 }
-int spawnPipe(const char* command, ChildRedirection redirection) {
+void spawnPipe(const char* command, ChildRedirection redirection) {
+    _spawn(command, redirection, 0, 0);
+}
+int spawnPipeChild(const char* command, ChildRedirection redirection) {
     return _spawn(command, redirection, 1, 0);
 }
 

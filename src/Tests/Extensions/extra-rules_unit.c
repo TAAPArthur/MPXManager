@@ -16,10 +16,10 @@
 SCUTEST_SET_ENV(onDefaultStartup, simpleCleanup);
 SCUTEST(test_print_status, .iter = 3) {
     addPrintStatusRule();
-    int pid;
+    int pid = 0;
     if(_i) {
         if(_i == 2) {
-            pid = spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY);
+            pid = spawnPipeChild(NULL, REDIRECT_CHILD_INPUT_ONLY);
             if(!pid) {
                 char buffer[255];
                 assert(STATUS_FD_EXTERNAL_READ);

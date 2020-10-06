@@ -111,7 +111,8 @@ static inline int spawnAndWait(const char* command) {return waitForChild(spawnCh
  * @param preserveSession if true, spawn won't double fork
  * @return the pid of the new process
  */
-int spawnPipe(const char* command, ChildRedirection ioRedirection);
+void spawnPipe(const char* command, ChildRedirection ioRedirection);
+int spawnPipeChild(const char* command, ChildRedirection ioRedirection);
 
 /**
  * Dups stdout and stderror to /dev/null

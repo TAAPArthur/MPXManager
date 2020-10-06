@@ -26,7 +26,7 @@ SCUTEST_ERR(test_failed_exec_restart, SYS_CALL_FAILED) {
 }
 
 SCUTEST_ITER(test_spawn_child, 2) {
-    assertEquals(10, waitForChild(_i ? spawnChild("exit 10") : spawnPipe("exit 10", REDIRECT_BOTH)));
+    assertEquals(10, waitForChild(_i ? spawnChild("exit 10") : spawnPipeChild("exit 10", REDIRECT_BOTH)));
 }
 
 SCUTEST(test_child_can_outlive_parent) {
@@ -68,7 +68,7 @@ SCUTEST_SET_ENV(set_handlers, simpleCleanup);
 SCUTEST(test_spawn_pipe_input_only) {
     const char values[2][256] = {"1", "2"};
     char buffer[2][256] = {0};
-    if(!spawnPipe(NULL, REDIRECT_CHILD_INPUT_ONLY)) {
+    if(!spawnPipeChild(NULL, REDIRECT_CHILD_INPUT_ONLY)) {
         read(STDIN_FILENO, buffer[0], LEN(buffer[0]));
         assert(strcmp(buffer[0], values[0]) == 0);
         exit(0);
@@ -83,7 +83,7 @@ SCUTEST(test_spawn_pipe_input_only) {
 SCUTEST(test_spawn_pipe_output_only) {
     const char values[2][256] = {"1", "2"};
     char buffer[2][256] = {0};
-    if(!spawnPipe(NULL, REDIRECT_CHILD_OUTPUT_ONLY)) {
+    if(!spawnPipeChild(NULL, REDIRECT_CHILD_OUTPUT_ONLY)) {
         printf(values[1]);
         exit(0);
     }
@@ -94,7 +94,7 @@ SCUTEST(test_spawn_pipe_output_only) {
 }
 
 SCUTEST_ITER(spawn_pipe_death, 4) {
-    int pid = spawnPipe(NULL, (ChildRedirection)_i);
+    int pid = spawnPipeChild(NULL, (ChildRedirection)_i);
     if(!pid) {
         while(true)
             msleep(100);
@@ -104,7 +104,7 @@ SCUTEST_ITER(spawn_pipe_death, 4) {
 }
 
 SCUTEST(spawn_pipe_close) {
-    int pid = spawnPipe(NULL, REDIRECT_BOTH);
+    int pid = spawnPipeChild(NULL, REDIRECT_BOTH);
     if(!pid) {
         exit(0);
     }
@@ -114,8 +114,15 @@ SCUTEST(spawn_pipe_close) {
     assert(!close(STATUS_FD_READ));
     assertEquals(waitForChild(pid), 0);
 }
-SCUTEST_ITER(spawn_pipe_child_close, 2) {
-    if(!spawnPipe(NULL, REDIRECT_BOTH)) {
+SCUTEST(spawn_pipe_read_and_close) {
+    spawnPipe("head -n 1", REDIRECT_CHILD_INPUT_ONLY);
+    createSigAction(SIGPIPE, SIG_IGN);
+    while(write(STATUS_FD, "\n\n", 3) != -1);
+    assert(!close(STATUS_FD));
+    assert(!close(STATUS_FD_READ));
+}
+SCUTEST(spawn_pipe_child_close) {
+    if(!spawnPipeChild(NULL, REDIRECT_BOTH)) {
         exit(0);
     }
     assert(waitForChild(0) == 0);
