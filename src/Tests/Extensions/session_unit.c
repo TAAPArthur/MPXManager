@@ -22,14 +22,19 @@ static void setup() {
     onDefaultStartup();
 }
 
-static void saveResetState() {
-    saveCustomState();
-    saveMonitorWorkspaceMapping();
-    resetState();
+static inline void resetState() {
+    destroyAllLists();
+    createSimpleEnv();
     addWorkspaces(DEFAULT_NUMBER_OF_WORKSPACES);
     initCurrentMasters();
     detectMonitors();
     scan(root);
+}
+
+static void saveResetState() {
+    saveCustomState();
+    saveMonitorWorkspaceMapping();
+    resetState();
     spawnAndWait("xprop -root");
 }
 static void saveResetReloadState() {
@@ -106,12 +111,20 @@ SCUTEST(test_restore_active_master) {
     assertEquals(getActiveMaster(), getMasterByName("test"));
 }
 
-SCUTEST(test_restore_state_window_masks_change) {
+SCUTEST(test_restore_state_window_masks_change, .iter = 2) {
     WindowID win = mapWindow(createNormalWindow());
     scan(root);
     addMask(getWindowInfo(win), FLOATING_MASK);
     saveResetReloadState();
     assert(hasMask(getWindowInfo(win), FLOATING_MASK));
+    if(_i) {
+        addMask(getWindowInfo(win), FULLSCREEN_MASK);
+        runEventLoop();
+        resetState();
+        loadCustomState();
+        runEventLoop();
+        assert(hasMask(getWindowInfo(win), FULLSCREEN_MASK));
+    }
 }
 SCUTEST(test_restore_state_clear_previous) {
     WindowID win = mapWindow(createNormalWindow());

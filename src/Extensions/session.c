@@ -323,9 +323,8 @@ void saveCustomState(void) {
     setWindowProperty(root, MPX_WM_WORKSPACE_LAYOUT_NAMES, ewmh->UTF8_STRING, getBuffer(&joiner), joiner.usedBufferSize);
     setWindowProperty(root, MPX_WM_WORKSPACE_ORDER, XCB_ATOM_CARDINAL, workspaceWindows, numWorkspaceWindows);
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
-        WindowMask mask = ~EXTERNAL_MASKS & winInfo->mask;
-        WindowMask savedMasks = ~EXTERNAL_MASKS & winInfo->savedMask;
-        if(mask != savedMasks) {
+        if((winInfo->mask ^ winInfo->savedMask) & (~EXTERNAL_MASKS)) {
+            WindowMask mask = ~EXTERNAL_MASKS & winInfo->mask;
             TRACE("Saving window masks for window: %d", winInfo->id);
             setWindowPropertyInt(winInfo->id, MPX_WM_MASKS, XCB_ATOM_CARDINAL, mask);
             setWindowPropertyString(winInfo->id, MPX_WM_MASKS_STR, ewmh->UTF8_STRING, getMaskAsString(mask, NULL));

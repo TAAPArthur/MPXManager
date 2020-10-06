@@ -54,11 +54,6 @@ static inline void wakeupWM() {
     flush();
 }
 
-static inline void resetState() {
-    destroyAllLists();
-    createSimpleEnv();
-}
-
 static inline void verifyWindowStack(const ArrayList* stack, const WindowID win[3]) {
     int i = 0;
     FOR_EACH(WindowInfo*, winInfo, stack) {

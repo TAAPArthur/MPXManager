@@ -245,7 +245,7 @@ void addAutoTileRules() {
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
     addEvent(WORKSPACE_WINDOW_REMOVE, DEFAULT_EVENT(markWorkspaceOfWindowDirty));
     addBatchEvent(IDLE, DEFAULT_EVENT(retileAllDirtyWorkspaces));
-    addBatchEvent(IDLE, DEFAULT_EVENT(saveAllWindowMasks, LOWER_PRIORITY));
+    addEvent(IDLE, DEFAULT_EVENT(saveAllWindowMasks, LOWEST_PRIORITY));
 }
 void assignDefaultLayoutsToWorkspace() {
     FOR_EACH(Workspace*, w, getAllWorkspaces()) {
