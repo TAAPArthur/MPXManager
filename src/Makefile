@@ -56,7 +56,7 @@ endif
 
 pkgname := mpxmanager
 
-all: mpxmanager
+all: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so
 
 install-headers:
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/" *.h
@@ -64,7 +64,7 @@ install-headers:
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/util" util/*.h
 	install -m 0744 -Dt "$(DESTDIR)/usr/include/$(pkgname)/xutil" xutil/*.h
 
-install: mpxmanager.sh mpxmanager-autocomplete.sh mpxmanager.1 libmpxmanager.a libmpx-patch.so install-headers
+install: all install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-*
@@ -97,7 +97,7 @@ mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.c com
 	sed -i "s/startOptions=.*/startOptions=\"$$(echo $$(./mpxmanager --list-start-options 2>&1 | sed 's/[,}{]//g' | awk '{print tolower($$0)}'| sed -E 's/((\w|-)+\W)/--\1/g'))\"/g"  mpxmanager-autocomplete.sh
 	sed -i "s/sendOptions=.*/sendOptions=\"$$(echo $$(./mpxmanager --list-options 2>&1 | sed 's/[,}{]//g' ))\"/g"  mpxmanager-autocomplete.sh
 
-mpxmanager: $(BASE_SRCS:.c=.o)
+mpxmanager: $(BASE_SRCS:.c=.o) Tests/test-config.o
 	${CC} ${CFLAGS} $^ -o $@ ${LDFLAGS}
 
 
