@@ -113,9 +113,4 @@ void popContext();
  */
 void printContextStr();
 
-/**
- * Prints the stack strace
- */
-void printStackTrace();
-
 #endif /* LOGGER_H_ */

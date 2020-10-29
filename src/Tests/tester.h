@@ -7,7 +7,6 @@
 #include "../globals.h"
 #include "../boundfunction.h"
 
-#define WAIT_UNTIL_TRUE(COND,EXPR...) do{msleep(10);EXPR;}while(!(COND))
 
 #define getArraySize(A) (A)->size
 
@@ -37,7 +36,6 @@ static inline void incrementCount(void) {
     count++;
 }
 static inline void decrementCount(void) {
-    LOG_RUN(0, printStackTrace());
     count--;
 }
 static inline int getCount() {return count;}

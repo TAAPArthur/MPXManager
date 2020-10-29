@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #================================================================
 # HEADER
 #================================================================
@@ -57,7 +57,7 @@
 set -e
 [ -z "$DEBUG" ] || set -xe
 
-VERSION=1.2.0
+VERSION=
 GIT_HASH=
 
 displayHelp(){
@@ -79,10 +79,7 @@ displayHash(){
 
 MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-mpxmanager}
 MPXMANAGER_HOME=${MPXMANAGER_HOME:-$HOME/.config/mpxmanager}
-MPXMANAGER_CONFIG=${MPXMANAGER_CONFIG:-$MPXMANAGER_HOME/config.c}
-MPXMANAGER_LAST_COMPILED_VERSION=$MPXMANAGER_HOME/.last_compiled_verision
 optspec=":vhs-:"
-
 
 getopts "$optspec" optchar || run $@
     case "${optchar}" in
@@ -101,17 +98,15 @@ getopts "$optspec" optchar || run $@
                     echo $MPXMANAGER_HOME
                     ;;
                 recompile)
-                    mkdir -p $MPXMANAGER_HOME
                     shift
-                    [ -f $MPXMANAGER_CONFIG ] || cp /usr/share/mpxmanager/sample-config.c $MPXMANAGER_CONFIG
+                    if [ ! -d $MPXMANAGER_HOME ]; then
+                        mkdir -p $MPXMANAGER_HOME
+                        cp /usr/share/mpxmanager/sample-config.c config.c
+                    fi
                     export CFLAGS=${CFLAGS:-__place__holder}
                     export LDFLAGS=${LDFLAGS:-__place__holder}
-                    if [[ ! -f $MPXMANAGER_LAST_COMPILED_VERSION || "$GIT_HASH" != $(cat $MPXMANAGER_LAST_COMPILED_VERSION) ]]; then
-                        make -f /usr/share/mpxmanager/sample-makefile -C $MPXMANAGER_HOME clean
-                        echo -n $GIT_HASH > $MPXMANAGER_LAST_COMPILED_VERSION
-                    fi
-
-                    make -f /usr/share/mpxmanager/sample-makefile -C $MPXMANAGER_HOME $* $MPXMANAGER_BIN_NAME
+                    cd $MPXMANAGER_HOME
+                    ${CC:-cc} *.c -o $MPXMANAGER_BIN_NAME ${CFLAGS} ${LDFLAGS} -lmpxmanager $*
                     ;;
                 version)
                     displayVersion

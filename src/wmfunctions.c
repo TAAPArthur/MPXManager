@@ -257,12 +257,18 @@ void activateWindowUnchecked(WindowInfo* winInfo) {
     activateWindow(winInfo);
 }
 
+static inline int popcount(int x) {
+    int c = 0;
+    for (; x != 0; x &= x - 1)
+        c++;
+    return c;
+}
 
 void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
     assert(mask);
     assert(mask < 128);
-    INFO("Config %d: mask %d (%d bits)", win, mask, __builtin_popcount(mask));
-    LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, __builtin_popcount(mask)));
+    INFO("Config %d: mask %d (%d bits)", win, mask, popcount(mask));
+    LOG_RUN(LOG_LEVEL_INFO, PRINT_ARR("Config values", values, popcount(mask)));
     XCALL(xcb_configure_window, dis, win, mask, values);
 }
 void setWindowPosition(WindowID win, const Rect geo) {

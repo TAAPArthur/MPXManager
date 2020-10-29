@@ -181,7 +181,6 @@ void quit(int exitCode) {
 
 static void handler(int sig) {
     ERROR("Error: signal %d:", sig);
-    LOG_RUN(LOG_LEVEL_WARN, printStackTrace());
     printSummary();
     if(sig == SIGSEGV || sig == SIGABRT)
         exit(sig);
@@ -217,5 +216,4 @@ void set_handlers() {
     createSigAction(SIGPIPE, resetPipe);
     createSigAction(SIGHUP, restart);
     createSigAction(SIGUSR1, restart);
-    createSigAction(SIGUSR2, printStackTrace);
 }

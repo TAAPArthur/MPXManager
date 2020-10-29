@@ -1,4 +1,3 @@
-#include <execinfo.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <assert.h>
@@ -16,14 +15,6 @@ LogLevel getLogLevel() {
 }
 void setLogLevel(LogLevel level) {
     LOG_LEVEL = level;
-}
-
-void printStackTrace(void) {
-    void* array[32];
-    // get void*'s for all entries on the stack
-    size_t size = backtrace(array, 32);
-    // print out all the frames to stderr
-    backtrace_symbols_fd(array, size, STDOUT_FILENO);
 }
 
 ArrayList context;

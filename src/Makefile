@@ -6,12 +6,12 @@ SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-varia
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
 ERROR_FLAGS := -Wall -Werror
-CFLAGS := ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
+CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 
-TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} --coverage -lm -lscutest
-LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lxdo
+TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} --coverage -lscutest
+LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lm
 
-LAYER0_SRCS :=  globals.c util/rect.h util/string-array.c util/logger.c util/debug.c settings.c
+LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c settings.c
 LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
 LAYER1_SRCS := util/arraylist.c boundfunction.c
 LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
@@ -67,7 +67,7 @@ install-headers:
 install: all install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpxmanager.a
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
-	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-*
+	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.c
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/etc/bash_completion.d/mpxmanager-autocomplete"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
@@ -83,14 +83,12 @@ uninstall:
 preinstall: mpxmanager.1 mpxmanager-autocomplete.sh
 	sed -i "s/pkgver=.*/pkgver='$$(./mpxmanager.sh -v)'/g" ../PKGBUILD
 
-mpxmanager.1: mpxmanager.sh
-	help2man -No mpxmanager.1 ./mpxmanager.sh
-
 mpxmanager.sh: mpxmanager.sh.template
 	cp $< $@
 	sed -i "s/CFLAGS:-__place__holder/CFLAGS:-'${CFLAGS}'/g" mpxmanager.sh
 	sed -i "s/LDFLAGS:-__place__holder/LDFLAGS:-'${LDFLAGS}'/g" mpxmanager.sh
 	sed -i "s/GIT_HASH=.*/GIT_HASH=$$(git rev-parse --short HEAD)/g" mpxmanager.sh
+	sed -i "s/VERSION=.*/VERSION=$$(./mpxmanager --version)/g" mpxmanager.sh
 
 mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.c communications.c | mpxmanager
 	cp $< $@
@@ -148,7 +146,7 @@ unitTestExtensions.out: unitTestExtensions
 	$(if $(TEST_FUNC),exit 1)
 
 
-code_coverage.out: unitTest
+code_coverage.out: unitTest.out
 	gcov -mr *
 	grep "#####:" *c.gcov > $@
 	grep "#####:" *c.gcov |wc -l

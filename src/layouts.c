@@ -241,7 +241,6 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
     if(isFocusable(winInfo))
         mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
     if(mask) {
-        INFO("PreConfig %d: mask %d (%d bits)", winInfo->id, mask, __builtin_popcount(mask));
         uint32_t finalConfig[CONFIG_LEN] = {0};
         for(int i = 0, counter = 0; i < CONFIG_LEN; i++) {
             if(mask & (1 << i))
@@ -390,7 +389,7 @@ void column(LayoutState* state) {
         full(state);
         return;
     }
-    int numCol = MAX(size, state->args->arg == 0 ? 31 - __builtin_clz(size + 1) : state->args->arg);
+    int numCol = MAX(size, state->args->arg == 0 ? log2(size + 1) : state->args->arg);
     int rem = numCol - size % numCol;
     // split of width(0) or height(1)
     int splitDim = getDimIndex(state->args);

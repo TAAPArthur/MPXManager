@@ -28,6 +28,10 @@ SCUTEST_ERR(startup_bad_option, INVALID_OPTION) {
     MAIN("--bad-option");
 }
 
+SCUTEST(test_version_exit) {
+    assertEquals(0, MAIN("--version"));
+}
+
 SCUTEST(startup_no_args) {
     addShutdownOnIdleRule();
     addEvent(X_CONNECTION, DEFAULT_EVENT(incrementCount));
@@ -39,7 +43,8 @@ SCUTEST_ITER(lists, LEN(autoCompleteHelpers)) {
     assertEquals(0, MAIN(autoCompleteHelpers[_i]));
 }
 SCUTEST_ERR(wm_no_response, WM_NOT_RESPONDING) {
-    assert(MAIN("log-level", "0"));
+    MAIN("log-level", "0");
+    fail();
 }
 static WindowID win;
 static void setup() {

@@ -56,7 +56,6 @@ void logError(xcb_generic_error_t* e) {
     ERROR("Error code %d %s ", e->error_code, buff) ;
     if((1 << e->error_code) & CRASH_ON_ERRORS) {
         ERROR("Crashing on error");
-        LOG_RUN(LOG_LEVEL_ERROR, printStackTrace());
         LOG_RUN(LOG_LEVEL_DEBUG, printSummary());
         quit(X_ERROR);
     }

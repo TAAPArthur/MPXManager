@@ -42,10 +42,16 @@ static void dumpOptions() {
 static void setWindow(WindowID win) { active = win;}
 static void noEventLoop() {RUN_EVENT_LOOP = 0;}
 static void replaceWM() {STEAL_WM_SELECTION = 1;}
+
+static void version() {
+    printf("1.3.0\n");
+    exit(NORMAL_TERMINATION);
+}
 static void dumpStartupOptions();
 /// list of startup options
 static Option options[] = {
     {"list-start-options", {dumpStartupOptions}},
+    {"list-start-options", {version}},
     {"log-level", {setLogLevel}, .flags = VAR_SETTER | REQUEST_INT},
     {"list-options", {dumpOptions}},
     {"no-event-loop", {noEventLoop}},
