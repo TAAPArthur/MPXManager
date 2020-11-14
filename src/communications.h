@@ -16,6 +16,7 @@ enum OptionFlags {
     UNSAFE = 1 << 1,
     /// Send confirmation before command is run
     CONFIRM_EARLY = 1 << 2,
+    USE_FOCUSED = 1 << 3,
     /// marks this function as one that only modifies a global variable
     VAR_SETTER = 1 << 4,
     REQUEST_INT = 1 << 5,

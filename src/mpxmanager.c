@@ -131,7 +131,7 @@ static void parseArgs(int argc, const char* const* argv) {
         break;
     }
 }
-void shutdownWhenNoOutsandingMessages() {
+void shutdownWhenNoOutstandingMessages() {
     if(!hasOutStandingMessages())
         requestShutdown();
 }
@@ -161,7 +161,7 @@ int _main(int argc, const char* const* argv) {
         if(hasOutStandingMessages()) {
             TRACE("waiting for send receipts");
             registerForWindowEvents(getPrivateWindow(), XCB_EVENT_MASK_PROPERTY_CHANGE);
-            addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(shutdownWhenNoOutsandingMessages));
+            addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(shutdownWhenNoOutstandingMessages));
             alarm(IDLE_TIMEOUT_CLI_SEC);
             createSigAction(SIGALRM, timeoutWaitingForRequests);
             runEventLoop();

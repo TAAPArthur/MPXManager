@@ -28,6 +28,26 @@ SCUTEST(test_send_receive_func) {
     assert(!hasOutStandingMessages());
 }
 
+SCUTEST(test_hex) {
+    addShutdownOnIdleRule();
+    WindowID win = mapWindow(createNormalWindow());
+    char buffer[16]={0};
+    sprintf(buffer, "0x%x", win);
+    checkAndSend("focus-win", buffer);
+    runEventLoop();
+    assertEquals(getActiveFocus(), win);
+}
+SCUTEST(test_destroy_win) {
+    addEvent(XCB_DESTROY_NOTIFY, DEFAULT_EVENT(requestShutdown, LOWEST_PRIORITY));
+    WindowID win = mapWindow(createNormalWindow());
+    registerForWindowEvents(win, XCB_EVENT_MASK_STRUCTURE_NOTIFY);
+    scan(root);
+    onWindowFocus(win);
+    assert(getFocusedWindow());
+    checkAndSend("destroy-win", "");
+    runEventLoop();
+}
+
 SCUTEST(test_send_quit) {
     checkAndSend("quit", "");
     runEventLoop();

@@ -30,10 +30,13 @@
  */
 static int isInt(const char* str, bool* isNumeric) {
     char* end;
-    int num = strtol(str, &end, 10);
-    if(*end) {
+    int num;
+    if(str[0]=='0' && str[1]=='x' || str[0]=='x') {
         num = strtol(str, &end, 16);
     }
+    else
+        num = strtol(str, &end, 10);
+    INFO("HERE '%s' %d", str, num);
     if(isNumeric)
         *isNumeric = (*end == 0) && str[0];
     return num;
@@ -54,7 +57,10 @@ void callOption(const Option* o, const char* p, const char* p2) {
     TRACE("Calling %s %s", o->name, p);
     uint32_t i = isInt(p, NULL);
     const BindingFunc* bindingFunc = &o->bindingFunc;
-    if(o->flags & REQUEST_INT) {
+    if(o->flags & USE_FOCUSED) {
+        callBindingWithWindow(&o->bindingFunc, FOCUSED_WINDOW, NULL);
+    }
+    else if(o->flags & REQUEST_INT) {
         o->bindingFunc.func(i, bindingFunc->arg);
     }
     else if(o->flags & REQUEST_STR) {
@@ -66,6 +72,7 @@ void callOption(const Option* o, const char* p, const char* p2) {
 }
 
 static Option baseOptions[] = {
+    {"destroy-win", {destroyWindowInfo}, .flags = USE_FOCUSED},
     {"dump", {dumpWindowByClass}, .flags = FORK_ON_RECEIVE | REQUEST_STR},
     {"dump", {dumpWindowFilter, .arg.i = MAPPABLE_MASK}, .flags = FORK_ON_RECEIVE},
     {"dump-master", {dumpMaster, .arg.i = 0}, .flags = FORK_ON_RECEIVE},
@@ -74,22 +81,29 @@ static Option baseOptions[] = {
     {"focus-win", {(void(*)())focusWindow}, .flags = REQUEST_INT},
     {"log-level", {setLogLevel}, .flags = VAR_SETTER | REQUEST_INT},
     {"lower", {lowerWindow}, .flags = REQUEST_INT},
-    {"next-layout", {cycleLayouts}, UP},
+    {"move-to-workspace", {moveToWorkspace}, .flags = USE_FOCUSED|REQUEST_INT},
+    {"next-layout", {cycleLayouts, .arg.i=UP}, },
     {"next-win", {shiftFocus}, UP},
-    {"next-win-of-class", {shiftFocusToNextClass}, UP},
+    {"next-win-of-class", {shiftFocusToNextClass, .arg.i=UP}},
     {"prev-layout", {cycleLayouts}, DOWN},
     {"prev-win", {shiftFocus}, DOWN},
-    {"prev-win-of-class", {shiftFocusToNextClass}, DOWN},
+    {"prev-win-of-class", {shiftFocusToNextClass, .arg.i=DOWN}},
+    {"quit", {requestShutdown},  .flags = CONFIRM_EARLY | UNSAFE},
     {"raise", {raiseWindow}, .flags = REQUEST_INT},
     {"raise-or-run", {raiseOrRun2},  .flags = REQUEST_STR | REQUEST_MULTI | UNSAFE},
     {"raise-or-run", {raiseOrRun},  .flags = REQUEST_STR | UNSAFE},
     {"raise-or-run-role", {raiseOrRunRole},  .flags = REQUEST_STR | REQUEST_MULTI | UNSAFE},
     {"raise-or-run-title", {raiseOrRunTitle},  .flags = REQUEST_STR | REQUEST_MULTI | UNSAFE},
     {"restart", {restart}, .flags = CONFIRM_EARLY},
+    {"shift-focus-down", {shiftFocus, .arg.i=DOWN}},
+    {"shift-focus-up", {shiftFocus, .arg.i=UP}},
+    {"shift-workspace-down", {shiftWorkspace, .arg.i=DOWN}},
+    {"shift-workspace-up", {shiftWorkspace, .arg.i=UP}},
     {"spawn", {spawn},  .flags = REQUEST_STR | UNSAFE},
-    {"quit", {requestShutdown},  .flags = CONFIRM_EARLY | UNSAFE},
     {"sum", {printSummary}, .flags = FORK_ON_RECEIVE},
-    {"switch-workspace", {switchToWorkspace}},
+    {"swap-down", {swapPosition, .arg.i=DOWN}},
+    {"swap-up", {swapPosition, .arg.i=UP}},
+    {"switch-workspace", {switchToWorkspace}, .flags = REQUEST_INT},
 };
 static ArrayList options;
 
