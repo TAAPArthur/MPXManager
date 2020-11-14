@@ -130,31 +130,6 @@ SCUTEST(spawn_pipe_child_close) {
 }
 
 SCUTEST_SET_ENV(NULL, simpleCleanup);
-SCUTEST_ITER(spawn_env, 2) {
-    bool large = _i;
-    createSimpleEnv();
-    LD_PRELOAD_INJECTION = 1;
-    WindowInfo* winInfo = addFakeWindowInfo(large ? 1 << 31 : 1);
-    onWindowFocus(winInfo->id);
-    addFakeMonitor((Rect) {0, 0, 1, (uint16_t)(large ? -1 : 1)});
-    assignUnusedMonitorsToWorkspaces();
-    int pid = spawnChild(NULL);
-    if(!pid) {
-        char buffer[255];
-        sprintf(buffer, "%d", getActiveMasterKeyboardID());
-        assert(getenv("_WIN_ID"));
-        assert(getenv("_WIN_TITLE"));
-        assert(getenv("_WIN_CLASS"));
-        assert(getenv("_WIN_INSTANCE"));
-        assert(getenv("_ROOT_X"));
-        assert(getenv(DEFAULT_KEYBOARD_ENV_VAR_NAME));
-        assert(getenv(DEFAULT_POINTER_ENV_VAR_NAME));
-        assert(getenv("LD_PRELOAD"));
-        simpleCleanup();
-        quit(0);
-    }
-    assertEquals(waitForChild(pid), 0);
-}
 
 SCUTEST(test_quit) {
     quit(0);

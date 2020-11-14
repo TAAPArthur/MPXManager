@@ -122,10 +122,6 @@ void suppressOutput(void) ;
  * function to run in child after a fork/spawn call
  */
 extern void (*onChildSpawn)(void);
-/**
- * Set environment vars such to help old clients know which master device to use
- */
-void setClientMasterEnvVar(void);
 
 void set_handlers();
 

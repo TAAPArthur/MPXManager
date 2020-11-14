@@ -23,7 +23,7 @@ int numPassedArguments;
 const char* const* passedArguments;
 static char buffer[255] = {};
 
-void (*onChildSpawn)(void) = setClientMasterEnvVar;
+void (*onChildSpawn)(void) = NULL;
 void safePipe(int* fds) {
     if(pipe(fds)) {
         perror(NULL);
@@ -32,57 +32,6 @@ void safePipe(int* fds) {
     fcntl(fds[0], F_SETFD, FD_CLOEXEC);
     fcntl(fds[1], F_SETFD, FD_CLOEXEC);
     INFO("Created pipes %d\n", fds[1]);
-}
-
-static inline void setEnvRect(const char* name, const Rect rect) {
-    const char var[4][32] = {"_%s_X", "_%s_Y", "_%s_WIDTH", "_%s_HEIGHT"};
-    char strName[32];
-    char strValue[16];
-    for(int n = 0; n < 4; n++) {
-        sprintf(strName, var[n], name);
-        sprintf(strValue, "%ud", ((short*)&rect)[n]);
-        setenv(strName, strValue, 1);
-    }
-}
-void setClientMasterEnvVar(void) {
-    static char strValue[32];
-    if(getActiveMaster()) {
-        sprintf(strValue, "%ud", getActiveMasterKeyboardID());
-        setenv(DEFAULT_KEYBOARD_ENV_VAR_NAME, strValue, 1);
-        sprintf(strValue, "%ud", getActiveMasterPointerID());
-        setenv(DEFAULT_POINTER_ENV_VAR_NAME, strValue, 1);
-        if(getFocusedWindow()) {
-            sprintf(strValue, "%ud", getFocusedWindow()->id);
-            setenv("_WIN_ID", strValue, 1);
-            setenv("_WIN_TITLE", getFocusedWindow()->title, 1);
-            setenv("_WIN_CLASS", getFocusedWindow()->className, 1);
-            setenv("_WIN_INSTANCE", getFocusedWindow()->instanceName, 1);
-            setEnvRect("WIN", getFocusedWindow()->geometry);
-        }
-        Monitor* m = getActiveWorkspace() ? getMonitor(getActiveWorkspace()) : NULL;
-        if(m) {
-            setEnvRect("MON", m->base);
-            setEnvRect("VIEW", m->view);
-            setenv("MONITOR_NAME", m->name, 1);
-        }
-        const Rect rootBounds = {0, 0, getRootWidth(), getRootHeight()};
-        setEnvRect("ROOT", rootBounds);
-        if(LD_PRELOAD_INJECTION) {
-            const char* previousPreload = getenv("LD_PRELOAD");
-            const char* preload_str = LD_PRELOAD_PATH;
-            char* buffer = NULL;
-            if(previousPreload && previousPreload[0]) {
-                buffer = calloc(1, strlen(previousPreload) + strlen(LD_PRELOAD_PATH) + 1);
-                strcat(buffer, LD_PRELOAD_PATH);
-                strcat(buffer, ":");
-                strcat(buffer, previousPreload);
-                preload_str = buffer;
-            }
-            setenv("LD_PRELOAD", preload_str, 1);
-            if(buffer)
-                free(buffer);
-        }
-    }
 }
 
 void suppressOutput(void) {
