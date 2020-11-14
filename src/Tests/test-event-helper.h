@@ -74,4 +74,8 @@ static inline void generateMotionEvents(int num) {
     }
     flush();
 }
+
+static inline void addFailOnEventRule(int eventType) {
+    addEvent(eventType, DEFAULT_EVENT(fail));
+}
 #endif

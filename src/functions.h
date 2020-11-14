@@ -268,4 +268,11 @@ static inline void floatWindow(WindowInfo* winInfo) {
 static inline void sinkWindow(WindowInfo* winInfo) {
     removeMask(winInfo, FLOATING_MASK | ALL_NO_TILE_MASKS);
 }
+
+/**
+ * Swaps the workspaces and positions in said workspaces between the two windows
+ * @param winInfo1
+ * @param winInfo2
+ */
+void swapWindows(WindowID win, WindowID win2);
 #endif

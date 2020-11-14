@@ -264,3 +264,23 @@ void updateWindowMoveResize() {
         }
     }
 }
+
+void swapWindows(WindowID win, WindowID win2) {
+    WindowInfo* winInfo1 = getWindowInfo(win), *winInfo2=getWindowInfo(win2);
+    if(winInfo1 && winInfo2) {
+        TRACE("swapping windows %d %d", winInfo1->id, winInfo2->id);
+        Workspace* w1 = getWorkspaceOfWindow(winInfo1);
+        Workspace* w2 = getWorkspaceOfWindow(winInfo2);
+        if(w1 && w2) {
+            swapElements(
+                getWorkspaceWindowStack(w1),
+                getIndex(getWorkspaceWindowStack(w1), winInfo1, sizeof(WindowID)),
+                getWorkspaceWindowStack(w2),
+                getIndex(getWorkspaceWindowStack(w2), winInfo2, sizeof(WindowID))
+            );
+        }
+        Rect geo = getRealGeometry(winInfo2->id);
+        setWindowPosition(winInfo2->id, getRealGeometry(winInfo1->id));
+        setWindowPosition(winInfo1->id, geo);
+    }
+}

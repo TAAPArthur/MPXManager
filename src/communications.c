@@ -100,6 +100,7 @@ static Option baseOptions[] = {
     {"sum", {printSummary}, .flags = REDIRECT_OUTPUT},
     {"swap-down", {swapPosition, .arg.i=DOWN}},
     {"swap-up", {swapPosition, .arg.i=UP}},
+    {"swap-windows", {swapWindows}, .flags = REQUEST_INT|REQUEST_MULTI},
     {"switch-workspace", {switchToWorkspace}, .flags = REQUEST_INT},
 };
 static ArrayList options;
@@ -115,7 +116,6 @@ void initOptions() {
 void addInterClientCommunicationRule() {
     addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(receiveClientMessage));
 }
-
 
 static int outstandingSendCount;
 uint32_t getNumberOfMessageSent() {

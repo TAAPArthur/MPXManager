@@ -292,3 +292,29 @@ SCUTEST(test_wm_commit) {
     assertEquals(100, getRealGeometry(winInfo->id).x);
     assertEquals(100, getRealGeometry(winInfo->id).y);
 }
+SCUTEST_SET_ENV(onDefaultStartup, cleanupXServer);
+SCUTEST(test_swap_windows, .iter=2) {
+    mapWindow(createNormalWindow());
+    WindowID win1 = mapWindow(createNormalWindow());
+    mapWindow(createNormalWindow());
+    WindowID win2 = mapWindow(createNormalWindow());
+    mapWindow(createNormalWindow());
+    scan(root);
+    moveToWorkspace(getWindowInfo(win2), 1);
+    setActiveLayout(&GRID);
+    addShutdownOnIdleRule();
+    runEventLoop();
+    Rect pos1 = getRealGeometry(win1);
+    Rect pos2 = getRealGeometry(win2);
+    swapWindows(win1, win2);
+    if(_i) {
+        addFailOnEventRule(TILE_WORKSPACE);
+    } else {
+        retile();
+    }
+    runEventLoop();
+    assertEqualsRect(pos2, getRealGeometry(win1));
+    assertEqualsRect(pos1, getRealGeometry(win2));
+    assertEquals(getWorkspaceOfWindow(getWindowInfo(win1))->id, 1);
+    assertEquals(getWorkspaceOfWindow(getWindowInfo(win2))->id, 0);
+}

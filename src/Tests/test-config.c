@@ -5,7 +5,6 @@
 #include "../Extensions/extra-rules.h"
 #include "../Extensions/mpx.h"
 #include "../Extensions/session.h"
-#include "../Extensions/window-clone.h"
 #include "../bindings.h"
 #include "../boundfunction.h"
 #include "../functions.h"
@@ -29,7 +28,6 @@ void loadSettings(void) {
         // Extensions
         addAutoDetectDockPosition();
         addAutoMPXRules();
-        addCloneRules();
         addEWMHRules();
         addFloatRule();
         addMoveNonTileableWindowsToWorkspaceBounds();
