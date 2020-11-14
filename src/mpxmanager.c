@@ -167,7 +167,8 @@ int _main(int argc, const char* const* argv) {
             runEventLoop();
             DEBUG("WM Running: %d; Outstanding messages: %d", isMPXManagerRunning(), hasOutStandingMessages());
         }
-        //if(hasXConnectionBeenOpened()) return !getLastMessageExitCode();
+        if(hasXConnectionBeenOpened())
+            return getLastMessageExitCode();
     }
     return 0;
 }

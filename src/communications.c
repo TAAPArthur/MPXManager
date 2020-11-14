@@ -73,11 +73,11 @@ void callOption(const Option* o, const char* p, const char* p2) {
 
 static Option baseOptions[] = {
     {"destroy-win", {destroyWindowInfo}, .flags = USE_FOCUSED},
-    {"dump", {dumpWindowByClass}, .flags = FORK_ON_RECEIVE | REQUEST_STR},
-    {"dump", {dumpWindowFilter, .arg.i = MAPPABLE_MASK}, .flags = FORK_ON_RECEIVE},
-    {"dump-master", {dumpMaster, .arg.i = 0}, .flags = FORK_ON_RECEIVE},
-    {"dump-rules", {dumpRules},  .flags = FORK_ON_RECEIVE},
-    {"dump-win", {dumpWindow},  .flags = FORK_ON_RECEIVE | REQUEST_INT},
+    {"dump", {dumpWindowByClass}, .flags = REDIRECT_OUTPUT | REQUEST_STR},
+    {"dump", {dumpWindowFilter, .arg.i = MAPPABLE_MASK}, .flags = REDIRECT_OUTPUT},
+    {"dump-master", {dumpMaster, .arg.i = 0}, .flags = REDIRECT_OUTPUT},
+    {"dump-rules", {dumpRules},  .flags = REDIRECT_OUTPUT},
+    {"dump-win", {dumpWindow},  .flags = REDIRECT_OUTPUT | REQUEST_INT},
     {"focus-win", {(void(*)())focusWindow}, .flags = REQUEST_INT},
     {"log-level", {setLogLevel}, .flags = VAR_SETTER | REQUEST_INT},
     {"lower", {lowerWindow}, .flags = REQUEST_INT},
@@ -100,7 +100,7 @@ static Option baseOptions[] = {
     {"shift-workspace-down", {shiftWorkspace, .arg.i=DOWN}},
     {"shift-workspace-up", {shiftWorkspace, .arg.i=UP}},
     {"spawn", {spawn},  .flags = REQUEST_STR | UNSAFE},
-    {"sum", {printSummary}, .flags = FORK_ON_RECEIVE},
+    {"sum", {printSummary}, .flags = REDIRECT_OUTPUT},
     {"swap-down", {swapPosition, .arg.i=DOWN}},
     {"swap-up", {swapPosition, .arg.i=UP}},
     {"switch-workspace", {switchToWorkspace}, .flags = REQUEST_INT},
@@ -207,7 +207,7 @@ void receiveClientMessage(xcb_client_message_event_t* event) {
             }
             fflush(NULL);
             int stdout = -1;
-            if((option->flags & FORK_ON_RECEIVE)) {
+            if((option->flags & REDIRECT_OUTPUT)) {
                 fflush(NULL);
                 stdout = dup(STDOUT_FILENO);
                 char outputFile[64] = {"/dev/null"};
@@ -228,7 +228,7 @@ void receiveClientMessage(xcb_client_message_event_t* event) {
                     close(fd);
             }
             callOption(option, values[0], values[1]);
-            if((option->flags & FORK_ON_RECEIVE)) {
+            if((option->flags & REDIRECT_OUTPUT)) {
                 fflush(NULL);
                 if(dup2(stdout, STDOUT_FILENO) == -1) {
                     perror("Could not revert back stdout");
