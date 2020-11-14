@@ -75,7 +75,6 @@ SCUTEST(test_activate_window) {
     assertEquals(getActiveWorkspaceIndex(), 1);
 }
 
-/* TODO
 SCUTEST(test_activate_workspace) {
     addWorkspaces(1);
     WindowID win = mapWindow(createNormalWindow());
@@ -85,16 +84,12 @@ SCUTEST(test_activate_workspace) {
     moveToWorkspace(getWindowInfo(win), 1);
     moveToWorkspace(getWindowInfo(win3), 0);
     moveToWorkspace(getWindowInfo(win2), 0);
-    assertEquals(activateWorkspace(1), 0);
-    onWindowFocus(win);
+    activateWorkspace(1);
+    assertEquals(getActiveFocus(), win);
     assertEquals(getActiveWorkspace()->id, 1);
-    assertEquals(activateWorkspace(0), 0);
-    onWindowFocus(win3);
-    onWindowFocus(win2);
-    assertEquals(activateWorkspace(1), win);
-    assertEquals(activateWorkspace(0), win2);
+    activateWorkspace(0);
+    assertEquals(getActiveFocus(), win3);
 }
-*/
 
 SCUTEST(test_sticky_workspace_change) {
     WindowID win = mapArbitraryWindow();

@@ -28,6 +28,11 @@ SCUTEST(test_send_receive_func) {
     assert(!hasOutStandingMessages());
 }
 
+SCUTEST(test_send_quit) {
+    checkAndSend("quit", "");
+    runEventLoop();
+}
+
 SCUTEST(test_send_multi_func) {
     sendAs("raise-or-run", 0, "NotFound", "exit 0");
 }

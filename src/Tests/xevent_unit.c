@@ -66,6 +66,17 @@ static void verifyFDs(int i, int mask) {
     assertEquals(fds[0], i);
     assertEquals(mask, POLLIN);
 }
+
+void wakeup() {
+    mapWindow(createNormalWindow());
+}
+SCUTEST(test_wakeup_from_blocking, .timeout=5) {
+    addEvent(TRUE_IDLE, DEFAULT_EVENT(wakeup));
+    addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(requestShutdown));
+    openXDisplay();
+    registerForWindowEvents(root, XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY| XCB_EVENT_MASK_STRUCTURE_NOTIFY);
+    runEventLoop();
+}
 SCUTEST(test_extra_events) {
     pipe(fds);
     pipe(fds + 2);

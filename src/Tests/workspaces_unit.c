@@ -21,6 +21,12 @@ SCUTEST(test_workspace_add_remove) {
         assert(getNumberOfWorkspaces() == starting - i);
     }
 }
+
+SCUTEST(test_set_workspace_name) {
+    addWorkspaces(1);
+    setWorkspaceName(0, "N");
+    assertEquals(getWorkspaceByName("N"), getWorkspace(0));
+}
 SCUTEST(test_workspace_add_remove_many) {
     int starting = getNumberOfWorkspaces();
     int size = 10;

@@ -3,6 +3,7 @@
 #include "../devices.h"
 #include "../globals.h"
 #include "../windows.h"
+#include "../xutil/test-functions.h"
 #include "test-event-helper.h"
 #include "test-mpx-helper.h"
 #include "tester.h"
@@ -15,6 +16,31 @@ SCUTEST_ITER(test_grab_ungrab_bindings, 2) {
     assertEquals(0, grabBinding(&sampleBinding, 0));
     assert(sampleBinding.detail);
     assertEquals(0, grabBinding(&sampleBinding, 1));
+}
+
+
+SCUTEST(test_grab_ungrab_device) {
+    Binding sampleBinding = {0, 1, {incrementCount}, .flags = {.grabDevice= 1},
+        .chainMembers = CHAIN_MEM(
+                {0, 2, {incrementCount}},
+                {0, 3, {incrementCount}, .flags={.popChain=1}}
+                )};
+    addBindings(&sampleBinding, 1);
+    BindingEvent event = {0, 1};
+    BindingEvent eventInner = {0, 2};
+    BindingEvent eventOther = {0, 3};
+    checkBindings(&event);
+    assertEquals(1, getCount());
+    consumeEvents();
+    checkBindings(&eventInner);
+    clickButton(5, getActiveMasterPointerID());
+    waitToReceiveInput(XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS | XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, 0);
+    assertEquals(2, getCount());
+    checkBindings(&eventOther);
+    assertEquals(3, getCount());
+    consumeEvents();
+    clickButton(5, getActiveMasterPointerID());
+    assert(!consumeEvents());
 }
 
 #define OTHER_MODE 1
@@ -95,5 +121,16 @@ SCUTEST(test_check_bindings_chain) {
     checkBindings(&eventEnd);
     assertEquals(4, getCount());
     assertEquals(0, getActiveMaster()->bindings.size);
+}
+
+SCUTEST(test_check_bindings_chain_external_event) {
+    BindingEvent event = {0, 2};
+    BindingEvent outOfChainEvent = {0, 1};
+    checkBindings(&event);
+    assertEquals(2, getCount());
+    assertEquals(1, getActiveMaster()->bindings.size);
+    checkBindings(&outOfChainEvent);
+    assertEquals(2, getCount());
+    assertEquals(1, getActiveMaster()->bindings.size);
 }
 

@@ -230,24 +230,11 @@ bool shouldUpdate(RefWindowMouse* refStruct) {
     refStruct->lastSeqNumber = getLastDetectedEventSequenceNumber();
     return 1;
 }
-/*
-bool detectWindowMoveResizeButtonRelease(Master* m) {
-    xcb_input_button_release_event_t* event = (xcb_input_button_release_event_t*)getLastEvent();
-    auto ref = getRef(m);
-    if(ref) {
-        if(ref->btn && ref->btn == event->detail) {
-            commitWindowMoveResize(m);
-            return 0;
-        }
-    }
-    return 1;
-}
-*/
 
 void startWindowMoveResize(WindowInfo* winInfo, bool move, int change) {
     if(!getRef()) {
         WindowID win = winInfo->id;
-        DEBUG("Starting WM move/resize; Master: %d", getActiveMasterKeyboardID());
+        DEBUG("Starting WM move/resize; Master: %d Win: %d", getActiveMasterKeyboardID(), win);
         short pos[2] = {0, 0};
         getMousePosition(getActiveMasterPointerID(), root, pos);
         RefWindowMouse temp = {.win = win, .ref = getRealGeometry(win), {pos[0], pos[1]}, .change = change, move};

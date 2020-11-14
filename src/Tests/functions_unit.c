@@ -238,3 +238,52 @@ SCUTEST(activate_urgent) {
     activateNextUrgentWindow();
     assertEquals(getActiveFocus(), middle->id);
 }
+SCUTEST(test_wm_move) {
+    movePointer(0, 0);
+    int deltaX=10, deltaY=20;
+    WindowInfo* winInfo = getElement(getAllWindows(), 0);
+    WindowInfo* winInfo2 = getElement(getAllWindows(), 1);
+    startWindowMoveResize(winInfo, 1, 0);
+    startWindowMoveResize(winInfo2, 1, 0);
+    movePointer(deltaX, deltaY);
+    updateWindowMoveResize();
+    assertEquals(0, getRealGeometry(winInfo2->id).x);
+    assertEquals(0, getRealGeometry(winInfo2->id).y);
+    assertEquals(deltaX, getRealGeometry(winInfo->id).x);
+    assertEquals(deltaY, getRealGeometry(winInfo->id).y);
+}
+SCUTEST(test_wm_resize_invert) {
+    WindowInfo* winInfo = getElement(getAllWindows(), 0);
+    int N = 10;
+    setWindowPosition(winInfo->id, (Rect){N, N, N, N});
+    movePointer(2*N, 2*N);
+    startWindowMoveResize(winInfo, 0, 0);
+    movePointer(0, 0);
+    updateWindowMoveResize();
+    Rect pos = {0, 0, N, N};
+    assertEqualsRect(pos, getRealGeometry(winInfo->id));
+}
+
+SCUTEST(test_wm_cancel) {
+    WindowInfo* winInfo = getElement(getAllWindows(), 0);
+    startWindowMoveResize(winInfo, 0, 0);
+    Rect originalPos = getRealGeometry(winInfo->id);
+    movePointer(100, 100);
+    updateWindowMoveResize();
+    cancelWindowMoveResize();
+    assertEqualsRect(originalPos, getRealGeometry(winInfo->id));
+}
+SCUTEST(test_wm_commit) {
+    movePointer(0, 0);
+    WindowInfo* winInfo = getElement(getAllWindows(), 0);
+    startWindowMoveResize(winInfo, 1, 0);
+    movePointer(100, 100);
+    updateWindowMoveResize();
+    commitWindowMoveResize();
+    assertEquals(100, getRealGeometry(winInfo->id).x);
+    assertEquals(100, getRealGeometry(winInfo->id).y);
+    movePointer(0, 0);
+    updateWindowMoveResize();
+    assertEquals(100, getRealGeometry(winInfo->id).x);
+    assertEquals(100, getRealGeometry(winInfo->id).y);
+}
