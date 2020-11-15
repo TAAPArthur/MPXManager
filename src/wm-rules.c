@@ -144,9 +144,9 @@ void onMapEvent(xcb_map_notify_event_t* event) {
     TRACE("Detected map event for Window %d", event->window);
     WindowInfo* winInfo = getWindowInfo(event->window);
     if(winInfo) {
-        bool alreadlyMapped = hasMask(winInfo, MAPPABLE_MASK);
+        bool alreadyMapped = hasMask(winInfo, MAPPABLE_MASK);
         addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
-        if(!alreadlyMapped)
+        if(!alreadyMapped)
             applyEventRules(CLIENT_MAP_ALLOW, winInfo);
         if(winInfo->dock)
             applyEventRules(SCREEN_CHANGE, NULL);

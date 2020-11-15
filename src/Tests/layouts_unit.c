@@ -89,7 +89,7 @@ SCUTEST_ITER(test_layouts_unmapped_windows, NUMBER_OF_LAYOUT_FAMILIES) {
     }
     retile();
     Rect geo = getRealGeometry(unmapped);
-    assertEquals(*(long*)&rect, *(long*)&geo);
+    assertEqualsRect(rect, geo);
 }
 
 SCUTEST_ITER(test_fixed_position_windows, NUMBER_OF_LAYOUT_FAMILIES + 1) {
@@ -261,7 +261,7 @@ SCUTEST_ITER(test_privileged_windows_size, 9 * 2) {
     addMask(winInfo, baseMask | arr[_i].mask);
     retile();
     Rect rect = getRealGeometry(winInfo->id);
-    assertEquals(*(long*)&arr[_i].dims, *(long*)&rect);
+    assertEqualsRect(arr[_i].dims, rect);
     toggleActiveLayout(NULL);
 }
 
@@ -275,4 +275,13 @@ SCUTEST(test_register_restore_layout) {
     restoreArgs(&c);
     assert(!memcmp(&c.args, &args, sizeof(LayoutArgs)));
     toggleActiveLayout(NULL);
+}
+
+SCUTEST(test_find_registered_layout_by_name) {
+    Layout c = {"test", NULL};
+    assert(!findLayoutByName(c.name));
+    registerLayout(&c);
+    assertEquals(findLayoutByName(c.name), &c);
+    unregisterLayout(&c);
+    assert(!findLayoutByName(c.name));
 }

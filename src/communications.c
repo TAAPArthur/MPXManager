@@ -28,7 +28,7 @@
  *
  * @return the interger if isNumeric is set to 1
  */
-static int isInt(const char* str, bool* isNumeric) {
+static int isInt(const char* str) {
     char* end;
     int num;
     if(str[0]=='0' && str[1]=='x' || str[0]=='x') {
@@ -36,9 +36,6 @@ static int isInt(const char* str, bool* isNumeric) {
     }
     else
         num = strtol(str, &end, 10);
-    INFO("HERE '%s' %d", str, num);
-    if(isNumeric)
-        *isNumeric = (*end == 0) && str[0];
     return num;
 }
 
@@ -55,7 +52,7 @@ bool matchesOption(Option* o, const char* str, char numOptions) {
 }
 void callOption(const Option* o, const char* p, const char* p2) {
     TRACE("Calling %s %s", o->name, p);
-    uint32_t i = isInt(p, NULL);
+    uint32_t i = isInt(p);
     const BindingFunc* bindingFunc = &o->bindingFunc;
     if(o->flags & USE_FOCUSED) {
         callBindingWithWindow(&o->bindingFunc, FOCUSED_WINDOW, NULL);
@@ -79,7 +76,7 @@ static Option baseOptions[] = {
     {"dump-rules", {dumpRules},  .flags = REDIRECT_OUTPUT},
     {"dump-win", {dumpWindow},  .flags = REDIRECT_OUTPUT | REQUEST_INT},
     {"focus-win", {(void(*)())focusWindow}, .flags = REQUEST_INT},
-    {"log-level", {setLogLevel}, .flags = VAR_SETTER | REQUEST_INT},
+    {"log-level", {setLogLevel}, .flags = REQUEST_INT},
     {"lower", {lowerWindow}, .flags = REQUEST_INT},
     {"move-to-workspace", {moveToWorkspace}, .flags = USE_FOCUSED|REQUEST_INT},
     {"next-layout", {cycleLayouts, .arg.i=UP}, },

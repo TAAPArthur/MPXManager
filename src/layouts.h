@@ -147,6 +147,8 @@ static inline Layout* getActiveLayout() {return getActiveWorkspace()->getActiveL
  * @param layout
  */
 void registerLayout(Layout* layout);
+
+void unregisterLayout(Layout* layout);
 /**
  * @return list of registered layouts
  */

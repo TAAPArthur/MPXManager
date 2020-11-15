@@ -255,13 +255,18 @@ SCUTEST(test_wm_move) {
 SCUTEST(test_wm_resize_invert) {
     WindowInfo* winInfo = getElement(getAllWindows(), 0);
     int N = 10;
-    setWindowPosition(winInfo->id, (Rect){N, N, N, N});
+    Rect originalPos = {N, N, N, N};
+    setWindowPosition(winInfo->id, originalPos);
     movePointer(2*N, 2*N);
     startWindowMoveResize(winInfo, 0, 0);
     movePointer(0, 0);
     updateWindowMoveResize();
     Rect pos = {0, 0, N, N};
     assertEqualsRect(pos, getRealGeometry(winInfo->id));
+    movePointer(2*N, 2*N);
+    flush();
+    updateWindowMoveResize();
+    assertEqualsRect(originalPos, getRealGeometry(winInfo->id));
 }
 
 SCUTEST(test_wm_cancel) {

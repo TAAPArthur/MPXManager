@@ -199,16 +199,13 @@ static void removeRef() {
     free(getActiveMaster()->windowMoveResizer);
     getActiveMaster()->windowMoveResizer = NULL;
 }
-static inline Rect calculateNewPosition(const RefWindowMouse* refStruct, const short newMousePos[2],
-    bool* hasChanged) {
-    *hasChanged = 0;
+static inline Rect calculateNewPosition(const RefWindowMouse* refStruct, const short newMousePos[2]) {
     Rect _result = refStruct->ref;
     short* result = &_result.x;
     int mask[] = {1, 2};
     for(int i = 0; i < 2; i++) {
-        short delta = newMousePos[i] - refStruct->mousePos[i];
-        if(!(refStruct->change & mask[i]) && delta) {
-            *hasChanged = 1;
+        if(!(refStruct->change & mask[i])) {
+            short delta = newMousePos[i] - refStruct->mousePos[i];
             if(refStruct->move)
                 result[i] += delta;
             else if((signed)(delta + result[2 + i]) < 0) {
@@ -224,7 +221,7 @@ static inline Rect calculateNewPosition(const RefWindowMouse* refStruct, const s
     return _result;
 }
 bool shouldUpdate(RefWindowMouse* refStruct) {
-    if(getLastDetectedEventSequenceNumber() <= refStruct->lastSeqNumber) {
+    if(getLastDetectedEventSequenceNumber() < refStruct->lastSeqNumber) {
         return 0;
     }
     refStruct->lastSeqNumber = getLastDetectedEventSequenceNumber();
@@ -257,17 +254,13 @@ void cancelWindowMoveResize() {
 
 void updateWindowMoveResize() {
     RefWindowMouse* ref = getRef();
-    if(ref) {
+    if(ref && shouldUpdate(ref)) {
         TRACE("Updating WM move/resize; Master: %d", getActiveMasterKeyboardID());
-        if(!shouldUpdate(ref))
-            return;
         short pos[2];
         if(getMousePosition(getActiveMasterPointerID(), root, pos)) {
-            bool change = 0;
-            Rect r = calculateNewPosition(ref, pos, &change);
+            Rect r = calculateNewPosition(ref, pos);
             assert(r.width && r.height);
-            if(change)
-                setWindowPosition(ref->win, r);
+            setWindowPosition(ref->win, r);
         }
     }
 }

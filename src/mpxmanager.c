@@ -51,8 +51,8 @@ static void dumpStartupOptions();
 /// list of startup options
 static Option options[] = {
     {"list-start-options", {dumpStartupOptions}},
-    {"list-start-options", {version}},
-    {"log-level", {setLogLevel}, .flags = VAR_SETTER | REQUEST_INT},
+    {"version", {version}},
+    {"log-level", {setLogLevel}, .flags = REQUEST_INT},
     {"list-options", {dumpOptions}},
     {"no-event-loop", {noEventLoop}},
     {"no-run-as-window-manager", {clearWMSettings}},
@@ -69,8 +69,7 @@ static void dumpStartupOptions() {
 /**
  * @param list list of options
  * @param argv
- * @param i index of argv; may be modified
- * @param varsOnly if true will only consider options with the VAR_SETTER flag
+ * @param n index of argv; may be modified
  *
  * @return true, if an option was found and called
  */

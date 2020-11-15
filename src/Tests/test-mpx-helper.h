@@ -10,7 +10,7 @@
 #include "../workspaces.h"
 #include "tester.h"
 
-#define assertEqualsRect(A,B)do{Rect __b=B; dumpRect(A);dumpRect(__b);assert(memcmp(&A, &__b, sizeof(Rect))==0);}while(0)
+#define assertEqualsRect(A,B)do{fflush(NULL);Rect __b=B; dumpRect(A);dumpRect(__b);assert(memcmp(&A, &__b, sizeof(Rect))==0);}while(0)
 static inline WindowInfo* addFakeWindowInfo(WindowID win) {
     return newWindowInfo(win, 0);
 }

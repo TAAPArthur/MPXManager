@@ -102,6 +102,23 @@ SCUTEST(test_sticky_workspace_change) {
     }
 }
 
+SCUTEST(test_sticky_workspace_change_multiple_masters) {
+    addWorkspaces(3);
+    createMasterDevice("test");
+    createMasterDevice("test");
+    initCurrentMasters();
+    assertEquals(getAllMonitors()->size, 1);
+    Master*originalMaster=getActiveMaster();
+    int i=0;
+    FOR_EACH(Master*,master, getAllMasters()) {
+        setActiveMaster(master);
+        switchToWorkspace(i++);
+    }
+    setActiveMaster(originalMaster);
+    switchToWorkspace(i);
+    assert(isWorkspaceVisible(getWorkspace(i)));
+}
+
 SCUTEST(test_workspace_change) {
     addWorkspaces(2);
     int nonEmptyIndex = 0;
