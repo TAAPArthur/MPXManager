@@ -165,9 +165,9 @@ void removeDuplicateMonitors(void) {
     }
 }
 
-static inline Workspace* _findWorkspace(bool requireEmpty) {
+static inline Workspace* _findWorkspace(bool empty) {
     FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
-        if(!isWorkspaceVisible(workspace) && (requireEmpty || !getWorkspaceWindowStack(workspace)->size))
+        if(!isWorkspaceVisible(workspace) && (!empty == !getWorkspaceWindowStack(workspace)->size))
             return workspace;
     }
     return NULL;
@@ -183,6 +183,12 @@ static inline Workspace* findWorkspace() {
     if(!workspace)
         workspace = _findWorkspace(0);
     return workspace;
+}
+void assignEmptyWorkspace(Monitor* monitor) {
+    assert(!getWorkspaceOfMonitor(monitor));
+    Workspace* workspace = _findWorkspace(0);
+    if(workspace)
+        setMonitor(workspace, monitor);
 }
 void assignWorkspace(Monitor* monitor, Workspace* workspace) {
     assert(!getWorkspaceOfMonitor(monitor));

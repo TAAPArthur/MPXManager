@@ -25,6 +25,41 @@ SCUTEST(create_container) {
     assert(findElement(getAllMonitors(), &id, sizeof(MonitorID)));
 }
 
+SCUTEST(test_contain_window) {
+    WindowID win = mapWindow(createNormalWindow());
+    registerWindow(win, root, NULL);
+    assertEquals(getWorkspaceOfWindow(getWindowInfo(win))->id, 0);
+    containWindow(getWindowInfo(win));
+    assertEquals(getWorkspaceOfWindow(getWindowInfo(win))->id, 1);
+}
+
+SCUTEST(test_assign_empty_workspace) {
+    WindowID win = mapWindow(createNormalWindow());
+    WindowID win2 = mapWindow(createNormalWindow());
+    scan(root);
+    moveToWorkspace(getWindowInfo(win2), 1);
+    containWindow(getWindowInfo(win));
+    assert(!isWorkspaceVisible(getWorkspace(1)));
+    assert(isWorkspaceVisible(getWorkspace(0)));
+    assert(isWorkspaceVisible(getWorkspace(2)));
+}
+
+SCUTEST(test_contain_window_too_many) {
+    addResumeContainerRules();
+    for(int i=0;i<getNumberOfWorkspaces();i++) {
+        WindowID win = mapWindow(createNormalWindow());
+        registerWindow(win, root, NULL);
+        containWindow(getWindowInfo(win));
+    }
+    assertEquals(getAllMonitors()->size, getNumberOfWorkspaces() +1);
+    assertEquals(getAllWindows()->size, getNumberOfWorkspaces() *2 );
+    releaseAllWindows();
+    runEventLoop();
+    assertEquals(getAllWindows()->size, getNumberOfWorkspaces());
+    assertEquals(getAllMonitors()->size, 1);
+    assertEquals(getAllWindows()->size, getNumberOfWorkspaces());
+}
+
 WindowID container;
 Monitor* containerMonitor;
 WindowInfo* containerWindowInfo;

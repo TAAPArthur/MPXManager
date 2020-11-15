@@ -61,6 +61,7 @@ Workspace* getWorkspaceOfMonitor(Monitor* monitor);
  * @param workspace
  */
 void assignWorkspace(Monitor* monitor, Workspace* workspace);
+void assignEmptyWorkspace(Monitor* monitor);
 /**
  * @return True if the monitor is marked as primary
  */

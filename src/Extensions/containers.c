@@ -67,7 +67,6 @@ WindowID createContainer(const char* name, Workspace* monitorWorkspace, Workspac
     if(!name)
         name = "";
     WindowID win;
-    Monitor* m;
     Rect base = (Rect) {0, 0, 1, 1};
     do {
         win = createWindow(root, XCB_WINDOW_CLASS_INPUT_OUTPUT, 0, NULL, base);
@@ -76,23 +75,38 @@ WindowID createContainer(const char* name, Workspace* monitorWorkspace, Workspac
             WARN("Failed to create container because a monitor the generated id was already taken");
             continue;
         }
-        m = newMonitor(win, base, 0, name, 1);
         break;
     } while(true);
     setWindowTitle(win, name);
     WindowInfo* winInfo = newWindowInfo(win, root);
-    addMask(winInfo, INPUT_MASK | MAPPABLE_MASK);
+    addMask(winInfo, INPUT_MASK | MAPPABLE_MASK|BELOW_MASK);
+    setUserTime(win, 0);
+    lowerWindow(win, 0);
+    if(!registerWindowInfo(winInfo, NULL))
+        return 0;
+    Monitor* m = newMonitor(win, base, 0, name, 1);
     if(monitorWorkspace)
         assignWorkspace(m, monitorWorkspace);
     if(windowWorkspace)
         moveToWorkspace(winInfo, windowWorkspace->id);
     applyEventRules(SCREEN_CHANGE, NULL);
-    if(!registerWindowInfo(winInfo, NULL))
-        return 0;
     return win;
 }
 WindowID createSimpleContainer() {
     return createContainer(CONTAINER_NAME_PREFIX, NULL, NULL);
+}
+void containWindow(WindowInfo*winInfo){
+    WindowID container = createSimpleContainer();
+    Monitor*m=getMonitorForContainer(container);
+    assignEmptyWorkspace(m);
+    swapWindows(container, winInfo->id);
+    if(getWorkspaceOfMonitor(m))
+        moveToWorkspace(winInfo, getWorkspaceOfMonitor(m)->id);
+}
+
+void containWindowAndActivate(WindowInfo*winInfo){
+    containWindow(winInfo);
+    activateWindow(winInfo);
 }
 
 Monitor* containWindows(Workspace* containedWorkspace, WindowFunctionArg arg, const char* name) {
@@ -168,7 +182,7 @@ void loadContainers() {
             WorkspaceID containedIn = ((MonitorID*)xcb_get_property_value(reply))[i + 1];
             Workspace* w = getWorkspace(containing);
             Monitor* m = getMonitor(w);
-            if(m->fake) {
+            if(m && m->fake) {
                 INFO("Restoring container: %s", m->name);
                 createContainer(m->name, w, getWorkspace(containedIn));
                 freeMonitor(m);

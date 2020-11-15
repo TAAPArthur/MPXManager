@@ -62,4 +62,7 @@ void releaseAllWindows();
  * @param winInfo The container window or a contained window
  */
 void toggleContainer(WindowInfo* winInfo);
+
+void containWindow(WindowInfo*winInfo);
+void containWindowAndActivate(WindowInfo*winInfo);
 #endif
