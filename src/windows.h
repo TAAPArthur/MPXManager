@@ -227,7 +227,7 @@ static inline bool hasMask(const WindowInfo* winInfo, WindowMask mask) {
 }
 
 static inline bool hasOrHasNotMasks(const WindowInfo* winInfo, WindowMask has, WindowMask hasNot) {
-    return hasMask(winInfo, has) || !hasPartOfMask(winInfo, hasNot);
+    return !winInfo || hasMask(winInfo, has) || !hasPartOfMask(winInfo, hasNot);
 }
 static inline bool hasAndHasNotMasks(const WindowInfo* winInfo, WindowMask has, WindowMask hasNot) {
     return hasMask(winInfo, has) && !hasPartOfMask(winInfo, hasNot);

@@ -141,7 +141,7 @@ SCUTEST(test_workspace_change) {
 };
 
 
-SCUTEST(test_configure_windows, .iter = 3) {
+SCUTEST(test_configure_windows, .iter = 4) {
     static int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
     WindowID win = createNormalWindow();
     Rect original = {0, 0, 1, 1};
@@ -154,6 +154,8 @@ SCUTEST(test_configure_windows, .iter = 3) {
         addMask(winInfo, EXTERNAL_CONFIGURABLE_MASK);
     else if(_i == 1)
         removeMask(winInfo, MAPPED_MASK | MAPPABLE_MASK);
+    else if(_i == 2)
+        unregisterWindow(winInfo, 0);
     else {
         addMask(winInfo, MAPPED_MASK | MAPPABLE_MASK);
         fail = 1;
