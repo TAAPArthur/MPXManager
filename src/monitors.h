@@ -24,8 +24,6 @@ struct Monitor {
     Rect base;
     /** The modified size of the monitor after docks are avoided */
     Rect view;
-    /**1 iff the monitor is the primary*/
-    bool primary;
     /// human readable name given by the XServer
     char name[MAX_NAME_LEN];
     const bool fake;
@@ -36,7 +34,7 @@ struct Monitor {
     WindowID stackingWindow;
 };
 
-Monitor* newMonitor(MonitorID id, Rect base, bool primary, const char* name, bool fake);
+Monitor* newMonitor(MonitorID id, Rect base, const char* name, bool fake);
 void freeMonitor(Monitor* monitor);
 
 /**

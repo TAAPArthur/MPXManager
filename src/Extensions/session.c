@@ -113,7 +113,7 @@ static void loadSavedFakeMonitor() {
             if(m)
                 setBase(m, buffer.bounds);
             else
-                newMonitor(buffer.id, buffer.bounds, 0, name, 1);
+                newMonitor(buffer.id, buffer.bounds, name, 1);
         }
         free(replyNames);
         free(reply);

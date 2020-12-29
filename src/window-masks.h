@@ -58,7 +58,7 @@
 /// Intended for Desktop windows
 #define NO_ACTIVATE_MASK 	(1U << 17)
 
-/// if the window is not in a workspace it should be positioned relative to the primary monitor if anny
+/// if the window is not in a workspace it should be positioned relative to the primary monitor if any
 /// if the window is in a workspace it will be move should be moved to always be in the workspace of the primary monitor if any
 #define PRIMARY_MONITOR_MASK 	(1U << 18)
 

@@ -84,7 +84,7 @@ WindowID createContainer(const char* name, Workspace* monitorWorkspace, Workspac
     lowerWindow(win, 0);
     if(!registerWindowInfo(winInfo, NULL))
         return 0;
-    Monitor* m = newMonitor(win, base, 0, name, 1);
+    Monitor* m = newMonitor(win, base, name, 1);
     if(monitorWorkspace)
         assignWorkspace(m, monitorWorkspace);
     if(windowWorkspace)

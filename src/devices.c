@@ -201,7 +201,7 @@ void detectMonitors(void) {
         Monitor* m = findElement(getAllMonitors(), &monitorInfo->name, sizeof(monitorInfo->name));
         if(!m) {
             DEBUG("New monitor detected: %d", monitorInfo->name);
-            m = newMonitor(monitorInfo->name, *(Rect*)&monitorInfo->x, monitorInfo->primary, "", 0);
+            m = newMonitor(monitorInfo->name, *(Rect*)&monitorInfo->x, "", 0);
         }
         else
             setBase(m, *(Rect*)&monitorInfo->x);

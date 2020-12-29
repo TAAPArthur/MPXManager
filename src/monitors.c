@@ -27,9 +27,9 @@ Monitor* getMonitorByID(MonitorID id) {
 uint32_t MONITOR_DUPLICATION_POLICY = SAME_DIMS;
 uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
-Monitor* newMonitor(MonitorID id, Rect base, bool primary, const char* name, bool fake) {
+Monitor* newMonitor(MonitorID id, Rect base, const char* name, bool fake) {
     Monitor* monitor = (Monitor*)malloc(sizeof(Monitor));
-    Monitor temp = {.id = id, .base = base, .view = base, .primary = primary, .fake = fake};
+    Monitor temp = {.id = id, .base = base, .view = base, .fake = fake};
     memmove(monitor, &temp, sizeof(Monitor));
     strncpy(monitor->name, name, MAX_NAME_LEN - 1);
     addElement(getAllMonitors(), monitor);
@@ -40,7 +40,7 @@ Monitor* addFakeMonitorWithName(Rect bounds, const char* name) {
     for(id = 2;; id++)
         if(!findElement(getAllMonitors(), &id, sizeof(MonitorID)))
             break;
-    Monitor* m = newMonitor(id, bounds, 0, name, 1);
+    Monitor* m = newMonitor(id, bounds, name, 1);
     return m;
 }
 void freeMonitor(Monitor* monitor) {
