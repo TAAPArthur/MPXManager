@@ -136,11 +136,11 @@ void dumpWorkspace(Workspace* workspace) {
 void dumpMaster(Master* master) {
     if(!master)
         master = getActiveMaster();
-    printf("Master %d (%d) %s %06x", master->id, master->pointerID, master->name, master->focusColor);
+    printf("Master %3d (%3d) %s %06x", master->id, master->pointerID, master->name, master->focusColor);
     printf("Workspace %d ", getMasterWorkspaceIndex(master));
     printf("Slaves: {");
     FOR_EACH(Slave*, slave, getSlaves(master)) {
-        printf(" %d", slave->id);
+        printf(" %3d", slave->id);
     }
     printf("} Windows: {");
     FOR_EACH(WindowInfo*, winInfo, getMasterWindowStack(master)) {
@@ -148,6 +148,11 @@ void dumpMaster(Master* master) {
     }
     printf("}\n");
 }
+
+void dumpSlave(Slave*slave) {
+    printf("ID: %3d; Master %3d; Keyboard %3d; %s\n", slave->id, slave->attachment, slave->keyboard, slave->name);
+}
+
 void dumpWindowInfo(WindowInfo* winInfo) {
     printf("{ID %d%s ", winInfo->id, (isTileable(winInfo) ? "*" : !isMappable(winInfo) ? "?" :  ""));
     if(winInfo->type)
@@ -158,7 +163,7 @@ void dumpWindowInfo(WindowInfo* winInfo) {
         printf("Dock ");
     }
     if(winInfo->type) {
-        printf("Type %d %d", winInfo->type, winInfo->implicitType);
+        printf("Type %s %d ", winInfo->typeName, winInfo->implicitType);
     }
     printf("%s ", getMaskAsString(winInfo->mask, buffer));
     printf("Geometry: ");
@@ -190,7 +195,7 @@ void printSummary(void) {
     printf("Summary");
     printf("\nSlaves:\n");
     FOR_EACH(Slave*, slave, getAllSlaves()) {
-        printf("ID: %d; Master %d; Keyboard %d; %s\n", slave->id, slave->attachment, slave->keyboard, slave->name);
+        dumpSlave(slave);
     }
     printf("\nMasters:\n");
     FOR_EACH(Master*, master, getAllMasters()) {
