@@ -8,10 +8,6 @@
 #include "../boundfunction.h"
 
 
-#define getArraySize(A) (A)->size
-
-#define assertAndDelete(X) do {auto* _x=X;assert(_x); delete _x;} while(0)
-
 //#define assertEquals(A,B)do{long__A=(long)A; long __B =(long)B; int __result=(__A==__B); if(!__result){std::cout<<__A<<"!="<<__B<<"\n";assert(0 && #A "!=" #B);}}while(0)
 #define assertEquals(A,B) do{long __A=(long)A; long __B =(long)B; \
     int __result=(__A==__B); \

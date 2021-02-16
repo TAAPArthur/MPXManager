@@ -26,7 +26,7 @@ SCUTEST(test_onWindowFocus) {
         addFakeWindowInfo(i);
         FOR_EACH(Master*, m, getAllMasters()) {
             setActiveMaster(m);
-            assert(i - 1 == getArraySize(getMasterWindowStack(m)));
+            assert(i - 1 == getMasterWindowStack(m)->size);
             onWindowFocus(i);
             assertEquals(getFocusedWindow(), getWindowInfo(i));
             onWindowFocus(1);
@@ -45,7 +45,7 @@ SCUTEST(test_focus_dups) {
 SCUTEST(onWindowFocus_bad) {
     for(int i = 0; i < 10; i++)
         onWindowFocus(i);
-    assert(!getArraySize(getMasterWindowStack(getActiveMaster())));
+    assert(!getMasterWindowStack(getActiveMaster())->size);
 }
 SCUTEST(onWindowFocusNull) {
     assert(!getFocusedWindow());
@@ -63,7 +63,7 @@ SCUTEST(freeze_focus_stack) {
     onWindowFocus(1);
     assertEquals(getFocusedWindow(), getWindowInfo(1));
     onWindowFocus(3);
-    assertEquals(getArraySize(getActiveMasterWindowStack()), 3);
+    assertEquals(getActiveMasterWindowStack()->size, 3);
     assertEquals(getFocusedWindow(), getWindowInfo(3));
     onWindowFocus(1);
     onWindowFocus(2);
