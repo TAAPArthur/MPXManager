@@ -136,7 +136,7 @@ void dumpWorkspace(Workspace* workspace) {
 void dumpMaster(Master* master) {
     if(!master)
         master = getActiveMaster();
-    printf("Master %3d (%3d) %s %06x", master->id, master->pointerID, master->name, master->focusColor);
+    printf("Master %03d (%03d) %s %06X ", master->id, master->pointerID, master->name, master->focusColor);
     printf("Workspace %d ", getMasterWorkspaceIndex(master));
     printf("Slaves: {");
     FOR_EACH(Slave*, slave, getSlaves(master)) {

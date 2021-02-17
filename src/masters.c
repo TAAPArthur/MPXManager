@@ -25,10 +25,14 @@ void setActiveMaster(Master* newMaster) {
         DEBUG("Setting active master: %d", newMaster->id);
     master = newMaster;
 }
+uint32_t __attribute__((weak)) generateMasterColor(MasterID pointerID) {
+    return 0xF<<(pointerID/4);
+}
 
-Master* newMaster(MasterID pointerID, MasterID keyboardID, const char* name) {
+Master* newMaster(MasterID keyboardID, MasterID pointerID, const char* name) {
     Master* master = (Master*)malloc(sizeof(Master));
-    Master temp = {.id = pointerID, keyboardID = keyboardID, .focusColor = DEFAULT_BORDER_COLOR};
+    Master temp = {.id = keyboardID , .pointerID = pointerID, .focusColor =
+        pointerID == DEFAULT_POINTER? DEFAULT_BORDER_COLOR: generateMasterColor(pointerID)};
     memmove(master, &temp, sizeof(Master));
     addElement(&masterList, master);
     strncpy(master->name, name, MAX_NAME_LEN - 1);
