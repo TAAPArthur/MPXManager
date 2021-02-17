@@ -83,7 +83,7 @@ uninstall:
 preinstall: mpxmanager.1 mpxmanager-autocomplete.sh
 	sed -i "s/pkgver=.*/pkgver='$$(./mpxmanager.sh -v)'/g" ../PKGBUILD
 
-mpxmanager.sh: mpxmanager.sh.template
+mpxmanager.sh: mpxmanager.sh.template | mpxmanager
 	cp $< $@
 	sed -i "s/CFLAGS:-__place__holder/CFLAGS:-'${CFLAGS}'/g" mpxmanager.sh
 	sed -i "s/LDFLAGS:-__place__holder/LDFLAGS:-'${LDFLAGS}'/g" mpxmanager.sh
@@ -118,6 +118,8 @@ functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o |libmp
 
 functional.out: functionalTest
 	LD_PRELOAD=$$(pwd)/libmpx-patch.so $(call RUN_TEST, ./$^ )
+	$(if $(TEST_FILE)$(TEST_FUNC),exit 1)
+	touch $@
 
 endToEndTest: CFLAGS := ${TESTFLAGS}
 endToEndTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/endToEnd_test.o |libmpx-patch.so
@@ -136,6 +138,7 @@ unitTest: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(TEST_SRCS)) $(TEST_SR
 unitTest.out: unitTest
 	$(call RUN_TEST, ./unitTest )
 	$(if $(TEST_FUNC),exit 1)
+	touch $@
 
 unitTestExtensions: CFLAGS := ${TESTFLAGS}
 unitTestExtensions: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(LAYER6_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
@@ -159,7 +162,7 @@ doc-check:
 	+$(MAKE) -j1 -C .. $@
 
 
-.PHONY: test *.out all clean doc install package
+.PHONY: test all clean doc install package
 
 .DELETE_ON_ERROR:
 
