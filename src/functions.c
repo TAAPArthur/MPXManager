@@ -69,12 +69,12 @@ static void applyAction(WindowInfo* winInfo, WindowAction action) {
             break;
     }
 }
-WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, const FindAndRaiseArg arg) {
+WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, int dir, const FindAndRaiseArg arg) {
     WindowInfo* target = NULL;
     if(!arg.skipMasterStack)
-        target = getNextWindowInStack(getMasterWindowStack(getActiveMaster()), 1, rule, arg.includeNonActivatable);
+        target = getNextWindowInStack(getMasterWindowStack(getActiveMaster()), dir, rule, arg.includeNonActivatable);
     if(!target) {
-        target = getNextWindowInStack(getAllWindows(), 1, rule, arg.includeNonActivatable);
+        target = getNextWindowInStack(getAllWindows(), dir, rule, arg.includeNonActivatable);
         if(target)
             DEBUG("found window globally");
     }
@@ -98,13 +98,13 @@ bool matchesRole(WindowInfo* winInfo, const char* str) {
     return strcmp(winInfo->role, str) == 0;
 }
 
-int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, const char*)) {
+int raiseOrRunFunc(const char* s, const char* cmd, int dir, bool(*func)(WindowInfo*, const char*)) {
     if(s[0] == '$') {
         const char* c = getenv(s + 1);
         s = c ? c : "";
     }
     WindowFunctionArg arg = {func, .arg.str = s};
-    if(!findAndRaise(arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0})) {
+    if(!findAndRaise(arg, ACTION_ACTIVATE, dir, (FindAndRaiseArg) {0})) {
         spawn(cmd);
         return 1;
     }
@@ -112,11 +112,11 @@ int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, cons
 }
 void activateNextUrgentWindow() {
     WindowFunctionArg arg = {hasMask, {URGENT_MASK}};
-    findAndRaise(arg, ACTION_ACTIVATE, (FindAndRaiseArg) {0});
+    findAndRaise(arg, ACTION_ACTIVATE, DOWN, (FindAndRaiseArg) {0});
 }
 void popHiddenWindow() {
     WindowFunctionArg arg = {hasMask, {HIDDEN_MASK}};
-    WindowInfo* winInfo = findAndRaise(arg, ACTION_NONE, (FindAndRaiseArg) {.includeNonActivatable = 1});
+    WindowInfo* winInfo = findAndRaise(arg, ACTION_NONE, DOWN, (FindAndRaiseArg) {.includeNonActivatable = 1});
     if(winInfo) {
         removeMask(winInfo, HIDDEN_MASK);
         // tile now so the window won't flash on screen

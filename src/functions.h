@@ -50,7 +50,7 @@ typedef struct {
  * @param master
  * @return 1 if a matching window was found
  */
-WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, FindAndRaiseArg arg);
+WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, int dir, FindAndRaiseArg arg);
 
 
 /**
@@ -86,7 +86,7 @@ bool matchesRole(WindowInfo* winInfo, const char* str);
  *
  * @return 0 iff a window was found else the pid of the spawned process
  */
-int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, const char*));
+int raiseOrRunFunc(const char* s, const char* cmd, int dir, bool(*func)(WindowInfo*, const char*));
 
 /**
  * Tries to raise a window with class (or resource) name equal to s.
@@ -96,10 +96,10 @@ int raiseOrRunFunc(const char* s, const char* cmd, bool(*func)(WindowInfo*, cons
  *
  * @return 0 iff the program was spawned
  */
-static inline void raiseOrRun(const char* s) { raiseOrRunFunc(s, s, matchesClass); }
-static inline void raiseOrRun2(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, matchesClass); }
-static inline void raiseOrRunRole(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, matchesRole); }
-static inline void raiseOrRunTitle(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, matchesTitle); }
+static inline void raiseOrRun(const char* s) { raiseOrRunFunc(s, s, DOWN, matchesClass); }
+static inline void raiseOrRun2(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, DOWN, matchesClass); }
+static inline void raiseOrRunRole(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, DOWN, matchesRole); }
+static inline void raiseOrRunTitle(const char* s, const char* cmd) { raiseOrRunFunc(s, cmd, DOWN, matchesTitle); }
 /**
  * Freezes and cycle through windows in the active master's& stack
  * @param delta

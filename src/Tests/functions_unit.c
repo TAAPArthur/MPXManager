@@ -121,7 +121,7 @@ SCUTEST_ITER(test_raiseOrRun, 16) {
         setenv(envVar, s, 1);
         s = sAsEnvVar;
     }
-    int pid = raiseOrRunFunc(s, cmd, role ? matchesRole : title ? matchesTitle : matchesClass);
+    int pid = raiseOrRunFunc(s, cmd,UP, role ? matchesRole : title ? matchesTitle : matchesClass);
     assertEquals(!run, !pid);
 }
 
@@ -134,10 +134,10 @@ SCUTEST(test_raiseOrRun_diff) {
     }
     runEventLoop();
     assertEquals(getFocusedWindow()->id, top->id);
-    assert(!raiseOrRunFunc(str, NULL, matchesRole));
+    assert(!raiseOrRunFunc(str, NULL, DOWN, matchesRole));
     runEventLoop();
     assertEquals(getFocusedWindow()->id, middle->id);
-    assert(!raiseOrRunFunc(str, NULL, matchesRole));
+    assert(!raiseOrRunFunc(str, NULL, DOWN, matchesRole));
     runEventLoop();
     assertEquals(getFocusedWindow()->id, top->id);
 }
