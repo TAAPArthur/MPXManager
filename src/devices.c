@@ -67,6 +67,13 @@ void destroyAllNonDefaultMasters(void) {
     }
 }
 
+void destroyAllNonEmptyMasters(void) {
+    FOR_EACH(Master*, master, getAllMasters()) {
+        if(getKeyboardID(master) != DEFAULT_KEYBOARD && getSlaves(master)->size)
+            destroyMasterDevice(getKeyboardID(master));
+    }
+}
+
 void registerMasterDevice(MasterID id) {
     /*
     xcb_input_xi_query_device_cookie_t cookie=xcb_input_xi_query_device(dis, XIAllMasterDevices);

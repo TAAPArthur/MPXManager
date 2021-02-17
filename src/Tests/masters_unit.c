@@ -9,11 +9,12 @@ SCUTEST_SET_ENV(addDefaultMaster, simpleCleanup);
 SCUTEST(default_master) {
     assert(getActiveMaster());
     Master* m = getMasterByID(DEFAULT_KEYBOARD);
-    assert(m == getActiveMaster());
-    assert(m == getMasterByID(DEFAULT_POINTER));
-    assert(getAllMasters()->size == 1);
-    assert(getKeyboardID(m) == DEFAULT_KEYBOARD);
-    assert(getPointerID(m) == DEFAULT_POINTER);
+    assertEquals(m, getActiveMaster());
+    assertEquals(m, getMasterByID(DEFAULT_POINTER));
+    assertEquals(m->focusColor, DEFAULT_BORDER_COLOR);
+    assertEquals(getAllMasters()->size, 1);
+    assertEquals(getKeyboardID(m), DEFAULT_KEYBOARD);
+    assertEquals(getPointerID(m), DEFAULT_POINTER);
     assert(!getMasterWindowStack(m)->size);
     assert(!getMasterByName("__bad__name__"));
 }

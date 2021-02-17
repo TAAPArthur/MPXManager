@@ -51,6 +51,8 @@ void floatSlave(SlaveID slaveID) ;
  */
 void destroyMasterDevice2(MasterID id, int returnPointer, int returnKeyboard);
 static inline void destroyMasterDevice(MasterID id) {destroyMasterDevice2(id, DEFAULT_POINTER, DEFAULT_KEYBOARD);}
+
+void destroyAllNonEmptyMasters(void);
 /**
  * Calls destroyMasterDevice for all non default masters
  */

@@ -46,6 +46,21 @@ SCUTEST(test_slave_swapping) {
     assert(slave2 == getHead(getSlaves(master1)));
 }
 
+SCUTEST(test_split_master) {
+    int numMasters = getAllMasters()->size;
+    splitMaster();
+    assertEquals(numMasters + 1, getAllMasters()->size);
+}
+
+SCUTEST(test_cycle_active_slave) {
+    splitMaster();
+    Slave* slave = getHead(getAllSlaves());
+    getActiveMaster()->lastActiveSlave = slave->id;
+    cycleActiveSlave(UP);
+    initCurrentMasters();
+    assertEquals(1, getSlaves(getActiveMaster())->size);
+}
+
 static void mpxStartup(void) {
     MASTER_INFO_PATH = ABS_PATH;
     remove(ABS_PATH);
@@ -71,6 +86,17 @@ SCUTEST(test_save_load_mpx_bad) {
     MASTER_INFO_PATH = "";
     assert(!saveMPXMasterInfo());
     assert(!loadMPXMasterInfo());
+}
+SCUTEST(test_cycle_slaves) {
+    initCurrentMasters();
+    assert(saveMPXMasterInfo());
+    assert(loadMPXMasterInfo());
+    splitMaster();
+    Slave* slave = getHead(getAllSlaves());
+    getActiveMaster()->lastActiveSlave = slave->id;
+    cycleSlaves(UP);
+    initCurrentMasters();
+    assertEquals(0, getSlaves(getActiveMaster())->size);
 }
 const char* names[] = {"t1", "t2", "t3", "t4"};
 int colors[LEN(names)] = {0, 0xFF, 0xFF00, 0xFF0000};
@@ -135,17 +161,6 @@ SCUTEST(test_auto_resume) {
     assert(getSlaves(getMasterByName(names[0]))->size);
 }
 
-SCUTEST(test_split_master) {
-    splitMaster();
-    Master* child = getLastChildOfMaster(getActiveMaster());
-    assert(child);
-    FOR_EACH(Slave*, slave, getAllSlaves()) {
-        getActiveMaster()->lastActiveSlave = slave->id;
-        attachActiveSlaveToLastChildOfMaster();
-    }
-    initCurrentMasters();
-    assertEquals(getAllSlaves()->size, getSlaves(child)->size);
-}
 static void splitMasterEnv() {
     CRASH_ON_ERRORS = -1;
     MASTER_INFO_PATH = ABS_PATH;
@@ -154,7 +169,7 @@ static void splitMasterEnv() {
     splitMaster();
     Slave* slave = getHead(getAllSlaves());
     getActiveMaster()->lastActiveSlave = slave->id;
-    attachActiveSlaveToLastChildOfMaster();
+    cycleActiveSlave(UP);
     initCurrentMasters();
     saveMPXMasterInfo();
     destroyAllNonDefaultMasters();
@@ -163,29 +178,7 @@ static void splitMasterEnv() {
     loadMPXMasterInfo();
     runEventLoop();
     startMPX();
-    assert(getLastChildOfMaster(getActiveMaster()));
+    assertEquals(getAllMasters()->size, 2);
 }
 
 SCUTEST_SET_ENV(splitMasterEnv, cleanupXServer);
-SCUTEST(test_split_master_toggle_child) {
-    Master* child = getLastChildOfMaster(getActiveMaster());
-    assert(child);
-    assertEquals(1, getSlaves(child)->size);
-    toggleChildMaster();
-    initCurrentMasters();
-    assertEquals(0, getSlaves(child)->size);
-    toggleChildMaster();
-    initCurrentMasters();
-    assertEquals(1, getSlaves(child)->size);
-}
-SCUTEST(test_split_master_toggle_parent) {
-    Master* child = getLastChildOfMaster(getActiveMaster());
-    setActiveMaster(child);
-    assertEquals(1, getSlaves(child)->size);
-    toggleParentMaster();
-    initCurrentMasters();
-    assertEquals(0, getSlaves(child)->size);
-    toggleParentMaster();
-    initCurrentMasters();
-    assertEquals(1, getSlaves(child)->size);
-}

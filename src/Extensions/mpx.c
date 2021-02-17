@@ -20,9 +20,8 @@
 typedef struct {
     /// The name of the master device pair (w/o Keyboard or Pointer suffix)
     char masterName[MAX_NAME_LEN];
-    char parentName[MAX_NAME_LEN];
     /// the focus color to give the master
-    int focusColor;
+    uint32_t focusColor;
     /// list of names of slaves
     StringJoiner slaveNames;
 } MPXMasterInfo ;
@@ -42,37 +41,29 @@ MPXMasterInfo* getMasterInfoForMaster(Master* master) {
     }
     return newMPXMasterInfo(master->name, master->focusColor);
 }
-Master* getParentMaster() {
-    MPXMasterInfo* masterInfo = getMasterInfoForMaster(getActiveMaster());
-    return getMasterByName(masterInfo->parentName);
-}
-Master* getLastChildOfMaster() {
-    FOR_EACH_R(MPXMasterInfo*, masterInfo, &masterInfoList) {
-        if(strcmp(getActiveMaster()->name, masterInfo->parentName) == 0) {
-            Master* m = getMasterByName(masterInfo->masterName);
-            if(m)
-                return m;
+
+void attachToLastMaster() {
+    MPXMasterInfo* masterInfo = getTail(&masterInfoList);
+    if(masterInfo) {
+        Slave* slave = getSlaveByID(getActiveMaster()->lastActiveSlave);
+        Master* master = getMasterByName(masterInfo->masterName);
+        if(slave && master && master != getActiveMaster()){
+            attachSlaveToMaster(slave, master );
         }
     }
-    return NULL;
 }
 
-Master* getChildOfMasterByActiveSlave() {
-    Slave* slave = getSlaveByID(getActiveMaster()->lastActiveSlave);
-    if(!slave)
-        return NULL;
-    FOR_EACH_R(MPXMasterInfo*, masterInfo, &masterInfoList) {
+MPXMasterInfo* getMasterInfoForSlave(Slave* slave) {
+    FOR_EACH(MPXMasterInfo*, masterInfo, &masterInfoList) {
         if(isInBuffer(&masterInfo->slaveNames, slave->name)) {
-            Master* m = getMasterByName(masterInfo->masterName);
-            if(m && m != getActiveMaster())
-                return m;
+            return masterInfo;
         }
     }
-    TRACE("Could not find child master owning slave %d", getActiveMaster()->lastActiveSlave);
+    INFO("Could not find master info for slave %s", slave->name);
     return NULL;
 }
 
-bool attachSlaveToProperMaster(Master* m) {
+bool attachRegisteredSlavesOfMaster(Master* m) {
     bool found = 0;
     MPXMasterInfo* masterInfo = getMasterInfoForMaster(m);
     FOR_EACH(Slave*, slave, getAllSlaves()) {
@@ -83,56 +74,55 @@ bool attachSlaveToProperMaster(Master* m) {
     }
     return found;
 }
+
 static inline void attachAllSlavesToMaster(Master* currentMaster, Master* newMaster) {
     FOR_EACH(Slave*, slave, getSlaves(currentMaster)) {
         attachSlaveToMaster(slave, newMaster);
     }
 }
-void attachActiveSlaveToLastChildOfMaster() {
-    Slave* slave = getSlaveByID(getActiveMaster()->lastActiveSlave);
-    Master* master = getLastChildOfMaster();
-    if(master && slave)
-        attachSlaveToMaster(slave, master);
-}
 
-void splitMaster(void) {
-    INFO("Started splitting master");
+Master* createNewMaster() {
     char name[32];
     sprintf(name, "dummy%d", getTime());
     createMasterDevice(name);
     initCurrentMasters();
-    MPXMasterInfo* masterInfo = getMasterInfoForMaster(getMasterByName(name));
-    strcpy(masterInfo->parentName, getActiveMaster()->name);
+    return getMasterByName(name);
 }
-void toggleSlaves(Master* parent, Master* child) {
-    if(!parent || !child) {
-        INFO("Not changing slaves Parent %p Child %p", parent, child);
-        return;
+void splitMaster(void) {
+    INFO("Started splitting master");
+    createNewMaster();
+}
+
+void moveUnregisteredSlavesOfActiveMasterToNew(void) {
+    Master* master = createNewMaster();
+    FOR_EACH(Slave*, slave, getSlaves(getActiveMaster())) {
+        if(!getMasterInfoForSlave(slave))
+        attachSlaveToMaster(slave, master);
     }
-    MPXMasterInfo* masterInfo = getMasterInfoForMaster(child);
-    bool parentHasChildSlave = 0;
-    FOR_EACH(Slave*, slave, getSlaves(parent)) {
-        if(isInBuffer(&masterInfo->slaveNames, slave->name)) {
-            parentHasChildSlave = 1;
-            break;
+}
+
+void cycleActiveSlave(int dir) {
+    Master* newMaster = getNextElement(getAllMasters(), getActiveMaster(), sizeof(MasterID), dir);
+    Slave* slave = getSlaveByID(getActiveMaster()->lastActiveSlave);
+    if(slave && newMaster != getActiveMaster()){
+        attachSlaveToMaster(slave, newMaster);
+    }
+}
+
+void cycleSlaves(int dir) {
+    Master* newMaster = getNextElement(getAllMasters(), getActiveMaster(), sizeof(MasterID), dir);
+    Slave* slave = getSlaveByID(getActiveMaster()->lastActiveSlave);
+    MPXMasterInfo* masterInfo =  getMasterInfoForSlave(slave);
+    if(masterInfo) {
+        FOR_EACH(Slave*, slave, getAllSlaves()) {
+            if(isInBuffer(&masterInfo->slaveNames, slave->name))
+                attachSlaveToMaster(slave, newMaster);
         }
     }
-    // attempt to attach the active master's slaves back to itself
-    if(parentHasChildSlave) {
-        INFO("Giving slaves to child");
-        attachSlaveToProperMaster(child);
-    }
-    else {
-        INFO("Giving slaves to parent");
-        // give parent slave(s)
-        attachAllSlavesToMaster(child, parent);
-    }
 }
-void toggleParentMaster() {
-    toggleSlaves(getParentMaster(), getActiveMaster());
-}
-void toggleChildMaster() {
-    toggleSlaves(getActiveMaster(), getChildOfMasterByActiveSlave());
+
+void shiftSlaves(int dir) {
+    swapSlaves(getActiveMaster(), getNextElement(getAllMasters(), getActiveMaster(), sizeof(MasterID), dir));
 }
 
 void swapSlaves(Master* master1, Master* master2) {
@@ -156,17 +146,6 @@ void swapXDevices(Master* master1, Master* master2) {
     swapSlaves(master1, master2);
     flush();
 }
-void swapXDevicesWithChild() {
-    Master* parent = getParentMaster(getActiveMaster());
-    if(parent)
-        swapXDevices(getActiveMaster(), parent);
-}
-void swapXDevicesWithClientMaster() {
-    Master* master = getClientMaster(getFocusedWindow()->id);
-    if(master != getActiveMaster()) {
-        swapXDevices(getActiveMaster(), master);
-    }
-}
 
 static void autoAttachSlave(xcb_input_hierarchy_event_t* event) {
     if(event->flags & (XCB_INPUT_HIERARCHY_MASK_MASTER_ADDED | XCB_INPUT_HIERARCHY_MASK_SLAVE_ADDED |
@@ -185,7 +164,7 @@ void restoreMPX(void) {
         MPXMasterInfo* masterInfo = getMasterInfoForMaster(m);
         TRACE("setting color to %0x", masterInfo->focusColor);
         m->focusColor = masterInfo->focusColor;
-        attachSlaveToProperMaster(m);
+        attachRegisteredSlavesOfMaster(m);
     }
     initCurrentMasters();
 }
@@ -228,7 +207,6 @@ int saveMPXMasterInfo(void) {
         return 0;
     FOR_EACH(Master*, master, getAllMasters()) {
         fprintf(fp, "%s\n", master->name);
-        fprintf(fp, "%s\n", getMasterInfoForMaster(master)->parentName);
         fprintf(fp, "%06X\n", master->focusColor);
         FOR_EACH(Slave*, slave, getSlaves(master)) {
             fprintf(fp, "%s\n", slave->name);
@@ -277,9 +255,6 @@ int loadMPXMasterInfo(void) {
                 info = newMPXMasterInfo(line, 0);
                 break;
             case 1:
-                strncpy(info->parentName, line, MAX_NAME_LEN - 1);
-                break;
-            case 2:
                 info->focusColor = (int)strtol(line, NULL, 16);
                 break;
             default:

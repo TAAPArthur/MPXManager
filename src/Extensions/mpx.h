@@ -39,11 +39,6 @@ int loadMPXMasterInfo(void);
  */
 void splitMaster(void);
 
-Master* getLastChildOfMaster();
-
-void toggleParentMaster(void);
-void toggleChildMaster(void);
-
 
 /**
  * Swap the ids of master devices backed by master1 and master2
@@ -54,13 +49,37 @@ void toggleChildMaster(void);
  * @param master2
  */
 void swapXDevices(Master* master1, Master* master2);
-void swapXDevicesWithChild();
 
-void attachActiveSlaveToLastChildOfMaster();
+
+/**
+ * Attach all registered slaves of Master m to m
+ */
+bool attachRegisteredSlavesOfMaster(Master* m);
+/**
+ * Swap all slaves attached to master1 with master2
+ */
+void swapSlaves(Master* master1, Master* master2);
+/**
+ * Move all slaves attached to the active master that are registered to the same master
+ * as the active slave to the next master
+ */
+void cycleSlaves(int dir);
+/**
+ * Move the active slave to the next master
+ */
+void cycleActiveSlave(int dir);
+/**
+ * Create a new master and attach all unregistered slaves of the active master to it
+ */
+void moveUnregisteredSlavesOfActiveMasterToNew(void);
+
+void attachToLastMaster();
+
+void shiftSlaves(int dir);
 
 #define SPLIT_MASTER_BINDING(M, K) {M,K, {splitMaster}, .flags = {.grabDevice = 1}, .chainMembers = CHAIN_MEM( \
         {WILDCARD_MODIFIER, XK_Escape, .flags={.popChain=1, .shortCircuit=1}}, \
-        {WILDCARD_MODIFIER, 0, {attachActiveSlaveToLastChildOfMaster}} \
+        {WILDCARD_MODIFIER, 0, {attachToLastMaster}} \
         ) \
 }
 #endif
