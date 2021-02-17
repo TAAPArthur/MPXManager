@@ -24,6 +24,7 @@ typedef struct ArrayList {
 
 void* getElement(const ArrayList* array, int index);
 static inline void* getHead(const ArrayList* array) { return getElement(array, 0);}
+static inline void* getTail(const ArrayList* array) { return getElement(array, array->size-1);}
 void addElement(ArrayList* array, void* p);
 int getIndex(const ArrayList* array, const void* p, size_t size);
 void* findElement(const ArrayList* array, const void* p, size_t size);
@@ -73,8 +74,9 @@ void clearArray(ArrayList* array);
 static inline uint32_t getNextIndex(const ArrayList* array, int current, int delta) {
     return (current + delta + array->size) % array->size;
 }
-static inline void* getNextElement(const ArrayList* array, int current, int delta) {
-    return getElement(array, (current + delta + array->size) % array->size);
+
+static inline void* getNextElement(const ArrayList* array, const void* p, size_t size, int delta) {
+    return getElement(array, (getIndex(array, p, size)+ delta + array->size) % array->size);
 }
 
 #endif
