@@ -275,4 +275,6 @@ static inline void sinkWindow(WindowInfo* winInfo) {
  * @param winInfo2
  */
 void swapWindows(WindowID win, WindowID win2);
+
+void clearAllFakeMonitors(void);
 #endif

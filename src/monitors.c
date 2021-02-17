@@ -240,3 +240,10 @@ uint16_t getRootWidth(void) {
 uint16_t getRootHeight(void) {
     return rootDim ? rootDim[1] : 0;
 }
+
+void clearAllFakeMonitors(void) {
+    FOR_EACH_R(Monitor*, m, getAllMonitors()) {
+        if(m->fake)
+            freeMonitor(m);
+    }
+}

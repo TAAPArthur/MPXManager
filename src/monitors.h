@@ -187,4 +187,6 @@ Monitor* addFakeMonitorWithName(Rect bounds, const char* name);
 static inline Monitor* addFakeMonitor(Rect bounds) {return addFakeMonitorWithName(bounds, "");}
 
 void setBase(Monitor* monitor, const Rect rect);
+
+void clearAllFakeMonitors(void);
 #endif

@@ -171,3 +171,11 @@ SCUTEST(test_auto_assign_workspace_active_first) {
     assert(isWorkspaceVisible(getActiveWorkspace()));
 }
 
+SCUTEST(test_clear_fake_monitors) {
+    addWorkspaces(2);
+    addDummyMonitor();
+    addDummyMonitor();
+    assignUnusedMonitorsToWorkspaces();
+    clearAllFakeMonitors();
+    assert(!getAllMonitors()->size);
+}
