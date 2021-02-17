@@ -140,4 +140,7 @@ extern WindowMask MASKS_TO_SYNC;
  * 4 Pager
  */
 extern uint32_t SRC_INDICATION;
+
+/// If no primary monitor is assigned, we'll pick a monitor and act like its the primary
+extern bool ASSUME_PRIMARY_MONITOR;
 #endif

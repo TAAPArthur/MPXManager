@@ -196,7 +196,6 @@ WindowID getActiveFocusOfMaster(MasterID id) {
 void detectMonitors(void) {
 #ifdef NO_XRANDR
     addRootMonitor();
-    removeDuplicateMonitors();
 #else
     DEBUG("refreshing monitors");
     xcb_randr_get_monitors_cookie_t cookie = xcb_randr_get_monitors(dis, root, 1);
@@ -229,5 +228,8 @@ void detectMonitors(void) {
     }
 #endif
     removeDuplicateMonitors();
+    if(ASSUME_PRIMARY_MONITOR && !getPrimaryMonitor() && getAllMonitors()->size ) {
+        setPrimary(((Monitor*)getHead(getAllMonitors()))->id);
+    }
     DEBUG("Number of monitors after consolidation %d", getAllMonitors()->size);
 }
