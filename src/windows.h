@@ -266,6 +266,10 @@ static inline bool isTileable(const WindowInfo* winInfo) {
     return hasMask(winInfo, MAPPABLE_MASK) && !hasPartOfMask(winInfo, ALL_NO_TILE_MASKS);
 }
 
+static inline bool isVisible(const WindowInfo* winInfo) {
+    return hasMask(winInfo, VISIBLE_MASK);
+}
+
 /**
  *
  * @return the window map state either UNMAPPED(0) or MAPPED(1)

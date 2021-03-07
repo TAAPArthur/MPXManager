@@ -56,6 +56,24 @@ SCUTEST(auto_window_map) {
     assert(isWindowMapped(winInfo->id));
     assert(hasMask(winInfo, MAPPED_MASK));
 }
+
+SCUTEST_ITER(unmap_no_flash, 2) {
+    NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_VISIBILITY_CHANGE;
+
+    addEvent(XCB_VISIBILITY_NOTIFY, DEFAULT_EVENT(incrementCount, HIGHEST_PRIORITY));
+    WindowID win1 = mapWindow(createNormalWindow());
+    WindowID win2 = mapWindow(createNormalWindow());
+    WindowID win = _i?win2:win1;
+    setActiveLayout(&FULL);
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    activateWindow(winInfo);
+    runEventLoop();
+    int visibleCount = getCount();
+    switchToWorkspace(1);
+    runEventLoop();
+    assertEquals(visibleCount, getCount());
+}
 SCUTEST_ITER(maintain_focus_when_moving_window_to_another_workspace, 2) {
     MONITOR_DUPLICATION_POLICY = 0;
     addFakeMonitor((Rect) {100, 0, 100, 100});

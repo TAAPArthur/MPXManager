@@ -84,6 +84,9 @@
 
 /**The window can receive input focus*/
 #define INPUT_MASK 	(1U << 24)
+
+/// Indicates that at least part of the window is visible
+#define VISIBLE_MASK 	(1U << 29)
 ///Indicates the window is not withdrawn
 #define MAPPABLE_MASK 	(1U << 30)
 ///the window is currently mapped

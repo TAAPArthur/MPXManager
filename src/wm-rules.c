@@ -232,10 +232,14 @@ void addNonDocksToActiveWorkspace(WindowInfo* winInfo) {
 
 
 void updateAllWindowWorkspaceState(int unmapped) {
-    FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
-        if(isWorkspaceVisible(workspace) == !unmapped) {
-            FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace)) {
-                updateWindowWorkspaceState(winInfo);
+    for (int i = 0; i < 2; i++) {
+        FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
+            if(isWorkspaceVisible(workspace) == !unmapped) {
+                FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(workspace)) {
+                    // unmap obscured windows first
+                    if(i == isVisible(winInfo))
+                        updateWindowWorkspaceState(winInfo);
+                }
             }
         }
     }
@@ -309,6 +313,14 @@ void addRememberMappedWindowsRule() {
     addEvent(CLIENT_MAP_DISALLOW, DEFAULT_EVENT(clearWMState));
     addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(rememberMappedWindows, HIGHER_PRIORITY));
 }
+void onVisibilityEvent(xcb_visibility_notify_event_t* event) {
+    WindowInfo* winInfo = getWindowInfo(event->window);
+    if(winInfo)
+        if(event->state == XCB_VISIBILITY_FULLY_OBSCURED)
+            removeMask(winInfo, VISIBLE_MASK);
+        else
+            addMask(winInfo, VISIBLE_MASK);
+}
 
 void addBasicRules() {
     addEvent(TRUE_IDLE, DEFAULT_EVENT(setIdleProperty, LOWER_PRIORITY));
@@ -316,6 +328,7 @@ void addBasicRules() {
     addEvent(0, DEFAULT_EVENT(logError));
     addEvent(XCB_CREATE_NOTIFY, DEFAULT_EVENT(onCreateEvent));
     addEvent(XCB_DESTROY_NOTIFY, DEFAULT_EVENT(onDestroyEvent));
+    addEvent(XCB_VISIBILITY_NOTIFY, DEFAULT_EVENT(onVisibilityEvent, HIGH_PRIORITY));
     addEvent(XCB_UNMAP_NOTIFY, DEFAULT_EVENT(onUnmapEvent));
     addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(onMapEvent));
     addEvent(XCB_MAP_REQUEST, DEFAULT_EVENT(onMapRequestEvent));
