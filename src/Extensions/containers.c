@@ -119,7 +119,7 @@ Monitor* containWindows(Workspace* containedWorkspace, WindowFunctionArg arg, co
         return NULL;
     for(int i = 0; i < getWorkspaceWindowStack(workspace)->size; i++) {
         WindowInfo* winInfo = getElement(getWorkspaceWindowStack(workspace), i);
-        if(arg.func(winInfo, arg)) {
+        if(arg.func(winInfo, arg.arg)) {
             moveToWorkspace(winInfo, containedWorkspace->id);
             i--;
         }

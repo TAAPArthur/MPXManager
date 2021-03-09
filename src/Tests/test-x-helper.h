@@ -52,6 +52,13 @@ static inline WindowID  createUnmappedWindow(void) {
     return _createWindow(root, 0, 0, 0, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, ewmh->_NET_WM_WINDOW_TYPE_NORMAL);
 }
 static inline WindowID mapArbitraryWindow() {return mapWindow(createNormalWindow());}
+
+static inline WindowID mapWindowWithClass(const char* clazz) {
+    Window win = createNormalWindow();
+    setWindowClass(win, clazz, clazz);
+    mapWindow(win);
+    return win;
+}
 static inline bool _checkStackingOrder(const WindowID* stackingOrder, int num, bool adj) {
     xcb_query_tree_reply_t* reply;
     reply = xcb_query_tree_reply(dis, xcb_query_tree(dis, root), 0);

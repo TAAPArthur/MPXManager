@@ -60,6 +60,23 @@ SCUTEST(test_contain_window_too_many) {
     assertEquals(getAllWindows()->size, getNumberOfWorkspaces());
 }
 
+SCUTEST(contain_matching) {
+    const char* clazz = "test";
+    const char* clazz2 = "test2";
+    Window win = mapWindowWithClass(clazz);
+    Window win2 = mapWindowWithClass(clazz2);
+    runEventLoop();
+    int targetWorkspace = 3;
+    Monitor* mon = containWindows(getWorkspace(targetWorkspace), (WindowFunctionArg) {matchesClass,  .arg = {.str = clazz}}, clazz);
+    assert(mon);
+    runEventLoop();
+    assertEquals(3, getAllWindows()->size);
+    assertEquals(getAllMonitors()->size, 2);
+    assertEquals(targetWorkspace, getWorkspaceOfWindow(getWindowInfo(win))->id);
+    assertEquals(getActiveWorkspace(), getWorkspaceOfWindow(getWindowInfo(win2)));
+    assertEquals(getActiveWorkspace(), getWorkspace(0));
+}
+
 WindowID container;
 Monitor* containerMonitor;
 WindowInfo* containerWindowInfo;
