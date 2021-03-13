@@ -140,7 +140,7 @@ void releaseWindows(Monitor* container) {
     }
 }
 void releaseAllWindows() {
-    FOR_EACH(Monitor*, monitor, getAllMonitors()) {
+    FOR_EACH_R(Monitor*, monitor, getAllMonitors()) {
         if(getWindowInfoForContainer(monitor->id))
             releaseWindows(monitor);
     }

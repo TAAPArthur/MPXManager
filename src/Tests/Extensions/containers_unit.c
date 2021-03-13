@@ -25,6 +25,19 @@ SCUTEST(create_container) {
     assert(findElement(getAllMonitors(), &id, sizeof(MonitorID)));
 }
 
+SCUTEST(release_all_containers) {
+    addResumeContainerRules();
+    int N = 10;
+    for(int i=0; i < N; i++)
+        createSimpleContainer();
+    assertEquals(N, getAllWindows()->size);
+    assertEquals(1 + N, getAllMonitors()->size);
+    releaseAllWindows();
+    runEventLoop();
+    assertEquals(0, getAllWindows()->size);
+    assertEquals(1, getAllMonitors()->size);
+}
+
 SCUTEST(test_contain_window) {
     WindowID win = mapWindow(createNormalWindow());
     registerWindow(win, root, NULL);

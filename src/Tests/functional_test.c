@@ -59,7 +59,6 @@ SCUTEST(auto_window_map) {
 
 SCUTEST_ITER(unmap_no_flash, 2) {
     NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_VISIBILITY_CHANGE;
-
     addEvent(XCB_VISIBILITY_NOTIFY, DEFAULT_EVENT(incrementCount, HIGHEST_PRIORITY));
     WindowID win1 = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
@@ -150,11 +149,11 @@ SCUTEST_ITER(stable, 2) {
 }
 
 
+static void _set_dock(WindowInfo * winInfo) {
+    winInfo->dock = 1;
+}
 SCUTEST(test_dock_not_auto_in_workspace) {
-    void func(WindowInfo * winInfo) {
-        winInfo->dock = 1;
-    }
-    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(func, HIGHEST_PRIORITY));
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(_set_dock, HIGHEST_PRIORITY));
     WindowID win = mapWindow(createNormalWindow());
     runEventLoop();
     assert(!getWorkspaceOfWindow(getWindowInfo(win)));
