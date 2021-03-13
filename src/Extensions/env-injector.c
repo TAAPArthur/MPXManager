@@ -42,20 +42,5 @@ void setClientMasterEnvVar(void) {
         }
         const Rect rootBounds = {0, 0, getRootWidth(), getRootHeight()};
         setEnvRect("ROOT", rootBounds);
-        if(LD_PRELOAD_INJECTION) {
-            const char* previousPreload = getenv("LD_PRELOAD");
-            const char* preload_str = LD_PRELOAD_PATH;
-            char* buffer = NULL;
-            if(previousPreload && previousPreload[0]) {
-                buffer = calloc(1, strlen(previousPreload) + strlen(LD_PRELOAD_PATH) + 1);
-                strcat(buffer, LD_PRELOAD_PATH);
-                strcat(buffer, ":");
-                strcat(buffer, previousPreload);
-                preload_str = buffer;
-            }
-            setenv("LD_PRELOAD", preload_str, 1);
-            if(buffer)
-                free(buffer);
-        }
     }
 }

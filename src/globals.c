@@ -7,10 +7,8 @@
 bool ALLOW_SETTING_UNSYNCED_MASKS = 0;
 bool ALLOW_UNSAFE_OPTIONS = 1;
 bool ASSUME_PRIMARY_MONITOR = 0;
-bool LD_PRELOAD_INJECTION = 0;
 bool RUN_AS_WM = 1;
 bool STEAL_WM_SELECTION = 0;
-const char* LD_PRELOAD_PATH = "/usr/lib/libmpx-patch.so";
 const char* MASTER_INFO_PATH = "$HOME/.config/mpxmanager/master-info.txt";
 const char* SHELL = "/bin/sh";
 int16_t DEFAULT_BORDER_WIDTH = 1;

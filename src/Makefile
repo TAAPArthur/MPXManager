@@ -19,6 +19,7 @@ LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c
 LAYER4_SRCS := wm-rules.c
 LAYER5_SRCS := functions.c communications.c mpxmanager.c
 LAYER6_SRCS := $(wildcard Extensions/*.c)
+LAYER7_SRCS := $(wildcard Hacks/*.c)
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER11_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
 TOP_LAYER_SRCS := settings.c mpxmanager.c
@@ -110,7 +111,7 @@ libmpx-patch.so: Hacks/mpx-patch.c
 
 
 test: CFLAGS := ${TESTFLAGS}
-test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out # doc-check
+test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out unitTestHacks.out # doc-check
 
 functionalTest: CFLAGS := ${TESTFLAGS}
 functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o |libmpx-patch.so
@@ -141,12 +142,22 @@ unitTest.out: unitTest
 	touch $@
 
 unitTestExtensions: CFLAGS := ${TESTFLAGS}
-unitTestExtensions: Tests/tester.o   $(patsubst %.c,Tests/%_unit.o,$(LAYER6_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
+unitTestExtensions: Tests/tester.o $(patsubst %.c,Tests/%_unit.o,$(LAYER6_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
 	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 unitTestExtensions.out: unitTestExtensions
 	$(call RUN_TEST, ./$^)
 	$(if $(TEST_FUNC),exit 1)
+	touch $@
+
+unitTestHacks: CFLAGS := ${TESTFLAGS}
+unitTestHacks: Tests/tester.o $(patsubst %.c,Tests/%_unit.o,$(LAYER7_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
+	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
+
+unitTestHacks.out: unitTestHacks | libmpx-patch.so
+	LD_PRELOAD=libmpx-patch.so $(call RUN_TEST, ./$^)
+	$(if $(TEST_FUNC),exit 1)
+	touch $@
 
 
 code_coverage.out: unitTest.out

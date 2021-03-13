@@ -51,8 +51,6 @@ extern bool ALLOW_SETTING_UNSYNCED_MASKS;
 /// If false, then unsafe options won't be proccessed
 extern bool ALLOW_UNSAFE_OPTIONS;
 
-/// if true, then preload LD_PRELOAD_PATH
-extern bool LD_PRELOAD_INJECTION;
 /**
  * If true, then we won't automatically ignore windows with the override redirect flag set.
  * Even so we cannot properly manage then; Effectively the flags STICKY and FLOATING would be set (we set them by default too)
@@ -69,10 +67,6 @@ extern bool RUN_AS_WM;
  * If the WM_SELECTION is owned by another client, take it anyways
  */
 extern bool STEAL_WM_SELECTION;
-
-
-/// the path of the lib to preload
-extern const char* LD_PRELOAD_PATH;
 
 /// File path of config file dictating ideal master(s)/slaves configuration
 extern const char* MASTER_INFO_PATH;
