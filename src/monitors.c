@@ -24,7 +24,7 @@ Monitor* getMonitorByID(MonitorID id) {
     return findElement(getAllMonitors(), &id, sizeof(MonitorID));
 }
 
-uint32_t MONITOR_DUPLICATION_POLICY = SAME_DIMS;
+uint32_t MONITOR_DUPLICATION_POLICY = SAME_DIMS | CONSIDER_ONLY_NONFAKES;
 uint32_t MONITOR_DUPLICATION_RESOLUTION = TAKE_PRIMARY | TAKE_LARGER;
 
 Monitor* newMonitor(MonitorID id, Rect base, const char* name, bool fake) {

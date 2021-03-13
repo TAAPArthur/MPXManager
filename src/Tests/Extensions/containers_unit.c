@@ -77,6 +77,24 @@ SCUTEST(contain_matching) {
     assertEquals(getActiveWorkspace(), getWorkspace(0));
 }
 
+SCUTEST(contain_matching_multiple_contains, .iter=2) {
+    const char* clazz = "test";
+    const char* clazz2 = "test2";
+    int N=_i?10:1;
+    for(int i=0;i<N;i++) {
+        mapWindowWithClass(clazz);
+        mapWindowWithClass(clazz2);
+    }
+    runEventLoop();
+    containWindows(getWorkspace(1), (WindowFunctionArg) {matchesClass,  .arg = {.str = clazz}}, clazz);
+    containWindows(getWorkspace(2), (WindowFunctionArg) {matchesClass,  .arg = {.str = clazz2}}, clazz2);
+    runEventLoop();
+    assertEquals(2*N+2, getAllWindows()->size);
+    assertEquals(getAllMonitors()->size, 3);
+    assertEquals(getWorkspaceWindowStack(getWorkspace(1))->size, N);
+    assertEquals(getWorkspaceWindowStack(getWorkspace(2))->size, N);
+}
+
 WindowID container;
 Monitor* containerMonitor;
 WindowInfo* containerWindowInfo;
