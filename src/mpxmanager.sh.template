@@ -67,7 +67,18 @@ displayHelp(){
     head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${VERSION}/${VERSION} ${GIT_HASH}/g" ;
 }
 
+recompile() {
+    if [ ! -d $MPXMANAGER_HOME ]; then
+        mkdir -p $MPXMANAGER_HOME
+        cp /usr/share/mpxmanager/sample-config.c config.c
+    fi
+    export CFLAGS=${CFLAGS:-__place__holder}
+    export LDFLAGS=${LDFLAGS:-__place__holder}
+    cd $MPXMANAGER_HOME
+    ${CC:-cc} ./*.c -o $MPXMANAGER_BIN_NAME ${CFLAGS} ${LDFLAGS} -lmpxmanager $*
+}
 run(){
+    [ -x $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME ] || recompile
     exec $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME $@
 }
 displayVersion(){
@@ -99,14 +110,7 @@ getopts "$optspec" optchar || run $@
                     ;;
                 recompile)
                     shift
-                    if [ ! -d $MPXMANAGER_HOME ]; then
-                        mkdir -p $MPXMANAGER_HOME
-                        cp /usr/share/mpxmanager/sample-config.c config.c
-                    fi
-                    export CFLAGS=${CFLAGS:-__place__holder}
-                    export LDFLAGS=${LDFLAGS:-__place__holder}
-                    cd $MPXMANAGER_HOME
-                    ${CC:-cc} *.c -o $MPXMANAGER_BIN_NAME ${CFLAGS} ${LDFLAGS} -lmpxmanager $*
+                    recompile $@
                     ;;
                 version)
                     displayVersion
