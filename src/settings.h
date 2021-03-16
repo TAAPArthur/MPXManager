@@ -10,6 +10,9 @@
 /// Layout related keybindings
 #define LAYOUT_MODE 1
 
+/// Set an global var from the env
+#define SET_FROM_ENV(VAR) if(getenv("MPX" # VAR)) VAR = atoi("MPX" # VAR)
+
 /// User specified start up method to run before connection to X
 extern void (*startupMethod)();
 /**
