@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 #================================================================
 # HEADER
 #================================================================
@@ -54,11 +54,10 @@
 #================================================================
 #MAN generated with help2man -No mpxmanager.1 ./mpxmanager.sh
 
-set -e
-[ -z "$DEBUG" ] || set -xe
-
 VERSION=
 GIT_HASH=
+MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-mpxmanager}
+MPXMANAGER_HOME=${MPXMANAGER_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/mpxmanager}
 
 displayHelp(){
     SCRIPT_HEADSIZE=$(head -200 ${0} |grep -n "^# END_OF_HEADER" | cut -f1 -d:)
@@ -88,44 +87,27 @@ displayHash(){
     echo $GIT_HASH
 }
 
-MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-mpxmanager}
-MPXMANAGER_HOME=${MPXMANAGER_HOME:-$HOME/.config/mpxmanager}
-optspec=":vhs-:"
-
-getopts "$optspec" optchar || run $@
-    case "${optchar}" in
-        -)
-            case "${OPTARG}" in
-                hash)
-                    displayHash
-                    ;;
-                help)
-                    displayHelp
-                    ;;
-                name)
-                    echo $MPXMANAGER_BIN_NAME
-                    ;;
-                path)
-                    echo $MPXMANAGER_HOME
-                    ;;
-                recompile)
-                    shift
-                    recompile $@
-                    ;;
-                version)
-                    displayVersion
-                    ;;
-                *)
-                    run $@
-                    ;;
-            esac;;
-        v)
-            displayVersion
-            ;;
-        h)
-            displayHelp
-            ;;
-        *)
-            run $@
-            ;;
-    esac
+case "$1" in
+    --hash)
+        displayHash
+        ;;
+    -h|--help)
+        displayHelp
+        ;;
+    --name)
+        echo $MPXMANAGER_BIN_NAME
+        ;;
+    --path)
+        echo $MPXMANAGER_HOME
+        ;;
+    -r|--recompile)
+        shift
+        recompile $@
+        ;;
+    -v|--version)
+        displayVersion
+        ;;
+    *)
+        run $@
+        ;;
+esac
