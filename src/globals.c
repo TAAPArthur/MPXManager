@@ -7,6 +7,7 @@
 bool ALLOW_SETTING_UNSYNCED_MASKS = 0;
 bool ALLOW_UNSAFE_OPTIONS = 1;
 bool ASSUME_PRIMARY_MONITOR = 0;
+bool HIDE_WM_STATUS = 0;
 bool RUN_AS_WM = 1;
 bool STEAL_WM_SELECTION = 0;
 const char* MASTER_INFO_PATH = "$HOME/.config/mpxmanager/master-info.txt";

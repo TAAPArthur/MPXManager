@@ -22,34 +22,36 @@
 void printStatusMethod(void) {
     if(STATUS_FD == 0)
         return;
-    if(isLogging(LOG_LEVEL_DEBUG)) {
-        dprintf(STATUS_FD, "[%d]: ", getIdleCount());
+    if(!HIDE_WM_STATUS) {
+        if(isLogging(LOG_LEVEL_DEBUG)) {
+            dprintf(STATUS_FD, "[%d]: ", getIdleCount());
+        }
+        if(getActiveMode())
+            dprintf(STATUS_FD, "%d: ", getActiveMode());
+        if(getAllMasters()->size > 1)
+            dprintf(STATUS_FD, "%dM %dA ", getAllMasters()->size, getActiveMasterKeyboardID());
+        FOR_EACH(Workspace*, w, getAllWorkspaces()) {
+            const char* color;
+            if(hasWindowWithMask(w, URGENT_MASK))
+                color = "cyan";
+            else if(isWorkspaceVisible(w))
+                color = "green";
+            else if(hasWindowWithMask(w, MAPPABLE_MASK))
+                color = "yellow";
+            else continue;
+            dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->name, w == getActiveWorkspace() ? "*" : "",
+                getLayout(w) ? getLayout(w)->name : "");
+        }
+        if(getActiveMaster()->bindings.size)
+            dprintf(STATUS_FD, "[(%d)] ", getActiveMaster()->bindings.size);
     }
-    if(getActiveMode())
-        dprintf(STATUS_FD, "%d: ", getActiveMode());
-    if(getAllMasters()->size > 1)
-        dprintf(STATUS_FD, "%dM %dA ", getAllMasters()->size, getActiveMasterKeyboardID());
-    FOR_EACH(Workspace*, w, getAllWorkspaces()) {
-        const char* color;
-        if(hasWindowWithMask(w, URGENT_MASK))
-            color = "cyan";
-        else if(isWorkspaceVisible(w))
-            color = "green";
-        else if(hasWindowWithMask(w, MAPPABLE_MASK))
-            color = "yellow";
-        else continue;
-        dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->name, w == getActiveWorkspace() ? "*" : "",
-            getLayout(w) ? getLayout(w)->name : "");
-    }
-    if(getActiveMaster()->bindings.size)
-        dprintf(STATUS_FD, "[(%d)] ", getActiveMaster()->bindings.size);
     if(getFocusedWindow() && isNotInInvisibleWorkspace(getFocusedWindow())) {
         if(isLogging(LOG_LEVEL_DEBUG))
             dprintf(STATUS_FD, "%0x ", getFocusedWindow()->id);
         dprintf(STATUS_FD, "^fg(%s)%s^fg()", "green", getFocusedWindow()->title);
     }
     else {
-        dprintf(STATUS_FD, "Focused on %0xd (root: %0xd)", getActiveFocus(), root);
+        dprintf(STATUS_FD, "Focused on %x (root: %x)", getActiveFocus(), root);
     }
     dprintf(STATUS_FD, "\n");
 }

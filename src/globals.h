@@ -51,6 +51,9 @@ extern bool ALLOW_SETTING_UNSYNCED_MASKS;
 /// If false, then unsafe options won't be proccessed
 extern bool ALLOW_UNSAFE_OPTIONS;
 
+/// if false, then omit status info not directly related to the focused window
+extern bool HIDE_WM_STATUS;
+
 /**
  * If true, then we won't automatically ignore windows with the override redirect flag set.
  * Even so we cannot properly manage then; Effectively the flags STICKY and FLOATING would be set (we set them by default too)
