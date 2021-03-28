@@ -103,7 +103,9 @@ extern xcb_ewmh_client_source_type_t source;
 /**
  * Sets the WM_STATE from the window masks
  */
-void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len);
+void setXWindowStateFromMask(WindowInfo* winInfo);
+
+void setXWindowStateFromMaskAndUnsyncedAtoms(WindowInfo* winInfo, xcb_atom_t* atoms, int len, xcb_ewmh_wm_state_action_t action);
 /**
  * Reads the WM_STATE fields from the given window and sets the window mask to be consistent with the state
  * If the WM_STATE cannot be read, then nothing is done

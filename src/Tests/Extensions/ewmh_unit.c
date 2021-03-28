@@ -195,7 +195,7 @@ SCUTEST(test_sync_window_state) {
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
     addMask(winInfo, MASKS_TO_SYNC);
-    setXWindowStateFromMask(winInfo, NULL, 0);
+    setXWindowStateFromMask(winInfo);
     assertEquals(winInfo->mask & MASKS_TO_SYNC, MASKS_TO_SYNC);
     unregisterWindow(winInfo, 0);
     scan(root);
@@ -373,7 +373,7 @@ SCUTEST(test_client_set_window_workspace) {
 SCUTEST(test_client_set_window_unknown_state) {
     WindowInfo* winInfo = getHead(getAllWindows());
     catchError(xcb_ewmh_set_wm_state_checked(ewmh, winInfo->id, 1, &ewmh->MANAGER));
-    setXWindowStateFromMask(winInfo, NULL, 0);
+    setXWindowStateFromMask(winInfo);
     xcb_ewmh_get_atoms_reply_t reply;
     assert(xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL));
     assertEquals(reply.atoms_len, 1);
@@ -386,6 +386,27 @@ SCUTEST_ITER(test_client_set_window_state, 3) {
     source = (xcb_ewmh_client_source_type_t)_i;
     WindowInfo* winInfo = getHead(getAllWindows());
     sendChangeWindowStateRequest(winInfo->id, XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_STICKY, 0);
+    runEventLoop();
+    assert(hasMask(winInfo, STICKY_MASK));
+}
+SCUTEST_ITER(test_client_duplicate_window_state, 2) {
+    ALLOW_SETTING_UNSYNCED_MASKS = 1;
+    MASKS_TO_SYNC &= ~FULLSCREEN_MASK ;
+    xcb_ewmh_get_atoms_reply_t reply;
+    WindowInfo* winInfo = getHead(getAllWindows());
+    bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    assert(!hasState || reply.atoms_len == 0);
+    for(int i=0; i<= _i;i++)
+        sendChangeWindowStateRequest(winInfo->id, XCB_EWMH_WM_STATE_ADD, ewmh->_NET_WM_STATE_FULLSCREEN, ewmh->_NET_WM_STATE_FULLSCREEN);
+    runEventLoop();
+    hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    assert(hasState);
+    assertEquals(1, reply.atoms_len);
+    for(int i=0; i<= _i;i++)
+        sendChangeWindowStateRequest(winInfo->id, XCB_EWMH_WM_STATE_REMOVE, ewmh->_NET_WM_STATE_FULLSCREEN, ewmh->_NET_WM_STATE_FULLSCREEN);
+    runEventLoop();
+    hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
+    assert(!hasState || reply.atoms_len ==0);
 }
 SCUTEST_ITER(test_client_set_window_state2, 2) {
     WindowInfo* winInfo = getHead(getAllWindows());

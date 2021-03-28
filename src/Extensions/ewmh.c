@@ -216,13 +216,13 @@ void onClientMessage(xcb_client_message_event_t* event) {
     else if(message == ewmh->_NET_WM_STATE) {
         // action, prop1, prop2, source
         // if prop2 is 0, then there is only 1 property to consider
-        int num = data.data32[2] == 0 ? 1 : 2;
+        int num = data.data32[2] == 0 || data.data32[2] == data.data32[1] ? 1 : 2;
         if(winInfo) {
             if(allowRequestFromSource(data.data32[3])) {
                 WindowMask mask = winInfo->mask;
-                bool added = setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
-                if(mask != winInfo->mask)
-                    setXWindowStateFromMask(winInfo, &data.data32[1], added ? num : 0);
+                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
+                if(mask != winInfo->mask || ( ALLOW_SETTING_UNSYNCED_MASKS && ((mask & getMasksToSync(winInfo)) != mask)))
+                    setXWindowStateFromMaskAndUnsyncedAtoms(winInfo, &data.data32[1], num, data.data32[0]);
             }
             else
                 INFO("Client message denied");
@@ -234,7 +234,7 @@ void onClientMessage(xcb_client_message_event_t* event) {
                 if(getMasksToSync(winInfo) & HIDDEN_MASK) {
                     INFO("Received request to iconify window; marking window as HIDDEN");
                     addMask(winInfo, HIDDEN_MASK);
-                    setXWindowStateFromMask(winInfo, NULL, 0);
+                    setXWindowStateFromMask(winInfo);
                 }
                 else
                     INFO("Received request to iconify window; ignored");
@@ -258,36 +258,66 @@ void onClientMessage(xcb_client_message_event_t* event) {
     //ignored (we are allowed to) ewmh->_NET_DESKTOP_GEOMETRY, ewmh->_NET_DESKTOP_VIEWPORT
 }
 
-void setXWindowStateFromMask(WindowInfo* winInfo, xcb_atom_t* atoms, int len) {
-    INFO("Setting X State for window %d from masks  %d %s", winInfo->id, winInfo->mask,
-        getMaskAsString(winInfo->mask & getMasksToSync(winInfo), NULL));
+static inline bool containsElement(xcb_atom_t* atoms, int len, xcb_atom_t value) {
+    for(int i = 0; i < len; i++)
+        if (atoms[i] == value)
+            return 1;
+    return 0;
+
+}
+
+void setXWindowStateFromMaskAndUnsyncedAtoms(WindowInfo* winInfo, xcb_atom_t* atoms, int len, xcb_ewmh_wm_state_action_t action) {
+    INFO("Setting X State for window %d from masks  %d %s; Add %d", winInfo->id, winInfo->mask,
+        getMaskAsString(winInfo->mask & getMasksToSync(winInfo), NULL), action);
     xcb_ewmh_get_atoms_reply_t reply;
     bool hasState = xcb_ewmh_get_wm_state_reply(ewmh, xcb_ewmh_get_wm_state(ewmh, winInfo->id), &reply, NULL);
     xcb_atom_t windowState[sizeof(WindowMask) * 8 + (hasState ? reply.atoms_len : 0)];
     int n = 0;
+
+    if(action == XCB_EWMH_WM_STATE_TOGGLE) {
+        action = XCB_EWMH_WM_STATE_REMOVE;
+        if(hasState) {
+            for(int i=0;i<len; i++) {
+                if(!containsElement(reply.atoms, reply.atoms_len, atoms[i])) {
+                    action = XCB_EWMH_WM_STATE_ADD;
+                    break;
+                }
+            }
+        } else {
+            action = XCB_EWMH_WM_STATE_ADD;
+        }
+    }
+
+    bool addAtoms = action == XCB_EWMH_WM_STATE_ADD;
     if(hasState) {
         LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(reply.atoms, reply.atoms_len));
         for(uint32_t i = 0; i < reply.atoms_len; i++) {
             if((getMaskFromAtom(reply.atoms[i]) & getMasksToSync(winInfo)) == 0)
-                windowState[n++] = reply.atoms[i];
+                if(addAtoms || !containsElement(atoms, len, reply.atoms[i]))
+                    windowState[n++] = reply.atoms[i];
         }
         xcb_ewmh_get_atoms_reply_wipe(&reply);
     }
-    if(ALLOW_SETTING_UNSYNCED_MASKS) {
+    if(ALLOW_SETTING_UNSYNCED_MASKS && addAtoms) {
         for(uint32_t i = 0; i < len; i++)
-            if((getMaskFromAtom(atoms[i]) & getMasksToSync(winInfo)) == 0)
+            if((getMaskFromAtom(atoms[i]) & getMasksToSync(winInfo)) == 0 && !containsElement(reply.atoms, hasState?reply.atoms_len:0, atoms[i]))
                 windowState[n++] = atoms[i];
     }
     n += getAtomsFromMask(winInfo->mask & getMasksToSync(winInfo), 0, windowState + n);
+    INFO("Setting %d X window mask for %d", n, winInfo->id);
     xcb_ewmh_set_wm_state(ewmh, winInfo->id, n, windowState);
     dumpAtoms(windowState, n);
+}
+
+void setXWindowStateFromMask(WindowInfo* winInfo) {
+    setXWindowStateFromMaskAndUnsyncedAtoms(winInfo, NULL, 0, 0);
 }
 
 void updateXWindowStateForAllWindows() {
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
         if(hasMask(winInfo, MAPPABLE_MASK)) {
             if((winInfo->mask ^ winInfo->savedMask) & getMasksToSync(winInfo))
-                setXWindowStateFromMask(winInfo, NULL, 0);
+                setXWindowStateFromMask(winInfo);
         }
     }
 }
