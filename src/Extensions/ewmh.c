@@ -106,157 +106,6 @@ void autoResumeWorkspace(WindowInfo* winInfo) {
         moveToWorkspace(winInfo, getSavedWorkspaceIndex(winInfo->id));
     }
 }
-static inline const char* getSourceTypeName(xcb_ewmh_client_source_type_t source) {
-    switch(source) {
-        default:
-        case XCB_EWMH_CLIENT_SOURCE_TYPE_NONE:
-            return "Old";
-        case XCB_EWMH_CLIENT_SOURCE_TYPE_NORMAL:
-            return "Application";
-        case XCB_EWMH_CLIENT_SOURCE_TYPE_OTHER:
-            return "Other";
-    }
-}
-/**
- * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
- * @param source
- * @return
- */
-static bool allowRequestFromSource(int source) {
-    INFO("Got request from %s", getSourceTypeName((xcb_ewmh_client_source_type_t)source));
-    return SRC_INDICATION & (1 << (source));
-}
-
-void onClientMessage(xcb_client_message_event_t* event) {
-    xcb_client_message_data_t data = event->data;
-    xcb_window_t win = event->window;
-    Atom message = event->type;
-    INFO("Received client message for window: %d message: %s", win, getAtomName(message, NULL));
-    WindowInfo* winInfo = getWindowInfo(win);
-    if(message == ewmh->_NET_CURRENT_DESKTOP)
-        switchToWorkspace(data.data32[0]);
-    else if(message == ewmh->_NET_ACTIVE_WINDOW) {
-        //data: source,timestamp,current active window
-        if(winInfo && allowRequestFromSource(data.data32[0])) {
-            Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
-            if(m)
-                setActiveMaster(m);
-            DEBUG("Activating window %d for master %d due to client request", win, getActiveMaster()->id);
-            activateWindow(winInfo);
-        }
-    }
-    else if(message == ewmh->_NET_SHOWING_DESKTOP) {
-        DEBUG("Changing showing desktop to %d\n", data.data32[0]);
-        setShowingDesktop(data.data32[0]);
-    }
-    else if(message == ewmh->_NET_CLOSE_WINDOW) {
-        DEBUG("Killing window %d\n", win);
-        if(!winInfo)
-            killClientOfWindow(win);
-        else if(allowRequestFromSource(data.data32[0])) {
-            killClientOfWindowInfo(winInfo);
-        }
-    }
-    else if(message == ewmh->_NET_RESTACK_WINDOW) {
-        DEBUG("Restacking Window %d sibling %d detail %d\n", win, data.data32[1], data.data32[2]);
-        if(winInfo && allowRequestFromSource(data.data32[0]))
-            processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
-                XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
-    }
-    else if(message == ewmh->_NET_REQUEST_FRAME_EXTENTS) {
-        xcb_ewmh_set_frame_extents(ewmh, win, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH,
-            DEFAULT_BORDER_WIDTH);
-    }
-    else if(message == ewmh->_NET_MOVERESIZE_WINDOW) {
-        DEBUG("Move/Resize window request %d\n", win);
-        int mask = data.data8[1] & 15;
-        int source = (data.data8[1] >> 4) & 15;
-        short values[4];
-        for(int i = 1; i <= 4; i++)
-            values[i - 1] = data.data32[i];
-        if(winInfo && allowRequestFromSource(source)) {
-            processConfigureRequest(win, values, 0, 0, mask);
-        }
-    }
-    else if(message == ewmh->_NET_WM_MOVERESIZE) {
-        // x,y, direction, button, src
-        if(winInfo && allowRequestFromSource(data.data32[4])) {
-            int dir = data.data32[2];
-            bool disallowMoveX = XCB_EWMH_WM_MOVERESIZE_SIZE_TOP == dir || XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOM == dir ;
-            bool disallowMoveY = XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT == dir || XCB_EWMH_WM_MOVERESIZE_SIZE_LEFT == dir ;
-            bool move = dir == XCB_EWMH_WM_MOVERESIZE_MOVE || dir == XCB_EWMH_WM_MOVERESIZE_MOVE_KEYBOARD;
-            Master* m = getClientMaster(win);
-            setActiveMaster(m);
-            if(dir == XCB_EWMH_WM_MOVERESIZE_CANCEL) {
-                extern Binding* startWindowMoveBinding;
-                if(m->bindings.size)
-                    if(peek(&m->bindings) == startWindowMoveBinding || peek(&m->bindings) == startWindowMoveBinding + 1)
-                        pop(&m->bindings);
-                cancelWindowMoveResize();
-            }
-            else {
-                int btn = data.data32[3] ? data.data32[3] : 1;
-                INFO("Starting WM move/resize with button %d (%d)", btn, data.data32[3]);
-                startWindowMoveResize(winInfo, move, (disallowMoveY << 1) | disallowMoveX);
-                extern Binding* startWindowMoveBinding;
-                enterChain(startWindowMoveBinding + !move, &m->bindings);
-            }
-        }
-    }
-    //change window's workspace
-    else if(message == ewmh->_NET_WM_DESKTOP) {
-        WorkspaceID destIndex = data.data32[0];
-        if(!(destIndex == NO_WORKSPACE || destIndex < getNumberOfWorkspaces()))
-            destIndex = getNumberOfWorkspaces() - 1;
-        if(winInfo && allowRequestFromSource(data.data32[1])) {
-            DEBUG("Changing window workspace %d %d\n", destIndex, data.data32[0]);
-            moveToWorkspace(winInfo, destIndex);
-        }
-    }
-    else if(message == ewmh->_NET_WM_STATE) {
-        // action, prop1, prop2, source
-        // if prop2 is 0, then there is only 1 property to consider
-        int num = data.data32[2] == 0 || data.data32[2] == data.data32[1] ? 1 : 2;
-        if(winInfo) {
-            if(allowRequestFromSource(data.data32[3])) {
-                WindowMask mask = winInfo->mask;
-                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
-                if(mask != winInfo->mask || ( ALLOW_SETTING_UNSYNCED_MASKS && ((mask & getMasksToSync(winInfo)) != mask)))
-                    setXWindowStateFromMaskAndUnsyncedAtoms(winInfo, &data.data32[1], num, data.data32[0]);
-            }
-            else
-                INFO("Client message denied");
-        }
-    }
-    else if(message == WM_CHANGE_STATE) {
-        if(winInfo && allowRequestFromSource(XCB_EWMH_CLIENT_SOURCE_TYPE_NONE))
-            if(data.data32[0] == XCB_ICCCM_WM_STATE_ICONIC) {
-                if(getMasksToSync(winInfo) & HIDDEN_MASK) {
-                    INFO("Received request to iconify window; marking window as HIDDEN");
-                    addMask(winInfo, HIDDEN_MASK);
-                    setXWindowStateFromMask(winInfo);
-                }
-                else
-                    INFO("Received request to iconify window; ignored");
-            }
-    }
-    else if(message == ewmh->_NET_NUMBER_OF_DESKTOPS) {
-        if(data.data32[0] > 0) {
-            int delta = data.data32[0] - getNumberOfWorkspaces();
-            if(delta > 0)
-                addWorkspaces(delta);
-            else {
-                WorkspaceID newLastIndex = data.data32[0] - 1;
-                if(getActiveWorkspaceIndex() > newLastIndex)
-                    setActiveWorkspaceIndex(newLastIndex);
-                removeWorkspaces(-delta);
-            }
-            assert(data.data32[0] == getNumberOfWorkspaces());
-            assignUnusedMonitorsToWorkspaces();
-        }
-    }
-    //ignored (we are allowed to) ewmh->_NET_DESKTOP_GEOMETRY, ewmh->_NET_DESKTOP_VIEWPORT
-}
 
 static inline bool containsElement(xcb_atom_t* atoms, int len, xcb_atom_t value) {
     for(int i = 0; i < len; i++)
@@ -432,6 +281,158 @@ void updateEWMHClientList() {
         ids[i++] = winInfo->id;
     }
     xcb_ewmh_set_client_list(ewmh, defaultScreenNumber, i, ids);
+}
+
+static inline const char* getSourceTypeName(xcb_ewmh_client_source_type_t source) {
+    switch(source) {
+        default:
+        case XCB_EWMH_CLIENT_SOURCE_TYPE_NONE:
+            return "Old";
+        case XCB_EWMH_CLIENT_SOURCE_TYPE_NORMAL:
+            return "Application";
+        case XCB_EWMH_CLIENT_SOURCE_TYPE_OTHER:
+            return "Other";
+    }
+}
+/**
+ * Checks to see if the window has SRC* masks set that will allow. If not client requests with such a source will be ignored
+ * @param source
+ * @return
+ */
+static bool allowRequestFromSource(int source) {
+    INFO("Got request from %s", getSourceTypeName((xcb_ewmh_client_source_type_t)source));
+    return SRC_INDICATION & (1 << (source));
+}
+
+void onClientMessage(xcb_client_message_event_t* event) {
+    xcb_client_message_data_t data = event->data;
+    xcb_window_t win = event->window;
+    Atom message = event->type;
+    INFO("Received client message for window: %d message: %s", win, getAtomName(message, NULL));
+    WindowInfo* winInfo = getWindowInfo(win);
+    if(message == ewmh->_NET_CURRENT_DESKTOP)
+        switchToWorkspace(data.data32[0]);
+    else if(message == ewmh->_NET_ACTIVE_WINDOW) {
+        //data: source,timestamp,current active window
+        if(winInfo && allowRequestFromSource(data.data32[0])) {
+            Master* m = data.data32[3] ? getMasterByID(data.data32[3]) : getClientMaster(win);
+            if(m)
+                setActiveMaster(m);
+            DEBUG("Activating window %d for master %d due to client request", win, getActiveMaster()->id);
+            activateWindow(winInfo);
+        }
+    }
+    else if(message == ewmh->_NET_SHOWING_DESKTOP) {
+        DEBUG("Changing showing desktop to %d\n", data.data32[0]);
+        setShowingDesktop(data.data32[0]);
+    }
+    else if(message == ewmh->_NET_CLOSE_WINDOW) {
+        DEBUG("Killing window %d\n", win);
+        if(!winInfo)
+            killClientOfWindow(win);
+        else if(allowRequestFromSource(data.data32[0])) {
+            killClientOfWindowInfo(winInfo);
+        }
+    }
+    else if(message == ewmh->_NET_RESTACK_WINDOW) {
+        DEBUG("Restacking Window %d sibling %d detail %d\n", win, data.data32[1], data.data32[2]);
+        if(winInfo && allowRequestFromSource(data.data32[0]))
+            processConfigureRequest(win, NULL, data.data32[1], data.data32[2],
+                XCB_CONFIG_WINDOW_STACK_MODE | XCB_CONFIG_WINDOW_SIBLING);
+    }
+    else if(message == ewmh->_NET_REQUEST_FRAME_EXTENTS) {
+        xcb_ewmh_set_frame_extents(ewmh, win, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH, DEFAULT_BORDER_WIDTH,
+            DEFAULT_BORDER_WIDTH);
+    }
+    else if(message == ewmh->_NET_MOVERESIZE_WINDOW) {
+        DEBUG("Move/Resize window request %d\n", win);
+        int mask = data.data8[1] & 15;
+        int source = (data.data8[1] >> 4) & 15;
+        short values[4];
+        for(int i = 1; i <= 4; i++)
+            values[i - 1] = data.data32[i];
+        if(winInfo && allowRequestFromSource(source)) {
+            processConfigureRequest(win, values, 0, 0, mask);
+        }
+    }
+    else if(message == ewmh->_NET_WM_MOVERESIZE) {
+        // x,y, direction, button, src
+        if(winInfo && allowRequestFromSource(data.data32[4])) {
+            int dir = data.data32[2];
+            bool disallowMoveX = XCB_EWMH_WM_MOVERESIZE_SIZE_TOP == dir || XCB_EWMH_WM_MOVERESIZE_SIZE_BOTTOM == dir ;
+            bool disallowMoveY = XCB_EWMH_WM_MOVERESIZE_SIZE_RIGHT == dir || XCB_EWMH_WM_MOVERESIZE_SIZE_LEFT == dir ;
+            bool move = dir == XCB_EWMH_WM_MOVERESIZE_MOVE || dir == XCB_EWMH_WM_MOVERESIZE_MOVE_KEYBOARD;
+            Master* m = getClientMaster(win);
+            setActiveMaster(m);
+            if(dir == XCB_EWMH_WM_MOVERESIZE_CANCEL) {
+                extern Binding* startWindowMoveBinding;
+                if(m->bindings.size)
+                    if(peek(&m->bindings) == startWindowMoveBinding || peek(&m->bindings) == startWindowMoveBinding + 1)
+                        pop(&m->bindings);
+                cancelWindowMoveResize();
+            }
+            else {
+                int btn = data.data32[3] ? data.data32[3] : 1;
+                INFO("Starting WM move/resize with button %d (%d)", btn, data.data32[3]);
+                startWindowMoveResize(winInfo, move, (disallowMoveY << 1) | disallowMoveX);
+                extern Binding* startWindowMoveBinding;
+                enterChain(startWindowMoveBinding + !move, &m->bindings);
+            }
+        }
+    }
+    //change window's workspace
+    else if(message == ewmh->_NET_WM_DESKTOP) {
+        WorkspaceID destIndex = data.data32[0];
+        if(!(destIndex == NO_WORKSPACE || destIndex < getNumberOfWorkspaces()))
+            destIndex = getNumberOfWorkspaces() - 1;
+        if(winInfo && allowRequestFromSource(data.data32[1])) {
+            DEBUG("Changing window workspace %d %d\n", destIndex, data.data32[0]);
+            moveToWorkspace(winInfo, destIndex);
+        }
+    }
+    else if(message == ewmh->_NET_WM_STATE) {
+        // action, prop1, prop2, source
+        // if prop2 is 0, then there is only 1 property to consider
+        int num = data.data32[2] == 0 || data.data32[2] == data.data32[1] ? 1 : 2;
+        if(winInfo) {
+            if(allowRequestFromSource(data.data32[3])) {
+                WindowMask mask = winInfo->mask;
+                setWindowStateFromAtomInfo(winInfo, (xcb_atom_t*) &data.data32[1], num, data.data32[0]);
+                if(mask != winInfo->mask || ( ALLOW_SETTING_UNSYNCED_MASKS && ((mask & getMasksToSync(winInfo)) != mask)))
+                    setXWindowStateFromMaskAndUnsyncedAtoms(winInfo, &data.data32[1], num, data.data32[0]);
+            }
+            else
+                INFO("Client message denied");
+        }
+    }
+    else if(message == WM_CHANGE_STATE) {
+        if(winInfo && allowRequestFromSource(XCB_EWMH_CLIENT_SOURCE_TYPE_NONE))
+            if(data.data32[0] == XCB_ICCCM_WM_STATE_ICONIC) {
+                if(getMasksToSync(winInfo) & HIDDEN_MASK) {
+                    INFO("Received request to iconify window; marking window as HIDDEN");
+                    addMask(winInfo, HIDDEN_MASK);
+                    setXWindowStateFromMask(winInfo);
+                }
+                else
+                    INFO("Received request to iconify window; ignored");
+            }
+    }
+    else if(message == ewmh->_NET_NUMBER_OF_DESKTOPS) {
+        if(data.data32[0] > 0) {
+            int delta = data.data32[0] - getNumberOfWorkspaces();
+            if(delta > 0)
+                addWorkspaces(delta);
+            else {
+                WorkspaceID newLastIndex = data.data32[0] - 1;
+                if(getActiveWorkspaceIndex() > newLastIndex)
+                    setActiveWorkspaceIndex(newLastIndex);
+                removeWorkspaces(-delta);
+            }
+            assert(data.data32[0] == getNumberOfWorkspaces());
+            assignUnusedMonitorsToWorkspaces();
+        }
+    }
+    //ignored (we are allowed to) ewmh->_NET_DESKTOP_GEOMETRY, ewmh->_NET_DESKTOP_VIEWPORT
 }
 
 void addEWMHRules() {

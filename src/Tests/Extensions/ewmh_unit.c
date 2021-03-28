@@ -229,6 +229,10 @@ SCUTEST_ITER(docks, 4 * 2) {
     assertEquals(prop->start, 1);
     assertEquals(prop->end, 1);
 }
+
+static void auto_tile_with_dock_helper(WindowInfo * winInfo) {
+    assert(memcmp(&((Monitor*)getHead(getAllMonitors()))->base, &winInfo->geometry, sizeof(Rect)));
+}
 SCUTEST_ITER(auto_tile_with_dock, 5) {
     assignUnusedMonitorsToWorkspaces();
     addAutoTileRules();
@@ -241,10 +245,7 @@ SCUTEST_ITER(auto_tile_with_dock, 5) {
     WindowID win2 = mapArbitraryWindow();
     WindowID win3 = mapArbitraryWindow();
     Monitor* m = getHead(getAllMonitors());
-    void func(WindowInfo * winInfo) {
-        assert(memcmp(&m->base, &winInfo->geometry, sizeof(Rect)));
-    }
-    addEvent(WINDOW_MOVE, DEFAULT_EVENT(func, LOWEST_PRIORITY));
+    addEvent(WINDOW_MOVE, DEFAULT_EVENT(auto_tile_with_dock_helper, LOWEST_PRIORITY));
     if(_i < 4) {
         scan(root);
         if(consume)
