@@ -69,6 +69,7 @@ void callOption(const Option* o, const char* p, const char* p2) {
 }
 
 static Option baseOptions[] = {
+    {"block-device-events", {blockEvent, .arg.i=DEVICE_EVENT}},
     {"destroy-win", {destroyWindowInfo}, .flags = USE_FOCUSED},
     {"dump", {dumpWindowByClass}, .flags = REDIRECT_OUTPUT | REQUEST_STR},
     {"dump", {dumpWindowFilter, .arg.i = MAPPABLE_MASK}, .flags = REDIRECT_OUTPUT},
@@ -102,6 +103,7 @@ static Option baseOptions[] = {
     {"swap-up", {swapPosition, .arg.i=UP}},
     {"swap-windows", {swapWindows}, .flags = REQUEST_INT|REQUEST_MULTI},
     {"switch-workspace", {switchToWorkspace}, .flags = REQUEST_INT},
+    {"unblock-device-events", {unblockEvent, .arg.i=DEVICE_EVENT}},
 };
 static ArrayList options;
 

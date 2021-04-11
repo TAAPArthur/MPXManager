@@ -45,6 +45,20 @@ typedef struct BoundFunction {
 /// @}
 void addEvent(UserEvent type, const BoundFunction func);
 void addBatchEvent(UserEvent type, const BoundFunction func);
+void removeEvent(UserEvent type, const BoundFunction func);
+void removeBatchEvent(UserEvent type, const BoundFunction func);
+
+/**
+ * Adds a HIGHEST_PRIORITY event that will short circuit the event process
+ * for the specifying type.
+ * Other HIGHEST_PRIORITY events are not blocked
+ */
+void blockEvent(UserEvent);
+/**
+ * Removes the special added via blockEvent
+ * Needs to be called as many times as blockEvent was to resume normal event processing
+ */
+void unblockEvent(UserEvent);
 
 /**
  * Deletes all normal and batch event rules
