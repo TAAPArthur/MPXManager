@@ -229,16 +229,18 @@ Workspace* getWorkspaceOfMonitor(Monitor* monitor) {
     return NULL;
 }
 
-static const uint16_t* rootDim;
-void setRootDims(const uint16_t* s) {
-    rootDim = s;
+static uint16_t rootDim[2];
+void setRootDims(uint16_t w, uint16_t h){
+    rootDim[0] = w;
+    rootDim[1] = h;
 }
+
 uint16_t getRootWidth(void) {
-    return rootDim ? rootDim[0] : 0;
+    return rootDim[0];
 }
 
 uint16_t getRootHeight(void) {
-    return rootDim ? rootDim[1] : 0;
+    return rootDim[1];
 }
 
 void clearAllFakeMonitors(void) {

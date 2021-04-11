@@ -153,7 +153,8 @@ void openXDisplay(void) {
     CREATE_ATOM(WM_STATE);
     CREATE_ATOM(WM_WINDOW_ROLE);
     screen = ewmh->screens[0];
-    setRootDims(&screen->width_in_pixels);
+
+    setRootDims(screen->width_in_pixels, screen->height_in_pixels);
     root = screen->root;
     char selectionName[32];
     sprintf(selectionName, "WM_S%d", defaultScreenNumber);

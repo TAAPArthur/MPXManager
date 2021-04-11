@@ -164,7 +164,7 @@ Monitor* addRootMonitor();
  *
  * @param s an array of size 2
  */
-void setRootDims(const uint16_t* s);
+void setRootDims(uint16_t w, uint16_t h);
 /**
  *
  * @return the width of the root window

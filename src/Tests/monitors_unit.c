@@ -7,9 +7,8 @@
 #include <string.h>
 
 static WindowInfo* winInfo;
-const uint16_t rootDims[2] = {100, 100};
 static void setupEnvWithDock(int i) {
-    setRootDims(rootDims);
+    setRootDims(100, 100);
     addDefaultMaster();
     addWorkspaces(2);
     winInfo = addFakeWindowInfo(1);

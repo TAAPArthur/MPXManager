@@ -72,8 +72,10 @@ void onConfigureNotifyEvent(xcb_configure_notify_event_t* event) {
         setGeometry(winInfo, &event->x);
         applyEventRules(WINDOW_MOVE, winInfo);
     }
-    if(event->window == root)
+    if(event->window == root) {
+        setRootDims(event->width, event->height);
         applyEventRules(SCREEN_CHANGE, NULL);
+    }
 }
 void onConfigureRequestEvent(xcb_configure_request_event_t* event) {
     short values[5];
