@@ -27,9 +27,9 @@ static volatile int idle;
 int getIdleCount() {
     return idle;
 }
-static int lastQueuedEventSequenceNumber;
+static int lastDetectedEventSequenceNumber;
 static int lastEventSequenceNumber;
-uint32_t getLastDetectedEventSequenceNumber() {return MAX(lastQueuedEventSequenceNumber, lastEventSequenceNumber);}
+uint32_t getLastDetectedEventSequenceNumber() {return lastDetectedEventSequenceNumber;}
 uint16_t getCurrentSequenceNumber(void) {
     return lastEventSequenceNumber;
 }
@@ -55,7 +55,7 @@ static bool pushEvent(xcb_generic_event_t* event) {
         return NULL;
     }
     eventQueue.arr[eventQueue.bufferIndexWrite++ % MPX_EVENT_QUEUE_SIZE] = event;
-    lastQueuedEventSequenceNumber = event->sequence;
+    lastDetectedEventSequenceNumber = event->sequence;
     return (eventQueue.bufferIndexWrite - eventQueue.bufferIndexRead) % MPX_EVENT_QUEUE_SIZE;
 }
 
@@ -108,6 +108,7 @@ static inline xcb_generic_event_t* pollForXEvent(void) {
     TRACE("Polling for event");
     xcb_generic_event_t* event = xcb_poll_for_event(dis);
     if(event) {
+        lastDetectedEventSequenceNumber = event->sequence;
         TRACE("Reading events on the X queue");
         while(pushEvent(xcb_poll_for_queued_event(dis)));
         TRACE("Finished reading events off of the X queue");
