@@ -32,18 +32,11 @@ void _addEvent(ArrayList* arr, const BoundFunction func) {
         }
     }
 }
-
 void addEvent(UserEvent type, const BoundFunction func) {
     _addEvent(getEventList(type, 0), func);
 }
 void addBatchEvent(UserEvent type, const BoundFunction func) {
     _addEvent(getEventList(type, 1), func);
-}
-void removeEvent(UserEvent type, const BoundFunction func) {
-    removeElement(getEventList(type, 0), &func, sizeof(func));
-}
-void removeBatchEvent(UserEvent type, const BoundFunction func) {
-    removeElement(getEventList(type, 1), &func, sizeof(func));
 }
 
 void clearAllRules() {
@@ -103,13 +96,4 @@ bool applyEventRules(UserEvent type, void* p) {
     bool result = applyRules(&eventRules[type], p);
     popContext();
     return result;
-}
-
-static bool abortEarly(){return false;}
-static BoundFunction abortEarlyFunc = DEFAULT_EVENT(abortEarly, HIGHEST_PRIORITY, .abort=1);
-void blockEvent(UserEvent t) {
-    addEvent(t, abortEarlyFunc);
-}
-void unblockEvent(UserEvent t) {
-    removeEvent(t, abortEarlyFunc);
 }

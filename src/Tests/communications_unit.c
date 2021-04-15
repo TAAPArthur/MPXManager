@@ -53,19 +53,6 @@ SCUTEST(test_send_quit) {
     runEventLoop();
 }
 
-SCUTEST(test_block_unblock_device_events) {
-    addEvent(DEVICE_EVENT, DEFAULT_EVENT(fail));
-    addShutdownOnIdleRule();
-    checkAndSend("block-device-events", "");
-    runEventLoop();
-    applyEventRules(DEVICE_EVENT, NULL);
-    addEvent(DEVICE_EVENT, DEFAULT_EVENT(quit, HIGHER_PRIORITY));
-    checkAndSend("unblock-device-events", "");
-    runEventLoop();
-    applyEventRules(DEVICE_EVENT, NULL);
-    fail();
-}
-
 SCUTEST(test_send_multi_func) {
     sendAs("raise-or-run", 0, "NotFound", "exit 0");
 }

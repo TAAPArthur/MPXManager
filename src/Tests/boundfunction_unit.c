@@ -30,39 +30,6 @@ SCUTEST(test_add_apply_rules) {
     assertEquals(getCount(), 2 * NUMBER_OF_MPX_EVENTS);
 }
 
-SCUTEST(test_add_remove_event) {
-    BoundFunction func = DEFAULT_EVENT(incrementCount);
-    addEvent(0, func);
-    addEvent(0, func);
-    applyEventRules(0, NULL);
-    assertEquals(getCount(), 2);
-    removeEvent(0, func);
-    applyEventRules(0, NULL);
-    assertEquals(getCount(), 3);
-    removeEvent(0, func);
-    applyEventRules(0, NULL);
-    assertEquals(getCount(), 3);
-}
-
-SCUTEST(test_block_unblock, .iter=2) {
-    BoundFunction func = DEFAULT_EVENT(incrementCount);
-    addEvent(0, func);
-    blockEvent(0);
-    for(int i=0;i<_i;i++) {
-        blockEvent(0);
-    }
-    applyEventRules(0, NULL);
-    assertEquals(getCount(), 0);
-    for(int i=0;i<_i;i++) {
-        unblockEvent(0);
-        applyEventRules(0, NULL);
-        assertEquals(getCount(), 0);
-    }
-    unblockEvent(0);
-    applyEventRules(0, NULL);
-    assertEquals(getCount(), 1);
-}
-
 static void assertCount0() {assert(getCount() == 0);}
 static void assertCount1() {assert(getCount() == 1);}
 static void assertCount2() {assert(getCount() == 2);}
