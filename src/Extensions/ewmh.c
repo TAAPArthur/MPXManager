@@ -155,7 +155,7 @@ void setXWindowStateFromMaskAndUnsyncedAtoms(WindowInfo* winInfo, xcb_atom_t* at
     n += getAtomsFromMask(winInfo->mask & getMasksToSync(winInfo), 0, windowState + n);
     INFO("Setting %d X window mask for %d", n, winInfo->id);
     xcb_ewmh_set_wm_state(ewmh, winInfo->id, n, windowState);
-    dumpAtoms(windowState, n);
+    LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(windowState, n));
 }
 
 void setXWindowStateFromMask(WindowInfo* winInfo) {
@@ -175,7 +175,7 @@ bool setWindowStateFromAtomInfo(WindowInfo* winInfo, const xcb_atom_t* atoms, ui
     assert(numberOfAtoms);
     INFO("Setting window masks for window %d %s current masks %d from %d atoms; Action %d", winInfo->id, winInfo->title,
         winInfo->mask,  numberOfAtoms, action);
-    dumpAtoms(atoms, numberOfAtoms);
+    LOG_RUN(LOG_LEVEL_DEBUG, dumpAtoms(atoms, numberOfAtoms));
     WindowMask mask = 0;
     for(unsigned int i = 0; i < numberOfAtoms; i++) {
         mask |= getMaskFromAtom(atoms[i]);
@@ -444,7 +444,7 @@ void addEWMHRules() {
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(autoResumeWorkspace));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadDockProperties));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadSavedAtomState));
-    addEvent(TRUE_IDLE, DEFAULT_EVENT(setActiveProperties));
+    addEvent(IDLE, DEFAULT_EVENT(setActiveProperties));
     addEvent(WORKSPACE_WINDOW_ADD, DEFAULT_EVENT(setSavedWorkspaceIndex));
     addEvent(XCB_CLIENT_MESSAGE, DEFAULT_EVENT(onClientMessage));
     addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(autoFocus));
