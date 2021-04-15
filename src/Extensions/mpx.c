@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include "../boundfunction.h"
 #include "../devices.h"
@@ -194,8 +195,10 @@ static FILE* openMPXMasterInfoFile(const char* mode) {
     else
         fp = fopen(MASTER_INFO_PATH, mode);
     if(!fp) {
-        ERROR("Failed to open %s mode %s", MASTER_INFO_PATH, mode);
-        perror("Could not open master info path");
+        if(errno != ENOENT) {
+            ERROR("Failed to open %s mode %s", MASTER_INFO_PATH, mode);
+            perror("Could not open master info path");
+        }
     }
     return fp;
 }
@@ -224,7 +227,6 @@ int loadMPXMasterInfo(void) {
     INFO("Loading saved MPX state");
     fp = openMPXMasterInfoFile("r");
     if(fp == NULL) {
-        WARN("Could not read saved MPX state");
         return 0;
     }
     FOR_EACH(MPXMasterInfo*, info, &masterInfoList) {
