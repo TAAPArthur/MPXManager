@@ -17,7 +17,7 @@ static inline WindowInfo* addFakeWindowInfo(WindowID win) {
 
 
 static inline Master* addFakeMaster(MasterID pointerID, MasterID keyboardID) {
-    return newMaster(pointerID, keyboardID, "");
+    return newMaster(pointerID, keyboardID, "", 0);
 }
 static inline Monitor* addDummyMonitor() {
     return addFakeMonitor((Rect) {0, 0, 1, 1});

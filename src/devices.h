@@ -14,8 +14,6 @@
 #include "xutil/xsession.h"
 
 
-void registerMasterDevice(MasterID id);
-
 /**
  * Creates a master device with the specified name
  * @param name the user set prefix of the master device pair

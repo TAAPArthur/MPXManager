@@ -42,7 +42,7 @@ SCUTEST(test_init_current_slaves) {
     initCurrentMasters();
     FOR_EACH(Slave*, slave, getSlaves(getActiveMaster())) {
         slaveCounter[slave->keyboard]++;
-        assert(!isTestDevice(slave->name));
+        assert(!isTestDevice(slave->name, strlen(slave->name)));
     }
     assert(slaveCounter[0]);
     assert(slaveCounter[1]);

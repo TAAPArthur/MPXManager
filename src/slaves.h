@@ -34,7 +34,7 @@ typedef struct Slave {
  *
  * @return
  */
-Slave* newSlave(const MasterID id, MasterID attachment, bool keyboard, const char* name);
+Slave* newSlave(const MasterID id, MasterID attachment, bool keyboard, const char* name, int nameLen);
 /**
  * Unregisters the slaves and removes the struct and internal memory
  * @param slave
@@ -46,6 +46,6 @@ Slave* getSlaveByID(SlaveID id);
  * Checks to see if the device is prefixed with XTEST
  * @return 1 iff str is the name of a test slave as opposed to one backed by a physical device
  */
-bool isTestDevice(const char* name);
+bool isTestDevice(const char* name, int nameLen);
 
 #endif

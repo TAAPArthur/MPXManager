@@ -22,7 +22,7 @@
  *
  * @return
  */
-Master* newMaster(MasterID keyboardID, MasterID pointerID, const char* name);
+Master* newMaster(MasterID keyboardID, MasterID pointerID, const char* name, int nameLen);
 
 /**
  * Destorys a master and all of its resources

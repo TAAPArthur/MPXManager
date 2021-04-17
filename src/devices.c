@@ -28,7 +28,7 @@ void createMasterDevice(const char* name) {
     //xcb_input_xi_change_hierarchy(c, num_changes, changes);
 }
 void attachSlaveToMaster(Slave* slave, Master* master) {
-    assert(!isTestDevice(slave->name));
+    assert(!isTestDevice(slave->name, strlen(slave->name)));
     if(master)
         attachSlaveToMasterDevice(slave->id, slave->keyboard ? getKeyboardID(master) : getPointerID(master));
     else floatSlave(slave->id);
@@ -74,62 +74,41 @@ void destroyAllNonEmptyMasters(void) {
     }
 }
 
-void registerMasterDevice(MasterID id) {
-    /*
-    xcb_input_xi_query_device_cookie_t cookie=xcb_input_xi_query_device(dis, XIAllMasterDevices);
-    xcb_input_xi_query_device_reply_t *reply=xcb_input_xi_query_device_reply(dis, cookie, NULL);
+void initCurrentMasters() {
+    xcb_input_xi_query_device_cookie_t cookie = xcb_input_xi_query_device(dis, XIAllDevices);
+    xcb_input_xi_query_device_reply_t *reply = xcb_input_xi_query_device_reply(dis, cookie, NULL);
+    xcb_input_xi_device_info_iterator_t  iter = xcb_input_xi_query_device_infos_iterator(reply);
 
-    xcb_input_xi_device_info_iterator_t *iter= xcb_input_xi_query_device_infos_iterator(reply);
-
-    while(iter->rem){
-        xcb_input_xi_device_info_t info=iter->data;
-        xcb_input_xi_device_info_next(iter);
-        xcb_input_xi_device_it
-        xcb_input_xi_iter_n
-        xcb_randr_monitor_info_next
-        //detectMonitors()
-    }*/
-    //xcb_input_xi_query_device(c, deviceid);
-    int ndevices;
-    XIDeviceInfo* devices, *device;
-    devices = XIQueryDevice(dpy, id, &ndevices);
-    DEBUG("Detected %d devices", ndevices);
-    for(int i = 0; i < ndevices; i++) {
-        device = &devices[i];
-        switch(device->use) {
-            case XIMasterPointer:
-                continue;
-            case XISlaveKeyboard:
-            case XISlavePointer :
-            case XIFloatingSlave:
-                if(!isTestDevice(device->name)) {
-                    Slave* slave = findElement(getAllSlaves(), &device->deviceid, sizeof(MasterID));
+    while(iter.rem){
+        xcb_input_xi_device_info_t* device = iter.data;
+        const char* deviceName = xcb_input_xi_device_info_name (device);
+        switch(device->type) {
+            case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER:
+                break;
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD:
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER:
+            case XCB_INPUT_DEVICE_TYPE_FLOATING_SLAVE:
+                if(!isTestDevice(deviceName, device->name_len)) {
+                    Slave* slave = findElement(getAllSlaves(), &device->deviceid, MIN(sizeof(MasterID), sizeof(xcb_input_device_id_t)));
                     if(slave) {
                         setMasterForSlave(slave, device->attachment);
                     }
                     else
-                        newSlave(device->deviceid, device->attachment, device->use == XISlaveKeyboard, device->name);
+                        newSlave(device->deviceid, device->attachment, device->type == XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD, deviceName, device->name_len);
                 }
                 break;
-            case XIMasterKeyboard: {
-                if(findElement(getAllMasters(), &device->deviceid, sizeof(MasterID)))
-                    continue;
-                int lastSpace = 0;
-                for(int n = 0; device->name[n]; n++)
-                    if(device->name[n] == ' ')
-                        lastSpace = n;
-                if(lastSpace)
-                    device->name[lastSpace] = 0;
-                newMaster(device->deviceid, device->attachment, device->name);
+            case XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD: {
+                if(findElement(getAllMasters(), &device->deviceid, MIN(sizeof(MasterID), sizeof(xcb_input_device_id_t))))
+                    break;
+                const char*c = strstr(deviceName, " ");
+                newMaster(device->deviceid, device->attachment, deviceName, c ? c - deviceName : device->name_len);
             }
         }
+        xcb_input_xi_device_info_next (&iter);
     }
-    XIFreeDeviceInfo(devices);
+    free(reply);
     assert(getAllMasters()->size >= 1);
     assert(getActiveMaster());
-}
-void initCurrentMasters() {
-    registerMasterDevice(XIAllDevices);
 }
 
 Master* getMasterByDeviceID(MasterID id) {

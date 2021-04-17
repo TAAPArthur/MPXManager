@@ -9,11 +9,11 @@ const ArrayList* getAllSlaves(void) {
 __DEFINE_GET_X_BY_NAME(Slave)
 
 void setMasterForSlave(Slave* slave, MasterID master);
-Slave* newSlave(const MasterID id, MasterID attachment, bool keyboard, const char* name) {
+Slave* newSlave(const MasterID id, MasterID attachment, bool keyboard, const char* name, int nameLen) {
     Slave* slave = malloc(sizeof(Slave));
     Slave temp = {.id = id, .keyboard = keyboard};
     memmove(slave, &temp, sizeof(Slave));
-    strncpy(slave->name, name, MAX_NAME_LEN - 1);
+    strncpy(slave->name, name, MIN(nameLen, MAX_NAME_LEN - 1));
     addElement(&slaveList, slave);
     setMasterForSlave(slave, attachment);
     return slave;
@@ -34,13 +34,12 @@ Slave* getSlaveByID(SlaveID id) {
 
 
 
-static int endsWith(const char* str, const char* suffix) {
-    size_t lenstr = strlen(str);
+static int endsWith(const char* str, int lenstr, const char* suffix) {
     size_t lensuffix = strlen(suffix);
     if(lensuffix > lenstr)
         return 0;
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
-bool isTestDevice(const char* name) {
-    return endsWith(name, "XTEST pointer") || endsWith(name, "XTEST keyboard");
+bool isTestDevice(const char* name, int nameLen) {
+    return endsWith(name, nameLen, "XTEST pointer") || endsWith(name, nameLen, "XTEST keyboard");
 }

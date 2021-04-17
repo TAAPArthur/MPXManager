@@ -127,6 +127,6 @@ SCUTEST(test_master_active_remove) {
 }
 
 SCUTEST(test_slaves) {
-    Slave* s = newSlave(10, getActiveMasterKeyboardID(), 1, "name");
+    Slave* s = newSlave(10, getActiveMasterKeyboardID(), 1, "name", 4);
     assertEquals(s, getElement(getSlaves(getActiveMaster()), 0));
 }

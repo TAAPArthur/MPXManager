@@ -27,6 +27,9 @@
 #endif
 
 
+#ifndef DEFAULT_MASTER_NAME
+#define DEFAULT_MASTER_NAME "Virtual core"
+#endif
 /// the X pointer that exists by default
 #ifndef DEFAULT_POINTER
 #define DEFAULT_POINTER 2

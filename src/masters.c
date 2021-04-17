@@ -29,13 +29,13 @@ uint32_t __attribute__((weak)) generateMasterColor(MasterID pointerID) {
     return 0xF<<(pointerID/4);
 }
 
-Master* newMaster(MasterID keyboardID, MasterID pointerID, const char* name) {
+Master* newMaster(MasterID keyboardID, MasterID pointerID, const char* name, int nameLen) {
     Master* master = (Master*)malloc(sizeof(Master));
     Master temp = {.id = keyboardID , .pointerID = pointerID, .focusColor =
         pointerID == DEFAULT_POINTER? DEFAULT_BORDER_COLOR: generateMasterColor(pointerID)};
     memmove(master, &temp, sizeof(Master));
     addElement(&masterList, master);
-    strncpy(master->name, name, MAX_NAME_LEN - 1);
+    strncpy(master->name, name, MIN(nameLen, MAX_NAME_LEN - 1));
     return master;
 }
 void freeMaster(Master* master) {
@@ -52,7 +52,7 @@ void freeMaster(Master* master) {
 
 void addDefaultMaster() {
     assert(getAllMasters()->size == 0);
-    Master* m = newMaster(DEFAULT_KEYBOARD, DEFAULT_POINTER, "Virtual core");
+    Master* m = newMaster(DEFAULT_KEYBOARD, DEFAULT_POINTER, DEFAULT_MASTER_NAME, strlen(DEFAULT_MASTER_NAME));
     if(getActiveMaster() == NULL)
         setActiveMaster(m);
 }

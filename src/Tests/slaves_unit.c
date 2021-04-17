@@ -4,7 +4,7 @@
 
 SCUTEST_SET_ENV(addDefaultMaster, simpleCleanup);
 SCUTEST(slaves) {
-    newSlave(100, DEFAULT_KEYBOARD, 1, "");
+    newSlave(100, DEFAULT_KEYBOARD, 1, "", 0);
     assert(getAllSlaves()->size);
     assert(getSlaveByName(""));
 }
@@ -23,7 +23,7 @@ SCUTEST(detect_test_slaves) {
         "TEST keyboard dummy",
     };
     for(int i = 0; i < LEN(testDevices); i++)
-        assert(isTestDevice(testDevices[i]));
+        assert(isTestDevice(testDevices[i], strlen(testDevices[i])));
     for(int i = 0; i < LEN(nonTestDevices); i++)
-        assert(!isTestDevice(nonTestDevices[i]));
+        assert(!isTestDevice(nonTestDevices[i], strlen(nonTestDevices[i])));
 }
