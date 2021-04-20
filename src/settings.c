@@ -81,7 +81,7 @@ Binding DEFAULT_BINDINGS[] = {
     WORKSPACE_OPERATION(XK_9, 8),
     WORKSPACE_OPERATION(XK_0, 9),
     STACK_OPERATION(XK_Up, XK_Down, XK_Left, XK_Right),
-    STACK_OPERATION(XK_H, XK_J, XK_K, XK_L),
+    STACK_OPERATION(XK_K, XK_J, XK_H, XK_L),
 
     {WILDCARD_MODIFIER, Button1, {activateWorkspaceUnderMouse}, .flags = {.shortCircuit = 0, .noGrab = 1}},
     {WILDCARD_MODIFIER, Button1, {.func = activateWindowUnchecked}, .flags = {.shortCircuit = 0, .noGrab = 1,  .windowToPass = EVENT_WINDOW, }},
