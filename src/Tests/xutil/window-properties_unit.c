@@ -1,12 +1,12 @@
-#include "../devices.h"
-#include "../globals.h"
-#include "../monitors.h"
-#include "../window-properties.h"
-#include "../windows.h"
-#include "test-event-helper.h"
-#include "test-mpx-helper.h"
-#include "test-x-helper.h"
-#include "tester.h"
+#include "../../devices.h"
+#include "../../globals.h"
+#include "../../monitors.h"
+#include "../../xutil/window-properties.h"
+#include "../../windows.h"
+#include "../test-event-helper.h"
+#include "../test-mpx-helper.h"
+#include "../test-x-helper.h"
+#include "../tester.h"
 
 /*
 SET_ENV(createXSimpleEnv, cleanupXServer);

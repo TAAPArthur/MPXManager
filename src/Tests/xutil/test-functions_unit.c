@@ -1,12 +1,12 @@
-#include "../device-grab.h"
-#include "../devices.h"
-#include "../globals.h"
-#include "../system.h"
-#include "../test-functions.h"
-#include "../user-events.h"
-#include "../xsession.h"
-#include "tester.h"
-#include "test-event-helper.h"
+#include "../../xutil/device-grab.h"
+#include "../../devices.h"
+#include "../../globals.h"
+#include "../../system.h"
+#include "../../xutil/test-functions.h"
+#include "../../user-events.h"
+#include "../../xutil/xsession.h"
+#include "../tester.h"
+#include "../test-event-helper.h"
 
 #include <xcb/xcb.h>
 #include <xcb/xinput.h>

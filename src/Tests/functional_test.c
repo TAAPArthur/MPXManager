@@ -141,6 +141,8 @@ SCUTEST(transfer_focus_within_workspace) {
     assertEquals(getFocusedWindow(), getWindowInfo(win2));
 }
 SCUTEST_ITER(stable, 2) {
+    mapArbitraryWindow();
+    mapArbitraryWindow();
     FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
         raiseLowerWindow(winInfo->id, 0, _i);
     }
