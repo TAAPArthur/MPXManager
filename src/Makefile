@@ -86,7 +86,6 @@ preinstall: mpxmanager.1 mpxmanager-autocomplete.sh
 
 mpxmanager.sh: mpxmanager.sh.template | mpxmanager
 	cp $< $@
-	sed -i "s/CFLAGS:-__place__holder/CFLAGS:-'${CFLAGS}'/g" mpxmanager.sh
 	sed -i "s/LDFLAGS:-__place__holder/LDFLAGS:-'${LDFLAGS}'/g" mpxmanager.sh
 	sed -i "s/GIT_HASH=.*/GIT_HASH=$$(git rev-parse --short HEAD)/g" mpxmanager.sh
 	sed -i "s/VERSION=.*/VERSION=$$(./mpxmanager --version)/g" mpxmanager.sh

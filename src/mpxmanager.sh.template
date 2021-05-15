@@ -57,34 +57,35 @@
 VERSION=
 GIT_HASH=
 MPXMANAGER_BIN_NAME=${MPXMANAGER_BIN_NAME:-mpxmanager}
-MPXMANAGER_HOME=${MPXMANAGER_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/mpxmanager}
+MPXMANAGER_BIN_DIR=${MPXMANAGER_BIN_DIR:-${XDG_DATA_DIR:-$HOME/.local/share}}/mpxmanager
+MPXMANAGER_HOME=${MPXMANAGER_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}}/mpxmanager
 
 displayHelp(){
-    SCRIPT_HEADSIZE=$(head -200 ${0} |grep -n "^# END_OF_HEADER" | cut -f1 -d:)
-    SCRIPT_NAME="$(basename ${0})"
-    head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${SCRIPT_NAME}/${SCRIPT_NAME}/g" ;
-    head -${SCRIPT_HEADSIZE:-99} ${0} | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${VERSION}/${VERSION} ${GIT_HASH}/g" ;
+    SCRIPT_HEADSIZE=$(head -200 "$0" |grep -n "^# END_OF_HEADER" | cut -f1 -d:)
+    SCRIPT_NAME="$(basename "$0")"
+    head "-${SCRIPT_HEADSIZE:-99}" "$0" | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${SCRIPT_NAME}/${SCRIPT_NAME}/g" ;
+    head "-${SCRIPT_HEADSIZE:-99}" "$0" | grep -e "^#[%+]" | sed -e "s/^#[%+-]//g" -e "s/\${VERSION}/${VERSION} ${GIT_HASH}/g" ;
 }
 
 recompile() {
-    if [ ! -d $MPXMANAGER_HOME ]; then
-        mkdir -p $MPXMANAGER_HOME
-        cp /usr/share/mpxmanager/sample-config.c config.c
+    if [ ! -d "$MPXMANAGER_HOME" ]; then
+        mkdir -p "$MPXMANAGER_HOME"
+        cp /usr/share/mpxmanager/sample-config.c "$MPXMANAGER_HOME/config.c"
     fi
-    export CFLAGS=${CFLAGS:-__place__holder}
+    mkdir -p "$MPXMANAGER_BIN_DIR"
     export LDFLAGS=${LDFLAGS:-__place__holder}
-    cd $MPXMANAGER_HOME
-    ${CC:-cc} ./*.c -o $MPXMANAGER_BIN_NAME ${CFLAGS} ${LDFLAGS} -lmpxmanager $*
+    # shellcheck disable=SC2086
+    ${CC:-cc} "$MPXMANAGER_HOME"/*.c -o "$MPXMANAGER_BIN_DIR/$MPXMANAGER_BIN_NAME" $CFLAGS $LDFLAGS -lmpxmanager "$@"
 }
 run(){
-    [ -x $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME ] || recompile
-    exec $MPXMANAGER_HOME/$MPXMANAGER_BIN_NAME $@
+    [ -x "$MPXMANAGER_BIN_DIR/$MPXMANAGER_BIN_NAME" ] || recompile
+    exec "$MPXMANAGER_BIN_DIR/$MPXMANAGER_BIN_NAME" "$@"
 }
 displayVersion(){
-    echo $VERSION
+    echo "$VERSION"
 }
 displayHash(){
-    echo $GIT_HASH
+    echo "$GIT_HASH"
 }
 
 case "$1" in
@@ -95,19 +96,19 @@ case "$1" in
         displayHelp
         ;;
     --name)
-        echo $MPXMANAGER_BIN_NAME
+        echo "$MPXMANAGER_BIN_NAME"
         ;;
     --path)
-        echo $MPXMANAGER_HOME
+        echo "$MPXMANAGER_HOME"
         ;;
     -r|--recompile)
         shift
-        recompile $@
+        recompile "$@"
         ;;
     -v|--version)
         displayVersion
         ;;
     *)
-        run $@
+        run "$@"
         ;;
 esac
