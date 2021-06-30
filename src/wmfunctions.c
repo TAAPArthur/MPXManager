@@ -264,7 +264,7 @@ static inline int popcount(int x) {
     return c;
 }
 
-void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]) {
+void configureWindow(WindowID win, uint32_t mask, uint32_t* values) {
     assert(mask);
     assert(mask < 128);
     INFO("Config %d: mask %d (%d bits)", win, mask, popcount(mask));
@@ -305,7 +305,7 @@ static inline int filterConfigValues(uint32_t* filteredArr, const WindowInfo* wi
     else configMask &= ~XCB_CONFIG_WINDOW_STACK_MODE;
     return configMask;
 }
-int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask) {
+int processConfigureRequest(WindowID win, const short* values, WindowID sibling, int stackMode, int configMask) {
     assert(configMask);
     DEBUG("processing configure request window %d", win);
     uint32_t actualValues[7];

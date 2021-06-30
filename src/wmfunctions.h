@@ -109,7 +109,7 @@ void activateWorkspace(WorkspaceID workspaceIndex);
 /**
  * @see xcb_configure_window
  */
-void configureWindow(WindowID win, uint32_t mask, uint32_t values[7]);
+void configureWindow(WindowID win, uint32_t mask, uint32_t* values);
 
 /**
  * Sets the window position to be geo.
@@ -131,7 +131,7 @@ void setWindowPosition(WindowID win, const Rect geo);
  * @param configMask
  * @see xcb_configure_window
  */
-int processConfigureRequest(WindowID win, const short values[5], WindowID sibling, int stackMode, int configMask);
+int processConfigureRequest(WindowID win, const short* values, WindowID sibling, int stackMode, int configMask);
 
 
 /**

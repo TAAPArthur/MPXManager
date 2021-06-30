@@ -102,7 +102,7 @@ static int dimIndexToPos(int dim) {
 }
 
 
-void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]) {
+void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t* config) {
     if(args) {
         int endX = m->view.x * 2 + m->view.width;
         int endY = m->view.y * 2 + m->view.height;
@@ -203,7 +203,7 @@ static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor
         config[CONFIG_INDEX_BORDER] = getTilingOverrideBorder(winInfo);
 }
 
-void tileWindow(const LayoutState* state, const WindowInfo* winInfo, const short values[CONFIG_LEN]) {
+void tileWindow(const LayoutState* state, const WindowInfo* winInfo, const short* values) {
     assert(winInfo);
     int mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
         XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |

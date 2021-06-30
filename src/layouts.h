@@ -183,14 +183,14 @@ void retile(void);
  * @param m
  * @param config the config that will be modified
  */
-void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t config[CONFIG_LEN]);
+void transformConfig(const LayoutArgs* args, const Monitor* m, uint32_t* config);
 /**
  * Configures the winInfo using values as reference points and apply various properties of winInfo's mask and set configuration which will override values
  * @param state
  * @param winInfo the window to tile
  * @param values where the layout wants to position the window
  */
-void tileWindow(const LayoutState* state, const WindowInfo* winInfo, const short values[CONFIG_LEN]);
+void tileWindow(const LayoutState* state, const WindowInfo* winInfo, const short* values);
 
 /**
  * "Tiles" untileable windows
