@@ -70,7 +70,7 @@ install: all install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/lib/" libmpx-patch.so
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/$(pkgname)/" sample-config.c
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
-	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/usr/share/bash-completion/mpxmanager"
+	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/usr/share/bash-completion/completions/mpxmanager"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
 uninstall:
 	rm -f "$(DESTDIR)/usr/lib/libmpxmanager.a"
