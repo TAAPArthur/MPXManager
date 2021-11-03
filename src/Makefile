@@ -1,5 +1,4 @@
-CC ?= gcc
-SHELL := /bin/bash
+SHELL := /bin/sh
 DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
@@ -98,16 +97,11 @@ mpxmanager-autocomplete.sh: mpxmanager-autocomplete.sh.template mpxmanager.c com
 mpxmanager: $(BASE_SRCS:.c=.o) Tests/test-config.o
 	${CC} ${CFLAGS} $^ -o $@ ${LDFLAGS}
 
-
-libmpxmanager.so: $(BASE_SRCS:.c=.o)
-	${CC} ${CFLAGS} -fPIC -shared -o libmpxmanager.so $^ ${CFLAGS} ${LDFLAGS}
-
 libmpxmanager.a: $(BASE_SRCS:.c=.o)
 	ar rcs libmpxmanager.a $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS}
-
 
 test: CFLAGS := ${TESTFLAGS}
 test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out unitTestHacks.out # doc-check
