@@ -113,13 +113,7 @@ void scan(xcb_window_t baseWindow) {
         for(int i = 0; i < numberOfChildren; i++) {
             TRACE("processing child %d", children[i]);
             attr = xcb_get_window_attributes_reply(dis, cookies[i], NULL);
-            if(registerWindow(children[i], baseWindow, attr)) {
-                xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, children[i]), NULL);
-                if(reply) {
-                    getWindowInfo(children[i])->geometry = *(Rect*)&reply->x;
-                    free(reply);
-                }
-            }
+            registerWindow(children[i], baseWindow, attr);
             if(attr)
                 free(attr);
         }

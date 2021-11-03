@@ -274,6 +274,14 @@ void assignDefaultLayoutsToWorkspace() {
     }
 }
 
+void loadGeometry(WindowInfo* winInfo) {
+    xcb_get_geometry_reply_t* reply = xcb_get_geometry_reply(dis, xcb_get_geometry(dis, winInfo->id), NULL);
+    if(reply) {
+        setGeometry(getWindowInfo(winInfo->id), &reply->x);
+        free(reply);
+    }
+}
+
 void loadWindowProperties(WindowInfo* winInfo) {
     TRACE("loading window properties %d", winInfo->id);
     getClassInfo(winInfo->id, winInfo->className, winInfo->instanceName);
@@ -346,6 +354,8 @@ void addBasicRules() {
     addEvent(X_CONNECTION, DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, HIGH_PRIORITY));
     addEvent(X_CONNECTION, DEFAULT_EVENT(onXConnect, HIGH_PRIORITY));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadWindowProperties, HIGHER_PRIORITY));
+    addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadGeometry, HIGHER_PRIORITY));
+
     addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(listenForNonRootEventsFromWindow, HIGHER_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks));
