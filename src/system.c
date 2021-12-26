@@ -35,11 +35,9 @@ void safePipe(int* fds) {
 }
 
 void suppressOutput(void) {
-    assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDERR_FILENO) == STDERR_FILENO);
-    assert(dup2(open("/dev/null", O_WRONLY | O_APPEND), STDOUT_FILENO) == STDOUT_FILENO);
+    dup2(open("/dev/null", O_WRONLY | O_APPEND), STDERR_FILENO);
+    dup2(open("/dev/null", O_WRONLY | O_APPEND), STDOUT_FILENO);
 }
-
-static int _spawn(const char* command, ChildRedirection spawnPipe, bool preserveSession, bool silent);
 
 static int _spawn(const char* command, ChildRedirection spawnPipe, bool preserveSession, bool silent) {
     INFO("Spawning command %s", command);
@@ -106,6 +104,10 @@ void spawnPipe(const char* command, ChildRedirection redirection) {
 }
 int spawnPipeChild(const char* command, ChildRedirection redirection) {
     return _spawn(command, redirection, 1, 0);
+}
+
+int spawnSilent(const char* command) {
+    return _spawn(command, 0, 0, 1);
 }
 
 int waitForChild(int pid) {

@@ -105,7 +105,7 @@ int raiseOrRunFunc(const char* s, const char* cmd, int dir, bool(*func)(WindowIn
     }
     WindowFunctionArg arg = {func, .arg.str = s};
     if(!findAndRaise(arg, ACTION_ACTIVATE, dir, (FindAndRaiseArg) {0})) {
-        spawn(cmd);
+        spawnSilent(cmd);
         return 1;
     }
     return 0;
