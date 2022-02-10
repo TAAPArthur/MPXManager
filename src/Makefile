@@ -7,7 +7,7 @@ IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-comp
 ERROR_FLAGS := -Wall -Werror
 CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 
-TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} --coverage -lscutest
+TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS} --coverage
 LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lm
 
 LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c settings.c

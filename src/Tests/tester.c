@@ -1,4 +1,4 @@
-#include <scutest/tester.h>
+#define SCUTEST_IMPLEMENTATION
 #include <stdlib.h>
 
 #include "tester.h"

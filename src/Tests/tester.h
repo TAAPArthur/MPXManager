@@ -1,11 +1,13 @@
 #ifndef MPX_TESTER_H_
 #define MPX_TESTER_H_
-#include <scutest/tester.h>
+
 #include <assert.h>
+#include <scutest/scutest.h>
 #include <stdio.h>
-#include "../util/logger.h"
-#include "../globals.h"
+
 #include "../boundfunction.h"
+#include "../globals.h"
+#include "../util/logger.h"
 
 
 //#define assertEquals(A,B)do{long__A=(long)A; long __B =(long)B; int __result=(__A==__B); if(!__result){std::cout<<__A<<"!="<<__B<<"\n";assert(0 && #A "!=" #B);}}while(0)

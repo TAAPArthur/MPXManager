@@ -1,8 +1,7 @@
-#include <scutest/tester.h>
-#include "test-mpx-helper.h"
-#include "tester.h"
 #include "../masters.h"
 #include "../util/time.h"
+#include "test-mpx-helper.h"
+#include "tester.h"
 
 SCUTEST_SET_ENV(addDefaultMaster, simpleCleanup);
 

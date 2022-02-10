@@ -1,16 +1,15 @@
-#include <scutest/tester.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../util/arraylist.h"
-#include "../util/time.h"
 #include "../globals.h"
-#include "../util/logger.h"
 #include "../masters.h"
 #include "../system.h"
+#include "../util/arraylist.h"
+#include "../util/logger.h"
+#include "../util/time.h"
 #include "test-mpx-helper.h"
 
 SCUTEST(test_failed_exec_spawn) {

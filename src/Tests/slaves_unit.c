@@ -1,6 +1,5 @@
-#include <scutest/tester.h>
-#include "test-mpx-helper.h"
 #include "../slaves.h"
+#include "test-mpx-helper.h"
 
 SCUTEST_SET_ENV(addDefaultMaster, simpleCleanup);
 SCUTEST(slaves) {

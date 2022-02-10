@@ -1,8 +1,8 @@
+#include "../boundfunction.h"
 #include "../masters.h"
 #include "../monitors.h"
 #include "../mywm-structs.h"
 #include "../windows.h"
-#include "../boundfunction.h"
 #include "test-mpx-helper.h"
 #include "tester.h"
 #include <string.h>

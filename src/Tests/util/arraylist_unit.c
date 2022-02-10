@@ -1,8 +1,7 @@
 #include "../../util/arraylist.h"
 #include "../tester.h"
-#include <scutest/tester.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 
 static int N = 100;
 static ArrayList list;

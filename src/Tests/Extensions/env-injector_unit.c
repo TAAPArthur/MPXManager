@@ -1,4 +1,3 @@
-#include <scutest/tester.h>
 #include <stdlib.h>
 #include "../../system.h"
 #include "../tester.h"
