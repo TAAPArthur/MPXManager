@@ -39,9 +39,11 @@ typedef struct BoundFunction {
 /// Creates a BoundFunction with a name based on F with a preset priority
 /// @param F the function to call
 /// @param args
-#define __EVENT(F, N, P...) ((const BoundFunction){{(void(*)())F}, "_" #F, _Generic((F), void(*)():0, bool(*)():1), P})
-#define DEFAULT_EVENT(F, P...) __EVENT(F, "_" #F, P)
-#define USER_EVENT(F, P...) __EVENT(F, #F, P)
+#define __EVENT(F, N, T, P...) ((const BoundFunction){F, N, T, P})
+#define DEFAULT_EVENT(F, P...) __EVENT({.func = F}, "_" #F, 0, P)
+#define FILTER_EVENT(F, P...) __EVENT({.intFunc = F}, "_" #F, 1, P)
+#define USER_EVENT(F, P...) __EVENT({.func = F}, #F, 0, P)
+#define USER_FILTER_EVENT(F, P...) __EVENT({.intFunc = F}, #F, 1, P)
 /// @}
 void addEvent(UserEvent type, const BoundFunction func);
 void addBatchEvent(UserEvent type, const BoundFunction func);

@@ -52,15 +52,15 @@ SCUTEST_ITER(test_rule_priority, 2) {
 }
 
 SCUTEST(test_apply_rule_abort) {
-    BoundFunction nonAbort = DEFAULT_EVENT(returnTrue);
+    BoundFunction nonAbort = FILTER_EVENT(returnTrue);
     BoundFunction normal = USER_EVENT(incrementCount);
-    BoundFunction abort = DEFAULT_EVENT(returnFalse, LOWEST_PRIORITY, .abort = 1);
+    BoundFunction abort = FILTER_EVENT(returnFalse, LOWEST_PRIORITY, .abort = 1);
     addEvent(0, normal);
     addEvent(0, nonAbort);
     addEvent(0, abort);
     applyEventRules(0, NULL);
     assertEquals(1, getCount());
-    addEvent(0, DEFAULT_EVENT(returnFalse, HIGHEST_PRIORITY, .abort = 1));
+    addEvent(0, FILTER_EVENT(returnFalse, HIGHEST_PRIORITY, .abort = 1));
     applyEventRules(0, NULL);
     assertEquals(1, getCount());
 }

@@ -203,7 +203,7 @@ void onUnmapEvent(xcb_unmap_notify_event_t* event) {
 }
 
 void addApplyBindingsRule() {
-    addEvent(DEVICE_EVENT, DEFAULT_EVENT(checkBindings));
+    addEvent(DEVICE_EVENT, FILTER_EVENT(checkBindings));
 }
 
 void registerForEvents() {
@@ -345,7 +345,7 @@ void addBasicRules() {
     addEvent(XCB_CONFIGURE_REQUEST, DEFAULT_EVENT(onConfigureRequestEvent));
     addEvent(XCB_CONFIGURE_NOTIFY, DEFAULT_EVENT(onConfigureNotifyEvent));
     addEvent(XCB_PROPERTY_NOTIFY, DEFAULT_EVENT(onPropertyEvent));
-    addEvent(XCB_SELECTION_CLEAR, DEFAULT_EVENT(onSelectionClearEvent));
+    addEvent(XCB_SELECTION_CLEAR, FILTER_EVENT(onSelectionClearEvent));
     addEvent(XCB_INPUT_FOCUS_IN + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onFocusInEvent));
     addEvent(XCB_INPUT_FOCUS_OUT + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onFocusOutEvent));
     addEvent(XCB_INPUT_HIERARCHY + GENERIC_EVENT_OFFSET, DEFAULT_EVENT(onHierarchyChangeEvent));
@@ -356,7 +356,7 @@ void addBasicRules() {
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadWindowProperties, HIGHER_PRIORITY));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadGeometry, HIGHER_PRIORITY));
 
-    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(listenForNonRootEventsFromWindow, HIGHER_PRIORITY));
+    addEvent(POST_REGISTER_WINDOW, FILTER_EVENT(listenForNonRootEventsFromWindow, HIGHER_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, LOW_PRIORITY));
@@ -379,6 +379,6 @@ bool ignoreOverrideRedirectAndInputOnlyWindowWindowsRule(WindowInfo* winInfo) {
 }
 
 void addIgnoreOverrideRedirectAndInputOnlyWindowsRule() {
-    addEvent(POST_REGISTER_WINDOW, DEFAULT_EVENT(ignoreOverrideRedirectAndInputOnlyWindowWindowsRule, HIGHER_PRIORITY,
+    addEvent(POST_REGISTER_WINDOW, FILTER_EVENT(ignoreOverrideRedirectAndInputOnlyWindowWindowsRule, HIGHER_PRIORITY,
             .abort = 1));
 }

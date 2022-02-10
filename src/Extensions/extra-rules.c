@@ -129,7 +129,7 @@ static bool isNotRepeatedKey(xcb_input_key_press_event_t* event) {
     return !(event->flags & XCB_INPUT_KEY_EVENT_FLAGS_KEY_REPEAT);
 }
 void addIgnoreKeyRepeat() {
-    addEvent(XCB_INPUT_KEY_PRESS, DEFAULT_EVENT(isNotRepeatedKey, HIGHER_PRIORITY, .abort = 1));
+    addEvent(XCB_INPUT_KEY_PRESS, FILTER_EVENT(isNotRepeatedKey, HIGHER_PRIORITY, .abort = 1));
 }
 
 static void moveNonTileableWindowsToWorkspaceBounds(WindowInfo* winInfo) {
@@ -160,7 +160,7 @@ static bool unregisterNonTopLevelWindows(xcb_reparent_notify_event_t* event) {
 }
 
 void addIgnoreNonTopLevelWindowsRule() {
-    addEvent(XCB_REPARENT_NOTIFY, DEFAULT_EVENT(unregisterNonTopLevelWindows, .abort = 1));
+    addEvent(XCB_REPARENT_NOTIFY, FILTER_EVENT(unregisterNonTopLevelWindows, .abort = 1));
 }
 void onReparentEvent(xcb_reparent_notify_event_t* event) {
     WindowInfo* winInfo = getWindowInfo(event->window);
