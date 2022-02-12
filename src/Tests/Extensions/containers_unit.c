@@ -19,131 +19,59 @@
 #include "../tester.h"
 
 SCUTEST_SET_ENV(onDefaultStartup, cleanupXServer, .timeout = 2);
-SCUTEST(create_container) {
-    WindowID id = createSimpleContainer();
-    assert(getWindowInfo(id));
-    assert(findElement(getAllMonitors(), &id, sizeof(MonitorID)));
+SCUTEST(test_create_container) {
+    WindowID win = createNormalWindow();
+    assert(getAllMonitors()->size == 1);
+    scan(root);
+    for(int i = 0; i < 2; i++) {
+        assert(!i == createContainer(getWindowInfo(win)));
+        assert(getMonitorForContainer(win));
+        assert(getAllMonitors()->size == 2);
+    }
 }
 
-SCUTEST(release_all_containers) {
-    addResumeContainerRules();
-    int N = 10;
-    for(int i=0; i < N; i++)
-        createSimpleContainer();
-    assertEquals(N, getAllWindows()->size);
-    assertEquals(1 + N, getAllMonitors()->size);
-    releaseAllWindows();
-    runEventLoop();
-    assertEquals(0, getAllWindows()->size);
-    assertEquals(1, getAllMonitors()->size);
-}
-
-SCUTEST(test_contain_window) {
-    WindowID win = mapWindow(createNormalWindow());
-    registerWindow(win, root, NULL);
-    assertEquals(getWorkspaceOfWindow(getWindowInfo(win))->id, 0);
-    containWindow(getWindowInfo(win));
-    assertEquals(getWorkspaceOfWindow(getWindowInfo(win))->id, 1);
-}
-
-SCUTEST(test_assign_empty_workspace) {
+SCUTEST(test_create_container_in_workspace) {
     WindowID win = mapWindow(createNormalWindow());
     WindowID win2 = mapWindow(createNormalWindow());
     scan(root);
-    moveToWorkspace(getWindowInfo(win2), 1);
-    containWindow(getWindowInfo(win));
-    assert(!isWorkspaceVisible(getWorkspace(1)));
+    moveToWorkspace(getWindowInfo(win2), 2);
+    createContainerInWorkspace(getWindowInfo(win), getWorkspace(2));
     assert(isWorkspaceVisible(getWorkspace(0)));
     assert(isWorkspaceVisible(getWorkspace(2)));
 }
 
-SCUTEST(test_contain_window_too_many) {
-    addResumeContainerRules();
-    for(int i=0;i<getNumberOfWorkspaces();i++) {
-        WindowID win = mapWindow(createNormalWindow());
-        registerWindow(win, root, NULL);
-        containWindow(getWindowInfo(win));
-    }
-    assertEquals(getAllMonitors()->size, getNumberOfWorkspaces() +1);
-    assertEquals(getAllWindows()->size, getNumberOfWorkspaces() *2 );
-    releaseAllWindows();
-    runEventLoop();
-    assertEquals(getAllWindows()->size, getNumberOfWorkspaces());
-    assertEquals(getAllMonitors()->size, 1);
-    assertEquals(getAllWindows()->size, getNumberOfWorkspaces());
-}
-
-SCUTEST(contain_matching) {
-    const char* clazz = "test";
-    const char* clazz2 = "test2";
-    Window win = mapWindowWithClass(clazz);
-    Window win2 = mapWindowWithClass(clazz2);
-    runEventLoop();
-    int targetWorkspace = 3;
-    Monitor* mon = containWindows(getWorkspace(targetWorkspace), (WindowFunctionArg) {matchesClass,  .arg = {.str = clazz}}, clazz);
-    assert(mon);
-    runEventLoop();
-    assertEquals(3, getAllWindows()->size);
-    assertEquals(getAllMonitors()->size, 2);
-    assertEquals(targetWorkspace, getWorkspaceOfWindow(getWindowInfo(win))->id);
-    assertEquals(getActiveWorkspace(), getWorkspaceOfWindow(getWindowInfo(win2)));
-    assertEquals(getActiveWorkspace(), getWorkspace(0));
-}
-
-SCUTEST(contain_matching_multiple_contains, .iter=2) {
-    const char* clazz = "test";
-    const char* clazz2 = "test2";
-    int N=_i?10:1;
-    for(int i=0;i<N;i++) {
-        mapWindowWithClass(clazz);
-        mapWindowWithClass(clazz2);
-    }
-    runEventLoop();
-    containWindows(getWorkspace(1), (WindowFunctionArg) {matchesClass,  .arg = {.str = clazz}}, clazz);
-    containWindows(getWorkspace(2), (WindowFunctionArg) {matchesClass,  .arg = {.str = clazz2}}, clazz2);
-    runEventLoop();
-    assertEquals(2*N+2, getAllWindows()->size);
-    assertEquals(getAllMonitors()->size, 3);
-    assertEquals(getWorkspaceWindowStack(getWorkspace(1))->size, N);
-    assertEquals(getWorkspaceWindowStack(getWorkspace(2))->size, N);
-}
-
-WindowID container;
-Monitor* containerMonitor;
-WindowInfo* containerWindowInfo;
-WindowID normalWindow;
-WindowID containedWindow;
-
-
-/*
-static void addCommonRules() {
-    addResumeContainerRules();
-    addAutoTileRules();
-    addEWMHRules();
-    addAutoFocusRule();
-}
-*/
+static WindowID container;
+static Monitor* containerMonitor;
+static WindowInfo* containerWindowInfo;
+static WindowID normalWindow;
+static WindowID containedWindow;
 
 static void setup() {
     MONITOR_DUPLICATION_POLICY |= CONSIDER_ONLY_NONFAKES;
     DEFAULT_BORDER_WIDTH = 0;
     CRASH_ON_ERRORS = 0;
-    addResumeContainerRules();
+    addContainerRules();
     onDefaultStartup();
-    container = createSimpleContainer();
-    setActiveLayout(&GRID);
+
+    container = mapArbitraryWindow();
     normalWindow = mapArbitraryWindow();
-    setWindowTitle(normalWindow, "Normal");
     containedWindow = mapArbitraryWindow();
-    setWindowTitle(containedWindow, "ContainedWindow");
-    runEventLoop();
-    containerMonitor = getMonitorForContainer(container);
+    scan(root);
+
     containerWindowInfo = getWindowInfoForContainer(container);
+    createContainer(containerWindowInfo);
+    containerMonitor = getMonitorForContainer(container);
     assert(containerWindowInfo);
     assert(containerMonitor);
+
+    setActiveLayout(&GRID);
+    setWindowTitle(normalWindow, "Normal");
+    setWindowTitle(containedWindow, "ContainedWindow");
+    runEventLoop();
+
     assert(getWorkspaceOfMonitor(containerMonitor));
-    assertEqualsRect(containerMonitor->base, getRealGeometry(containerWindowInfo->id));
     moveToWorkspace(getWindowInfo(containedWindow), getWorkspaceOfMonitor(containerMonitor)->id);
+    assertEqualsRect(containerMonitor->base, getRealGeometry(containerWindowInfo->id));
     runEventLoop();
 }
 SCUTEST_SET_ENV(setup, cleanupXServer, .timeout = 2);
@@ -174,24 +102,11 @@ SCUTEST(toggle_focus) {
     assertEquals(getActiveFocus(), container);
 }
 
-SCUTEST_ITER(release_container, 2) {
-    if(_i)
-        switchToWorkspace(getWorkspaceOfMonitor(containerMonitor)->id);
-    releaseWindows(containerMonitor);
-    runEventLoop();
-    assert(!getWindowInfo(container));
-    assert(!getMonitorByID(container));
-}
-
 SCUTEST(test_destroy_container) {
     destroyWindow(container);
     runEventLoop();
     assert(!getWindowInfo(container));
     assert(!getMonitorByID(container));
-}
-
-SCUTEST(nested_windows) {
-    assert(contains(getRealGeometry(containerWindowInfo->id), getRealGeometry(containedWindow)));
 }
 
 /*
@@ -263,6 +178,7 @@ SCUTEST(destroy_containers) {
     assertEquals(1, getAllMonitors()->size);
 }
 
+/*
 void loadContainers();
 SCUTEST(resume_containers) {
     int size = getAllMonitors()->size;
@@ -281,6 +197,7 @@ SCUTEST(resume_containers) {
     assertEquals(containerMonitor, getMonitorForContainer(getWindowInfoForContainer(containerMonitor->id)->id));
     assertEquals(workspaceIndex, getWorkspaceIndexOfWindow(getWindowInfoForContainer(containerMonitor->id)));
 }
+*/
 
 /*
 static void bare_setup() {
@@ -353,8 +270,3 @@ SCUTEST(contain_windows_raise_on_tile) {
     }
 }
 */
-
-SCUTEST(contain_windows_to_self) {
-    mapArbitraryWindow();
-    assert(!containWindows(getActiveWorkspace(), (WindowFunctionArg) {returnTrue}, ""));
-}
