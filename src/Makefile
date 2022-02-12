@@ -26,7 +26,7 @@ BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS} ${LAYER6_SRCS}
 SRCS := ${BASE_SRCS} config.c
 
 MEM_CHECK = valgrind -q  --error-exitcode=123
-RUN_TEST = xvfb-run -w 0 -a $(if $(QUICK),  $(MEM_CHECK) $(1) 20,$(1))
+RUN_TEST = ./run_in_x_container.sh $(if $(QUICK),  $(MEM_CHECK) $(1) 20,$(1))
 
 NO_XRANDR ?= 0
 ifeq ($(NO_XRANDR),1)
