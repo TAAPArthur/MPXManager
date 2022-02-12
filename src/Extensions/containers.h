@@ -10,11 +10,6 @@
 #include "../functions.h"
 
 /**
- * Creates a fake Monitor and WindowInfo that are linked
- * @return a window id
- */
-WindowID createSimpleContainer();
-/**
  * Checks to see if the monitor id corresponds to a container
  * @param mon
  * @return the WindowInfo* associated with mon
@@ -27,42 +22,14 @@ WindowInfo* getWindowInfoForContainer(MonitorID mon);
  */
 Monitor* getMonitorForContainer(WindowID win);
 
-/**
- * Adds a X_CONNECTION rule to restore contains based on the presence of fake monitors
- *
- * @param remove
- */
-void addResumeContainerRules();
+void addContainerRules();
 
-
-/**
- * Create a container and move all windows in the active workspace matching func to said container
- * This is a no-op if containedWorkspace is the active workspace
- *
- * @param containedWorkspace
- * @param func
- * @param name name of container
- *
- * @return the monitor of the newly created container
- */
-Monitor* containWindows(Workspace* containedWorkspace, WindowFunctionArg arg, const char* name);
-/**
- * Move all windows in container to the active workspace
- *
- * @param container
- */
-void releaseWindows(Monitor* container);
-/**
- * Move all windows in all containers to the active workspace
- */
-void releaseAllWindows();
+bool createContainerInWorkspace(WindowInfo*winInfo, Workspace* monitorWorkspace);
+static inline bool createContainer(WindowInfo*winInfo) {return createContainerInWorkspace(winInfo, NULL);};
 /**
  * Either activate the container window or the container workspace depending if winInfo is a contained window or a container
  *
  * @param winInfo The container window or a contained window
  */
 void toggleContainer(WindowInfo* winInfo);
-
-void containWindow(WindowInfo*winInfo);
-void containWindowAndActivate(WindowInfo*winInfo);
 #endif

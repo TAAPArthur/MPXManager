@@ -32,7 +32,7 @@ void loadSettings(void) {
         addFloatRule();
         addMoveNonTileableWindowsToWorkspaceBounds();
         addPrintStatusRule();
-        addResumeContainerRules();
+        addContainerRules();
         addResumeCustomStateRules();
         addStickyPrimaryMonitorRule();
     }
