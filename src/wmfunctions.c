@@ -11,19 +11,19 @@
 
 #include "bindings.h"
 #include "boundfunction.h"
-#include "xutil/device-grab.h"
 #include "globals.h"
 #include "masters.h"
 #include "monitors.h"
+#include "system.h"
 #include "threads.h"
 #include "user-events.h"
 #include "util/logger.h"
 #include "util/time.h"
-#include "xutil/window-properties.h"
 #include "windows.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
-#include "system.h"
+#include "xutil/device-grab.h"
+#include "xutil/window-properties.h"
 #include "xutil/xsession.h"
 
 WindowID isMPXManagerRunning(void) {

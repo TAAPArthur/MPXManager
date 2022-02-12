@@ -1,6 +1,6 @@
-#include "tester.h"
-#include "test-event-helper.h"
 #include "../wmfunctions.h"
+#include "test-event-helper.h"
+#include "tester.h"
 
 static void setupOwnSelection() {
     createXSimpleEnv();

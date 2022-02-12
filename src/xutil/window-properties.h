@@ -4,14 +4,14 @@
  */
 #ifndef MPX_WINDOW_PROPERTIES
 #define MPX_WINDOW_PROPERTIES
+#include <stdbool.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-#include <stdbool.h>
 
+#include "../masters.h"
 #include "../mywm-structs.h"
 #include "../util/rect.h"
-#include "../masters.h"
 
 /**
  * Sets the win to be a transient for transientTo

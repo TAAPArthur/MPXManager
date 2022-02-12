@@ -2,15 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <string.h>
+#include "boundfunction.h"
 #include "globals.h"
+#include "monitors.h"
 #include "mywm-structs.h"
 #include "user-events.h"
-#include "boundfunction.h"
-#include "workspaces.h"
-#include "windows.h"
-#include "monitors.h"
 #include "util/arraylist.h"
+#include "windows.h"
+#include "workspaces.h"
+#include <string.h>
 
 
 ///list of all workspaces

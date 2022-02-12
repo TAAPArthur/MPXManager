@@ -1,7 +1,7 @@
 #include "../windows.h"
 
-#include "tester.h"
 #include "test-mpx-helper.h"
+#include "tester.h"
 
 SCUTEST_SET_ENV(createSimpleEnv, simpleCleanup);
 SCUTEST(test_mask_add_remove_toggle) {

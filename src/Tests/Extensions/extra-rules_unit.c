@@ -1,11 +1,11 @@
 #include <unistd.h>
 
-#include "../../bindings.h"
-#include "../../devices.h"
 #include "../../Extensions/ewmh.h"
 #include "../../Extensions/extra-rules.h"
-#include "../../globals.h"
+#include "../../bindings.h"
+#include "../../devices.h"
 #include "../../functions.h"
+#include "../../globals.h"
 #include "../../layouts.h"
 #include "../../wm-rules.h"
 #include "../../wmfunctions.h"

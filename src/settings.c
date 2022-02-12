@@ -6,23 +6,23 @@
 
 #include <X11/keysym.h>
 
+#include "communications.h"
+#include "devices.h"
 #include "functions.h"
 #include "globals.h"
-#include "devices.h"
-#include "communications.h"
 #include "layouts.h"
-#include "util/logger.h"
 #include "masters.h"
 #include "monitors.h"
 #include "settings.h"
 #include "system.h"
-#include "xutil/window-properties.h"
-#include "xutil/device-grab.h"
+#include "util/logger.h"
 #include "windows.h"
-#include "xevent.h"
 #include "wm-rules.h"
 #include "wmfunctions.h"
 #include "workspaces.h"
+#include "xevent.h"
+#include "xutil/device-grab.h"
+#include "xutil/window-properties.h"
 
 
 static Binding CHAIN_BINDINGS[] = {

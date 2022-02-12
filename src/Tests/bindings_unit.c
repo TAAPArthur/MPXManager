@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "../bindings.h"
 #include "../devices.h"
 #include "../globals.h"
@@ -7,6 +6,7 @@
 #include "test-event-helper.h"
 #include "test-mpx-helper.h"
 #include "tester.h"
+#include <stdlib.h>
 
 
 SCUTEST_SET_ENV(createXSimpleEnv, cleanupXServer);

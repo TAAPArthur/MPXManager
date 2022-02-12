@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "globals.h"
-#include "util/logger.h"
 #include "masters.h"
 #include "mywm-structs.h"
+#include "util/logger.h"
 #include "util/time.h"
 
 ///the active master

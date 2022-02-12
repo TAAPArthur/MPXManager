@@ -4,8 +4,8 @@
 #include "../wmfunctions.h"
 #include "test-event-helper.h"
 #include "test-mpx-helper.h"
-#include "test-x-helper.h"
 #include "test-wm-helper.h"
+#include "test-x-helper.h"
 #include "tester.h"
 
 

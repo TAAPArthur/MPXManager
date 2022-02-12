@@ -2,11 +2,11 @@
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 
-#include "window-properties.h"
-#include "xsession.h"
 #include "../util/logger.h"
 #include "../util/time.h"
 #include "../windows.h"
+#include "window-properties.h"
+#include "xsession.h"
 
 
 void setWindowTransientFor(WindowID win, WindowID transientTo) {

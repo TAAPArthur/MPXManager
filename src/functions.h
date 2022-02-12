@@ -9,8 +9,8 @@
 #define FUNCTIONS_H_
 
 
-#include "boundfunction.h"
 #include "bindings.h"
+#include "boundfunction.h"
 #include "masters.h"
 #include "monitors.h"
 #include "wmfunctions.h"

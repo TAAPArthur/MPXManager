@@ -1,15 +1,15 @@
-#include <math.h>
 #include <X11/keysym.h>
+#include <math.h>
 
+#include "test-event-helper.h"
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
-#include "test-event-helper.h"
 #include "tester.h"
 
 #include "../bindings.h"
-#include "../xutil/window-properties.h"
 #include "../devices.h"
 #include "../globals.h"
+#include "../xutil/window-properties.h"
 
 
 SCUTEST_SET_ENV(createXSimpleEnv, cleanupXServer);

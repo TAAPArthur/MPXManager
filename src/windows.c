@@ -4,9 +4,9 @@
 
 #include "boundfunction.h"
 #include "globals.h"
-#include "util/logger.h"
 #include "masters.h"
 #include "user-events.h"
+#include "util/logger.h"
 #include "windows.h"
 #include "workspaces.h"
 

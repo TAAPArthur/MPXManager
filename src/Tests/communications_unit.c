@@ -1,7 +1,7 @@
-#include "tester.h"
-#include "test-event-helper.h"
 #include "../communications.h"
 #include "../wmfunctions.h"
+#include "test-event-helper.h"
+#include "tester.h"
 
 static void checkAndSend(const char* name, const char* value) {
     assert(findOption(name, value, NULL));

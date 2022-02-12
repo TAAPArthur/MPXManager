@@ -1,10 +1,10 @@
 #include <unistd.h>
 
-#include "tester.h"
-#include "test-event-helper.h"
-#include "test-x-helper.h"
 #include "../communications.h"
 #include "../wmfunctions.h"
+#include "test-event-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 int _main(int argc, char* const* argv) ;
 

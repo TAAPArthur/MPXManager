@@ -1,10 +1,10 @@
-#include <assert.h>
-#include <stdlib.h>
-#include "../util/logger.h"
 #include "../monitors.h"
 #include "../mywm-structs.h"
 #include "../system.h"
+#include "../util/logger.h"
 #include "../windows.h"
+#include <assert.h>
+#include <stdlib.h>
 
 static inline void setEnvRect(const char* name, const Rect rect) {
     const char var[4][32] = {"_%s_X", "_%s_Y", "_%s_WIDTH", "_%s_HEIGHT"};

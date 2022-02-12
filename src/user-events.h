@@ -5,9 +5,9 @@
 
 #ifndef MPX_USER_EVENTS
 #define MPX_USER_EVENTS
-#include <stdbool.h>
 #include <X11/X.h>
 #include <X11/extensions/XInput2.h>
+#include <stdbool.h>
 #include <xcb/xinput.h>
 /// The last supported standard x event
 #define GENERIC_EVENT_OFFSET (LASTEvent-1)

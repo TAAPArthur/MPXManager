@@ -1,11 +1,11 @@
 #include "../globals.h"
-#include "../xutil/device-grab.h"
-#include "../xutil/test-functions.h"
 #include "../system.h"
 #include "../user-events.h"
-#include "tester.h"
-#include "test-x-helper.h"
+#include "../xutil/device-grab.h"
+#include "../xutil/test-functions.h"
 #include "test-event-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 #include <unistd.h>
 

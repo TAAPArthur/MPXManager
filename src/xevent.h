@@ -5,8 +5,8 @@
 
 #ifndef MPX_XEVENT_H_
 #define MPX_XEVENT_H_
-#include <xcb/xcb.h>
 #include <stdbool.h>
+#include <xcb/xcb.h>
 
 #define MPX_EVENT_QUEUE_SIZE (1 << 10)
 

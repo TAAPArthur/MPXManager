@@ -1,8 +1,8 @@
 #define _GNU_SOURCE
-#include <xcb/xinput.h>
 #include <X11/extensions/XInput2.h>
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <xcb/xinput.h>
 
 #define BASE_NAME(SymbolName) base_ ## SymbolName
 #define TYPE_NAME(SymbolName) SymbolName ## _t

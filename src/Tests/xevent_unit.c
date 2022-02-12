@@ -1,10 +1,10 @@
-#include <sys/eventfd.h>
 #include <poll.h>
+#include <sys/eventfd.h>
 #include <unistd.h>
 
-#include "tester.h"
-#include "test-x-helper.h"
 #include "test-event-helper.h"
+#include "test-x-helper.h"
+#include "tester.h"
 
 static void setup() {
     openXDisplay();

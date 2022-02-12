@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "globals.h"
+#include "monitors.h"
 #include "util/logger.h"
 #include "util/rect.h"
-#include "monitors.h"
 #include "windows.h"
 #include "workspaces.h"
 

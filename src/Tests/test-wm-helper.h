@@ -1,21 +1,21 @@
 #ifndef MPX_TEST_WM_HELPER
 #define MPX_TEST_WM_HELPER
 
-#include <assert.h>
 #include "../bindings.h"
 #include "../globals.h"
 #include "../masters.h"
+#include "../settings.h"
 #include "../system.h"
 #include "../user-events.h"
 #include "../util/time.h"
 #include "../wm-rules.h"
 #include "../wmfunctions.h"
-#include "test-mpx-helper.h"
 #include "../xevent.h"
-#include "../settings.h"
-#include "test-x-helper.h"
 #include "test-event-helper.h"
+#include "test-mpx-helper.h"
+#include "test-x-helper.h"
 #include "tester.h"
+#include <assert.h>
 
 
 static inline WindowID getWMPrivateWindow() {

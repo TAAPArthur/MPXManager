@@ -8,8 +8,8 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include "user-events.h"
 #include "mywm-structs.h"
+#include "user-events.h"
 
 typedef int8_t FunctionPriority;
 /// @{
