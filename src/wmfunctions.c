@@ -267,7 +267,7 @@ void configureWindow(WindowID win, uint32_t mask, uint32_t* values) {
 }
 void setWindowPosition(WindowID win, const Rect geo) {
     uint32_t values[4];
-    copyTo(&geo, 1, values);
+    copyTo(&geo, values);
     uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT ;
     configureWindow(win, mask, values);
 }

@@ -69,7 +69,7 @@ static void updateEWMHWorkspaceProperties() {
     xcb_ewmh_geometry_t workAreas[getNumberOfWorkspaces()];
     FOR_EACH(Workspace*, w, getAllWorkspaces()) {
         if(isWorkspaceVisible(w))
-            copyTo(&getMonitor(w)->view, 0, ((uint32_t*)&workAreas[w->id]));
+            copyTo(&getMonitor(w)->view, ((uint32_t*)&workAreas[w->id]));
     }
     // top left point of each desktop
     xcb_ewmh_set_desktop_viewport(ewmh, defaultScreenNumber, getNumberOfWorkspaces(), viewPorts);

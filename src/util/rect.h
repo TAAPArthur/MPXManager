@@ -31,9 +31,9 @@ static inline bool isRectEqual(Rect a, Rect b) {
  *
  * @param arr
  */
-static inline void copyTo(const Rect* rect, bool includeBorder, uint32_t* arr) {
-    for(int i = 0; i < 4 + includeBorder; i++)
-        arr[i] = ((short*)rect)[i];
+static inline void copyTo(const Rect* rect, uint32_t* arr) {
+    for(int i = 0; i < 4; i++)
+        arr[i] = ((uint16_t*)rect)[i];
 }
 /**
  * Checks to if two lines intersect
