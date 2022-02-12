@@ -232,9 +232,9 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
     uint32_t config[CONFIG_LEN] = {0};
     config[CONFIG_INDEX_BORDER] = DEFAULT_BORDER_WIDTH;
     if(winInfo->dock || !getWorkspaceOfWindow(winInfo))
-        copyTo(&monitor->base, 0, config);
+        copyTo(&monitor->base, config);
     else
-        copyTo(&monitor->view, 0, config);
+        copyTo(&monitor->view, config);
     uint32_t mask = applyMasksToConfig(winInfo, monitor, config);
     mask |= getTilingOverrideMask(winInfo);
     applyTilingOverrideToConfig(winInfo, monitor, config);
