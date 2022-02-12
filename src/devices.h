@@ -7,10 +7,10 @@
 #ifndef MPX_DEVICES_H_
 #define MPX_DEVICES_H_
 
-#include "util/arraylist.h"
 #include "masters.h"
 #include "monitors.h"
 #include "mywm-structs.h"
+#include "util/arraylist.h"
 #include "xutil/xsession.h"
 
 

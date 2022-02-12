@@ -1,10 +1,10 @@
+#include "unistd.h"
 #include <assert.h>
 #include <string.h>
-#include "unistd.h"
 
+#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-#include <X11/Xlib-xcb.h>
 
 #include <stdio.h>
 

@@ -6,8 +6,8 @@
 #define MONITORS_H_
 
 #include "mywm-structs.h"
-#include "util/rect.h"
 #include "util/arraylist.h"
+#include "util/rect.h"
 
 /**
  *

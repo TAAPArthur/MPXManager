@@ -5,8 +5,8 @@
 #ifndef MYWM_STRUCTS_H
 #define MYWM_STRUCTS_H
 
-#include <stdint.h>
 #include "util/arraylist.h"
+#include <stdint.h>
 
 #define LEN(X) (sizeof(X) / sizeof((X)[0]))
 #define MAX_NAME_LEN 255

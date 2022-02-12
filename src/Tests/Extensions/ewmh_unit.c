@@ -1,17 +1,17 @@
-#include <unistd.h>
-#include <signal.h>
-#include "../../Extensions/ewmh.h"
 #include "../../Extensions/ewmh-client.h"
+#include "../../Extensions/ewmh.h"
+#include "../../functions.h"
 #include "../../globals.h"
 #include "../../layouts.h"
 #include "../../wm-rules.h"
 #include "../../wmfunctions.h"
-#include "../../functions.h"
+#include <signal.h>
+#include <unistd.h>
 
-#include "../tester.h"
 #include "../test-event-helper.h"
-#include "../test-x-helper.h"
 #include "../test-wm-helper.h"
+#include "../test-x-helper.h"
+#include "../tester.h"
 
 
 SCUTEST(test_lose_wm_selection, .iter = 2) {

@@ -1,11 +1,11 @@
 #ifndef MPX_TEST_MPX_HELPER
 #define MPX_TEST_MPX_HELPER
 
-#include "../util/debug.h"
-#include "../util/logger.h"
 #include "../masters.h"
 #include "../monitors.h"
 #include "../mywm-structs.h"
+#include "../util/debug.h"
+#include "../util/logger.h"
 #include "../windows.h"
 #include "../workspaces.h"
 #include "tester.h"

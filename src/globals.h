@@ -5,11 +5,11 @@
 #ifndef MPX_GLOBALS_H_
 #define MPX_GLOBALS_H_
 
+#include "mywm-structs.h"
 #include <X11/X.h>
 #include <X11/extensions/XInput2.h>
-#include <xcb/xinput.h>
-#include "mywm-structs.h"
 #include <stdbool.h>
+#include <xcb/xinput.h>
 
 /// Sets of masks that only a WM should have
 #define WM_MASKS (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_STRUCTURE_NOTIFY)

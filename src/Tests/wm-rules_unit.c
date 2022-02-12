@@ -1,13 +1,13 @@
-#include <unistd.h>
 #include <signal.h>
+#include <unistd.h>
 
-#include "tester.h"
+#include "../layouts.h"
+#include "../layouts.h"
+#include "../wm-rules.h"
+#include "../wmfunctions.h"
 #include "test-event-helper.h"
 #include "test-wm-helper.h"
-#include "../wm-rules.h"
-#include "../layouts.h"
-#include "../wmfunctions.h"
-#include "../layouts.h"
+#include "tester.h"
 
 static void setupEnvWithBasicRules() {
     registerDefaultLayouts();

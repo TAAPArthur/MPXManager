@@ -1,15 +1,15 @@
 
+#include "unistd.h"
 #include <assert.h>
 #include <string.h>
-#include "unistd.h"
 
+#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-#include <X11/Xlib-xcb.h>
 
-#include "../util/logger.h"
-#include "../util/debug.h"
 #include "../system.h"
+#include "../util/debug.h"
+#include "../util/logger.h"
 #include "xsession.h"
 
 #define _ADD_EVENT_TYPE_CASE(TYPE) case TYPE: return #TYPE

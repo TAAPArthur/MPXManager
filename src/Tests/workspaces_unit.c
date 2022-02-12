@@ -1,9 +1,9 @@
-#include "tester.h"
 #include "test-mpx-helper.h"
+#include "tester.h"
 
-#include <string.h>
 #include "../monitors.h"
 #include "../workspaces.h"
+#include <string.h>
 
 static Layout* fakeLayouts[2] = {NULL, (void*)1};
 SCUTEST_SET_ENV(addDefaultMaster, simpleCleanup);

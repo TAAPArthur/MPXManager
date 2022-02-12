@@ -8,8 +8,8 @@
 
 #include <xcb/xcb.h>
 
-#include "windows.h"
 #include "masters.h"
+#include "windows.h"
 
 /**
  * @return private window of wm if there is a running instance of MPXManager and it is acting like a window manger (RUN_AS_WM==1)

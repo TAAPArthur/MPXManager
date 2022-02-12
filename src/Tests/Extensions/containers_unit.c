@@ -1,10 +1,10 @@
+#include <X11/Xlib-xcb.h>
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/Xproto.h>
+#include <X11/Xutil.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
 
 #include "../../Extensions/containers.h"
 #include "../../Extensions/session.h"
@@ -12,11 +12,11 @@
 #include "../../globals.h"
 #include "../../layouts.h"
 #include "../../wmfunctions.h"
-#include "../tester.h"
-#include "../test-mpx-helper.h"
 #include "../test-event-helper.h"
-#include "../test-x-helper.h"
+#include "../test-mpx-helper.h"
 #include "../test-wm-helper.h"
+#include "../test-x-helper.h"
+#include "../tester.h"
 
 SCUTEST_SET_ENV(onDefaultStartup, cleanupXServer, .timeout = 2);
 SCUTEST(create_container) {

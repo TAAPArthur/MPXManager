@@ -1,10 +1,10 @@
 #ifndef MPX_EWMH_CLIENT_H_
 #define MPX_EWMH_CLIENT_H_
-#include <xcb/xcb_ewmh.h>
 #include "../mywm-structs.h"
 #include "../windows.h"
 #include "../xutil/xsession.h"
 #include "ewmh.h"
+#include <xcb/xcb_ewmh.h>
 
 /**
  * Send ClientMessage requesting to change the _NET_ACTIVE_WINDOW

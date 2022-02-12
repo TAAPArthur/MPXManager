@@ -1,12 +1,12 @@
-#include <unistd.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
 
-#include "logger.h"
 #include "../globals.h"
 #include "../system.h"
 #include "../xevent.h"
 #include "arraylist.h"
+#include "logger.h"
 
 static LogLevel LOG_LEVEL = 0;
 

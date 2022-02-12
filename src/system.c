@@ -8,13 +8,13 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "util/arraylist.h"
-#include "util/debug.h"
-#include "util/logger.h"
 #include "masters.h"
 #include "monitors.h"
 #include "mywm-structs.h"
 #include "system.h"
+#include "util/arraylist.h"
+#include "util/debug.h"
+#include "util/logger.h"
 #include "windows.h"
 #include "workspaces.h"
 

@@ -1,23 +1,23 @@
+#include <X11/Xlib-xcb.h>
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/Xproto.h>
+#include <X11/Xutil.h>
+#include <unistd.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-#include <X11/Xlib-xcb.h>
-#include <unistd.h>
 
+#include "../../Extensions/mpx.h"
+#include "../../devices.h"
+#include "../../functions.h"
 #include "../../globals.h"
 #include "../../wm-rules.h"
 #include "../../wmfunctions.h"
-#include "../../functions.h"
-#include "../../devices.h"
-#include "../../Extensions/mpx.h"
-#include "../tester.h"
-#include "../test-mpx-helper.h"
 #include "../test-event-helper.h"
-#include "../test-x-helper.h"
+#include "../test-mpx-helper.h"
 #include "../test-wm-helper.h"
+#include "../test-x-helper.h"
+#include "../tester.h"
 
 #define DIRNAME  "/tmp"
 #define BASENAME "._dummy_mpx_info.txt"

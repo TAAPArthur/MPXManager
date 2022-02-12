@@ -1,10 +1,10 @@
-#include <xcb/xinput.h>
-#include <xcb/xtest.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XTest.h>
+#include <xcb/xinput.h>
+#include <xcb/xtest.h>
 
-#include "../util/logger.h"
 #include "../masters.h"
+#include "../util/logger.h"
 #include "test-functions.h"
 #include "xsession.h"
 

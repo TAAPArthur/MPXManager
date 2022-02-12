@@ -1,26 +1,26 @@
 #ifndef MPX_TEST_X11_HELPER2
 #define MPX_TEST_X11_HELPER2
 
+#include <X11/XF86keysym.h>
 #include <X11/Xlib-xcb.h>
+#include <X11/keysym.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xinput.h>
-#include <X11/XF86keysym.h>
-#include <X11/keysym.h>
 
-#include <assert.h>
-#include <err.h>
-#include "test-mpx-helper.h"
-#include "tester.h"
-#include "../globals.h"
-#include "../xutil/xsession.h"
-#include "../xutil/window-properties.h"
-#include "../system.h"
-#include "../masters.h"
 #include "../bindings.h"
 #include "../devices.h"
+#include "../globals.h"
+#include "../masters.h"
+#include "../system.h"
 #include "../user-events.h"
+#include "../xutil/window-properties.h"
+#include "../xutil/xsession.h"
+#include "test-mpx-helper.h"
+#include "tester.h"
+#include <assert.h>
+#include <err.h>
 
 static inline int _createWindow(int parent, int mapped, uint32_t ignored, int userIgnored, uint32_t input,
     xcb_window_class_t clazz, xcb_atom_t type) {

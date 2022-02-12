@@ -7,14 +7,14 @@
 #define MPX_XSESSION_H_
 
 
-#include <X11/Xlib.h>
-#include <xcb/xcb_ewmh.h>
-#include <string.h>
+#include "../globals.h"
 #include "../mywm-structs.h"
+#include "../util/rect.h"
 #include "../util/string-array.h"
 #include "../window-masks.h"
-#include "../util/rect.h"
-#include "../globals.h"
+#include <X11/Xlib.h>
+#include <string.h>
+#include <xcb/xcb_ewmh.h>
 
 /**
  * The max number of devices the XServer can support.

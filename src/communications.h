@@ -5,8 +5,8 @@
 #ifndef MPXMANAGER_COMMUTNICATE_H_
 #define MPXMANAGER_COMMUTNICATE_H_
 
-#include "boundfunction.h"
 #include "bindings.h"
+#include "boundfunction.h"
 
 /// flags that control how options are handled
 enum OptionFlags {

@@ -1,22 +1,22 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 
-#include "../util/arraylist.h"
-#include "../util/debug.h"
 #include "../bindings.h"
 #include "../devices.h"
-#include "ewmh.h"
+#include "../functions.h"
 #include "../globals.h"
-#include "../util/logger.h"
 #include "../system.h"
-#include "../util/time.h"
 #include "../user-events.h"
-#include "../xutil/window-properties.h"
+#include "../util/arraylist.h"
+#include "../util/debug.h"
+#include "../util/logger.h"
 #include "../util/string-array.h"
+#include "../util/time.h"
 #include "../windows.h"
 #include "../wmfunctions.h"
-#include "../functions.h"
+#include "../xutil/window-properties.h"
 #include "../xutil/xsession.h"
+#include "ewmh.h"
 
 xcb_ewmh_client_source_type_t source = XCB_EWMH_CLIENT_SOURCE_TYPE_OTHER;
 

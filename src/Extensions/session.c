@@ -1,5 +1,5 @@
-#include <limits.h>
 #include <assert.h>
+#include <limits.h>
 #include <string.h>
 
 #include "../boundfunction.h"
@@ -10,10 +10,10 @@
 #include "../user-events.h"
 #include "../util/debug.h"
 #include "../util/logger.h"
+#include "../util/string-array.h"
 #include "../windows.h"
 #include "../wmfunctions.h"
 #include "../workspaces.h"
-#include "../util/string-array.h"
 #include "../xutil/window-properties.h"
 #include "../xutil/xsession.h"
 #include "session.h"

@@ -1,6 +1,6 @@
-#include <string.h>
-#include <stdlib.h>
 #include "slaves.h"
+#include <stdlib.h>
+#include <string.h>
 
 static ArrayList slaveList;
 const ArrayList* getAllSlaves(void) {

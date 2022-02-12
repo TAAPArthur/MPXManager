@@ -2,18 +2,18 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-#include <X11/Xlib-xcb.h>
 
-#include "../globals.h"
-#include "../util/logger.h"
-#include "../monitors.h"
 #include "../boundfunction.h"
+#include "../globals.h"
+#include "../monitors.h"
 #include "../system.h"
-#include "../util/debug.h"
-#include "../util/time.h"
 #include "../user-events.h"
+#include "../util/debug.h"
+#include "../util/logger.h"
+#include "../util/time.h"
 #include "xsession.h"
 
 

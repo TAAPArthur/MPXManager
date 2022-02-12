@@ -7,16 +7,16 @@
 #include <xcb/randr.h>
 #endif
 
-#include "util/arraylist.h"
 #include "boundfunction.h"
 #include "devices.h"
 #include "globals.h"
-#include "util/logger.h"
 #include "masters.h"
 #include "monitors.h"
 #include "system.h"
 #include "time.h"
 #include "user-events.h"
+#include "util/arraylist.h"
+#include "util/logger.h"
 #include "xutil/xsession.h"
 
 

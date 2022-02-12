@@ -5,10 +5,10 @@
 #ifndef MASTERS_H
 #define MASTERS_H
 
-#include "util/arraylist.h"
 #include "globals.h"
 #include "mywm-structs.h"
 #include "slaves.h"
+#include "util/arraylist.h"
 
 /// will match any mode
 #define ANY_MODE ((uint32_t)-1)

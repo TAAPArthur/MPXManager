@@ -1,11 +1,11 @@
 #include <assert.h>
-#include <string.h>
 #include <poll.h>
+#include <string.h>
 #include <unistd.h>
 
+#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
-#include <X11/Xlib-xcb.h>
 
 #include "boundfunction.h"
 #include "globals.h"

@@ -1,16 +1,16 @@
-#include "../../xutil/device-grab.h"
 #include "../../devices.h"
 #include "../../globals.h"
 #include "../../system.h"
-#include "../../xutil/test-functions.h"
 #include "../../user-events.h"
+#include "../../xutil/device-grab.h"
+#include "../../xutil/test-functions.h"
 #include "../../xutil/xsession.h"
-#include "../tester.h"
 #include "../test-event-helper.h"
+#include "../tester.h"
 
 #include <xcb/xcb.h>
-#include <xcb/xinput.h>
 #include <xcb/xcb_ewmh.h>
+#include <xcb/xinput.h>
 
 int keyDetail = 65;
 int mouseDetail = 1;

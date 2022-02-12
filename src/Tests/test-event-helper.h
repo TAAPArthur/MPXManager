@@ -1,19 +1,19 @@
 #ifndef MPX_TEST_EVENT_HELPER
 #define MPX_TEST_EVENT_HELPER
 
-#include <assert.h>
 #include "../bindings.h"
-#include "../xutil/device-grab.h"
 #include "../globals.h"
 #include "../masters.h"
 #include "../system.h"
-#include "../xevent.h"
-#include "../xutil/test-functions.h"
 #include "../user-events.h"
 #include "../util/time.h"
+#include "../xevent.h"
+#include "../xutil/device-grab.h"
+#include "../xutil/test-functions.h"
 #include "test-mpx-helper.h"
 #include "test-x-helper.h"
 #include "tester.h"
+#include <assert.h>
 
 static inline void exitFailure() {
     quit(10);

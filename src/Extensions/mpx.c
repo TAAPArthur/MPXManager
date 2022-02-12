@@ -1,16 +1,16 @@
 #include <assert.h>
-#include <string.h>
-#include <stdio.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "../boundfunction.h"
 #include "../devices.h"
-#include "../util/logger.h"
 #include "../masters.h"
-#include "../windows.h"
 #include "../slaves.h"
+#include "../util/logger.h"
 #include "../util/string-array.h"
 #include "../util/time.h"
+#include "../windows.h"
 #include "../xutil/test-functions.h"
 #include "../xutil/xsession.h"
 #include "mpx.h"

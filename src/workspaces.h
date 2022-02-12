@@ -6,11 +6,11 @@
 #define WORKSPACES_H
 #include <assert.h>
 
-#include "mywm-structs.h"
-#include "window-masks.h"
 #include "masters.h"
+#include "mywm-structs.h"
 #include "util/arraylist.h"
 #include "util/rect.h"
+#include "window-masks.h"
 
 /// Placeholder for WindowInfo->workspaceIndex; indicates the window is not in a workspace
 #ifndef NO_WORKSPACE

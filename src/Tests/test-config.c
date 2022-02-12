@@ -1,4 +1,3 @@
-#include "../settings.h"
 #include "../Extensions/compatibility-rules.h"
 #include "../Extensions/containers.h"
 #include "../Extensions/ewmh.h"
@@ -11,6 +10,7 @@
 #include "../globals.h"
 #include "../globals.h"
 #include "../layouts.h"
+#include "../settings.h"
 #include "../settings.h"
 #include "../system.h"
 #include "../util/logger.h"

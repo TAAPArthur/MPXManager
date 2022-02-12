@@ -6,8 +6,8 @@
 #define BINDINGS_H_
 
 
-#include "util/arraylist.h"
 #include "mywm-structs.h"
+#include "util/arraylist.h"
 #include <stdbool.h>
 
 /// Wildcard mask
