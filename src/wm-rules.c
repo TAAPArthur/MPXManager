@@ -127,6 +127,8 @@ void onDeviceEvent(xcb_input_key_press_event_t* event) {
                      .winInfo = winInfo
                  };
     applyEventRules(DEVICE_EVENT, &bindingEvent);
+    unfreezeServerEvents();
+
 }
 
 void onFocusInEvent(xcb_input_focus_in_event_t* event) {

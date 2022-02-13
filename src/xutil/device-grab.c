@@ -55,7 +55,7 @@ int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskVa
     int size = ignoreMod ? LEN(modifiers) : LEN(modifiers) / 2;
     xcb_input_grab_type_t grabType = getKeyboardMask(maskValue) ? XCB_INPUT_GRAB_TYPE_KEYCODE: XCB_INPUT_GRAB_TYPE_BUTTON;
     xcb_input_xi_passive_grab_device_reply_t *reply;
-    reply = xcb_input_xi_passive_grab_device_reply(dis, xcb_input_xi_passive_grab_device(dis,XCB_CURRENT_TIME,root,XCB_CURSOR_NONE, detail, deviceID, size, 1, grabType, XCB_INPUT_GRAB_MODE_22_ASYNC, XCB_INPUT_GRAB_MODE_22_ASYNC, XCB_INPUT_GRAB_OWNER_OWNER, &maskValue, modifiers), NULL);
+    reply = xcb_input_xi_passive_grab_device_reply(dis, xcb_input_xi_passive_grab_device(dis,XCB_CURRENT_TIME,root,XCB_CURSOR_NONE, detail, deviceID, size, 1, grabType, XCB_INPUT_GRAB_MODE_22_SYNC, XCB_INPUT_GRAB_MODE_22_SYNC, XCB_INPUT_GRAB_OWNER_OWNER, &maskValue, modifiers), NULL);
 
     int errors = LEN(modifiers);
     if(reply) {
@@ -75,11 +75,18 @@ int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t igno
 }
 void replayPointerEvent() {
     TRACE("Replaying pointer events");
-    xcb_allow_events(dis, XCB_ALLOW_REPLAY_POINTER, XCB_CURRENT_TIME);
+    xcb_input_allow_device_events(dis, XCB_CURRENT_TIME, XCB_INPUT_EVENT_MODE_REPLAY_DEVICE, getActiveMaster()->pointerID);
 }
+
 void replayKeyboardEvent() {
     TRACE("Replaying keyboard event");
-    xcb_allow_events(dis, XCB_ALLOW_REPLAY_KEYBOARD, XCB_CURRENT_TIME);
+    xcb_input_allow_device_events(dis, XCB_CURRENT_TIME, XCB_INPUT_EVENT_MODE_REPLAY_DEVICE, getActiveMaster()->id);
+}
+
+void unfreezeServerEvents() {
+    TRACE("unfreezing events");
+    catchError(xcb_input_allow_device_events_checked(dis, XCB_CURRENT_TIME, XCB_INPUT_EVENT_MODE_ASYNC_DEVICE, getActiveMaster()->id));
+    catchError(xcb_input_allow_device_events_checked(dis, XCB_CURRENT_TIME, XCB_INPUT_EVENT_MODE_ASYNC_PAIRED_DEVICE, getActiveMaster()->id));
 }
 
 int registerForWindowEvents(WindowID window, int mask) {
