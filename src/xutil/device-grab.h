@@ -62,6 +62,11 @@ int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t igno
  * Wraps xcb_allow_events
  */
 void replayPointerEvent();
+/**
+ * Replays current keyboard event to children of the grab window
+ * Wraps xcb_allow_events
+ */
+void replayKeyboardEvent();
 
 /**
  *

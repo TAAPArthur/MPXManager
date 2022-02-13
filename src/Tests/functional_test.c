@@ -162,7 +162,6 @@ SCUTEST(test_dock_not_auto_in_workspace) {
 }
 
 
-void replayKeyboardEvent();
 static Binding customBindings[] = {
     {0, XK_Super_L, {grabActiveKeyboard, {0}} },
     {0, XK_Super_L, {setFocusStackFrozen, {1}} },
