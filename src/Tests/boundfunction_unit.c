@@ -35,7 +35,7 @@ static void assertCount1() {assert(getCount() == 1);}
 static void assertCount2() {assert(getCount() == 2);}
 static void assertCount3() {assert(getCount() == 3);}
 SCUTEST_ITER(test_rule_priority, 2) {
-    BoundFunction func[] = {
+    BoundFunction func[7] = {
         DEFAULT_EVENT(assertCount0, HIGHEST_PRIORITY),
         DEFAULT_EVENT(incrementCount, HIGHER_PRIORITY),
         DEFAULT_EVENT(assertCount1, HIGH_PRIORITY),

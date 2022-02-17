@@ -151,6 +151,7 @@ SCUTEST(test_primary_monitor) {
         assert(getPrimaryMonitor());
     }
 }
+/*
 SCUTEST(test_detect_removed_monitors) {
     MONITOR_DUPLICATION_POLICY = 0;
     assertEquals(0, spawnAndWait("xsane-xrandr add-monitor 0 0 10 10 &>/dev/null"));
@@ -160,6 +161,7 @@ SCUTEST(test_detect_removed_monitors) {
     detectMonitors();
     assertEquals(getAllMonitors()->size, 1);
 }
+*/
 SCUTEST(test_create_monitor_persists) {
     MONITOR_DUPLICATION_POLICY = 0;
     detectMonitors();
