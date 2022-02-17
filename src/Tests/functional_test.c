@@ -163,9 +163,9 @@ SCUTEST(test_dock_not_auto_in_workspace) {
 
 
 static Binding customBindings[] = {
-    {0, XK_Super_L, {grabActiveKeyboard, {0}} },
+    {0, XK_Super_L, {grabActiveKeyboard, {0}}, .flags.noShortCircuit=1},
     {0, XK_Super_L, {setFocusStackFrozen, {1}} },
-    {Mod4Mask, XK_Super_L, {setFocusStackFrozen, {0}}, .flags = {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
+    {Mod4Mask, XK_Super_L, {setFocusStackFrozen, {0}}, .flags = {.noShortCircuit=1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
     {Mod4Mask, XK_Super_L, {ungrabActiveKeyboard, {0}}, .flags = {.mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}},
     {Mod4Mask, XK_A, {incrementCount}},
 };

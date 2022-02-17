@@ -15,10 +15,14 @@
 #include "xutil/xsession.h"
 
 static ArrayList globalBindings;
-ArrayList globalMasterChainBindings;
+static ArrayList globalMasterChainBindings;
 void addBindings(Binding* b, int N) {
     for(int i = 0; i < N; i++)
         addElement(&globalBindings, &b[i]);
+}
+
+const ArrayList* getBindings() {
+    return &globalBindings;
 }
 void clearBindings() {
     clearArray(&globalBindings);
@@ -114,14 +118,15 @@ bool checkBindings(const BindingEvent* event) {
             }
             if(binding->chainMembers.size) {
                 enterChain(binding, masterBindings);
-                if(!binding->flags.shortCircuit) {
+                if(binding->flags.noShortCircuit) {
                     INFO("Entering into chain immediately");
                     return checkBindings(event);
                 }
             }
-            if(binding->flags.shortCircuit) {
-                INFO("Chain shot circuited");
+            if(!binding->flags.noShortCircuit) {
                 break;
+            } else {
+                DEBUG("Binding not short circuited");
             }
         }
     }

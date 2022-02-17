@@ -47,17 +47,17 @@ SCUTEST(test_grab_ungrab_device) {
 static Binding sampleBindings[] = {
     {0, 1, {incrementCount}},
     {0, 3, {fail} },
-    {0, 3, {incrementCount}, .flags.mode = OTHER_MODE},
+    {0, 3, {incrementCount}, .flags.noShortCircuit = 1, .flags.mode = OTHER_MODE},
     {0, 3, {incrementCount}, .flags.mode = ANY_MODE},
     {0, 1, {incrementCount}},
     {
-        0, 2, {incrementCount}, .chainMembers = CHAIN_MEM(
+        0, 2, {incrementCount}, .flags.noShortCircuit = 1, .chainMembers = CHAIN_MEM(
         {0, 2, {incrementCount}},
-        {0, 3, {incrementCount}, .flags.popChain = 1},
+        {0, 3, {incrementCount}, .flags.popChain = 1, },
         )
     },
     {
-        0, 4, {incrementCount}, .flags.mask = 1, .chainMembers = CHAIN_MEM(
+        0, 4, {incrementCount}, .flags.noShortCircuit = 1, .flags.mask = 1, .chainMembers = CHAIN_MEM(
         {0, 4, {incrementCount}},
         {0, 3, {incrementCount}, .flags.popChain = 1},
         )
@@ -77,6 +77,14 @@ SCUTEST_ITER(test_addBindings, 2) {
 
 SCUTEST(test_check_bindings) {
     BindingEvent event = {0, 1};
+    sampleBindings[0].flags.noShortCircuit = 0;
+    checkBindings(&event);
+    assertEquals(1, getCount());
+}
+
+SCUTEST(test_check_bindings_short_cricuit) {
+    BindingEvent event = {0, 1};
+    sampleBindings[0].flags.noShortCircuit = 1;
     checkBindings(&event);
     assertEquals(2, getCount());
 }
@@ -87,13 +95,6 @@ SCUTEST(test_check_bindings_mode) {
     BindingEvent event = {0, 3};
     checkBindings(&event);
     assertEquals(2, getCount());
-}
-
-SCUTEST(test_check_bindings_short_cricuit) {
-    BindingEvent event = {0, 1};
-    sampleBindings[0].flags.shortCircuit = 1;
-    checkBindings(&event);
-    assertEquals(1, getCount());
 }
 
 SCUTEST(test_check_bindings_global_chain) {
