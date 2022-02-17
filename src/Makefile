@@ -10,18 +10,18 @@ CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
 LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lm
 
-LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c settings.c
+LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c
 LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
 LAYER1_SRCS := util/arraylist.c boundfunction.c
 LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
 LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c
 LAYER4_SRCS := wm-rules.c
-LAYER5_SRCS := functions.c communications.c mpxmanager.c
+LAYER5_SRCS := functions.c communications.c settings.c mpxmanager.c
 LAYER6_SRCS := $(wildcard Extensions/*.c)
 LAYER7_SRCS := $(wildcard Hacks/*.c)
 
 TEST_SRCS := ${LAYER1_SRCS} ${LAYER11_SRCS} ${LAYER2_SRCS} ${LAYER3_SRCS} ${LAYER4_SRCS} ${LAYER5_SRCS}
-TOP_LAYER_SRCS := settings.c mpxmanager.c
+TOP_LAYER_SRCS := mpxmanager.c
 BASE_SRCS := ${TOP_LAYER_SRCS} ${TEST_SRCS} ${LAYER0_SRCS} ${LAYER6_SRCS}
 SRCS := ${BASE_SRCS} config.c
 

@@ -43,7 +43,8 @@ typedef struct BindingFlags {
     unsigned int mode;
     bool grabDevice;
     bool popChain;
-    bool shortCircuit;
+    // if set than further bindings will be processed
+    bool noShortCircuit;
     uint16_t ignoreMod;
     EventWindow windowToPass;
 } BindingFlags ;
@@ -95,10 +96,13 @@ typedef struct BindingEvent {
  * @see deviceBindings;
 */
 void addBindings(Binding* b, int N);
+
+const ArrayList* getBindings();
 void clearBindings();
 int grabAllBindings(Binding* bindings, int numBindings, bool ungrab);
 int grabBinding(Binding* binding, bool ungrab);
 
+bool matches(Binding* binding, const BindingEvent* event);
 /**
  * Check bindings to see if they match the userEvent
  * Bindings will be checked in order a binding that matches may cause all subsequent bindings to be skipped

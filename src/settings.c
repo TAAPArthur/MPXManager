@@ -29,10 +29,10 @@ static Binding CHAIN_BINDINGS[] = {
     CYCLE_BINDINGS(Mod1Mask,ShiftMask, XK_Tab, cycleWindows, XK_Alt_L),
     CYCLE_BINDINGS(Mod4Mask,ShiftMask, XK_Tab, shiftFocusToNextClass, XK_Super_L),
     {
-        DEFAULT_MOD_MASK, Button1, {startWindowMove}, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS
+        DEFAULT_MOD_MASK, Button1, {startWindowMove}, .flags = {.noShortCircuit=1, .grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS
     },
     {
-        DEFAULT_MOD_MASK, Button3, {startWindowResize}, .flags = {.grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS
+        DEFAULT_MOD_MASK, Button3, {startWindowResize}, .flags = {.noShortCircuit=1, .grabDevice = 1, .windowToPass = EVENT_WINDOW}, .chainMembers = START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS
     },
 };
 Binding* startWindowMoveBinding = CHAIN_BINDINGS + 2;
@@ -83,16 +83,16 @@ Binding DEFAULT_BINDINGS[] = {
     STACK_OPERATION(XK_Up, XK_Down, XK_Left, XK_Right),
     STACK_OPERATION(XK_K, XK_J, XK_H, XK_L),
 
-    {WILDCARD_MODIFIER, Button1, {activateWorkspaceUnderMouse}, .flags = {.shortCircuit = 0, .noGrab = 1}},
-    {WILDCARD_MODIFIER, Button1, {.func = activateWindowUnchecked}, .flags = {.shortCircuit = 0, .noGrab = 1,  .windowToPass = EVENT_WINDOW, }},
+    {WILDCARD_MODIFIER, Button1, {activateWorkspaceUnderMouse}, .flags = {.noShortCircuit = 1, .noGrab = 1}},
+    {WILDCARD_MODIFIER, Button1, {.func = activateWindowUnchecked}, .flags = {.noShortCircuit = 1, .noGrab = 1,  .windowToPass = EVENT_WINDOW, }},
     {0, Button1, {replayPointerEvent}},
 
     {DEFAULT_MOD_MASK, XK_c, {killClientOfWindowInfo}, .flags = {.windowToPass = FOCUSED_WINDOW, .noKeyRepeat = 1}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_c, {killClientOfWindowInfo}, .flags = { .windowToPass = EVENT_WINDOW, .noKeyRepeat = 1}},
     {DEFAULT_MOD_MASK | ControlMask, XK_c, {destroyWindowInfo}, .flags = {.windowToPass = FOCUSED_WINDOW, .noKeyRepeat = 1}},
     {DEFAULT_MOD_MASK | ControlMask | ShiftMask, XK_c, {destroyWindowInfo}, .flags = { .windowToPass = EVENT_WINDOW, .noKeyRepeat = 1}},
-    {DEFAULT_MOD_MASK, Button1, {floatWindow}, .flags = {.windowToPass = EVENT_WINDOW}},
-    {DEFAULT_MOD_MASK, Button3, {floatWindow}, .flags = {.windowToPass = EVENT_WINDOW}},
+    {DEFAULT_MOD_MASK, Button1, {floatWindow}, .flags = {.noShortCircuit=1, .windowToPass = EVENT_WINDOW}},
+    {DEFAULT_MOD_MASK, Button3, {floatWindow}, .flags = {.noShortCircuit=1, .windowToPass = EVENT_WINDOW}},
     {DEFAULT_MOD_MASK | ShiftMask, Button1, {sinkWindow}, .flags = {.windowToPass = EVENT_WINDOW}},
     {DEFAULT_MOD_MASK, XK_t, {sinkWindow}, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK | Mod1Mask, XK_t, {toggleMask, {STICKY_MASK}}, .flags = {.windowToPass = FOCUSED_WINDOW}},

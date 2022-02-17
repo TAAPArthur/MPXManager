@@ -45,13 +45,13 @@ void addSuggestedRules();
 
 #define START_WINDOW_MOVE_RESIZE_CHAIN_MEMBERS \
     CHAIN_MEM( \
-            {WILDCARD_MODIFIER, 0, {updateWindowMoveResize}, .flags = {.shortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}}, \
+            {WILDCARD_MODIFIER, 0, {updateWindowMoveResize}, .flags = {.noShortCircuit = 1, .noGrab = 1, .mask = XCB_INPUT_XI_EVENT_MASK_MOTION | XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS}}, \
             {WILDCARD_MODIFIER, XK_Escape, {cancelWindowMoveResize}, .flags = {.noGrab = 1, .popChain = 1}}, \
             {WILDCARD_MODIFIER, 0, {commitWindowMoveResize}, .flags = {.noGrab = 1,.mask = XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE, .popChain = 1}},)
 
 #define CYCLE_BINDINGS(MOD, REV_MOD, KEY, FUNC, END_KEY) \
     { \
-        MOD, KEY, {setFocusStackFrozen, {1}}, .flags = {.grabDevice = 1, .ignoreMod = REV_MOD}, .chainMembers = CHAIN_MEM( \
+        MOD, KEY, {setFocusStackFrozen, {1}}, .flags = {.noShortCircuit = 1, .grabDevice = 1, .ignoreMod = REV_MOD}, .chainMembers = CHAIN_MEM( \
         {MOD, KEY, {FUNC, {DOWN}}, .flags = {.noGrab = 1}}, \
         {MOD| REV_MOD, KEY, {FUNC, {UP}}, .flags = {.noGrab = 1}}, \
         {WILDCARD_MODIFIER, END_KEY, {setFocusStackFrozen, {0}}, .flags = {.noGrab = 1, .popChain = 1, .mask = XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE}}, \
