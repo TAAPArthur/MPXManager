@@ -209,7 +209,9 @@ void addApplyBindingsRule() {
 void registerForEvents() {
     if(ROOT_EVENT_MASKS)
         registerForWindowEvents(root, ROOT_EVENT_MASKS);
-    grabAllBindings(NULL, 0, 0);
+
+    initGlobalBindings();
+    grabGlobalBindings();
     DEBUG("listening for device event; masks: %d", ROOT_DEVICE_EVENT_MASKS);
     if(ROOT_DEVICE_EVENT_MASKS)
         passiveGrab(root, ROOT_DEVICE_EVENT_MASKS);

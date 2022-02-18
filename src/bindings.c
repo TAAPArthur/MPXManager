@@ -28,22 +28,15 @@ void clearBindings() {
     clearArray(&globalBindings);
 }
 
-Detail getDetail(Binding* binding) {
-    if(binding->detail == 0 && binding->buttonOrKey != 0) {
-        binding->detail = getButtonDetailOrKeyCode(binding->buttonOrKey);
-        assert(binding->detail);
-    }
-    return binding->detail;
-}
 static inline bool matchesFlags(const BindingFlags* flags, const BindingEvent* event) {
     return ((flags->mask & event->mask) == event->mask) &&
         (!flags->noKeyRepeat || !event->keyRepeat) &&
         (flags->mode == ANY_MODE || getActiveMode() == ANY_MODE || getActiveMode() == flags->mode);
 }
-bool matches(Binding* binding, const BindingEvent* event) {
+bool matches(const Binding* binding, const BindingEvent* event) {
     if(matchesFlags(&binding->flags, event))
         if((binding->mod == WILDCARD_MODIFIER || binding->mod == (event->mod & ~IGNORE_MASK & ~binding->flags.ignoreMod))
-            && (!binding->buttonOrKey || getDetail(binding) == event->detail))
+            && (!binding->buttonOrKey || binding->detail == event->detail))
             return 1;
     return 0;
 }
@@ -133,7 +126,34 @@ bool checkBindings(const BindingEvent* event) {
     return 1;
 }
 
-int grabBinding(Binding* binding, bool ungrab) {
+int grabBinding(const Binding* binding, bool ungrab) {
+    if(binding->detail && !binding->flags.noGrab) {
+        if(!ungrab)
+            return grabDetail(binding->flags.targetID, binding->detail, binding->mod, binding->flags.mask,
+                    binding->flags.ignoreMod);
+        else
+            return ungrabDetail(binding->flags.targetID, binding->detail, binding->mod, binding->flags.ignoreMod,
+                    getKeyboardMask(binding->flags.mask));
+    }
+    return 0;
+}
+
+int grabGlobalBindings() {
+    int errors = 0;
+    INFO("Grabing all global bindings");
+    FOR_EACH(Binding*, b, &globalBindings) {
+        errors += grabBinding(b, 0);
+    }
+    return errors;
+}
+int grabAllBindings(const Binding* bindings, int numBindings, bool ungrab) {
+    int errors = 0;
+    for(int i = 0; i < numBindings; i++)
+        errors += grabBinding(bindings + i, ungrab);
+    return errors;
+}
+
+void initBinding(Binding* binding) {
     if(binding->flags.mask == 0)
         binding->flags.mask = binding->buttonOrKey == 0 ? ANY_MASK : isButton(binding->buttonOrKey) ?
             XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
@@ -141,29 +161,18 @@ int grabBinding(Binding* binding, bool ungrab) {
     if(binding->flags.targetID == 0) {
         binding->flags.targetID = XIAllMasterDevices;
     }
-    if(getDetail(binding) && !binding->flags.noGrab) {
-        if(!ungrab)
-            return grabDetail(binding->flags.targetID, getDetail(binding), binding->mod, binding->flags.mask,
-                    binding->flags.ignoreMod);
-        else
-            return ungrabDetail(binding->flags.targetID, getDetail(binding), binding->mod, binding->flags.ignoreMod,
-                    getKeyboardMask(binding->flags.mask));
+    if(binding->detail == 0 && binding->buttonOrKey != 0) {
+        binding->detail = getButtonDetailOrKeyCode(binding->buttonOrKey);
+        assert(binding->detail);
     }
-    return 0;
+
+    for(int i = 0; i < binding->chainMembers.size; i++) {
+        initBinding(binding->chainMembers.bindings + i);
+    }
 }
 
-int grabAllBindings(Binding* bindings, int numBindings, bool ungrab) {
-    int errors = 0;
-    if(!bindings) {
-        assert(!numBindings);
-        INFO("Grabing/Ungrabbing all global bindings %d", ungrab);
-        FOR_EACH(Binding*, b, &globalBindings) {
-            errors += grabBinding(b, ungrab);
-        }
+void initGlobalBindings() {
+    FOR_EACH(Binding*, b, &globalBindings) {
+        initBinding(b);
     }
-    else {
-        for(int i = 0; i < numBindings; i++)
-            errors += grabBinding(bindings + i, ungrab);
-    }
-    return errors;
 }
