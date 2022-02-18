@@ -2,9 +2,9 @@
 #include <assert.h>
 #include <string.h>
 
-#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
+#include <xcb/xcb_keysyms.h>
 
 #include <stdio.h>
 
@@ -98,5 +98,25 @@ int getButtonDetailOrKeyCode(int buttonOrKey) {
     return isButton(buttonOrKey) ? buttonOrKey : getKeyCode(buttonOrKey);
 }
 int getKeyCode(int keysym) {
-    return XKeysymToKeycode(dpy, keysym);
+    xcb_key_symbols_t * symbols = xcb_key_symbols_alloc(dis);
+    xcb_keycode_t * codes = xcb_key_symbols_get_keycode(symbols, keysym);
+    uint8_t keycode = codes[0];
+    free(codes);
+    xcb_key_symbols_free(symbols);
+    return keycode;
+}
+
+void* startBatchKeyCodeLookup() {
+    return xcb_key_symbols_alloc(dis);
+}
+
+void endBatchKeyCodeLookup(void*symbols) {
+    xcb_key_symbols_free(symbols);
+}
+
+int getBatchedKeyCode(void*symbols, int keysym) {
+    xcb_keycode_t * codes = xcb_key_symbols_get_keycode(symbols, keysym);
+    uint8_t keycode = codes[0];
+    free(codes);
+    return keycode;
 }

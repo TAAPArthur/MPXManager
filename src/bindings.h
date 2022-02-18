@@ -104,7 +104,8 @@ int grabBinding(const Binding* binding, bool ungrab);
 int grabGlobalBindings();
 
 void initGlobalBindings();
-void initBinding(Binding* binding);
+void initBinding(Binding* binding, void*symbols);
+static inline void initSingleBinding(Binding* binding){initBinding(binding, NULL);}
 
 bool matches(const Binding* binding, const BindingEvent* event);
 /**
