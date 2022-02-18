@@ -159,6 +159,10 @@ char* getAtomName(xcb_atom_t atom, char* buffer);
  */
 int getKeyCode(int keysym);
 
+void* startBatchKeyCodeLookup();
+void endBatchKeyCodeLookup();
+int getBatchedKeyCode(void*symbols, int keysym);
+
 /**
  * Returns true if buttonOrKey is a valid button.
  * A valid button is less than 8.

@@ -8,7 +8,7 @@ ERROR_FLAGS := -Wall -Werror
 CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
-LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lm
+LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-keysyms -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lm
 
 LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c
 LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c

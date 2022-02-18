@@ -153,7 +153,12 @@ int grabAllBindings(const Binding* bindings, int numBindings, bool ungrab) {
     return errors;
 }
 
-void initBinding(Binding* binding) {
+void initBinding(Binding* binding, void* symbols) {
+    bool freeSymbols = 0;
+    if(!symbols) {
+        symbols = startBatchKeyCodeLookup();
+        freeSymbols = 1;
+    }
     if(binding->flags.mask == 0)
         binding->flags.mask = binding->buttonOrKey == 0 ? ANY_MASK : isButton(binding->buttonOrKey) ?
             XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
@@ -162,17 +167,27 @@ void initBinding(Binding* binding) {
         binding->flags.targetID = XCB_INPUT_DEVICE_ALL_MASTER;
     }
     if(binding->detail == 0 && binding->buttonOrKey != 0) {
-        binding->detail = getButtonDetailOrKeyCode(binding->buttonOrKey);
+
+        if(isButton(binding->buttonOrKey))
+            binding->detail = binding->buttonOrKey;
+        else {
+            binding->detail = getBatchedKeyCode(symbols, binding->buttonOrKey);
+        }
         assert(binding->detail);
     }
 
     for(int i = 0; i < binding->chainMembers.size; i++) {
-        initBinding(binding->chainMembers.bindings + i);
+        initBinding(binding->chainMembers.bindings + i, symbols);
+    }
+    if(freeSymbols) {
+        endBatchKeyCodeLookup(symbols);
     }
 }
 
 void initGlobalBindings() {
+    void* symbols = startBatchKeyCodeLookup();
     FOR_EACH(Binding*, b, &globalBindings) {
-        initBinding(b);
+        initBinding(b, symbols);
     }
+    endBatchKeyCodeLookup(symbols);
 }
