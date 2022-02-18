@@ -8,27 +8,27 @@
 #include "test-functions.h"
 #include "xsession.h"
 
+
+static void sendEvent(int type, int detail, MasterID id) {
+    const xcb_query_extension_reply_t * reply = xcb_get_extension_data(dis, &xcb_input_id);
+    xcb_test_fake_input_checked(dis, reply->first_event + type - XCB_INPUT_KEY_PRESS + 1, detail, XCB_CURRENT_TIME, root, 0,0, id);
+}
 void sendButtonPress(int button, MasterID id) {
-    XDevice dev = {.device_id = id};
-    XTestFakeDeviceButtonEvent(dpy, &dev, button, 1, NULL, 0, CurrentTime);
+    sendEvent(XCB_INPUT_BUTTON_PRESS, button, id);
 }
 void sendButtonRelease(int button, MasterID id) {
-    XDevice dev = {.device_id = id};
-    XTestFakeDeviceButtonEvent(dpy, &dev, button, 0, NULL, 0, CurrentTime);
+    sendEvent(XCB_INPUT_BUTTON_RELEASE, button, id);
 }
 void clickButton(int button, MasterID id) {
-    VERBOSE("Clicking button %d for %d", button, id);
     sendButtonPress(button, id);
     sendButtonRelease(button, id);
 }
 
 void sendKeyPress(int keyCode, MasterID id) {
-    XDevice dev = {.device_id = id};
-    XTestFakeDeviceKeyEvent(dpy, &dev, keyCode, 1, NULL, 0, CurrentTime);
+    sendEvent(XCB_INPUT_KEY_PRESS, keyCode, id);
 }
 void sendKeyRelease(int keyCode, MasterID id) {
-    XDevice dev = {.device_id = id};
-    XTestFakeDeviceKeyEvent(dpy, &dev, keyCode, 0, NULL, 0, CurrentTime);
+    sendEvent(XCB_INPUT_KEY_RELEASE, keyCode, id);
 }
 void typeKey(int keycode, MasterID id) {
     sendKeyPress(keycode, id);
