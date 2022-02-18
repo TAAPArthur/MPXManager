@@ -102,10 +102,7 @@ SCUTEST(event_names) {
     for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
         assert(eventTypeToString(i));
 }
-SCUTEST(event_attributes) {
-    for(int i = 0; i < LASTEvent; i++)
-        assert(opcodeToString(i));
-}
+
 SCUTEST(catch_error_silent) {
     xcb_window_t win = createNormalWindow();
     CRASH_ON_ERRORS = -1;

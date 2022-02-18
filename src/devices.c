@@ -19,7 +19,6 @@
 #include "xutil/xsession.h"
 
 
-#pragma GCC diagnostic ignored "-Wnarrowing"
 
 typedef struct {
     xcb_input_hierarchy_change_t change;

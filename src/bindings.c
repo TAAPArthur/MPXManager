@@ -11,7 +11,6 @@
 #include "util/logger.h"
 #include "windows.h"
 #include "xutil/device-grab.h"
-#include "xutil/xdebug.h"
 #include "xutil/xsession.h"
 
 static ArrayList globalBindings;
@@ -87,6 +86,13 @@ void enterChain(Binding* binding, ArrayList* masterBindings) {
     else
         push(masterBindings, binding);
 }
+
+void dumpBinding(Binding* b) {
+    if(isButton(b->buttonOrKey))
+        DEBUG("Mod: %d Button: %d\n", b->mod, b->buttonOrKey);
+    else
+        DEBUG("Mod: %d Sym : %d Detail: %d Mask: %d\n", b->mod, b->buttonOrKey, b->detail, b->flags.mask);
+}
 bool checkBindings(const BindingEvent* event) {
     ArrayList* masterBindings = globalMasterChainBindings.size ? &globalMasterChainBindings : &
         getActiveMaster()->bindings;
@@ -99,7 +105,7 @@ bool checkBindings(const BindingEvent* event) {
                 &globalBindings, i);
         if(matches(binding, event)) {
             TRACE("Found match");
-            LOG_RUN(LOG_LEVEL_TRACE, dumbBinding(binding));
+            LOG_RUN(LOG_LEVEL_TRACE, dumpBinding(binding));
             callBindingWithWindow(&binding->func, binding->flags.windowToPass, event);
             if(binding->flags.popChain) {
                 assert(masterBindings->size);

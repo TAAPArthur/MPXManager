@@ -3,7 +3,7 @@ DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
+IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
 ERROR_FLAGS := -Wall -Werror
 CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 
@@ -11,7 +11,7 @@ TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
 LDFLAGS :=  -lxcb -lxcb-keysyms -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lm
 
 LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c
-LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
+LAYER0_SRCS += xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
 LAYER1_SRCS := util/arraylist.c boundfunction.c
 LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
 LAYER3_SRCS := system.c xevent.c devices.c bindings.c wmfunctions.c layouts.c
@@ -71,6 +71,7 @@ install: all install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/usr/share/bash-completion/completions/mpxmanager"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
+
 uninstall:
 	rm -f "$(DESTDIR)/usr/lib/libmpxmanager.a"
 	rm -f "$(DESTDIR)/usr/lib/libmpx-patch.so"
@@ -98,7 +99,7 @@ mpxmanager: $(BASE_SRCS:.c=.o) Tests/test-config.o
 	${CC} ${CFLAGS} $^ -o $@ ${LDFLAGS}
 
 libmpxmanager.a: $(BASE_SRCS:.c=.o)
-	ar rcs libmpxmanager.a $^
+	ar rcs $@ $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS} -lX11 -lXi

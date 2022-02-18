@@ -9,10 +9,6 @@
 #include "tester.h"
 
 #define _LAYOUT_FAMILY(S){.name=""#S,.func=S}
-// we do a lot of short arthimatic which get promoted to an int
-// which causes narrowing we we try to store it back into a short
-// ignore
-#pragma GCC diagnostic ignored "-Wnarrowing"
 
 static Layout LAYOUT_FAMILIES[] = {
     _LAYOUT_FAMILY(full),
