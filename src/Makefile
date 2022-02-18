@@ -3,7 +3,7 @@ DEBUGGING_FLAGS := -g -rdynamic -O0
 RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
-IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers -Wno-sign-compare
+IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
 ERROR_FLAGS := -Wall -Werror
 CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 
@@ -71,6 +71,7 @@ install: all install-headers
 	install -m 0744 -Dt "$(DESTDIR)/usr/share/man/man1/" mpxmanager.1
 	install -D -m 0755 "mpxmanager-autocomplete.sh" "$(DESTDIR)/usr/share/bash-completion/completions/mpxmanager"
 	install -D -m 0755 "mpxmanager.sh" "$(DESTDIR)/usr/bin/$(pkgname)"
+
 uninstall:
 	rm -f "$(DESTDIR)/usr/lib/libmpxmanager.a"
 	rm -f "$(DESTDIR)/usr/lib/libmpx-patch.so"
@@ -98,7 +99,7 @@ mpxmanager: $(BASE_SRCS:.c=.o) Tests/test-config.o
 	${CC} ${CFLAGS} $^ -o $@ ${LDFLAGS}
 
 libmpxmanager.a: $(BASE_SRCS:.c=.o)
-	ar rcs libmpxmanager.a $^
+	ar rcs $@ $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS}
@@ -151,7 +152,6 @@ unitTestHacks.out: unitTestHacks | libmpx-patch.so
 	LD_PRELOAD=libmpx-patch.so $(call RUN_TEST, ./$^)
 	$(if $(TEST_FUNC),exit 1)
 	touch $@
-
 
 code_coverage.out: unitTest.out
 	gcov -mr *
