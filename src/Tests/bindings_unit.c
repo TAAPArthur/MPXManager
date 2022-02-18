@@ -13,6 +13,7 @@ SCUTEST_SET_ENV(createXSimpleEnv, cleanupXServer);
 
 SCUTEST_ITER(test_grab_ungrab_bindings, 2) {
     Binding sampleBinding = {0, XK_A, {incrementCount}, .flags = {.noGrab = 1}};
+    initBinding(&sampleBinding);
     assertEquals(0, grabBinding(&sampleBinding, 0));
     assert(sampleBinding.detail);
     assertEquals(0, grabBinding(&sampleBinding, 1));
@@ -25,6 +26,7 @@ SCUTEST(test_grab_ungrab_device) {
                 {0, 2, {incrementCount}},
                 {0, 3, {incrementCount}, .flags={.popChain=1}}
                 )};
+    initBinding(&sampleBinding);
     addBindings(&sampleBinding, 1);
     BindingEvent event = {0, 1};
     BindingEvent eventInner = {0, 2};
@@ -67,6 +69,7 @@ static Binding sampleBindings[] = {
 static void setupBindings() {
     createXSimpleEnv();
     addBindings(sampleBindings, LEN(sampleBindings));
+    initGlobalBindings();
     grabAllBindings(NULL, 0, 0);
 }
 SCUTEST_SET_ENV(setupBindings, cleanupXServer);

@@ -99,10 +99,14 @@ void addBindings(Binding* b, int N);
 
 const ArrayList* getBindings();
 void clearBindings();
-int grabAllBindings(Binding* bindings, int numBindings, bool ungrab);
-int grabBinding(Binding* binding, bool ungrab);
+int grabAllBindings(const Binding* bindings, int numBindings, bool ungrab);
+int grabBinding(const Binding* binding, bool ungrab);
+int grabGlobalBindings();
 
-bool matches(Binding* binding, const BindingEvent* event);
+void initGlobalBindings();
+void initBinding(Binding* binding);
+
+bool matches(const Binding* binding, const BindingEvent* event);
 /**
  * Check bindings to see if they match the userEvent
  * Bindings will be checked in order a binding that matches may cause all subsequent bindings to be skipped
