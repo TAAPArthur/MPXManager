@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <string.h>
 
-#include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 #ifndef NO_XRANDR
 #include <xcb/randr.h>
@@ -22,9 +21,33 @@
 
 #pragma GCC diagnostic ignored "-Wnarrowing"
 
+typedef struct {
+    xcb_input_hierarchy_change_t change;
+    xcb_input_hierarchy_change_data_t data;
+} ChangeHierachyHolder;
+//holder = {{XCB_INPUT_HIERARCHY_CHANGE_TYPE_ADD_MASTER, sizeof(xcb_input_hierarchy_change_data_t)}, {.add_master={strlen(name), .send_core = 1, .enable = 1, .name=(char*)name } }};
+//xcb_input_xi_change_hierarchy(dis, 1, &holder.change);
+
+static char hierachy_buffer[sizeof(xcb_input_hierarchy_change_t) + sizeof(xcb_input_hierarchy_change_data_t ) + MAX_NAME_LEN];
+
+static inline xcb_input_hierarchy_change_t* create_hierarchy_change_struct(uint16_t type, xcb_input_hierarchy_change_data_t** data_ptr) {
+    xcb_input_hierarchy_change_t* change = (void*)hierachy_buffer;
+    xcb_input_hierarchy_change_data_t* data = (void*)(change + 1);
+    change->type = type;
+    change->len = 2;
+    *data_ptr = data;
+    return change;
+}
 void createMasterDevice(const char* name) {
-    XIAddMasterInfo add = {.type = XIAddMaster, .name = (char*)name, .send_core = 1, .enable = 1};
-    XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&add, 1);
+    xcb_input_hierarchy_change_data_t* data;
+    xcb_input_hierarchy_change_t* change;
+    change = create_hierarchy_change_struct(XCB_INPUT_HIERARCHY_CHANGE_TYPE_ADD_MASTER, &data);
+    char* name_start = ((char*)data)+4;
+    strncpy(name_start, name,MAX_NAME_LEN - 1);
+    data->add_master.name_len = strlen(name_start);
+    data->add_master.send_core = 1;
+    data->add_master.enable = 1;
+    xcb_input_xi_change_hierarchy(dis, 1, change);
     //xcb_input_xi_change_hierarchy(c, num_changes, changes);
 }
 void attachSlaveToMaster(Slave* slave, Master* master) {
@@ -34,30 +57,36 @@ void attachSlaveToMaster(Slave* slave, Master* master) {
     else floatSlave(slave->id);
 }
 void floatSlave(SlaveID slaveID) {
-    INFO("floating %d ", slaveID);
-    XIAnyHierarchyChangeInfo changes;
-    changes.type = XIDetachSlave;
-    changes.attach.deviceid = slaveID;
-    XIChangeHierarchy(dpy, &changes, 1);
+    xcb_input_hierarchy_change_data_t* data;
+    xcb_input_hierarchy_change_t* change;
+    change = create_hierarchy_change_struct(XCB_INPUT_HIERARCHY_CHANGE_TYPE_DETACH_SLAVE, &data);
+    data->detach_slave.deviceid=slaveID;
+    memcpy(data, &data->detach_slave, sizeof(data->detach_slave));
+    INFO("floating %d", slaveID);
+    xcb_input_xi_change_hierarchy(dis, 1, change);
 }
 void attachSlaveToMasterDevice(SlaveID slaveID, MasterID masterID) {
     INFO("attaching %d to %d", slaveID, masterID);
-    XIAnyHierarchyChangeInfo changes;
-    changes.type = XIAttachSlave;
-    changes.attach.deviceid = slaveID;
-    changes.attach.new_master = masterID;
-    XIChangeHierarchy(dpy, &changes, 1);
+    xcb_input_hierarchy_change_data_t* data;
+    xcb_input_hierarchy_change_t* change;
+    change = create_hierarchy_change_struct(XCB_INPUT_HIERARCHY_CHANGE_TYPE_ATTACH_SLAVE, &data);
+    data->attach_slave.deviceid = slaveID;
+    data->attach_slave.master = masterID;
+    memcpy(data, &data->attach_slave, sizeof(data->attach_slave));
+    xcb_input_xi_change_hierarchy(dis, 1, change);
 }
 void destroyMasterDevice2(MasterID id, int returnPointer, int returnKeyboard) {
     assert(id != DEFAULT_KEYBOARD && id != DEFAULT_POINTER);
-    XIRemoveMasterInfo remove = {
-        .type = XIRemoveMaster,
-        .deviceid = id,
-        .return_mode = XIAttachToMaster,
-        .return_pointer = returnPointer,
-        .return_keyboard = returnKeyboard,
-    };
-    XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&remove, 1);
+    xcb_input_hierarchy_change_data_t* data;
+    xcb_input_hierarchy_change_t* change;
+    change = create_hierarchy_change_struct(XCB_INPUT_HIERARCHY_CHANGE_TYPE_REMOVE_MASTER, &data);
+    data->remove_master.return_mode = XCB_INPUT_HIERARCHY_CHANGE_TYPE_ADD_MASTER;
+    data->remove_master.deviceid = id;
+    data->remove_master.return_pointer = returnPointer;
+    data->remove_master.return_keyboard = returnKeyboard;
+    memcpy(data, &data->remove_master, sizeof(data->remove_master));
+    INFO("Removing %d", id);
+    xcb_input_xi_change_hierarchy(dis, 1, change);
 }
 
 void destroyAllNonDefaultMasters(void) {
@@ -75,7 +104,7 @@ void destroyAllNonEmptyMasters(void) {
 }
 
 void initCurrentMasters() {
-    xcb_input_xi_query_device_cookie_t cookie = xcb_input_xi_query_device(dis, XIAllDevices);
+    xcb_input_xi_query_device_cookie_t cookie = xcb_input_xi_query_device(dis, XCB_INPUT_DEVICE_ALL);
     xcb_input_xi_query_device_reply_t *reply = xcb_input_xi_query_device_reply(dis, cookie, NULL);
     xcb_input_xi_device_info_iterator_t  iter = xcb_input_xi_query_device_infos_iterator(reply);
 
@@ -140,23 +169,15 @@ bool getMousePosition(MasterID id, int relativeWindow, int16_t result[2]) {
     }
     return reply ? 1 : 0;
 }
-/*
-static int getAssociatedMasterDevice(int deviceID) {
-    int ndevices;
-    XIDeviceInfo* masterDevices;
-    MasterID id;
-    masterDevices = XIQueryDevice(dpy, deviceID, &ndevices);
-    id = masterDevices[0].attachment;
-    XIFreeDeviceInfo(masterDevices);
-    return id;
-}
-*/
 void setClientPointerForWindow(WindowID window, MasterID id) {
     XCALL(xcb_input_xi_set_client_pointer, dis, window, id);
 }
 MasterID getClientPointerForWindow(WindowID win) {
-    MasterID masterPointer;
-    XIGetClientPointer(dpy, win, (int*)&masterPointer);
+    xcb_input_xi_get_client_pointer_reply_t* reply;
+    reply = xcb_input_xi_get_client_pointer_reply(dis, xcb_input_xi_get_client_pointer(dis, win), NULL);
+
+    MasterID masterPointer = reply ? reply->deviceid: DEFAULT_POINTER;
+    free(reply);
     return masterPointer;
 }
 Master* getClientMaster(WindowID win) {
