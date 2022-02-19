@@ -67,7 +67,7 @@ static void verifyFDs(int i, int mask) {
     assertEquals(mask, POLLIN);
 }
 
-void wakeup() {
+static void wakeup() {
     mapWindow(createNormalWindow());
 }
 SCUTEST(test_wakeup_from_blocking, .timeout=5) {
@@ -75,6 +75,15 @@ SCUTEST(test_wakeup_from_blocking, .timeout=5) {
     addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(requestShutdown));
     openXDisplay();
     registerForWindowEvents(root, XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY| XCB_EVENT_MASK_STRUCTURE_NOTIFY);
+    runEventLoop();
+}
+
+static void killPrivateWindow() {
+    killClientOfWindow(getPrivateWindow());
+}
+SCUTEST(test_xconnection_err) {
+    openXDisplay();
+    addEvent(IDLE, DEFAULT_EVENT(killPrivateWindow));
     runEventLoop();
 }
 SCUTEST(test_extra_events) {

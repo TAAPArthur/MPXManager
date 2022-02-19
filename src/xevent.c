@@ -97,6 +97,11 @@ static inline int processEvents(int timeout) {
                 if(eventFDInfo.pollFDs[i].revents & (POLLERR | POLLNVAL | POLLHUP)) {
                     WARN("Removing extra event index %d", i);
                     removeExtraEvent(i);
+                    if(!eventFDInfo.numberOfFDsToPoll){
+                        DEBUG("All fds have been close");
+                        requestShutdown();
+                    }
+
                 }
             }
         }
