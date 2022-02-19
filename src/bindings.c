@@ -30,7 +30,7 @@ void clearBindings() {
 static inline bool matchesFlags(const BindingFlags* flags, const BindingEvent* event) {
     return ((flags->mask & event->mask) == event->mask) &&
         (!flags->noKeyRepeat || !event->keyRepeat) &&
-        (flags->mode == ANY_MODE || getActiveMode() == ANY_MODE || getActiveMode() == flags->mode);
+        (flags->mode == getActiveMode() || (getActiveMode() & flags->mode) == flags->mode);
 }
 bool matches(const Binding* binding, const BindingEvent* event) {
     if(matchesFlags(&binding->flags, event))

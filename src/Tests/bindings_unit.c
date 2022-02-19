@@ -48,7 +48,7 @@ SCUTEST(test_grab_ungrab_device) {
 #define OTHER_MODE 1
 static Binding sampleBindings[] = {
     {0, 1, {incrementCount}},
-    {0, 3, {fail} },
+    {0, 3, {fail} , .flags.mode = OTHER_MODE | 2},
     {0, 3, {incrementCount}, .flags.noShortCircuit = 1, .flags.mode = OTHER_MODE},
     {0, 3, {incrementCount}, .flags.mode = ANY_MODE},
     {0, 1, {incrementCount}},

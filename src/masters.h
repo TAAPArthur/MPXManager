@@ -11,7 +11,7 @@
 #include "util/arraylist.h"
 
 /// will match any mode
-#define ANY_MODE ((uint32_t)-1)
+#define ANY_MODE 0
 
 /**
  * Creates a new master device and adds it to the global list
@@ -152,6 +152,8 @@ void setFocusStackFrozen(int value);
  * @see allowsMode
  */
 static inline void setActiveMode(int mode) {getActiveMaster()->bindingMode = mode;}
+static inline void addActiveMode(int mode) {getActiveMaster()->bindingMode |= mode;}
+static inline void removeActiveMode(int mode) {getActiveMaster()->bindingMode &= ~mode;}
 /**
  * Returns the current binding mode for the active master
  *

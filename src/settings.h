@@ -7,8 +7,9 @@
 #ifndef MPX_SETTINGS_H_
 #define MPX_SETTINGS_H_
 
+#define KEYBOARD_PASSTHROUGH_MODE (1 << 0)
 /// Layout related keybindings
-#define LAYOUT_MODE 1
+#define LAYOUT_MODE               (1 << 1)
 
 /// Set an global var from the env
 #define SET_FROM_ENV(VAR) if(getenv("MPX" # VAR)) VAR = atoi("MPX" # VAR)
