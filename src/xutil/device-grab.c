@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <string.h>
 
-#include <X11/extensions/XInput2.h>
 #include <xcb/xinput.h>
 #ifndef NO_XRANDR
 #include <xcb/randr.h>
@@ -11,12 +10,26 @@
 #include "device-grab.h"
 #include "xsession.h"
 
-#pragma GCC diagnostic ignored "-Wnarrowing"
+/**
+ * @param id
+ *
+ * @return 1 iff id is 0 or 1
+ */
+static inline bool isSpecialID(MasterID id) {
+    return id == XCB_INPUT_DEVICE_ALL_MASTER || id == XCB_INPUT_DEVICE_ALL;
+}
 
 void passiveGrab(WindowID window, uint32_t maskValue) {
     TRACE("Passively Selecting %d  on window %d", maskValue, window);
-    XIEventMask eventMask = {XIAllDevices, 4, (unsigned char*)& maskValue};
-    XISelectEvents(dpy, window, &eventMask, 1);
+    struct {
+        xcb_input_event_mask_t iem;
+        xcb_input_xi_event_mask_t xiem;
+    } se_mask;
+    se_mask.iem.deviceid = XCB_INPUT_DEVICE_ALL;
+    se_mask.iem.mask_len = 1;
+
+    se_mask.xiem = maskValue;
+    xcb_input_xi_select_events(dis, window, 1, &se_mask.iem);
 }
 void passiveUngrab(WindowID window) {
     passiveGrab(window, 0);
@@ -24,38 +37,41 @@ void passiveUngrab(WindowID window) {
 
 int grabDevice(MasterID deviceID, uint32_t maskValue) {
     assert(!isSpecialID(deviceID));
-    XIEventMask eventMask = {deviceID, 4, (unsigned char*)& maskValue};
     INFO("Grabbing device %d with mask %d", deviceID, maskValue);
-    return XIGrabDevice(dpy, deviceID, root, CurrentTime, None, GrabModeAsync,
-            GrabModeAsync, 1, &eventMask);
+    xcb_input_xi_grab_device_reply_t* reply;
+    reply = xcb_input_xi_grab_device_reply(dis, xcb_input_xi_grab_device(dis, root, XCB_CURRENT_TIME, XCB_NONE, deviceID, XCB_INPUT_GRAB_MODE_22_ASYNC, XCB_INPUT_GRAB_MODE_22_ASYNC, 1,  1, &maskValue), NULL);
+    free(reply);
+    return reply->status;
 }
+
 int ungrabDevice(MasterID id) {
-    INFO("Ungrabbing device %d", id);
-    return XIUngrabDevice(dpy, id, 0);
+    xcb_input_xi_ungrab_device(dis, XCB_CURRENT_TIME, id);
+    return 1;
 }
 
 int grabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t maskValue, uint32_t ignoreMod) {
-    XIEventMask eventMask = {deviceID, 2, (unsigned char*)& maskValue};
-    XIGrabModifiers modifiers[4] = {{mod}, {mod | IGNORE_MASK}, {mod | ignoreMod}, {mod | IGNORE_MASK | ignoreMod} };
-    TRACE("Grabbing detail on %d detail:%d mod:%d mask: %d", deviceID, detail, mod, maskValue);
+    uint32_t modifiers[4] = {mod, mod | IGNORE_MASK, mod | ignoreMod, mod | IGNORE_MASK | ignoreMod };
+    DEBUG("Grabbing detail on %d detail:%d mod:%d mask: %d", deviceID, detail, mod, maskValue);
     int size = ignoreMod ? LEN(modifiers) : LEN(modifiers) / 2;
-    if(!getKeyboardMask(maskValue))
-        return XIGrabButton(dpy, deviceID, detail, root, 0,
-                maskValue & XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE ? XIGrabModeAsync : XIGrabModeSync, XIGrabModeAsync, 1, &eventMask,
-                size, modifiers);
-    else
-        return XIGrabKeycode(dpy, deviceID, detail, root, XIGrabModeAsync, XIGrabModeAsync,
-                1, &eventMask, size, modifiers);
+    xcb_input_grab_type_t grabType = getKeyboardMask(maskValue) ? XCB_INPUT_GRAB_TYPE_KEYCODE: XCB_INPUT_GRAB_TYPE_BUTTON;
+    xcb_input_xi_passive_grab_device_reply_t *reply;
+    reply = xcb_input_xi_passive_grab_device_reply(dis, xcb_input_xi_passive_grab_device(dis,XCB_CURRENT_TIME,root,XCB_CURSOR_NONE, detail, deviceID, size, 1, grabType, XCB_INPUT_GRAB_MODE_22_ASYNC, XCB_INPUT_GRAB_MODE_22_ASYNC, XCB_INPUT_GRAB_OWNER_OWNER, &maskValue, modifiers), NULL);
+
+    int errors = LEN(modifiers);
+    if(reply) {
+        errors -= reply->num_modifiers;
+        free(reply);
+    }
+    return errors;
 }
 int ungrabDetail(MasterID deviceID, uint32_t detail, uint32_t mod, uint32_t ignoreMod, bool isKeyboard) {
     DEBUG("UNGrabbing device:%d detail:%d mod:%d %d",
         deviceID, detail, mod, isKeyboard);
-    XIGrabModifiers modifiers[4] = {{mod}, {mod | IGNORE_MASK}, {mod | ignoreMod}, {mod | IGNORE_MASK | ignoreMod} };
-    int size = ignoreMod ? LEN(modifiers) : LEN(modifiers) / 2;
-    if(!isKeyboard)
-        return XIUngrabButton(dpy, deviceID, detail, root, size, modifiers);
-    else
-        return XIUngrabKeycode(dpy, deviceID, detail, root, size, modifiers);
+    uint32_t modifiers[4] = {mod, mod | IGNORE_MASK, mod | ignoreMod, mod | IGNORE_MASK | ignoreMod };
+    xcb_input_grab_type_t grabType = isKeyboard ? XCB_INPUT_GRAB_TYPE_KEYCODE: XCB_INPUT_GRAB_TYPE_BUTTON;
+
+    xcb_input_xi_passive_ungrab_device(dis, root, detail, deviceID, LEN(modifiers), grabType, modifiers);
+    return 0;
 }
 void replayPointerEvent() {
     TRACE("Replaying pointer events");

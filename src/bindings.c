@@ -159,7 +159,7 @@ void initBinding(Binding* binding) {
             XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS :
             XCB_INPUT_XI_EVENT_MASK_KEY_PRESS;
     if(binding->flags.targetID == 0) {
-        binding->flags.targetID = XIAllMasterDevices;
+        binding->flags.targetID = XCB_INPUT_DEVICE_ALL_MASTER;
     }
     if(binding->detail == 0 && binding->buttonOrKey != 0) {
         binding->detail = getButtonDetailOrKeyCode(binding->buttonOrKey);
