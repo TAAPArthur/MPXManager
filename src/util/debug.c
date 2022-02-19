@@ -49,17 +49,20 @@ const char* eventTypeToString(int type) {
             _ADD_EVENT_TYPE_CASE(UNREGISTER_WINDOW);
             _ADD_EVENT_TYPE_CASE(DEVICE_EVENT);
             _ADD_EVENT_TYPE_CASE(CLIENT_MAP_ALLOW);
+            _ADD_EVENT_TYPE_CASE(CLIENT_MAP_DISALLOW);
             _ADD_EVENT_TYPE_CASE(WORKSPACE_WINDOW_ADD);
             _ADD_EVENT_TYPE_CASE(WORKSPACE_WINDOW_REMOVE);
             _ADD_EVENT_TYPE_CASE(MONITOR_WORKSPACE_CHANGE);
             _ADD_EVENT_TYPE_CASE(SCREEN_CHANGE);
             _ADD_EVENT_TYPE_CASE(WINDOW_MOVE);
+            _ADD_EVENT_TYPE_CASE(WINDOW_FOCUS);
             _ADD_EVENT_TYPE_CASE(TILE_WORKSPACE);
             _ADD_EVENT_TYPE_CASE(IDLE);
             _ADD_EVENT_TYPE_CASE(TRUE_IDLE);
         case 0:
             return "Error";
         default:
+            assert(type < LAST_REAL_EVENT);
             return "unknown event";
     }
 }

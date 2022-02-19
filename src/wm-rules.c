@@ -140,6 +140,7 @@ void onFocusInEvent(xcb_input_focus_in_event_t* event) {
             onWindowFocus(winInfo->id);
         removeMask(winInfo, URGENT_MASK);
         setBorder(winInfo->id);
+        applyEventRules(WINDOW_FOCUS, winInfo);
     }
 }
 

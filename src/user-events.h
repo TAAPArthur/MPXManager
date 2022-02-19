@@ -47,6 +47,8 @@ typedef enum {
      * Called anytime a managed window is configured. The filtering out of ignored windows is one of the main differences between this and XCB_CONFIGURE_NOTIFY. The other being that the WindowInfo object will be passed in when the rule is applied.
      */
     WINDOW_MOVE,
+    // Called when a window focus event is received for a managed window that is not already the focused window
+    WINDOW_FOCUS,
     /// called when the connection is idle
     IDLE,
     /// called when the connection is idle (even after the calls to IDLE. )
