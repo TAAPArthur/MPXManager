@@ -44,12 +44,6 @@ void addMoveNonTileableWindowsToWorkspaceBounds() ;
  * Calls printStatusMethod if set (and pipe is setup) on IDLE events
  */
 void addPrintStatusRule();
-/**
- * Calls requestShutdown when the WM is not IDLE
- *
- * @param remove
- */
-void addShutdownOnIdleRule();
 
 /**
  * Adds a rule for the PRIMARY_MONITOR_MASK to have any effect

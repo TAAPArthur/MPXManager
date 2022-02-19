@@ -59,6 +59,11 @@ void requestShutdown();
  */
 bool isShuttingDown(void);
 
+/**
+ * Calls requestShutdown when the WM is not IDLE
+ *
+ * @param remove
+ */
 void addShutdownOnIdleRule();
 
 int getEventQueueSize();

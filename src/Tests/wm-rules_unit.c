@@ -43,6 +43,13 @@ SCUTEST(test_get_private_window) {
     assert(!getWindowInfo(getPrivateWindow()));
 }
 
+SCUTEST(test_destroy_private_window) {
+    getPrivateWindow();
+    runEventLoop();
+    destroyWindow(getPrivateWindow());
+    addEvent(TRUE_IDLE, DEFAULT_EVENT(fail));
+    runEventLoop();
+}
 
 SCUTEST(test_unmap) {
     WindowID win = mapWindow(createNormalWindow());

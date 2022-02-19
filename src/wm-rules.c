@@ -104,6 +104,12 @@ void onDestroyEvent(xcb_destroy_notify_event_t* event) {
     unregisterWindow(getWindowInfo(event->window), 0);
 }
 
+void shutdownIfPrivateWindowWasDestroyed(xcb_destroy_notify_event_t* event) {
+    if(event->window == getPrivateWindow()){
+        DEBUG("Our private window was destroyed");
+        requestShutdown();
+    }
+}
 
 void onDeviceEvent(xcb_input_key_press_event_t* event) {
     TRACE("device event seq: %d type: %d id %d (%d) flags %d windows: %d %d %d Detail %d Mod %d (%d)",
@@ -340,6 +346,7 @@ void addBasicRules() {
     addEvent(0, DEFAULT_EVENT(logError));
     addEvent(XCB_CREATE_NOTIFY, DEFAULT_EVENT(onCreateEvent));
     addEvent(XCB_DESTROY_NOTIFY, DEFAULT_EVENT(onDestroyEvent));
+    addEvent(XCB_DESTROY_NOTIFY, DEFAULT_EVENT(shutdownIfPrivateWindowWasDestroyed, LOWER_PRIORITY));
     addEvent(XCB_VISIBILITY_NOTIFY, DEFAULT_EVENT(onVisibilityEvent, HIGH_PRIORITY));
     addEvent(XCB_UNMAP_NOTIFY, DEFAULT_EVENT(onUnmapEvent));
     addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(onMapEvent));
