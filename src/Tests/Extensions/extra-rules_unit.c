@@ -22,9 +22,8 @@ SCUTEST(test_print_status, .iter = 3) {
             pid = spawnPipeChild(NULL, REDIRECT_CHILD_INPUT_ONLY);
             if(!pid) {
                 char buffer[255];
-                assert(STATUS_FD_EXTERNAL_READ);
                 int result = -1;
-                while(result = read(STATUS_FD_EXTERNAL_READ, buffer, LEN(buffer))) {
+                while(result = read(STDIN_FILENO, buffer, LEN(buffer))) {
                     if(result == -1)
                         perror("Failed to read");
                     write(1, buffer, result);

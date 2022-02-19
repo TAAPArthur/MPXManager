@@ -59,19 +59,20 @@ static int _spawn(const char* command, ChildRedirection spawnPipe, bool preserve
         if(spawnPipe) {
             if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
                 dup2(STATUS_FD_EXTERNAL_READ, STDIN_FILENO);
+                close(STATUS_FD_EXTERNAL_READ);
+                close(STATUS_FD);
             }
-            if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH)
+            if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH) {
                 dup2(STATUS_FD_EXTERNAL_WRITE, STDOUT_FILENO);
+                close(STATUS_FD_EXTERNAL_WRITE);
+                close(STATUS_FD_READ);
+            }
         }
         if(onChildSpawn)
             onChildSpawn();
         if(silent)
             suppressOutput();
         if(command == NULL) {
-            if(spawnPipe == REDIRECT_CHILD_INPUT_ONLY || spawnPipe == REDIRECT_BOTH)
-                close(STATUS_FD);
-            if(spawnPipe == REDIRECT_CHILD_OUTPUT_ONLY || spawnPipe == REDIRECT_BOTH)
-                close(STATUS_FD_READ);
             return 0;
         }
         const char* const args[] = {SHELL, "-c", command, NULL};
