@@ -2,7 +2,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 
@@ -34,7 +33,6 @@ xcb_atom_t WM_WINDOW_ROLE;
 xcb_atom_t OPTION_NAME;
 xcb_atom_t OPTION_VALUES;
 
-Display* dpy;
 xcb_connection_t* dis;
 WindowID root;
 xcb_ewmh_connection_t* ewmh;
@@ -114,25 +112,17 @@ int getAtomsFromMask(WindowMask mask, bool action, xcb_atom_t* arr) {
 }
 
 bool hasXConnectionBeenOpened() {
-    return dpy ? 1 : 0;
+    return dis ? 1 : 0;
 }
 
-static int handleXLibError(Display* dpy __attribute__((unused)), XErrorEvent* e) {
-    xcb_generic_error_t error = {.response_type = (uint8_t)e->type, .error_code = e->error_code, .resource_id = (uint32_t)e->resourceid, .minor_code = e->minor_code, .major_code = e->request_code};
-    ERROR("XLib error");
-    logError(&error);
-    return 0;
-}
 void openXDisplay(void) {
     //XInitThreads();
     DEBUG(" connecting to XServer ");
-    dpy = XOpenDisplay(NULL);
-    if(!dpy) {
+    dis = xcb_connect(NULL, NULL);
+    if(xcb_connection_has_error(dis)) {
         ERROR(" Failed to connect to xserver");
         exit(X_ERROR);
     }
-    dis = XGetXCBConnection(dpy);
-    assert(!xcb_connection_has_error(dis));
     xcb_intern_atom_cookie_t* cookie;
     bool applyRule = ewmh == NULL;
     ewmh = (xcb_ewmh_connection_t*)malloc(sizeof(xcb_ewmh_connection_t));
@@ -161,8 +151,6 @@ void openXDisplay(void) {
     WM_SELECTION_ATOM = getAtom(selectionName);
     sprintf(selectionName, "MPX_WM_S%d", defaultScreenNumber);
     MPX_WM_SELECTION_ATOM = getAtom(selectionName);
-    XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
-    XSetErrorHandler(handleXLibError);
     compliantWindowManagerIndicatorWindow = 0;
     createMaskAtomMapping();
     if(applyRule)
@@ -176,7 +164,6 @@ void closeConnection(void) {
         free(ewmh);
         ewmh = NULL;
         compliantWindowManagerIndicatorWindow = 0;
-        if(dpy)
-            XCloseDisplay(dpy);
+        xcb_disconnect(dis);
     }
 }

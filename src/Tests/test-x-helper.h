@@ -1,8 +1,6 @@
 #ifndef MPX_TEST_X11_HELPER2
 #define MPX_TEST_X11_HELPER2
 
-#include <X11/XF86keysym.h>
-#include <X11/Xlib-xcb.h>
 #include <X11/keysym.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
@@ -112,7 +110,6 @@ static inline WindowID setEWMHDockProperties(WindowID win, int i, int size, bool
 
 static inline int consumeEvents() {
     flush();
-    XSync(dpy, 0);
     xcb_generic_event_t* e;
     int numEvents = 0;
     while(1) {

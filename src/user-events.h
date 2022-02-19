@@ -6,13 +6,12 @@
 #ifndef MPX_USER_EVENTS
 #define MPX_USER_EVENTS
 #include <X11/X.h>
-#include <X11/extensions/XInput2.h>
 #include <stdbool.h>
 #include <xcb/xinput.h>
 /// The last supported standard x event
 #define GENERIC_EVENT_OFFSET (LASTEvent-1)
 /// max value of supported X events (not total events)
-#define LAST_REAL_EVENT (GENERIC_EVENT_OFFSET+XI_LASTEVENT+1)
+#define LAST_REAL_EVENT (GENERIC_EVENT_OFFSET+XCB_INPUT_BARRIER_LEAVE+1)
 
 typedef enum {
     /**

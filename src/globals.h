@@ -7,7 +7,6 @@
 
 #include "mywm-structs.h"
 #include <X11/X.h>
-#include <X11/extensions/XInput2.h>
 #include <stdbool.h>
 #include <xcb/xinput.h>
 

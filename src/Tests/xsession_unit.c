@@ -127,7 +127,6 @@ SCUTEST_ITER_ERR(crash_on_error, 2, 1) {
     suppressOutput();
     if(_i) {
         grabDevice(100, 0);
-        XSync(dpy, 0);
         assert(0);
     }
     else

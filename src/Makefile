@@ -8,7 +8,7 @@ ERROR_FLAGS := -Wall -Werror
 CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
-LDFLAGS :=  -lX11 -lXi -lxcb -lxcb-keysyms -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lX11-xcb -lXtst -lm
+LDFLAGS :=  -lxcb -lxcb-keysyms -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lm
 
 LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c
 LAYER0_SRCS += xutil/xdebug.c xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
@@ -101,13 +101,13 @@ libmpxmanager.a: $(BASE_SRCS:.c=.o)
 	ar rcs libmpxmanager.a $^
 
 libmpx-patch.so: Hacks/mpx-patch.c
-	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS}
+	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS} -lX11 -lXi
 
 test: CFLAGS := ${TESTFLAGS}
-test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out unitTestHacks.out # doc-check
+test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out # doc-check
 
 functionalTest: CFLAGS := ${TESTFLAGS}
-functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o |libmpx-patch.so
+functionalTest: $(BASE_SRCS:.c=.o) Tests/tester.o Tests/functional_test.o | libmpx-patch.so
 	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
 
 functional.out: functionalTest
@@ -142,16 +142,6 @@ unitTestExtensions.out: unitTestExtensions
 	$(call RUN_TEST, ./$^)
 	$(if $(TEST_FUNC),exit 1)
 	touch $@
-
-unitTestHacks: CFLAGS := ${TESTFLAGS}
-unitTestHacks: Tests/tester.o $(patsubst %.c,Tests/%_unit.o,$(LAYER7_SRCS)) $(LAYER6_SRCS) $(TEST_SRCS:.c=.o) $(LAYER0_SRCS:.c=.o)
-	${CC} ${CFLAGS} $^ -o $@  ${TESTFLAGS} ${TESTLIBS} ${LDFLAGS}
-
-unitTestHacks.out: unitTestHacks | libmpx-patch.so
-	LD_PRELOAD=libmpx-patch.so $(call RUN_TEST, ./$^)
-	$(if $(TEST_FUNC),exit 1)
-	touch $@
-
 
 code_coverage.out: unitTest.out
 	gcov -mr *
