@@ -24,7 +24,7 @@ void printStatusMethod(void) {
         return;
     if(!HIDE_WM_STATUS) {
         if(isLogging(LOG_LEVEL_DEBUG)) {
-            dprintf(STATUS_FD, "[%d]: ", getIdleCount());
+            dprintf(STATUS_FD, "0x%X: ", getIdleCount());
         }
         if(getActiveMode())
             dprintf(STATUS_FD, "%d: ", getActiveMode());

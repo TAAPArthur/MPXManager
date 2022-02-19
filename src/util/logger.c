@@ -29,9 +29,7 @@ void popContext() {
 int getEventQueueSize();
 void printContextStr() {
     // TODO
-    printf("%d|%04X|%04X|%04X|%04X|", RESTART_COUNTER, getCurrentSequenceNumber(), getLastDetectedEventSequenceNumber(),
-        getEventQueueSize(),
-        getIdleCount());
+    printf("%d|%04X|%04X|", RESTART_COUNTER, getCurrentSequenceNumber(), getIdleCount());
     for(int i = 0; i < context.size; i++)
         printf("[%s]", (char*)getElement(&context, i));
 }
