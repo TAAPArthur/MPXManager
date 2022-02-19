@@ -132,10 +132,6 @@ void processXEvent(xcb_generic_event_t* event) {
     lastEventSequenceNumber = event->sequence;
     applyEventRules(type, event);
     free(event);
-#ifdef DEBUG
-    XSync(dpy, 0);
-    fflush(NULL);
-#endif
 }
 void processXEvents(void) {
     xcb_generic_event_t* event = NULL;

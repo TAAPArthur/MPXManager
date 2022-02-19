@@ -112,7 +112,6 @@ static inline WindowID setEWMHDockProperties(WindowID win, int i, int size, bool
 
 static inline int consumeEvents() {
     flush();
-    XSync(dpy, 0);
     xcb_generic_event_t* e;
     int numEvents = 0;
     while(1) {

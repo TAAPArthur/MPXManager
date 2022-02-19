@@ -12,7 +12,6 @@
 #include "../util/rect.h"
 #include "../util/string-array.h"
 #include "../window-masks.h"
-#include <X11/Xlib.h>
 #include <string.h>
 #include <xcb/xcb_ewmh.h>
 
@@ -95,8 +94,6 @@ extern xcb_atom_t WM_WINDOW_ROLE;
 extern xcb_atom_t OPTION_NAME;
 extern xcb_atom_t OPTION_VALUES;
 
-/**XDisplay instance (only used for events/device commands)*/
-extern Display* dpy;
 /**XCB display instance*/
 extern xcb_connection_t* dis;
 /**EWMH instance*/
@@ -129,7 +126,6 @@ void closeConnection(void);
  */
 static inline void flush(void) {
     xcb_flush(dis);
-    XFlush(dpy);
 }
 
 /**

@@ -3,7 +3,6 @@
 #include <strings.h>
 #include <time.h>
 
-#include <X11/extensions/XInput2.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>

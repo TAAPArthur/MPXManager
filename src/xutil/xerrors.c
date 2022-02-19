@@ -50,10 +50,6 @@ int catchErrorSilent(xcb_void_cookie_t cookie) {
 void logError(xcb_generic_error_t* e) {
     ERROR("error occurred with seq %d resource %d. Error code: %d %s (%d %d)", e->sequence, e->resource_id, e->error_code,
         opcodeToString(e->major_code), e->major_code, e->minor_code);
-    int size = 256;
-    char buff[size];
-    XGetErrorText(dpy, e->error_code, buff, size);
-    ERROR("Error code %d %s ", e->error_code, buff) ;
     if((1 << e->error_code) & CRASH_ON_ERRORS) {
         ERROR("Crashing on error");
         LOG_RUN(LOG_LEVEL_DEBUG, printSummary());
