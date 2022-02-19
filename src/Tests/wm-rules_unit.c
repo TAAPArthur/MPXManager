@@ -208,9 +208,9 @@ static void setupClientEnvWithBasicRules() {
         cleanupXServer();
         exit(0);
     }
+    pause();
     openXDisplay();
     registerForWindowEvents(root, XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY);
-    pause();
     consumeEvents();
 }
 SCUTEST_SET_ENV(setupClientEnvWithBasicRules, cleanupXServer);

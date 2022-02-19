@@ -14,13 +14,13 @@
 #include "../test-wm-helper.h"
 
 
-SCUTEST(test_lose_wm_selection, .iter = 2, .timeout = 10) {
+SCUTEST(test_lose_wm_selection, .iter = 2) {
     STEAL_WM_SELECTION = _i;
     int pid = fork();
     createSigAction(SIGUSR1, requestShutdown);
     if(!pid) {
-        openXDisplay();
         pause();
+        openXDisplay();
         broadcastEWMHCompilence();
         exit(0);
     }
