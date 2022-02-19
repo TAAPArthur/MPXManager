@@ -104,14 +104,6 @@ static inline uint8_t getPointerMask(int mask) {
     return mask & POINTER_MASKS;
 }
 /**
- * @param id
- *
- * @return 1 iff id is 0 or 1
- */
-static inline bool isSpecialID(MasterID id) {
-    return id == XIAllMasterDevices || id == XIAllDevices;
-}
-/**
  * Declare interest in select window events
  * @param window
  * @param mask
