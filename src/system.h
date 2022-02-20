@@ -117,7 +117,7 @@ int spawnPipeChild(const char* command, ChildRedirection ioRedirection);
 /**
  * Like spawn but redirects child output to /dev/null
  */
-int spawnSilent(const char* command);
+void spawnSilent(const char* command);
 
 /**
  * Dups stdout and stderror to /dev/null

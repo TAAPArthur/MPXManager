@@ -107,8 +107,8 @@ int spawnPipeChild(const char* command, ChildRedirection redirection) {
     return _spawn(command, redirection, 1, 0);
 }
 
-int spawnSilent(const char* command) {
-    return _spawn(command, 0, 0, 1);
+void spawnSilent(const char* command) {
+    _spawn(command, 0, 0, 1);
 }
 
 int waitForChild(int pid) {
