@@ -118,7 +118,7 @@ void popHiddenWindow() {
     WindowFunctionArg arg = {hasMask, {HIDDEN_MASK}};
     WindowInfo* winInfo = findAndRaise(arg, ACTION_NONE, DOWN, (FindAndRaiseArg) {.includeNonActivatable = 1});
     if(winInfo) {
-        removeMask(winInfo, HIDDEN_MASK);
+        removeMask(winInfo, HIDDEN_MASK | NO_ACTIVATE_MASK);
         // tile now so the window won't flash on screen
         if(getWorkspaceOfWindow(winInfo))
             tileWorkspace(getWorkspaceOfWindow(winInfo));

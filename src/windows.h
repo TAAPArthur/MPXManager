@@ -279,7 +279,7 @@ static inline bool isMappable(const WindowInfo* winInfo) {
 }
 
 static inline bool isActivatable(const WindowInfo* winInfo) {
-    return hasAndHasNotMasks(winInfo, MAPPABLE_MASK | INPUT_MASK, HIDDEN_MASK | NO_ACTIVATE_MASK);
+    return hasAndHasNotMasks(winInfo, MAPPABLE_MASK | INPUT_MASK, NO_ACTIVATE_MASK);
 }
 
 /**

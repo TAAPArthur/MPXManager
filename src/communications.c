@@ -76,6 +76,8 @@ static Option baseOptions[] = {
     {"dump-rules", {dumpRules},  .flags = REDIRECT_OUTPUT},
     {"dump-win", {dumpWindow},  .flags = REDIRECT_OUTPUT | REQUEST_INT},
     {"focus-win", {(void(*)())focusWindow}, .flags = REQUEST_INT},
+    {"hide", {addMask, .arg.i=HIDDEN_MASK}, .flags = USE_FOCUSED},
+    {"hide", {addMask}, .flags = USE_FOCUSED|REQUEST_INT},
     {"log-level", {setLogLevel}, .flags = REQUEST_INT},
     {"lower", {lowerWindow}, .flags = REQUEST_INT},
     {"move-to-workspace", {moveToWorkspace}, .flags = USE_FOCUSED|REQUEST_INT},
@@ -102,6 +104,7 @@ static Option baseOptions[] = {
     {"swap-up", {swapPosition, .arg.i=UP}},
     {"swap-windows", {swapWindows}, .flags = REQUEST_INT|REQUEST_MULTI},
     {"switch-workspace", {switchToWorkspace}, .flags = REQUEST_INT},
+    {"unhide", {popHiddenWindow}, },
 };
 static ArrayList options;
 

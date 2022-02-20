@@ -234,6 +234,7 @@ void activateWorkspace(WorkspaceID workspaceIndex) {
 
 bool activateWindow(WindowInfo* winInfo) {
     if(winInfo && isActivatable(winInfo)) {
+        removeMask(winInfo, HIDDEN_MASK);
         raiseWindowInfo(winInfo, 0);
         DEBUG("activating window %d in workspace %d", winInfo->id, getWorkspaceIndexOfWindow(winInfo));
         if(getWorkspaceIndexOfWindow(winInfo) != NO_WORKSPACE) {
