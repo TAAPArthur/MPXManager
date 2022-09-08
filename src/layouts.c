@@ -187,7 +187,7 @@ static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor
     if (!getTilingOverrideMask(winInfo))
         return;
     Rect tilingOverride = *getTilingOverride(winInfo);
-    Rect bounds = m->view;
+    Rect bounds = winInfo->dock ? m->base : m->view;
     if (winInfo->dock || getWorkspaceOfWindow(winInfo) || hasPartOfMask(winInfo, ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
         for (int i = 0; i < 4; i++)
             (&bounds.x)[i] = config[i];
