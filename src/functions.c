@@ -88,7 +88,6 @@ WindowInfo* findAndRaise(const WindowFunctionArg rule, WindowAction action, int 
     return target;
 }
 bool matchesClass(WindowInfo* winInfo, const char* str) {
-    INFO("MatchesClass %d ''%s '%s' vs  %s", winInfo->id, winInfo->className, winInfo->instanceName, str);
     return strcmp(winInfo->className, str) == 0 || strcmp(winInfo->instanceName, str) == 0;
 }
 bool matchesTitle(WindowInfo* winInfo, const char* str) {
