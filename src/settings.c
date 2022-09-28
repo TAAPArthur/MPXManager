@@ -98,7 +98,7 @@ Binding DEFAULT_BINDINGS[] = {
     {DEFAULT_MOD_MASK | Mod1Mask, XK_t, {toggleMask, {STICKY_MASK}}, .flags = {.windowToPass = FOCUSED_WINDOW}},
     {DEFAULT_MOD_MASK, XK_u, {.func = activateNextUrgentWindow}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_y, {.func = popHiddenWindow}},
-    {DEFAULT_MOD_MASK, XK_y, {toggleMask, {HIDDEN_MASK}}, .flags = {.windowToPass = FOCUSED_WINDOW}},
+    {DEFAULT_MOD_MASK, XK_y, {toggleMask, {NO_ACTIVATE_MASK | HIDDEN_MASK}}, .flags = {.windowToPass = FOCUSED_WINDOW}},
 
     {DEFAULT_MOD_MASK, XK_F11, {toggleActiveLayoutOrCycle, {.p = &FULL}}},
     {DEFAULT_MOD_MASK, XK_F, {toggleMask, {FULLSCREEN_MASK}}, .flags = {.windowToPass = FOCUSED_WINDOW}},
