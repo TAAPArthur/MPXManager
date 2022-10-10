@@ -40,8 +40,9 @@ int grabDevice(MasterID deviceID, uint32_t maskValue) {
     INFO("Grabbing device %d with mask %d", deviceID, maskValue);
     xcb_input_xi_grab_device_reply_t* reply;
     reply = xcb_input_xi_grab_device_reply(dis, xcb_input_xi_grab_device(dis, root, XCB_CURRENT_TIME, XCB_NONE, deviceID, XCB_INPUT_GRAB_MODE_22_ASYNC, XCB_INPUT_GRAB_MODE_22_ASYNC, 1,  1, &maskValue), NULL);
+    int status = reply->status;
     free(reply);
-    return reply->status;
+    return status;
 }
 
 int ungrabDevice(MasterID id) {
