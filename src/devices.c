@@ -204,9 +204,7 @@ WindowID getActiveFocusOfMaster(MasterID id) {
     return win;
 }
 void detectMonitors(void) {
-#ifdef NO_XRANDR
-    addRootMonitor();
-#else
+#ifndef NO_XRANDR
     DEBUG("refreshing monitors");
     xcb_randr_get_monitors_cookie_t cookie = xcb_randr_get_monitors(dis, root, 1);
     xcb_randr_get_monitors_reply_t* monitors = xcb_randr_get_monitors_reply(dis, cookie, NULL);
@@ -237,6 +235,9 @@ void detectMonitors(void) {
             m->_mark = 0;
     }
 #endif
+    if(!getAllMonitors()->size ) {
+        addRootMonitor();
+    }
     removeDuplicateMonitors();
     if(ASSUME_PRIMARY_MONITOR && !getPrimaryMonitor() && getAllMonitors()->size ) {
         setPrimary(((Monitor*)getHead(getAllMonitors()))->id);
