@@ -6,6 +6,10 @@ void* getElement(const ArrayList* array, int index) {
     return array->__arr[index];
 }
 
+void** getData(const ArrayList* array) {
+    return array->__arr;
+};
+
 void addElement(ArrayList* array, void* p) {
     if(array->size == array->maxSize) {
         if(array->maxSize)

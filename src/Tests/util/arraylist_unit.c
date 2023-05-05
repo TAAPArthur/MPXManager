@@ -19,7 +19,9 @@ SCUTEST_SET_ENV(NULL, tearDown);
 SCUTEST(test_add_remove) {
     for(int i = 0; i < N; i++) {
         assert(list.size == i);
-        addElement(&list, malloc(sizeof(int)));
+        int* n = malloc(sizeof(int));
+        addElement(&list, n);
+        assert(getData(&list)[i] == n);
     }
     assert(list.size == N);
     for(int i = 0; i < N; i++) {

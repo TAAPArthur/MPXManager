@@ -22,6 +22,7 @@ typedef struct ArrayList {
     int maxSize;
 } ArrayList;
 
+void** getData(const ArrayList* array);
 void* getElement(const ArrayList* array, int index);
 static inline void* getHead(const ArrayList* array) { return getElement(array, 0);}
 static inline void* getTail(const ArrayList* array) { return getElement(array, array->size-1);}
