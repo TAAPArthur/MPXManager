@@ -104,6 +104,8 @@ libmpxmanager.a: $(BASE_SRCS:.c=.o)
 libmpx-patch.so: Hacks/mpx-patch.c
 	${CC} ${CFLAGS} -fPIC -shared -o $@ $^ ${LDFLAGS} -lX11 -lXi
 
+layouts.o: layouts.c tile.h
+
 test: CFLAGS := ${TESTFLAGS}
 test: unitTest.out functional.out unitTestExtensions.out endToEndTest.out # doc-check
 

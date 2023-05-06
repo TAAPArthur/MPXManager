@@ -1,6 +1,7 @@
 #include "../functions.h"
 #include "../layouts.h"
 #include "../masters.h"
+#include "../tile.h"
 #include "../wmfunctions.h"
 #include "test-event-helper.h"
 #include "test-mpx-helper.h"

@@ -40,7 +40,7 @@ void printStatusMethod(void) {
                 color = "yellow";
             else continue;
             dprintf(STATUS_FD, "^fg(%s)%s%s:%s^fg() ", color, w->name, w == getActiveWorkspace() ? "*" : "",
-                getLayout(w) ? getLayout(w)->name : "");
+                getLayout(w) ? getLayoutName(getLayout(w)) : "");
         }
         if(getActiveMaster()->bindings.size)
             dprintf(STATUS_FD, "[(%d)] ", getActiveMaster()->bindings.size);

@@ -3,6 +3,7 @@
 #include "../globals.h"
 #include "../layouts.h"
 #include "../settings.h"
+#include "../tile.h"
 #include "../windows.h"
 #include "../wm-rules.h"
 #include "../wmfunctions.h"

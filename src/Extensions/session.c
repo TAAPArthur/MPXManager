@@ -309,7 +309,7 @@ void saveCustomState(void) {
     for(WorkspaceID i = 0; i < getNumberOfWorkspaces(); i++) {
         layoutOffsets[i] = getLayoutOffset(getWorkspace(i));
         Layout* layout = getLayout(getWorkspace(i));
-        addString(&joiner, (layout ? layout->name : ""));
+        addString(&joiner, (layout ? getLayoutName(layout) : ""));
         FOR_EACH(WindowInfo*, winInfo, getWorkspaceWindowStack(getWorkspace(i))) {
             workspaceWindows[numWorkspaceWindows++] = winInfo->id;
         }

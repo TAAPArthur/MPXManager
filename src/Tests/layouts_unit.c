@@ -1,7 +1,9 @@
+#define UNIT_TESTING
 #include "../devices.h"
 #include "../functions.h"
 #include "../layouts.h"
 #include "../monitors.h"
+#include "../tile.h"
 #include "../wmfunctions.h"
 #include "test-event-helper.h"
 #include "test-mpx-helper.h"
@@ -10,11 +12,6 @@
 
 #define _LAYOUT_FAMILY(S){.name=""#S,.func=S}
 
-static Layout LAYOUT_FAMILIES[] = {
-    _LAYOUT_FAMILY(full),
-    _LAYOUT_FAMILY(column),
-    _LAYOUT_FAMILY(masterPane),
-};
 int NUMBER_OF_LAYOUT_FAMILIES = LEN(LAYOUT_FAMILIES);
 SCUTEST_SET_ENV(createXSimpleEnv, cleanupXServer);
 
@@ -158,26 +155,28 @@ SCUTEST_ITER(test_identity_transform_config, TRANSFORM_LEN * 2) {
     int d = _i % 2 ? 0 : n;
     _i /= 2;
     Rect view = {.x = d, .y = d, .width = n, .height = n};
-    Monitor* monitor = addFakeMonitor(view);
-    uint32_t config[CONFIG_LEN] = {d, d, n, n};
-    int correctConfig[4] = {d, d, n, n};
-    LayoutArgs prop = {.transform = (Transform)_i};
-    transformConfig(&prop, monitor, config);
+    tile_type_t config[CONFIG_LEN] = {d, d, n, n};
+    tile_type_t correctConfig[4] = {d, d, n, n};
+    LayoutArgs args = {.transform = _i};
+
+    LayoutState state = {.args = &args, .bounds = &view.x};
+    layoutTransformConfig(&state, config);
     assert(memcmp(config, correctConfig, sizeof(correctConfig)) == 0);
 }
 SCUTEST_ITER(test_simple_transform_config, TRANSFORM_LEN) {
     DEFAULT_BORDER_WIDTH = 0;
-    Monitor* monitor = addFakeMonitor((Rect) {0, 0, 0, 0});
+    tile_type_t bounds[] = {0, 0, 0, 0};
     for(int i = 1; i < 5; i++) {
-        uint32_t config[TRANSFORM_LEN] = {i % 2, i / 2, 0, 0};
-        const int correctConfig[TRANSFORM_LEN][2] = {
+        tile_type_t config[TRANSFORM_LEN] = {i % 2, i / 2, 0, 0};
+        tile_type_t correctConfig[TRANSFORM_LEN][2] = {
             [NONE] = {config[0], config[1]},
             [ROT_180] = {-config[0], -config[1]},
             [REFLECT_HOR] = {-config[0], config[1]},
             [REFLECT_VERT] = {config[0], -config[1]},
         };
-        LayoutArgs prop = {.transform = (Transform)_i};
-        transformConfig(&prop, monitor, config);
+        LayoutArgs args = {.transform = _i};
+        LayoutState state = {.args = &args, .bounds = bounds};
+        layoutTransformConfig(&state, config);
         assert(memcmp(config, correctConfig[_i], sizeof(correctConfig[_i])) == 0);
     }
 }
@@ -217,9 +216,8 @@ SCUTEST(test_tile_windows) {
 }
 
 
-static Rect baseConfig;
-static void dummyLayout(LayoutState* state) {
-    tileWindow(state, getHead(state->stack), (short*)&baseConfig);
+static void dummyLayout(const LayoutState* state) {
+    state->tileWindow(state, state->data[0], (short*)&((Monitor*)state->userData)->base.x);
 };
 SCUTEST_ITER(test_privileged_windows_size, 9 * 2) {
     WindowMask extra = _i % 2 ? NO_MASK : NO_TILE_MASK;
@@ -232,15 +230,16 @@ SCUTEST_ITER(test_privileged_windows_size, 9 * 2) {
     Rect startingPos = {0, 10, 150, 200};
     setWindowPosition(winInfo->id, startingPos);
     moveToWorkspace(winInfo, getActiveWorkspaceIndex());
-    baseConfig = (extra == NO_MASK ? (Rect) {20, 30, 40, 50}: startingPos);
+    Rect baseConfig = (extra == NO_MASK ? view : startingPos);
+    m->base =  baseConfig;
     Layout l = {"", .func = dummyLayout, {.noBorder = 1}};
-    toggleActiveLayout(&l);
+    toggleActiveLayout(&FULL);
     DEFAULT_BORDER_WIDTH = 1;
     struct {
         WindowMask mask;
         const Rect dims;
     } arr[] = {
-        {0, baseConfig},
+        {0, view},
 
         {X_CENTERED_MASK | extra, {m->view.x + m->view.width / 2, baseConfig.y, baseConfig.width, baseConfig.height}},
         {Y_CENTERED_MASK | extra, {baseConfig.x, m->view.y + m->view.height / 2, baseConfig.width, baseConfig.height}},
@@ -268,7 +267,7 @@ SCUTEST(test_register_restore_layout) {
     for(int i = 0; i <= LAYOUT_ARG; i++)
         increaseLayoutArg(i, i * i, &c);
     assert(memcmp(&c.args, &args, sizeof(LayoutArgs)));
-    restoreArgs(&c);
+    layoutRestoreArgs(&c);
     assert(!memcmp(&c.args, &args, sizeof(LayoutArgs)));
     toggleActiveLayout(NULL);
 }

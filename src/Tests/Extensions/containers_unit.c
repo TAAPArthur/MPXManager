@@ -11,6 +11,7 @@
 #include "../../functions.h"
 #include "../../globals.h"
 #include "../../layouts.h"
+#include "../../tile.h"
 #include "../../wmfunctions.h"
 #include "../test-event-helper.h"
 #include "../test-mpx-helper.h"

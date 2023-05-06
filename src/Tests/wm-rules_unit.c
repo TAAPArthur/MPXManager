@@ -3,6 +3,7 @@
 
 #include "../layouts.h"
 #include "../layouts.h"
+#include "../tile.h"
 #include "../wm-rules.h"
 #include "../wmfunctions.h"
 #include "test-event-helper.h"

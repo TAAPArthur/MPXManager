@@ -15,6 +15,7 @@
 #include "monitors.h"
 #include "settings.h"
 #include "system.h"
+#include "tile.h"
 #include "util/logger.h"
 #include "windows.h"
 #include "wm-rules.h"

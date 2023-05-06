@@ -1,6 +1,7 @@
 #include "../../Extensions/session.h"
 #include "../../Extensions/ewmh.h"
 #include "../../devices.h"
+#include "../../tile.h"
 #include "../../layouts.h"
 #include "../../masters.h"
 #include "../../wm-rules.h"
