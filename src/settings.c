@@ -85,7 +85,6 @@ Binding DEFAULT_BINDINGS[] = {
 
     {WILDCARD_MODIFIER, Button1, {activateWorkspaceUnderMouse}, .flags = {.noShortCircuit = 1, .noGrab = 1}},
     {WILDCARD_MODIFIER, Button1, {.func = activateWindowUnchecked}, .flags = {.noShortCircuit = 1, .noGrab = 1,  .windowToPass = EVENT_WINDOW, }},
-    {0, Button1, {replayPointerEvent}},
 
     {DEFAULT_MOD_MASK, XK_c, {killClientOfWindowInfo}, .flags = {.windowToPass = FOCUSED_WINDOW, .noKeyRepeat = 1}},
     {DEFAULT_MOD_MASK | ShiftMask, XK_c, {killClientOfWindowInfo}, .flags = { .windowToPass = EVENT_WINDOW, .noKeyRepeat = 1}},
