@@ -105,8 +105,8 @@ WindowInfo* newWindowInfo(WindowID id, WindowID parent);
  */
 void freeWindowInfo(WindowInfo* winInfo);
 
-static inline bool isOverrideRedirectWindow(WindowInfo* winInfo) {return winInfo->overrideRedirect;};
-static inline bool isInputOnlyWindow(WindowInfo* winInfo) {return winInfo->inputOnly;};
+static inline bool isOverrideRedirectWindow(const WindowInfo* winInfo) {return winInfo->overrideRedirect;};
+static inline bool isInputOnlyWindow(const WindowInfo* winInfo) {return winInfo->inputOnly;};
 
 /**
  * Enables/Disables tiling to be overridden at the indexes corresponding to mask
@@ -174,7 +174,7 @@ static inline void setTilingOverridePercent(WindowInfo* winInfo, uint8_t percent
 /**
  * @return true if the window is not in a workspace or is in a visible one
  */
-bool isNotInInvisibleWorkspace(WindowInfo* winInfo);
+bool isNotInInvisibleWorkspace(const WindowInfo* winInfo);
 /**
  * Removes the window from its Workspace if it is in one
  */
@@ -190,13 +190,9 @@ void removeFromWorkspace(WindowInfo* winInfo);
 void moveToWorkspace(WindowInfo* winInfo, WorkspaceID destIndex);
 
 /**
- *
- *
- * @param createNew if true a new array will be created if it doesn't exist
- *
  * @return size 12 array representing dock properties
  */
-const DockProperties* getDockProperties(WindowInfo* winInfo);
+const DockProperties* getDockProperties(const WindowInfo* winInfo);
 /**
  * Add properties to winInfo that will be used to avoid docks
  * @param properties list of properties

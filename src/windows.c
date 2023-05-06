@@ -34,7 +34,7 @@ void freeWindowInfo(WindowInfo* winInfo) {
     free(winInfo);
 }
 
-bool isNotInInvisibleWorkspace(WindowInfo* winInfo) {
+bool isNotInInvisibleWorkspace(const WindowInfo* winInfo) {
     if(getWorkspaceIndexOfWindow(winInfo) == NO_WORKSPACE)
         return 1;
     return isWorkspaceVisible(getWorkspaceOfWindow(winInfo));
@@ -64,7 +64,7 @@ void moveToWorkspace(WindowInfo* winInfo, WorkspaceID destIndex) {
     }
 }
 
-const DockProperties* getDockProperties(WindowInfo* winInfo) {
+const DockProperties* getDockProperties(const WindowInfo* winInfo) {
     return winInfo->dockProperties.thickness ? &winInfo->dockProperties : NULL;
 }
 void setDockProperties(WindowInfo* winInfo, int* properties, bool partial) {

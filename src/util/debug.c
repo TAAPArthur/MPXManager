@@ -137,7 +137,7 @@ void dumpWorkspace(Workspace* workspace) {
     }
     printf("}\n");
 }
-void dumpMaster(Master* master) {
+void dumpMaster(const Master* master) {
     if(!master)
         master = getActiveMaster();
     printf("Master %03d (%03d) %s %06X ", master->id, master->pointerID, master->name, master->focusColor);
@@ -153,11 +153,11 @@ void dumpMaster(Master* master) {
     printf("}\n");
 }
 
-void dumpSlave(Slave*slave) {
+void dumpSlave(const Slave*slave) {
     printf("ID: %3d; Master %3d; Keyboard %3d; %s\n", slave->id, slave->attachment, slave->keyboard, slave->name);
 }
 
-void dumpWindowInfo(WindowInfo* winInfo) {
+void dumpWindowInfo(const WindowInfo* winInfo) {
     printf("{ID %d%s ", winInfo->id, (isTileable(winInfo) ? "*" : !isMappable(winInfo) ? "?" :  ""));
     if(winInfo->type)
         printf("Title '%s' Class '%s' '%s' ", winInfo->title, winInfo->className, winInfo->instanceName);

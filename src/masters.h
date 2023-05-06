@@ -88,11 +88,11 @@ typedef struct Master {
     ArrayList bindings;
 } Master;
 
-static inline const ArrayList* getSlaves(Master* master) {
+static inline const ArrayList* getSlaves(const Master* master) {
     return &master->slaves;
 }
 
-static inline const ArrayList* getMasterWindowStack(Master* master) {
+static inline const ArrayList* getMasterWindowStack(const Master* master) {
     return &master->windowStack;
 }
 static inline const ArrayList* getActiveMasterWindowStack() { return getMasterWindowStack(getActiveMaster());}
@@ -105,11 +105,11 @@ void addDefaultMaster();
 static inline MasterID getActiveMasterKeyboardID(void) {return getActiveMaster()->id;}
 /// @return the pointer id of the active master
 static inline MasterID getActiveMasterPointerID(void) {return getActiveMaster()->pointerID;}
-static inline MasterID getPointerID(Master* master) {return master->pointerID;}
-static inline MasterID getKeyboardID(Master* master) {return master->id;}
+static inline MasterID getPointerID(const Master* master) {return master->pointerID;}
+static inline MasterID getKeyboardID(const Master* master) {return master->id;}
 /// @return the ID of the active Workspace or NO_WORKSPACE
 static inline WorkspaceID getActiveWorkspaceIndex(void) {return getActiveMaster()->activeWorkspaceIndex ;}
-static inline WorkspaceID getMasterWorkspaceIndex(Master* master) {return master->activeWorkspaceIndex ;}
+static inline WorkspaceID getMasterWorkspaceIndex(const Master* master) {return master->activeWorkspaceIndex ;}
 /**
  * Sets the active workspace index
  * @param index

@@ -16,7 +16,7 @@ void dumpRect(Rect rect);
  */
 void dumpWindow(WindowID win) ;
 
-void dumpWindowInfo(WindowInfo* winInfo);
+void dumpWindowInfo(const WindowInfo* winInfo);
 /**
  * Prints all with that have filterMask (if filterMask is 0, print all windows)
  *
@@ -45,7 +45,7 @@ void dumpWindowByClass(const char* match);
  *
  * @param master
  */
-void dumpMaster(Master* master) ;
+void dumpMaster(const Master* master) ;
 /**
  * Stringifies type
  *
