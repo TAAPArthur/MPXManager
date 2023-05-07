@@ -1,11 +1,11 @@
 SHELL := /bin/sh
-DEBUGGING_FLAGS := -g -rdynamic -O0
+DEBUGGING_FLAGS := -g -O0
 RELEASE_FLAGS ?= -O2
 SPEED_TEST_FLAGS := -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable
 
 IGNORED_FLAGS := -Wno-parentheses -Wno-missing-field-initializers
 ERROR_FLAGS := -Wall -Werror
-CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT} -D_DEFAULT_SOURCE
+CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
 LDFLAGS :=  -lxcb -lxcb-keysyms -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lm
