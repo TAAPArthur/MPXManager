@@ -226,11 +226,11 @@ void dumpRules(void) {
     for(int batch = 0; batch < 2; batch++) {
         for(int i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
             if (getEventList(i, batch)->size) {
-                printf("%s%s: {", batch ? "BATCH_" : "", eventTypeToString(i));
+                printf("%s%s: ", batch ? "BATCH_" : "", eventTypeToString(i));
                 FOR_EACH(BoundFunction*, b, getEventList(i, batch)) {
                     printf("%s, ", b->name);
                 }
-                printf("}\n");
+                printf("\n");
             }
     }
 }

@@ -14,7 +14,6 @@
 #include "masters.h"
 #include "monitors.h"
 #include "system.h"
-#include "threads.h"
 #include "user-events.h"
 #include "util/logger.h"
 #include "util/time.h"

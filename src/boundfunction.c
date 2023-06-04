@@ -64,7 +64,7 @@ static bool applyRules(ArrayList* rules, void* p) {
             func->func.func(p, func->arg);
         popContext();
         if(abort) {
-            INFO("Rules aborted early due to: %s", func->name);
+            DEBUG("Rules aborted early due to: %s", func->name);
             return 0;
         }
     }
@@ -82,7 +82,7 @@ void applyBatchEventRules(void) {
     for(UserEvent i = 0; i < NUMBER_OF_MPX_EVENTS; i++)
         if(getNumberOfEventsTriggerSinceLastIdle(i)) {
             pushContext(eventTypeToString(i));
-            INFO("Event occurred: %d", getNumberOfEventsTriggerSinceLastIdle(i));
+            DEBUG("Event occurred: %d", getNumberOfEventsTriggerSinceLastIdle(i));
             if(batchEventRules[i].list.size)
                 applyRules(&batchEventRules[i].list, NULL);
             popContext();

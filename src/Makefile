@@ -10,7 +10,7 @@ CFLAGS := -std=c99 ${ERROR_FLAGS} ${IGNORED_FLAGS} ${INJECT}
 TESTFLAGS := ${CFLAGS} ${DEBUGGING_FLAGS}
 LDFLAGS :=  -lxcb -lxcb-keysyms -lxcb-xinput -lxcb-xtest -lxcb-ewmh -lxcb-icccm -lxcb-randr -lm
 
-LAYER0_SRCS :=  globals.c util/string-array.c util/logger.c util/debug.c
+LAYER0_SRCS := globals.c util/string-array.c util/logger.c util/debug.c
 LAYER0_SRCS += xutil/test-functions.c xutil/properties.c xutil/window-properties.c xutil/xsession.c xutil/device-grab.c xutil/xerrors.c
 LAYER1_SRCS := util/arraylist.c boundfunction.c
 LAYER2_SRCS := slaves.c masters.c workspaces.c windows.c monitors.c
