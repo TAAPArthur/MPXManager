@@ -216,10 +216,15 @@ bool isWorkspaceDirty(Workspace* workspace) {
     return 0;
 }
 
+
+void maybeTileWorkspace(Workspace* workspace) {
+    if (isWorkspaceVisible(workspace) && getWorkspaceWindowStack(workspace)->size && isWorkspaceDirty(workspace))
+        tileWorkspace(workspace);
+}
+
 void retileAllDirtyWorkspaces() {
     FOR_EACH(Workspace*, workspace, getAllWorkspaces()) {
-        if (isWorkspaceVisible(workspace) && getWorkspaceWindowStack(workspace)->size && isWorkspaceDirty(workspace))
-            tileWorkspace(workspace);
+        maybeTileWorkspace(workspace);
     }
 }
 

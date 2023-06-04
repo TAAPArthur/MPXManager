@@ -74,6 +74,7 @@ void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor)
  */
 void tileWorkspace(Workspace* workspace);
 
+void maybeTileWorkspace(Workspace*);
 void retileAllDirtyWorkspaces();
 
 void registerDefaultLayouts();

@@ -32,22 +32,7 @@ SCUTEST(test_focus_window_visible_after_window_destroy) {
     runEventLoop();
     assert(checkStackingOrder((WindowID[]) {win, win2, winNextFocused}, 3));
 }
-SCUTEST(test_tile_before_map) {
-    WindowID win = mapWindow(createNormalWindow());
-    registerWindow(win, root, NULL);
-    assert(getWorkspaceOfWindow(getWindowInfo(win)));
-    switchToWorkspace(1);
-    runEventLoop();
-    setWindowPosition(win, (Rect) {0, 1, 2, 3});
-    switchToWorkspace(0);
-    markWorkspaceOfWindowDirty(getWindowInfo(win));
-    consumeEvents();
-    addEvent(XCB_MAP_NOTIFY, DEFAULT_EVENT(fail));
-    addEvent(XCB_CONFIGURE_NOTIFY, DEFAULT_EVENT(incrementCount));
-    addEvent(XCB_CONFIGURE_NOTIFY, DEFAULT_EVENT(requestShutdown));
-    runEventLoop();
-    assert(getCount());
-}
+
 SCUTEST(auto_window_map) {
     WindowID win = mapWindow(createNormalWindow());
     scan(root);
@@ -74,6 +59,55 @@ SCUTEST_ITER(unmap_no_flash, 2) {
     runEventLoop();
     assertEquals(visibleCount, getCount());
 }
+
+static void verifyWindowsInWorkspaceAreUnmapped(Workspace* workspace) {
+    ArrayList* windowStack = getWorkspaceWindowStack(workspace);
+    FOR_EACH(WindowInfo*, winInfo, windowStack) {
+        assert(!isWindowMapped(winInfo->id));
+    }
+}
+SCUTEST(unmap_no_flash_workspace_switch) {
+
+    NON_ROOT_EVENT_MASKS |= XCB_EVENT_MASK_VISIBILITY_CHANGE;
+    Monitor* m = getMonitor(getWorkspace(0));
+    Rect bounds = m->base;
+    bounds.x += m->base.width;
+    Monitor* m2 = addFakeMonitorWithName(bounds, "adj");
+    assignUnusedMonitorsToWorkspaces();
+    setActiveLayout(&FULL);
+
+    assert(getWorkspaceOfMonitor(m));
+    assert(getWorkspaceOfMonitor(m2));
+    assert(getWorkspaceOfMonitor(m)->id == 0);
+    assert(getWorkspaceOfMonitor(m2)->id == 1);
+    switchToWorkspace(0);
+
+    WindowID win = createNormalWindow();
+    scan(root);
+    mapWindow(win);
+
+    WindowInfo* winInfo = getWindowInfo(win);
+    activateWindow(winInfo);
+
+    runEventLoop();
+    assert(hasMask(winInfo, MAPPED_MASK));
+    assert(getWorkspaceOfMonitor(m) == getWorkspaceOfWindow(getWindowInfo(win)));
+
+    activateWorkspace(2);
+    runEventLoop();
+    assert(!isWorkspaceVisible(getWorkspace(0)));
+    assert(!hasMask(winInfo, MAPPED_MASK));
+
+    activateWorkspace(1);
+    runEventLoop();
+    assert(!hasMask(winInfo, MAPPED_MASK));
+
+    addEvent(TILE_WORKSPACE, DEFAULT_EVENT(verifyWindowsInWorkspaceAreUnmapped, HIGHEST_PRIORITY));
+    activateWorkspace(0);
+    runEventLoop();
+    assert(hasMask(winInfo, MAPPED_MASK));
+}
+
 SCUTEST_ITER(maintain_focus_when_moving_window_to_another_workspace, 2) {
     MONITOR_DUPLICATION_POLICY = 0;
     addFakeMonitor((Rect) {100, 0, 100, 100});

@@ -368,6 +368,7 @@ void addBasicRules() {
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadWindowProperties, HIGHER_PRIORITY));
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(loadGeometry, HIGHER_PRIORITY));
 
+    addEvent(MONITOR_WORKSPACE_CHANGE, DEFAULT_EVENT(maybeTileWorkspace));
     addEvent(POST_REGISTER_WINDOW, FILTER_EVENT(listenForNonRootEventsFromWindow, HIGHER_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks));
