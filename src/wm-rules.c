@@ -371,7 +371,7 @@ void addBasicRules() {
     addEvent(MONITOR_WORKSPACE_CHANGE, DEFAULT_EVENT(maybeTileWorkspace));
     addEvent(POST_REGISTER_WINDOW, FILTER_EVENT(listenForNonRootEventsFromWindow, HIGHER_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(detectMonitors, HIGH_PRIORITY));
-    addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks));
+    addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(resizeAllMonitorsToAvoidAllDocks, LOW_PRIORITY));
     addBatchEvent(SCREEN_CHANGE, DEFAULT_EVENT(assignUnusedMonitorsToWorkspaces, LOW_PRIORITY));
     for(int i = XCB_INPUT_KEY_PRESS; i <= XCB_INPUT_MOTION; i++) {
         addEvent(GENERIC_EVENT_OFFSET + i, DEFAULT_EVENT(onDeviceEvent));

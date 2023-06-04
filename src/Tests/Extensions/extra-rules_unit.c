@@ -109,6 +109,29 @@ SCUTEST_ITER(primary_monitor_windows, 2) {
     }
 }
 
+SCUTEST(primary_monitor_mask_new_monitor) {
+    addStickyPrimaryMonitorRule();
+    Monitor* realMonitor = getHead(getAllMonitors());
+    setPrimary(realMonitor->id);
+
+    WindowID win = mapWindow(createNormalWindow());
+    scan(root);
+    WindowInfo* winInfo = getWindowInfo(win);
+    addMask(winInfo, DOCK_MASK | PRIMARY_MONITOR_MASK);
+    winInfo->dockProperties = (DockProperties) {DOCK_RIGHT, .thickness = 1};
+    runEventLoop();
+    assert(realMonitor->base.width == realMonitor->view.width + winInfo->dockProperties.thickness);
+
+    Monitor* fake = addFakeMonitor((Rect) {realMonitor->base.x + realMonitor->base.width, 0, 100, 100});
+    setPrimary(fake->id);
+    setRootDims(getRootWidth() + fake->base.width, getRootHeight());
+    assignUnusedMonitorsToWorkspaces();
+    applyEventRules(SCREEN_CHANGE, NULL);
+    runEventLoop();
+    assert(realMonitor->base.width == realMonitor->view.width);
+    assert(fake->base.width == fake->view.width + winInfo->dockProperties.thickness);
+}
+
 SCUTEST(test_insertWindowsAtHeadOfStack, .iter = 3) {
     Window win1 = mapArbitraryWindow();
     Window winFocused = mapArbitraryWindow();
