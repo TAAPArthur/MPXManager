@@ -45,8 +45,6 @@ struct WindowInfo {
      */
     WindowMask mask;
     WindowMask savedMask;
-    /// set to 1 iff the window is a dock
-    bool dock;
     /// 1 iff override_redirect flag set
     bool overrideRedirect;
     /// i iff input only window

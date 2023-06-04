@@ -37,7 +37,7 @@ SCUTEST(test_window_workspace_masks) {
 }
 SCUTEST_ITER(dock_properties, 2) {
     WindowInfo* winInfo = addFakeWindowInfo(1);
-    winInfo->dock = _i;
+    addMask(winInfo, DOCK_MASK);
     assert(!getDockProperties(winInfo));
     int arr[12] = {0};
     setDockProperties(winInfo, arr, 1);

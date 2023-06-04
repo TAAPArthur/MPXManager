@@ -34,7 +34,7 @@ SCUTEST_ITER(create_dock, 4 * 2) {
     runEventLoop();
     WindowInfo* winInfo = getWindowInfo(win);
     assert(winInfo);
-    assert(winInfo->dock);
+    assert(hasMask(winInfo, DOCK_MASK));
     const DockProperties* dockProperties = getDockProperties(winInfo);
     assert(dockProperties);
     assertEquals(dockProperties->type, type);

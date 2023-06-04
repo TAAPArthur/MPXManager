@@ -12,8 +12,7 @@ static void setupEnvWithDock(int i) {
     addDefaultMaster();
     addWorkspaces(2);
     winInfo = addFakeWindowInfo(1);
-    addMask(winInfo, MAPPED_MASK | MAPPABLE_MASK);
-    winInfo->dock = 1;
+    addMask(winInfo, MAPPED_MASK | MAPPABLE_MASK | DOCK_MASK);
     winInfo->dockProperties = (DockProperties) {i % 4, .thickness = 1};
 }
 SCUTEST_SET_ENV(setupEnvWithDock, simpleCleanup);

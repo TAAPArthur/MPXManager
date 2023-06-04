@@ -201,7 +201,7 @@ void loadSavedAtomState(WindowInfo* winInfo) {
 }
 
 void loadDockProperties(WindowInfo* winInfo) {
-    if(!winInfo->dock)
+    if(!hasMask(winInfo, DOCK_MASK))
         return;
     TRACE("Reloading dock properties");
     xcb_window_t win = winInfo->id;
@@ -227,7 +227,7 @@ void updateDockProperties(xcb_property_notify_event_t* event) {
     // only reload properties if a window is mapped
     if(winInfo && hasMask(winInfo, MAPPED_MASK)) {
         if(event->atom == ewmh->_NET_WM_STRUT || event->atom == ewmh->_NET_WM_STRUT_PARTIAL) {
-            if(winInfo->dock)
+            if(hasMask(winInfo, DOCK_MASK))
                 loadDockProperties(winInfo);
         }
     }

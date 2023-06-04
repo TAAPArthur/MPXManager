@@ -120,8 +120,8 @@ static void applyTilingOverrideToConfig(const WindowInfo* winInfo, const Monitor
     if (!getTilingOverrideMask(winInfo))
         return;
     Rect tilingOverride = *getTilingOverride(winInfo);
-    Rect bounds = winInfo->dock ? m->base : m->view;
-    if (winInfo->dock || getWorkspaceOfWindow(winInfo) || hasPartOfMask(winInfo, ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
+    Rect bounds = hasMask(winInfo, DOCK_MASK) ? m->base : m->view;
+    if (getWorkspaceOfWindow(winInfo) || hasPartOfMask(winInfo, DOCK_MASK | ROOT_FULLSCREEN_MASK | FULLSCREEN_MASK))
         for (int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
             (&bounds.x)[i] = config[i];
 
@@ -161,7 +161,7 @@ static void tileWindow(const LayoutState* state, const void* winInfo, tile_type_
 void arrangeNonTileableWindow(const WindowInfo* winInfo, const Monitor* monitor) {
     tile_type_t config[CONFIG_LEN] = {0};
     config[CONFIG_INDEX_BORDER] = DEFAULT_BORDER_WIDTH;
-    const Rect * bounds = (winInfo->dock || !getWorkspaceOfWindow(winInfo)) ? &monitor->base : &monitor->view;
+    const Rect * bounds = (hasMask(winInfo, DOCK_MASK) || !getWorkspaceOfWindow(winInfo)) ? &monitor->base : &monitor->view;
     for (int i = 0; i <= CONFIG_INDEX_HEIGHT; i++)
         config[i] = (&bounds->x)[i];
 

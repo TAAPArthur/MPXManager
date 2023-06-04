@@ -217,7 +217,7 @@ SCUTEST_ITER(docks, 4 * 2) {
     mapWindow(win);
     scan(root);
     WindowInfo* winInfo = getWindowInfo(win);
-    assert(winInfo->dock);
+    assert(hasMask(winInfo, DOCK_MASK));
     const DockProperties* prop = getDockProperties(getWindowInfo(win));
     assert(prop);
     assertEquals(prop->thickness, size);

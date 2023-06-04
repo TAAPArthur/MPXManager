@@ -68,7 +68,7 @@ bool isMonitorActive(Monitor* monitor) {
  * @return 1 iff the size changed
  */
 bool resizeToAvoidDock(Monitor* monitor, WindowInfo* winInfo) {
-    assert(winInfo && winInfo->dock);
+    assert(winInfo && hasMask(winInfo, DOCK_MASK));
     if(getWorkspaceOfWindow(winInfo) && getWorkspaceOfWindow(winInfo) != getWorkspaceOfMonitor(monitor) ||
         !getWorkspaceOfWindow(winInfo) && hasMask(winInfo, PRIMARY_MONITOR_MASK) && !isPrimary(monitor)) {
         TRACE("Monitor %d is skipping dock %d", monitor->id, winInfo->id);
@@ -112,7 +112,7 @@ void resizeAllMonitorsToAvoidAllDocks(void) {
     FOR_EACH(Monitor*, monitor, getAllMonitors()) {
         monitor->view = monitor->base;
         FOR_EACH(WindowInfo*, winInfo, getAllWindows()) {
-            if(winInfo->dock && hasMask(winInfo, MAPPED_MASK))
+            if(hasMask(winInfo, MAPPED_MASK | DOCK_MASK))
                 resizeToAvoidDock(monitor, winInfo);
         }
     }

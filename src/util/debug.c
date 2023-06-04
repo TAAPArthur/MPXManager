@@ -101,6 +101,7 @@ const char* getMaskAsString(WindowMask mask, char* buff) {
     _PRINT_MASK(EXTERNAL_RAISE_MASK);
     _PRINT_MASK(IGNORE_WORKSPACE_MASKS_MASK);
     _PRINT_MASK(INPUT_MASK);
+    _PRINT_MASK(DOCK_MASK);
     _PRINT_MASK(NO_RECORD_FOCUS_MASK);
     _PRINT_MASK(NO_ACTIVATE_MASK);
     _PRINT_MASK(VISIBLE_MASK);
@@ -163,9 +164,6 @@ void dumpWindowInfo(const WindowInfo* winInfo) {
         printf("Title '%s' Class '%s' '%s' ", winInfo->title, winInfo->className, winInfo->instanceName);
     if(winInfo->role[0])
         printf("Role '%s' ", winInfo->role);
-    if(winInfo->dock) {
-        printf("Dock ");
-    }
     if(winInfo->type) {
         printf("Type %s %d ", winInfo->typeName, winInfo->implicitType);
     }

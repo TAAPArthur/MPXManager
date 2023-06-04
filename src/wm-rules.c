@@ -159,7 +159,7 @@ void onMapEvent(xcb_map_notify_event_t* event) {
         addMask(winInfo, MAPPABLE_MASK | MAPPED_MASK);
         if(!alreadyMapped)
             applyEventRules(CLIENT_MAP_ALLOW, winInfo);
-        if(winInfo->dock)
+        if(hasMask(winInfo, DOCK_MASK))
             applyEventRules(SCREEN_CHANGE, NULL);
     }
 }
@@ -206,7 +206,7 @@ void onUnmapEvent(xcb_unmap_notify_event_t* event) {
             removeMask(winInfo, MAPPABLE_MASK);
             applyEventRules(CLIENT_MAP_DISALLOW, winInfo);
         }
-        if(winInfo->dock)
+        if(hasMask(winInfo, DOCK_MASK))
             applyEventRules(SCREEN_CHANGE, NULL);
     }
 }
@@ -238,7 +238,7 @@ bool listenForNonRootEventsFromWindow(WindowInfo* winInfo) {
 }
 
 void addNonDocksToActiveWorkspace(WindowInfo* winInfo) {
-    if(!getWorkspaceOfWindow(winInfo) && !winInfo->dock) {
+    if(!getWorkspaceOfWindow(winInfo) && !hasMask(winInfo, DOCK_MASK)) {
         moveToWorkspace(winInfo, getActiveWorkspaceIndex());
     }
 }
@@ -314,7 +314,7 @@ void loadWindowProperties(WindowInfo* winInfo) {
     getWindowPropertyString(winInfo->id, WM_WINDOW_ROLE, XCB_ATOM_STRING, winInfo->role);
     if(winInfo->type == ewmh->_NET_WM_WINDOW_TYPE_DOCK) {
         DEBUG("Marking window as dock");
-        winInfo->dock = 1;
+        addMask(winInfo, DOCK_MASK);
     }
 }
 

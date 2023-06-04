@@ -84,6 +84,8 @@
 
 /**The window can receive input focus*/
 #define INPUT_MASK 	(1U << 24)
+// Window is a dock
+#define DOCK_MASK 	(1U << 25)
 
 /// Indicates that at least part of the window is visible
 #define VISIBLE_MASK 	(1U << 29)

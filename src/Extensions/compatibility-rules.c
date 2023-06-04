@@ -8,7 +8,7 @@
 #include "compatibility-rules.h"
 
 void autoDetectDockPosition(WindowInfo* winInfo) {
-    if(winInfo->dock && !getDockProperties(winInfo)) {
+    if(hasMask(winInfo, DOCK_MASK) && !getDockProperties(winInfo)) {
         const Rect rect = getRealGeometry(winInfo->id);
         int properties[12] = {0};
         FOR_EACH(Monitor*, monitor, getAllMonitors()) {

@@ -187,7 +187,7 @@ SCUTEST_ITER(stable, 2) {
 
 
 static void _set_dock(WindowInfo * winInfo) {
-    winInfo->dock = 1;
+    addMask(winInfo, DOCK_MASK);
 }
 SCUTEST(test_dock_not_auto_in_workspace) {
     addEvent(CLIENT_MAP_ALLOW, DEFAULT_EVENT(_set_dock, HIGHEST_PRIORITY));
